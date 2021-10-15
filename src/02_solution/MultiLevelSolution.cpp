@@ -679,7 +679,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       if(_solution[igridn]->_ResEpsBdcFlag[k]) {
         Mesh* msh = _mlMesh->GetLevel(igridn);
 
-        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = msh->GetAmrRestrictionMap();
+        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
         for(unsigned j = msh->_dofOffset[_solType[k]][_iproc]; j < msh->_dofOffset[_solType[k]][_iproc + 1]; j++) {
@@ -849,7 +849,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       if(_solution[igridn]->_ResEpsBdcFlag[solIndex]) {
         Mesh* msh = _mlMesh->GetLevel(igridn);
 
-        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = msh->GetAmrRestrictionMap();
+        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
         for(unsigned j = msh->_dofOffset[_solType[solIndex]][_iproc]; j < msh->_dofOffset[_solType[solIndex]][_iproc + 1]; j++) {

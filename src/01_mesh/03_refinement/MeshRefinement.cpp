@@ -415,7 +415,7 @@ namespace femus {
     _mesh.el->DeleteElementNearVertex();
     _mesh.el->BuildElementNearVertex();
 
-    _mesh.Buildkel();
+    _mesh.BuildElementNearFace();
 
     // build Mesh coordinates by projecting the coarse coordinats
     _mesh._topology = new Solution(&_mesh);

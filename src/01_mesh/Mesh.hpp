@@ -172,7 +172,9 @@ public:
     
     void PartitionForElements(std::vector < unsigned > & partition);
     
-    void InitializeTopologyStructures();
+    void InitializeAndFillTopologyCoordinates();
+    
+    void InitializeAndFillTopologyAMR();
   
     /** Only file reading */
     void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
@@ -185,7 +187,7 @@ public:
 
     void ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
-    void ReadCoarseMeshAfterPartitioning();
+    void BuildTopologyAndMeshElemStructures();
     
     /** This function generates a coarse box mesh */
     void GenerateCoarseBoxMesh(const unsigned int nx,
@@ -203,7 +205,7 @@ public:
     
     void initialize_dof_offsets();
     
-    void build_elem_offsets(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
+    void build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
     
     void build_element_based_dofs();
     /**  */
@@ -212,7 +214,9 @@ public:
     /** Mapping from mesh file to femus */
     std::vector <unsigned>  from_mesh_file_to_femus_node_partition_mapping();
     
-    void end_building_dof_offset_biquadratic_and_coord_reordering(std::vector <unsigned> & mapping);
+    void reorder_nodes_and_coords(std::vector <unsigned> & mapping);
+    
+    void end_building_dof_offset_biquadratic();
     
     void ghost_nodes_search();
     
@@ -221,7 +225,7 @@ public:
     void set_node_and_elem_counts();
   
     /** To be added */
-    void Buildkel();
+    void BuildElementNearFace();
     
     void BiquadraticNodesNotInGambit();
     
@@ -352,11 +356,15 @@ private:
     static const unsigned _amrIndex = 3;
     static const unsigned _solidMarkIndex = 4;
     
+    /** AMR */
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
     /** Mesh characteristic length */
     double _cLength;
+    
+    void ComputeCharacteristicLength();
+
 };
 
 } //end namespace femus

@@ -574,7 +574,7 @@ namespace femus
   void elem::GetAMRRestriction(Mesh *msh)
   {
 
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &restriction = msh->GetAmrRestrictionMap();
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & restriction = msh->GetAmrRestrictionMap();
     restriction.resize(3);
 
     std::vector < std::map < unsigned, bool > > &interfaceSolidMark = msh->GetAmrSolidMark();

@@ -221,21 +221,24 @@ namespace femus {
     
     Partition();
 
-    ReadCoarseMeshAfterPartitioning();
+    BuildTopologyAndMeshElemStructures();
     
-    
+    PrintInfo();
+
   }
 
 
-  void Mesh::ReadCoarseMeshAfterPartitioning() {
+  void Mesh::BuildTopologyAndMeshElemStructures() {
       
     el->BuildElementNearVertex();
 
 
-    Buildkel();
+    BuildElementNearFace();
 
 
-    InitializeTopologyStructures();
+    InitializeAndFillTopologyCoordinates();
+    ComputeCharacteristicLength();
+    InitializeAndFillTopologyAMR();
 
 
     el->BuildElementNearElement();
@@ -246,13 +249,12 @@ namespace femus {
 
     _amrRestriction.resize(3);
 
-    PrintInfo();
-    
+
   }
   
 
 
-  void Mesh::InitializeTopologyStructures() {
+  void Mesh::InitializeAndFillTopologyCoordinates() {
 
     _topology = new Solution(this);
 
@@ -264,6 +266,18 @@ namespace femus {
     _topology->ResizeSolutionVector("Y");
     _topology->ResizeSolutionVector("Z");
 
+    //set coordinates -----------
+    _topology->GetSolutionName("X") = _coords[0];
+    _topology->GetSolutionName("Y") = _coords[1];
+    _topology->GetSolutionName("Z") = _coords[2];
+    //set coordinates -----------
+    
+
+  }
+  
+  
+  void Mesh::ComputeCharacteristicLength() {
+      
     //compute max and min coords -----------
     std::vector < double > xMax(3, 0.);
     std::vector < double > xMin(3, 0.);
@@ -273,22 +287,22 @@ namespace femus {
         if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
       }
     }
+    
     _cLength = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
     //compute max and min coords - end -----------
-
-
-    //set coordinates -----------
-    _topology->GetSolutionName("X") = _coords[0];
-    _topology->GetSolutionName("Y") = _coords[1];
-    _topology->GetSolutionName("Z") = _coords[2];
-    //set coordinates -----------
-
-
+    
+  }
+  
+  
+  
+  void Mesh::InitializeAndFillTopologyAMR() {
+      
     _topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
 
     _topology->ResizeSolutionVector("AMR");
 
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
+    
     AllocateAndMarkStructureNode();
 
   }
@@ -330,10 +344,12 @@ namespace femus {
 
     el->BuildElementNearVertex();
 
-    Buildkel();
+    BuildElementNearFace();
 
 
-    InitializeTopologyStructures();
+    InitializeAndFillTopologyCoordinates();
+    ComputeCharacteristicLength();
+    InitializeAndFillTopologyAMR();
 
 
     el->BuildElementNearElement();
@@ -348,10 +364,11 @@ namespace femus {
     PrintInfo();
   }
 
-  /** This function stores the element adiacent to the element face (iel,iface)
-   * and stores it in kel[iel][iface]
+  /** This function stores the element adiacent to the element face (iel, iface)
+   * and stores it in _elementNearFace[iel][iface]
    **/
-  void Mesh::Buildkel() {
+  void Mesh::BuildElementNearFace() {
+      
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
       for(unsigned iface = 0; iface < el->GetElementFaceNumber(iel); iface++) {
         if(el->GetFaceElementIndex(iel, iface) <= 0) {   //TODO probably just == -1
@@ -390,6 +407,7 @@ namespace femus {
         }
       }
     }
+    
   }
 
 
@@ -529,7 +547,7 @@ namespace femus {
   }
 
   
-   void Mesh::build_elem_offsets(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping)  {
+   void Mesh::build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping)  {
  
        
     //BEGIN building the  metis2Gambit_elem 
@@ -660,14 +678,21 @@ namespace femus {
 
    }
 
+   void Mesh::end_building_dof_offset_biquadratic()  {
 
-
-   void Mesh::end_building_dof_offset_biquadratic_and_coord_reordering(std::vector <unsigned> & mapping)  {
-       
     for(int i = 1 ; i <= _nprocs; i++) {
       _dofOffset[2][i] = _dofOffset[2][i - 1] + _ownSize[2][i - 1];
     }
 
+   }
+
+
+   void Mesh::reorder_nodes_and_coords(std::vector <unsigned> & mapping)  {
+       
+    end_building_dof_offset_biquadratic();
+    
+    
+     
     el->ReorderMeshNodes(mapping);
 
     //reorder coordinate vector at coarse level ----
@@ -811,7 +836,7 @@ namespace femus {
     std::vector < unsigned > mapping;
 
     
-   build_elem_offsets(partition, mapping);
+   build_elem_offsets_and_reorder_mesh_elem_quantities(partition, mapping);
    
    build_element_based_dofs();  
    
@@ -821,7 +846,9 @@ namespace femus {
 
     std::vector<unsigned> ().swap(partition);
     
-    end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
+    end_building_dof_offset_biquadratic();
+    
+    reorder_nodes_and_coords(mapping);
    
     std::vector<unsigned> ().swap(mapping);    //     mapping.resize(0);  //this DOES NOT FREE memory!!!
 
