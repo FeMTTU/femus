@@ -144,14 +144,22 @@ namespace femus
 
 //   mesh.SetGridNumber(0);
 
-        if(nz != 0)
+        if(nz != 0) {
           mesh.SetDimension(3);
-        else if(ny != 0)
+          mesh.SetRefinementCellAndFaceIndices(3);
+        }
+        else if(ny != 0) {
           mesh.SetDimension(2);
-        else if(nx != 0)
+          mesh.SetRefinementCellAndFaceIndices(2);
+        }
+        else if(nx != 0) {
           mesh.SetDimension(1);
-        else
+          mesh.SetRefinementCellAndFaceIndices(1);
+        }
+        else {
           mesh.SetDimension(0);
+          mesh.SetRefinementCellAndFaceIndices(0);
+        }
 
         unsigned ngroup;
         unsigned nbcd;

@@ -51,7 +51,7 @@ class GambitIO : public MeshInput<Mesh>
    */
   virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
-  //void BiquadraticNodesNotInGambit(Mesh& mesh);
+  //void AddBiquadraticNodesNotInMeshFile(Mesh& mesh);
 
  private:
    

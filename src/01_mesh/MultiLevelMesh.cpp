@@ -68,7 +68,7 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
 }
 
 
-  void MultiLevelMesh::BuildElemType(const char GaussOrder[]) {
+  void MultiLevelMesh::BuildFETypesBasedOnExistingCoarseMeshGeomElements(const char GaussOrder[]) {
       
     if(_finiteElementGeometryFlag[0]) {
       _finiteElement[0][0]=new const elem_type_3D("hex","linear",GaussOrder);
@@ -118,10 +118,12 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
 
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,
-			       const char mesh_file[], const char GaussOrder[], const double Lref,
-			       bool (* SetRefinementFlag)(const std::vector < double > &x,
-							  const int &ElemGroupNumber,const int &level) ):
+MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,
+                               const unsigned short &igridr,
+                               const char mesh_file[], 
+                               const char GaussOrder[], 
+                               const double Lref,
+                               bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) )  :
     _gridn0(igridn)
     {
 
@@ -136,7 +138,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
 
-    BuildElemType(GaussOrder);
+    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
 
     //totally refined meshes
     for (unsigned i=1; i<igridr; i++) {
@@ -235,7 +237,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
     
    ReadCoarseMeshOnlyFileReading(mesh_file, Lref, read_groups, read_boundary_groups);
 
-    BuildElemType(GaussOrder);
+    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
 
     PrepareAllLevelsForRefinement();
     
@@ -273,16 +275,16 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
 
     _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type, _finiteElementGeometryFlag);
 
-    BuildElemType(GaussOrder);
+    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
 
     PrepareAllLevelsForRefinement();
     
 }
 
 
-void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned short &igridr,
-                                 bool (* SetRefinementFlag)(const std::vector < double >& x,
-                                         const int &ElemGroupNumber,const int &level))
+void MultiLevelMesh::RefineMesh( const unsigned short &igridn, 
+                                 const unsigned short &igridr,
+                                 bool (* SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) )
 {
 
     _gridn0 = igridn;
@@ -301,7 +303,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
     //partially refined meshes
 
-    if(SetRefinementFlag==NULL){
+    if(SetRefinementFlag == NULL) {
 
     }
     else{
@@ -310,6 +312,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
     }
 
     for (unsigned i=igridr; i<_gridn0; i++) {
+        
       if(Mesh::_IsUserRefinementFunctionDefined == false) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
@@ -319,9 +322,11 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
         meshcoarser.FlagElementsToBeRefined();
 	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
       }
+      
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);
       meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+    
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();

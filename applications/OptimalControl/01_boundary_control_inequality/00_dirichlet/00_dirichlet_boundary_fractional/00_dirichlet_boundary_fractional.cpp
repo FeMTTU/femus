@@ -298,7 +298,7 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->dofmap_initialize_dof_offsets();
            ml_mesh.GetLevelZero(0)->dofmap_build_element_based_dof_offsets();
            
-           ml_mesh.GetLevelZero(0)->dofmap_from_mesh_file_to_femus_node_partition_ownSize_reorder_mapping(partition, mapping);
+           ml_mesh.GetLevelZero(0)->dofmap_from_mesh_file_to_femus_compute_Node_partition_Node_ownSize_Node_mapping(partition, mapping);
            std::vector<unsigned> ().swap(partition);
            ml_mesh.GetLevelZero(0)->reorder_node_quantities(mapping);
    
@@ -306,14 +306,20 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->dofmap_ghost_nodes_search();
            ml_mesh.GetLevelZero(0)->dofmap_complete_dof_offsets();
            
-           ml_mesh.GetLevelZero(0)->set_node_counts();
+           ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
        
    
-    ml_mesh.GetLevelZero(0)->BuildTopologyAndMeshElemStructures();
-    ml_mesh.GetLevelZero(0)->PrintInfo();
+           ml_mesh.GetLevelZero(0)->BuildMeshElemStructuresAndTopologyStructures();  //needs dofmap
+           ml_mesh.GetLevelZero(0)->PrintInfo();   //doesn't need dofmap
 
-  ml_mesh.BuildElemType(fe_quad_rule_vec[0].c_str());
-  ml_mesh.PrepareAllLevelsForRefinement();
+  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); //doesn't need dofmap. This seems to be abstract, it can be performed right after the mesh geometric elements are read. It is needed for local MG operators, as well as for Integration of shape functions...
+  //The problem is that it also performs global operations such as matrix sparsity pattern, global MG operators... And these also use _dofOffset...
+  //The problem is that this class actually has certain functions which have REAL structures instead of only being ABSTRACT FE families!!!
+  // So:
+//   Mesh and Multimesh are real and not abstract, and rightly so 
+//   Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
+//   ElemType is not completely abstract as it should be 
+  ml_mesh.PrepareAllLevelsForRefinement();       //doesn't need dofmap
 // // // =================================================================  
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
 // // // =================================================================

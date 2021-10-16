@@ -102,6 +102,7 @@ namespace femus {
     inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> dimNodes ;
     nvt0 = nvt;
     mesh.SetDimension(dim);
+    mesh.SetRefinementCellAndFaceIndices(dim);
     mesh.SetNumberOfElements(nel);
     mesh.SetNumberOfNodes(nvt);
     inf >> str2;
@@ -174,7 +175,7 @@ namespace femus {
       }
     }
     
-    //GambitIO::BiquadraticNodesNotInGambit(mesh);
+    //GambitIO::AddBiquadraticNodesNotInMeshFile(mesh);
     //nvt = mesh.GetNumberOfNodes();
        
     inf >> str2;
@@ -320,7 +321,7 @@ namespace femus {
   };
   
   
-//   void GambitIO::BiquadraticNodesNotInGambit(Mesh& mesh) {
+//   void GambitIO::AddBiquadraticNodesNotInMeshFile(Mesh& mesh) {
 // 
 //     unsigned int nnodes = mesh.GetNumberOfNodes();
 // //     std::cout << " ********************************** "<< std::endl;

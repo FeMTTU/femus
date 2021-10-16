@@ -1042,6 +1042,7 @@ namespace femus
 
 
   void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) {
+      
     xv.resize(_dimension);
     unsigned ndofs = el->GetElementDofNumber(iel, solType);
     for(int d = 0; d < _dimension; d++) {
@@ -1053,6 +1054,7 @@ namespace femus
         xv[d][j] = (*_topology->_Sol[d])(xdof);
       }
     }
+    
   }
 
 

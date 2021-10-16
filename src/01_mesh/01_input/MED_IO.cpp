@@ -1314,6 +1314,7 @@ namespace femus {
     Mesh& mesh = GetMesh();
     uint mydim = 1;  //this is the initial value, then it will be updated below
     mesh.SetDimension(mydim);  //this is basically the MANIFOLD DIMENSION of the domain
+    mesh.SetRefinementCellAndFaceIndices(mydim);
 
 
     std::vector< std::string > elem_types(n_fem_type);
@@ -1337,7 +1338,10 @@ namespace femus {
       else if(/*elem_types_str.compare("SE2") == 0 ||*/
         elem_types_str.compare("SE3") == 0)  mydim = 1;
 
-      if(mydim > mesh.GetDimension()) mesh.SetDimension(mydim);
+      if(mydim > mesh.GetDimension()) { 
+          mesh.SetDimension(mydim);
+          mesh.SetRefinementCellAndFaceIndices(mydim); 
+      }
 
     }  //end for
 

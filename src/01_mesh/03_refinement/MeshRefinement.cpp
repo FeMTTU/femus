@@ -247,14 +247,14 @@ namespace femus {
             }
           }
 
-          // project vertex indeces
+          // project vertex indices
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++)
             for(unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++) {
               unsigned jDof =  otherFiniteElement[elt][0]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
               _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof));
             }
 
-          // project face indeces
+          // project face indices
           for(unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
             int value = elc->GetFaceElementIndex(iel, iface);
 

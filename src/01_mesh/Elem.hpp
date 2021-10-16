@@ -19,6 +19,7 @@
 #include <vector>
 #include <map>
 
+#include "GeomElTypeEnum.hpp"
 #include "Mesh.hpp"
 #include "NumericVector.hpp"
 
@@ -35,7 +36,8 @@ namespace femus {
   
   class NumericVector;
   /**
-   * The elem class
+   * The elem class: it contains the list of all Mesh Geometric Elements, along with several Element-based and also Node-based properties
+   * @todo I believe it would even be more linear if this class did not have any function involving the Mesh pointer, there are very few in any case
   */
   class elem {
 
@@ -178,21 +180,25 @@ namespace femus {
       void SetElementLevel(const unsigned& iel, const short unsigned& level) {
         _elementLevel[iel] = level;
       }
+      
       short unsigned GetElementLevel(const unsigned &jel) {
         return _elementLevel[jel];
       }
+      
       void ScatterElementQuantities() {
         _elementLevel.scatter(_elementOffset);
         _elementType.scatter(_elementOffset);
         _elementMaterial.scatter(_elementOffset);
         _elementGroup.scatter(_elementOffset);
       }
+      
       void LocalizeElementQuantities(const unsigned &lproc) {
         _elementLevel.broadcast(lproc);
         _elementType.broadcast(lproc);
         _elementMaterial.broadcast(lproc);
         _elementGroup.broadcast(lproc);
       }
+      
       void FreeLocalizedElementQuantities() {
         _elementLevel.clearBroadcast();
         _elementType.clearBroadcast();
@@ -256,7 +262,7 @@ namespace femus {
       /* Number of elements of the Mesh */
       unsigned _nel;
       /* Number of elements of the Mesh for each Geometric type */
-      unsigned _nelt[6];
+      unsigned _nelt[N_GEOM_ELS];
       unsigned _nelr;
       unsigned _ngroup;
       unsigned _level;
@@ -270,14 +276,19 @@ namespace femus {
       MyVector< short unsigned> _elementMaterial;
       std::vector<unsigned> _materialElementCounter;
 
-      /** For each element, gives the conversion from local node carrier to global node */
+      /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
-      MyMatrix <int> _elementNearFace;  ///@todo this is about the elements attached to each face, but it is used for BCs as well
+      /** @todo this is about the elements attached to each face. It is used for BCs as well */
+      MyMatrix <int> _elementNearFace;
 
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;
 
-      MyMatrix <unsigned> _elementNearVertex;      // number of elements which have a given vertex
+      /** For each Node, it gives the list of elements having that Node as a vertex 
+        @todo I think this should be scattered */
+      MyMatrix <unsigned> _elementNearVertex;
+      /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
+        @todo I think this should be scattered */
       MyMatrix <unsigned> _elementNearElement;
 
   };

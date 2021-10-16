@@ -195,7 +195,7 @@ namespace femus
       // member functions
       // ====================================
       
-      virtual const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) = 0;
+      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
 
       /** Set numbers of coarse and fine dofs for 1 element */
       void set_coarse_and_fine_elem_data(const basis* pt_basis_in);
@@ -372,7 +372,7 @@ namespace femus
       // member functions
       // ====================================
       
-      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
+      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
       
       
       void allocate_and_fill_shape_at_quadrature_points();
@@ -517,7 +517,7 @@ namespace femus
                                            
   protected:
       
-     const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
+     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
      
      void allocate_and_fill_shape_at_quadrature_points();
       
@@ -673,7 +673,7 @@ namespace femus
      
     protected:
 
-     const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
+     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
      
      void allocate_and_fill_shape_at_quadrature_points();
 

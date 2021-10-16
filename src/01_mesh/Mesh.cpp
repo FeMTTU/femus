@@ -98,8 +98,8 @@ namespace femus {
 
   }
 
-  const unsigned Mesh::_numberOfMissedBiquadraticNodes[6] = {0, 5, 3, 0, 1, 0};
-  const double Mesh::_baricentricWeight[6][5][18] = {
+  const unsigned Mesh::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0, 5, 3, 0, 1, 0};
+  const double Mesh::_baricentricWeight[N_GEOM_ELS][5][18] = {
     {},
     {
       { -1. / 9., -1. / 9., -1. / 9.,  0    , 4. / 9., 4. / 9., 4. / 9., 0.   , 0.   , 0.   },
@@ -202,7 +202,7 @@ namespace femus {
 
 
 
-    BiquadraticNodesNotInGambit();
+    AddBiquadraticNodesNotInMeshFile();
 
     el->ShrinkToFit();
 
@@ -221,14 +221,14 @@ namespace femus {
     
     Partition();
 
-    BuildTopologyAndMeshElemStructures();
+    BuildMeshElemStructuresAndTopologyStructures();
     
     PrintInfo();
 
   }
 
 
-  void Mesh::BuildTopologyAndMeshElemStructures() {
+  void Mesh::BuildMeshElemStructuresAndTopologyStructures() {
       
     el->BuildElementNearVertex();
 
@@ -247,14 +247,14 @@ namespace femus {
     el->ScatterElementDof();
     el->ScatterElementNearFace();
 
-    _amrRestriction.resize(3);
+    _amrRestriction.resize(3); /* 3 Lagrange continuous families (linear, quadr, biquadr) */
 
 
   }
   
 
 
- /// this needs all the dof maps, at least for the continuous Lagrange elements
+ /// this needs all the dof maps, for the continuous Lagrange elements
   void Mesh::Topology_InitializeAndFillCoordinates() {
       
     _topology = new Solution(this);
@@ -263,9 +263,9 @@ namespace femus {
     _topology->AddSolution("Y", LAGRANGE, SECOND, 1, 0);
     _topology->AddSolution("Z", LAGRANGE, SECOND, 1, 0);
 
-    _topology->ResizeSolutionVector("X");
-    _topology->ResizeSolutionVector("Y");
-    _topology->ResizeSolutionVector("Z");
+    _topology->ResizeSolutionVector("X");  //needs dofmap
+    _topology->ResizeSolutionVector("Y");  //needs dofmap
+    _topology->ResizeSolutionVector("Z");  //needs dofmap
 
     //set coordinates -----------
     _topology->GetSolutionName("X") = _coords[0];
@@ -295,7 +295,7 @@ namespace femus {
   }
   
   
-/// This needs all the dof maps, both for continuous and discontinuous Lagrange elements  
+/// This needs the dof maps, for the discontinuous Lagrange elements
   void Mesh::Topology_InitializeAMR() {
       
     _topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
@@ -305,6 +305,7 @@ namespace femus {
   }
   
 
+/// This needs the dof maps, for the continuous Lagrange elements
   void Mesh::Topology_InitializeAndFillSolidNodeFlag() {
       
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
@@ -333,7 +334,7 @@ namespace femus {
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
 
 
-    BiquadraticNodesNotInGambit();
+    AddBiquadraticNodesNotInMeshFile();
 
     el->ShrinkToFit();
 
@@ -377,7 +378,7 @@ namespace femus {
       
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
       for(unsigned iface = 0; iface < el->GetElementFaceNumber(iel); iface++) {
-        if(el->GetFaceElementIndex(iel, iface) <= 0) {   //TODO probably just == -1
+        if(el->GetFaceElementIndex(iel, iface) <= 0) {   /// @todo probably just == -1
           unsigned i1 = el->GetFaceVertexIndex(iel, iface, 0);
           unsigned i2 = el->GetFaceVertexIndex(iel, iface, 1);
           unsigned i3 = el->GetFaceVertexIndex(iel, iface, 2);
@@ -451,7 +452,7 @@ namespace femus {
   }
 
   
-   std::vector <unsigned>  Mesh::from_mesh_file_to_femus_node_partition_mapping() {
+   std::vector <unsigned>  Mesh::dofmap_from_mesh_file_to_femus_node_partition_mapping() {
   
      std::vector <unsigned> partition(GetNumberOfNodes(), _nprocs);
   
@@ -488,7 +489,7 @@ namespace femus {
   
   
 
-  void Mesh::dofmap_from_mesh_file_to_femus_node_partition_ownSize_reorder_mapping(std::vector <unsigned> & partition, std::vector <unsigned> & mapping) {
+  void Mesh::dofmap_from_mesh_file_to_femus_compute_Node_partition_Node_ownSize_Node_mapping(std::vector <unsigned> & partition, std::vector <unsigned> & mapping) {
   // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
       
 
@@ -711,7 +712,7 @@ namespace femus {
         }
       }
     }
-    //reorder coordinate vector ----
+    //reorder coordinate vector at coarse level ----
 
 
    }
@@ -852,7 +853,7 @@ namespace femus {
    
     //BEGIN building for k = 0,1,2
 
-   dofmap_from_mesh_file_to_femus_node_partition_ownSize_reorder_mapping(partition, mapping);
+   dofmap_from_mesh_file_to_femus_compute_Node_partition_Node_ownSize_Node_mapping(partition, mapping);
 
     std::vector<unsigned> ().swap(partition);
     
@@ -904,6 +905,7 @@ namespace femus {
     unsigned dof;
 
     switch(solType) {
+        
       case 0: { // linear Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
         unsigned isdom = IsdomBisectionSearch(iNode, 2);
@@ -960,6 +962,7 @@ namespace femus {
     unsigned dof;
 
     switch(solType) {
+        
       case 0: { // linear Lagrange
         unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
         unsigned isdom = IsdomBisectionSearch(iNode, 2);
@@ -1014,6 +1017,7 @@ namespace femus {
 
 
   SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
+      
     if(itype < 3 && jtype < 3) {
       if(!_ProjQitoQj[itype][jtype]) {
         BuildQitoQjProjection(itype, jtype);
@@ -1257,7 +1261,7 @@ namespace femus {
 
 // *******************************************************
 
-  void Mesh::BiquadraticNodesNotInGambit() {
+  void Mesh::AddBiquadraticNodesNotInMeshFile() {
 
     unsigned int nnodes = GetNumberOfNodes();
 //     std::cout << " ********************************** "<< std::endl;

@@ -1071,7 +1071,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     _dim = 1;
 
     //************ FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+    const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
@@ -1272,7 +1272,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     _dim = 2;
 
     //************ FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+    const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
@@ -1315,7 +1315,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     _dim = 3;
     
     //************ FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+    const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
@@ -1352,7 +1352,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
   }
 
   
-  const basis* elem_type_1D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) { 
+  const basis* elem_type_1D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) { 
         
     basis* linearElement;
 
@@ -1381,7 +1381,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     
 
-  const basis* elem_type_2D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) {
+  const basis* elem_type_2D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) {
         
     basis* linearElement;
 
@@ -1423,7 +1423,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     
 
-  const basis* elem_type_3D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) {
+  const basis* elem_type_3D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) {
   
     basis* linearElement;
     

@@ -59,7 +59,7 @@ public:
     void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
     
     /** For every Geometric Element type appearing in the mesh, initialize evaluations at quadrature points, for all FE families  */
-    void BuildElemType(const char GaussOrder[]);
+    void BuildFETypesBasedOnExistingCoarseMeshGeomElements(const char GaussOrder[]);
     
     void PrepareAllLevelsForRefinement();
     
@@ -78,10 +78,12 @@ public:
                                const char GaussOrder[]
                              );
 
-    /** Refine the coarse mesh (totally or selectively (in according to the SetRefinementFlag user-function) ) */
-    void RefineMesh(const unsigned short &igridn, const unsigned short &igridr,
-                    bool (* SetRefinementFlag)(const std::vector < double >& x,
-                            const int &ElemGroupNumber,const int &level));
+    /** Refine the coarse mesh (totally or selectively (according to the SetRefinementFlag user-function) ):
+       the first argument is the number of uniformly refined levels;
+       the second argument is the total number of refined levels: uniform + selective */
+    void RefineMesh(const unsigned short &igridn, 
+                    const unsigned short &igridr,
+                    bool (* SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) );
 
     /** Add a partially refined mesh level in the AMR alghorithm **/
     void AddAMRMeshLevel();
