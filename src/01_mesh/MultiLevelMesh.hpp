@@ -61,7 +61,7 @@ public:
     /** For every Geometric Element type appearing in the mesh, initialize evaluations at quadrature points, for all FE families  */
     void BuildElemType(const char GaussOrder[]);
     
-    void AllocateAllLevels();
+    void PrepareAllLevelsForRefinement();
     
     void ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
 

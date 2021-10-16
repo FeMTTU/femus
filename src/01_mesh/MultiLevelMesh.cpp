@@ -237,13 +237,13 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
 
     BuildElemType(GaussOrder);
 
-    AllocateAllLevels();
+    PrepareAllLevelsForRefinement();
     
 }
 
 
 
-void MultiLevelMesh::AllocateAllLevels() {
+void MultiLevelMesh::PrepareAllLevelsForRefinement() {
     
     _gridn = _gridn0;
     _level.resize(_gridn);
@@ -275,7 +275,7 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
 
     BuildElemType(GaussOrder);
 
-    AllocateAllLevels();
+    PrepareAllLevelsForRefinement();
     
 }
 

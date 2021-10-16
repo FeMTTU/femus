@@ -172,9 +172,11 @@ public:
     
     void PartitionForElements(std::vector < unsigned > & partition);
     
-    void InitializeAndFillTopologyCoordinates();
+    void Topology_InitializeAndFillCoordinates();
     
-    void InitializeAndFillTopologyAMR();
+    void Topology_InitializeAMR();
+    
+    void Topology_InitializeAndFillSolidNodeFlag();
   
     /** Only file reading */
     void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
@@ -203,26 +205,28 @@ public:
 
     void initialize_elem_offsets();
     
-    void initialize_dof_offsets();
+    void dofmap_initialize_dof_offsets();
     
     void build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
     
-    void build_element_based_dofs();
+    void dofmap_build_element_based_dof_offsets();
     /**  */
-    void from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector< unsigned > & mapping);
+    void dofmap_from_mesh_file_to_femus_node_partition_ownSize_reorder_mapping(std::vector <unsigned> & partition, std::vector< unsigned > & mapping);
     
     /** Mapping from mesh file to femus */
     std::vector <unsigned>  from_mesh_file_to_femus_node_partition_mapping();
     
-    void reorder_nodes_and_coords(std::vector <unsigned> & mapping);
+    void reorder_node_quantities(std::vector <unsigned> & mapping);
     
-    void end_building_dof_offset_biquadratic();
+    void dofmap_end_building_dof_offset_biquadratic();
     
-    void ghost_nodes_search();
+    void dofmap_ghost_nodes_search();
     
-    void complete_dof_offsets();
+    void dofmap_complete_dof_offsets();
     
-    void set_node_and_elem_counts();
+    void set_node_counts();
+  
+    void set_elem_counts();
   
     /** To be added */
     void BuildElementNearFace();

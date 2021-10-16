@@ -236,10 +236,10 @@ namespace femus {
     BuildElementNearFace();
 
 
-    InitializeAndFillTopologyCoordinates();
     ComputeCharacteristicLength();
-    InitializeAndFillTopologyAMR();
-
+    Topology_InitializeAndFillCoordinates();
+    Topology_InitializeAMR();
+    Topology_InitializeAndFillSolidNodeFlag();
 
     el->BuildElementNearElement();
 
@@ -254,8 +254,9 @@ namespace femus {
   
 
 
-  void Mesh::InitializeAndFillTopologyCoordinates() {
-
+ /// this needs all the dof maps, at least for the continuous Lagrange elements
+  void Mesh::Topology_InitializeAndFillCoordinates() {
+      
     _topology = new Solution(this);
 
     _topology->AddSolution("X", LAGRANGE, SECOND, 1, 0);
@@ -294,19 +295,23 @@ namespace femus {
   }
   
   
-  
-  void Mesh::InitializeAndFillTopologyAMR() {
+/// This needs all the dof maps, both for continuous and discontinuous Lagrange elements  
+  void Mesh::Topology_InitializeAMR() {
       
     _topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
 
     _topology->ResizeSolutionVector("AMR");
 
+  }
+  
+
+  void Mesh::Topology_InitializeAndFillSolidNodeFlag() {
+      
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
     
     AllocateAndMarkStructureNode();
 
   }
-
 
   /**
    *  This function generates the coarse Box Mesh level using the built-in generator
@@ -347,9 +352,10 @@ namespace femus {
     BuildElementNearFace();
 
 
-    InitializeAndFillTopologyCoordinates();
     ComputeCharacteristicLength();
-    InitializeAndFillTopologyAMR();
+    Topology_InitializeAndFillCoordinates();
+    Topology_InitializeAMR();
+    Topology_InitializeAndFillSolidNodeFlag();
 
 
     el->BuildElementNearElement();
@@ -422,7 +428,7 @@ namespace femus {
     for(int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
       int flag_mat = GetElementMaterial(iel);
 
-      if(flag_mat == 4) {
+      if(flag_mat == 4) { ///@todo Where on Earth do we say that 4 is a special flag for the solid
         unsigned elementType = GetElementType(iel);
         unsigned nve = el->GetNVE(elementType, 2);
 
@@ -482,13 +488,11 @@ namespace femus {
   
   
 
-  void Mesh::from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector <unsigned> & mapping) {
+  void Mesh::dofmap_from_mesh_file_to_femus_node_partition_ownSize_reorder_mapping(std::vector <unsigned> & partition, std::vector <unsigned> & mapping) {
   // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
       
 
-      
-    // Initialization for k = 0,1,2
-    
+
      partition.assign(GetNumberOfNodes(), _nprocs);
   
         mapping.resize(GetNumberOfNodes()); ///@todo I think this is bad because it doesn't clear the previous content!!!
@@ -535,7 +539,7 @@ namespace femus {
   }
   
 
-  void Mesh::initialize_dof_offsets() {
+  void Mesh::dofmap_initialize_dof_offsets() {
       
     //BEGIN Initialization for k = 0,1,2,3,4
     for(int k = 0; k < 5; k++) {
@@ -616,7 +620,7 @@ namespace femus {
           ielMat = el->GetElementMaterial(iel);
           ielGroup = el->GetElementGroup(iel);
 
-          if(jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
+          if( jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel) ) ) ) {
             imapping[j - 1] = jel;
             imapping[j] = iel;
             newN = j - _elementOffset[isdom];
@@ -626,6 +630,7 @@ namespace femus {
       }
 
     }
+    
 
     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
       mapping[imapping[i]] = i;
@@ -651,7 +656,7 @@ namespace femus {
 
 
 
-   void Mesh::build_element_based_dofs()  {
+   void Mesh::dofmap_build_element_based_dof_offsets()  {
        
     //BEGIN building element based dofs -  k = 3,4 
 
@@ -677,8 +682,10 @@ namespace femus {
     //END building element based dofs -  k = 3,4
 
    }
+   
+   
 
-   void Mesh::end_building_dof_offset_biquadratic()  {
+   void Mesh::dofmap_end_building_dof_offset_biquadratic()  {
 
     for(int i = 1 ; i <= _nprocs; i++) {
       _dofOffset[2][i] = _dofOffset[2][i - 1] + _ownSize[2][i - 1];
@@ -687,11 +694,8 @@ namespace femus {
    }
 
 
-   void Mesh::reorder_nodes_and_coords(std::vector <unsigned> & mapping)  {
+   void Mesh::reorder_node_quantities(std::vector <unsigned> & mapping)  {
        
-    end_building_dof_offset_biquadratic();
-    
-    
      
     el->ReorderMeshNodes(mapping);
 
@@ -713,7 +717,7 @@ namespace femus {
    }
    
 
-    void Mesh::ghost_nodes_search() {
+    void Mesh::dofmap_ghost_nodes_search() {
  
     for(int k = 0; k < 3; k++) {
       _ghostDofs[k].resize(_nprocs);
@@ -744,7 +748,7 @@ namespace femus {
   }
 
   
-    void Mesh::complete_dof_offsets() {
+    void Mesh::dofmap_complete_dof_offsets() {
 
     //BEGIN completing k = 0, 1
 
@@ -812,15 +816,19 @@ namespace femus {
   
   
   
-  void Mesh::set_node_and_elem_counts() {
+  void Mesh::set_node_counts() {
       
     SetNumberOfNodes(_dofOffset[2][_nprocs]);
     el->SetNodeNumber(_dofOffset[2][_nprocs]);
 
+  }
+  
+
+  void Mesh::set_elem_counts() {
+      
     el->SetElementOffsets(_elementOffset, _iproc, _nprocs);
 
   }  
-
   
   
  /**
@@ -830,25 +838,27 @@ namespace femus {
 
     initialize_elem_offsets();
     
-    initialize_dof_offsets();
+    dofmap_initialize_dof_offsets();
     
 
     std::vector < unsigned > mapping;
 
     
    build_elem_offsets_and_reorder_mesh_elem_quantities(partition, mapping);
+   set_elem_counts();
+    
    
-   build_element_based_dofs();  
+   dofmap_build_element_based_dof_offsets();  
    
     //BEGIN building for k = 0,1,2
 
-   from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
+   dofmap_from_mesh_file_to_femus_node_partition_ownSize_reorder_mapping(partition, mapping);
 
     std::vector<unsigned> ().swap(partition);
     
-    end_building_dof_offset_biquadratic();
+    dofmap_end_building_dof_offset_biquadratic();
     
-    reorder_nodes_and_coords(mapping);
+    reorder_node_quantities(mapping);
    
     std::vector<unsigned> ().swap(mapping);    //     mapping.resize(0);  //this DOES NOT FREE memory!!!
 
@@ -857,16 +867,16 @@ namespace femus {
 
    
     //BEGIN ghost nodes search k = 0, 1, 2
-    ghost_nodes_search();
+    dofmap_ghost_nodes_search();
     //END ghost nodes search k = 0, 1, 2
 
 
     //BEGIN completing for k = 0,1
-    complete_dof_offsets();
+    dofmap_complete_dof_offsets();
     //END completing for k = 0,1
     
     
-    set_node_and_elem_counts();
+    set_node_counts();
     
   }
 

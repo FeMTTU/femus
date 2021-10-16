@@ -407,7 +407,9 @@ namespace femus
         _elementNearElement[iel][j] = it->first;
       }
     }
+    
   }
+  
 
   void elem::BuildElementNearVertex()
   {

@@ -290,28 +290,30 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->PartitionForElements(partition);
        
            ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
-           ml_mesh.GetLevelZero(0)->initialize_dof_offsets();
            
            std::vector < unsigned > mapping;
-           
            ml_mesh.GetLevelZero(0)->build_elem_offsets_and_reorder_mesh_elem_quantities(partition, mapping);
-           ml_mesh.GetLevelZero(0)->build_element_based_dofs();
-           ml_mesh.GetLevelZero(0)->from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
+           ml_mesh.GetLevelZero(0)->set_elem_counts();
+
+           ml_mesh.GetLevelZero(0)->dofmap_initialize_dof_offsets();
+           ml_mesh.GetLevelZero(0)->dofmap_build_element_based_dof_offsets();
            
+           ml_mesh.GetLevelZero(0)->dofmap_from_mesh_file_to_femus_node_partition_ownSize_reorder_mapping(partition, mapping);
            std::vector<unsigned> ().swap(partition);
+           ml_mesh.GetLevelZero(0)->reorder_node_quantities(mapping);
    
-           ml_mesh.GetLevelZero(0)->end_building_dof_offset_biquadratic();
-           ml_mesh.GetLevelZero(0)->reorder_nodes_and_coords(mapping);
-           ml_mesh.GetLevelZero(0)->ghost_nodes_search();
-           ml_mesh.GetLevelZero(0)->complete_dof_offsets();
-           ml_mesh.GetLevelZero(0)->set_node_and_elem_counts();
+           ml_mesh.GetLevelZero(0)->dofmap_end_building_dof_offset_biquadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_ghost_nodes_search();
+           ml_mesh.GetLevelZero(0)->dofmap_complete_dof_offsets();
+           
+           ml_mesh.GetLevelZero(0)->set_node_counts();
        
    
     ml_mesh.GetLevelZero(0)->BuildTopologyAndMeshElemStructures();
     ml_mesh.GetLevelZero(0)->PrintInfo();
 
   ml_mesh.BuildElemType(fe_quad_rule_vec[0].c_str());
-  ml_mesh.AllocateAllLevels();
+  ml_mesh.PrepareAllLevelsForRefinement();
 // // // =================================================================  
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
 // // // =================================================================

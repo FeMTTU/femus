@@ -270,6 +270,7 @@ namespace femus {
       MyVector< short unsigned> _elementMaterial;
       std::vector<unsigned> _materialElementCounter;
 
+      /** For each element, gives the conversion from local node carrier to global node */
       MyMatrix <unsigned> _elementDof;
       MyMatrix <int> _elementNearFace;  ///@todo this is about the elements attached to each face, but it is used for BCs as well
 
