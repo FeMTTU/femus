@@ -286,31 +286,42 @@ int main(int argc, char** args) {
   
     ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     ml_mesh.GetLevelZero(0)->Partition();
-       std::vector < unsigned > partition;
-           ml_mesh.GetLevelZero(0)->PartitionForElements(partition);
-       
+    
+           std::vector < unsigned > elem_partition_from_mesh_file_to_new;
+           ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new);     
            ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
-           
-           std::vector < unsigned > mapping;
-           ml_mesh.GetLevelZero(0)->build_elem_offsets_and_reorder_mesh_elem_quantities(partition, mapping);
+           ml_mesh.GetLevelZero(0)->build_elem_offsets_and_reorder_mesh_elem_quantities(elem_partition_from_mesh_file_to_new);
            ml_mesh.GetLevelZero(0)->set_elem_counts();
+           std::vector<unsigned> ().swap(elem_partition_from_mesh_file_to_new);
 
+// // // =================================================================  
            ml_mesh.GetLevelZero(0)->dofmap_initialize_dof_offsets();
-           ml_mesh.GetLevelZero(0)->dofmap_build_element_based_dof_offsets();
            
-           ml_mesh.GetLevelZero(0)->dofmap_from_mesh_file_to_femus_compute_Node_partition_Node_ownSize_Node_mapping(partition, mapping);
-           std::vector<unsigned> ().swap(partition);
-           ml_mesh.GetLevelZero(0)->reorder_node_quantities(mapping);
-   
-           ml_mesh.GetLevelZero(0)->dofmap_end_building_dof_offset_biquadratic();
-           ml_mesh.GetLevelZero(0)->dofmap_ghost_nodes_search();
-           ml_mesh.GetLevelZero(0)->dofmap_complete_dof_offsets();
+// // // =================================================================  
+           ml_mesh.GetLevelZero(0)->dofmap_build_element_based_dof_offsets();
+           // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
+           //Then for the dofs on the edges how do I do? 
+           // In every subdomain I will have nelems x element nodes + n skeleton dofs in that subdomain 
+           // Then, when it comes to retrieving such dofs for each element, i'll retrieve the interior element nodes + the boundary dofs
+           
+// // // =================================================================  
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new;
+           ml_mesh.GetLevelZero(0)->compute_Node_mapping_Node_ownSize(node_mapping_from_mesh_file_to_new);
+           ml_mesh.GetLevelZero(0)->reorder_node_quantities(node_mapping_from_mesh_file_to_new);
+           
+           ml_mesh.GetLevelZero(0)->dofmap_build_node_based_dof_offsets_biquadratic();
+           
+           ml_mesh.GetLevelZero(0)->ghost_nodes_search();
+           
+           ml_mesh.GetLevelZero(0)->dofmap_build_node_based_dof_offsets_linear_quadratic();
            
            ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
        
    
-           ml_mesh.GetLevelZero(0)->BuildMeshElemStructuresAndTopologyStructures();  //needs dofmap
-           ml_mesh.GetLevelZero(0)->PrintInfo();   //doesn't need dofmap
+           ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();
+           
+           ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
+           ml_mesh.GetLevelZero(0)->PrintInfo();   //needs dofmap
 
   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); //doesn't need dofmap. This seems to be abstract, it can be performed right after the mesh geometric elements are read. It is needed for local MG operators, as well as for Integration of shape functions...
   //The problem is that it also performs global operations such as matrix sparsity pattern, global MG operators... And these also use _dofOffset...
@@ -347,9 +358,9 @@ int main(int argc, char** args) {
   ml_sol_aux->AddSolution(node_based_bdry_flag_name.c_str(), node_flag_fe_fam, node_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
   ml_sol_aux->Initialize(node_based_bdry_flag_name.c_str());
       // ======= COARSE READING and REFINEMENT ========================
-  ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
+  ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
 
-  std::vector<unsigned> ().swap(mapping);
+  std::vector<unsigned> ().swap(node_mapping_from_mesh_file_to_new);
 
   for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
      ml_sol_aux->RefineSolution(l);

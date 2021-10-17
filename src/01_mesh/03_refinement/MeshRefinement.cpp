@@ -408,8 +408,9 @@ namespace femus {
     }
 
     _mesh.FillISvector(partition);
-    partition.resize(0);
+    std::vector<unsigned> ().swap(partition);
 
+    
     elc->SetChildElementDof(_mesh.el);
 
     _mesh.el->DeleteElementNearVertex();

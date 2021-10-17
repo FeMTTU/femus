@@ -248,7 +248,9 @@ public:
 
     void AddBiquadraticNodesNotInMeshFile();
     
-    void BuildMeshElemStructuresAndTopologyStructures();
+    void BuildMeshElemStructures();
+    
+    void BuildTopologyStructures();
     
 private:
     
@@ -287,7 +289,7 @@ public:
     /** FE: DofMap carriers */
     void initialize_elem_offsets();
     
-    void build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
+    void build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition);
     
     void set_elem_counts();
   
@@ -299,18 +301,18 @@ public:
     
     void dofmap_build_element_based_dof_offsets();
     /**  */
-    void dofmap_from_mesh_file_to_femus_compute_Node_partition_Node_ownSize_Node_mapping(std::vector <unsigned> & partition, std::vector< unsigned > & mapping);
+    void compute_Node_mapping_Node_ownSize(std::vector< unsigned > & mapping);
     
     /** Mapping from mesh file to femus */
     std::vector <unsigned>  dofmap_from_mesh_file_to_femus_node_partition_mapping();
     
-    void reorder_node_quantities(std::vector <unsigned> & mapping);
+    void reorder_node_quantities(const std::vector <unsigned> & mapping);
     
-    void dofmap_end_building_dof_offset_biquadratic();
+    void dofmap_build_node_based_dof_offsets_biquadratic();
     
-    void dofmap_ghost_nodes_search();
+    void ghost_nodes_search();
     
-    void dofmap_complete_dof_offsets();
+    void dofmap_build_node_based_dof_offsets_linear_quadratic();
     
     void set_node_counts();
 
