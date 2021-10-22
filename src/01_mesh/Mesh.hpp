@@ -46,6 +46,9 @@ class elem;
 
 class Mesh : public ParallelObject {
 
+// =========================
+// === CONSTR-DESTR =================
+// =========================
 public:
 
     /** Constructor */
@@ -61,9 +64,19 @@ public:
 // === BASIC =================
 // =========================
 public:
-
+    
     /** Print the mesh info for this level */
     void PrintInfo();
+
+    /** MESH: Get the dimension of the problem (1D, 2D, 3D) */
+    const unsigned GetDimension() const {
+      return Mesh::_dimension;
+    }
+
+    /** MESH: Set the dimension of the problem (1D, 2D, 3D) */
+    void SetDimension(const unsigned &dim) {
+      Mesh::_dimension = dim;
+    }
 
     /** Get the dof number for the element -type- */
     unsigned GetTotalNumberOfDofs(const unsigned &type) const {
@@ -83,28 +96,13 @@ public:
     /** Set the number of element */
     void SetNumberOfElements(const unsigned &nelem) {
       _nelem = nelem;
-    };
+    }
 
     /** Get the number of element */
     unsigned GetNumberOfElements() const {
       return _nelem;
     }
 
-    /** MESH: Get the dimension of the problem (1D, 2D, 3D) */
-    const unsigned GetDimension() const {
-      return Mesh::_dimension;
-    }
-
-    /** MESH: Set the dimension of the problem (1D, 2D, 3D) */
-    void SetDimension(const unsigned &dim) {
-      Mesh::_dimension = dim;
-    }
-
-    void SetRefinementCellAndFaceIndices(const unsigned &dim) {
-
-      Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE
-      Mesh::_face_index = pow(2, dim -1u);
-    }
 
 private:
     
@@ -151,8 +149,8 @@ public:
 
     unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = 1) const;
     
-
-
+    void BuildMeshElemStructures();
+    
     /** To be added */
     void BuildElementNearFace();
 
@@ -165,16 +163,12 @@ public:
     elem *el;
     
     /** MESH: Number of elements per processor (incremental count) */
-    vector < unsigned > _elementOffset;
-    
-    
-    
-    
-    
-    
+    std::vector < unsigned > _elementOffset;
+ 
+  
     
 // =========================
-// === MESH, CharacteristicLength =================
+// === BASIC, CharacteristicLength =================
 // =========================
 public:
     
@@ -188,14 +182,13 @@ public:
       return _cLength;
     };
 
+    void ComputeCharacteristicLength();
+    
     
 private:
 
-    /** MESH: Mesh characteristic length */
+    /** Order of the domain size */
     double _cLength;
-    /** MESH: Mesh characteristic length */
-    void ComputeCharacteristicLength();
-    
 
     
 
@@ -243,15 +236,15 @@ public:
                                const double xmin, const double xmax,
                                const double ymin, const double ymax,
                                const double zmin, const double zmax,
-                               const ElemType type, std::vector<bool> &type_elem_flag);
+                               const ElemType type, 
+                               std::vector<bool> &type_elem_flag);
 
 
     void AddBiquadraticNodesNotInMeshFile();
     
-    void BuildMeshElemStructures();
-    
-    void BuildTopologyStructures();
-    
+    /** Boundary names for faces, I think only used for Box mesh so far */
+    std::map<unsigned int, std::string> _boundaryinfo;
+
 private:
     
     
@@ -259,7 +252,6 @@ private:
     static const double _baricentricWeight[N_GEOM_ELS][5][18];
     
     static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
-
     
     
     
@@ -273,94 +265,8 @@ public:
     void PartitionForElements(std::vector < unsigned > & partition);
     
 
-
 // =========================
-// === FE DOFMAP =================
-// =========================
-public:
-    
-    unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
-
-    unsigned GetSolutionDof(const unsigned &i0,const unsigned &i1, const unsigned &ielc, const short unsigned &solType, const Mesh* mshc) const ;
-
-    /** Performs a bisection search to find the processor of the given dof */
-    unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
-
-    /** FE: DofMap carriers */
-    void initialize_elem_offsets();
-    
-    void build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition);
-    
-    void set_elem_counts();
-  
-    
-    /** FE: DofMap: Here is where the element and node global orderings are changed based on the partitioning */
-    void FillISvector(vector < unsigned > &partition);
-
-    void dofmap_initialize_dof_offsets();
-    
-    void dofmap_build_element_based_dof_offsets();
-    /**  */
-    void compute_Node_mapping_Node_ownSize(std::vector< unsigned > & mapping);
-    
-    /** Mapping from mesh file to femus */
-    std::vector <unsigned>  dofmap_from_mesh_file_to_femus_node_partition_mapping();
-    
-    void reorder_node_quantities(const std::vector <unsigned> & mapping);
-    
-    void dofmap_build_node_based_dof_offsets_biquadratic();
-    
-    void ghost_nodes_search();
-    
-    void dofmap_build_node_based_dof_offsets_linear_quadratic();
-    
-    void set_node_counts();
-
-    /** FE: DofMap: Number of owned nodes per FE family and per processor (count, non-incremental) */
-    vector < unsigned > _ownSize[5];
-    /** FE: DofMap: Number of nodes per FE family and per processor (incremental count) */
-    vector < unsigned > _dofOffset[5];
-    /** FE: DofMap: Number of ghost nodes per FE family and per processor (count, non-incremental) */
-    vector< vector < int > > _ghostDofs[5];
-    
-    
-// =========================
-// === FE DOFMAP, REFINEMENT =================
-// =========================
-public:
-    /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
-    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-
-    /**  FE: Get the coarse to the fine projection matrix and use it to restrict only on coarse nodes i.e. projection*/
-    SparseMatrix* GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType);
-
-    /**  FE: Get the coarse to the fine projection matrix*/
-    SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);
-
-private:
-    
-    /** FE: DofMap  k = 0, 1 */
-    std::map < unsigned, unsigned > _ownedGhostMap[2];
-    /** FE: DofMap  k = 0, 1 */ 
-    std::vector < unsigned > _originalOwnSize[2];
-
-    
-    
-    /** FE: The projection matrix between Lagrange FEM at the same level mesh */
-    SparseMatrix* _ProjQitoQj[3][3];
-
-    /** FE: The coarse to the fine projection matrix */
-    SparseMatrix* _ProjCoarseToFine[5];
-
-    /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
-    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-
-    /** FE: Build the coarse to the fine projection matrix */
-    void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
-
-    
-// =========================
-// === MULTIGRID, REFINEMENT =================
+// === REFINEMENT =================
 // =========================
 public:
 
@@ -377,6 +283,12 @@ public:
     /** MESH: Set the coarser mesh from which this mesh is generated */
     void SetCoarseMesh( Mesh* otherCoarseMsh ){
       _coarseMsh = otherCoarseMsh;
+    }
+
+    void SetRefinementCellAndFaceIndices(const unsigned &dim) {
+
+      Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE
+      Mesh::_face_index = pow(2, dim -1u);
     }
 
     /** MESH */
@@ -407,6 +319,136 @@ private:
     static unsigned _face_index;
 
 
+
+
+// =========================
+// === FE DOFMAP =================
+// =========================
+public:
+    
+    /** FE: DofMap carriers */
+    void initialize_elem_offsets();
+    
+    void build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition);
+    
+    void set_elem_counts();
+    
+    void mesh_reorder_node_quantities(const std::vector <unsigned> & mapping);
+    
+    void set_node_counts();
+
+    void deallocate_node_mapping(std::vector < unsigned > & node_mapping) const;
+    
+    unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
+
+    unsigned GetSolutionDof(const unsigned &i0,const unsigned &i1, const unsigned &ielc, const short unsigned &solType, const Mesh* mshc) const;
+
+    /** Performs a bisection search to find the processor of the given dof */
+    unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
+
+    /** FE: DofMap: Here is where the element and node global orderings are changed based on the partitioning */
+    void FillISvector(vector < unsigned > &partition);
+
+    void dofmap_initialize_dof_offsets();
+    
+    void dofmap_build_element_based_dof_offsets();
+    /**  */
+    void dofmap_compute_Node_mapping_Node_ownSize(std::vector< unsigned > & mapping);
+    
+    void dofmap_build_node_based_dof_offsets_biquadratic();
+    
+    void dofmap_node_based_dof_offsets_ghost_nodes_search();
+    
+    void dofmap_build_node_based_dof_offsets_linear_quadratic();
+    
+    void dofmap_clear_ghost_dof_list_other_procs_all_fe();
+    
+    /** FE: DofMap: Number of owned nodes per FE family and per processor (count, non-incremental) */
+    std::vector < unsigned > _ownSize[5];
+    /** FE: DofMap: Number of nodes per FE family and per processor (incremental count) */
+    std::vector < unsigned > _dofOffset[5];
+    /** FE: DofMap: Number of ghost nodes per FE family and per processor (count, non-incremental) */
+    std::vector< std::vector < int > > _ghostDofs[5];
+
+private:
+    
+    /** FE: DofMap  k = 0, 1 */
+    std::map < unsigned, unsigned > _ownedGhostMap[2];
+    /** FE: DofMap  k = 0, 1 */ 
+    std::vector < unsigned > _originalOwnSize[2];
+
+   
+    
+// =========================
+// === FE DOFMAP & REFINEMENT =================
+// =========================
+public:
+    /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
+    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+
+    /**  FE: Get the coarse to the fine projection matrix and use it to restrict only on coarse nodes i.e. projection*/
+    SparseMatrix* GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType);
+
+    /**  FE: Get the coarse to the fine projection matrix*/
+    SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);
+
+private:
+    
+    /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
+    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+
+    /** FE: Build the coarse to the fine projection matrix */
+    void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
+    
+    /** FE: The projection matrix between Lagrange FEM at the same level mesh */
+    SparseMatrix* _ProjQitoQj[3][3];
+
+    /** FE: The coarse to the fine projection matrix */
+    SparseMatrix* _ProjCoarseToFine[5];
+
+    
+    
+    
+// =========================
+// === TOPOLOGY: Coordinates, AMR, SolidMark (a bit of everything) =================
+// =========================
+public:
+    /** MESH: Coordinates and other stuff */
+    Solution* _topology;
+    
+    /** MESH: Topology */
+    const unsigned GetXIndex()          const { return _xIndex; }
+    const unsigned GetYIndex()          const { return _yIndex; }
+    const unsigned GetZIndex()          const { return _zIndex; }
+    const unsigned GetAmrIndex()        const { return _amrIndex; }
+    const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; }
+    
+    void BuildTopologyStructures();
+    
+    void Topology_InitializeAndFillCoordinates();
+    
+    void Topology_InitializeAMR();
+    
+    void Topology_InitializeAndFillSolidNodeFlag();
+    
+    /** FSI: Allocate memory for adding fluid or solid mark */
+    void AllocateAndMarkStructureNode();
+    
+    /** Only for parallel */
+    bool GetSolidMark(const unsigned &inode) const;
+    
+    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType = 2);
+
+
+  
+private:
+    
+    // indices of the topology parallel vectors
+    static const unsigned _xIndex = 0;
+    static const unsigned _yIndex = 1;
+    static const unsigned _zIndex = 2;
+    static const unsigned _amrIndex = 3;
+    static const unsigned _solidMarkIndex = 4;
 
 
 
@@ -448,58 +490,6 @@ private:
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
     /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
-
-    
-
-    
-// =========================
-// === TOPOLOGY: Coordinates, AMR, SolidMark =================
-// =========================
-public:
-    /** MESH: Coordinates and other stuff */
-    Solution* _topology;
-    
-    /** MESH: Topology */
-    const unsigned GetXIndex()          const { return _xIndex; };
-    const unsigned GetYIndex()          const { return _yIndex; };
-    const unsigned GetZIndex()          const { return _zIndex; };
-    const unsigned GetAmrIndex()        const { return _amrIndex; };
-    const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; };
-    
-    void Topology_InitializeAndFillCoordinates();
-    
-    void Topology_InitializeAMR();
-    
-    void Topology_InitializeAndFillSolidNodeFlag();
-    
-    /** FSI: Allocate memory for adding fluid or solid mark */
-    void AllocateAndMarkStructureNode();
-    
-    /** Only for parallel */
-    bool GetSolidMark(const unsigned &inode) const;
-    
-    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType = 2);
-
-
-  
-private:
-    
-    // indices of the topology parallel vectors
-    static const unsigned _xIndex = 0;
-    static const unsigned _yIndex = 1;
-    static const unsigned _zIndex = 2;
-    static const unsigned _amrIndex = 3;
-    static const unsigned _solidMarkIndex = 4;
-
-
-    
-// =========================
-// === BOUNDARY CONDITIONS =================
-// =========================
-public:
-    
-    /** Boundary conditions: @todo should be moved */
-    std::map<unsigned int, std::string> _boundaryinfo;
 
 
     

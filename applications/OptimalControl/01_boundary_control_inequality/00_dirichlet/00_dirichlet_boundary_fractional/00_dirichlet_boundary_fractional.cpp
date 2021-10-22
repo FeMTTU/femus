@@ -288,7 +288,8 @@ int main(int argc, char** args) {
 //     ml_mesh.GetLevelZero(0)->Partition();
     
            std::vector < unsigned > elem_partition_from_mesh_file_to_new;
-           ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new);     
+           ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new); 
+           
            ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
            ml_mesh.GetLevelZero(0)->build_elem_offsets_and_reorder_mesh_elem_quantities(elem_partition_from_mesh_file_to_new);
            ml_mesh.GetLevelZero(0)->set_elem_counts();
@@ -306,30 +307,34 @@ int main(int argc, char** args) {
            
 // // // =================================================================  
            std::vector < unsigned > node_mapping_from_mesh_file_to_new;
-           ml_mesh.GetLevelZero(0)->compute_Node_mapping_Node_ownSize(node_mapping_from_mesh_file_to_new);
-           ml_mesh.GetLevelZero(0)->reorder_node_quantities(node_mapping_from_mesh_file_to_new);
+           ml_mesh.GetLevelZero(0)->dofmap_compute_Node_mapping_Node_ownSize(node_mapping_from_mesh_file_to_new);
+           ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
            
            ml_mesh.GetLevelZero(0)->dofmap_build_node_based_dof_offsets_biquadratic();
            
-           ml_mesh.GetLevelZero(0)->ghost_nodes_search();
+           ml_mesh.GetLevelZero(0)->dofmap_node_based_dof_offsets_ghost_nodes_search();
            
            ml_mesh.GetLevelZero(0)->dofmap_build_node_based_dof_offsets_linear_quadratic();
            
+           ml_mesh.GetLevelZero(0)->dofmap_clear_ghost_dof_list_other_procs_all_fe();
+
            ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
        
    
            ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();
            
            ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
+
+           ml_mesh.GetLevelZero(0)->ComputeCharacteristicLength();//doesn't need dofmap
            ml_mesh.GetLevelZero(0)->PrintInfo();   //needs dofmap
 
   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); //doesn't need dofmap. This seems to be abstract, it can be performed right after the mesh geometric elements are read. It is needed for local MG operators, as well as for Integration of shape functions...
   //The problem is that it also performs global operations such as matrix sparsity pattern, global MG operators... And these also use _dofOffset...
   //The problem is that this class actually has certain functions which have REAL structures instead of only being ABSTRACT FE families!!!
   // So:
-//   Mesh and Multimesh are real and not abstract, and rightly so 
-//   Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
-//   ElemType is not completely abstract as it should be 
+//   - Mesh and Multimesh are real and not abstract, and rightly so 
+//   - Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
+//   - ElemType is not completely abstract as it should be 
   ml_mesh.PrepareAllLevelsForRefinement();       //doesn't need dofmap
 // // // =================================================================  
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
@@ -360,7 +365,7 @@ int main(int argc, char** args) {
       // ======= COARSE READING and REFINEMENT ========================
   ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
 
-  std::vector<unsigned> ().swap(node_mapping_from_mesh_file_to_new);
+  ml_mesh.GetLevelZero(0)->deallocate_node_mapping(node_mapping_from_mesh_file_to_new);
 
   for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
      ml_sol_aux->RefineSolution(l);

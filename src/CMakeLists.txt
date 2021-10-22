@@ -38,7 +38,6 @@ SET(femus_src
 01_mesh/Elem.cpp
 01_mesh/Mesh.cpp
 01_mesh/MultiLevelMesh.cpp
-01_mesh/obj_io.cpp
 02_solution/MultiLevelSolution.cpp
 02_solution/Solution.cpp
 02_solution/01_output/Writer.cpp

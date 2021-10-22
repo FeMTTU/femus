@@ -1,4 +1,4 @@
-/*=========================================================================
+/* =========================================================================
 
  Program: FEMuS
  Module: ElemType
@@ -11,33 +11,28 @@
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  PURPOSE.  See the above copyright notice for more information.
 
-=========================================================================*/
+========================================================================= */
 
-/**
- * The ElemType class
-*/
 
 #ifndef __femus_fe_ElemType_hpp__
 #define __femus_fe_ElemType_hpp__
 
-//----------------------------------------------------------------------------
-// includes :
-//----------------------------------------------------------------------------
 #include "Basis.hpp"
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
 #include "GaussPoints.hpp"
-#include "adept.h"
 #include "FETypeEnum.hpp"
 #include "GeomElTypeEnum.hpp"
+
+#include "adept.h"
 #include <boost/optional.hpp>
 
 
 namespace femus
 {
-    
-    
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -55,6 +50,23 @@ namespace femus
       /** destructor */
       virtual ~elem_type();
 
+//=== Geometry - related ===========================
+    public:
+        
+      /** Retrieve the dimension of the underlying geometric element */
+      inline unsigned  GetDim() const {
+        return _dim;
+      }
+
+//  Geometric Element
+   protected:
+       
+      unsigned _dim; /* Spatial dimension of the geometric element */
+      GeomElType _GeomElemType;  /* Geometric Element flag */
+
+//=== Multigrid - related ===========================
+    public:
+        
       /** To be Added */
       void BuildProlongation(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
                              const unsigned& index_sol, const unsigned& kkindex_sol) const;
@@ -69,7 +81,72 @@ namespace femus
       /** To be Added */
       void BuildProlongation(const Mesh& mymesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
 
+    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
+      static unsigned _refindex;
 
+      
+//=== FE - related (without evaluations) ===========================
+    public:
+      basis* GetBasis() const {
+        return _pt_basis;
+      }
+      
+      /** Retrieve the number of dofs for this element */
+      inline int  GetNDofs() const {
+        return _nc;
+      }
+      
+      
+   protected:
+       
+      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
+      
+      void allocate_and_set_IND(const basis* pt_basis_in);
+      /** Set node coordinates and fine node indices */
+      void set_coordinates_and_KVERT_IND(const basis* pt_basis_in);
+      /** Compute node coordinates in basis object */
+      void set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
+      
+      /* Finite Element Family flag */
+      unsigned _SolType;
+      /* FE basis functions*/
+      basis* _pt_basis;
+      /* [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
+      const int** _IND;
+      
+//  FE with MG
+   protected:
+       
+      /** Compute element prolongation operator */
+      void set_element_prolongation(const basis* linearElement);
+      
+      void allocate_coordinates_and_KVERT_IND();
+      
+      /** Set numbers of coarse and fine dofs for 1 element */
+      void set_coarse_and_fine_elem_data(const basis* pt_basis_in);
+      /* _nc: number of dofs of 1 element;  */
+      int _nc;
+      /* _nf: number of dofs in that element after refinement; */
+      int _nf;
+      /*                          _nlag[0] = number of linear dofs in 1 element;
+                                  _nlag[1] = number of serendipity dofs in 1 element; 
+                                  _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+                                  _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+                                  */
+      int _nlag[4];  
+      const double** _X;       /* [_nf][_dim] coordinates of the _nf nodes in the refined elements */ 
+      const int** _KVERT_IND;  /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
+
+      double** _prol_val;      /* Prolongator value */
+      int** _prol_ind;         /* Prolongator index */
+      double* _mem_prol_val;
+      int* _mem_prol_ind;
+
+
+
+//=== Quadrature - related ===========================
+    public:
+        
       virtual void GetJacobian(const vector < vector < adept::adouble > >& vt, const unsigned& ig, adept::adouble& Weight,
                                vector< vector < adept::adouble > >& jacobianMatrix) const = 0;
 
@@ -77,7 +154,6 @@ namespace femus
                                vector< vector < double > >& jacobianMatrix) const = 0;
 
 
-//==============================
                                              
       /* mixed adept-double */                        
       virtual void Jacobian(const vector < vector < adept::adouble > >& vt, const unsigned& ig, adept::adouble& Weight,
@@ -121,7 +197,7 @@ namespace femus
       virtual double* GetDPhiDZeta(const unsigned& ig) const {
         std::cout << "GetDPhiDZeta does not apply to this element dimension\n";
         abort();
-      };
+      }
 
 //   /** To be Added */
 //   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
@@ -135,45 +211,23 @@ namespace femus
       /** To be Added */
       inline const Gauss GetGaussRule() const {
         return _gauss;
-      };
+      }
 
       /** To be Added */
       inline const Gauss* GetGaussRule_bdry() const {
         return _gauss_bdry;
-      };
+      }
 
       /** To be Added */
       inline double  GetGaussWeight(const unsigned ig) const {
         return _gauss.GetGaussWeightsPointer()[ig];
-      };
+      }
 
       /** To be Added */
       inline unsigned GetGaussPointNumber() const {
         return _gauss.GetGaussPointsNumber();
-      };
-
-      /** Retrieve the number of dofs for this element */
-      inline int  GetNDofs() const {
-        return _nc;
-      };
-
-      /** Retrieve the dimension of the underlying geometric element */
-      inline unsigned  GetDim() const {
-        return _dim;
-      };
+      }
       
-     // member data
-      static unsigned _refindex;
-
-      void GetSparsityPatternSize(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc,
-                                  NumericVector* NNZ_d, NumericVector* NNZ_o,
-                                  const unsigned& index_sol, const unsigned& kkindex_sol) const;
-
-      void GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o, const char el_dofs[]) const;
-
-      void GetSparsityPatternSize(const Mesh& Mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
-
-   
       virtual void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt,
                                                                                          const vector < vector < double> > & vt_bdry, 
                                                                                          const unsigned & jface, 
@@ -181,38 +235,12 @@ namespace femus
                                                                                          vector < double > & phi,
                                                                                          vector < double > & gradphi) const = 0;
 
-      
-      basis* GetBasis() const {
-        return _pt_basis;
-      }
-
-
       virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
+
       
+//  Quadrature
    protected:
-
-      // ====================================
-      // member functions
-      // ====================================
-      
-      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
-
-      /** Set numbers of coarse and fine dofs for 1 element */
-      void set_coarse_and_fine_elem_data(const basis* pt_basis_in);
-      
-      void allocate_and_set_IND(const basis* pt_basis_in);
-
-      void allocate_coordinates_and_KVERT_IND();
-      
-      /** Set node coordinates and fine node indices */
-      void set_coordinates_and_KVERT_IND(const basis* pt_basis_in);
-      
-      /** Compute node coordinates in basis object */
-      void set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
-   
-      /** Compute element prolongation operator */
-      void set_element_prolongation(const basis* linearElement);
-      
+       
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
       virtual void deallocate_shape_at_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
@@ -223,36 +251,10 @@ namespace femus
 
       virtual void deallocate_volume_shape_at_reference_boundary_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
       
-      
-      // ====================================
-      // member data
-      // ====================================
-      
-      unsigned _dim; /* Spatial dimension of the geometric element */
-      int _nc, _nf, _nlag[4];  /* _nc: number of dofs of 1 element;  _nf: number of dofs in that element after refinement; 
-                                  _nlag[0] = number of linear dofs in 1 element;
-                                  _nlag[1] = number of serendipity dofs in 1 element; 
-                                  _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
-                                  _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
-                                  */
-      unsigned _SolType;       /* Finite Element Family flag */
-      GeomElType _GeomElemType;  /* Geometric Element flag */
-      const double** _X;       /* [_nf][_dim] coordinates of the _nf nodes in the refined elements */ 
-      const int** _IND;        /* [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
-      const int** _KVERT_IND;  /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
-
-      double** _prol_val;      /* Prolongator value */
-      int** _prol_ind;         /* Prolongator index */
-      double* _mem_prol_val;
-      int* _mem_prol_ind;
-      
-      basis* _pt_basis;  /* FE basis functions*/
-
-//  Gauss
       const Gauss _gauss;
             Gauss* _gauss_bdry; ///@todo this must become a vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
 
-//  FE values at quadrature points on faces
+//  Quadrature - FE values at quadrature points on faces
       std::vector < std::vector < std::vector < double > > > _phiFace;  //for each face, for each Gauss point on the face, for each shape function of the volume
       std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta)
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta), for each reference direction (xi, eta, zeta) again
@@ -261,6 +263,21 @@ namespace femus
      std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof  
                                                                                 ///@todo unfortunately I cannot put this only once in the templated father, because it is not found...
                                                                                 /// But, if I put it in this templated father, it works... Why?
+      
+//=== Quadrature - related - end ===========================
+      
+//=== Sparsity pattern - related ===========================
+    public:
+
+      void GetSparsityPatternSize(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc,
+                                  NumericVector* NNZ_d, NumericVector* NNZ_o,
+                                  const unsigned& index_sol, const unsigned& kkindex_sol) const;
+
+      void GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o, const char el_dofs[]) const;
+
+      void GetSparsityPatternSize(const Mesh& Mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
+
+ 
         
   };
 
@@ -284,68 +301,102 @@ namespace femus
 
                             
       template <class type>
-      void GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                            vector < vector < type > >& jacobianMatrix) const;
+      void GetJacobian_type(const std::vector < std::vector < type > >& vt, const unsigned& ig, type& Weight,
+                            std::vector < std::vector < type > >& jacobianMatrix) const;
 
-      void GetJacobian(const vector < vector < adept::adouble > >& vt, const unsigned& ig, adept::adouble& Weight,
-                       vector < vector < adept::adouble > >& jacobianMatrix) const {
+      void GetJacobian(const std::vector < std::vector < adept::adouble > >& vt,
+                       const unsigned& ig,
+                       adept::adouble& Weight,
+                       std::vector < std::vector < adept::adouble > >& jacobianMatrix) const {
         GetJacobian_type(vt, ig, Weight, jacobianMatrix);
       }
-      void GetJacobian(const vector < vector < double > >& vt, const unsigned& ig, double& Weight,
-                       vector < vector < double > >& jacobianMatrix) const {
+      void GetJacobian(const std::vector < std::vector < double > >& vt,
+                       const unsigned& ig,
+                       double& Weight,
+                       std::vector < std::vector < double > >& jacobianMatrix) const {
         GetJacobian_type(vt, ig, Weight, jacobianMatrix);
       }
       
 
       /* all type minus a double */
       template <class type>
-      void Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                         vector < double >& phi, vector < type >& gradphi,
-                         boost::optional < vector < type > & > nablaphi) const;
+      void Jacobian_type(const std::vector < std::vector < type > >& vt,
+                         const unsigned& ig, 
+                         type& Weight,
+                         std::vector < double >& phi, 
+                         std::vector < type >& gradphi,
+                         boost::optional < std::vector < type > & > nablaphi) const;
 
       /* mixed adept - double */                        
-      void Jacobian(const vector < vector < adept::adouble > >& vt, const unsigned& ig, adept::adouble& Weight,
-                    vector < double >& phi, vector < adept::adouble >& gradphi,
-                    boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const {
+      void Jacobian(const std::vector < std::vector < adept::adouble > >& vt,
+                    const unsigned& ig, 
+                    adept::adouble& Weight,
+                    std::vector < double >& phi,
+                    std::vector < adept::adouble >& gradphi,
+                    boost::optional < std::vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
       
       /* all double */                        
-      void Jacobian(const vector < vector < double > >& vt, const unsigned& ig, double& Weight,
-                    vector < double >& phi, vector < double >& gradphi,
-                    boost::optional < vector < double > & > nablaphi = boost::none) const {
+      void Jacobian(const std::vector < std::vector < double > >& vt, 
+                    const unsigned& ig, 
+                    double& Weight,
+                    std::vector < double >& phi,
+                    std::vector < double >& gradphi,
+                    boost::optional < std::vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
 
       /* Gauss-coordinate based */                        
       template <class type>
-      void Jacobian_type(const vector < vector < type > >& vt, const vector < double >& xi, type& Weight,
-                         vector < double >& phi, vector < type >& gradphi,
-                         boost::optional < vector < type > & > nablaphi) const;
+      void Jacobian_type(const std::vector < std::vector < type > >& vt, 
+                         const std::vector < double >& xi,
+                         type& Weight,
+                         std::vector < double >& phi, 
+                         std::vector < type >& gradphi,
+                         boost::optional < std::vector < type > & > nablaphi) const;
 
-      void Jacobian(const vector < vector < adept::adouble > >& vt, const vector < double >& xi, adept::adouble& Weight,
-                    vector < double >& phi, vector < adept::adouble >& gradphi,
-                    boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const {
+      void Jacobian(const std::vector < std::vector < adept::adouble > >& vt, 
+                    const std::vector < double >& xi, 
+                    adept::adouble& Weight,
+                    std::vector < double >& phi, 
+                    std::vector < adept::adouble >& gradphi,
+                    boost::optional < std::vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
-      void Jacobian(const vector < vector < double > >& vt, const vector < double >& xi, double& Weight,
-                    vector < double >& phi, vector < double >& gradphi,
-                    boost::optional < vector < double > & > nablaphi = boost::none) const {
+      void Jacobian(const std::vector < std::vector < double > >& vt, 
+                    const std::vector < double >& xi, 
+                    double& Weight,
+                    std::vector < double >& phi, 
+                    std::vector < double >& gradphi,
+                    boost::optional < std::vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
 
 
       template <class type>
-      void JacobianSur_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                            vector < double >& phi, vector < type >& gradphi, vector < type >& normal) const;
+      void JacobianSur_type(const std::vector < std::vector < type > >& vt,
+                            const unsigned& ig,
+                            type& Weight,
+                            std::vector < double >& phi, 
+                            std::vector < type >& gradphi, 
+                            std::vector < type >& normal) const;
 
-      void JacobianSur(const vector < vector < adept::adouble > >& vt, const unsigned& ig, adept::adouble& Weight,
-                       vector < double >& phi, vector < adept::adouble >& gradphi, vector < adept::adouble >& normal) const {
+      void JacobianSur(const std::vector < std::vector < adept::adouble > >& vt, 
+                       const unsigned& ig,
+                       adept::adouble& Weight,
+                       std::vector < double >& phi,
+                       std::vector < adept::adouble >& gradphi,
+                       std::vector < adept::adouble >& normal) const {
         JacobianSur_type(vt, ig, Weight, phi, gradphi, normal);
       }
 
-      void JacobianSur(const vector < vector < double > >& vt, const unsigned& ig, double& Weight,
-                       vector < double >& phi, vector < double >& gradphi, vector < double >& normal) const {
+      void JacobianSur(const std::vector < std::vector < double > >& vt,
+                       const unsigned& ig,
+                       double& Weight,
+                       std::vector < double >& phi, 
+                       std::vector < double >& gradphi, 
+                       std::vector < double >& normal) const {
         JacobianSur_type(vt, ig, Weight, phi, gradphi, normal);
       }
 
@@ -385,7 +436,12 @@ namespace femus
 
       void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
-      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
+      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const std::vector < std::vector < double > > &vt,
+                                                                                 const std::vector < std::vector < double> > & vt_bdry,  
+                                                                                 const unsigned& jface, 
+                                                                                 const unsigned &ig,
+                                                                                 std::vector < double > &phi,
+                                                                                 std::vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); }
             
       // ====================================
       // member data

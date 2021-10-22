@@ -227,6 +227,8 @@ namespace femus {
     
     BuildTopologyStructures();
 
+    ComputeCharacteristicLength();
+
     PrintInfo();
 
   }
@@ -253,7 +255,6 @@ namespace femus {
   void Mesh::BuildTopologyStructures() {
       
 
-    ComputeCharacteristicLength();
     Topology_InitializeAndFillCoordinates();
     Topology_InitializeAMR();
     Topology_InitializeAndFillSolidNodeFlag();
@@ -465,44 +466,10 @@ namespace femus {
   }
 
   
-   std::vector <unsigned>  Mesh::dofmap_from_mesh_file_to_femus_node_partition_mapping() {
-  
-     std::vector <unsigned> partition(GetNumberOfNodes(), _nprocs);
-  
-     std::vector <unsigned> mapping(GetNumberOfNodes(), 0.);
-
-
-    unsigned counter = 0;
-
-    for(int isdom = 0; isdom < _nprocs; isdom++) {
-      for(unsigned k = 0; k < 3; k++) {
-        for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-          unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
-          unsigned nodeEnd = el->GetElementDofNumber(iel, k);
-
-          for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-            unsigned ii = el->GetElementDofIndex(iel, inode);
-
-            if(partition[ii] > isdom) {
-              partition[ii] = isdom;
-              mapping[ii] = counter;
-              counter++;
-
-            }
-          }
-        }
-      }
-    }
-  
-    std::vector<unsigned> ().swap(partition);
-      
-      return mapping;
-      
-  }
-  
+ 
   
 
-  void Mesh::compute_Node_mapping_Node_ownSize(std::vector <unsigned> & mapping) {
+  void Mesh::dofmap_compute_Node_mapping_Node_ownSize(std::vector <unsigned> & mapping) {
   // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
       
 
@@ -713,7 +680,7 @@ namespace femus {
    }
 
 
-   void Mesh::reorder_node_quantities(const std::vector <unsigned> & mapping)  {
+   void Mesh::mesh_reorder_node_quantities(const std::vector <unsigned> & mapping)  {
        
      
     el->ReorderMeshNodes(mapping);
@@ -736,7 +703,7 @@ namespace femus {
    }
    
 
-    void Mesh::ghost_nodes_search() {
+    void Mesh::dofmap_node_based_dof_offsets_ghost_nodes_search() {
  
     for(int k = 0; k < 3; k++) {
       _ghostDofs[k].resize(_nprocs);
@@ -819,9 +786,13 @@ namespace femus {
     }
 
     //END completing for k = 0, 1
+    
 
-
-
+  }
+  
+  
+  void Mesh::dofmap_clear_ghost_dof_list_other_procs_all_fe() {
+      
     //delete ghost dof list all but _iproc
     for(int isdom = 0; isdom < _nprocs; isdom++) {
       if(isdom != _iproc)
@@ -829,7 +800,7 @@ namespace femus {
           _ghostDofs[k][isdom].resize(0);
         }
     }
-    
+      
 
   }
   
@@ -847,7 +818,14 @@ namespace femus {
       
     el->SetElementOffsets(_elementOffset, _iproc, _nprocs);
 
-  }  
+  }
+  
+  
+  void Mesh::deallocate_node_mapping(std::vector < unsigned > & node_mapping) const {
+      
+    std::vector<unsigned> ().swap(node_mapping);    //     node_mapping.resize(0);  //resize DOES NOT FREE memory!!!
+      
+  }
   
   
  /**
@@ -866,25 +844,28 @@ namespace femus {
     dofmap_build_element_based_dof_offsets();  
    
     //BEGIN building for k = 0,1,2
-    std::vector < unsigned > mapping;
-    compute_Node_mapping_Node_ownSize(mapping);
+    std::vector < unsigned > node_mapping;
+    dofmap_compute_Node_mapping_Node_ownSize(node_mapping);
+    mesh_reorder_node_quantities(node_mapping);
+    
+    deallocate_node_mapping(node_mapping);
+
+    
     dofmap_build_node_based_dof_offsets_biquadratic();
     //END building for k = 2, but incomplete for k = 0, 1
     
-    reorder_node_quantities(mapping);
    
-    std::vector<unsigned> ().swap(mapping);    //     mapping.resize(0);  //resize DOES NOT FREE memory!!!
-
 
     //BEGIN ghost nodes search k = 0, 1, 2
-    ghost_nodes_search();
+    dofmap_node_based_dof_offsets_ghost_nodes_search();
     //END ghost nodes search k = 0, 1, 2
     //BEGIN completing for k = 0,1
     dofmap_build_node_based_dof_offsets_linear_quadratic();
     //END completing for k = 0,1
     
+    dofmap_clear_ghost_dof_list_other_procs_all_fe();
     
-    set_node_counts();
+    set_node_counts(); //redundant by now
     
   }
 
