@@ -151,8 +151,9 @@ private:
     unsigned short _gridn0;
     unsigned short _gridn;
 
-    /** Array of meshes,  dimension: number of levels */
+    /** Array of meshes, with all levels from the beginning of mesh generation */
     std::vector <Mesh*> _level0;
+    /** Array of meshes, only the ones that survive after EraseCoarseLevels */
     std::vector <Mesh*> _level;
 
     

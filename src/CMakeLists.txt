@@ -83,8 +83,6 @@ algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 algebra/SlepcSVD.cpp
 fe/ElemType.cpp
-fe/ElemType_template.cpp
-fe/ElemType_template_base.cpp
 fe/Hexaedron.cpp
 fe/Line.cpp
 fe/Quadrilateral.cpp
@@ -92,6 +90,8 @@ fe/Tetrahedral.cpp
 fe/Triangle.cpp
 fe/Wedge.cpp
 fe_quadrature/GaussPoints.cpp
+fe_quadrature/ElemType_template.cpp
+fe_quadrature/ElemType_template_base.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp

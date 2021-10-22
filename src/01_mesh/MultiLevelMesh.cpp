@@ -174,7 +174,6 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();
-    elem_type::_refindex=refindex;
 
     _gridn=_gridn0;
     _level.resize(_gridn);
@@ -292,13 +291,14 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn,
     _level0.resize(_gridn0);
 
     //totally refined meshes
-    for (unsigned i=1; i<igridr; i++) {
+    // First, refine all meshes totally
+    for (unsigned i = 1; i < igridr; i++) {
       MeshRefinement meshcoarser(*_level0[i-1u]);
       meshcoarser.FlagAllElementsToBeRefined();
 
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);
-      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+      meshfiner.RefineMesh(i, _level0[i-1], _finiteElement);
     }
 
     //partially refined meshes
@@ -311,7 +311,8 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn,
       Mesh::_IsUserRefinementFunctionDefined = true;
     }
 
-    for (unsigned i=igridr; i<_gridn0; i++) {
+    //When one provides a refinement flag, igridn must be LARGER THAN igridr... Otherwise it's the other way around
+    for (unsigned i = igridr; i < _gridn0; i++) {
         
       if(Mesh::_IsUserRefinementFunctionDefined == false) {
         cout << "Set Refinement Region flag is not defined! " << endl;
@@ -330,10 +331,9 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn,
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();
-    elem_type::_refindex=refindex;
 
 
-    _gridn=_gridn0;
+    _gridn = _gridn0;
     _level.resize(_gridn);
     for(int i=0; i<_gridn; i++)
         _level[i]=_level0[i];

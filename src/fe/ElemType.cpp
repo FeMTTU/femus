@@ -33,7 +33,6 @@ using std::endl;
 
 namespace femus {
 
-  unsigned elem_type::_refindex = 1;
 
 //   Constructor
   elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) : _gauss(geom_elem, order_gauss)
@@ -69,13 +68,13 @@ namespace femus {
            _gauss_bdry = new  Gauss("quad", order_gauss);
        }
       else if ( !strcmp(geom_elem, "tet") ) {
-           _gauss_bdry = new  Gauss("tri",order_gauss);
+           _gauss_bdry = new  Gauss("tri", order_gauss);
        }
       else if ( !strcmp(geom_elem, "line") ) {
-           _gauss_bdry = new  Gauss("point",order_gauss);
+           _gauss_bdry = new  Gauss("point", order_gauss);
        }
       else if ( !strcmp(geom_elem, "wedge") ) {
-           _gauss_bdry = new  Gauss("quad",order_gauss); ///@todo this is wrong, we have to do a VECTOR of quadratures
+           _gauss_bdry = new  Gauss("quad", order_gauss); ///@todo this is wrong, we have to do a VECTOR of quadratures
        }
       else {
         cout << " Boundary gauss points for " << geom_elem << " is not implemented yet" << endl;
@@ -89,9 +88,10 @@ namespace femus {
   elem_type::~elem_type()
   {
 
+    delete [] _IND;
+    
     delete [] _X;
     delete [] _KVERT_IND;
-    delete [] _IND;
 
     delete [] _prol_val;
     delete [] _prol_ind;
@@ -420,7 +420,7 @@ namespace femus {
 //END prolungator for solution printing
 //----------------------------------------------------------------------------------------------------
 
-  void elem_type::allocate_and_set_IND(const basis* pt_basis_in)  {
+  void elem_type::allocate_and_set_coarse_node_indices(const basis* pt_basis_in)  {
       
     _IND = new const int * [_nc];
 
@@ -431,7 +431,7 @@ namespace femus {
   }
   
   
-  void elem_type::allocate_coordinates_and_KVERT_IND()  {
+  void elem_type::allocate_fine_coordinates_and_KVERT_IND()  {
       
     _X         = new const double * [_nf];
     _KVERT_IND = new const int * [_nf];
@@ -439,7 +439,7 @@ namespace femus {
   }
   
   
-  void elem_type::set_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
+  void elem_type::set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
        
       for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = pt_basis_in->GetKVERT_IND(i);
@@ -449,7 +449,7 @@ namespace femus {
   } 
   
   
-  void elem_type::set_coarse_and_fine_elem_data(const basis* pt_basis_in)  {
+  void elem_type::set_coarse_and_fine_num_dofs(const basis* pt_basis_in)  {
   
     _nc 	 = pt_basis_in->_nc;
     _nf 	 = pt_basis_in->_nf;
@@ -459,15 +459,15 @@ namespace femus {
     _nlag[3] = pt_basis_in->_nlag3;
 
     
-    allocate_and_set_IND(pt_basis_in);
+    allocate_and_set_coarse_node_indices(pt_basis_in);
 
-    allocate_coordinates_and_KVERT_IND();
+    allocate_fine_coordinates_and_KVERT_IND();
     
   }
   
   
   
-   void elem_type::set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
+   void elem_type::set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
        
      if(_SolType <= 2) {
          
@@ -1074,16 +1074,16 @@ if( _SolType >= 3 && _SolType < 5 ) {
     const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
     // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
+    set_coarse_and_fine_num_dofs(_pt_basis);
 
     //***********************************************************
     // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis, linearElement);
+    set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
 
-    set_coordinates_and_KVERT_IND(_pt_basis);
+    set_fine_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
 
-    // local projection matrix evaluation
+    // local prolongation matrix evaluation
     set_element_prolongation(linearElement);
 
     delete linearElement;
@@ -1097,11 +1097,6 @@ if( _SolType >= 3 && _SolType < 5 ) {
     // boundary
     allocate_volume_shape_at_reference_boundary_quadrature_points();
 
-    
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-//=====================
 
   }
   
@@ -1275,16 +1270,16 @@ if( _SolType >= 3 && _SolType < 5 ) {
     const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
     // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
+    set_coarse_and_fine_num_dofs(_pt_basis);
 
     //***********************************************************
     // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis, linearElement);
+    set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
 
-    set_coordinates_and_KVERT_IND(_pt_basis);
+    set_fine_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
 
-    // local projection matrix evaluation
+    // local prolongation matrix evaluation
     set_element_prolongation(linearElement);
 
     delete linearElement;
@@ -1298,12 +1293,6 @@ if( _SolType >= 3 && _SolType < 5 ) {
     // boundary
     allocate_volume_shape_at_reference_boundary_quadrature_points();
     
-
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
-//=====================
 
   }
   
@@ -1318,16 +1307,16 @@ if( _SolType >= 3 && _SolType < 5 ) {
     const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
     // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
+    set_coarse_and_fine_num_dofs(_pt_basis);
 
     //***********************************************************
     // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis, linearElement);
+    set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
 
-    set_coordinates_and_KVERT_IND(_pt_basis);
+    set_fine_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
 
-    // local projection matrix evaluation
+    // local prolongation matrix evaluation
     set_element_prolongation(linearElement);
 
     delete linearElement;
@@ -1341,14 +1330,6 @@ if( _SolType >= 3 && _SolType < 5 ) {
     // boundary
     allocate_volume_shape_at_reference_boundary_quadrature_points();
  
-
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
-    _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
-//=====================
-
   }
 
   
