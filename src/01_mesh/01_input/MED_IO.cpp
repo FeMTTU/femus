@@ -138,7 +138,12 @@ namespace femus {
   
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_domain_groups_flag, const bool read_boundary_groups_flag) {
+  void MED_IO::read(const std::string& name, 
+                    vector < vector < double> >& coords, 
+                    const double Lref, 
+                    std::vector<bool>& type_elem_flag, 
+                    const bool read_domain_groups_flag, 
+                    const bool read_boundary_groups_flag) {
 
 
     Mesh& mesh = GetMesh();
@@ -885,6 +890,7 @@ namespace femus {
 
 
       for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
+          
         mesh.el->SetElementGroup(iel, 1);
         unsigned nve = el_nodes_per_dimension;  /// @todo this is only one element type
         if(nve == 27) {
@@ -921,11 +927,13 @@ namespace femus {
           std::cout << "Error! Use a second order discretization" << std::endl;
           abort();
         }
+        
         for(unsigned i = 0; i < nve; i++) {
           unsigned inode = MEDToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
           const unsigned dof_value = conn_map[iel + i * n_elems_per_dimension ] - 1u;
           mesh.el->SetElementDofIndex(iel, inode, dof_value);  //MED connectivity is stored on a per-node basis, not a per-element basis
         }
+        
       }
 
     

@@ -42,6 +42,9 @@ namespace femus
   class elem_type
   {
 
+// =========================================
+// ===  Constr/Destr =================
+// =========================================
     public:
 
       /** constructor that receives Geometric Element and Gauss info */
@@ -50,7 +53,9 @@ namespace femus
       /** destructor */
       virtual ~elem_type();
 
-//=== Geometry - related ===========================
+// =========================================
+// ===  Geometry - related =================
+// =========================================
     public:
         
       /** Retrieve the dimension of the underlying geometric element */
@@ -58,35 +63,25 @@ namespace femus
         return _dim;
       }
 
-//  Geometric Element
    protected:
        
       unsigned _dim; /* Spatial dimension of the geometric element */
       GeomElType _GeomElemType;  /* Geometric Element flag */
 
-//=== Multigrid - related ===========================
+// =========================================
+// ===  Multigrid - related =================
+// =========================================
     public:
         
-      /** To be Added */
-      void BuildProlongation(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
-                             const unsigned& index_sol, const unsigned& kkindex_sol) const;
-
-      /** To be Added */
-      void BuildRestrictionTranspose(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
-                                     const unsigned& index_sol, const unsigned& kkindex_sol,
-                                     const unsigned& index_pair_sol, const unsigned& kkindex_pair_sol) const;
-
-      /** To be Added */
-      void BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc, SparseMatrix* Projmat, const char el_dofs[]) const;
-      /** To be Added */
-      void BuildProlongation(const Mesh& mymesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
-
-    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
+    /** @todo I think it is unused MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
       static unsigned _refindex;
 
       
-//=== FE - related (without evaluations) ===========================
+// =========================================
+// ===   FE - related (without evaluations) =================
+// =========================================
     public:
+        
       basis* GetBasis() const {
         return _pt_basis;
       }
@@ -113,8 +108,12 @@ namespace femus
       basis* _pt_basis;
       /* [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
       const int** _IND;
+
+
       
-//  FE with MG
+// =========================================
+// ===  FE with MG =================
+// =========================================
    protected:
        
       /** Compute element prolongation operator */
@@ -144,8 +143,10 @@ namespace femus
 
 
 
-//=== Quadrature - related ===========================
-    public:
+// =========================================
+// ===  Quadrature =================
+// =========================================
+  public:
         
       virtual void GetJacobian(const vector < vector < adept::adouble > >& vt, const unsigned& ig, adept::adouble& Weight,
                                vector< vector < adept::adouble > >& jacobianMatrix) const = 0;
@@ -238,8 +239,8 @@ namespace femus
       virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
 
       
-//  Quadrature
    protected:
+       
        
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
@@ -264,9 +265,10 @@ namespace femus
                                                                                 ///@todo unfortunately I cannot put this only once in the templated father, because it is not found...
                                                                                 /// But, if I put it in this templated father, it works... Why?
       
-//=== Quadrature - related - end ===========================
       
-//=== Sparsity pattern - related ===========================
+// =========================================
+// ===  Equation, Sparsity pattern =================
+// =========================================
     public:
 
       void GetSparsityPatternSize(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc,
@@ -276,6 +278,25 @@ namespace femus
       void GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o, const char el_dofs[]) const;
 
       void GetSparsityPatternSize(const Mesh& Mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
+
+// =========================================
+// ===  Equation, Multigrid =================
+// =========================================
+    public:
+        
+      /** To be Added */
+      void BuildProlongation(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
+                             const unsigned& index_sol, const unsigned& kkindex_sol) const;
+
+      /** To be Added */
+      void BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc, SparseMatrix* Projmat, const char el_dofs[]) const;
+      /** To be Added */
+      void BuildProlongation(const Mesh& mymesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
+
+      /** To be Added */
+      void BuildRestrictionTranspose(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
+                                     const unsigned& index_sol, const unsigned& kkindex_sol,
+                                     const unsigned& index_pair_sol, const unsigned& kkindex_pair_sol) const;
 
  
         
