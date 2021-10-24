@@ -89,9 +89,9 @@ fe/Quadrilateral.cpp
 fe/Tetrahedral.cpp
 fe/Triangle.cpp
 fe/Wedge.cpp
-fe_quadrature/GaussPoints.cpp
 fe_quadrature/ElemType_template.cpp
 fe_quadrature/ElemType_template_base.cpp
+geom_quadrature/GaussPoints.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp
