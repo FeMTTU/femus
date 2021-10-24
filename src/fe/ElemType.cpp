@@ -1169,12 +1169,12 @@ if( _SolType >= 3 && _SolType < 5 ) {
     
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
-    _phi_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_vol_at_bdry  = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_memory_vol_at_bdry[i * _nc];
-      _dphidxi_vol_at_bdry[i]  = &_dphidxi_memory_vol_at_bdry[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
+      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
      }
      
 }
@@ -1182,10 +1182,10 @@ if( _SolType >= 3 && _SolType < 5 ) {
   void elem_type_1D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
       
         delete [] _phi_vol_at_bdry;
-        delete [] _phi_memory_vol_at_bdry;
+        delete [] _phi_vol_at_bdry_memory;
         
         delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_memory_vol_at_bdry;
+        delete [] _dphidxi_vol_at_bdry_memory;
 
 }
   
@@ -1197,16 +1197,16 @@ if( _SolType >= 3 && _SolType < 5 ) {
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
     _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidzeta_vol_at_bdry = new double*[n_gauss_bdry];
-    _phi_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_vol_at_bdry  = new double [n_gauss_bdry * _nc];
-    _dphideta_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidzeta_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
+    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidzeta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_memory_vol_at_bdry[i * _nc];
-      _dphidxi_vol_at_bdry[i]   = & _dphidxi_memory_vol_at_bdry[i * _nc];
-      _dphideta_vol_at_bdry[i]  = & _dphideta_memory_vol_at_bdry[i * _nc];
-      _dphidzeta_vol_at_bdry[i] = & _dphidzeta_memory_vol_at_bdry[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
+      _dphidxi_vol_at_bdry[i]   = & _dphidxi_vol_at_bdry_memory[i * _nc];
+      _dphideta_vol_at_bdry[i]  = & _dphideta_vol_at_bdry_memory[i * _nc];
+      _dphidzeta_vol_at_bdry[i] = & _dphidzeta_vol_at_bdry_memory[i * _nc];
      }
       
 }
@@ -1215,14 +1215,14 @@ if( _SolType >= 3 && _SolType < 5 ) {
   void elem_type_3D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
       
         delete [] _phi_vol_at_bdry;
-        delete [] _phi_memory_vol_at_bdry;
+        delete [] _phi_vol_at_bdry_memory;
         
         delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_memory_vol_at_bdry;
+        delete [] _dphidxi_vol_at_bdry_memory;
         delete [] _dphideta_vol_at_bdry;
-        delete [] _dphideta_memory_vol_at_bdry;
+        delete [] _dphideta_vol_at_bdry_memory;
         delete [] _dphidzeta_vol_at_bdry;
-        delete [] _dphidzeta_memory_vol_at_bdry;
+        delete [] _dphidzeta_vol_at_bdry_memory;
       
 }
   
@@ -1234,14 +1234,14 @@ if( _SolType >= 3 && _SolType < 5 ) {
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
     _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
-    _phi_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_vol_at_bdry  = new double [n_gauss_bdry * _nc];
-    _dphideta_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
+    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_memory_vol_at_bdry[i * _nc];
-      _dphidxi_vol_at_bdry[i]  = &_dphidxi_memory_vol_at_bdry[i * _nc];
-      _dphideta_vol_at_bdry[i] = &_dphideta_memory_vol_at_bdry[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
+      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
+      _dphideta_vol_at_bdry[i] = &_dphideta_vol_at_bdry_memory[i * _nc];
      }
      
     }
@@ -1250,12 +1250,12 @@ if( _SolType >= 3 && _SolType < 5 ) {
   void elem_type_2D::deallocate_volume_shape_at_reference_boundary_quadrature_points() {
       
         delete [] _phi_vol_at_bdry;
-        delete [] _phi_memory_vol_at_bdry;
+        delete [] _phi_vol_at_bdry_memory;
         
         delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_memory_vol_at_bdry;
+        delete [] _dphidxi_vol_at_bdry_memory;
         delete [] _dphideta_vol_at_bdry;
-        delete [] _dphideta_memory_vol_at_bdry;
+        delete [] _dphideta_vol_at_bdry_memory;
       
   }
   

@@ -71,7 +71,7 @@ namespace femus
 
       
 // =========================================
-// ===   FE - related (without evaluations) =================
+// ===   FE (without evaluations) =================
 // =========================================
     public:
         
@@ -79,29 +79,18 @@ namespace femus
         return _pt_basis;
       }
       
-      /** Retrieve the number of dofs for this element */
-      inline int  GetNDofs() const {
-        return _nc;
-      }
-      
       
    protected:
        
-      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
-      
-      void allocate_and_set_coarse_node_indices(const basis* pt_basis_in);
-      
-      /** Compute node coordinates in basis object */
-      void set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
-      
-      /** Set fine node coordinates and fine node indices */
-      void set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in);
-      
       /** Finite Element Family flag */
       unsigned _SolType;
       
       /** FE basis functions*/
       basis* _pt_basis;
+      
+      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
+      
+      void allocate_and_set_coarse_node_indices(const basis* pt_basis_in);
       
       /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
       const int** _IND;
@@ -111,12 +100,25 @@ namespace femus
 // =========================================
 // ===  FE with MG =================
 // =========================================
+    public:
+        
+      /** Retrieve the number of dofs for this element */
+      inline int  GetNDofs() const {
+        return _nc;
+      }
+      
    protected:
        
       /** Compute element prolongation operator */
       void set_element_prolongation(const basis* linearElement);
       
       void allocate_fine_coordinates_and_KVERT_IND();
+      
+      /** Compute node coordinates in basis object */
+      void set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
+      
+      /** Set fine node coordinates and fine node indices */
+      void set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in);
       
       /** Set numbers of coarse and fine dofs for 1 element */
       void set_coarse_and_fine_num_dofs(const basis* pt_basis_in);
@@ -143,10 +145,13 @@ namespace femus
       /** Prolongator value */
       double** _prol_val;
       
+      /** Prolongator value, array for contiguous memory */
+      double* _mem_prol_val;
+      
       /** Prolongator index */
       int** _prol_ind;
-      
-      double* _mem_prol_val;
+ 
+      /** Prolongator index, array for contiguous memory */
       int* _mem_prol_ind;
 
 
@@ -380,6 +385,9 @@ namespace femus
       
 
                             
+// =========================================
+// ===  Quadrature =================
+// =========================================
       template <class type>
       void GetJacobian_type(const std::vector < std::vector < type > >& vt, const unsigned& ig, type& Weight,
                             std::vector < std::vector < type > >& jacobianMatrix) const;
@@ -499,9 +507,6 @@ namespace femus
       
        
       void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
-          
-      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
-      
       
       void allocate_and_fill_shape_at_quadrature_points();
       
@@ -525,19 +530,26 @@ namespace femus
       // ====================================
       
       double** _phi;
-      double* _phi_memory;
+      double*  _phi_memory;
       double** _dphidxi;
-      double* _dphidxi_memory;
+      double*  _dphidxi_memory;
 
       double** _d2phidxi2;
-      double* _d2phidxi2_memory;
+      double*  _d2phidxi2_memory;
 
 
         // values at boundary gauss points
       double ** _phi_vol_at_bdry;
-      double * _phi_memory_vol_at_bdry;
+      double *  _phi_vol_at_bdry_memory;
       double ** _dphidxi_vol_at_bdry;
-      double * _dphidxi_memory_vol_at_bdry;
+      double *  _dphidxi_vol_at_bdry_memory;
+      
+// =========================================
+// ===   FE (without evaluations) =================
+// =========================================
+  protected:
+      
+      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
       
   };
 
@@ -559,6 +571,18 @@ namespace femus
        }
 
       
+// =========================================
+// ===   FE (without evaluations) =================
+// =========================================
+    protected:
+      
+    const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+
+// =========================================
+// ===   Quadrature =================
+// =========================================
+    public:
+        
       template <class type>
       void GetJacobian_type(const std::vector < std::vector < type > >& vt, const unsigned& ig, type& Weight,
                             std::vector < std::vector < type > >& jacobianMatrix) const;
@@ -647,11 +671,9 @@ namespace femus
 
      
   protected:
-      
+
      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const;
                                            
-     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
-     
      void allocate_and_fill_shape_at_quadrature_points();
       
      void deallocate_shape_at_quadrature_points();
@@ -671,28 +693,27 @@ namespace femus
       // ====================================
       
       double** _phi;
-      double* _phi_memory;
+      double*  _phi_memory;
       double** _dphidxi;
-      double* _dphidxi_memory;
+      double*  _dphidxi_memory;
       double** _dphideta;
-      double* _dphideta_memory;
+      double*  _dphideta_memory;
 
       double** _d2phidxi2;
-      double* _d2phidxi2_memory;
+      double*  _d2phidxi2_memory;
       double** _d2phideta2;
-      double* _d2phideta2_memory;
+      double*  _d2phideta2_memory;
 
       double** _d2phidxideta;
-      double* _d2phidxideta_memory;
+      double*  _d2phidxideta_memory;
 
       // values at boundary gauss points ///@todo probably remove
       double ** _phi_vol_at_bdry;
-      double *  _phi_memory_vol_at_bdry;
+      double *  _phi_vol_at_bdry_memory;
       double ** _dphidxi_vol_at_bdry;
-      double *  _dphidxi_memory_vol_at_bdry;
+      double *  _dphidxi_vol_at_bdry_memory;
       double ** _dphideta_vol_at_bdry;
-      double *  _dphideta_memory_vol_at_bdry;
-
+      double *  _dphideta_vol_at_bdry_memory;
 
   };
   
@@ -715,7 +736,18 @@ namespace femus
           deallocate_volume_shape_at_reference_boundary_quadrature_points();
       }
       
+// =========================================
+// ===   FE (without evaluations) =================
+// =========================================
+    protected:
+     
+     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+     
       
+// =========================================
+// ===   Quadrature =================
+// =========================================
+    public:
      
       template <class type>
       void GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
@@ -806,8 +838,6 @@ namespace femus
 
      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
      
-     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
-     
      void allocate_and_fill_shape_at_quadrature_points();
 
      void deallocate_shape_at_quadrature_points();
@@ -827,41 +857,38 @@ namespace femus
       // ====================================
         
       double** _phi;
-      double* _phi_memory;
+      double*  _phi_memory;
       double** _dphidxi;
-      double* _dphidxi_memory;
+      double*  _dphidxi_memory;
       double** _dphideta;
-      double* _dphideta_memory;
+      double*  _dphideta_memory;
       double** _dphidzeta;
-      double* _dphidzeta_memory;
+      double*  _dphidzeta_memory;
 
       double** _d2phidxi2;
-      double* _d2phidxi2_memory;
+      double*  _d2phidxi2_memory;
       double** _d2phideta2;
-      double* _d2phideta2_memory;
+      double*  _d2phideta2_memory;
       double** _d2phidzeta2;
-      double* _d2phidzeta2_memory;
+      double*  _d2phidzeta2_memory;
 
       double** _d2phidxideta;
-      double* _d2phidxideta_memory;
+      double*  _d2phidxideta_memory;
       double** _d2phidetadzeta;
-      double* _d2phidetadzeta_memory;
+      double*  _d2phidetadzeta_memory;
       double** _d2phidzetadxi;
-      double* _d2phidzetadxi_memory;
+      double*  _d2phidzetadxi_memory;
       
         // values at boundary gauss points
       double ** _phi_vol_at_bdry;
-      double *  _phi_memory_vol_at_bdry;
+      double *  _phi_vol_at_bdry_memory;
       double ** _dphidxi_vol_at_bdry;
-      double *  _dphidxi_memory_vol_at_bdry;
+      double *  _dphidxi_vol_at_bdry_memory;
       double ** _dphideta_vol_at_bdry;
-      double *  _dphideta_memory_vol_at_bdry;
+      double *  _dphideta_vol_at_bdry_memory;
       double ** _dphidzeta_vol_at_bdry;
-      double *  _dphidzeta_memory_vol_at_bdry;
+      double *  _dphidzeta_vol_at_bdry_memory;
  
-      
-      
-      
   };
 
   
