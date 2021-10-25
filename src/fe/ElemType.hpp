@@ -47,9 +47,12 @@ namespace femus
 // =========================================
     public:
 
-      /** constructor that receives Geometric Element and Gauss info */
+      /** constructor that receives Geometric Element, Finite Element and Gauss info */
       elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss);
 
+      /** constructor that receives Geometric Element, Finite Element */
+      elem_type(const char* geom_elem, const char* fe_order);
+  
       /** destructor */
       virtual ~elem_type();
 
@@ -65,6 +68,8 @@ namespace femus
 
    protected:
        
+      void initialize_geom_elem(const char* geom_elem);
+      
       unsigned _dim; /* Spatial dimension of the geometric element */
       
       GeomElType _GeomElemType;  /* Geometric Element flag */
@@ -82,6 +87,10 @@ namespace femus
       
    protected:
        
+      void initialize_fe_and_multigrid_parts(const char* geom_elem);
+      
+      void initialize_fe_soltype(const char* fe_order);
+      
       /** Finite Element Family flag */
       unsigned _SolType;
       
@@ -157,7 +166,48 @@ namespace femus
 
 
 // =========================================
-// ===  Quadrature =================
+// ===  Quadrature, without FE evaluations =================
+// =========================================
+  public:
+      
+      /** To be Added */
+      inline const Gauss GetGaussRule() const {
+        return *_gauss;
+      }
+
+      /** To be Added */
+      inline const Gauss* GetGaussRule_bdry() const {
+        return _gauss_bdry;
+      }
+
+      /** To be Added */
+      inline double  GetGaussWeight(const unsigned ig) const {
+        return _gauss->GetGaussWeightsPointer()[ig];
+      }
+
+      /** To be Added */
+      inline unsigned GetGaussPointNumber() const {
+        return _gauss->GetGaussPointsNumber();
+      }
+      
+      
+      
+  protected:
+      
+      void initialize_quadrature(const char* geom_elem, const char* order_gauss);
+      
+      void initialize_quadrature_boundary(const char* geom_elem, const char* order_gauss);
+      
+      void deallocate_quadrature();
+      
+      void deallocate_quadrature_boundary();
+      
+      Gauss* _gauss;
+      Gauss* _gauss_bdry; ///@todo this must become a vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
+
+      
+// =========================================
+// ===  Quadrature, with FE evaluations =================
 // =========================================
   public:
         
@@ -236,25 +286,6 @@ namespace femus
         abort();
       }
 
-      /** To be Added */
-      inline const Gauss GetGaussRule() const {
-        return _gauss;
-      }
-
-      /** To be Added */
-      inline const Gauss* GetGaussRule_bdry() const {
-        return _gauss_bdry;
-      }
-
-      /** To be Added */
-      inline double  GetGaussWeight(const unsigned ig) const {
-        return _gauss.GetGaussWeightsPointer()[ig];
-      }
-
-      /** To be Added */
-      inline unsigned GetGaussPointNumber() const {
-        return _gauss.GetGaussPointsNumber();
-      }
       
       virtual void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const std::vector < std::vector < double > > &vt,
                                                                                          const std::vector < std::vector < double> > & vt_bdry, 
@@ -266,22 +297,21 @@ namespace femus
       
    protected:
        
-      virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
-
        
+      void initialize_fe_quadrature_evaluations(const char* order_gauss);
+      
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
       virtual void deallocate_shape_at_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
       
       virtual void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss) = 0;
 
-      virtual void allocate_volume_shape_at_reference_boundary_quadrature_points() = 0;
+      virtual void allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() = 0;
+
+      virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
 
       virtual void deallocate_volume_shape_at_reference_boundary_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
       
-      const Gauss _gauss;
-            Gauss* _gauss_bdry; ///@todo this must become a vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
-
       ///  Quadrature - FE values at quadrature points on faces - for each face, for each Gauss point on the face, for each shape function of the volume
       std::vector < std::vector < std::vector < double > > > _phiFace;
       
@@ -378,16 +408,27 @@ namespace femus
       /** destructor */
       ~elem_type_1D() {
           
+// Quadrature ====      
           deallocate_shape_at_quadrature_points();
             
           deallocate_volume_shape_at_reference_boundary_quadrature_points();
        }
       
 
+// =========================================
+// ===   FE (without evaluations) =================
+// =========================================
+  protected:
+      
+      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+      
                             
 // =========================================
 // ===  Quadrature =================
 // =========================================
+    public:
+        
+        
       template <class type>
       void GetJacobian_type(const std::vector < std::vector < type > >& vt, const unsigned& ig, type& Weight,
                             std::vector < std::vector < type > >& jacobianMatrix) const;
@@ -514,7 +555,7 @@ namespace femus
       
       void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss);
       
-      void allocate_volume_shape_at_reference_boundary_quadrature_points();
+      void allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face();
 
       void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
@@ -544,13 +585,6 @@ namespace femus
       double ** _dphidxi_vol_at_bdry;
       double *  _dphidxi_vol_at_bdry_memory;
       
-// =========================================
-// ===   FE (without evaluations) =================
-// =========================================
-  protected:
-      
-      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
-      
   };
 
 
@@ -565,6 +599,7 @@ namespace femus
       /** destructor */
       ~elem_type_2D() {
           
+// Quadrature ====      
           deallocate_shape_at_quadrature_points();
             
           deallocate_volume_shape_at_reference_boundary_quadrature_points();
@@ -680,7 +715,7 @@ namespace femus
       
      void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss);
      
-     void allocate_volume_shape_at_reference_boundary_quadrature_points();
+     void allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face();
 
      void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
@@ -731,6 +766,7 @@ namespace femus
       /** destructor */
       ~elem_type_3D() {
           
+// Quadrature ====      
           deallocate_shape_at_quadrature_points();
             
           deallocate_volume_shape_at_reference_boundary_quadrature_points();
@@ -844,7 +880,7 @@ namespace femus
      
      void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss);
      
-     void allocate_volume_shape_at_reference_boundary_quadrature_points();
+     void allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face();
 
      void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
@@ -916,7 +952,7 @@ namespace femus
 
     jacobianMatrix[0][0] = 1 / Jac;
 
-    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = Jac * _gauss->GetGaussWeightsPointer()[ig];
 
   }
 
@@ -947,7 +983,7 @@ namespace femus
       Jac += (*dxi) * vt[0][inode];
     }
 
-    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = Jac * _gauss->GetGaussWeightsPointer()[ig];
 
     JacI = 1 / Jac;
 
@@ -1053,7 +1089,7 @@ namespace femus
     JacI[1][0] = -Jac[1][0] / det;
     JacI[1][1] =  Jac[0][0] / det;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
     for(int inode = 0; inode < _nc; inode++) {
       phi[inode] = _phi[ig][inode];
@@ -1092,7 +1128,7 @@ namespace femus
     jacobianMatrix[1][0] = -Jac[1][0] / det;
     jacobianMatrix[1][1] = Jac[0][0] / det;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
   }
 
@@ -1135,7 +1171,7 @@ namespace femus
     JacI[1][0] = -Jac[1][0] / det;
     JacI[1][1] = Jac[0][0] / det;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
     dxi = _dphidxi[ig];
     deta = _dphideta[ig];
@@ -1284,7 +1320,7 @@ namespace femus
                 Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
                 Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
     for(int inode = 0; inode < _nc; inode++) {
       phi[inode] = _phi[ig][inode];
@@ -1341,7 +1377,7 @@ namespace femus
     jacobianMatrix[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
     jacobianMatrix[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
   }
 
@@ -1396,7 +1432,7 @@ namespace femus
     JacI[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
     JacI[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
     dxi = _dphidxi[ig];
     deta = _dphideta[ig];
