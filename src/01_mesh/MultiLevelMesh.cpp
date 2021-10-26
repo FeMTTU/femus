@@ -63,11 +63,22 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
       _finiteElement[i][j] = NULL;
     }
   }
-  _writer = NULL;
+  
+  
+  InitializeWriter();
 
 }
 
 
+
+ void MultiLevelMesh::InitializeWriter() {
+     
+   _writer = NULL;
+    
+ }
+ 
+ 
+ 
   void MultiLevelMesh::BuildFETypesBasedOnExistingCoarseMeshGeomElements(const char GaussOrder[]) {
       
     if(_finiteElementGeometryFlag[0]) {
@@ -224,7 +235,70 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
     
   }
   
+  void MultiLevelMesh::RefineMeshesTotally(const unsigned short &igridr) {
+      
+    for (unsigned i = 1; i < igridr; i++) {
+      MeshRefinement meshcoarser(*_level0[i-1u]);
+      meshcoarser.FlagAllElementsToBeRefined();
 
+      _level0[i] = new Mesh();
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i, _level0[i-1], _finiteElement);
+    }
+      
+      
+  }
+  
+
+   void MultiLevelMesh::RefineMeshesPartially(const unsigned short &igridr,
+                                              bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) ) {
+       
+ 
+      if(SetRefinementFlag == NULL) {
+
+    }
+    else{
+      Mesh::_SetRefinementFlag = SetRefinementFlag;
+      Mesh::_IsUserRefinementFunctionDefined = true;
+    }
+    
+    //Here there are two alternatives:
+    //When igridn is STRICTLY LARGER THAN igridr, one must provide a refinement flag function, ... 
+    //When igridn is SMALLER THAN OR EQUAL igridr, this loop is ignored
+    for (unsigned i = igridr; i < _gridn0; i++) {
+        
+      if(Mesh::_IsUserRefinementFunctionDefined == false) {
+        cout << "Set Refinement Region flag is not defined! " << endl;
+        exit(1);
+      }
+      else {
+	MeshRefinement meshcoarser(*_level0[i-1u]);
+        meshcoarser.FlagElementsToBeRefined();
+	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
+      }
+      
+      _level0[i] = new Mesh();
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+    
+    }
+    
+    
+
+   }
+   
+   
+   void MultiLevelMesh::CopyLevelsZeroIntoNewLevels() {
+       
+   _gridn = _gridn0;
+    _level.resize(_gridn);
+    for(int i = 0; i < _gridn; i++) {
+        _level[i] = _level0[i];
+     }
+    
+   }
+   
+   
 //---------------------------------------------------------------------------------------------------
 MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,
                                const unsigned short &igridr,
@@ -251,52 +325,20 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,
     
     
     //totally refined meshes **************
-    
-    for (unsigned i=1; i<igridr; i++) {
-        MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagAllElementsToBeRefined();
-	_level0[i] = new Mesh();
-	MeshRefinement meshfiner(*_level0[i]);
-        meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-    }
-    
+    RefineMeshesTotally(igridr);
     
 
     //partially refined meshes **************
+    RefineMeshesPartially(igridr, SetRefinementFlag);
     
-    if(SetRefinementFlag==NULL){
-    }
-    else{
-      Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_IsUserRefinementFunctionDefined = true;
-    }
 
 
-    for (unsigned i=igridr; i<_gridn0; i++) {
-      if(!Mesh::_IsUserRefinementFunctionDefined) {
-        cout << "Set Refinement Region flag is not defined! " << endl;
-        exit(1);
-      }
-      else {
-	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefined();
-      }
-      _level0[i] = new Mesh();
-      MeshRefinement meshfiner(*_level0[i]);
-      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-      //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
-    }
-
-
-   // copy _level0 into the new levels _level **************
-    _gridn=_gridn0;
-    _level.resize(_gridn);
-    for(int i=0; i<_gridn; i++)
-        _level[i]=_level0[i];
-    
+    // copy _level0 into the new levels _level **************
+    CopyLevelsZeroIntoNewLevels();
+   
     
    // initialize writer **************
-    _writer = NULL;
+  InitializeWriter();
 
 }
 
@@ -407,56 +449,19 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn,
     _level0.resize(_gridn0);
 
     //totally refined meshes **************
+    RefineMeshesTotally(igridr);
+
     
-    // First, refine all meshes totally
-    for (unsigned i = 1; i < igridr; i++) {
-      MeshRefinement meshcoarser(*_level0[i-1u]);
-      meshcoarser.FlagAllElementsToBeRefined();
-
-      _level0[i] = new Mesh();
-      MeshRefinement meshfiner(*_level0[i]);
-      meshfiner.RefineMesh(i, _level0[i-1], _finiteElement);
-    }
-
     //partially refined meshes **************
-
-    if(SetRefinementFlag == NULL) {
-
-    }
-    else{
-      Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_IsUserRefinementFunctionDefined = true;
-    }
+    RefineMeshesPartially(igridr, SetRefinementFlag);
     
-    //Here there are two alternatives:
-    //When igridn is STRICTLY LARGER THAN igridr, one must provide a refinement flag function, ... 
-    //When igridn is SMALLER THAN OR EQUAL igridr, this loop is ignored
-    for (unsigned i = igridr; i < _gridn0; i++) {
-        
-      if(Mesh::_IsUserRefinementFunctionDefined == false) {
-        cout << "Set Refinement Region flag is not defined! " << endl;
-        exit(1);
-      }
-      else {
-	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefined();
-	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
-      }
-      
-      _level0[i] = new Mesh();
-      MeshRefinement meshfiner(*_level0[i]);
-      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-    
-    }
-
 
    // copy _level0 into the new levels _level **************
-    _gridn = _gridn0;
-    _level.resize(_gridn);
-    for(int i=0; i<_gridn; i++)
-        _level[i]=_level0[i];
+    CopyLevelsZeroIntoNewLevels();
 
 }
+
+
 
 void MultiLevelMesh::AddAMRMeshLevel()
 {
@@ -500,7 +505,7 @@ void MultiLevelMesh::PrintInfo() {
 
     /** Get the dimension of the problem (1D, 2D, 3D) from one Mesh (level 0 always exists, after initialization) */
     const unsigned MultiLevelMesh::GetDimension() const {
-      return _level0[LEV_PICK]->GetDimension();
+      return _level0[LEVEL_AT_WHICH_YOU_PICK_THE_DIM]->GetDimension();
     }
 
 // ========================================================

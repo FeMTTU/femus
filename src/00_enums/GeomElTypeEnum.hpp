@@ -24,7 +24,7 @@ enum  GeomElType { HEX=0,
 
 #define MAX_EL_N_FACES 6
 		 
-#define LEV_PICK  0
+#define LEVEL_AT_WHICH_YOU_PICK_THE_DIM  0
 
 #define ZERO_ELEM   0
 		 

@@ -47,6 +47,7 @@ public:
     /** Constructor */
     MultiLevelMesh();
 
+    /** Constructor with refinement in it */
     MultiLevelMesh(const unsigned short &igridn,
                    const unsigned short &igridr,
                    const char mesh_file[],
@@ -56,6 +57,17 @@ public:
     
     /** Destructor */
     ~MultiLevelMesh();
+
+//====================
+//==== Basic ======== 
+//====================
+public:
+    /** Get the dimension of the problem (1D, 2D, 3D) */
+    const unsigned GetDimension() const;
+
+    /** Print the mesh info for each level */
+    void PrintInfo();
+    
 
 //====================
 //==== Coarse level ======== 
@@ -87,7 +99,6 @@ public:
 //====================
 //==== Coarse level, Geom Elem ======== 
 //====================
-
 private:
     /** Flag to denote what Geometric Elements are in the given Mesh */
     std::vector <bool> _finiteElementGeometryFlag;
@@ -139,13 +150,14 @@ public:
         return _gridn;
     }
 
-    /** Get the dimension of the problem (1D, 2D, 3D) */
-    const unsigned GetDimension() const;
-
-    /** Print the mesh info for each level */
-    void PrintInfo();
-    
 private:
+    
+    void RefineMeshesTotally(const unsigned short &igridr);
+    
+    void RefineMeshesPartially(const unsigned short &igridr,
+                               bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) );
+  
+    void CopyLevelsZeroIntoNewLevels();
     
     /**  */
     unsigned short _gridn0;
@@ -188,6 +200,8 @@ public:
     void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
     
 private:
+    
+    void InitializeWriter();
     
     /** MultilevelMesh  writer */
     Writer* _writer;
