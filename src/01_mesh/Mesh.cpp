@@ -459,7 +459,7 @@ namespace femus {
   }
 
 
-  void Mesh::SetFiniteElementPtr(const elem_type* OtherFiniteElement[6][5]) {
+  void Mesh::SetFiniteElementPtr(/*const*/ elem_type* OtherFiniteElement[6][5]) {
     for(int i = 0; i < 6; i++)
       for(int j = 0; j < 5; j++)
         _finiteElement[i][j] = OtherFiniteElement[i][j];

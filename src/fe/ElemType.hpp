@@ -89,6 +89,8 @@ namespace femus
        
       void initialize_fe_and_multigrid_parts(const char* geom_elem);
       
+      void deallocate_fe_and_multigrid_parts();
+      
       void initialize_fe_soltype(const char* fe_order);
       
       /** Finite Element Family flag */
@@ -190,13 +192,15 @@ namespace femus
         return _gauss->GetGaussPointsNumber();
       }
       
-      
-      
   protected:
       
+      void initialize_quadrature_all(const char* geom_elem, const char* order_gauss);
+     
       void initialize_quadrature(const char* geom_elem, const char* order_gauss);
       
       void initialize_quadrature_boundary(const char* geom_elem, const char* order_gauss);
+      
+      void deallocate_quadrature_all();
       
       void deallocate_quadrature();
       
@@ -295,6 +299,8 @@ namespace femus
                                                                                          std::vector < double > & gradphi) const = 0;
 
       
+     virtual  void initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) = 0;
+      
    protected:
        
        
@@ -302,7 +308,7 @@ namespace femus
       
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
-      virtual void deallocate_shape_at_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
+      virtual void deallocate_shape_at_quadrature_points() = 0; /* you shouldn't call virtual function from constr/destr, so I am not using them in there*/
       
       virtual void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss) = 0;
 
@@ -310,7 +316,7 @@ namespace femus
 
       virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
 
-      virtual void deallocate_volume_shape_at_reference_boundary_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
+      virtual void deallocate_volume_shape_at_reference_boundary_quadrature_points() = 0;
       
       ///  Quadrature - FE values at quadrature points on faces - for each face, for each Gauss point on the face, for each shape function of the volume
       std::vector < std::vector < std::vector < double > > > _phiFace;
@@ -403,17 +409,13 @@ namespace femus
     public:
         
       /** constructor */
-      elem_type_1D(const char* solid, const char* order, const char* gauss_order);
+      elem_type_1D(const char* geom_elem, const char* fe_order, const char* gauss_order);
+
+      /** constructor */
+      elem_type_1D(const char* geom_elem, const char* fe_order);
 
       /** destructor */
-      ~elem_type_1D() {
-          
-// Quadrature ====      
-          deallocate_shape_at_quadrature_points();
-            
-          deallocate_volume_shape_at_reference_boundary_quadrature_points();
-       }
-      
+      ~elem_type_1D();      
 
 // =========================================
 // ===   FE (without evaluations) =================
@@ -544,6 +546,8 @@ namespace femus
         return _dphidxi[ig];
       }
 
+      void initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss);
+      
   protected:
       
        
@@ -594,16 +598,13 @@ namespace femus
     public:
         
       /** constructor */
-      elem_type_2D(const char* solid, const char* order, const char* gauss_order);
+      elem_type_2D(const char* geom_elem, const char* fe_order, const char* gauss_order);
+
+      /** constructor */
+      elem_type_2D(const char* geom_elem, const char* fe_order);
 
       /** destructor */
-      ~elem_type_2D() {
-          
-// Quadrature ====      
-          deallocate_shape_at_quadrature_points();
-            
-          deallocate_volume_shape_at_reference_boundary_quadrature_points();
-       }
+      ~elem_type_2D();
 
       
 // =========================================
@@ -705,6 +706,8 @@ namespace femus
       }
 
      
+      void initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss);
+      
   protected:
 
      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const;
@@ -761,16 +764,13 @@ namespace femus
     public:
         
       /** constructor */
-      elem_type_3D(const char* solid, const char* order, const char* gauss_order);
+      elem_type_3D(const char* geom_elem, const char* fe_order, const char* gauss_order);
       
+      /** constructor */
+      elem_type_3D(const char* geom_elem, const char* fe_order);
+
       /** destructor */
-      ~elem_type_3D() {
-          
-// Quadrature ====      
-          deallocate_shape_at_quadrature_points();
-            
-          deallocate_volume_shape_at_reference_boundary_quadrature_points();
-      }
+      ~elem_type_3D();
       
 // =========================================
 // ===   FE (without evaluations) =================
@@ -870,6 +870,8 @@ namespace femus
         return _dphidzeta[ig];
       }
 
+      void initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss);
+      
     protected:
 
      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;

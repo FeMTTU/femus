@@ -45,7 +45,7 @@ public:
     /** Refinement functions */
 
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
-    void RefineMesh(const unsigned &igrid, Mesh *mshc, const elem_type* otheFiniteElement[6][5]);
+    void RefineMesh(const unsigned &igrid, Mesh *mshc, /*const*/ elem_type* otheFiniteElement[6][5]);
 
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();

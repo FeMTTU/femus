@@ -184,7 +184,7 @@ namespace femus {
 
 
 //---------------------------------------------------------------------------------------------------------------
-  void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, const elem_type* otherFiniteElement[6][5]) {
+  void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ elem_type* otherFiniteElement[6][5]) {
 
     _mesh.SetIfHomogeneous(true);
 

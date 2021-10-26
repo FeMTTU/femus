@@ -255,13 +255,6 @@ int main(int argc, char** args) {
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
-  // ======= Quad Rule ========================
-  //right now only one quadrature rule is used, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
-  //quadr rule order
-  /*const*/ std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  fe_quad_rule_vec.push_back("eighth");
-
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
 
@@ -328,7 +321,9 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->ComputeCharacteristicLength();//doesn't need dofmap
            ml_mesh.GetLevelZero(0)->PrintInfo();   //needs dofmap
 
-  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); //doesn't need dofmap. This seems to be abstract, it can be performed right after the mesh geometric elements are read. It is needed for local MG operators, as well as for Integration of shape functions...
+  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+//   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); 
+  //doesn't need dofmap. This seems to be abstract, it can be performed right after the mesh geometric elements are read. It is needed for local MG operators, as well as for Integration of shape functions...
   //The problem is that it also performs global operations such as matrix sparsity pattern, global MG operators... And these also use _dofOffset...
   //The problem is that this class actually has certain functions which have REAL structures instead of only being ABSTRACT FE families!!!
   // So:
@@ -392,10 +387,21 @@ int main(int argc, char** args) {
   // ======= Problem  ==================
   MultiLevelProblem ml_prob(&ml_sol);
   
+  // ======= Problem, Files  ==================
   ml_prob.SetFilesHandler(&files);
+  
+  // ======= Problem, Quad Rule ========================
+  //right now only one quadrature rule is used in the FE type under Mesh, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
+  //quadr rule order
+  /*const*/ std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  fe_quad_rule_vec.push_back("eighth");
+
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor
 
+  
   // ======= Solutions that are Unknowns - BEGIN ==================
   std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
 

@@ -165,7 +165,16 @@ public:
     /** For every Geometric Element type appearing in the mesh, initialize evaluations at quadrature points, for all FE families  */
     void BuildFETypesBasedOnExistingCoarseMeshGeomElements(const char GaussOrder[]);
     
-    const elem_type *_finiteElement[N_GEOM_ELS][5];
+    /** For every Geometric Element type appearing in the mesh, initialize FE types, without quadrature evaluations */
+    void BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+    
+    void InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(const char * GaussOrder);
+  
+    elem_type *_finiteElement[N_GEOM_ELS][5];
+    
+private:
+    
+  void SetFiniteElementPtrOnCoarseMesh();
     
 //====================
 //==== File output ======== 

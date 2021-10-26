@@ -34,7 +34,7 @@ using std::endl;
 namespace femus {
 
 
-//   Constructor
+//   Constructor with FE quadrature evaluations
   elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) 
   {
       
@@ -42,15 +42,13 @@ namespace femus {
       
      initialize_fe_soltype(fe_order);
      
-     initialize_quadrature(geom_elem, order_gauss);
+     // Quadrature (without FE Evaluations) ====    
+     initialize_quadrature_all(geom_elem, order_gauss);
       
-     initialize_quadrature_boundary(geom_elem, order_gauss);
-      
-   
   }
   
 
-//   Constructor
+//   Constructor without FE quadrature evaluations
   elem_type::elem_type(const char* geom_elem, const char* fe_order)
   {
       
@@ -66,6 +64,17 @@ namespace femus {
   {
 
 // FE and MG ====      
+   deallocate_fe_and_multigrid_parts();
+
+    
+// Quadrature (without FE Evaluations) ====    
+    deallocate_quadrature_all();
+    
+  }
+  
+
+  void elem_type::deallocate_fe_and_multigrid_parts() {
+      
     delete _pt_basis;
     
     delete [] _IND;
@@ -77,17 +86,11 @@ namespace femus {
     delete [] _prol_ind;
     delete [] _mem_prol_val;
     delete [] _mem_prol_ind;
-
-    
-// Quadrature ====    
-    
-    deallocate_quadrature();
-    
-    deallocate_quadrature_boundary();  
     
   }
-
   
+  
+ 
    void elem_type::initialize_geom_elem(const char* geom_elem) {
        
 // GEOM ELEM ============
@@ -121,7 +124,16 @@ namespace femus {
 
    }
    
+   
+   void elem_type::initialize_quadrature_all(const char* geom_elem, const char* order_gauss) {
        
+     initialize_quadrature(geom_elem, order_gauss);
+      
+     initialize_quadrature_boundary(geom_elem, order_gauss);
+     
+  }
+  
+   
    void elem_type::initialize_quadrature(const char* geom_elem, const char* order_gauss) {
        
           _gauss = new  Gauss(geom_elem, order_gauss);
@@ -155,6 +167,12 @@ namespace femus {
    }
    
    
+  void elem_type::deallocate_quadrature_all() {
+      
+    deallocate_quadrature();
+    deallocate_quadrature_boundary();
+      
+  }
 
   void elem_type::deallocate_quadrature() {
       
@@ -187,6 +205,17 @@ namespace femus {
 
   }
   
+  
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order) :
+    elem_type(geom_elem, fe_order)
+  {
+
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
+
+  }
+  
 
   
   
@@ -195,7 +224,6 @@ namespace femus {
   {
 
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
-      
     //************ FE and MG SETUP ******************
     initialize_fe_and_multigrid_parts(geom_elem);
 
@@ -207,6 +235,15 @@ namespace femus {
   }
   
   
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order):
+    elem_type(geom_elem, fe_order)
+  {
+
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
+
+  }
   
 
   elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
@@ -214,7 +251,6 @@ namespace femus {
   {
     
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
-      
     //************ FE and MG SETUP ******************
     initialize_fe_and_multigrid_parts(geom_elem);
     
@@ -225,9 +261,84 @@ namespace femus {
   }
   
   
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order) :
+    elem_type(geom_elem, fe_order)
+  {
+    
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
+    
+  }
   
   
+   void elem_type_1D::initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) {
+       
+    //************ QUADRATURE ******************
+      initialize_quadrature_all(geom_elem, order_gauss);
   
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+  
+   }
+   
+   
+   void elem_type_2D::initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) {
+       
+    //************ QUADRATURE ******************
+      initialize_quadrature_all(geom_elem, order_gauss);
+  
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+  
+   }
+   
+   
+   void elem_type_3D::initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) {
+       
+    //************ QUADRATURE ******************
+      initialize_quadrature_all(geom_elem, order_gauss);
+  
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+  
+   }
+   
+   
+   /** destructor */
+    elem_type_1D::~elem_type_1D() {
+          
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+      // Quadrature ====      
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
+    }
+    
+
+    /** destructor */
+    elem_type_2D::~elem_type_2D() {
+          
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+      // Quadrature ====      
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
+    }
+    
+  
+    /** destructor */
+    elem_type_3D::~elem_type_3D() {
+          
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+      // Quadrature ====      
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
+    }
+    
+    
+    
 //----------------------------------------------------------------------------------------------------
 //BEGIN build matrix sparsity pattern size and build prolungator matrix for the LsysPde  Matrix
 //-----------------------------------------------------------------------------------------------------
@@ -1304,7 +1415,41 @@ if( _SolType >= 3 && _SolType < 5 ) {
         delete [] _dphidxi_vol_at_bdry_memory;
 
 }
+
+
+   void elem_type_2D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
+
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_vol_at_bdry = new double*[n_gauss_bdry];
+    _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
+    _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
+    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
+      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
+      _dphideta_vol_at_bdry[i] = &_dphideta_vol_at_bdry_memory[i * _nc];
+     }
+     
+    }
+
+
+  void elem_type_2D::deallocate_volume_shape_at_reference_boundary_quadrature_points() {
+      
+        delete [] _phi_vol_at_bdry;
+        delete [] _phi_vol_at_bdry_memory;
+        
+        delete [] _dphidxi_vol_at_bdry;
+        delete [] _dphidxi_vol_at_bdry_memory;
+        delete [] _dphideta_vol_at_bdry;
+        delete [] _dphideta_vol_at_bdry_memory;
+      
+  }
   
+    
   void elem_type_3D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
       
      int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
@@ -1343,39 +1488,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
 }
   
    
-   void elem_type_2D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
 
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
-    
-    _phi_vol_at_bdry = new double*[n_gauss_bdry];
-    _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
-    _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
-    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
-    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
-    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
-    
-     for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
-      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
-      _dphideta_vol_at_bdry[i] = &_dphideta_vol_at_bdry_memory[i * _nc];
-     }
-     
-    }
-
-
-  void elem_type_2D::deallocate_volume_shape_at_reference_boundary_quadrature_points() {
-      
-        delete [] _phi_vol_at_bdry;
-        delete [] _phi_vol_at_bdry_memory;
-        
-        delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_vol_at_bdry_memory;
-        delete [] _dphideta_vol_at_bdry;
-        delete [] _dphideta_vol_at_bdry_memory;
-      
-  }
-  
-  
   
 
  void elem_type::initialize_fe_quadrature_evaluations(const char* order_gauss) {

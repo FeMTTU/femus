@@ -198,7 +198,7 @@ private:
 public:
 
     /** To be Added */
-    void SetFiniteElementPtr(const elem_type* otheFiniteElement[N_GEOM_ELS][5]);
+    void SetFiniteElementPtr(/*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][5]);
     
     
     /** FE: Finite Element families, for each Geometric Element */
