@@ -113,7 +113,7 @@ private:
     /** MESH: number of nodes */
     unsigned _nnodes;
 
-    /** MESH: node coordinates for each space dimension */
+    /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
     vector < vector < double > > _coords;
 
 

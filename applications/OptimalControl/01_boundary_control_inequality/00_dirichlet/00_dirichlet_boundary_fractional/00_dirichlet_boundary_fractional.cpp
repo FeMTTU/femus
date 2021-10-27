@@ -283,6 +283,7 @@ int main(int argc, char** args) {
            std::vector < unsigned > elem_partition_from_mesh_file_to_new;
            ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new); 
            
+// // //  BEGIN FillISvector
            ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
            ml_mesh.GetLevelZero(0)->build_elem_offsets_and_reorder_mesh_elem_quantities(elem_partition_from_mesh_file_to_new);
            ml_mesh.GetLevelZero(0)->set_elem_counts();
@@ -312,6 +313,7 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->dofmap_clear_ghost_dof_list_other_procs_all_fe();
 
            ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
+// // //   END FillISvector
        
    
            ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();
@@ -343,6 +345,7 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
   
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  //RefineMesh contains a similar procedure as ReadCoarseMesh. In particular, the dofmap at each level is filled there
 
   // ======= Solution, auxiliary - BEFORE COARSE ERASING  ==================
   const unsigned  steady_flag = 0;

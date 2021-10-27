@@ -16,9 +16,6 @@
 #ifndef __femus_mesh_Elem_hpp__
 #define __femus_mesh_Elem_hpp__
 
-#include <vector>
-#include <map>
-
 #include "GeomElTypeEnum.hpp"
 #include "Mesh.hpp"
 #include "NumericVector.hpp"
@@ -27,6 +24,11 @@
 #include "MyMatrix.hpp"
 #include "Basis.hpp"
 #include "PolynomialBases.hpp"
+
+
+#include <vector>
+#include <map>
+
 
 namespace femus {
 
@@ -257,11 +259,11 @@ namespace femus {
       unsigned _iproc;
       unsigned _nprocs;
 
-      /* Number of nodes of the Mesh */
+      /** Number of nodes of the Mesh */
       unsigned _nvt;
-      /* Number of elements of the Mesh */
+      /** Number of elements of the Mesh */
       unsigned _nel;
-      /* Number of elements of the Mesh for each Geometric type */
+      /** Number of elements of the Mesh for each Geometric type */
       unsigned _nelt[N_GEOM_ELS];
       unsigned _nelr;
       unsigned _ngroup;
@@ -274,6 +276,7 @@ namespace femus {
       MyVector< short unsigned> _elementType;
       MyVector< short unsigned> _elementGroup;
       MyVector< short unsigned> _elementMaterial;
+      /** Volume elements, 3 types of material */
       std::vector<unsigned> _materialElementCounter;
 
       /** For each element, gives the conversion from local node index to global node index */
@@ -292,9 +295,10 @@ namespace femus {
       MyMatrix <unsigned> _elementNearElement;
 
   };
+  
 
 //linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
-  const unsigned NVE[6][5] = {
+  const unsigned NVE[N_GEOM_ELS][5] = {
     {8, 20, 27, 1, 4}, //hex
     {4, 10, 15, 1, 4}, //tet
     {6, 15, 21, 1, 4}, //wedge
@@ -306,14 +310,14 @@ namespace femus {
   /**
    * Number of elements obtained with one refinement
   **/
-  const unsigned NRE[6] = {8, 8, 8, 4, 4, 2};
+  const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
 
   /**
    * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
    * The 1st number is the quadrilaterals
    * The 2nd number is such that the different "2nd - 1st" is the number of triangular faces
    **/
-  const unsigned NFC[6][2] = {
+  const unsigned NFC[N_GEOM_ELS][2] = {
     {6, 6},
     {0, 4},
     {3, 5},
@@ -325,7 +329,7 @@ namespace femus {
   /**
    * Node ordering for each element face(3D), edge(2D) or point-extrema(1D) position for each considered element
    **/
-  const unsigned ig[6][6][9] = {
+  const unsigned ig[N_GEOM_ELS][6][9] = {
     { {0, 1, 5, 4, 8, 17, 12, 16, 20},
       {1, 2, 6, 5, 9, 18, 13, 17, 21},
       {2, 3, 7, 6, 10, 19, 14, 18, 22},
@@ -359,7 +363,7 @@ namespace femus {
   };
 
 
-  const unsigned NFACENODES[6][6][3] = {
+  const unsigned NFACENODES[N_GEOM_ELS][6][3] = {
     { {4, 8, 9}, // Hex
       {4, 8, 9},
       {4, 8, 9},
@@ -396,7 +400,7 @@ namespace femus {
 } //end namespace femus
 
 
-const unsigned referenceElementDirection[6][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
+const unsigned referenceElementDirection[N_GEOM_ELS][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
   {
     {23, 21}, {20, 22}, {24, 25}
   },

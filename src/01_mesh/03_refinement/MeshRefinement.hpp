@@ -20,6 +20,8 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "ParallelObject.hpp"
+#include "GeomElTypeEnum.hpp"
+
 
 namespace femus {
 
@@ -45,7 +47,7 @@ public:
     /** Refinement functions */
 
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
-    void RefineMesh(const unsigned &igrid, Mesh *mshc, /*const*/ elem_type* otheFiniteElement[6][5]);
+    void RefineMesh(const unsigned &igrid, Mesh *mshc, /*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][5]);
 
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
@@ -64,7 +66,7 @@ private:
     bool FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error);
 
     /** To be added */
-    void Buildkmid();
+    void AddFaceDofAndElementDof();
 
 
     Mesh& _mesh;                 //< reference to the mesh which is built by refinement
@@ -72,7 +74,7 @@ private:
 };
 
 
-  const unsigned coarse2FineFaceMapping[6][6][4][2]= { // fine element,fine face=c2FFM[element type][coarse face][face split index][0,1]
+  const unsigned coarse2FineFaceMapping[N_GEOM_ELS][6][4][2]= { // fine element,fine face=c2FFM[element type][coarse face][face split index][0,1]
     {
       { {0,0},{1,0},{4,0},{5,0} },
       { {1,1},{2,1},{5,1},{6,1} },
@@ -111,7 +113,7 @@ private:
     }
   };
 
-  const unsigned edge2VerticesMapping[6][12][2]= { // vertex1,vertex2=e2VM[element type][edge][0,1]
+  const unsigned edge2VerticesMapping[N_GEOM_ELS][12][2]= { // vertex1,vertex2=e2VM[element type][edge][0,1]
     {
       {0,1},{1,2},{2,3},{3,0},
       {4,5},{5,6},{6,7},{7,4},
@@ -137,7 +139,7 @@ private:
     }
   };
 
-  const unsigned vertices2EdgeMapping[6][7][8]= { // edge =v2EM[element type][vertex1][vertex2] with vertex1<vertex2
+  const unsigned vertices2EdgeMapping[N_GEOM_ELS][7][8]= { // edge =v2EM[element type][vertex1][vertex2] with vertex1<vertex2
     { {0,8,0,11,16},
       {0,0,9,0,0,17},
       {0,0,0,10,0,0,18},

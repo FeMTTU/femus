@@ -2,6 +2,8 @@
 #define __femus_enums_GeomElTypeEnum_hpp__
 
 #include <string>
+#include <vector>
+
 namespace femus {
     
   static const std::vector< std::string >  geom_elems = {"hex", "tet", "wedge", "quad", "tri", "line"};

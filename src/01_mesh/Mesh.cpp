@@ -459,10 +459,13 @@ namespace femus {
   }
 
 
-  void Mesh::SetFiniteElementPtr(/*const*/ elem_type* OtherFiniteElement[6][5]) {
-    for(int i = 0; i < 6; i++)
+  
+  void Mesh::SetFiniteElementPtr(/*const*/ elem_type* OtherFiniteElement[N_GEOM_ELS][5]) {
+      
+    for(int i = 0; i < N_GEOM_ELS; i++)
       for(int j = 0; j < 5; j++)
         _finiteElement[i][j] = OtherFiniteElement[i][j];
+      
   }
 
   
@@ -1252,8 +1255,6 @@ namespace femus {
   void Mesh::AddBiquadraticNodesNotInMeshFile() {
 
     unsigned int nnodes = GetNumberOfNodes();
-//     std::cout << " ********************************** "<< std::endl;
-//     std::cout << "nnodes before = "  << nnodes << std::endl;
 
     //intialize to UINT_MAX
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
@@ -1331,6 +1332,8 @@ namespace femus {
     el->SetNodeNumber(nnodes);
     SetNumberOfNodes(nnodes);
 //     std::cout <<"nnodes after="<< nnodes << std::endl;
+    
+    
 
     // add the coordinates of the biquadratic nodes not included in gambit
     _coords[0].resize(nnodes);
@@ -1360,6 +1363,8 @@ namespace femus {
         }
       }
     }
+    
+    
   }
 
   basis* Mesh::GetBasis(const short unsigned& ielType, const short unsigned& solType) {
