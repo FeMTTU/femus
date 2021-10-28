@@ -26,10 +26,13 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Mesh.hpp"
-#include "petscmat.h"
 #include "FElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+
+#include "petscmat.h"
+
 #include <vector>
+
 
 namespace femus {
 

@@ -17,12 +17,14 @@ PURPOSE.  See the above copyright notice for more information.
 #define __femus_mesh_MultiLevelMesh_hpp__
 
 
-#include <vector>
 #include "ElemTypeEnum.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "WriterEnum.hpp"
 #include "Writer.hpp"
+
 #include <vector>
+
+
 namespace femus {
 
 
@@ -100,8 +102,12 @@ public:
 //==== Coarse level, Geom Elem ======== 
 //====================
 private:
+    
+    void InitializeGeomElemFlag();
+  
     /** Flag to denote what Geometric Elements are in the given Mesh */
     std::vector <bool> _finiteElementGeometryFlag;
+    
     
     
 //====================
@@ -109,7 +115,7 @@ private:
 //====================
 public:
     
-    void PrepareAllLevelsForRefinement();
+    void PrepareNewLevelsForRefinement();
     
     /** Refine the coarse mesh (totally or selectively (according to the SetRefinementFlag user-function) ):
        the first argument is the number of uniformly refined levels;
@@ -157,15 +163,20 @@ private:
     void RefineMeshesPartially(const unsigned short &igridr,
                                bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) );
   
+    void InitializeLevelsZeroAndAllocateCoarse(const unsigned short gridn);
+    
     void CopyLevelsZeroIntoNewLevels();
     
-    /**  */
+    void DeleteLevelsZero();
+    
+    /** Number of levels for _level0 */
     unsigned short _gridn0;
+    /** Number of levels for _level */
     unsigned short _gridn;
 
-    /** Array of meshes, with all levels from the beginning of mesh generation */
+    /** Array of meshes, with all levels from the beginning of mesh generation. These are the only ones that are dynamically allocated with "new Mesh" */
     std::vector <Mesh*> _level0;
-    /** Array of meshes, only the ones that survive after EraseCoarseLevels */
+    /** Array of meshes, only the ones that survive after EraseCoarseLevels. This is only a copy of pointers */
     std::vector <Mesh*> _level;
 
     
@@ -186,8 +197,12 @@ public:
     
 private:
     
+  void InitializeFETypes();
+ 
   void SetFiniteElementPtrOnCoarseMesh();
     
+  void DeleteFETypesForExistingGeomElements();
+  
 //====================
 //==== File output ======== 
 //====================
@@ -202,6 +217,8 @@ public:
 private:
     
     void InitializeWriter();
+    
+    void DeleteWriter();
     
     /** MultilevelMesh  writer */
     Writer* _writer;

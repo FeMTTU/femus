@@ -19,8 +19,6 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <vector>
-#include <map>
 #include "MultiLevelMesh.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
@@ -31,9 +29,12 @@
 #include "System.hpp"
 #include "ElemType_template.hpp"
 
+#include <vector>
+#include <map>
+
+
 namespace femus {
 
-using std::map;
 
 //------------------------------------------------------------------------------
 // Forward declarations

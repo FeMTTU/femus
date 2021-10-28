@@ -16,6 +16,7 @@
 #ifndef __femus_mesh_Elem_hpp__
 #define __femus_mesh_Elem_hpp__
 
+
 #include "GeomElTypeEnum.hpp"
 #include "Mesh.hpp"
 #include "NumericVector.hpp"
@@ -288,10 +289,10 @@ namespace femus {
       MyMatrix <unsigned> _childElemDof;
 
       /** For each Node, it gives the list of elements having that Node as a vertex 
-        @todo I think this should be scattered */
+        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
       MyMatrix <unsigned> _elementNearVertex;
       /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
-        @todo I think this should be scattered */
+        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
       MyMatrix <unsigned> _elementNearElement;
 
   };

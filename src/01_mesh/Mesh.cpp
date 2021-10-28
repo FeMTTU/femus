@@ -195,9 +195,9 @@ namespace femus {
 
     SetIfHomogeneous(true);
 
-    _coords.resize(3);
+    SetLevel(0);
 
-    _level = 0;
+    _coords.resize(3);
 
 
     ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
@@ -243,6 +243,7 @@ namespace femus {
 
 
     el->BuildElementNearElement();
+    el->DeleteElementNearVertex();
 
     el->ScatterElementQuantities();
     el->ScatterElementDof();
@@ -338,9 +339,10 @@ namespace femus {
 
     SetIfHomogeneous(true);
 
-    _coords.resize(3);
+    SetLevel(0);
 
-    _level = 0;
+    _coords.resize(3);
+    
 
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
 
@@ -351,6 +353,7 @@ namespace femus {
 
     el->SetNodeNumber(_nnodes);
 
+    
     std::vector < unsigned > materialElementCounter(3, 0);
     materialElementCounter[0] = GetNumberOfElements();
     el->SetMaterialElementCounter(materialElementCounter);
@@ -359,27 +362,13 @@ namespace femus {
     Partition();
 
 
-    el->BuildElementNearVertex();
-
-    BuildElementNearFace();
-
-
-    el->BuildElementNearElement();
-    el->DeleteElementNearVertex();  ///@todo check why it is needed here and not in the other similar function
-
-    el->ScatterElementQuantities();
-    el->ScatterElementDof();
-    el->ScatterElementNearFace();
-
+    BuildMeshElemStructures();
+    
+    
+    BuildTopologyStructures();
 
     ComputeCharacteristicLength();
-    Topology_InitializeAndFillCoordinates();
-    Topology_InitializeAMR();
-    Topology_InitializeAndFillSolidNodeFlag();
-
-   
-    _amrRestriction.resize(3);
-
+    
     PrintInfo();
     
   }

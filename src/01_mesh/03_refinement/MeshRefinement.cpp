@@ -193,13 +193,16 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
       
     _mesh.SetIfHomogeneous(true);
 
+    _mesh.SetLevel(igrid);
+    
+    
+//info from the coarse mesh    
     _mesh.SetCoarseMesh(mshc);
 
     elem* elc = mshc->el;
 
     _mesh.SetFiniteElementPtr(otherFiniteElement);
 
-    _mesh.SetLevel(igrid);
     
 //====== BEGIN ELEMENTS  ==============================
 
@@ -449,20 +452,9 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====================================
 //==== BuildMeshElemStructures ======== 
 //====================================
-    
-    _mesh.el->DeleteElementNearVertex();
-    _mesh.el->BuildElementNearVertex();
-
-    _mesh.BuildElementNearFace();
-
-    _mesh.el->BuildElementNearElement();
-    _mesh.el->DeleteElementNearVertex();
-
-    _mesh.el->ScatterElementQuantities();
-    _mesh.el->ScatterElementDof();
-    _mesh.el->ScatterElementNearFace();
-
-    
+        
+    _mesh.BuildMeshElemStructures();
+  
     
 //====================================
 //==== BuildTopologyStructures ======== 

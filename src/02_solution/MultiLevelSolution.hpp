@@ -19,8 +19,6 @@ PURPOSE.  See the above copyright notice for more information.
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <vector>
-#include <memory>
 #include "MultiLevelMesh.hpp"
 #include "Solution.hpp"
 #include "ParallelObject.hpp"
@@ -28,6 +26,10 @@ PURPOSE.  See the above copyright notice for more information.
 #include "BDCTypeEnum.hpp"
 #include "FunctionBase.hpp"
 #include "Writer.hpp"
+
+#include <vector>
+#include <memory>
+
 
 namespace femus {
 

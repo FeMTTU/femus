@@ -24,8 +24,8 @@
 #include "ElemType.hpp"
 #include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
-#include <assert.h>
 
+#include <cassert>
 #include <vector>
 #include <map>
 
@@ -35,7 +35,6 @@ namespace femus {
 
 
 
-using std::vector;
 class Solution;
 
 class elem;
@@ -114,7 +113,7 @@ private:
     unsigned _nnodes;
 
     /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
-    vector < vector < double > > _coords;
+    std::vector < std::vector < double > > _coords;
 
 
 // =========================

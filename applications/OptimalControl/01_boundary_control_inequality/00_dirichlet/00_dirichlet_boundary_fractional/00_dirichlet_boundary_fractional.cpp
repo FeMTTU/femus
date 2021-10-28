@@ -332,7 +332,7 @@ int main(int argc, char** args) {
 //   - Mesh and Multimesh are real and not abstract, and rightly so 
 //   - Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
 //   - ElemType is not completely abstract as it should be 
-  ml_mesh.PrepareAllLevelsForRefinement();       //doesn't need dofmap
+  ml_mesh.PrepareNewLevelsForRefinement();       //doesn't need dofmap
 // // // =================================================================  
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
 // // // =================================================================
