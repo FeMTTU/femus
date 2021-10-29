@@ -351,7 +351,7 @@ namespace femus {
 
     el->ShrinkToFit();
 
-    el->SetNodeNumber(_nnodes);
+    el->SetNodeNumber(_nnodes);  ///@todo are we sure we need it here? On the other ReadCoarse it is commented
 
     
     std::vector < unsigned > materialElementCounter(3, 0);
@@ -515,7 +515,7 @@ namespace femus {
   }
   
 
-  void Mesh::dofmap_initialize_dof_offsets() {
+  void Mesh::dofmap_initialize_dof_offsets_all_fe_families() {
       
     //BEGIN Initialization for k = 0,1,2,3,4
     for(int k = 0; k < 5; k++) {
@@ -825,16 +825,20 @@ namespace femus {
   */
   void Mesh::FillISvector(vector < unsigned >& partition) {
 
-    initialize_elem_offsets();
+     dofmap_initialize_dof_offsets_all_fe_families();
+     
+  // // // ======== ELEM OFFSETS =========================================================  
+   
+   initialize_elem_offsets();
     build_elem_offsets_and_reorder_mesh_elem_quantities(partition);
     set_elem_counts();
    
     std::vector<unsigned> ().swap(partition);
     
    
-    dofmap_initialize_dof_offsets();
     dofmap_build_element_based_dof_offsets();  
    
+  // // // ======== NODE OFFSETS =========================================================  
     //BEGIN building for k = 0,1,2
     std::vector < unsigned > node_mapping;
     dofmap_compute_Node_mapping_Node_ownSize(node_mapping);

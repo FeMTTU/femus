@@ -457,7 +457,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
   
     
 //====================================
-//==== BuildTopologyStructures ======== 
+//==== BEGIN BuildTopologyStructures ======== 
 //====================================
     
     // build Mesh coordinates by projecting the coarse coordinats
@@ -505,6 +505,10 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     else{
       restriction.resize(3);
     }
+//====================================
+//==== END BuildTopologyStructures ======== 
+//====================================
+    
     
     
 //====================================

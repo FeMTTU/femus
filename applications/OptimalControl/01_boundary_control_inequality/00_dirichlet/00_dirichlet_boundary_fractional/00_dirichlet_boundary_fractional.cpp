@@ -284,22 +284,24 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new); 
            
 // // //  BEGIN FillISvector
+           ml_mesh.GetLevelZero(0)->dofmap_initialize_dof_offsets_all_fe_families();
+
+           // // // ======== ELEM OFFSETS =========================================================  
            ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
            ml_mesh.GetLevelZero(0)->build_elem_offsets_and_reorder_mesh_elem_quantities(elem_partition_from_mesh_file_to_new);
            ml_mesh.GetLevelZero(0)->set_elem_counts();
            std::vector<unsigned> ().swap(elem_partition_from_mesh_file_to_new);
 
-// // // =================================================================  
-           ml_mesh.GetLevelZero(0)->dofmap_initialize_dof_offsets();
            
-// // // =================================================================  
            ml_mesh.GetLevelZero(0)->dofmap_build_element_based_dof_offsets();
            // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
+           //I will loop over the elements and take all the node dofs either of order 1 or 2, counted with repetition
+           //Then I have to take the mesh skeleton (without repetition)
            //Then for the dofs on the edges how do I do? 
            // In every subdomain I will have nelems x element nodes + n skeleton dofs in that subdomain 
            // Then, when it comes to retrieving such dofs for each element, i'll retrieve the interior element nodes + the boundary dofs
            
-// // // =================================================================  
+           // // // ======== NODE OFFSETS =========================================================  
            std::vector < unsigned > node_mapping_from_mesh_file_to_new;
            ml_mesh.GetLevelZero(0)->dofmap_compute_Node_mapping_Node_ownSize(node_mapping_from_mesh_file_to_new);
            ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
@@ -316,7 +318,7 @@ int main(int argc, char** args) {
 // // //   END FillISvector
        
    
-           ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();
+           ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();  //does it need dofmap already?
            
            ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
 
@@ -402,7 +404,9 @@ int main(int argc, char** args) {
 
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
-  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+  // I should put it inside a Mesh constructor with whatever argument so I hide it from the main
+  // No it must be at the very end of ReadCoarseMesh
 
   
   // ======= Solutions that are Unknowns - BEGIN ==================

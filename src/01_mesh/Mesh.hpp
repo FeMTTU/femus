@@ -192,7 +192,7 @@ private:
     
 
 // =========================
-// === EVERYTHING, TO FACTORIZE =================
+// === FE and EVERYTHING, TO FACTORIZE =================
 // =========================
 public:
 
@@ -348,7 +348,7 @@ public:
     /** FE: DofMap: Here is where the element and node global orderings are changed based on the partitioning */
     void FillISvector(vector < unsigned > &partition);
 
-    void dofmap_initialize_dof_offsets();
+    void dofmap_initialize_dof_offsets_all_fe_families();
     
     void dofmap_build_element_based_dof_offsets();
     /**  */
