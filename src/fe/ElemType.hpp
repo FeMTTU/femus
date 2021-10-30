@@ -39,6 +39,10 @@ namespace femus
   class elem;
   class LinearEquation;
 
+  
+      /** Class for Finite Element on 1 single Geometric Element 
+       @todo must factorize this class a lot 
+       It should have only abstract stuff about FE on 1 elem */
   class elem_type
   {
 
@@ -207,7 +211,8 @@ namespace femus
       void deallocate_quadrature_boundary();
       
       Gauss* _gauss;
-      Gauss* _gauss_bdry; ///@todo this must become a vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
+      ///@todo this must become a vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
+      Gauss* _gauss_bdry; 
 
       
 // =========================================
@@ -570,9 +575,6 @@ namespace femus
                                                                                  std::vector < double > &phi,
                                                                                  std::vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); }
             
-      // ====================================
-      // member data
-      // ====================================
       
       double** _phi;
       double*  _phi_memory;
@@ -725,10 +727,6 @@ namespace femus
       
      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
-      
-      // ====================================
-      // member data
-      // ====================================
       
       double** _phi;
       double*  _phi_memory;
@@ -889,11 +887,6 @@ namespace femus
      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
-        
-      // ====================================
-      // member data
-      // ====================================
-        
       double** _phi;
       double*  _phi_memory;
       double** _dphidxi;

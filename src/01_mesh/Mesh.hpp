@@ -65,7 +65,7 @@ public:
 public:
     
     /** Print the mesh info for this level */
-    void PrintInfo();
+    void PrintInfo() const;
 
     /** MESH: Get the dimension of the problem (1D, 2D, 3D) */
     const unsigned GetDimension() const {
@@ -75,11 +75,6 @@ public:
     /** MESH: Set the dimension of the problem (1D, 2D, 3D) */
     void SetDimension(const unsigned &dim) {
       Mesh::_dimension = dim;
-    }
-
-    /** Get the dof number for the element -type- */
-    unsigned GetTotalNumberOfDofs(const unsigned &type) const {
-      return _dofOffset[type][_nprocs];
     }
 
     /** Set the number of nodes */
@@ -115,6 +110,7 @@ private:
     /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
     std::vector < std::vector < double > > _coords;
 
+    void PrintInfoElements() const;
 
 // =========================
 // === BASIC, ELEM =================
@@ -191,16 +187,20 @@ private:
 
     
 
-// =========================
-// === FE and EVERYTHING, TO FACTORIZE =================
-// =========================
+/// =========================
+/// === FE for single elem =================
+/// =========================
 public:
 
+    const elem_type * GetFiniteElement(const unsigned geom_elem, const unsigned fe_soltype) const {
+        return _finiteElement[geom_elem][fe_soltype];
+    }
+    
     /** To be Added */
     void SetFiniteElementPtr(/*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][5]);
     
     
-    /** FE: Finite Element families, for each Geometric Element */
+    /** FE: Finite Element families, for each Geometric Element @todo this one day should be private */
     const elem_type *_finiteElement[N_GEOM_ELS][5];
     
     
@@ -265,7 +265,7 @@ public:
     
 
 // =========================
-// === REFINEMENT =================
+// === MESH REFINEMENT =================
 // =========================
 public:
 
@@ -306,6 +306,8 @@ public:
     
 private:
     
+    void PrintInfoLevel() const;
+    
     /** MESH: level of mesh in the multilevel hierarchy */
     unsigned _level;
     
@@ -338,6 +340,11 @@ public:
 
     void deallocate_node_mapping(std::vector < unsigned > & node_mapping) const;
     
+    /** Get the dof number for the element -type- */
+    unsigned GetTotalNumberOfDofs(const unsigned &type) const {
+      return _dofOffset[type][_nprocs];
+    }
+
     unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
 
     unsigned GetSolutionDof(const unsigned &i0,const unsigned &i1, const unsigned &ielc, const short unsigned &solType, const Mesh* mshc) const;
@@ -375,16 +382,32 @@ private:
     std::map < unsigned, unsigned > _ownedGhostMap[2];
     /** FE: DofMap  k = 0, 1 */ 
     std::vector < unsigned > _originalOwnSize[2];
+    /** print node-based dofOffset counts */
+    void PrintInfoNodes() const;
+   
+// =========================
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) =================
+// =========================
+public:
+    
+    /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
+    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+
+    
+private:
+    
+    /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
+    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+
+    /** FE: The projection matrix between Lagrange FEM at the same level mesh */
+    SparseMatrix* _ProjQitoQj[3][3];
 
    
-    
 // =========================
 // === FE DOFMAP & REFINEMENT =================
 // =========================
 public:
-    /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
-    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-
+    
     /**  FE: Get the coarse to the fine projection matrix and use it to restrict only on coarse nodes i.e. projection*/
     SparseMatrix* GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType);
 
@@ -392,16 +415,9 @@ public:
     SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);
 
 private:
-    
-    /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
-    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-
     /** FE: Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
     
-    /** FE: The projection matrix between Lagrange FEM at the same level mesh */
-    SparseMatrix* _ProjQitoQj[3][3];
-
     /** FE: The coarse to the fine projection matrix */
     SparseMatrix* _ProjCoarseToFine[5];
 

@@ -69,7 +69,7 @@ public:
     /** Multilevel mesh pointer */
     MultiLevelMesh *_ml_msh;
 
-    /** Data structure holding arbitrary parameters. */
+    /** Data structure holding arbitrary parameters. @todo not used anywhere */
     Parameters parameters;
 
     /** Typedef for system iterators */

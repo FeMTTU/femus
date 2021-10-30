@@ -11,6 +11,8 @@ SET(femus_src
 00_utils/Files.cpp
 00_utils/input_parser/InputParser.cpp
 00_utils/input_parser/JsonInputParser.cpp
+00_utils/parallel/MyMatrix.cpp
+00_utils/parallel/MyVector.cpp
 01_mesh/gencase/Box.cpp
 01_mesh/gencase/Domain.cpp
 01_mesh/gencase/ElemSto.cpp
@@ -95,8 +97,6 @@ geom_quadrature/GaussPoints.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp
-parallel/MyMatrix.cpp
-parallel/MyVector.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp

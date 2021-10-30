@@ -88,18 +88,33 @@ namespace femus {
   }
 
 /// print Mesh info
-  void Mesh::PrintInfo() {
+  void Mesh::PrintInfo() const {
 
-    std::cout << " Mesh Level                  : " << _level  << std::endl;
-    std::cout << " Number of elements          : " << _nelem  << std::endl;
-    std::cout << " Number of linear nodes      : " << _dofOffset[0][_nprocs] << std::endl;
-    std::cout << " Number of quadratic nodes   : " << _dofOffset[1][_nprocs] << std::endl;
-    std::cout << " Number of biquadratic nodes : " << _dofOffset[2][_nprocs] << std::endl;
-    std::cout << std::endl;
+      PrintInfoLevel();
+      PrintInfoElements();
+      PrintInfoNodes();
+      std::cout << std::endl;
 
   }
   
-
+  
+  void Mesh::PrintInfoLevel() const {
+    std::cout << " Mesh Level                  : " << _level  << std::endl;
+  }
+  
+  
+  void Mesh::PrintInfoElements() const {
+    std::cout << " Number of elements          : " << _nelem  << std::endl;
+  }
+  
+  void Mesh::PrintInfoNodes() const {
+    std::cout << " Number of linear nodes      : " << _dofOffset[0][_nprocs] << std::endl;
+    std::cout << " Number of quadratic nodes   : " << _dofOffset[1][_nprocs] << std::endl;
+    std::cout << " Number of biquadratic nodes : " << _dofOffset[2][_nprocs] << std::endl;
+  }
+  
+  
+  
   const unsigned Mesh::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0, 5, 3, 0, 1, 0};
   const double Mesh::_baricentricWeight[N_GEOM_ELS][5][18] = {
     {},
@@ -129,7 +144,9 @@ namespace femus {
     const bool flag_for_ncommon_in_metis = false;
 
     partition.resize(GetNumberOfElements());
+    
     MeshMetisPartitioning meshMetisPartitioning(*this);
+    
     meshMetisPartitioning.DoPartition(partition, flag_for_ncommon_in_metis);
 
   }
