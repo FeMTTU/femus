@@ -21,7 +21,6 @@
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
 #include "MED_IO.hpp"
-// #include "obj_io.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -65,7 +64,9 @@ namespace femus {
 
 
   Mesh::~Mesh() {
+      
     delete el;
+    
     _topology->FreeSolutionVectors();
     delete _topology;
 
@@ -86,6 +87,8 @@ namespace femus {
     }
     
   }
+  
+  
 
 /// print Mesh info
   void Mesh::PrintInfo() const {
@@ -481,7 +484,7 @@ namespace femus {
  
   
 
-  std::vector <unsigned> Mesh::dofmap_compute_Node_mapping_Node_ownSize() {
+  std::vector <unsigned> Mesh::dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize() {
   // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
       
 
@@ -537,7 +540,7 @@ namespace femus {
   }
   
 
-  void Mesh::dofmap_initialize_dof_offsets_all_fe_families() {
+  void Mesh::dofmap_all_fe_families_initialize_dof_offsets() {
       
     //BEGIN Initialization for k = 0,1,2,3,4
     for(int k = 0; k < 5; k++) {
@@ -656,7 +659,7 @@ namespace femus {
 
 
 
-   void Mesh::dofmap_build_element_based_dof_offsets()  {
+   void Mesh::dofmap_Element_based_dof_offsets_build()  {
        
     //BEGIN building element based dofs -  k = 3,4 
 
@@ -685,7 +688,7 @@ namespace femus {
    
    
 
-   void Mesh::dofmap_build_node_based_dof_offsets_biquadratic()  {
+   void Mesh::dofmap_Node_based_dof_offsets_build_biquadratic()  {
 
     for(int i = 1 ; i <= _nprocs; i++) {
       _dofOffset[2][i] = _dofOffset[2][i - 1] + _ownSize[2][i - 1];
@@ -717,7 +720,7 @@ namespace femus {
    }
    
 
-    void Mesh::dofmap_node_based_dof_offsets_ghost_nodes_search() {
+    void Mesh::dofmap_Node_based_dof_offsets_ghost_nodes_search() {
  
     for(int k = 0; k < 3; k++) {
       _ghostDofs[k].resize(_nprocs);
@@ -748,7 +751,7 @@ namespace femus {
   }
 
   
-    void Mesh::dofmap_build_node_based_dof_offsets_linear_quadratic() {
+    void Mesh::dofmap_Node_based_dof_offsets_build_linear_quadratic() {
 
     //BEGIN completing k = 0, 1
 
@@ -805,7 +808,7 @@ namespace femus {
   }
   
   
-  void Mesh::dofmap_clear_ghost_dof_list_other_procs_all_fe() {
+  void Mesh::dofmap_all_fe_families_clear_ghost_dof_list_other_procs() {
       
     //delete ghost dof list all but _iproc
     for(int isdom = 0; isdom < _nprocs; isdom++) {
@@ -854,7 +857,7 @@ namespace femus {
     std::vector<unsigned> ().swap(partition);
     
    
-    dofmap_build_element_based_dof_offsets();  
+    dofmap_Element_based_dof_offsets_build();  
       
       
   }
@@ -864,25 +867,25 @@ namespace femus {
   void Mesh::FillISvectorNodeOffsets() {
       
     //BEGIN building for k = 0,1,2
-    std::vector < unsigned > node_mapping =  dofmap_compute_Node_mapping_Node_ownSize();
+    std::vector < unsigned > node_mapping =  dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
     mesh_reorder_node_quantities(node_mapping);
     
     deallocate_node_mapping(node_mapping);
 
     
-    dofmap_build_node_based_dof_offsets_biquadratic();
+    dofmap_Node_based_dof_offsets_build_biquadratic();
     //END building for k = 2, but incomplete for k = 0, 1
     
    
 
     //BEGIN ghost nodes search k = 0, 1, 2
-    dofmap_node_based_dof_offsets_ghost_nodes_search();
+    dofmap_Node_based_dof_offsets_ghost_nodes_search();
     //END ghost nodes search k = 0, 1, 2
     //BEGIN completing for k = 0,1
-    dofmap_build_node_based_dof_offsets_linear_quadratic();
+    dofmap_Node_based_dof_offsets_build_linear_quadratic();
     //END completing for k = 0,1
     
-    dofmap_clear_ghost_dof_list_other_procs_all_fe();
+    dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
     
     set_node_counts(); //redundant by now
       
@@ -894,7 +897,7 @@ namespace femus {
   */
   void Mesh::FillISvector(std::vector < unsigned >& partition) {
 
-     dofmap_initialize_dof_offsets_all_fe_families();
+     dofmap_all_fe_families_initialize_dof_offsets();
      
      FillISvectorElemOffsets(partition);
      
@@ -1396,9 +1399,31 @@ namespace femus {
     
     
   }
+  
+  
 
   basis* Mesh::GetBasis(const short unsigned& ielType, const short unsigned& solType) {
     return _finiteElement[ielType][solType]->GetBasis();
   }
 
+  
+  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) {
+      
+    xv.resize(_dimension);
+    unsigned ndofs = el->GetElementDofNumber(iel, solType);
+    for(int d = 0; d < _dimension; d++) {
+      xv[d].resize(ndofs);
+    }
+    for(unsigned j = 0; j < ndofs; j++) {
+      unsigned xdof  = GetSolutionDof(j, iel, solType);
+      for(int d = 0; d < _dimension; d++) {
+        xv[d][j] = (*_topology->_Sol[d])(xdof);
+      }
+    }
+    
+  }
+
+  
+  
+  
 } //end namespace femus

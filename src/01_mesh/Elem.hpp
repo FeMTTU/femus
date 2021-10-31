@@ -48,10 +48,10 @@ namespace femus {
       //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
       elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
 
-      void ShrinkToFit();
-
       /** destructor */
       ~elem();
+
+      void ShrinkToFit();
 
       void ScatterElementNearFace();
       void LocalizeElementNearFace(const unsigned& jproc);
@@ -256,14 +256,19 @@ namespace femus {
       unsigned _iproc;
       unsigned _nprocs;
 
+      /** Dimension of the underlying Mesh */
+      unsigned _dim;
       /** Number of nodes of the Mesh */
       unsigned _nvt;
       /** Number of elements of the Mesh */
       unsigned _nel;
       /** Number of elements of the Mesh for each Geometric type */
       unsigned _nelt[N_GEOM_ELS];
+      /** Number of refined elements */
       unsigned _nelr;
+      /** @todo group of all elements - seems to be unused */
       unsigned _ngroup;
+      /** level of refinement of this list of elements */
       unsigned _level;
 
       std::vector < unsigned > _elementOffset;

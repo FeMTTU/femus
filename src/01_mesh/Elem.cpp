@@ -58,20 +58,6 @@ namespace femus
 
 }
 
-  void elem::ShrinkToFit()
-  {
-
-    _elementDof.shrinkToFit(UINT_MAX);
-
-    MyVector <unsigned> rowSize(_nel);
-    for (unsigned iel = 0; iel < _nel; iel++) {
-      unsigned ielType = GetElementType(iel);
-      rowSize[iel] = NFC[ielType][1];
-    }
-    _elementNearFace.shrinkToFit(rowSize);
-
-  }
-  
   
   /**
    * This constructor allocates the memory for the \textit{finer elem}
@@ -119,7 +105,26 @@ namespace femus
     rowSizeElNearFace.clear();
 
   }
+  
 
+  
+  void elem::ShrinkToFit()
+  {
+
+    _elementDof.shrinkToFit(UINT_MAX);
+
+    MyVector <unsigned> rowSize(_nel);
+    for (unsigned iel = 0; iel < _nel; iel++) {
+      unsigned ielType = GetElementType(iel);
+      rowSize[iel] = NFC[ielType][1];
+    }
+    _elementNearFace.shrinkToFit(rowSize);
+
+  }
+  
+  
+  
+  
   void elem::ReorderMeshElements(const std::vector < unsigned >& elementMapping)
   {
 
@@ -1044,22 +1049,6 @@ namespace femus
     }
   }
 
-
-  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) {
-      
-    xv.resize(_dimension);
-    unsigned ndofs = el->GetElementDofNumber(iel, solType);
-    for(int d = 0; d < _dimension; d++) {
-      xv[d].resize(ndofs);
-    }
-    for(unsigned j = 0; j < ndofs; j++) {
-      unsigned xdof  = GetSolutionDof(j, iel, solType);
-      for(int d = 0; d < _dimension; d++) {
-        xv[d][j] = (*_topology->_Sol[d])(xdof);
-      }
-    }
-    
-  }
 
 
 

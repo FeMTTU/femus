@@ -359,19 +359,19 @@ public:
   
     void FillISvectorNodeOffsets();
     
-    void dofmap_initialize_dof_offsets_all_fe_families();
+    void dofmap_all_fe_families_initialize_dof_offsets();
     
-    void dofmap_build_element_based_dof_offsets();
+    void dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
+    
+    void dofmap_Element_based_dof_offsets_build();
 
-    std::vector <unsigned> dofmap_compute_Node_mapping_Node_ownSize();
+    std::vector <unsigned> dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
     
-    void dofmap_build_node_based_dof_offsets_biquadratic();
+    void dofmap_Node_based_dof_offsets_build_biquadratic();
     
-    void dofmap_node_based_dof_offsets_ghost_nodes_search();
+    void dofmap_Node_based_dof_offsets_ghost_nodes_search();
     
-    void dofmap_build_node_based_dof_offsets_linear_quadratic();
-    
-    void dofmap_clear_ghost_dof_list_other_procs_all_fe();
+    void dofmap_Node_based_dof_offsets_build_linear_quadratic();
     
     /** FE: DofMap: Number of owned nodes per FE family and per processor (count, non-incremental) */
     std::vector < unsigned > _ownSize[5];

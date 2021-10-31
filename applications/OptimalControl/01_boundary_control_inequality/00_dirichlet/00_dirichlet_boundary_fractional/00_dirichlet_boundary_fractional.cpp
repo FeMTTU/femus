@@ -284,7 +284,7 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new); 
            
 // // //  BEGIN FillISvector
-           ml_mesh.GetLevelZero(0)->dofmap_initialize_dof_offsets_all_fe_families();
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize_dof_offsets();
 
            ml_mesh.GetLevelZero(0)->FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
            // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
@@ -296,16 +296,16 @@ int main(int argc, char** args) {
            
            // // // ======== NODE OFFSETS =========================================================  
            //there should be a distinction here between "node offsets" and "dof offsets"
-           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->dofmap_compute_Node_mapping_Node_ownSize();
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
            ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
            
-           ml_mesh.GetLevelZero(0)->dofmap_build_node_based_dof_offsets_biquadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_build_biquadratic();
            
-           ml_mesh.GetLevelZero(0)->dofmap_node_based_dof_offsets_ghost_nodes_search();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_ghost_nodes_search();
            
-           ml_mesh.GetLevelZero(0)->dofmap_build_node_based_dof_offsets_linear_quadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_build_linear_quadratic();
            
-           ml_mesh.GetLevelZero(0)->dofmap_clear_ghost_dof_list_other_procs_all_fe();
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
 
            ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
 // // //   END FillISvector
