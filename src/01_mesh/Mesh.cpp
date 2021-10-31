@@ -481,13 +481,12 @@ namespace femus {
  
   
 
-  void Mesh::dofmap_compute_Node_mapping_Node_ownSize(std::vector <unsigned> & mapping) {
+  std::vector <unsigned> Mesh::dofmap_compute_Node_mapping_Node_ownSize() {
   // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
       
 
      std::vector<unsigned>  partition(GetNumberOfNodes(), _nprocs);
-  
-        mapping.resize(GetNumberOfNodes()); ///@todo I think this is bad because it doesn't clear the previous content!!!
+    std::vector <unsigned>  mapping(GetNumberOfNodes(), 0);
 
     for(unsigned k = 0; k < 3; k++) {
       _ownSize[k].assign(_nprocs, 0);
@@ -522,6 +521,9 @@ namespace femus {
   
     
     std::vector<unsigned> ().swap(partition);
+    
+    
+    return mapping;
   
   }
 // *******************************************************
@@ -838,16 +840,12 @@ namespace femus {
     std::vector<unsigned> ().swap(node_mapping);    //     node_mapping.resize(0);  //resize DOES NOT FREE memory!!!
       
   }
-  
-  
- /**
-  * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
-  */
-  void Mesh::FillISvector(vector < unsigned >& partition) {
 
-     dofmap_initialize_dof_offsets_all_fe_families();
-     
+  
+  
   // // // ======== ELEM OFFSETS =========================================================  
+  void Mesh::FillISvectorElemOffsets(std::vector < unsigned >& partition) {
+      
    
    initialize_elem_offsets();
     build_elem_offsets_and_reorder_mesh_elem_quantities(partition);
@@ -857,11 +855,16 @@ namespace femus {
     
    
     dofmap_build_element_based_dof_offsets();  
-   
+      
+      
+  }
+  
+  
   // // // ======== NODE OFFSETS =========================================================  
+  void Mesh::FillISvectorNodeOffsets() {
+      
     //BEGIN building for k = 0,1,2
-    std::vector < unsigned > node_mapping;
-    dofmap_compute_Node_mapping_Node_ownSize(node_mapping);
+    std::vector < unsigned > node_mapping =  dofmap_compute_Node_mapping_Node_ownSize();
     mesh_reorder_node_quantities(node_mapping);
     
     deallocate_node_mapping(node_mapping);
@@ -882,6 +885,20 @@ namespace femus {
     dofmap_clear_ghost_dof_list_other_procs_all_fe();
     
     set_node_counts(); //redundant by now
+      
+  }
+  
+  
+ /**
+  * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
+  */
+  void Mesh::FillISvector(std::vector < unsigned >& partition) {
+
+     dofmap_initialize_dof_offsets_all_fe_families();
+     
+     FillISvectorElemOffsets(partition);
+     
+     FillISvectorNodeOffsets();
     
   }
 

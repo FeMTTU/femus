@@ -286,14 +286,7 @@ int main(int argc, char** args) {
 // // //  BEGIN FillISvector
            ml_mesh.GetLevelZero(0)->dofmap_initialize_dof_offsets_all_fe_families();
 
-           // // // ======== ELEM OFFSETS =========================================================  
-           ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
-           ml_mesh.GetLevelZero(0)->build_elem_offsets_and_reorder_mesh_elem_quantities(elem_partition_from_mesh_file_to_new);
-           ml_mesh.GetLevelZero(0)->set_elem_counts();
-           std::vector<unsigned> ().swap(elem_partition_from_mesh_file_to_new);
-
-           
-           ml_mesh.GetLevelZero(0)->dofmap_build_element_based_dof_offsets();
+           ml_mesh.GetLevelZero(0)->FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
            // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
            //I will loop over the elements and take all the node dofs either of order 1 or 2, counted with repetition
            //Then I have to take the mesh skeleton (without repetition)
@@ -303,8 +296,7 @@ int main(int argc, char** args) {
            
            // // // ======== NODE OFFSETS =========================================================  
            //there should be a distinction here between "node offsets" and "dof offsets"
-           std::vector < unsigned > node_mapping_from_mesh_file_to_new;
-           ml_mesh.GetLevelZero(0)->dofmap_compute_Node_mapping_Node_ownSize(node_mapping_from_mesh_file_to_new);
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->dofmap_compute_Node_mapping_Node_ownSize();
            ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
            
            ml_mesh.GetLevelZero(0)->dofmap_build_node_based_dof_offsets_biquadratic();

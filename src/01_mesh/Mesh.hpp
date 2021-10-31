@@ -355,11 +355,15 @@ public:
     /** FE: DofMap: Here is where the element and node global orderings are changed based on the partitioning */
     void FillISvector(vector < unsigned > &partition);
 
+    void FillISvectorElemOffsets(std::vector < unsigned >& partition);
+  
+    void FillISvectorNodeOffsets();
+    
     void dofmap_initialize_dof_offsets_all_fe_families();
     
     void dofmap_build_element_based_dof_offsets();
-    /**  */
-    void dofmap_compute_Node_mapping_Node_ownSize(std::vector< unsigned > & mapping);
+
+    std::vector <unsigned> dofmap_compute_Node_mapping_Node_ownSize();
     
     void dofmap_build_node_based_dof_offsets_biquadratic();
     
