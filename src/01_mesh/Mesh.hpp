@@ -375,8 +375,9 @@ public:
     std::vector < unsigned > _dofOffset[5];
     /** FE: DofMap: Number of ghost nodes per FE family and per processor (count, non-incremental) */
     std::vector< std::vector < int > > _ghostDofs[5];
-
+    
 private:
+
     
     /** FE: DofMap  k = 0, 1 */
     std::map < unsigned, unsigned > _ownedGhostMap[2];

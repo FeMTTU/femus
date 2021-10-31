@@ -302,6 +302,7 @@ int main(int argc, char** args) {
            // Then, when it comes to retrieving such dofs for each element, i'll retrieve the interior element nodes + the boundary dofs
            
            // // // ======== NODE OFFSETS =========================================================  
+           //there should be a distinction here between "node offsets" and "dof offsets"
            std::vector < unsigned > node_mapping_from_mesh_file_to_new;
            ml_mesh.GetLevelZero(0)->dofmap_compute_Node_mapping_Node_ownSize(node_mapping_from_mesh_file_to_new);
            ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
@@ -318,7 +319,7 @@ int main(int argc, char** args) {
 // // //   END FillISvector
        
    
-           ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();  //does it need dofmap already?
+           ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();  //does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
            
            ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
 

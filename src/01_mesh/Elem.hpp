@@ -18,9 +18,6 @@
 
 
 #include "GeomElTypeEnum.hpp"
-#include "Mesh.hpp"
-#include "NumericVector.hpp"
-
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
 #include "Basis.hpp"
@@ -33,14 +30,12 @@
 
 namespace femus {
 
+  //Forward declarations  
   class basis;
-  
   class Mesh;
-  
-  class NumericVector;
   /**
    * The elem class: it contains the list of all Mesh Geometric Elements, along with several Element-based and also Node-based properties
-   * @todo I believe it would even be more linear if this class did not have any function involving the Mesh pointer, there are very few in any case
+   * @todo I believe it would even be more linear if this class did not have any function at all involving the Mesh pointer, there are very few in any case
   */
   class elem {
 
@@ -255,6 +250,7 @@ namespace femus {
       
     private:
 
+      /** Pointer to the list of coarser elements */
       elem* _coarseElem;
             
       unsigned _iproc;
@@ -285,7 +281,9 @@ namespace femus {
       /** @todo this is about the elements attached to each face. It is used for BCs as well */
       MyMatrix <int> _elementNearFace;
 
+      /** This is only going to all levels except the finest one  @todo I think it contains for each element the list of its child elements */
       MyMatrix <unsigned> _childElem;
+      /** This is only going to all levels except the finest one */
       MyMatrix <unsigned> _childElemDof;
 
       /** For each Node, it gives the list of elements having that Node as a vertex 

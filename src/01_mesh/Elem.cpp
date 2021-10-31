@@ -17,14 +17,18 @@
 // includes :
 //----------------------------------------------------------------------------
 
+#include "Elem.hpp"
+#include "Mesh.hpp"
+#include "GeomElTypeEnum.hpp"
+#include "NumericVector.hpp"
+
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
-#include "Elem.hpp"
-#include "GeomElTypeEnum.hpp"
+
 
 namespace femus
 {

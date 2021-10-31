@@ -445,7 +445,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====================================
 //==== SetChildElementDof ======== 
 //====================================
-    elc->SetChildElementDof(_mesh.el);
+    elc->SetChildElementDof(_mesh.el); ///@todo you can only do this after the reordering that took place in FillISVector
 
     
     

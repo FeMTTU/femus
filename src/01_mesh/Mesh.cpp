@@ -306,24 +306,6 @@ namespace femus {
   }
   
   
-  void Mesh::ComputeCharacteristicLength() {
-      
-    //compute max and min coords -----------
-    std::vector < double > xMax(3, 0.);
-    std::vector < double > xMin(3, 0.);
-    for(unsigned i = 0; i < _coords[0].size(); i++) {
-      for(unsigned k = 0; k < 3; k++) {
-        if(xMax[k] < _coords[k][i]) xMax[k] = _coords[k][i];
-        if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
-      }
-    }
-    
-    _cLength = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
-    //compute max and min coords - end -----------
-    
-  }
-  
-  
 /// This needs the dof maps, for the discontinuous Lagrange elements
   void Mesh::Topology_InitializeAMR() {
       
@@ -342,7 +324,27 @@ namespace femus {
     AllocateAndMarkStructureNode();
 
   }
+  
 
+  
+  void Mesh::ComputeCharacteristicLength() {
+      
+    //compute max and min coords -----------
+    std::vector < double > xMax(3, 0.);
+    std::vector < double > xMin(3, 0.);
+    for(unsigned i = 0; i < _coords[0].size(); i++) {
+      for(unsigned k = 0; k < 3; k++) {
+        if(xMax[k] < _coords[k][i]) xMax[k] = _coords[k][i];
+        if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
+      }
+    }
+    
+    _cLength = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
+    //compute max and min coords - end -----------
+    
+  }
+  
+  
   /**
    *  This function generates the coarse Box Mesh level using the built-in generator
    *   ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, need to check that
@@ -393,6 +395,7 @@ namespace femus {
 
   /** This function stores the element adiacent to the element face (iel, iface)
    * and stores it in _elementNearFace[iel][iface]
+   * @todo this function should go inside the Elem class instead
    **/
   void Mesh::BuildElementNearFace() {
       
