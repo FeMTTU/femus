@@ -290,7 +290,7 @@ namespace femus
 
               // Build the elements of the mesh
               unsigned iel = 0;
-              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el = new elem(mesh.GetNumberOfElements(), mesh.GetDimension());
               mesh.el->SetElementGroupNumber(1);
               // Build the elements.  Each one is a bit different.
               switch(type) {
@@ -529,7 +529,7 @@ namespace femus
 
 
               unsigned iel = 0;
-              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el = new elem(mesh.GetNumberOfElements(), mesh.GetDimension());
               mesh.el->SetElementGroupNumber(1);
               // Build the elements.  Each one is a bit different.
               switch(type) {
@@ -953,7 +953,7 @@ namespace femus
 
               // Build the elements.
               unsigned iel = 0;
-              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el = new elem(mesh.GetNumberOfElements(), mesh.GetDimension());
               mesh.el->SetElementGroupNumber(1);
               switch(type) {
 // 	  case INVALID_ELEM:

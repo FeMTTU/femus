@@ -373,11 +373,11 @@ public:
     
     void dofmap_Node_based_dof_offsets_build_linear_quadratic();
     
-    /** FE: DofMap: Number of owned nodes per FE family and per processor (count, non-incremental) */
+    /** FE: DofMap: Number of owned dofs per FE family and per processor (count, non-incremental) */
     std::vector < unsigned > _ownSize[5];
-    /** FE: DofMap: Number of nodes per FE family and per processor (incremental count) */
+    /** FE: DofMap: Number of dofs per FE family and per processor (incremental count) */
     std::vector < unsigned > _dofOffset[5];
-    /** FE: DofMap: Number of ghost nodes per FE family and per processor (count, non-incremental) */
+    /** FE: DofMap: Number of ghost dofs per FE family and per processor (count, non-incremental) */
     std::vector< std::vector < int > > _ghostDofs[5];
     
 private:

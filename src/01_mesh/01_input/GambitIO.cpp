@@ -119,7 +119,7 @@ namespace femus {
       std::cout << "Generic-mesh file " << name << " cannot read elements\n";
       exit(0);
     }
-    mesh.el = new elem(nel);
+    mesh.el = new elem(nel, mesh.GetDimension());
     while(str2.compare("ELEMENTS/CELLS") != 0) inf >> str2;
     inf >> str2;
     for(unsigned iel = 0; iel < nel; iel++) {

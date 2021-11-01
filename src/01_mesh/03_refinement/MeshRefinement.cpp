@@ -220,7 +220,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), mshc);
 
-    _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector);
+    _mesh.el = new elem(elc, mshc->GetDimension(), _mesh.GetRefIndex(), coarseLocalizedAmrVector);
 
 
     unsigned jel = 0;

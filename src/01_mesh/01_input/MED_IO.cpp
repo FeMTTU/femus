@@ -884,7 +884,7 @@ namespace femus {
     std::cout << " Number of elements of dimension " << (i + 1) << " in med file: " <<  n_elems_per_dimension <<  std::endl;
        
       mesh.SetNumberOfElements(n_elems_per_dimension);
-      mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted. It is in the Destructor of Mesh
+      mesh.el = new elem(n_elems_per_dimension, mesh.GetDimension());
 
 
 

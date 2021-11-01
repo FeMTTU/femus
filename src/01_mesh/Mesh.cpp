@@ -420,14 +420,14 @@ namespace femus {
                   unsigned j3 = el->GetFaceVertexIndex(jel, jface, 2);
                   unsigned j4 = el->GetFaceVertexIndex(jel, jface, 3);
 
-                  if((Mesh::_dimension == 3 &&
+                  if((el->GetDimension()/*Mesh::_dimension*/ == 3 &&
                       (i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
                       (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
                       (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4)) ||
-                      (Mesh::_dimension == 2 &&
+                      (el->GetDimension()/*Mesh::_dimension*/ == 2 &&
                        (i1 == j1 || i1 == j2) &&
                        (i2 == j1 || i2 == j2)) ||
-                      (Mesh::_dimension == 1 &&
+                      (el->GetDimension()/*Mesh::_dimension*/ == 1 &&
                        (i1 == j1))
                     ) {
                     el->SetFaceElementIndex(iel, iface, jel + 1u);

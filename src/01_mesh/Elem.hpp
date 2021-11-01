@@ -43,10 +43,10 @@ namespace femus {
     public:
 
       /** constructors */
-      elem(const unsigned& other_nel);
+      elem(const unsigned& other_nel, const unsigned dim_in);
 
       //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
-      elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
+      elem(elem* elc, const unsigned dim_in, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
 
       /** destructor */
       ~elem();
@@ -247,15 +247,20 @@ namespace femus {
         return _materialElementCounter;
       }
       
+      /** To be Added */
+      unsigned GetDimension() const { return _dim; }
+
       
     private:
 
-      /** Pointer to the list of coarser elements */
-      elem* _coarseElem;
-            
       unsigned _iproc;
       unsigned _nprocs;
 
+      /** Pointer to the list of coarser elements */
+      elem* _coarseElem;
+      /** level of refinement of this list of elements */
+      unsigned _level;
+            
       /** Dimension of the underlying Mesh */
       unsigned _dim;
       /** Number of nodes of the Mesh */
@@ -268,8 +273,6 @@ namespace femus {
       unsigned _nelr;
       /** @todo group of all elements - seems to be unused */
       unsigned _ngroup;
-      /** level of refinement of this list of elements */
-      unsigned _level;
 
       std::vector < unsigned > _elementOffset;
       unsigned _elementOwned;
