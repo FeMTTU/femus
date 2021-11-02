@@ -453,7 +453,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //==== BuildMeshElemStructures ======== 
 //====================================
         
-    _mesh.BuildMeshElemStructures();
+    _mesh.GetMeshElements()->BuildMeshElemStructures();
   
     
 //====================================

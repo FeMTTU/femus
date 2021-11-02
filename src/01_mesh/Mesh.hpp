@@ -125,7 +125,7 @@ public:
 
     /** Get element group*/
     short unsigned GetElementGroup(const unsigned &iel) const;
-    /** Get element material*/
+    /** Get element material @todo this should be in a separate FSI environment */
     short unsigned GetElementMaterial(const unsigned &iel) const;
     
     /** Get element type*/
@@ -144,20 +144,15 @@ public:
 
     unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = 1) const;
     
-    void BuildMeshElemStructures();
-    
-    /** To be added */
-    void BuildElementNearFace();
-
     /** MESH */
-    elem * GetElementArray() const {
+    elem * GetMeshElements() const {
       return el;
     }
     
-    /** MESH: list of all elements */
+    /** MESH: list of all elements @todo should be private */
     elem *el;
     
-    /** MESH: Number of elements per processor (incremental count) */
+    /** MESH: Number of elements per processor (incremental count)  @todo should be private */
     std::vector < unsigned > _elementOffset;
  
   
@@ -359,7 +354,7 @@ public:
   
     void FillISvectorNodeOffsets();
     
-    void dofmap_all_fe_families_initialize_dof_offsets();
+    void dofmap_all_fe_families_initialize();
     
     void dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
     
@@ -373,15 +368,20 @@ public:
     
     void dofmap_Node_based_dof_offsets_build_linear_quadratic();
     
-    /** FE: DofMap: Number of owned dofs per FE family and per processor (count, non-incremental) */
-    std::vector < unsigned > _ownSize[5];
+    unsigned  dofmap_get_own_size(const unsigned soltype, const unsigned proc_id) const { return  _ownSize[soltype][proc_id]; }
+    
+    std::vector < int > dofmap_get_ghost_dofs(const unsigned soltype, const unsigned proc_id) const { return  _ghostDofs[soltype][proc_id]; }
+
     /** FE: DofMap: Number of dofs per FE family and per processor (incremental count) */
     std::vector < unsigned > _dofOffset[5];
-    /** FE: DofMap: Number of ghost dofs per FE family and per processor (count, non-incremental) */
-    std::vector< std::vector < int > > _ghostDofs[5];
     
 private:
 
+    
+    /** FE: DofMap: Number of owned dofs per FE family and per processor (count, non-incremental) */
+    std::vector < unsigned > _ownSize[5];
+    /** FE: DofMap: Number of ghost dofs per FE family and per processor (count, non-incremental) */
+    std::vector< std::vector < int > > _ghostDofs[5];
     
     /** FE: DofMap  k = 0, 1 */
     std::map < unsigned, unsigned > _ownedGhostMap[2];
@@ -389,25 +389,8 @@ private:
     std::vector < unsigned > _originalOwnSize[2];
     /** print node-based dofOffset counts */
     void PrintInfoNodes() const;
-   
-// =========================
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) =================
-// =========================
-public:
-    
-    /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
-    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
 
     
-private:
-    
-    /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
-    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-
-    /** FE: The projection matrix between Lagrange FEM at the same level mesh */
-    SparseMatrix* _ProjQitoQj[3][3];
-
-   
 // =========================
 // === FE DOFMAP & REFINEMENT =================
 // =========================
@@ -428,6 +411,24 @@ private:
 
     
     
+// =========================
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) =================
+// =========================
+public:
+    
+    /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
+    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+
+    
+private:
+    
+    /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
+    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+
+    /** FE: The projection matrix between Lagrange FEM at the same level mesh */
+    SparseMatrix* _ProjQitoQj[3][3];
+
+   
     
 // =========================
 // === TOPOLOGY: Coordinates, AMR, SolidMark (a bit of everything) =================
@@ -451,10 +452,10 @@ public:
     
     void Topology_InitializeAndFillSolidNodeFlag();
     
-    /** FSI: Allocate memory for adding fluid or solid mark */
+    /** FSI: Allocate memory for adding fluid or solid mark @todo this should be in a separate FSI environment */
     void AllocateAndMarkStructureNode();
     
-    /** Only for parallel */
+    /** Only for parallel @todo this should be in a separate FSI environment */
     bool GetSolidMark(const unsigned &inode) const;
     
     void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType = 2);

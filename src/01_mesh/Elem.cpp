@@ -388,6 +388,59 @@ namespace femus
     _ngroup = value;
   }
 
+  
+  void elem::BuildElementNearFace() {
+      
+    for(unsigned iel = 0; iel < GetElementNumber(); iel++) {
+      for(unsigned iface = 0; iface < GetElementFaceNumber(iel); iface++) {
+        if(GetFaceElementIndex(iel, iface) <= 0) {   /// @todo probably just == -1
+          unsigned i1 = GetFaceVertexIndex(iel, iface, 0);
+          unsigned i2 = GetFaceVertexIndex(iel, iface, 1);
+          unsigned i3 = GetFaceVertexIndex(iel, iface, 2);
+
+          for(unsigned j = 0; j < GetElementNearVertexNumber(i1); j++) {
+            unsigned jel = GetElementNearVertex(i1, j);
+
+            if(jel > iel) {
+              for(unsigned jface = 0; jface < GetElementFaceNumber(jel); jface++) {
+                if(GetFaceElementIndex(jel, jface) <= 0) {
+                  unsigned j1 = GetFaceVertexIndex(jel, jface, 0);
+                  unsigned j2 = GetFaceVertexIndex(jel, jface, 1);
+                  unsigned j3 = GetFaceVertexIndex(jel, jface, 2);
+                  unsigned j4 = GetFaceVertexIndex(jel, jface, 3);
+                  
+                  const bool faces_coincide_three_dim = (GetDimension()/*Mesh::_dimension*/ == 3 &&
+                                         (i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
+                                         (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
+                                         (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4));
+                  
+                  const bool faces_coincide_two_dim = (GetDimension()/*Mesh::_dimension*/ == 2 &&
+                                       (i1 == j1 || i1 == j2) &&
+                                       (i2 == j1 || i2 == j2));
+                  
+                  const bool faces_coincide_one_dim = (GetDimension()/*Mesh::_dimension*/ == 1 && (i1 == j1));
+
+                  if(faces_coincide_three_dim
+                      ||
+                     faces_coincide_two_dim 
+                      ||
+                     faces_coincide_one_dim
+                    ) {
+                    SetFaceElementIndex(iel, iface, jel + 1u);
+                    SetFaceElementIndex(jel, jface, iel + 1u);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+  }
+
+  
+  
   /**
    * Set the memory storage and initialize nve and kvtel (node->element vectors)
    **/
@@ -445,6 +498,27 @@ namespace femus
     }
   }
 
+  
+  
+  void elem::BuildMeshElemStructures() {
+      
+    BuildElementNearVertex();
+
+
+    BuildElementNearFace();
+
+
+    BuildElementNearElement();
+    DeleteElementNearVertex();
+
+    ScatterElementQuantities();
+    ScatterElementDof();
+    ScatterElementNearFace();
+    
+  }
+  
+  
+  
   /**
    * Return the number of elements which have a given vertex
    **/

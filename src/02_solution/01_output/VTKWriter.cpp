@@ -135,7 +135,7 @@ namespace femus {
     const unsigned elementOffsetp1 = mesh->_elementOffset[_iproc + 1];
     
     const unsigned dofOffset = mesh->_dofOffset[index][_iproc];
-    const unsigned nvtOwned = mesh->_ownSize[index][_iproc];
+    const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _iproc);
     
     // point pointer to common memory area buffer of void type;
     unsigned icount = 0;
@@ -346,7 +346,7 @@ namespace femus {
     const unsigned nel = elemetOffsetp1 - elemetOffset;
     
     //count the own node dofs on all levels -------------
-    unsigned nvtOwned = mesh->_ownSize[index][_iproc];
+    unsigned nvtOwned = mesh->dofmap_get_own_size(index, _iproc);
     
     // count the ghost node dofs on all levels -------------
     const std::map < unsigned, unsigned > ghostMap = ghost_map_proc(mesh, index);
@@ -389,8 +389,8 @@ namespace femus {
     }
     else { // IF PARALLEL
       num_vec_aux_for_node_fields->init( mesh->_dofOffset[index][_nprocs],
-                   mesh->_ownSize[index][_iproc],
-                   mesh->_ghostDofs[index][_iproc], false, GHOSTED );
+                   mesh->dofmap_get_own_size(index, _iproc),
+                   mesh->dofmap_get_ghost_dofs(index, _iproc), false, GHOSTED );
     }
     //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
 
@@ -601,7 +601,7 @@ namespace femus {
          //--------- fill var_nd ------------
             //print own dofs -------------------------
             unsigned offset_iprc = mesh->_dofOffset[index][_iproc];
-            unsigned nvt_ig = mesh->_ownSize[index][_iproc];
+            unsigned nvt_ig = mesh->dofmap_get_own_size(index, _iproc);
 
             if( name == 0 )
               num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex],

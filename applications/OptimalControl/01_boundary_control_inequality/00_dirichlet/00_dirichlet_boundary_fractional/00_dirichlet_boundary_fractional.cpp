@@ -284,7 +284,7 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new); 
            
 // // //  BEGIN FillISvector
-           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize_dof_offsets();
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
 
            ml_mesh.GetLevelZero(0)->FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
            // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
@@ -305,13 +305,15 @@ int main(int argc, char** args) {
            
            ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_build_linear_quadratic();
            
+           ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
+           // // // ======== NODE OFFSETS - end =========================================================  
+           
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
 
-           ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
 // // //   END FillISvector
        
    
-           ml_mesh.GetLevelZero(0)->BuildMeshElemStructures();  //does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
+           ml_mesh.GetLevelZero(0)->GetMeshElements()->BuildMeshElemStructures();  //does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
            
            ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
 

@@ -18,9 +18,9 @@
 //----------------------------------------------------------------------------
 #include "Mesh.hpp"
 #include "MeshGeneration.hpp"
-#include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
 #include "MED_IO.hpp"
+#include "MeshMetisPartitioning.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -243,7 +243,7 @@ namespace femus {
     
     Partition();
 
-    BuildMeshElemStructures();
+    GetMeshElements()->BuildMeshElemStructures();
     
     BuildTopologyStructures();
 
@@ -254,24 +254,6 @@ namespace femus {
   }
 
 
-  void Mesh::BuildMeshElemStructures() {
-      
-    el->BuildElementNearVertex();
-
-
-    BuildElementNearFace();
-
-
-    el->BuildElementNearElement();
-    el->DeleteElementNearVertex();
-
-    el->ScatterElementQuantities();
-    el->ScatterElementDof();
-    el->ScatterElementNearFace();
-    
-
-  }
-  
   
   void Mesh::BuildTopologyStructures() {
       
@@ -384,7 +366,7 @@ namespace femus {
     Partition();
 
 
-    BuildMeshElemStructures();
+    GetMeshElements()->BuildMeshElemStructures();
     
     
     BuildTopologyStructures();
@@ -400,56 +382,6 @@ namespace femus {
    * and stores it in _elementNearFace[iel][iface]
    * @todo this function should go inside the Elem class instead
    **/
-  void Mesh::BuildElementNearFace() {
-      
-    for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
-      for(unsigned iface = 0; iface < el->GetElementFaceNumber(iel); iface++) {
-        if(el->GetFaceElementIndex(iel, iface) <= 0) {   /// @todo probably just == -1
-          unsigned i1 = el->GetFaceVertexIndex(iel, iface, 0);
-          unsigned i2 = el->GetFaceVertexIndex(iel, iface, 1);
-          unsigned i3 = el->GetFaceVertexIndex(iel, iface, 2);
-
-          for(unsigned j = 0; j < el->GetElementNearVertexNumber(i1); j++) {
-            unsigned jel = el->GetElementNearVertex(i1, j);
-
-            if(jel > iel) {
-              for(unsigned jface = 0; jface < el->GetElementFaceNumber(jel); jface++) {
-                if(el->GetFaceElementIndex(jel, jface) <= 0) {
-                  unsigned j1 = el->GetFaceVertexIndex(jel, jface, 0);
-                  unsigned j2 = el->GetFaceVertexIndex(jel, jface, 1);
-                  unsigned j3 = el->GetFaceVertexIndex(jel, jface, 2);
-                  unsigned j4 = el->GetFaceVertexIndex(jel, jface, 3);
-                  
-                  const bool faces_coincide_three_dim = (el->GetDimension()/*Mesh::_dimension*/ == 3 &&
-                                         (i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
-                                         (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
-                                         (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4));
-                  
-                  const bool faces_coincide_two_dim = (el->GetDimension()/*Mesh::_dimension*/ == 2 &&
-                                       (i1 == j1 || i1 == j2) &&
-                                       (i2 == j1 || i2 == j2));
-                  
-                  const bool faces_coincide_one_dim = (el->GetDimension()/*Mesh::_dimension*/ == 1 && (i1 == j1));
-
-                  if(faces_coincide_three_dim
-                      ||
-                     faces_coincide_two_dim 
-                      ||
-                     faces_coincide_one_dim
-                    ) {
-                    el->SetFaceElementIndex(iel, iface, jel + 1u);
-                    el->SetFaceElementIndex(jel, jface, iel + 1u);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    
-  }
-
 
   void Mesh::AllocateAndMarkStructureNode() {
 
@@ -547,14 +479,20 @@ namespace femus {
   }
   
 
-  void Mesh::dofmap_all_fe_families_initialize_dof_offsets() {
+  void Mesh::dofmap_all_fe_families_initialize() {
       
     //BEGIN Initialization for k = 0,1,2,3,4
     for(int k = 0; k < 5; k++) {
       _dofOffset[k].resize(_nprocs + 1);
       _dofOffset[k][0] = 0;
     }
+    
+    for(int k = 0; k < 5; k++) {
+              _ownSize[k].assign(_nprocs, 0); 
+            _ghostDofs[k].resize(_nprocs);
+    }
     //END Initialization for k = 0,1,2,3,4
+
     
   }
 
@@ -892,8 +830,6 @@ namespace femus {
     dofmap_Node_based_dof_offsets_build_linear_quadratic();
     //END completing for k = 0,1
     
-    dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
-    
     set_node_counts(); //redundant by now
       
   }
@@ -904,11 +840,13 @@ namespace femus {
   */
   void Mesh::FillISvector(std::vector < unsigned >& partition) {
 
-     dofmap_all_fe_families_initialize_dof_offsets();
+     dofmap_all_fe_families_initialize();
      
      FillISvectorElemOffsets(partition);
      
      FillISvectorNodeOffsets();
+    
+     dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
     
   }
 

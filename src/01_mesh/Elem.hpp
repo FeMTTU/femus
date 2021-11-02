@@ -165,6 +165,11 @@ namespace femus {
 
       void BuildElementNearElement();
 
+      /** To be added */
+      void BuildElementNearFace();
+
+      void BuildMeshElemStructures();
+      
       const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers)  {
         return (layers == 0) ? 1 : _elementNearElement.end(iel);
       };
@@ -274,6 +279,7 @@ namespace femus {
       /** @todo group of all elements - seems to be unused */
       unsigned _ngroup;
 
+      /** @todo Same as in Mesh, see if we can avoid duplication */
       std::vector < unsigned > _elementOffset;
       unsigned _elementOwned;
 

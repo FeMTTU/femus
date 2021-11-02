@@ -55,26 +55,7 @@ namespace femus {
   };
 
  
-//   const unsigned GambitIO::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0,5,3,0,1,0};
-//   
-//   const double GambitIO::_baricentricWeight[N_GEOM_ELS][5][18] = {
-//     {},
-//     { 
-//       { -1./9., -1./ 9., -1./9.,  0    , 4./9., 4./9., 4./9., 0.   , 0.   , 0.   },
-//       { -1./9., -1./ 9.,  0.   , -1./9., 4./9., 0.   , 0.   , 4./9., 4./9., 0.   },
-//       {  0.   , -1./ 9., -1./9., -1./9., 0.   , 4./9., 0.   , 0.   , 4./9., 4./9.},
-//       { -1./9.,  0.    , -1./9., -1./9., 0.   , 0.   , 4./9., 4./9., 0.   , 4./9.},
-//       { -1./8., -1./ 8., -1./8., -1./8., 1./4., 1./4., 1./4., 1./4., 1./4., 1./4.}
-//     },
-//     {
-//       { -1./9., -1./9., -1./9., 0.   ,  0.   ,  0.   , 4./9., 4./9., 4./9.},
-//       {  0.   ,  0.   ,  0.   ,-1./9., -1./9., -1./9., 0.   , 0.   , 0.   , 4./9., 4./9., 4./9.},
-//       {  0.   ,  0.   ,  0.   , 0.   ,  0.   ,  0.   , 0.   , 0.   , 0.   , 0.   , 0.   , 0.   ,
-//         -1./9., -1./9., -1./9., 4./9.,  4./9.,  4./9.},
-//     },
-//     {},
-//     {{ -1. / 9., -1. / 9., -1. / 9., 4. / 9., 4. / 9., 4. / 9.}}
-//   };
+
 
   void GambitIO::read(const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
@@ -229,29 +210,6 @@ namespace femus {
       exit(0);
     }
     
-    // add the coordinates of the biquadratic nodes not included in gambit
-/*    for(int iel = 0; iel < nel; iel++) {
-      unsigned elementType = mesh.el->GetElementType(iel);
-      
-      unsigned ndof = mesh.el->GetElementDofNumber(iel,2);
-      unsigned jstart = ndof - _numberOfMissedBiquadraticNodes[elementType];
-            
-      for(unsigned j = jstart; j < ndof; j++){
-	
-	unsigned jnode = mesh.el->GetElementDofIndex(iel, j);
-	
-	coords[0][jnode] = 0.;
-        coords[1][jnode] = 0.;
-        coords[2][jnode] = 0.;
-        for(int i = 0; i < jstart; i++) {
-          unsigned inode = mesh.el->GetElementDofIndex(iel, i);
-          for(int k = 0; k < mesh.GetDimension(); k++) {
-	    coords[k][jnode] += coords[k][inode] * _baricentricWeight[ elementType ][j - jstart][i];
-          }          
-        }  
-      }     
-    }*/   
-
     
     inf.close();
     // end read NODAL COORDINATES ************* C
@@ -320,81 +278,5 @@ namespace femus {
 
   };
   
-  
-//   void GambitIO::AddBiquadraticNodesNotInMeshFile(Mesh& mesh) {
-// 
-//     unsigned int nnodes = mesh.GetNumberOfNodes();
-// //     std::cout << " ********************************** "<< std::endl;
-// //     std::cout << "nnodes before = "  << nnodes << std::endl;
-// 
-//     //intialize to UINT_MAX
-//     for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
-//       unsigned elementType = mesh.el->GetElementType(iel);
-//       if( elementType == 1 || elementType == 2 ) {
-//         for( unsigned inode = mesh.el->GetElementDofNumber( iel, 2 ) - _numberOfMissedBiquadraticNodes[elementType]; 
-// 	    inode < mesh.el->GetElementDofNumber( iel, 2 ); inode++ ) {
-//           mesh.el->SetElementDofIndex( iel, inode, UINT_MAX );
-//         }
-//       }
-//     }
-// 
-//     // generate face dofs for tet and wedge elements
-//     for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
-//       unsigned elementType = mesh.el->GetElementType(iel);
-//       if( elementType == 1 || elementType == 2 ) {
-//         for( unsigned iface = mesh.el->GetElementFaceNumber( iel, 0 ); iface < mesh.el->GetElementFaceNumber( iel, 1 ); iface++ ) { //on all the faces that are triangles
-//           unsigned inode = mesh.el->GetElementDofNumber( iel, 1 ) + iface; 
-// 	  if( UINT_MAX == mesh.el->GetElementDofIndex( iel, inode ) ) {
-//             mesh.el->SetElementDofIndex( iel, inode, nnodes);
-// 	    unsigned i1 = mesh.el->GetFaceVertexIndex( iel, iface, 0 );
-//             unsigned i2 = mesh.el->GetFaceVertexIndex( iel, iface, 1 );
-// 	    unsigned i3 = mesh.el->GetFaceVertexIndex( iel, iface, 2 );
-// 	    bool faceHasBeenFound = false;
-// 	    for( unsigned jel = iel + 1; jel < mesh.el->GetElementNumber(); jel++ ) {
-// 	      for( unsigned jface = mesh.el->GetElementFaceNumber( jel, 0 ); jface < mesh.el->GetElementFaceNumber( jel, 1 ); jface++ ) {
-//                 unsigned jnode = mesh.el->GetElementDofNumber( jel, 1 ) + jface;
-// 		if( UINT_MAX == mesh.el->GetElementDofIndex( jel, jnode ) ) {
-//                   unsigned j1 = mesh.el->GetFaceVertexIndex( jel, jface, 0 );
-//                   unsigned j2 = mesh.el->GetFaceVertexIndex( jel, jface, 1 );
-//                   unsigned j3 = mesh.el->GetFaceVertexIndex( jel, jface, 2 );
-// 		  if( ( i1 == j1 || i1 == j2 || i1 == j3 ) &&
-//                       ( i2 == j1 || i2 == j2 || i2 == j3 ) &&
-//                       ( i3 == j1 || i3 == j2 || i3 == j3 ) ) {
-//                     mesh.el->SetElementDofIndex( jel, jnode, nnodes);
-// 		    faceHasBeenFound = true;
-// 		    break;
-//                   }
-// 		}
-// 	      }
-// 	      if(faceHasBeenFound){
-// 		break;
-// 	      }
-// 	    }
-// 	    ++nnodes; 
-// 	  }    
-// 	}
-//       }
-//     }
-// 
-//     // generates element dofs for tet, wedge and triangle elements
-//     for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
-//       if( 1 == mesh.el->GetElementType( iel ) ) { //tet
-//           mesh.el->SetElementDofIndex( iel, 14, nnodes);
-// 	  ++nnodes;
-//         }
-//         else if( 2 == mesh.el->GetElementType( iel ) ) { //wedge
-//          mesh.el->SetElementDofIndex( iel, 20, nnodes);
-// 	 ++nnodes;
-//         }
-//         else if( 4 == mesh.el->GetElementType( iel ) ) { //triangle
-//           mesh.el->SetElementDofIndex( iel, 6, nnodes);
-// 	  ++nnodes;
-//         }
-//     }
-// 
-//     mesh.el->SetNodeNumber( nnodes );
-//     mesh.SetNumberOfNodes( nnodes );
-// //     std::cout <<"nnodes after="<< nnodes << std::endl;
-//   }
- 
+   
 }

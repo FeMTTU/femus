@@ -115,7 +115,7 @@ namespace femus {
     vector2.reserve( maxDim );
 
     NumericVector* numVector = NumericVector::build().release();
-    numVector->init( nvt, mesh->_ownSize[index_nd][_iproc], true, AUTOMATIC );
+    numVector->init( nvt, mesh->dofmap_get_own_size(index_nd, _iproc), true, AUTOMATIC );
 
     //BEGIN XMF FILE PRINT
 
