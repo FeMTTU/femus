@@ -368,6 +368,8 @@ public:
     
     void dofmap_Node_based_dof_offsets_build_linear_quadratic();
     
+    unsigned  dofmap_get_dof_offset(const unsigned soltype, const unsigned proc_id) const { return  _dofOffset[soltype][proc_id]; }
+    
     unsigned  dofmap_get_own_size(const unsigned soltype, const unsigned proc_id) const { return  _ownSize[soltype][proc_id]; }
     
     std::vector < int > dofmap_get_ghost_dofs(const unsigned soltype, const unsigned proc_id) const { return  _ghostDofs[soltype][proc_id]; }

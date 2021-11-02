@@ -428,7 +428,7 @@ namespace femus {
       
 
      std::vector<unsigned>  partition(GetNumberOfNodes(), _nprocs);
-    std::vector <unsigned>  mapping(GetNumberOfNodes(), 0);
+    std::vector <unsigned>  mapping_from_mesh_file_to_femus(GetNumberOfNodes(), 0);
 
     for(unsigned k = 0; k < 3; k++) {
       _ownSize[k].assign(_nprocs, 0);
@@ -444,11 +444,11 @@ namespace femus {
           unsigned nodeEnd = el->GetElementDofNumber(iel, k);
 
           for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-            unsigned ii = el->GetElementDofIndex(iel, inode);
+            unsigned ii = el->GetElementDofIndex(iel, inode); //at this point the elements were reordered, but not the nodes
 
             if(partition[ii] > isdom) {
               partition[ii] = isdom;
-              mapping[ii] = counter;
+              mapping_from_mesh_file_to_femus[ii] = counter;
               counter++;
 
               for(int j = k; j < 3; j++) {
@@ -465,7 +465,7 @@ namespace femus {
     std::vector<unsigned> ().swap(partition);
     
     
-    return mapping;
+    return mapping_from_mesh_file_to_femus;
   
   }
 // *******************************************************
