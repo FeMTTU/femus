@@ -419,16 +419,23 @@ namespace femus {
                   unsigned j2 = el->GetFaceVertexIndex(jel, jface, 1);
                   unsigned j3 = el->GetFaceVertexIndex(jel, jface, 2);
                   unsigned j4 = el->GetFaceVertexIndex(jel, jface, 3);
+                  
+                  const bool faces_coincide_three_dim = (el->GetDimension()/*Mesh::_dimension*/ == 3 &&
+                                         (i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
+                                         (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
+                                         (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4));
+                  
+                  const bool faces_coincide_two_dim = (el->GetDimension()/*Mesh::_dimension*/ == 2 &&
+                                       (i1 == j1 || i1 == j2) &&
+                                       (i2 == j1 || i2 == j2));
+                  
+                  const bool faces_coincide_one_dim = (el->GetDimension()/*Mesh::_dimension*/ == 1 && (i1 == j1));
 
-                  if((el->GetDimension()/*Mesh::_dimension*/ == 3 &&
-                      (i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
-                      (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
-                      (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4)) ||
-                      (el->GetDimension()/*Mesh::_dimension*/ == 2 &&
-                       (i1 == j1 || i1 == j2) &&
-                       (i2 == j1 || i2 == j2)) ||
-                      (el->GetDimension()/*Mesh::_dimension*/ == 1 &&
-                       (i1 == j1))
+                  if(faces_coincide_three_dim
+                      ||
+                     faces_coincide_two_dim 
+                      ||
+                     faces_coincide_one_dim
                     ) {
                     el->SetFaceElementIndex(iel, iface, jel + 1u);
                     el->SetFaceElementIndex(jel, jface, iel + 1u);
