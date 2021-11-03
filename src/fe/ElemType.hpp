@@ -339,10 +339,11 @@ namespace femus
       std::vector < std::vector <  std::vector < double > > > _dphidxi_templ;     
       
 // =========================================
-// ===  Equation, Sparsity pattern =================
+// ===  Equation, Sparsity pattern and Multigrid =================
 // =========================================
     public:
 
+      /** @todo move away from here */
       void GetSparsityPatternSize(const LinearEquation& lspdef, 
                                   const LinearEquation& lspdec,
                                   const int& ielc,
@@ -351,25 +352,7 @@ namespace femus
                                   const unsigned& index_sol, 
                                   const unsigned& kkindex_sol) const;
 
-      void GetSparsityPatternSize(const Mesh& meshf,
-                                  const Mesh& meshc,
-                                  const int& ielc,
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const char el_dofs[]) const;
-
-      void GetSparsityPatternSize(const Mesh& Mesh,
-                                  const int& iel, 
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const unsigned& itype) const;
-
-// =========================================
-// ===  Equation, Multigrid =================
-// =========================================
-    public:
-        
-      /** To be Added */
+      /** @todo move away from here */
       void BuildProlongation(const LinearEquation& lspdef,
                              const LinearEquation& lspdec,
                              const int& ielc, 
@@ -377,21 +360,7 @@ namespace femus
                              const unsigned& index_sol, 
                              const unsigned& kkindex_sol) const;
 
-      /** To be Added */
-      void BuildProlongation(const Mesh& meshf,
-                             const Mesh& meshc,
-                             const int& ielc,
-                             SparseMatrix* Projmat, 
-                             const char el_dofs[]) const;
-      /** To be Added */
-      void BuildProlongation(const Mesh& mymesh,
-                             const int& iel,
-                             SparseMatrix* Projmat,
-                             NumericVector* NNZ_d,
-                             NumericVector* NNZ_o,
-                             const unsigned& itype) const;
-
-      /** To be Added */
+      /** @todo move away from here */
       void BuildRestrictionTranspose(const LinearEquation& lspdef,
                                      const LinearEquation& lspdec,
                                      const int& ielc,
@@ -400,8 +369,38 @@ namespace femus
                                      const unsigned& kkindex_sol,
                                      const unsigned& index_pair_sol,
                                      const unsigned& kkindex_pair_sol) const;
+                                     
+      /** @todo move away from here */
+      void GetSparsityPatternSize(const Mesh& meshf,
+                                  const Mesh& meshc,
+                                  const int& ielc,
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const char el_dofs[]) const;
 
- 
+      /** @todo move away from here */
+      void BuildProlongation(const Mesh& meshf,
+                             const Mesh& meshc,
+                             const int& ielc,
+                             SparseMatrix* Projmat, 
+                             const char el_dofs[]) const;
+                             
+      /** for solution printing @todo move away from here */
+      void GetSparsityPatternSize(const Mesh& Mesh,
+                                  const int& iel, 
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const unsigned& itype) const;
+
+        
+      /** for solution printing @todo move away from here */
+      void BuildProlongation(const Mesh& mymesh,
+                             const int& iel,
+                             SparseMatrix* Projmat,
+                             NumericVector* NNZ_d,
+                             NumericVector* NNZ_o,
+                             const unsigned& itype) const;
+
         
   };
   

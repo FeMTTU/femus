@@ -347,6 +347,7 @@ namespace femus {
                                          NumericVector* NNZ_d, NumericVector* NNZ_o,
                                          const unsigned& index_sol, const unsigned& kkindex_sol) const
   {
+      
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -389,6 +390,8 @@ namespace femus {
         }
       }
     }
+    
+    
   }
 
 
@@ -426,6 +429,8 @@ namespace femus {
         Projmat->insert_row(irow, 1, jcol, &one);
       }
     }
+    
+    
   }
 
 
@@ -501,6 +506,8 @@ namespace femus {
         Projmat->insert_row(irow, 1, jcol, &one);
       }
     }
+    
+    
   }
 
 //----------------------------------------------------------------------------------------------------
@@ -554,6 +561,8 @@ namespace femus {
         }
       }
     }
+    
+    
   }
 
   void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
@@ -594,6 +603,8 @@ namespace femus {
         Projmat->insert_row(irow, 1, jcol, &one);
       }
     }
+    
+    
   }
 
 //----------------------------------------------------------------------------------------------------
@@ -606,7 +617,9 @@ namespace femus {
 
   void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
   {
+      
     bool identity = (_nlag[itype] <= _nc) ? true : false;
+    
     for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int iproc = mesh.IsdomBisectionSearch(irow, itype);
@@ -624,13 +637,18 @@ namespace femus {
       NNZ_d->set(irow, counter - counter_o);
       NNZ_o->set(irow, counter_o);
     }
+    
+    
   }
+  
 
   void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
   {
+      
     vector<int> cols(_nc);
     vector<double> value(_nc);
     bool identity = (_nlag[itype] <= _nc) ? true : false;
+    
     for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int ncols = (identity) ? 1 : _nc;
@@ -650,6 +668,8 @@ namespace femus {
         Projmat->insert_row(irow, counter, cols, &value[0]);
       }
     }
+    
+    
   }
 
 //----------------------------------------------------------------------------------------------------

@@ -371,6 +371,7 @@ public:
     
     void dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
     
+    const std::vector < unsigned > * dofmap_get_dof_offset_array() const { return  _dofOffset; }
     
     unsigned  dofmap_get_dof_offset(const unsigned soltype, const unsigned proc_id) const { return  _dofOffset[soltype][proc_id]; }
     
@@ -437,7 +438,7 @@ private:
    
     
 // =========================
-// === TOPOLOGY: Coordinates, AMR, SolidMark (a bit of everything) - this needs the FE dofmap =================
+// === TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap =================
 // =========================
 public:
     /** MESH: Coordinates and other stuff */
