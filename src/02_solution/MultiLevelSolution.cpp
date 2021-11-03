@@ -683,7 +683,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
         std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
-        for(unsigned j = msh->_dofOffset[_solType[k]][_iproc]; j < msh->_dofOffset[_solType[k]][_iproc + 1]; j++) {
+        for(unsigned j = msh->dofmap_get_dof_offset(_solType[k], _iproc); j < msh->dofmap_get_dof_offset(_solType[k], _iproc + 1); j++) {
           _solution[igridn]->_Bdc[k]->set(j, 2.);
         }
 
@@ -853,7 +853,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
         std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
-        for(unsigned j = msh->_dofOffset[_solType[solIndex]][_iproc]; j < msh->_dofOffset[_solType[solIndex]][_iproc + 1]; j++) {
+        for(unsigned j = msh->dofmap_get_dof_offset(_solType[solIndex], _iproc); j < msh->dofmap_get_dof_offset(_solType[solIndex], _iproc + 1); j++) {
           for(unsigned k = 0; k < solKiIndex.size(); k++) {
             _solution[igridn]->_Bdc[solKiIndex[k]]->set(j, 2.);
           }

@@ -286,7 +286,11 @@ int main(int argc, char** args) {
 // // //  BEGIN FillISvector
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
 
+           // // // ======== ELEM OFFSETS =========================================================  
            ml_mesh.GetLevelZero(0)->FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
+           
+           ml_mesh.GetLevelZero(0)->dofmap_Element_based_dof_offsets_build();  
+
            // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
            //I will loop over the elements and take all the node dofs either of order 1 or 2, counted with repetition
            //Then I have to take the mesh skeleton (without repetition)
@@ -299,13 +303,11 @@ int main(int argc, char** args) {
            std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
            ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
            
-           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_build_biquadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Continue_biquadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
            
-           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_ghost_nodes_search();
-           
-           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_build_linear_quadratic();
-           
-           ml_mesh.GetLevelZero(0)->set_node_counts(); //redundant by now
+           ml_mesh.GetLevelZero(0)->set_node_counts();
            // // // ======== NODE OFFSETS - end =========================================================  
            
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
@@ -313,7 +315,7 @@ int main(int argc, char** args) {
 // // //   END FillISvector
        
    
-           ml_mesh.GetLevelZero(0)->GetMeshElements()->BuildMeshElemStructures();  //does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
+           ml_mesh.GetLevelZero(0)->GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
            
            ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
 

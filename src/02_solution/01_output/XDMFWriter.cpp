@@ -100,7 +100,7 @@ namespace femus {
       abort();
     }
 
-    unsigned nvt = mesh->_dofOffset[index_nd][_nprocs];
+    unsigned nvt = mesh->dofmap_get_dof_offset(index_nd, _nprocs);
     unsigned nel = mesh->GetNumberOfElements();
     unsigned dim = mesh->GetDimension();
     unsigned maxDim = ( nvt > ( dim + 1 ) * nel ) ? nvt : ( dim + 1 ) * nel;

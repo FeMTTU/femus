@@ -365,9 +365,7 @@ namespace femus {
 
     Partition();
 
-
     GetMeshElements()->BuildMeshElemStructures();
-    
     
     BuildTopologyStructures();
 
@@ -462,8 +460,6 @@ namespace femus {
     }
   
     
-    std::vector<unsigned> ().swap(partition);
-    
     
     return mapping_from_mesh_file_to_femus;
   
@@ -497,13 +493,10 @@ namespace femus {
   }
 
   
-   void Mesh::build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition)  {
- 
+   void Mesh::build_elem_offsets(const std::vector <unsigned> & partition)  {
        
-    //BEGIN building the  metis2Gambit_elem 
-    std::vector <unsigned>  mapping;
-    
-    mapping.resize(GetNumberOfElements());
+          //BEGIN building the  metis2mesh_file element list 
+    std::vector <unsigned>  mapping(GetNumberOfElements());
 
     unsigned counter = 0;
 
@@ -518,8 +511,15 @@ namespace femus {
       }
     }
 
-    el->ReorderMeshElements(mapping);
-
+    el->ReorderMeshElements(mapping);  ///this is needed because later there will be another reordering based on Group and Material
+  
+   }
+   
+   
+   
+  
+   void Mesh::mesh_reorder_elem_quantities()  {
+ 
 
 
     std::vector < unsigned > imapping(GetNumberOfElements());
@@ -577,27 +577,16 @@ namespace femus {
     }
     
 
+    std::vector <unsigned>  mapping(GetNumberOfElements());
+        
     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
       mapping[imapping[i]] = i;
     }
 
-    std::vector < unsigned > ().swap(imapping);
-
 
     el->ReorderMeshElements(mapping);
     
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {
-//       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-//         std::cout << "("<<el->GetElementMaterial(iel) << ", "<< el->GetElementGroup(iel)<<") ";
-//       }
-//       std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
-
-    std::vector < unsigned > ().swap(mapping);
-    
-    
-    //END building the  metis2Gambit_elem
+    //END building the  metis2mesh_file element list 
 
     
 }
@@ -633,7 +622,7 @@ namespace femus {
    
    
 
-   void Mesh::dofmap_Node_based_dof_offsets_build_biquadratic()  {
+   void Mesh::dofmap_Node_based_dof_offsets_Continue_biquadratic()  {
 
     for(int i = 1 ; i <= _nprocs; i++) {
       _dofOffset[2][i] = _dofOffset[2][i - 1] + _ownSize[2][i - 1];
@@ -665,7 +654,7 @@ namespace femus {
    }
    
 
-    void Mesh::dofmap_Node_based_dof_offsets_ghost_nodes_search() {
+    void Mesh::dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic() {
  
     for(int k = 0; k < 3; k++) {
       _ghostDofs[k].resize(_nprocs);
@@ -694,9 +683,10 @@ namespace femus {
     }
 
   }
+  
 
   
-    void Mesh::dofmap_Node_based_dof_offsets_build_linear_quadratic() {
+    void Mesh::dofmap_Node_based_dof_offsets_Complete_linear_quadratic() {
 
     //BEGIN completing k = 0, 1
 
@@ -796,14 +786,10 @@ namespace femus {
       
    
    initialize_elem_offsets();
-    build_elem_offsets_and_reorder_mesh_elem_quantities(partition);
-    set_elem_counts();
+   build_elem_offsets(partition);
+   mesh_reorder_elem_quantities();
+   set_elem_counts();
    
-    std::vector<unsigned> ().swap(partition);
-    
-   
-    dofmap_Element_based_dof_offsets_build();  
-      
       
   }
   
@@ -811,26 +797,10 @@ namespace femus {
   // // // ======== NODE OFFSETS =========================================================  
   void Mesh::FillISvectorNodeOffsets() {
       
-    //BEGIN building for k = 0,1,2
     std::vector < unsigned > node_mapping =  dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
     mesh_reorder_node_quantities(node_mapping);
     
     deallocate_node_mapping(node_mapping);
-
-    
-    dofmap_Node_based_dof_offsets_build_biquadratic();
-    //END building for k = 2, but incomplete for k = 0, 1
-    
-   
-
-    //BEGIN ghost nodes search k = 0, 1, 2
-    dofmap_Node_based_dof_offsets_ghost_nodes_search();
-    //END ghost nodes search k = 0, 1, 2
-    //BEGIN completing for k = 0,1
-    dofmap_Node_based_dof_offsets_build_linear_quadratic();
-    //END completing for k = 0,1
-    
-    set_node_counts(); //redundant by now
       
   }
   
@@ -840,13 +810,29 @@ namespace femus {
   */
   void Mesh::FillISvector(std::vector < unsigned >& partition) {
 
-     dofmap_all_fe_families_initialize();
+        dofmap_all_fe_families_initialize();
      
      FillISvectorElemOffsets(partition);
      
+        dofmap_Element_based_dof_offsets_build();  
+
+      //BEGIN building for k = 0,1,2
      FillISvectorNodeOffsets();
     
-     dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
+      dofmap_Node_based_dof_offsets_Continue_biquadratic();
+        //BEGIN ghost nodes search k = 0, 1, 2
+      dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
+        //END ghost nodes search k = 0, 1, 2
+      //END building for k = 2, but incomplete for k = 0, 1
+      //BEGIN completing for k = 0,1
+      dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
+      //END completing for k = 0,1
+    
+    set_node_counts(); //also, it shouldn't use dofOffset
+
+     
+     
+        dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
     
   }
 

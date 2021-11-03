@@ -935,8 +935,8 @@ namespace femus
 
 
         //BEGIN filling the restriction object with infos coming form the parallel vectors and matrices
-        unsigned solutionOffset = msh->_dofOffset[soltype][_iproc];
-        unsigned solutionOffsetp1 = msh->_dofOffset[soltype][_iproc + 1];
+        unsigned solutionOffset   = msh->dofmap_get_dof_offset(soltype, _iproc);
+        unsigned solutionOffsetp1 = msh->dofmap_get_dof_offset(soltype, _iproc + 1);
         for (unsigned lproc = 0; lproc < _nprocs; lproc++) {
           masterNode.broadcast(lproc);
           slaveNodes.broadcast(lproc);

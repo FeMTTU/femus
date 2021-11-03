@@ -104,7 +104,7 @@ namespace femus {
     unsigned elementOffset = mesh->_elementOffset[_iproc];
     unsigned elementOffsetp1 = mesh->_elementOffset[_iproc + 1];
     
-    unsigned dofOffset = mesh->_dofOffset[index][_iproc];
+    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
     
     unsigned ghostMapCounter = 0;
      
@@ -134,7 +134,7 @@ namespace femus {
     const unsigned elementOffset = mesh->_elementOffset[_iproc];
     const unsigned elementOffsetp1 = mesh->_elementOffset[_iproc + 1];
     
-    const unsigned dofOffset = mesh->_dofOffset[index][_iproc];
+    const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
     const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _iproc);
     
     // point pointer to common memory area buffer of void type;
@@ -384,13 +384,13 @@ namespace femus {
     num_vec_aux_for_node_fields = NumericVector::build().release();
 
     if( n_processors() == 1 ) { // IF SERIAL
-      num_vec_aux_for_node_fields->init( mesh->_dofOffset[index][_nprocs],
-                   mesh->_dofOffset[index][_nprocs], false, SERIAL );
+      num_vec_aux_for_node_fields->init( mesh->dofmap_get_dof_offset(index, _nprocs),
+                                         mesh->dofmap_get_dof_offset(index, _nprocs), false, SERIAL );
     }
     else { // IF PARALLEL
-      num_vec_aux_for_node_fields->init( mesh->_dofOffset[index][_nprocs],
-                   mesh->dofmap_get_own_size(index, _iproc),
-                   mesh->dofmap_get_ghost_dofs(index, _iproc), false, GHOSTED );
+      num_vec_aux_for_node_fields->init( mesh->dofmap_get_dof_offset(index, _nprocs),
+                                         mesh->dofmap_get_own_size(index, _iproc),
+                                         mesh->dofmap_get_ghost_dofs(index, _iproc), false, GHOSTED );
     }
     //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
 
@@ -408,7 +408,7 @@ namespace femus {
     
     //print own nodes -------------------------
 
-    unsigned dofOffset = mesh->_dofOffset[index][_iproc];
+    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
     
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
@@ -600,7 +600,7 @@ namespace femus {
 
          //--------- fill var_nd ------------
             //print own dofs -------------------------
-            unsigned offset_iprc = mesh->_dofOffset[index][_iproc];
+            unsigned offset_iprc = mesh->dofmap_get_dof_offset(index, _iproc);
             unsigned nvt_ig = mesh->dofmap_get_own_size(index, _iproc);
 
             if( name == 0 )

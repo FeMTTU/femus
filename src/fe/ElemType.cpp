@@ -532,7 +532,7 @@ namespace femus {
           int j = _prol_ind[i][k];
           int jcolumn = meshc.GetSolutionDof(j, ielc, _SolType);
 
-          if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) counter_o++;
+          if(jcolumn < meshc.dofmap_get_dof_offset(_SolType, iproc) || jcolumn >= meshc.dofmap_get_dof_offset(_SolType, iproc + 1)) counter_o++;
         }
 
         NNZ_d->set(irow, ncols - counter_o);
@@ -546,7 +546,7 @@ namespace femus {
         int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
         int jcolumn = meshc.GetSolutionDof(i, ielc, _SolType);
 
-        if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) {
+        if(jcolumn < meshc.dofmap_get_dof_offset(_SolType, iproc) || jcolumn >= meshc.dofmap_get_dof_offset(_SolType, iproc + 1)) {
           NNZ_o->set(irow, 1);
         }
         else {
@@ -618,7 +618,7 @@ namespace femus {
         if(fabs(phi) > 1.0e-14) {
           counter++;
           int kcolumn = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
-          if(kcolumn < mesh._dofOffset[_SolType][iproc] || kcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
+          if(kcolumn < mesh.dofmap_get_dof_offset(_SolType, iproc) || kcolumn >= mesh.dofmap_get_dof_offset(_SolType, iproc + 1)) counter_o++;
         }
       }
       NNZ_d->set(irow, counter - counter_o);

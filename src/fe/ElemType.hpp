@@ -172,7 +172,7 @@ namespace femus
 
 
 // =========================================
-// ===  Quadrature, without FE evaluations =================
+// ===  Quadrature, only on GEOM ELEM, without FE evaluations =================
 // =========================================
   public:
       

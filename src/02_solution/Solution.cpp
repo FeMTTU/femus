@@ -293,26 +293,27 @@ _removeNullSpace[old_size + s] = false;
     _Sol[i] = NumericVector::build().release();
 
     if(n_processors() == 1) {  // IF SERIAL
-      _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->dofmap_get_own_size(_SolType[i], processor_id()), false, SERIAL);
+      _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()), 
+                    _msh->dofmap_get_own_size(_SolType[i], processor_id()), false, SERIAL);
     }
     else { // IF PARALLEL
       if(_SolType[i] < 3) {
         if(_msh->dofmap_get_ghost_dofs(_SolType[i], processor_id()).size() != 0) {
-          _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()],
+          _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()),
                         _msh->dofmap_get_own_size(_SolType[i], processor_id()),
                         _msh->dofmap_get_ghost_dofs(_SolType[i], processor_id()), 
                         false, GHOSTED);
         }
         else {
           std::vector <int> fake_ghost(1, _msh->dofmap_get_own_size(_SolType[i], processor_id()));  ///@todo why do we need this fake ghost?
-          _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], 
+          _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()), 
                         _msh->dofmap_get_own_size(_SolType[i], processor_id()),
                         fake_ghost, 
                         false, GHOSTED);
         }
       }
       else { //discontinuous Lagrange have no ghost nodes
-        _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], 
+        _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()), 
                       _msh->dofmap_get_own_size(_SolType[i], processor_id()),
                       false, PARALLEL);
       }
@@ -474,7 +475,7 @@ _removeNullSpace[old_size + s] = false;
 
       int loc_offset_EPS = KKoffset[k][processor_id()];
 
-      int glob_offset_eps = _msh->_dofOffset[soltype][processor_id()];
+      int glob_offset_eps = _msh->dofmap_get_dof_offset(soltype, processor_id());
 
       vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
 
@@ -526,7 +527,7 @@ _removeNullSpace[old_size + s] = false;
 
       int loc_offset_RES = KKoffset[k][processor_id()];
 
-      int glob_offset_res = _msh->_dofOffset[soltype][processor_id()];
+      int glob_offset_res = _msh->dofmap_get_dof_offset(soltype, processor_id());
 
       vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
 
@@ -1189,8 +1190,8 @@ _removeNullSpace[old_size + s] = false;
 
       unsigned dim = _msh->GetDimension();
 
-      int nr     = _msh->_dofOffset[3][_nprocs];
-      int nc     = _msh->_dofOffset[SolType][_nprocs];
+      int nr     = _msh->dofmap_get_dof_offset(3, _nprocs);
+      int nc     = _msh->dofmap_get_dof_offset(SolType, _nprocs);
       int nr_loc = _msh->dofmap_get_own_size(3, _iproc);
       int nc_loc = _msh->dofmap_get_own_size(SolType, _iproc);
 

@@ -181,29 +181,6 @@ private:
     double _cLength;
 
     
-
-/// =========================
-/// === FE for single elem =================
-/// =========================
-public:
-
-    const elem_type * GetFiniteElement(const unsigned geom_elem, const unsigned fe_soltype) const {
-        return _finiteElement[geom_elem][fe_soltype];
-    }
-    
-    /** To be Added */
-    void SetFiniteElementPtr(/*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][5]);
-    
-    
-    /** FE: Finite Element families, for each Geometric Element @todo this one day should be private */
-    const elem_type *_finiteElement[N_GEOM_ELS][5];
-    
-    
-    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
-
-
-    
-    
     
 
     
@@ -316,6 +293,29 @@ private:
 
 
 
+/// =========================
+/// === FE for single elem =================
+/// =========================
+public:
+
+    const elem_type * GetFiniteElement(const unsigned geom_elem, const unsigned fe_soltype) const {
+        return _finiteElement[geom_elem][fe_soltype];
+    }
+    
+    /** To be Added */
+    void SetFiniteElementPtr(/*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][5]);
+    
+    
+    /** FE: Finite Element families, for each Geometric Element @todo this one day should be private */
+    const elem_type *_finiteElement[N_GEOM_ELS][5];
+    
+    
+    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
+
+
+    
+    
+
 
 // =========================
 // === FE DOFMAP =================
@@ -325,7 +325,9 @@ public:
     /** FE: DofMap carriers */
     void initialize_elem_offsets();
     
-    void build_elem_offsets_and_reorder_mesh_elem_quantities(const std::vector <unsigned> & partition);
+    void build_elem_offsets(const std::vector <unsigned> & partition);
+    
+    void mesh_reorder_elem_quantities();
     
     void set_elem_counts();
     
@@ -354,6 +356,7 @@ public:
   
     void FillISvectorNodeOffsets();
     
+    
     void dofmap_all_fe_families_initialize();
     
     void dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
@@ -362,11 +365,12 @@ public:
 
     std::vector <unsigned> dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
     
-    void dofmap_Node_based_dof_offsets_build_biquadratic();
+    void dofmap_Node_based_dof_offsets_Continue_biquadratic();
     
-    void dofmap_Node_based_dof_offsets_ghost_nodes_search();
+    void dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
     
-    void dofmap_Node_based_dof_offsets_build_linear_quadratic();
+    void dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
+    
     
     unsigned  dofmap_get_dof_offset(const unsigned soltype, const unsigned proc_id) const { return  _dofOffset[soltype][proc_id]; }
     
@@ -374,7 +378,7 @@ public:
     
     std::vector < int > dofmap_get_ghost_dofs(const unsigned soltype, const unsigned proc_id) const { return  _ghostDofs[soltype][proc_id]; }
 
-    /** FE: DofMap: Number of dofs per FE family and per processor (incremental count) */
+    /** FE: DofMap: Number of dofs per FE family and per processor (incremental count) @todo this should be private */
     std::vector < unsigned > _dofOffset[5];
     
 private:
@@ -433,7 +437,7 @@ private:
    
     
 // =========================
-// === TOPOLOGY: Coordinates, AMR, SolidMark (a bit of everything) =================
+// === TOPOLOGY: Coordinates, AMR, SolidMark (a bit of everything) - this needs the FE dofmap =================
 // =========================
 public:
     /** MESH: Coordinates and other stuff */
@@ -485,12 +489,12 @@ public:
     static bool _IsUserRefinementFunctionDefined;
     
     /** AMR */
-    bool GetIfHomogeneous(){
+    bool GetIfHomogeneous() {
       return _meshIsHomogeneous;
     }
 
     /** AMR */
-    void SetIfHomogeneous(const bool &value){
+    void SetIfHomogeneous(const bool &value) {
       _meshIsHomogeneous = value ;
     }
 
