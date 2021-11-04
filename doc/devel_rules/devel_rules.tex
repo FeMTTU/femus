@@ -98,17 +98,25 @@
 
 \part{Application}
 
+ \section{How to add source files to the library}
+ 
+- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to 
+update the LIST in the src/ cmake file!!! (use ls -1)
 
+- now go to the binary directory and type make to generate the library
 
  \section{How to SETUP a NEW APPLICATION of the LIBRARY (will do a script probably)}
 
 - Create a folder in the Applications directory with your main function and your src/header files
+
 - Write the Cmakelists.txt file for it
+
 - Add the reference to the application in the Cmakelists.txt of the package library
+
 - open cmake-gui and run configure and generate
-- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to update the LIST in the src/ cmake file!!! (use ls -1)
-- now go to the binary directory and type make to generate the library
-- then enter your application folder and run make to generate your executable
+
+
+- now go to your application folder and run make to generate your executable
 
  \section{How to IMPLEMENT A NEW APPLICATION}
 
@@ -117,6 +125,7 @@
 \section{How to change the mesh file of an application}
 
 - Put the mesh file in the input/ directory
+
 - Set the filename in the main file
 
  \section{How to run in parallel with threads instead of cores}
@@ -142,14 +151,22 @@ To overcome this, do
   so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
 
 - Set the folder from which to restart in the file run\_to\_restart\_from
+
 - set the ITERATION NUMBER in the "initial\_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+
 - set the other parameters like "nsteps"
 
+
 - We must be very careful.
+
 - We must change ALMOST NOTHING
+
 - Do not change NUMBER OF PROCESSORS
+
 - Do not change NUMBER OF LEVELS
+
 - Do not change the OUTPUT FOLDERNAME (of course...)
+
 
 
 
@@ -1167,14 +1184,24 @@ In github:
 Go in the MAIN REPO
 
 Click on "Pull requests" (on the right)
+
 Click on "New pull request" (green button)
+
 Click on "compare across forks"
+
 The "base fork" is going to be the FORK master branch
+
 The "head fork" is going to be the MAIN master branch
+
 Click on "create pull request"
+
 Add some title for it
-Make sure that the branches can be AUTOMATICALLY MERGED (otherwise you have to solve the conflicts using command line...)
+
+Make sure that the branches can be AUTOMATICALLY MERGED (otherwise you have to solve the conflicts using command 
+line...)
+
 Click on "Merge pull request" (you find it by scrolling towards the bottom of the page)
+
 Click on "Confirm merge"
 
 From command line:
