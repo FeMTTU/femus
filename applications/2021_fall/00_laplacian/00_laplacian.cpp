@@ -23,7 +23,7 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
-double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     return 0.;
 
@@ -337,15 +337,15 @@ int main(int argc, char** args) {
         MultiLevelProblem ml_prob(&ml_sol);
 
         // add variables to ml_sol
-        ml_sol.AddSolution("d_s", LAGRANGE, SECOND/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+        ml_sol.AddSolution("u", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
 
         // ======= Solution: Initial Conditions ==================
         ml_sol.Initialize("All");    // initialize all variables to zero
-        ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
+        ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
         // ======= Solution: Boundary Conditions ==================
         ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-        ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
+        ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
 
 
@@ -362,7 +362,7 @@ int main(int argc, char** args) {
 
         system.SetDebugNonlinear(true);
 
-        system.AddSolutionToSystemPDE("d_s");
+        system.AddSolutionToSystemPDE("u");
 
         // attach the assembling function to system
         system.SetAssembleFunction(AssembleProblemDirNeu<double, double>);
@@ -443,7 +443,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     phi_u_x.reserve(maxSize * space_dim);
     phi_u_xx.reserve(maxSize * dim2);
 
-    const std::string solname_u = "d_s";
+    const std::string solname_u = "u";
     unsigned solIndex_u;
     solIndex_u = ml_sol->GetIndex(solname_u.c_str());
     unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u);
@@ -464,8 +464,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
     std::vector< int > l2GMap_AllVars;
     l2GMap_AllVars.reserve(n_vars*maxSize); // local to global mapping
-    std::vector< double >         Res;
-    Res.reserve(n_vars*maxSize);  // local redidual vector
+    std::vector< double >         Res;    Res.reserve(n_vars*maxSize);  // local redidual vector
     std::vector < double >        Jac;
     Jac.reserve(n_vars*maxSize * n_vars*maxSize);
 //***************************************************
@@ -651,6 +650,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                         //============ delta_state row ============================
                         //DIAG BLOCK delta_state - state
                         if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_mat_du_u_i_j;
+                        //if(i==1) Jac[ (0 + i) * nDof_AllVars   + 	(0 + j)] = 10.;
 // 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_beltrami_mat_du_u_i_j; ///@todo On a flat domain, this must coincide with the standard Laplacian, so we can do a double check with this
                     } // end phi_j loop
                 } // endif assemble_matrix
@@ -684,4 +684,4 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 }
 
 
-    CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain
+    //CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain
