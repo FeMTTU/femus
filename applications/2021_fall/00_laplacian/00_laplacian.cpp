@@ -23,7 +23,7 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
-double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
   
@@ -47,7 +47,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
     }
   else if (face_name == 2) {
       dirichlet = false;
-        value = 1.; //Neumann value
+        value = -1.; //Neumann value
     }
 
     
@@ -277,7 +277,7 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-   mesh_files.push_back("Mesh_1_x_dir_neu.med");
+   mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -331,15 +331,15 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob(&ml_sol);
   
   // add variables to ml_sol
-  ml_sol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+  ml_sol.AddSolution("u", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
   
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all variables to zero
-  ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
+  ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
+  ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
 
@@ -356,7 +356,7 @@ int main(int argc, char** args) {
   
   system.SetDebugNonlinear(true);
  
-  system.AddSolutionToSystemPDE("d_s");
+  system.AddSolutionToSystemPDE("u");
  
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleProblemDirNeu<double, double>);
@@ -437,7 +437,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   phi_u_x.reserve(maxSize * space_dim);
   phi_u_xx.reserve(maxSize * dim2);
   
-  const std::string solname_u = "d_s";
+  const std::string solname_u = "u";
   unsigned solIndex_u;
   solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
