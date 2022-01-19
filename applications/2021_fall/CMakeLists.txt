@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
   
 
-  ADD_SUBDIRECTORY(./00_laplacian/)
+  ADD_SUBDIRECTORY(./gbornia/)
   
