@@ -98,17 +98,25 @@
 
 \part{Application}
 
+ \section{How to add source files to the library}
+ 
+- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to 
+update the LIST in the src/ cmake file!!! (use ls -1)
 
+- now go to the binary directory and type make to generate the library
 
  \section{How to SETUP a NEW APPLICATION of the LIBRARY (will do a script probably)}
 
 - Create a folder in the Applications directory with your main function and your src/header files
+
 - Write the Cmakelists.txt file for it
+
 - Add the reference to the application in the Cmakelists.txt of the package library
+
 - open cmake-gui and run configure and generate
-- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to update the LIST in the src/ cmake file!!! (use ls -1)
-- now go to the binary directory and type make to generate the library
-- then enter your application folder and run make to generate your executable
+
+
+- now go to your application folder and run make to generate your executable
 
  \section{How to IMPLEMENT A NEW APPLICATION}
 
@@ -117,6 +125,7 @@
 \section{How to change the mesh file of an application}
 
 - Put the mesh file in the input/ directory
+
 - Set the filename in the main file
 
  \section{How to run in parallel with threads instead of cores}
@@ -142,14 +151,22 @@ To overcome this, do
   so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
 
 - Set the folder from which to restart in the file run\_to\_restart\_from
+
 - set the ITERATION NUMBER in the "initial\_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+
 - set the other parameters like "nsteps"
 
+
 - We must be very careful.
+
 - We must change ALMOST NOTHING
+
 - Do not change NUMBER OF PROCESSORS
+
 - Do not change NUMBER OF LEVELS
+
 - Do not change the OUTPUT FOLDERNAME (of course...)
+
 
 
 
@@ -722,16 +739,21 @@ Pay attention to the difference between Common and Intersection
 
 
 Create faces (Draw points and lines if needed, or create Faces directly)
+
    --> Extract edges from a face (Explode)
    
 \subsection{Mesh}
  
 Create Mesh object (only initialize)
+
 Create SubMesh of Mesh over the wanted SubGeometry
+
    --> Hypothesis: Propagation of 1D Hypothesis
 
 In Mesh:
+
 --   2D: Quadrangle Mapping
+
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
 
 -- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
@@ -739,10 +761,17 @@ In Mesh:
   because the compound mesh does not have an underlying geometry to use 
    
   You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
-   
+
+  
+  \subsection{CompoundMesh}
+  
+  
 -- Build CompoundMesh to merge the meshes
+
      --> Check the Boundary of the CompoundMesh!!! 
+     
      ---> When you do a Compound, the double nodes are MERGED, but the inner edges or inner faces are not REMOVED! So, you have to remove them manually!!!
+     
      ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
           To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
           Unfortunately you don't see this operation as a new object in the Mesh menu
@@ -1167,14 +1196,24 @@ In github:
 Go in the MAIN REPO
 
 Click on "Pull requests" (on the right)
+
 Click on "New pull request" (green button)
+
 Click on "compare across forks"
+
 The "base fork" is going to be the FORK master branch
+
 The "head fork" is going to be the MAIN master branch
+
 Click on "create pull request"
+
 Add some title for it
-Make sure that the branches can be AUTOMATICALLY MERGED (otherwise you have to solve the conflicts using command line...)
+
+Make sure that the branches can be AUTOMATICALLY MERGED (otherwise you have to solve the conflicts using command 
+line...)
+
 Click on "Merge pull request" (you find it by scrolling towards the bottom of the page)
+
 Click on "Confirm merge"
 
 From command line:
