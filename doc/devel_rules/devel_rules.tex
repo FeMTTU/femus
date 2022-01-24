@@ -739,16 +739,21 @@ Pay attention to the difference between Common and Intersection
 
 
 Create faces (Draw points and lines if needed, or create Faces directly)
+
    --> Extract edges from a face (Explode)
    
 \subsection{Mesh}
  
 Create Mesh object (only initialize)
+
 Create SubMesh of Mesh over the wanted SubGeometry
+
    --> Hypothesis: Propagation of 1D Hypothesis
 
 In Mesh:
+
 --   2D: Quadrangle Mapping
+
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
 
 -- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
@@ -756,10 +761,17 @@ In Mesh:
   because the compound mesh does not have an underlying geometry to use 
    
   You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
-   
+
+  
+  \subsection{CompoundMesh}
+  
+  
 -- Build CompoundMesh to merge the meshes
+
      --> Check the Boundary of the CompoundMesh!!! 
+     
      ---> When you do a Compound, the double nodes are MERGED, but the inner edges or inner faces are not REMOVED! So, you have to remove them manually!!!
+     
      ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
           To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
           Unfortunately you don't see this operation as a new object in the Mesh menu
