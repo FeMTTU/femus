@@ -15,7 +15,7 @@ sys.path.insert(0, r'/home/gbornia/software/femus/applications/2021_fall/gbornia
 ####################################################
 ##       Begin of NoteBook variables section      ##
 ####################################################
-notebook.set("l_x", 1)
+notebook.set("l_x", 3)
 notebook.set("l_y", 1)
 notebook.set("l_x_half", "0.5*l_x")
 notebook.set("l_y_half", "0.5*l_y")
