@@ -7,6 +7,7 @@
 #include "Assemble_unknown_jacres.hpp"
 
 #define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
+#define FACE_FOR_TARGET    1
 
 #include "../../../param.hpp"
 

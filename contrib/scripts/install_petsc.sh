@@ -55,7 +55,7 @@ for i in 0 #1 let us only install the optimized version, to speed up the install
 do
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Configure
-./configure  --with-debugging=${debugflag[i]} --with-cc=gcc --with-cxx=g++ --with-fc=gfortran --with-clanguage=cxx  COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -march=native -mtune=native' --with-shared-libraries=1 --download-openmpi=1 --download-fblaslapack=1 --download-blacs=1 --download-scalapack=1 --download-metis=1 --download-parmetis=1 --download-mumps=1 --download-hdf5=1
+./configure  --with-debugging=${debugflag[i]} --with-cc=gcc --with-cxx=g++ --with-fc=gfortran --with-clanguage=cxx  COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -march=native -mtune=native' --with-shared-libraries=1 --download-openmpi=1 --download-fblaslapack=1 --download-blacs=1 --download-scalapack=1 --download-cmake=1 --download-metis=1 --download-parmetis=1 --download-mumps=1 --download-hdf5=1
 #   --with-x=1
 #   --with-mpi-dir=$FM_MPI_DIR_ABS 
 #   --with-hdf5-dir=$FM_HDF5_DIR_ABS
