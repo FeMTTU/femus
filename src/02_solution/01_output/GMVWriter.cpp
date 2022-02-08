@@ -90,7 +90,7 @@ namespace femus {
 
     NumericVector* numVector;
     numVector = NumericVector::build().release();
-    numVector->init( mesh->_dofOffset[index][_nprocs], mesh->_ownSize[index][_iproc], true, AUTOMATIC );
+    numVector->init( mesh->dofmap_get_dof_offset(index, _nprocs), mesh->dofmap_get_own_size(index, _iproc), true, AUTOMATIC );
 
 
     //BEGIN GMV FILE PRINT

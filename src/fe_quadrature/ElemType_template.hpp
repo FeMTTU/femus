@@ -6,7 +6,7 @@
 #include "ElemType.hpp"
 #include "ElemType_template_base.hpp"
 
-
+#include <boost/optional.hpp>
 
 namespace femus {
 
@@ -75,9 +75,9 @@ namespace femus {
 
      inline void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
-                                             vector < double > & phi, 
-                                             vector < type >   & gradphi,
-                                             boost::optional< vector < type > & > nablaphi,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const;
                                              
      inline void shape_funcs_vol_at_bdry_current_elem(const unsigned ig, 
@@ -86,7 +86,7 @@ namespace femus {
                                                          std::vector < double > & phi_vol_at_bdry,
                                                          std::vector < type >   & phi_x_vol_at_bdry, 
                                                          boost::optional< std::vector < type > & > nablaphi_vol_at_bdry,
-                                                         const unsigned space_dimension) const;                                        
+                                                         const unsigned space_dimension) const;
 
      inline void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
                           std::vector < std::vector <type_mov> > & JacJacT,
@@ -180,7 +180,7 @@ namespace femus {
 
    void    fill_dphidxi_at_quadrature_points() {
        
-              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+              const unsigned int n_gauss = _gauss->GetGaussPointsNumber();
  
                   _dphidxi_templ.resize(_dim);
            
@@ -439,9 +439,9 @@ namespace femus {
       
      void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
-                                             vector < double > & phi, 
-                                             vector < type >   & gradphi,
-                                             boost::optional< vector < type > & > nablaphi,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
                                                  
     const double* dxi  = _dphidxi[ig];
@@ -567,7 +567,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
         
    void    fill_dphidxi_at_quadrature_points() {
        
-              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+              const unsigned int n_gauss = _gauss->GetGaussPointsNumber();
  
                   _dphidxi_templ.resize(_dim);
            
@@ -855,9 +855,9 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                              
       void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
-                                             vector < double > & phi, 
-                                             vector < type >   & gradphi,
-                                             boost::optional< vector < type > & > nablaphi,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
                                                  
 
@@ -1035,7 +1035,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 
    void    fill_dphidxi_at_quadrature_points() {
        
-              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+              const unsigned int n_gauss = _gauss->GetGaussPointsNumber();
  
                   _dphidxi_templ.resize(_dim);
            
@@ -1315,9 +1315,9 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                              
       void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
-                                             vector < double > & phi, 
-                                             vector < type >   & gradphi,
-                                             boost::optional< vector < type > & > nablaphi,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
 
     const double* dxi = _dphidxi[ig];

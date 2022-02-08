@@ -19,6 +19,7 @@
 
 #include "FETypeEnum.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "NumericVector.hpp"
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 #include "ElemType.hpp"

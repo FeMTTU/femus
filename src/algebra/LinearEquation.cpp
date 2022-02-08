@@ -233,7 +233,7 @@ namespace femus {
     for(int i = 0; i < _nprocs; i++) {
       for(int j = 0; j < _SolPdeIndex.size(); j++) {
         unsigned indexSol = _SolPdeIndex[j];
-        KKghostsize[i] += _msh->_ghostDofs[_SolType[indexSol]][i].size();
+        KKghostsize[i] += _msh->dofmap_get_ghost_dofs(_SolType[indexSol], i).size();
       }
     }
 
@@ -248,9 +248,9 @@ namespace femus {
       unsigned counter = 0;
       for(int j = 0; j < _SolPdeIndex.size(); j++) {
         unsigned indexSol = _SolPdeIndex[j];
-        for(int k = 0; k < _msh->_ghostDofs[_SolType[indexSol]][i].size(); k++) {
+        for(int k = 0; k < _msh->dofmap_get_ghost_dofs(_SolType[indexSol], i).size(); k++) {
           // ghost node
-          unsigned idof_metis = _msh->_ghostDofs[_SolType[indexSol]][i][k];
+          unsigned idof_metis = _msh->dofmap_get_ghost_dofs(_SolType[indexSol], i)[k];
           unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]);
           KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->_dofOffset[_SolType[indexSol]][isubdom];
           counter++;
