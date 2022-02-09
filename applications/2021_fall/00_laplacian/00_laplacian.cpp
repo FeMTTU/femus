@@ -23,7 +23,7 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
-double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
   
@@ -40,12 +40,17 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   const double tolerance = 1.e-5;
   
  if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
-  
+  //left endpoint is given dirchlet bd condition i.e. u(0) = 0
   if (face_name == 1) {
       dirichlet = true;
         value = 0.; //Dirichlet value
+        //dirichlet = false;
+       // value = 1.; //Neumann value
     }
+    //right endpoint is given neuman bd condition i.e. u'(1) = 1
   else if (face_name == 2) {
+       // dirichlet = true;
+       // value = 0.; //Dirichlet value
       dirichlet = false;
         value = 1.; //Neumann value
     }
@@ -312,7 +317,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -331,15 +336,15 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob(&ml_sol);
   
   // add variables to ml_sol
-  ml_sol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+  ml_sol.AddSolution("u", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
   
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all variables to zero
-  ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
+  ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
+  ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
 
@@ -356,7 +361,7 @@ int main(int argc, char** args) {
   
   system.SetDebugNonlinear(true);
  
-  system.AddSolutionToSystemPDE("d_s");
+  system.AddSolutionToSystemPDE("u");
  
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleProblemDirNeu<double, double>);
@@ -437,7 +442,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   phi_u_x.reserve(maxSize * space_dim);
   phi_u_xx.reserve(maxSize * dim2);
   
-  const std::string solname_u = "d_s";
+  const std::string solname_u = "u";
   unsigned solIndex_u;
   solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
@@ -570,6 +575,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                        laplace_res_du_u_i             +=  phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim];
 	             }
               }
+              //phi_u_x = grad_v and sol_u_x = grad_u
 //--------------    
               
 //--------------    
@@ -588,7 +594,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i); //integral grad_u grad_v - integral vf
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
