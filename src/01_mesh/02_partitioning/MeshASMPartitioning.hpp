@@ -20,13 +20,13 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MeshPartitioning.hpp"
-#include "vector"
+#include <vector>
+
 
 namespace femus {
 
 
 class Mesh;
-using std::vector;
 
 /**
  * This is the \p MeshASMPartitioning class.  This class calls a built-in mesh partitioner algorithm 
@@ -41,15 +41,13 @@ public:
     MeshASMPartitioning(Mesh& mesh);
 
     /** destructor */
-    ~MeshASMPartitioning() {}; 
+    ~MeshASMPartitioning() {} 
     
     /** Refinement functions */
     
     /** To be added */
-    void DoPartition(const unsigned *block_size, vector < vector< unsigned > > &block_elements,
-					vector <unsigned> &block_type_range);
-     void DoPartitionOld(const unsigned *block_size, vector < vector< unsigned > > &block_elements,
-					vector <unsigned> &block_type_range);
+    void DoPartition(const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements, std::vector <unsigned> &block_type_range);
+     void DoPartitionOld(const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements, std::vector <unsigned> &block_type_range);
     
     
 private:

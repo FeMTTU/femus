@@ -105,7 +105,83 @@ namespace femus {
     strcpy(_SolName[n], name);
 
   }
+  
+  
 
+  /**
+   * Weak galerkin
+   */
+  void Solution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
+                             const unsigned& tmorder, const bool &Pde_type) {
+
+    unsigned n = _Sol.size();
+
+// ---------------------
+//------ first resize -----------
+// ---------------------
+  
+// ID related---
+    _SolName.resize(n + 1u);
+    
+    
+//   FE related---  
+    _family.resize(n + 1u);
+    _order.resize(n + 1u);
+    _SolType.resize(n + 1u);
+
+//   FE related - Global vectors ---  
+    _Sol.resize(n + 1u);
+    _Sol[n] = NULL;
+
+    _Res.resize(n + 1u);
+    _Res[n] = NULL;
+
+    _Eps.resize(n + 1u);
+    _Eps[n] = NULL;
+
+    _GradVec.resize(n + 1u);
+    _GradVec[n].resize(_msh->GetDimension());
+
+    for(int i = 0; i < _msh->GetDimension(); i++) {
+      _GradVec[n][i] = NULL;
+    }
+
+    _Bdc.resize(n + 1u);
+    _Bdc[n] = NULL;
+    _ResEpsBdcFlag.resize(n + 1u);
+    _ResEpsBdcFlag[n] = Pde_type;
+    
+    
+//   Time discretization ---  
+    _SolTmOrder.resize(n + 1u);
+    _SolOld.resize(n + 1u);
+    _SolOld[n] = NULL;
+    
+//   FE related - Global vectors - end ---  
+
+// ---------------------
+//------ then fill -----------
+// ---------------------
+    
+// ID related---
+    _SolName[n] = new char [DEFAULT_SOL_NCHARS];
+    strcpy(_SolName[n], name);
+
+//   FE related---  
+    _family[n] = fefamily;
+    _order[n] = order_v;
+    _SolType[n] =  Solution::compute_fe_sol_type(fefamily, order_v, order_b);
+
+//   Time discretization ---  
+    _SolTmOrder[n] = tmorder;
+
+//   For pressure variables, if solution is fixed at one point (then null space must be removed) ---
+    _removeNullSpace.resize(n + 1u);
+    _removeNullSpace[n] = false;
+
+
+  }
+  
 
   
   void Solution::AddSolution_par(const int n_sols, const char name[], const FEFamily fefamily, const FEOrder order,
@@ -217,22 +293,29 @@ _removeNullSpace[old_size + s] = false;
     _Sol[i] = NumericVector::build().release();
 
     if(n_processors() == 1) {  // IF SERIAL
-      _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->_ownSize[_SolType[i]][processor_id()], false, SERIAL);
+      _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()), 
+                    _msh->dofmap_get_own_size(_SolType[i], processor_id()), false, SERIAL);
     }
     else { // IF PARALLEL
       if(_SolType[i] < 3) {
-        if(_msh->_ghostDofs[_SolType[i]][processor_id()].size() != 0) {
-          _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->_ownSize[_SolType[i]][processor_id()],
-                        _msh->_ghostDofs[_SolType[i]][processor_id()], false, GHOSTED);
+        if(_msh->dofmap_get_ghost_dofs(_SolType[i], processor_id()).size() != 0) {
+          _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()),
+                        _msh->dofmap_get_own_size(_SolType[i], processor_id()),
+                        _msh->dofmap_get_ghost_dofs(_SolType[i], processor_id()), 
+                        false, GHOSTED);
         }
         else {
-          std::vector <int> fake_ghost(1, _msh->_ownSize[_SolType[i]][processor_id()]);  ///@todo why do we need this fake ghost?
-          _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->_ownSize[_SolType[i]][processor_id()],
-                        fake_ghost, false, GHOSTED);
+          std::vector <int> fake_ghost(1, _msh->dofmap_get_own_size(_SolType[i], processor_id()));  ///@todo why do we need this fake ghost?
+          _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()), 
+                        _msh->dofmap_get_own_size(_SolType[i], processor_id()),
+                        fake_ghost, 
+                        false, GHOSTED);
         }
       }
-      else { //discontinuous pressure has no ghost nodes
-        _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->_ownSize[_SolType[i]][processor_id()], false, PARALLEL);
+      else { //discontinuous Lagrange have no ghost nodes
+        _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()), 
+                      _msh->dofmap_get_own_size(_SolType[i], processor_id()),
+                      false, PARALLEL);
       }
     }
 
@@ -392,20 +475,20 @@ _removeNullSpace[old_size + s] = false;
 
       int loc_offset_EPS = KKoffset[k][processor_id()];
 
-      int glob_offset_eps = _msh->_dofOffset[soltype][processor_id()];
+      int glob_offset_eps = _msh->dofmap_get_dof_offset(soltype, processor_id());
 
-      vector <int> index(_msh->_ownSize[soltype][processor_id()]);
+      vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
 
-      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < index.size(); i++) {
         index[i] = loc_offset_EPS + i;
       }
 
-      vector <double> valueEPS(_msh->_ownSize[soltype][processor_id()]);
+      vector <double> valueEPS(_msh->dofmap_get_own_size(soltype, processor_id()));
       _EPS->get(index, valueEPS);
       //vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
       //_RES->get(index,valueRES);
 
-      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < valueEPS.size(); i++) {
         _Eps[indexSol]->set(i + glob_offset_eps, valueEPS[i]);
         //if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
         //else _Res[indexSol]->set(i+glob_offset_eps,zero);
@@ -444,18 +527,18 @@ _removeNullSpace[old_size + s] = false;
 
       int loc_offset_RES = KKoffset[k][processor_id()];
 
-      int glob_offset_res = _msh->_dofOffset[soltype][processor_id()];
+      int glob_offset_res = _msh->dofmap_get_dof_offset(soltype, processor_id());
 
-      vector <int> index(_msh->_ownSize[soltype][processor_id()]);
+      vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
 
-      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < index.size(); i++) {
         index[i] = loc_offset_RES + i;
       }
 
-      vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
+      vector <double> valueRES(_msh->dofmap_get_own_size(soltype, processor_id()));
       _RES->get(index, valueRES);
 
-      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < valueRES.size(); i++) {
         if((*_Bdc[indexSol])(i + glob_offset_res) > 1.1) {
           _Res[indexSol]->set(i + glob_offset_res, valueRES[i]);
         }
@@ -1107,10 +1190,10 @@ _removeNullSpace[old_size + s] = false;
 
       unsigned dim = _msh->GetDimension();
 
-      int nr     = _msh->_dofOffset[3][_nprocs];
-      int nc     = _msh->_dofOffset[SolType][_nprocs];
-      int nr_loc = _msh->_ownSize[3][_iproc];
-      int nc_loc = _msh->_ownSize[SolType][_iproc];
+      int nr     = _msh->dofmap_get_dof_offset(3, _nprocs);
+      int nc     = _msh->dofmap_get_dof_offset(SolType, _nprocs);
+      int nr_loc = _msh->dofmap_get_own_size(3, _iproc);
+      int nc_loc = _msh->dofmap_get_own_size(SolType, _iproc);
 
       for(int i = 0; i < dim; i++) {
         _GradMat[SolType][i] = SparseMatrix::build().release();

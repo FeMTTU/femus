@@ -26,10 +26,13 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Mesh.hpp"
-#include "petscmat.h"
 #include "FElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+
+#include "petscmat.h"
+
 #include <vector>
+
 
 namespace femus {
 
@@ -42,7 +45,6 @@ namespace femus {
   class Mesh;
   class MultiLevelSolution;
 
-  using std::vector;
 
   class Solution : public ParallelObject {
 
@@ -56,6 +58,9 @@ namespace femus {
 
       /** Add a new variable called 'name' */
       void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder = 0, const bool &Pde_type = 1);
+
+      void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
+                             const unsigned& tmorder = 0, const bool &Pde_type = 1);
 
       /** Add a number of solutions */
       void AddSolution_par(const int n_sols, const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder = 0, const bool &Pde_type = 1);
@@ -76,9 +81,9 @@ namespace femus {
 //       /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
 //       void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
 
-      void UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const vector <vector <unsigned> > &KKoffset);
+      void UpdateSol(const std::vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const std::vector <std::vector <unsigned> > &KKoffset);
       /** */
-      void UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset);
+      void UpdateRes(const std::vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const std::vector <std::vector <unsigned> > &KKoffset);
 
       /** Update the solution */
       void CopySolutionToOldSolution();
@@ -102,8 +107,8 @@ namespace femus {
 //     bool FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,const double &AMRthreshold);
 
       /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
-      bool FlagAMRRegionBasedOnErroNorm(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType);
-      bool FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, 
+      bool FlagAMRRegionBasedOnErroNorm(const std::vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType);
+      bool FlagAMRRegionBasedOnErroNormAdaptive(const std::vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, 
 						const unsigned& normType, const double &neighborThresholdValue);
 
 
@@ -113,24 +118,24 @@ namespace femus {
       /** Init and set to zero The AMR Eps vector */
       void InitAMREps();
       /** Vector size: number of added Solutions. */
-      vector <NumericVector*> _Sol;
+      std::vector <NumericVector*> _Sol;
       /** Vector size: number of added Solutions. Used only if the Solution is time-dependent */
-      vector <NumericVector*> _SolOld;
+      std::vector <NumericVector*> _SolOld;
       /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
-      vector <NumericVector*> _Res;
+      std::vector <NumericVector*> _Res;
       /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
-      vector <NumericVector*> _Eps;
+      std::vector <NumericVector*> _Eps;
       /** Vector size: number of added Solutions. */
-      vector <NumericVector*> _AMREps;
+      std::vector <NumericVector*> _AMREps;
       bool _AMR_flag;
       /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
-      vector <NumericVector*> _Bdc;
+      std::vector <NumericVector*> _Bdc;
       /** Vector size: number of added Solutions. Tells if the Solution is an unknown to some PDE */
-      vector <bool> _ResEpsBdcFlag;
+      std::vector <bool> _ResEpsBdcFlag;
 
-      vector < vector <NumericVector*> > _GradVec;
+      std::vector < std::vector <NumericVector*> > _GradVec;
 
-      vector <SparseMatrix*> _GradMat[5];
+      std::vector <SparseMatrix*> _GradMat[5];
       // bool _GradMatFlag[5];
 
       void RemoveNullSpace(const unsigned &index) {
@@ -159,23 +164,28 @@ namespace femus {
       bool GetIfFSI(){
 	return _FSI; 
       }
+    
+    /// compute the sequential index for the FE family 
+    static int compute_fe_sol_type( const FEFamily fefamily,  const FEOrder order_v, const FEOrder order_b) {
+        return   order_v - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
+    }
       
     private:
         
       //member data
         
       /** Vector size: number of added Solutions. Tells the FE index */
-      vector <int>      _SolType;
+      std::vector <int>      _SolType;
       /** Vector size: number of added Solutions. Solution name */
-      vector <char*>    _SolName;
+      std::vector <char*>    _SolName;
       /** Vector size: number of added Solutions. Time type of Solution: 0 = steady, 2 = time dependent */
-      vector <unsigned> _SolTmOrder;
+      std::vector <unsigned> _SolTmOrder;
       /** Vector size: number of added Solutions. FE family */
-      vector <FEFamily> _family;
+      std::vector <FEFamily> _family;
       /** Vector size: number of added Solutions. FE order within a family */
-      vector <FEOrder>  _order;
+      std::vector <FEOrder>  _order;
       /** Vector size: number of added Solutions. */
-      vector <bool>     _removeNullSpace;
+      std::vector <bool>     _removeNullSpace;
       
       /** Pointer to underlying mesh object */
       Mesh *_msh;
