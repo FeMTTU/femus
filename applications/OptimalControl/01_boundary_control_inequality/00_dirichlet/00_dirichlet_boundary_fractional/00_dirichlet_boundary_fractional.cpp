@@ -14,8 +14,9 @@
 //for reading additional fields from MED file (based on MED ordering)
 
 
-
-#define FACE_FOR_CONTROL        2  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        2
+#define FACE_FOR_TARGET         1
 
 
 
@@ -41,9 +42,9 @@
 //**************************************
 
 //***** Operator-related ****************** 
-  #define RHS_ONE             1.
-  #define KEEP_ADJOINT_PUSH   0
-#define IS_CTRL_FRACTIONAL_SOBOLEV   1
+  #define RHS_ONE             0.
+  #define KEEP_ADJOINT_PUSH   1
+#define IS_CTRL_FRACTIONAL_SOBOLEV 1 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -248,7 +249,7 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
-  const bool use_output_time_folder = false;
+  const bool use_output_time_folder = true;
   const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
@@ -267,10 +268,10 @@ int main(int argc, char** args) {
   
 //   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
-//   std::string input_file = "parametric_square_2x2.med";
+  std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
-  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -504,8 +505,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors();
 
-  constexpr bool print_algebra_global = true;
-  constexpr bool print_algebra_local = true;
+  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_local = false;
   
   
 
@@ -1694,22 +1695,23 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
       
   } //end element loop
 
+  ////////////////////////////////////////
   double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
   
+  std::cout << "total integral on processor " << iproc << ": " << total_integral << std::endl;
+
+  double integral_target_parallel = 0.; MPI_Allreduce( &integral_target, &integral_target_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double integral_alpha_parallel = 0.; MPI_Allreduce( &integral_alpha, &integral_alpha_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double integral_beta_parallel = 0.;  MPI_Allreduce( &integral_beta, &integral_beta_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double total_integral_parallel = 0.; MPI_Allreduce( &total_integral, &total_integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+
+    std::cout << "@@@@@@@@@@@@@@@@ functional value: " << total_integral_parallel << std::endl;
   
-  ////////////////////////////////////////
-       std::cout << "integral on processor " << iproc << ": " << total_integral << std::endl;
-
-   double J = 0.;
-      MPI_Allreduce( &total_integral, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-
-
-    std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J << std::endl;
-  
-//   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-//   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-//   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-//   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target_parallel << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_alpha_parallel << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_beta_parallel << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral_parallel << std::endl;
  
 return;
   
