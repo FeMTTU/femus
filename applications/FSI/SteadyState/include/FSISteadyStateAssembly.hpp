@@ -1368,12 +1368,12 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
     
     for (unsigned isdom = 0; isdom < ml_msh.GetLevel(lev)->n_processors(); isdom++) {
         
-       ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().broadcast(isdom);
+       ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().broadcast(isdom);
        
-      for (unsigned iel = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().begin(); 
-                    iel < ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().end(); iel++) {
+      for (unsigned iel = ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().begin(); 
+                    iel < ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().end(); iel++) {
           
-        short unsigned elType = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray()[iel];
+        short unsigned elType = ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray()[iel];
       
         int increment = 1;
       
@@ -1388,7 +1388,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
         jel += increment;
       }
       
-      ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().clearBroadcast();
+      ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().clearBroadcast();
     }
          _element_faces[lev] =   MyMatrix < int > (rowSizeElNearFace, -1); 
 
@@ -1556,7 +1556,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
         
          const int face_flag_wet  = find_faces_for_integration_based_on_face_center (dimension, face_center);
          
-         const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel, f) - 1; //@todo have to subtract 1 because it was added before!
+         const int elem_near_face = ml_msh.GetLevel(lev)->GetMeshElements()->GetFaceElementIndex(iel, f) - 1; //@todo have to subtract 1 because it was added before!
 
               bool face_already_found_from_near_elem = false;
               

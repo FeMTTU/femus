@@ -30,9 +30,11 @@ using namespace femus;
 
 
   #if FEMUS_TEST_SOLUTION != 0
-     #define FEMUS_TEST_SOLUTION_PRINT 1
 
      #define FEMUS_TEST_PROBLEM  1
+
+     #define FEMUS_TEST_SOLUTION_PRINT 0
+
   #endif
 
 
@@ -100,6 +102,7 @@ int main(int argc,char **args) {
   
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
+<<<<<<< HEAD
 //  input_files.push_back("turek_FSI1.neu");
 //  input_files.push_back("turek_FSI1.med");
 //  input_files.push_back("turek_FSI1_3d.med");
@@ -112,6 +115,9 @@ int main(int argc,char **args) {
 //  input_files.push_back("dome_quad.med");
 //   input_files.push_back("square_quad.neu");
   input_files.push_back("parametric_square_4x5.med");
+=======
+  input_files.push_back("parametric_square_1x2.med");
+>>>>>>> femttu/master
 //   input_files.push_back("./geom_elem_many_Quad9_Four_boundaries_groups.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Nine_without_groups.med"); //Some boundary face was not set in the mesh MED file
 //   input_files.push_back("./geom_elem_many_Tri6_Two_boundaries.med"); //error
@@ -119,6 +125,7 @@ int main(int argc,char **args) {
 //   input_files.push_back("./geom_elem_many_Tet10_Twelve_boundaries.med"); ///@todo there seems to be an error in the output computation of biquadratic nodes
 //   input_files.push_back("./geom_elem_one_OneTet10.med");//Some boundary face was not set in the mesh MED file
 // 
+<<<<<<< HEAD
 // fsi 3d - one layer
 // volumes: 66
 // faces:  66*2 + 42 = 132 + 42 = 174
@@ -129,6 +136,10 @@ int main(int argc,char **args) {
 // faces:  66*2  + 42*4 =  132 + 168 = 300     
 
  
+=======
+
+
+>>>>>>> femttu/master
   for(unsigned m = 0; m < input_files.size(); m++) {
 
             
@@ -166,6 +177,7 @@ int main(int argc,char **args) {
   #if FEMUS_TEST_PROBLEM != 0
       MultiLevelProblem   ml_prob(&ml_sol);
   #endif 
+<<<<<<< HEAD
    
   const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
   const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
@@ -174,12 +186,33 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
+=======
+  
+   std::cout << " FEFamily_count " << FEFamily_count << std::endl;
+      
+  const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
+  const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
+//   ml_sol.AddSolution("u_lag_first", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
+//   ml_sol.AddSolution("u_lag_serendip", LAGRANGE, SERENDIPITY, steady_flag, is_an_unknown_of_a_pde);
+//   ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
+//   ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+//   ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
+   ml_sol.AddSolution("u_wg", WEAK_GALERKIN, FIRST, FIRST, steady_flag, is_an_unknown_of_a_pde);
+>>>>>>> femttu/master
 
     for(unsigned sol = 0; sol <  ml_sol.GetSolutionSize(); sol++) {
      const std::string sol_name(ml_sol.GetSolutionName(sol));
   ml_sol.Initialize(sol_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //   ml_sol.Initialize("all"); 
     }
+<<<<<<< HEAD
+=======
+    
+    //I have to construct the dof offset for one scalar Weak Galerkin variable over the given mesh
+    // I would like to avoid using _msh->_dofOffset etc
+    //I would prefer to do a single DofClass to
+    
+>>>>>>> femttu/master
 //====================================================
 
  

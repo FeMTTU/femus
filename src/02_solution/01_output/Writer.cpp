@@ -18,17 +18,17 @@
 //----------------------------------------------------------------------------
 
 #include "Writer.hpp"
-
-#include "mpi.h"
-
+#include "VTKWriter.hpp"
+#include "GMVWriter.hpp"
+#include "XDMFWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "SparseMatrix.hpp"
 #include "ElemType.hpp"
 #include "NumericVector.hpp"
-#include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
-#include "XDMFWriter.hpp"
+
+
+#include "mpi.h"
 
 
 

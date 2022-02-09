@@ -25,15 +25,14 @@
 #include "Parameter.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "GeomElTypeEnum.hpp"
+
 #include <iostream>
+
 
 namespace femus {
 
-using std::cout;
-using std::endl;
 
-bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x,
-				  const int &ElemGroupNumber,const int &level) = NULL;
+bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) = NULL;
 
 
 MultiLevelProblem::MultiLevelProblem():

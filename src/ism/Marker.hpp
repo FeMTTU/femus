@@ -21,10 +21,13 @@
 //----------------------------------------------------------------------------
 #include "MarkerTypeEnum.hpp"
 #include "ParallelObject.hpp"
-#include "Mesh.hpp"
-#include "vector"
-#include "map"
+#include "NumericVector.hpp"
 #include "MyVector.hpp"
+#include "Mesh.hpp"
+
+#include <vector>
+#include <map>
+
 
 namespace femus {
 

@@ -19,8 +19,6 @@ PURPOSE.  See the above copyright notice for more information.
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <vector>
-#include <memory>
 #include "MultiLevelMesh.hpp"
 #include "Solution.hpp"
 #include "ParallelObject.hpp"
@@ -28,6 +26,10 @@ PURPOSE.  See the above copyright notice for more information.
 #include "BDCTypeEnum.hpp"
 #include "FunctionBase.hpp"
 #include "Writer.hpp"
+
+#include <vector>
+#include <memory>
+
 
 namespace femus {
 
@@ -66,6 +68,9 @@ public:
  
     /** To be Added */
     void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, unsigned tmorder = 0, const bool &Pde_type = 1);
+
+    /** To be Added */
+    void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v,  const FEOrder order_b, unsigned tmorder = 0, const bool &Pde_type = 1);
 
     /** If you want to add a vector whose components are treated the same way */
     void AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
@@ -359,6 +364,7 @@ private:
     /** Vector size: number of added solutions. */
     vector < bool >                     _fixSolutionAtOnePoint;
 
+    /** Vector size: number of added solutions. */
     vector <unsigned>                   _solPairIndex;
     vector <unsigned>                   _solPairInverseIndex;
 
@@ -367,6 +373,7 @@ private:
 
     const MultiLevelProblem* _mlBCProblem;
     
+    /** For Fluid Structure Interaction */
     bool _FSI;
 
 };
