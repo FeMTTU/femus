@@ -32,6 +32,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include <sstream>
 #include <sys/stat.h>
 
+
 namespace femus {
 
 
@@ -164,6 +165,99 @@ namespace femus {
     }
   }
 
+ 
+ 
+ ///  Weak Galerkin Add Solution -------------------------------------------------------------------------------------
+  void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
+                                       unsigned tmorder, const bool& PdeType) {
+
+
+    unsigned n = _solType.size();
+    
+// ---------------------
+//------ first resize -----------
+// ---------------------
+  
+
+// ID related---
+    _solName.resize(n + 1u);
+    
+// is_an_unknown_of_a_pde---
+    _pdeType.resize(n + 1u);
+    
+//     For pressure variables---
+    _testIfPressure.resize(n + 1u);
+    _addAMRPressureStability.resize(n + 1u);
+//     For pressure variables, fix it at one point for PCFieldSplit, in Boundary Conditions ---
+    _fixSolutionAtOnePoint.resize(n + 1u);
+    
+//     For FSI, pairing velocities and displacements ---
+    _solPairIndex.resize(n + 1u);
+    _solPairInverseIndex.resize(n + 1u);
+
+//     Time discretization---
+    _solTimeOrder.resize(n + 1u);
+    
+// These are the things that should change for different FE...------    
+//   FE related---  
+    _family.resize(n + 1u);
+    _order.resize(n + 1u);
+    _solType.resize(n + 1u);
+    
+//     FE related and Time related: Boundary Conditions--- 
+    _bdcType.resize(n + 1u);
+// These are the things that should change for different FE... - end------    
+    
+
+// ---------------------
+//------ then fill -----------
+// ---------------------
+    
+// ID related---
+    _solName[n]  = new char [DEFAULT_SOL_NCHARS];
+    strcpy(_solName[n], name);
+    
+// is_an_unknown_of_a_pde---
+    _pdeType[n] = PdeType;
+    
+//   For pressure variables---
+    _testIfPressure[n] = 0;
+    _addAMRPressureStability[n] = false;
+//   For pressure variables, if solution is fixed at one point (then null space must be removed) ---
+    _fixSolutionAtOnePoint[n] = false;
+        
+//   For FSI, pairing velocities and displacements ---
+    _solPairIndex[n] = n;
+    _solPairInverseIndex[n] = n;
+    
+//     Time discretization---
+    _solTimeOrder[n] = tmorder;
+    
+// These are the things that should change for different FE...------    
+//   FE related---  
+    _family[n] = fefamily;
+    _order[n] = order_v;
+//     _order_b[n] = order_b;
+    _solType[n] = Solution::compute_fe_sol_type(fefamily, order_v, order_b); ///@todo: this normally goes from 0 to 4 for now, I have to understand how to use it
+    
+//     FE related and Time related: Boundary Conditions
+    _bdcType[n]  = new char [20];
+    sprintf(_bdcType[n], "undefined");
+// These are the things that should change for different FE... - end------    
+
+
+// ---------------------
+    cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
+         << std::setw(12) << order_v << " and time discretization order " << tmorder << endl;
+
+    for(unsigned ig = 0; ig < _gridn; ig++) {
+      _solution[ig]->AddSolution(_solName[n], _family[n], _order[n],  order_b, _solTimeOrder[n], _pdeType[n]);
+    }
+  }
+
+  
+  
+  
   void MultiLevelSolution::AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder, const bool& Pde_type) {
 
     for(unsigned i = 0; i < n_components; i++) {
@@ -586,10 +680,10 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       if(_solution[igridn]->_ResEpsBdcFlag[k]) {
         Mesh* msh = _mlMesh->GetLevel(igridn);
 
-        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = msh->GetAmrRestrictionMap();
+        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
-        for(unsigned j = msh->_dofOffset[_solType[k]][_iproc]; j < msh->_dofOffset[_solType[k]][_iproc + 1]; j++) {
+        for(unsigned j = msh->dofmap_get_dof_offset(_solType[k], _iproc); j < msh->dofmap_get_dof_offset(_solType[k], _iproc + 1); j++) {
           _solution[igridn]->_Bdc[k]->set(j, 2.);
         }
 
@@ -756,10 +850,10 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       if(_solution[igridn]->_ResEpsBdcFlag[solIndex]) {
         Mesh* msh = _mlMesh->GetLevel(igridn);
 
-        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = msh->GetAmrRestrictionMap();
+        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
-        for(unsigned j = msh->_dofOffset[_solType[solIndex]][_iproc]; j < msh->_dofOffset[_solType[solIndex]][_iproc + 1]; j++) {
+        for(unsigned j = msh->dofmap_get_dof_offset(_solType[solIndex], _iproc); j < msh->dofmap_get_dof_offset(_solType[solIndex], _iproc + 1); j++) {
           for(unsigned k = 0; k < solKiIndex.size(); k++) {
             _solution[igridn]->_Bdc[solKiIndex[k]]->set(j, 2.);
           }

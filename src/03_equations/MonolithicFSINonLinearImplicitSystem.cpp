@@ -146,7 +146,7 @@ namespace femus {
     LinearEquationSolver* LinSol = _LinSolver[level];
 
     Mesh* mesh = _msh[level];
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = mesh->GetAmrRestrictionMap();
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = mesh->GetAmrRestrictionMap();
 
     std::vector < std::map < unsigned, bool > > & amrSolidMark = mesh->GetAmrSolidMark();
     

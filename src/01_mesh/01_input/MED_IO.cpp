@@ -138,7 +138,12 @@ namespace femus {
   
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_domain_groups_flag, const bool read_boundary_groups_flag) {
+  void MED_IO::read(const std::string& name, 
+                    vector < vector < double> >& coords, 
+                    const double Lref, 
+                    std::vector<bool>& type_elem_flag, 
+                    const bool read_domain_groups_flag, 
+                    const bool read_boundary_groups_flag) {
 
 
     Mesh& mesh = GetMesh();
@@ -879,12 +884,13 @@ namespace femus {
     std::cout << " Number of elements of dimension " << (i + 1) << " in med file: " <<  n_elems_per_dimension <<  std::endl;
        
       mesh.SetNumberOfElements(n_elems_per_dimension);
-      mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted. It is in the Destructor of Mesh
+      mesh.el = new elem(n_elems_per_dimension, mesh.GetDimension());
 
 
 
 
       for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
+          
         mesh.el->SetElementGroup(iel, 1);
         unsigned nve = el_nodes_per_dimension;  /// @todo this is only one element type
         if(nve == 27) {
@@ -921,11 +927,13 @@ namespace femus {
           std::cout << "Error! Use a second order discretization" << std::endl;
           abort();
         }
+        
         for(unsigned i = 0; i < nve; i++) {
           unsigned inode = MEDToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
           const unsigned dof_value = conn_map[iel + i * n_elems_per_dimension ] - 1u;
           mesh.el->SetElementDofIndex(iel, inode, dof_value);  //MED connectivity is stored on a per-node basis, not a per-element basis
         }
+        
       }
 
     
@@ -1314,6 +1322,7 @@ namespace femus {
     Mesh& mesh = GetMesh();
     uint mydim = 1;  //this is the initial value, then it will be updated below
     mesh.SetDimension(mydim);  //this is basically the MANIFOLD DIMENSION of the domain
+    mesh.SetRefinementCellAndFaceIndices(mydim);
 
 
     std::vector< std::string > elem_types(n_fem_type);
@@ -1337,7 +1346,10 @@ namespace femus {
       else if(/*elem_types_str.compare("SE2") == 0 ||*/
         elem_types_str.compare("SE3") == 0)  mydim = 1;
 
-      if(mydim > mesh.GetDimension()) mesh.SetDimension(mydim);
+      if(mydim > mesh.GetDimension()) { 
+          mesh.SetDimension(mydim);
+          mesh.SetRefinementCellAndFaceIndices(mydim); 
+      }
 
     }  //end for
 

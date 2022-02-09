@@ -737,7 +737,7 @@ namespace femus {
     LinearEquationSolver* LinSol = _LinSolver[level];
 
     Mesh* mesh = _msh[level];
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = mesh->GetAmrRestrictionMap();
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = mesh->GetAmrRestrictionMap();
 
     int n = LinSol->KKIndex[LinSol->KKIndex.size() - 1u];
     int n_loc = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];

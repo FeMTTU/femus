@@ -33,35 +33,116 @@ using std::endl;
 
 namespace femus {
 
-  unsigned elem_type::_refindex = 1;
 
-//   Constructor
-  elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) : _gauss(geom_elem, order_gauss)
+//   Constructor with FE quadrature evaluations
+  elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) 
   {
       
+     initialize_geom_elem(geom_elem);
+      
+     initialize_fe_soltype(fe_order);
+     
+     // Quadrature (without FE Evaluations) ====    
+     initialize_quadrature_all(geom_elem, order_gauss);
+      
+  }
+  
+
+//   Constructor without FE quadrature evaluations
+  elem_type::elem_type(const char* geom_elem, const char* fe_order)
+  {
+      
+     initialize_geom_elem(geom_elem);
+      
+     initialize_fe_soltype(fe_order);
+      
+   
+  }
+  
+  
+  elem_type::~elem_type()
+  {
+
+// FE and MG ====      
+   deallocate_fe_and_multigrid_parts();
+
+    
+// Quadrature (without FE Evaluations) ====    
+    deallocate_quadrature_all();
+    
+  }
+  
+
+  void elem_type::deallocate_fe_and_multigrid_parts() {
+      
+    delete _pt_basis;
+    
+    delete [] _IND;
+    
+    delete [] _X;
+    delete [] _KVERT_IND;
+
+    delete [] _prol_val;
+    delete [] _prol_ind;
+    delete [] _mem_prol_val;
+    delete [] _mem_prol_ind;
+    
+  }
+  
+  
+ 
+   void elem_type::initialize_geom_elem(const char* geom_elem) {
+       
+// GEOM ELEM ============
+           if ( !strcmp(geom_elem, "hex") )    { _dim = 3; _GeomElemType = HEX;   }
+      else if ( !strcmp(geom_elem, "tet") )    { _dim = 3; _GeomElemType = TET;   }
+      else if ( !strcmp(geom_elem, "wedge") )  { _dim = 3; _GeomElemType = WEDGE; }
+      else if ( !strcmp(geom_elem, "quad") )   { _dim = 2; _GeomElemType = QUAD;  }
+      else if ( !strcmp(geom_elem, "tri") )    { _dim = 2; _GeomElemType = TRI;   }
+      else if ( !strcmp(geom_elem, "line") )   { _dim = 1; _GeomElemType = LINE;  }
+      else {
+        cout << " No " << geom_elem << " implemented" << endl;
+        abort();
+      }
+ 
+   }  
+  
+  
+   void elem_type::initialize_fe_soltype(const char* fe_order) {
+
+// FE FAMILY & ORDER ============
     if(!strcmp(fe_order, "linear"))           _SolType = 0;
     else if(!strcmp(fe_order, "quadratic"))   _SolType = 1;
     else if(!strcmp(fe_order, "biquadratic")) _SolType = 2;
     else if(!strcmp(fe_order, "constant"))    _SolType = 3;
     else if(!strcmp(fe_order, "disc_linear")) _SolType = 4;
     else {
-      cout << fe_order << " is not a valid option for " << geom_elem << endl;
+      cout << fe_order << " is not a valid option " << endl;
       abort();
     }  
+       
+
+   }
+   
+   
+   void elem_type::initialize_quadrature_all(const char* geom_elem, const char* order_gauss) {
+       
+     initialize_quadrature(geom_elem, order_gauss);
       
-           if ( !strcmp(geom_elem, "hex") )    _GeomElemType = HEX;
-      else if ( !strcmp(geom_elem, "tet") )    _GeomElemType = TET;
-      else if ( !strcmp(geom_elem, "wedge") )  _GeomElemType = WEDGE;
-      else if ( !strcmp(geom_elem, "quad") )   _GeomElemType = QUAD;
-      else if ( !strcmp(geom_elem, "tri") )    _GeomElemType = TRI;
-      else if ( !strcmp(geom_elem, "line") )   _GeomElemType = LINE;
-      else {
-        cout << " No " << geom_elem << " implemented" << endl;
-        abort();
-      }
-      
-      
-            ///@todo conditional delete in the destructor 
+     initialize_quadrature_boundary(geom_elem, order_gauss);
+     
+  }
+  
+   
+   void elem_type::initialize_quadrature(const char* geom_elem, const char* order_gauss) {
+       
+          _gauss = new  Gauss(geom_elem, order_gauss);
+       
+   }
+       
+   void elem_type::initialize_quadrature_boundary(const char* geom_elem, const char* order_gauss) {
+       
+
       if ( !strcmp(geom_elem, "quad") || !strcmp(geom_elem, "tri") ) { //QUAD or TRI
            _gauss_bdry = new  Gauss("line", order_gauss);
        }
@@ -69,40 +150,195 @@ namespace femus {
            _gauss_bdry = new  Gauss("quad", order_gauss);
        }
       else if ( !strcmp(geom_elem, "tet") ) {
-           _gauss_bdry = new  Gauss("tri",order_gauss);
+           _gauss_bdry = new  Gauss("tri", order_gauss);
        }
       else if ( !strcmp(geom_elem, "line") ) {
-           _gauss_bdry = new  Gauss("point",order_gauss);
+           _gauss_bdry = new  Gauss("point", order_gauss);
        }
       else if ( !strcmp(geom_elem, "wedge") ) {
-           _gauss_bdry = new  Gauss("quad",order_gauss); ///@todo this is wrong, we have to do a VECTOR of quadratures
+           _gauss_bdry = new  Gauss("quad", order_gauss); ///@todo this is wrong, we have to do a VECTOR of quadratures
        }
       else {
         cout << " Boundary gauss points for " << geom_elem << " is not implemented yet" << endl;
         abort();
       }
-    
-    
+       
+
+   }
+   
+   
+  void elem_type::deallocate_quadrature_all() {
+      
+    deallocate_quadrature();
+    deallocate_quadrature_boundary();
+      
   }
 
-
-  elem_type::~elem_type()
+  void elem_type::deallocate_quadrature() {
+      
+    delete _gauss;
+      
+  }
+   
+   
+  void elem_type::deallocate_quadrature_boundary() {
+      
+    delete _gauss_bdry;
+      
+  }
+  
+  
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
-    delete [] _X;
-    delete [] _KVERT_IND;
-    delete [] _IND;
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+      
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
 
-    delete [] _prol_val;
-    delete [] _prol_ind;
-    delete [] _mem_prol_val;
-    delete [] _mem_prol_ind;
 
-    delete _pt_basis;
+    
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+
+
+  }
+  
+  
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order) :
+    elem_type(geom_elem, fe_order)
+  {
+
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
+
+  }
+  
+
+  
+  
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
+
+
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+    
+
+  }
+  
+  
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order):
+    elem_type(geom_elem, fe_order)
+  {
+
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
+
+  }
+  
+
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+    
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
+    
+
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+ 
+  }
+  
+  
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order) :
+    elem_type(geom_elem, fe_order)
+  {
+    
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+    //************ FE and MG SETUP ******************
+    initialize_fe_and_multigrid_parts(geom_elem);
     
   }
+  
+  
+   void elem_type_1D::initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) {
+       
+    //************ QUADRATURE ******************
+      initialize_quadrature_all(geom_elem, order_gauss);
+  
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+  
+   }
+   
+   
+   void elem_type_2D::initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) {
+       
+    //************ QUADRATURE ******************
+      initialize_quadrature_all(geom_elem, order_gauss);
+  
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+  
+   }
+   
+   
+   void elem_type_3D::initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) {
+       
+    //************ QUADRATURE ******************
+      initialize_quadrature_all(geom_elem, order_gauss);
+  
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_fe_quadrature_evaluations(order_gauss);
+  
+   }
+   
+   
+   /** destructor */
+    elem_type_1D::~elem_type_1D() {
+          
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+      // Quadrature ====      
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
+    }
+    
 
-
+    /** destructor */
+    elem_type_2D::~elem_type_2D() {
+          
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+      // Quadrature ====      
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
+    }
+    
+  
+    /** destructor */
+    elem_type_3D::~elem_type_3D() {
+          
+// these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
+      // Quadrature ====      
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
+    }
+    
+    
+    
 //----------------------------------------------------------------------------------------------------
 //BEGIN build matrix sparsity pattern size and build prolungator matrix for the LsysPde  Matrix
 //-----------------------------------------------------------------------------------------------------
@@ -111,6 +347,7 @@ namespace femus {
                                          NumericVector* NNZ_d, NumericVector* NNZ_o,
                                          const unsigned& index_sol, const unsigned& kkindex_sol) const
   {
+      
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -153,6 +390,8 @@ namespace femus {
         }
       }
     }
+    
+    
   }
 
 
@@ -190,6 +429,8 @@ namespace femus {
         Projmat->insert_row(irow, 1, jcol, &one);
       }
     }
+    
+    
   }
 
 
@@ -265,6 +506,8 @@ namespace femus {
         Projmat->insert_row(irow, 1, jcol, &one);
       }
     }
+    
+    
   }
 
 //----------------------------------------------------------------------------------------------------
@@ -296,7 +539,7 @@ namespace femus {
           int j = _prol_ind[i][k];
           int jcolumn = meshc.GetSolutionDof(j, ielc, _SolType);
 
-          if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) counter_o++;
+          if(jcolumn < meshc.dofmap_get_dof_offset(_SolType, iproc) || jcolumn >= meshc.dofmap_get_dof_offset(_SolType, iproc + 1)) counter_o++;
         }
 
         NNZ_d->set(irow, ncols - counter_o);
@@ -310,7 +553,7 @@ namespace femus {
         int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
         int jcolumn = meshc.GetSolutionDof(i, ielc, _SolType);
 
-        if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) {
+        if(jcolumn < meshc.dofmap_get_dof_offset(_SolType, iproc) || jcolumn >= meshc.dofmap_get_dof_offset(_SolType, iproc + 1)) {
           NNZ_o->set(irow, 1);
         }
         else {
@@ -318,6 +561,8 @@ namespace femus {
         }
       }
     }
+    
+    
   }
 
   void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
@@ -358,6 +603,8 @@ namespace femus {
         Projmat->insert_row(irow, 1, jcol, &one);
       }
     }
+    
+    
   }
 
 //----------------------------------------------------------------------------------------------------
@@ -370,7 +617,9 @@ namespace femus {
 
   void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
   {
+      
     bool identity = (_nlag[itype] <= _nc) ? true : false;
+    
     for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int iproc = mesh.IsdomBisectionSearch(irow, itype);
@@ -382,19 +631,24 @@ namespace femus {
         if(fabs(phi) > 1.0e-14) {
           counter++;
           int kcolumn = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
-          if(kcolumn < mesh._dofOffset[_SolType][iproc] || kcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
+          if(kcolumn < mesh.dofmap_get_dof_offset(_SolType, iproc) || kcolumn >= mesh.dofmap_get_dof_offset(_SolType, iproc + 1)) counter_o++;
         }
       }
       NNZ_d->set(irow, counter - counter_o);
       NNZ_o->set(irow, counter_o);
     }
+    
+    
   }
+  
 
   void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
   {
+      
     vector<int> cols(_nc);
     vector<double> value(_nc);
     bool identity = (_nlag[itype] <= _nc) ? true : false;
+    
     for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int ncols = (identity) ? 1 : _nc;
@@ -414,13 +668,15 @@ namespace femus {
         Projmat->insert_row(irow, counter, cols, &value[0]);
       }
     }
+    
+    
   }
 
 //----------------------------------------------------------------------------------------------------
 //END prolungator for solution printing
 //----------------------------------------------------------------------------------------------------
 
-  void elem_type::allocate_and_set_IND(const basis* pt_basis_in)  {
+  void elem_type::allocate_and_set_coarse_node_indices(const basis* pt_basis_in)  {
       
     _IND = new const int * [_nc];
 
@@ -431,7 +687,7 @@ namespace femus {
   }
   
   
-  void elem_type::allocate_coordinates_and_KVERT_IND()  {
+  void elem_type::allocate_fine_coordinates_and_KVERT_IND()  {
       
     _X         = new const double * [_nf];
     _KVERT_IND = new const int * [_nf];
@@ -439,7 +695,7 @@ namespace femus {
   }
   
   
-  void elem_type::set_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
+  void elem_type::set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
        
       for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = pt_basis_in->GetKVERT_IND(i);
@@ -449,7 +705,7 @@ namespace femus {
   } 
   
   
-  void elem_type::set_coarse_and_fine_elem_data(const basis* pt_basis_in)  {
+  void elem_type::set_coarse_and_fine_num_dofs(const basis* pt_basis_in)  {
   
     _nc 	 = pt_basis_in->_nc;
     _nf 	 = pt_basis_in->_nf;
@@ -459,15 +715,15 @@ namespace femus {
     _nlag[3] = pt_basis_in->_nlag3;
 
     
-    allocate_and_set_IND(pt_basis_in);
+    allocate_and_set_coarse_node_indices(pt_basis_in);
 
-    allocate_coordinates_and_KVERT_IND();
+    allocate_fine_coordinates_and_KVERT_IND();
     
   }
   
   
   
-   void elem_type::set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
+   void elem_type::set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
        
      if(_SolType <= 2) {
          
@@ -591,7 +847,7 @@ namespace femus {
    void elem_type_1D::allocate_and_fill_shape_at_quadrature_points()  {
        
      // shape function and its derivatives evaluated at Gauss'points
-    int n_gauss = _gauss.GetGaussPointsNumber();
+    int n_gauss = _gauss->GetGaussPointsNumber();
 
     _phi = new double*[n_gauss];
     _dphidxi  = new double*[n_gauss];
@@ -607,7 +863,7 @@ namespace femus {
       _d2phidxi2[i]  = &_d2phidxi2_memory[i * _nc];
     }
 
-    const double* ptx[1] = {_gauss.GetGaussWeightsPointer() + n_gauss};  // you sum an integer to a pointer, which offsets the pointer as a result
+    const double* ptx[1] = {_gauss->GetGaussWeightsPointer() + n_gauss};  // you sum an integer to a pointer, which offsets the pointer as a result
 
     for(unsigned i = 0; i < n_gauss; i++) {
       double x[1];
@@ -631,7 +887,7 @@ namespace femus {
    void elem_type_2D::allocate_and_fill_shape_at_quadrature_points()  {
        
     // shape function and its derivatives evaluated at Gauss'points
-    int n_gauss = _gauss.GetGaussPointsNumber();
+    int n_gauss = _gauss->GetGaussPointsNumber();
 
     _phi = new double*[n_gauss];
     _dphidxi  = new double*[n_gauss];
@@ -662,7 +918,7 @@ namespace femus {
 
     }
     
-    const double* ptx[2] = {_gauss.GetGaussWeightsPointer() + n_gauss, _gauss.GetGaussWeightsPointer() + 2 * n_gauss};
+    const double* ptx[2] = {_gauss->GetGaussWeightsPointer() + n_gauss, _gauss->GetGaussWeightsPointer() + 2 * n_gauss};
 
     for(unsigned i = 0; i < n_gauss; i++) {
       double x[2];
@@ -691,7 +947,7 @@ namespace femus {
    void elem_type_3D::allocate_and_fill_shape_at_quadrature_points()  {
        
     // shape function and its derivatives evaluated at Gauss'points
-    int n_gauss = _gauss.GetGaussPointsNumber();
+    int n_gauss = _gauss->GetGaussPointsNumber();
 
     _phi = new double*[n_gauss];
     _dphidxi  = new double*[n_gauss];
@@ -735,9 +991,9 @@ namespace femus {
 
     }
 
-    const double* ptx[3] = {_gauss.GetGaussWeightsPointer() +   n_gauss,
-                            _gauss.GetGaussWeightsPointer() + 2 * n_gauss,
-                            _gauss.GetGaussWeightsPointer() + 3 * n_gauss
+    const double* ptx[3] = {_gauss->GetGaussWeightsPointer() +   n_gauss,
+                            _gauss->GetGaussWeightsPointer() + 2 * n_gauss,
+                            _gauss->GetGaussWeightsPointer() + 3 * n_gauss
                            };
 
     for(unsigned i = 0; i < n_gauss; i++) {
@@ -849,7 +1105,7 @@ namespace femus {
    
    
    
-      void elem_type_2D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
+   void elem_type_2D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
          
           
         constexpr unsigned int dim = 2;  
@@ -955,7 +1211,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
       
    }
    
-      void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
+   void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
    
 #if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
@@ -1062,50 +1318,36 @@ if( _SolType >= 3 && _SolType < 5 ) {
    }
       
       
+        
+  
+  void elem_type::initialize_fe_and_multigrid_parts(const char* geom_elem) {
       
 
-  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 1;
-
     //************ FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+    const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
     // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
+    set_coarse_and_fine_num_dofs(_pt_basis);
 
     //***********************************************************
     // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis, linearElement);
+    set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
 
-    set_coordinates_and_KVERT_IND(_pt_basis);
+    set_fine_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
 
-    // local projection matrix evaluation
+    //***********************************************************
+    // local prolongation matrix evaluation
     set_element_prolongation(linearElement);
+    //***********************************************************
 
     delete linearElement;
 
     
-    //************ FE and QUADRATURE EVALUATIONS ******************
-    allocate_and_fill_shape_at_quadrature_points();
-
-    allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
-
-    // boundary
-    allocate_volume_shape_at_reference_boundary_quadrature_points();
-
-    
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-//=====================
-
   }
   
-
+  
+  
   
   void elem_type_1D::deallocate_shape_at_quadrature_points() {
       
@@ -1168,18 +1410,18 @@ if( _SolType >= 3 && _SolType < 5 ) {
   }
   
   
-  void elem_type_1D::allocate_volume_shape_at_reference_boundary_quadrature_points() {
+  void elem_type_1D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
       
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
-    _phi_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_vol_at_bdry  = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_memory_vol_at_bdry[i * _nc];
-      _dphidxi_vol_at_bdry[i]  = &_dphidxi_memory_vol_at_bdry[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
+      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
      }
      
 }
@@ -1187,66 +1429,29 @@ if( _SolType >= 3 && _SolType < 5 ) {
   void elem_type_1D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
       
         delete [] _phi_vol_at_bdry;
-        delete [] _phi_memory_vol_at_bdry;
+        delete [] _phi_vol_at_bdry_memory;
         
         delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_memory_vol_at_bdry;
+        delete [] _dphidxi_vol_at_bdry_memory;
 
-}
-  
-  void elem_type_3D::allocate_volume_shape_at_reference_boundary_quadrature_points() {
-      
-     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
-    
-    _phi_vol_at_bdry = new double*[n_gauss_bdry];
-    _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
-    _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
-    _dphidzeta_vol_at_bdry = new double*[n_gauss_bdry];
-    _phi_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_vol_at_bdry  = new double [n_gauss_bdry * _nc];
-    _dphideta_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidzeta_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    
-     for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_memory_vol_at_bdry[i * _nc];
-      _dphidxi_vol_at_bdry[i]   = & _dphidxi_memory_vol_at_bdry[i * _nc];
-      _dphideta_vol_at_bdry[i]  = & _dphideta_memory_vol_at_bdry[i * _nc];
-      _dphidzeta_vol_at_bdry[i] = & _dphidzeta_memory_vol_at_bdry[i * _nc];
-     }
-      
 }
 
 
-  void elem_type_3D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
-      
-        delete [] _phi_vol_at_bdry;
-        delete [] _phi_memory_vol_at_bdry;
-        
-        delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_memory_vol_at_bdry;
-        delete [] _dphideta_vol_at_bdry;
-        delete [] _dphideta_memory_vol_at_bdry;
-        delete [] _dphidzeta_vol_at_bdry;
-        delete [] _dphidzeta_memory_vol_at_bdry;
-      
-}
-  
-   
-   void elem_type_2D::allocate_volume_shape_at_reference_boundary_quadrature_points() {
+   void elem_type_2D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
 
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
     _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
-    _phi_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_vol_at_bdry  = new double [n_gauss_bdry * _nc];
-    _dphideta_memory_vol_at_bdry = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
+    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_memory_vol_at_bdry[i * _nc];
-      _dphidxi_vol_at_bdry[i]  = &_dphidxi_memory_vol_at_bdry[i * _nc];
-      _dphideta_vol_at_bdry[i] = &_dphideta_memory_vol_at_bdry[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
+      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
+      _dphideta_vol_at_bdry[i] = &_dphideta_vol_at_bdry_memory[i * _nc];
      }
      
     }
@@ -1255,104 +1460,74 @@ if( _SolType >= 3 && _SolType < 5 ) {
   void elem_type_2D::deallocate_volume_shape_at_reference_boundary_quadrature_points() {
       
         delete [] _phi_vol_at_bdry;
-        delete [] _phi_memory_vol_at_bdry;
+        delete [] _phi_vol_at_bdry_memory;
         
         delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_memory_vol_at_bdry;
+        delete [] _dphidxi_vol_at_bdry_memory;
         delete [] _dphideta_vol_at_bdry;
-        delete [] _dphideta_memory_vol_at_bdry;
+        delete [] _dphideta_vol_at_bdry_memory;
       
   }
   
-  
-  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 2;
-
-    //************ FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis, linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
-    delete linearElement;
-
     
-    //************ FE and QUADRATURE EVALUATIONS ******************
+  void elem_type_3D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
+      
+     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_vol_at_bdry = new double*[n_gauss_bdry];
+    _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
+    _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
+    _dphidzeta_vol_at_bdry = new double*[n_gauss_bdry];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
+    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _dphidzeta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
+      _dphidxi_vol_at_bdry[i]   = & _dphidxi_vol_at_bdry_memory[i * _nc];
+      _dphideta_vol_at_bdry[i]  = & _dphideta_vol_at_bdry_memory[i * _nc];
+      _dphidzeta_vol_at_bdry[i] = & _dphidzeta_vol_at_bdry_memory[i * _nc];
+     }
+      
+}
+
+
+  void elem_type_3D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
+      
+        delete [] _phi_vol_at_bdry;
+        delete [] _phi_vol_at_bdry_memory;
+        
+        delete [] _dphidxi_vol_at_bdry;
+        delete [] _dphidxi_vol_at_bdry_memory;
+        delete [] _dphideta_vol_at_bdry;
+        delete [] _dphideta_vol_at_bdry_memory;
+        delete [] _dphidzeta_vol_at_bdry;
+        delete [] _dphidzeta_vol_at_bdry_memory;
+      
+}
+  
+   
+
+  
+
+ void elem_type::initialize_fe_quadrature_evaluations(const char* order_gauss) {
+     
     allocate_and_fill_shape_at_quadrature_points();
 
     allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
-    
-    // boundary
-    allocate_volume_shape_at_reference_boundary_quadrature_points();
-    
-
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
-//=====================
-
-  }
-  
-
-  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 3;
-    
-    //************ FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis, linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
-    delete linearElement;
-
-    
-    //************ FE and QUADRATURE EVALUATIONS ******************
-    allocate_and_fill_shape_at_quadrature_points();
-    
-    allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
 
     // boundary
-    allocate_volume_shape_at_reference_boundary_quadrature_points();
+    allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face();
+
+ }
  
-
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
-    _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
-//=====================
-
-  }
+ 
+  
+  
 
   
-  const basis* elem_type_1D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) { 
+  const basis* elem_type_1D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) { 
         
     basis* linearElement;
 
@@ -1381,7 +1556,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     
 
-  const basis* elem_type_2D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) {
+  const basis* elem_type_2D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) {
         
     basis* linearElement;
 
@@ -1423,7 +1598,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     
 
-  const basis* elem_type_3D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) {
+  const basis* elem_type_3D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) {
   
     basis* linearElement;
     
