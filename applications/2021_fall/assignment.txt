@@ -1,0 +1,22 @@
+ 
+Solve the Poisson problem with homogeneous Dirichlet boundary conditions on the domains given below. 
+Generate 1 mesh made of triangles and 1 mesh made of quadrilaterals.
+Parametrize your mesh files using the Notebook. 
+Save both the Python script and the Study file from Salome.
+Export the mesh files in MED format for them to be read in Femus.
+Construct an analytical solution to the problem with the Method of Manufactured Solutions.
+
+
+ The domains are:
+ 
+ Gayani:   circle of radius 1
+ Himali:   semi-circle of radius 1
+ Max:      quarter of circle of radius 1
+ Jonathon: annulus of inner radius 0.5 and outer radius 1
+ Fahad:    semi-annulus of inner radius 0.5 and outer radius 1
+ Edward:   quarter of annulus of inner radius 0.5 and outer radius 1
+ Aman:     cylinder of base radius 1 and length 2
+ Rifat:    semi-cylinder of base radius 1 and length 2
+ Armando:  quarter of cylinder of base radius 1 and length 2
+ Abu:      prism with annular base, with inner radius 0.5, outer radius 1 and length 2
+ 
