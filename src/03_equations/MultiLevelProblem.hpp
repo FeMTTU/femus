@@ -19,8 +19,6 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <vector>
-#include <map>
 #include "MultiLevelMesh.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
@@ -31,9 +29,12 @@
 #include "System.hpp"
 #include "ElemType_template.hpp"
 
+#include <vector>
+#include <map>
+
+
 namespace femus {
 
-using std::map;
 
 //------------------------------------------------------------------------------
 // Forward declarations
@@ -46,7 +47,7 @@ class QuantityMap;
 
 
 /**
-* This class is a black box container to handle multilevel problems.
+* This class is a container to handle multilevel problems.
 */
 
 class MultiLevelProblem {
@@ -68,7 +69,7 @@ public:
     /** Multilevel mesh pointer */
     MultiLevelMesh *_ml_msh;
 
-    /** Data structure holding arbitrary parameters. */
+    /** Data structure holding arbitrary parameters. @todo not used anywhere */
     Parameters parameters;
 
     /** Typedef for system iterators */

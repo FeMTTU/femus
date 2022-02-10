@@ -30,8 +30,6 @@
 
 namespace femus {
 
-  using std::cout;
-  using std::endl;
 
 
   MeshMetisPartitioning::MeshMetisPartitioning(Mesh& mesh) : MeshPartitioning(mesh) {
@@ -115,22 +113,18 @@ namespace femus {
         std::cout << " METIS PARTITIONING IS OK " << std::endl;
       }
       else if(err == METIS_ERROR_INPUT) {
-        cout << " METIS_ERROR_INPUT " << endl;
+        std::cout << " METIS_ERROR_INPUT " << std::endl;
         exit(1);
       }
       else if(err == METIS_ERROR_MEMORY) {
-        cout << " METIS_ERROR_MEMORY " << endl;
+        std::cout << " METIS_ERROR_MEMORY " << std::endl;
         exit(2);
       }
       else {
-        cout << " METIS_GENERIC_ERROR " << endl;
+        std::cout << " METIS_GENERIC_ERROR " << std::endl;
         exit(3);
       }
 
-      std::vector<unsigned> MaterialElementCounter = _mesh.el->GetMaterialElementCounter();
-
-//         for (unsigned i = 0 ; i < MaterialElementCounter.size(); i++)   std::cout << MaterialElementCounter[i] << " ";
-//         std::cout << std::endl;
 
 
     }
@@ -144,6 +138,7 @@ namespace femus {
   }
 
   void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const Mesh& meshc) {
+      
     partition.resize(_mesh.GetNumberOfElements());
     unsigned refIndex = _mesh.GetRefIndex();
     for(int isdom = 0; isdom < _nprocs; isdom++) {
@@ -153,6 +148,8 @@ namespace femus {
         }
       }
     }
+    
   }
+  
 
 }

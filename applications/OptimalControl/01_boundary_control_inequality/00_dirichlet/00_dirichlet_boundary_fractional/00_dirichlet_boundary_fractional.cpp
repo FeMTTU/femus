@@ -255,13 +255,6 @@ int main(int argc, char** args) {
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
-  // ======= Quad Rule ========================
-  //right now only one quadrature rule is used, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
-  //quadr rule order
-  /*const*/ std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  fe_quad_rule_vec.push_back("eighth");
-
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
 
@@ -283,28 +276,61 @@ int main(int argc, char** args) {
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - BEGIN ================================================  
 // // // =================================================================  
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
-
-//   ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), Lref, read_groups, read_boundary_groups);
   
     ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     ml_mesh.GetLevelZero(0)->Partition();
-       std::vector < unsigned > partition;
-       ml_mesh.GetLevelZero(0)->PartitionForElements(partition);
-//        ml_mesh.GetLevelZero(0)->FillISvector(partition);
-       
-           ml_mesh.GetLevelZero(0)->initialize_elem_dof_offsets();
-           std::vector < unsigned > mapping;
-           ml_mesh.GetLevelZero(0)->build_elem_offsets_and_dofs_element_based(partition, mapping);
-           ml_mesh.GetLevelZero(0)->from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
-           ml_mesh.GetLevelZero(0)->end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
-           ml_mesh.GetLevelZero(0)->ghost_nodes_search();
-           ml_mesh.GetLevelZero(0)->complete_dof_offsets();
-       
-       partition.resize(0);
-    ml_mesh.GetLevelZero(0)->ReadCoarseMeshAfterPartitioning();
+    
+           std::vector < unsigned > elem_partition_from_mesh_file_to_new;
+           ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new); 
+           
+// // //  BEGIN FillISvector
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
 
-  ml_mesh.BuildElemType(fe_quad_rule_vec[0].c_str());
-  ml_mesh.AllocateAllLevels();
+           // // // ======== ELEM OFFSETS =========================================================  
+           ml_mesh.GetLevelZero(0)->FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
+           
+           ml_mesh.GetLevelZero(0)->dofmap_Element_based_dof_offsets_build();  
+
+           // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
+           //I will loop over the elements and take all the node dofs either of order 1 or 2, counted with repetition
+           //Then I have to take the mesh skeleton (without repetition)
+           //Then for the dofs on the edges how do I do? 
+           // In every subdomain I will have nelems x element nodes + n skeleton dofs in that subdomain 
+           // Then, when it comes to retrieving such dofs for each element, i'll retrieve the interior element nodes + the boundary dofs
+           
+           // // // ======== NODE OFFSETS =========================================================  
+           //there should be a distinction here between "node offsets" and "dof offsets"
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
+           ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
+           
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Continue_biquadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
+           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
+           
+           ml_mesh.GetLevelZero(0)->set_node_counts();
+           // // // ======== NODE OFFSETS - end =========================================================  
+           
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
+
+// // //   END FillISvector
+       
+   
+           ml_mesh.GetLevelZero(0)->GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
+           
+           ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
+
+           ml_mesh.GetLevelZero(0)->ComputeCharacteristicLength();//doesn't need dofmap
+           ml_mesh.GetLevelZero(0)->PrintInfo();   //needs dofmap
+
+  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+//   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); 
+  //doesn't need dofmap. This seems to be abstract, it can be performed right after the mesh geometric elements are read. It is needed for local MG operators, as well as for Integration of shape functions...
+  //The problem is that it also performs global operations such as matrix sparsity pattern, global MG operators... And these also use _dofOffset...
+  //The problem is that this class actually has certain functions which have REAL structures instead of only being ABSTRACT FE families!!!
+  // So:
+//   - Mesh and Multimesh are real and not abstract, and rightly so 
+//   - Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
+  ml_mesh.PrepareNewLevelsForRefinement();       //doesn't need dofmap
 // // // =================================================================  
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
 // // // =================================================================
@@ -315,7 +341,9 @@ int main(int argc, char** args) {
   const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   const unsigned erased_levels = N_ERASED_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
+  
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  //RefineMesh contains a similar procedure as ReadCoarseMesh. In particular, the dofmap at each level is filled there
 
   // ======= Solution, auxiliary - BEFORE COARSE ERASING  ==================
   const unsigned  steady_flag = 0;
@@ -331,7 +359,10 @@ int main(int argc, char** args) {
   ml_sol_aux->AddSolution(node_based_bdry_flag_name.c_str(), node_flag_fe_fam, node_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
   ml_sol_aux->Initialize(node_based_bdry_flag_name.c_str());
       // ======= COARSE READING and REFINEMENT ========================
-  ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
+  ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
+
+  ml_mesh.GetLevelZero(0)->deallocate_node_mapping(node_mapping_from_mesh_file_to_new);
+
   for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
      ml_sol_aux->RefineSolution(l);
   }
@@ -357,10 +388,23 @@ int main(int argc, char** args) {
   // ======= Problem  ==================
   MultiLevelProblem ml_prob(&ml_sol);
   
+  // ======= Problem, Files  ==================
   ml_prob.SetFilesHandler(&files);
+  
+  // ======= Problem, Quad Rule ========================
+  //right now only one quadrature rule is used in the FE type under Mesh, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
+  //quadr rule order
+  /*const*/ std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  fe_quad_rule_vec.push_back("eighth");
+
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+  // I should put it inside a Mesh constructor with whatever argument so I hide it from the main
+  // No it must be at the very end of ReadCoarseMesh
 
+  
   // ======= Solutions that are Unknowns - BEGIN ==================
   std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
 
