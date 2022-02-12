@@ -1,0 +1,26 @@
+b64 - Authors
+=============
+
+Updated:    3rd August 2008
+
+
+Authors:
+
+  Matthew Wilson (all those crazy inventions)
+  Garth Lancaster (sage, salt 'o the earth, advice and counterpointing)
+
+
+Bug reports, fixes and suggestions (for which we are very grateful):
+
+  Adam McLaurin - suggestions that prompted the addition of the
+      b64_encode2() and b64_decode2() functions
+  mis232 - bug reports of makefile incompatibility and warnings on
+      64-bit Linux
+  Michael Coulman - bug report regarding GCC issue with shim lookup
+     
+
+
+Contributions are welcomed.
+
+
+=============================== End of file ================================

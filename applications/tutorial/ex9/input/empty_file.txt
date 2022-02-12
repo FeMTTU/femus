@@ -1,0 +1,2 @@
+This file is here only because the input/ directory would otherwise be empty 
+and hence not tracked by git

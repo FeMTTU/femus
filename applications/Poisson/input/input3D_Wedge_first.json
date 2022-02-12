@@ -1,0 +1,84 @@
+// Configuration options
+{
+    // mesh
+    "multilevel_mesh" : {
+      "first" : {
+        "type" : {
+          "filename" : "input/cube_Wedge.neu"
+                  }
+                 }
+             },
+        
+    // solution
+    "multilevel_solution" : {
+      "multilevel_mesh" : {
+        "first" : {
+          "variable" : {
+            "first" : {
+              "name" : "T", 
+              "fe_order" : "first",
+              "init_func" : "0.",
+              "func_source": "0.",
+              "boundary_conditions" : [
+                {
+                  "facename" : "top",
+                  "bdc_type" : "dirichlet"
+                },
+                {
+                  "facename" : "right",
+                  "bdc_type" : "neumann",
+                  "bdc_func" : "0.2"
+                }
+                                    ]                                           
+                                  }
+                                }
+                              }
+                            }
+                          },
+         
+    // multilevel problem
+    "multilevel_problem" : {
+      "multilevel_mesh" : {
+        "first" : {
+          "system" : {
+            "poisson" : {
+              "linear_solver" : {
+                "max_number_linear_iteration" : 6, 
+                "abs_conv_tol" : 1.e-09, 
+                "type" : {
+                  "multigrid" : {
+                    "nlevels" : 4, 
+                    "npresmoothing" : 1, 
+                    "npostsmoothing" : 1,                                                                                                 
+                    "mgtype" : "V_cycle",
+                    "smoother" : {
+                    "type" : {
+                      "gmres" : {
+                        "ksp" : "gmres",
+                        "precond" : "ilu",
+                        "rtol"    : 1.e-12,
+                        "atol"    : 1.e-20,
+                        "divtol"  : 1.e+50,
+                        "max_its" : 4
+                               }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+             }
+           }
+}
+
+
+
+
+
+
+
+
+
+

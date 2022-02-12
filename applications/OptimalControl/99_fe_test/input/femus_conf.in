@@ -1,0 +1,54 @@
+
+<Box>
+# double # mesh file consistency
+
+ lxb 0.    
+ lxe 1.  
+
+ lyb 0.  
+ lye 2.  
+
+ lzb 0.  
+ lze 1.  
+
+# only for libmesh generating function
+
+nintervx   2
+nintervy   2 
+nintervz   2
+
+transflag 0   
+thetax    0.  
+thetay    0.  
+thetaz    0.
+# thetaz0.523598775598
+
+</Box>
+
+
+
+<TimeLoop>
+# double
+
+dt          0.1  
+itime       0.0  
+initial_step 0
+nsteps      1    
+printstep   1    
+
+</TimeLoop>
+
+
+
+
+
+
+
+<Physics>
+# double
+
+# ReferenceValueForNon-dimensionalizationVelLenTemperature
+Lref      1.
+Tref      1.
+
+</Physics>

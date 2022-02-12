@@ -1,0 +1,28 @@
+# -*- Makefile -*-
+# This file is included by all Makefiles in the subdirectories to this
+# one, before each target is provided.
+
+# C++ compiler and the "all warnings" flag
+CPP = g++ -Wall
+
+# Optimizations 
+CPPOPTIMFLAGS = -O3 -pipe
+
+# In single threaded code you can append the following to
+# CPPOPTIMFLAGS for a little more speed:
+#-DADEPT_STACK_THREAD_UNSAFE
+
+# Debugging flags: turn this off in production code because it hugely
+# inflates the size of the executable
+#DEBUGFLAGS = -g
+
+# Concatenate all the compiler options
+CPPFLAGS = $(DEBUGFLAGS) $(CPPOPTIMFLAGS)
+
+# Include directories; remember that this directory is relative to
+# subdirectories of this one.
+INCLUDES = -I../include
+
+# The location of libraries for the linker; again remember that these
+# directories are relative to subdirectories of this one.
+LIBS = -L../lib -lm -ladept

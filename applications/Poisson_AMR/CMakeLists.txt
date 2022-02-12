@@ -1,0 +1,11 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(Poisson_AMR)
+
+SET(MAIN_FILE "main")
+SET(EXEC_FILE "Poisson_AMR")
+
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
+
+
+

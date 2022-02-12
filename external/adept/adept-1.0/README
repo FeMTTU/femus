@@ -1,0 +1,82 @@
+Adept: Automatic Differentiation using Expression Templates
+Version: 1.0, September 2013
+By Robin Hogan <r.j.hogan@reading.ac.uk>
+
+
+INTRODUCTION
+
+The Adept software library provides the capability to automatically
+differentiate an algorithm written in C or C++.  It uses expression
+templates in a way that allows it to compute adjoints much faster than
+the leading current tools that use the same approach of operator
+overloading. Benchmark calculations found that Adept was typically
+2.6-9 times faster than ADOL-C, CppAD and Sacado for adjoint
+calculations, and often not much slower than hand-written adjoint
+code. The code to run these benchmarks on your platform is provided in
+this package.
+
+The web site is at http://www.met.reading.ac.uk/clouds/adept/ where
+you can find the latest version of the code as well as a paper
+describing how it works:
+
+Hogan, R. J., 2013: Fast reverse-mode automatic differentiation using
+expression templates in C++. Submitted to ACM Trans. Mathematical
+Software.
+
+
+INSTALLING
+
+This code has been tested under Linux using the GNU C++ compiler and
+the instructions that follow assume you are using a Unix-like system.
+
+The software library is mostly contained in the header file
+include/adept.h, but you also need to compile the functions in
+adept/adept.cpp.  Type "make" in the present directory, which will
+create a static library in the lib/ directory.
+
+You may well need to edit Makefile_include for your system.
+
+The test/ directory contains some fairly simple examples of the use of
+the code: type "make test" to compile them.
+
+The advection/ directory contains simple code for benchmarking.  The
+multiscatter/ directory contains the code for a software library that
+has been adapted to use Adept.  Type "make multiscatter" to compile it
+and read multiscatter/README. Since this adaption was done in order to
+evaluate Adept against ADOL-C, CppAD and Sacado, you will need first
+to have installed these libraries, and edited the Makefile_include
+file to point to their installation directories.  However, "reduced"
+versions of these benchmark executables are also available to just
+test Adept against hand-coded adjoints.
+
+To install the include file and static library into
+/usr/local/include/adept.h and /usr/local/lib/libadept.a, type "make
+install" as superuser. Type "make uninstall" to delete them again.
+
+
+DOCUMENTATION
+
+This is a PDF file in the doc/ directory.
+
+Feel free to contact me with queries, comments and bug fixes. I'm also
+interested to know of successful uses of the code.
+
+
+LICENSE AND COPYRIGHT
+
+Adept and all the code in this package is distributed under the
+conditions of the GNU General Public License version 3 - see the
+COPYING file for details. If you wish to use this library under
+different terms then please contact Robin Hogan
+(r.j.hogan@reading.ac.uk).
+
+If you use Adept in published scientific work then I request that you
+cite the paper above, but this is not a condition of the license.
+
+All code in this package has the same copyright: 
+
+Copyright (C) 2012-2013 Robin Hogan and the University of Reading
+
+
+
+

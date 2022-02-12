@@ -1,0 +1,19 @@
+To support large codes better, provide a memory model that does not
+require the statement and operation stacks to present as a single
+block of memory, but allow them to be partioned into many smaller
+blocks.
+
+Complex number support.
+
+Support for mixed precision, e.g. rather than adouble, use
+active<double> and active<float>.
+
+Interface to a matrix/vector library that uses expression templates.
+
+Full support for mathematical functions:
+http://en.wikipedia.org/wiki/C_mathematical_functions
+
+Higher-order differentiation, in particular to compute the Hessian
+matrix.
+
+Parallelization, both via OpenMP and CUDA (in progress).

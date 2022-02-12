@@ -1,0 +1,29 @@
+This directory contains the code to run benchmarks for the
+Lax-Wendroff and Toon advection schemes described in the Adept
+paper. Type "make" to compile the program
+run_advection_benchmark_reduced, which includes only the hand-coded
+adjoint and the Adept automatic differentiation version.
+
+If you also have ADOL-C, Sacado and CppAD installed, try typing "make
+all", although you will probably need to edit the Makefile to ensure
+the include and library directories are correctly specified for your
+system.
+
+To see the usage instructions, type
+"./run_advection_benchmark_reduced" or "./run_advection_benchmark" to
+get
+
+Usage: ./run_advection_benchmark_reduced SCHEME [NUM_TIMESTEPS [NUM_REPEATS [COURANT_NUMBER [jacobian]]]]
+  where SCHEME is either "lax_wendroff" or "toon"
+        NUM_TIMESTEPS has default value 100                    
+        NUM_REPEATS has default value 100
+        COURANT_NUMBER has default value 0.125
+
+The scripts "benchmark.sh" and "benchmark_reduced.sh" run the two
+advection schemes with the various automatic differentiation tools so
+that their performance can be compared. The important output goes to
+standard output so can be easily redirected to a file.
+
+WARNING: these scripts take a long time to run!  You might want to
+edit them and change the number of repeates "NR" to a (much) smaller
+number than 1000.

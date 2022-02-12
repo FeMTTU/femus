@@ -1,0 +1,15 @@
+PCFieldSplit_ex11_1 FS_VT 0.1 10000 -ksp_monitor_true_residual >> FS_VTtrueResidualPr=0.1Ra=10000.txt
+PCFieldSplit_ex11_1 FS_TV 0.1 10000 -ksp_monitor_true_residual >> FS_TVtrueResidualPr=0.1Ra=10000.txt
+PCFieldSplit_ex11_1 ASM_VT 0.1 10000 -ksp_monitor_true_residual >> ASM_VTtrueResidualPr=0.1Ra=10000.txt
+PCFieldSplit_ex11_1 ASM_TV 0.1 10000 -ksp_monitor_true_residual >> ASM_TVtrueResidualPr=0.1Ra=10000.txt
+PCFieldSplit_ex11_1 ILU_VT 0.1 10000 -ksp_monitor_true_residual >> ILU_VTtrueResidualPr=0.1Ra=10000.txt
+PCFieldSplit_ex11_1 ILU_TV 0.1 10000 -ksp_monitor_true_residual >> ILU_TVtrueResidualPr=0.1Ra=10000.txt
+
+
+
+PCFieldSplit_ex11_1 FS_VT 0.1 10000  >> FS_VTprintout_infoPr=0.1Ra=10000_time.txt
+PCFieldSplit_ex11_1 FS_TV 0.1 10000  >> FS_TVprintout_infoPr=0.1Ra=10000_time.txt
+PCFieldSplit_ex11_1 ASM_VT 0.1 10000 >> ASM_VTprintout_infoPr=0.1Ra=10000_time.txt
+PCFieldSplit_ex11_1 ASM_TV 0.1 10000 >> ASM_TVprintout_infoPr=0.1Ra=10000_time.txt
+PCFieldSplit_ex11_1 ILU_VT 0.1 10000 >> ILU_VTprintout_infoPr=0.1Ra=10000_time.txt
+PCFieldSplit_ex11_1 ILU_TV 0.1 10000 >> ILU_TVprintout_infoPr=0.1Ra=10000_time.txt

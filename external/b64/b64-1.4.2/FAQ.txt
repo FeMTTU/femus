@@ -1,0 +1,12 @@
+b64 - FAQ
+=========
+
+Updated:    13th May 2008
+
+
+
+The FAQ list is under (constant) development. If you post a question on the
+STLSoft newsgroup (news://news.digitalmars.com/c++.stlsoft/)
+it will be used to create one.
+
+=============================== End of file ================================

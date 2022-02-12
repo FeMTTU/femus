@@ -1,0 +1,96 @@
+This directory contains three examples to demonstrate various features
+of Adept. Type "make" here to compile the first three (although if you
+did this one directory up everything should be made). To compile the
+fourth, you will need the GNU scientific library installed, and then
+you will need to type "make all" in this directory.
+
+
+TEST 1: BASIC FEATURES
+
+Executable: test_adept
+
+Source files: test_adept.cpp, algorithm.cpp, algorithm.h
+
+Demonstrates: basic use of Adept, reverse-mode automatic
+differentiation, computing the Jacobian matrix, printing diagnostic
+information, verifying results by comparing to numerical calculations,
+pausing and continuing recordings
+
+Synopsis: This program demonstrates how to differentiate a simple
+function (in algorithm.cpp), comparing the results from automatic
+differentiation with numerical differentiation. The function used is
+the contrived example from the Adept paper.
+
+
+TEST 2: COMPILING SOURCE FILES TWICE, WITH AND WITHOUT AUTOMATIC
+DIFFERENTIATION
+
+Executable: test_adept_with_and_without_ad
+
+Source files: test_adept_with_and_without_ad.cpp, algorithm.cpp,
+algorithm.h, algorithm_with_and_without_ad.h
+
+Demonstrates: most of the same features as TEST_ADEPT, plus compiling
+a source file twice
+
+Synopsis: This program is the same as in Test 1, except that
+algorithm.cpp is compiled twice, once with automatic differentiation
+(producing the object file algorithm.o) and once without (producing
+the object file algorithm_noad.o). This is achieved in the Makefile
+using the -DADEPT_NO_AUTOMATIC_DIFFERENTIATION flag. This provides two
+overloaded versions of the "algorithm" function, one that takes active
+"adouble" arguments, and the other that takes inactive "double"
+arguments. The two versions are declared in the
+algorithm_with_and_without_ad.h header file.
+
+
+TEST 3: RADIANCE SIMULATION
+
+Executable: test_radiances
+
+Source files: test_radiances.cpp, simulate_radiances.cpp,
+simulate_radiances.h
+
+Demonstrates: activation and deactivation of an Adept stack, using
+more than one Adept stack in the same program (but not at the same
+time), how to interface Adept with software that computes its own
+Jacobian
+
+Synopsis: The "main" function is in test_radiances.cpp, and
+demonstrates how to interface Adept to an algorithm that does not have
+an Adept interface, but which provides its own Jacobian. The algorithm
+in this case is in simulate_radiances.cpp; while it does not have an
+Adept interface, it does use Adept internally to compute the Jacobian
+that it returns. It therefore needs to temporarily deactivate the
+calling function's Adept stack (where derivative information is
+stored) while using its own.  This example is from the Adept
+documentation.
+
+
+TEST 4: GSL MINIMIZATION INTERFACE
+
+Executable: test_gsl_interface
+
+Command-line arguments: optionally, the executable name can be
+followed by an integer (which should be 2 or greater) expressing the
+number of dimensions of the minimization problem.  The default is 2.
+
+Source files: test_gsl_interface.cpp, rosenbrock_banana_function.cpp,
+state.cpp, state.h
+
+Pre-requisites: the GNU Scientific Library should be installed; on an
+RPM-based system you want the "gsl" and "gsl-devel" packages.
+
+To compile: "make test_gsl_interface" or "make all"
+
+Demonstrates: interface with the multi-dimensional minimization
+capability of the GNU Scientific Library, use of Adept to minimize a
+real function, an object-oriented way to store Adept data for a
+minimization problem
+
+Synopsis: The "main" function is in test_gsl_interface.cpp and is
+fairly self-explanatory. The state.cpp and state.h files show how
+Adept data can be stored and accessed in an object-oriented way. The
+function to be minimized is the N-dimensional Rosenbrock banana
+function, given in rosenbrock_banana_function.cpp.
+
