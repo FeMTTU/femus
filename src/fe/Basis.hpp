@@ -27,19 +27,25 @@
 #include <cassert>
 
 namespace femus {
+    
+    
 
   class basis {
       
     public:
 
+      /**
+       * _nc = number of dofs of 1 element;  
+       * _nf = number of dofs in that element after refinement; 
+        _nlag[0] = number of linear dofs in 1 element;
+        _nlag[1] = number of serendipity dofs in 1 element; 
+        _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+        _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+      */
       const int _nc, _nf, _nlag0, _nlag1, _nlag2, _nlag3;
-                                  /* _nc: number of dofs of 1 element;  _nf: number of dofs in that element after refinement; 
-                                  _nlag[0] = number of linear dofs in 1 element;
-                                  _nlag[1] = number of serendipity dofs in 1 element; 
-                                  _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
-                                  _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
-                                  */
-      int faceNumber[3]; /*this is only needed in 3d to handle faces of different types (wedges, pyramides, ...)*/
+      
+      /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...) */
+      int faceNumber[3];
 
       basis(const int &nc, const int &nf, const int &nlag0, const int &nlag1, const int &nlag2, const int &nlag3,
 	    const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):
@@ -53,26 +59,25 @@ namespace femus {
 	  faceNumber[0] = faceNumber0;
 	  faceNumber[1] = faceNumber1;
 	  faceNumber[2] = faceNumber2;
-	};
+	  }
 
-      virtual void PrintType() const = 0 ;
+      virtual void PrintType() const = 0;
       
       double eval_phi(const unsigned &j, const std::vector < double > &x) const {
         return eval_phi(this->GetIND(j), &x[0]);
-      };
+      }
       
-     
       double eval_dphidx(const unsigned &j, const std::vector < double > &x) const {
-	return eval_dphidx(this->GetIND(j), &x[0]);
-      };
+        return eval_dphidx(this->GetIND(j), &x[0]);
+      }
       
       double eval_dphidy(const unsigned &j, const std::vector < double > &x) const {
         return eval_dphidy(this->GetIND(j), &x[0]);
-      };
+      }
       
       double eval_dphidz(const unsigned &j, const std::vector < double > &x) const {
         return eval_dphidz(this->GetIND(j), &x[0]);
-      };
+      }
       
       /** Evaluate the derivatives either in the x, y or z direction **/
       double eval_dphidxyz(const unsigned int dim, const int* j, const double* x) const {
@@ -86,85 +91,94 @@ namespace femus {
             default: {std::cout << "Only up to dim 3" << std::endl; abort(); }
         }
         
-    };
+    }
       
       double eval_d2phidx2(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidx2(this->GetIND(j), &x[0]);
-      };
+      }
       
       double eval_d2phidy2(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidy2(this->GetIND(j), &x[0]);
-      };
+      }
       
       double eval_d2phidz2(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidz2(this->GetIND(j), &x[0]);
-      };
+      }
       
       double eval_d2phidxdy(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidxdy(this->GetIND(j), &x[0]);
-      };
+      }
       
       double eval_d2phidydz(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidydz(this->GetIND(j), &x[0]);
-      };
+      }
       
       double eval_d2phidzdx(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidzdx(this->GetIND(j), &x[0]);
-      };
+      }
       
       
       
       virtual double eval_phi(const int *I, const double* x) const {
         std::cout << "Error this phi is not available for this element \n";
         abort();
-      };
+      }
+      
       virtual double eval_dphidx(const int *I, const double* x) const {
         std::cout << "Error this dphidx is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_dphidy(const int *I, const double* x) const {
         std::cout << "Error this dphidy is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_dphidz(const int *I, const double* x) const {
         std::cout << "Error this dphidz is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_d2phidx2(const int *I, const double* x) const {
         std::cout << "Error this d2phix2 is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_d2phidy2(const int *I, const double* x) const {
         std::cout << "Error this d2phidy2 is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_d2phidz2(const int *I, const double* x) const {
         std::cout << "Error this d2phidz2 is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_d2phidxdy(const int *I, const double* x) const {
         std::cout << "Error this d2phidxdy is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_d2phidydz(const int *I, const double* x) const {
         std::cout << "Error this d2phidydz is not available for this element dimension\n";
         abort();
-      };
+      }
+      
       virtual double eval_d2phidzdx(const int *I, const double* x) const {
         std::cout << "Error this d2phidydz is not available for this element dimension\n";
         abort();
-      };
+      }
 
       virtual const double* GetX(const int &i) const = 0;
 
       virtual const double* GetXcoarse(const int &i) const {
         std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
         return NULL;
-      };
+      }
 
       virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
         std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
-      };
+      }
 
       virtual const int* GetIND(const int &i) const = 0;
 
@@ -173,7 +187,7 @@ namespace femus {
       virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
         std::cout << "Warning this function in not implemented for const element type" << std::endl;
         return 0u;
-      };
+      }
 
       virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
 	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::endl;
@@ -187,6 +201,7 @@ namespace femus {
       inline double lagLinear(const double& x, const int& i) const {
         return (!i) * 0.5 * (1. - x) + !(i - 2) * 0.5 * (1. + x);
       }
+      
       inline double dlagLinear(const double& x, const int& i) const {
         return (!i) * (-0.5) + !(i - 2) * 0.5;
       }
@@ -344,26 +359,31 @@ namespace femus {
 
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       void SetX(const unsigned &i, const unsigned &j, const double &value) {
         X[i][j] = value;
       }
+      
       const double* GetXcoarse(const int &i) const {
         return Xc[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
-      };
+      }
+      
       const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
         return faceDofs[i][j];
-      };
+      }
 
     protected:
         
@@ -376,13 +396,17 @@ namespace femus {
       static const unsigned faceDofs[6][9];
 
   };
+  
+  
 
   class HexLinear: public hex_lag {
+      
     public:
       HexLinear(): hex_lag(8, 27) {};
+      
       void PrintType() const {
         std::cout << " HexLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -391,26 +415,32 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const;
       double eval_d2phidydz(const int *I, const double* x) const;
       double eval_d2phidzdx(const int *I, const double* x) const;
-  };
+
+};
 
   //************************************************************
 
   class HexQuadratic: public hex_lag {
+      
     public:
+        
       HexQuadratic(): hex_lag(20, 81) {};
       void PrintType() const {
         std::cout << " HexQuadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -429,11 +459,13 @@ namespace femus {
   //************************************************************
 
   class HexBiquadratic: public hex_lag {
+      
     public:
+        
       HexBiquadratic(): hex_lag(27, 125) {};
       void PrintType() const {
         std::cout << " HexBiquadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -452,21 +484,26 @@ namespace femus {
   //************************************************************
 
   class hex_const : public basis {
+      
     public:
+        
       hex_const(const int& nc, const int& nf):
         basis(nc, nf, 8, 20, 27, 125, 0, 6, 6) { };
 
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
     protected:
+        
       static const double X[32][3];
       static const int IND[4][3];
       static const int KVERT_IND[32][2];
@@ -476,53 +513,68 @@ namespace femus {
 
 
   class hex0: public hex_const {
+      
     public:
-      hex0(): hex_const(1, 8) {};
+        
+      hex0(): hex_const(1, 8) {}
+      
       void PrintType() const {
         std::cout << " hex0 ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const {
         return 1.;
-      };
+      }
+      
       double eval_dphidx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_dphidy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_dphidz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
   };
 
   //******************************************************************************
 
   class hexpwLinear: public hex_const {
+      
     public:
-      hexpwLinear(): hex_const(4, 32) {};
+        
+      hexpwLinear(): hex_const(4, 32) {}
+      
       void PrintType() const {
         std::cout << " hexpwLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -531,54 +583,67 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
+  
   //************************************************************
 
   class wedge_lag : public basis {
+      
     public:
+        
       wedge_lag(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { };
+        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { }
 
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       void SetX(const unsigned &i, const unsigned &j, const double &value) {
         X[i][j] = value;
       }
+      
       const double* GetXcoarse(const int &i) const {
         return Xc[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
-      };
+      }
+      
       const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
         return faceDofs[i][j];
-      };
+      }
 
     protected:
         
@@ -591,13 +656,18 @@ namespace femus {
       static const unsigned faceDofs[5][9];
 
   };
+  
+  
 
   class WedgeLinear: public wedge_lag {
+      
     public:
-      WedgeLinear(): wedge_lag(6, 18) {};
+        
+      WedgeLinear(): wedge_lag(6, 18) {}
+      
       void PrintType() const {
         std::cout << " WedgeLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -606,33 +676,41 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
   //************************************************************
 
   class WedgeQuadratic: public wedge_lag {
+      
     public:
+        
       WedgeQuadratic(): wedge_lag(15, 57) {};
+      
       void PrintType() const {
         std::cout << " WedgeQuadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -647,15 +725,17 @@ namespace femus {
       double eval_d2phidzdx(const int *I, const double* x) const;
 
   };
+  
 
   //************************************************************
 
   class WedgeBiquadratic: public wedge_lag {
     public:
-      WedgeBiquadratic(): wedge_lag(21, 95) {};
+      WedgeBiquadratic(): wedge_lag(21, 95) {}
+      
       void PrintType() const {
         std::cout << " WedgeBiquadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -670,21 +750,26 @@ namespace femus {
       double eval_d2phidzdx(const int *I, const double* x) const;
 
   };
+  
 
   class wedge_const : public basis {
+      
     public:
+        
       wedge_const(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { };
+        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { }
 
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
     protected:
         
@@ -694,50 +779,66 @@ namespace femus {
 
   };
 
+  
   class wedge0: public wedge_const {
-    public:
-      wedge0(): wedge_const(1, 8) { };
+      
+  public:
+      
+      wedge0(): wedge_const(1, 8) { }
+      
       void PrintType() const {
         std::cout << " wedge0 ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const {
         return 1.;
-      };
+      }
+      
       double eval_dphidx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_dphidy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_dphidz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
+  
 
   class wedgepwLinear: public wedge_const {
+      
     public:
-      wedgepwLinear(): wedge_const(4, 32) { };
+        
+      wedgepwLinear(): wedge_const(4, 32) { }
+      
       void PrintType() const {
         std::cout << " wedgepwLinear ";
       };
@@ -749,22 +850,22 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
@@ -772,31 +873,33 @@ namespace femus {
   //************************************************************
 
   class tet_lag : public basis {
+      
     public:
+        
       tet_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, 67, 0, 0, 4) { };
+        basis(nc, nf, 4, 10, 15, 67, 0, 0, 4) { }
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
       void SetX(const unsigned &i, const unsigned &j, const double &value) {
         X[i][j] = value;
       }
       const double* GetXcoarse(const int &i) const {
         return Xc[i];
-      };
+      }
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
-      };
+      }
       const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
         return faceDofs[i][j];
-      };
+      }
 
     protected:
         
@@ -814,11 +917,14 @@ namespace femus {
 
 
   class TetLinear: public tet_lag {
+      
     public:
-      TetLinear(): tet_lag(4, 10) {};
+        
+      TetLinear(): tet_lag(4, 10) {}
+      
       void PrintType() const {
         std::cout << " TetLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -827,32 +933,41 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
   };
 
   //************************************************************
 
   class TetQuadratic: public tet_lag {
+      
     public:
-      TetQuadratic(): tet_lag(10, 35) {};
+        
+      TetQuadratic(): tet_lag(10, 35) {}
+      
       void PrintType() const {
         std::cout << " TetQuadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -870,11 +985,14 @@ namespace femus {
   //************************************************************
 
   class TetBiquadratic: public tet_lag {
+      
     public:
-      TetBiquadratic(): tet_lag(15, 67) {};
+        
+      TetBiquadratic(): tet_lag(15, 67) {}
+      
       void PrintType() const {
         std::cout << " TetBiquadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -887,24 +1005,29 @@ namespace femus {
       double eval_d2phidxdy(const int *I, const double* x) const;
       double eval_d2phidydz(const int *I, const double* x) const;
       double eval_d2phidzdx(const int *I, const double* x) const;
+      
   };
 
   //************************************************************
 
   class tet_const : public basis {
+      
     public:
+        
       tet_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, 67,  0, 0, 4) { };
+        basis(nc, nf, 4, 10, 15, 67,  0, 0, 4) { }
 
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
     protected:
         
@@ -914,53 +1037,63 @@ namespace femus {
       
   };
 
+  
   class tet0: public tet_const {
     public:
-      tet0(): tet_const(1, 8) { };
+      tet0(): tet_const(1, 8) { }
       void PrintType() const {
         std::cout << " tet0 ";
-      };
-
+      }
+      
       double eval_phi(const int *I, const double* x) const {
         return 1.;
-      };
+      }
+      
       double eval_dphidx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_dphidy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_dphidz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
+  
   class tetpwLinear: public tet_const {
+      
     public:
-      tetpwLinear(): tet_const(4, 32) { };
+        
+      tetpwLinear(): tet_const(4, 32) { }
+      
       void PrintType() const {
         std::cout << " tetpwLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -969,54 +1102,63 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidz2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidydz(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidzdx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
   //************************************************************
 
   class quad_lag : public basis {
+      
     public:
+        
       quad_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, 25, 0, 4, 4) { };
+        basis(nc, nf, 4, 8, 9, 25, 0, 4, 4) { }
+        
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       void SetX(const unsigned &i, const unsigned &j, const double &value) {
         X[i][j] = value;
       }
       const double* GetXcoarse(const int &i) const {
         return Xc[i];
-      };
+      }
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
-      };
+      }
       
       const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
         return faceDofs[i][j];
-      };
+      }
 
     protected:
         
@@ -1032,11 +1174,14 @@ namespace femus {
 
 
   class QuadLinear: public quad_lag {
+      
     public:
-      QuadLinear(): quad_lag(4, 9) {};
+        
+      QuadLinear(): quad_lag(4, 9) {}
+      
       void PrintType() const {
         std::cout << " QuadLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1054,11 +1199,14 @@ namespace femus {
   //************************************************************
 
   class QuadQuadratic: public quad_lag {
+      
     public:
-      QuadQuadratic(): quad_lag(8, 21) {};
+        
+      QuadQuadratic(): quad_lag(8, 21) {}
+      
       void PrintType() const {
         std::cout << " QuadQuadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1072,11 +1220,14 @@ namespace femus {
   //************************************************************
 
   class QuadBiquadratic: public quad_lag {
+      
     public:
-      QuadBiquadratic(): quad_lag(9, 25) {};
+        
+      QuadBiquadratic(): quad_lag(9, 25) {}
+      
       void PrintType() const {
         std::cout << " QuadBiquadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1090,18 +1241,21 @@ namespace femus {
   //******************************************************************************
 
   class quad_const : public basis {
+      
     public:
+        
       quad_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, 25,  0, 4, 4) { };
+        basis(nc, nf, 4, 8, 9, 25,  0, 4, 4) { }
+        
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
 
     protected:
@@ -1115,42 +1269,48 @@ namespace femus {
 
 
   class quad0: public quad_const {
+      
     public:
-      quad0(): quad_const(1, 4) {};
+        
+      quad0(): quad_const(1, 4) {}
+      
       void PrintType() const {
         std::cout << " quad0 ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const {
         return 1.;
-      };
+      }
       double eval_dphidx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_dphidy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
   //******************************************************************************
 
   class quadpwLinear: public quad_const {
+      
     public:
-      quadpwLinear(): quad_const(3, 12) {};
+        
+      quadpwLinear(): quad_const(3, 12) {}
+      
       void PrintType() const {
         std::cout << " quadpwLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1158,44 +1318,54 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
   };
 
   //************************************************************
 
   class tri_lag : public basis {
+      
     public:
+        
       tri_lag(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { };
+        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { }
+        
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       void SetX(const unsigned &i, const unsigned &j, const double &value) {
         X[i][j] = value;
       }
+      
       const double* GetXcoarse(const int &i) const {
         return Xc[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
-      };
+      }
       
       const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
         return faceDofs[i][j];
-      };
+      }
 
     protected:
         
@@ -1206,15 +1376,19 @@ namespace femus {
 
       static const unsigned fine2CoarseVertexMapping[4][3];
       static const unsigned faceDofs[3][3];
+
   };
 
 
   class TriLinear: public tri_lag {
+      
     public:
-      TriLinear(): tri_lag(3, 6) {};
+        
+      TriLinear(): tri_lag(3, 6) {}
+      
       void PrintType() const {
         std::cout << " TriLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1222,23 +1396,27 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
   };
 
   //************************************************************
 
   class TriQuadratic: public tri_lag {
+      
     public:
-      TriQuadratic(): tri_lag(6, 15) {};
+        
+      TriQuadratic(): tri_lag(6, 15) {}
+      
       void PrintType() const {
         std::cout << " TriQuadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1253,11 +1431,14 @@ namespace femus {
   //************************************************************
 
   class TriBiquadratic: public tri_lag {
+      
     public:
-      TriBiquadratic(): tri_lag(7, 19) {};
+        
+      TriBiquadratic(): tri_lag(7, 19) {}
+      
       void PrintType() const {
         std::cout << " TriBiquadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1272,18 +1453,23 @@ namespace femus {
   //************************************************************
 
   class tri_const : public basis {
+      
     public:
+        
       tri_const(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { };
+        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { }
+        
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
     protected:
         
@@ -1294,39 +1480,50 @@ namespace femus {
   };
 
   class tri0: public tri_const {
+      
     public:
-      tri0(): tri_const(1, 4) { };
+        
+      tri0(): tri_const(1, 4) { }
+      
       void PrintType() const {
         std::cout << " tri0 ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const {
         return 1.;
-      };
+      }
+      
       double eval_dphidx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_dphidy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
   };
 
   class tripwLinear: public tri_const {
+      
     public:
-      tripwLinear(): tri_const(3, 12) { };
+        
+      tripwLinear(): tri_const(3, 12) { }
+      
       void PrintType() const {
         std::cout << " tripwLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
@@ -1334,41 +1531,51 @@ namespace femus {
 
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidy2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidxdy(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
   };
 
 
   //************************************************************
 
   class line_lag : public basis {
+      
     public:
+        
       line_lag(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { };
+        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { }
+        
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       void SetX(const unsigned &i, const unsigned &j, const double &value) {
         X[i][j] = value;
-      };
+      }
+      
       const double* GetXcoarse(const int &i) const {
         return Xc[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
       
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
-      };
+      }
 
     protected:
         
@@ -1381,48 +1588,60 @@ namespace femus {
   };
 
   class LineLinear: public line_lag {
+      
     public:
-      LineLinear(): line_lag(2, 3) {};
+        
+      LineLinear(): line_lag(2, 3) {}
+      
       void PrintType() const {
         std::cout << " LineLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
   //************************************************************
   class LineBiquadratic: public line_lag {
+      
     public:
-      LineBiquadratic(): line_lag(3, 5) {};
+        
+      LineBiquadratic(): line_lag(3, 5) {}
+      
       void PrintType() const {
         std::cout << " LineBiquadratic ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
       double eval_d2phidx2(const int *I, const double* x) const;
+      
   };
 
   //************************************************************
 
   class line_const : public basis {
+      
     public:
+        
       line_const(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { };
+        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { }
+        
       const double* GetX(const int &i) const {
         return X[i];
-      };
+      }
+      
       const int* GetIND(const int &i) const {
         return IND[i];
-      };
+      }
+      
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
-      };
+      }
 
     protected:
         
@@ -1434,37 +1653,46 @@ namespace femus {
 
 
   class line0: public line_const {
+      
     public:
-      line0(): line_const(1, 2) { };
+        
+      line0(): line_const(1, 2) { }
+      
       void PrintType() const {
         std::cout << " line0 ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const {
         return 1.;
-      };
+      }
+      
       double eval_dphidx(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
+      
 
   };
 
 
   class linepwLinear: public line_const {
+      
     public:
-      linepwLinear(): line_const(2, 4) { };
+        
+      linepwLinear(): line_const(2, 4) { }
+      
       void PrintType() const {
         std::cout << " linepwLinear ";
-      };
+      }
 
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
-      };
+      }
 
   };
 
