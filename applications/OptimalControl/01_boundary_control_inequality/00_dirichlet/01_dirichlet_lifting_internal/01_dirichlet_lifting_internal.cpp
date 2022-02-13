@@ -6,7 +6,8 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL   3
+#define FACE_FOR_CONTROL   2
+#define FACE_FOR_TARGET    1
 
 #include "../../../param.hpp"
 
@@ -86,8 +87,8 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool use_output_time_folder = true;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -98,8 +99,11 @@ int main(int argc, char** args) {
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
    
-  std::string input_file = "square_4x5.med";
+//   std::string input_file = "square_4x5.med";
+  std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "square_parametric.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -117,15 +121,15 @@ int main(int argc, char** args) {
     // ======= Solution ========================
   MultiLevelSolution ml_sol(&ml_mesh);
 
-  ml_sol.AddSolution("state", LAGRANGE, FIRST);
-  ml_sol.AddSolution("control", LAGRANGE, FIRST);
-  ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
-  ml_sol.AddSolution("mu", LAGRANGE, FIRST);  
+  ml_sol.AddSolution("state", LAGRANGE, SECOND/*FIRST*/);
+  ml_sol.AddSolution("control", LAGRANGE, SECOND/*FIRST*/);
+  ml_sol.AddSolution("adjoint", LAGRANGE, SECOND/*FIRST*/);
+  ml_sol.AddSolution("mu", LAGRANGE, SECOND/*FIRST*/);  
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, SECOND/*FIRST*/, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);
@@ -213,6 +217,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id();
 
+  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_local = false;
   
   //=============== Geometry ========================================
   unsigned solType_coords = FE_DOMAIN;
@@ -849,8 +855,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
- std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->GetNonlinearIt()  << ".txt";
-  KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
   // ***************** END ASSEMBLY *******************
   
@@ -1083,10 +1087,20 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       } // end gauss point loop
   } //end element loop
 
-  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta << std::endl;
+  ////////////////////////////////////////
+  double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
+  
+  std::cout << "total integral on processor " << iproc << ": " << total_integral << std::endl;
+
+  double integral_target_parallel = 0.; MPI_Allreduce( &integral_target, &integral_target_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double integral_alpha_parallel = 0.; MPI_Allreduce( &integral_alpha, &integral_alpha_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double integral_beta_parallel = 0.;  MPI_Allreduce( &integral_beta, &integral_beta_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double total_integral_parallel = 0.; MPI_Allreduce( &total_integral, &total_integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target_parallel << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_alpha_parallel << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_beta_parallel << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral_parallel << std::endl;
 
 return;
   

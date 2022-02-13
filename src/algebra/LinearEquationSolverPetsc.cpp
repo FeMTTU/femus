@@ -380,6 +380,7 @@ namespace femus {
   // ================================================
 
   void LinearEquationSolverPetsc::GetNullSpaceBase (std::vector < Vec >& nullspBase) {
+      
     for (int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
 
@@ -388,9 +389,11 @@ namespace femus {
         unsigned nullspSize = nullspBase.size();
         nullspBase.resize (nullspSize + 1);
         VecDuplicate (EPS, &nullspBase[nullspSize]);
+        
         unsigned soltype = _SolType[indexSol];
         unsigned owndofs = _msh->_dofOffset[soltype][processor_id() + 1] - _msh->_dofOffset[soltype][processor_id()];
         if (soltype == 4) owndofs /= (_msh->GetDimension() + 1);
+        
         for (unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
           unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()] + i;

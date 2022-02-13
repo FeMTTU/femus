@@ -24,6 +24,9 @@ using namespace femus;
 
 #define FACE_FOR_CONTROL          3        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
+#define FACE_FOR_TARGET    1
+
+
 #include   "../nsopt_params.hpp"
 
   const double cost_functional_coeff = 1.;

@@ -18,10 +18,9 @@
 //----------------------------------------------------------------------------
 #include "Mesh.hpp"
 #include "MeshGeneration.hpp"
-#include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
 #include "MED_IO.hpp"
-// #include "obj_io.hpp"
+#include "MeshMetisPartitioning.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -65,7 +64,9 @@ namespace femus {
 
 
   Mesh::~Mesh() {
+      
     delete el;
+    
     _topology->FreeSolutionVectors();
     delete _topology;
 
@@ -84,22 +85,41 @@ namespace femus {
         _ProjCoarseToFine[i] = NULL;
       }
     }
+    
   }
+  
+  
 
 /// print Mesh info
-  void Mesh::PrintInfo() {
+  void Mesh::PrintInfo() const {
 
+      PrintInfoLevel();
+      PrintInfoElements();
+      PrintInfoNodes();
+      std::cout << std::endl;
+
+  }
+  
+  
+  void Mesh::PrintInfoLevel() const {
     std::cout << " Mesh Level                  : " << _level  << std::endl;
+  }
+  
+  
+  void Mesh::PrintInfoElements() const {
     std::cout << " Number of elements          : " << _nelem  << std::endl;
+  }
+  
+  void Mesh::PrintInfoNodes() const {
     std::cout << " Number of linear nodes      : " << _dofOffset[0][_nprocs] << std::endl;
     std::cout << " Number of quadratic nodes   : " << _dofOffset[1][_nprocs] << std::endl;
     std::cout << " Number of biquadratic nodes : " << _dofOffset[2][_nprocs] << std::endl;
-    std::cout << std::endl;
-
   }
-
-  const unsigned Mesh::_numberOfMissedBiquadraticNodes[6] = {0, 5, 3, 0, 1, 0};
-  const double Mesh::_baricentricWeight[6][5][18] = {
+  
+  
+  
+  const unsigned Mesh::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0, 5, 3, 0, 1, 0};
+  const double Mesh::_baricentricWeight[N_GEOM_ELS][5][18] = {
     {},
     {
       { -1. / 9., -1. / 9., -1. / 9.,  0    , 4. / 9., 4. / 9., 4. / 9., 0.   , 0.   , 0.   },
@@ -125,12 +145,15 @@ namespace femus {
   void Mesh::PartitionForElements(std::vector < unsigned > & partition) {
 
     const bool flag_for_ncommon_in_metis = false;
-    partition.reserve(GetNumberOfNodes());
+
     partition.resize(GetNumberOfElements());
+    
     MeshMetisPartitioning meshMetisPartitioning(*this);
+    
     meshMetisPartitioning.DoPartition(partition, flag_for_ncommon_in_metis);
 
   }
+  
   
   void Mesh::Partition() {
 
@@ -140,7 +163,7 @@ namespace femus {
     
     FillISvector(partition);
     
-    partition.resize(0);
+    std::vector<unsigned> ().swap(partition);
 
   }
 
@@ -188,20 +211,20 @@ namespace femus {
   
   
 
-  void Mesh::ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
+  void Mesh::ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool> & type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
     SetIfHomogeneous(true);
 
-    _coords.resize(3);
+    SetLevel(0);
 
-    _level = 0;
+    _coords.resize(3);
 
 
     ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
 
 
 
-    BiquadraticNodesNotInGambit();
+    AddBiquadraticNodesNotInMeshFile();
 
     el->ShrinkToFit();
 
@@ -220,49 +243,77 @@ namespace femus {
     
     Partition();
 
-    ReadCoarseMeshAfterPartitioning();
+    GetMeshElements()->BuildMeshElemStructures();
     
-    
-  }
+    BuildTopologyStructures();
 
-
-  void Mesh::ReadCoarseMeshAfterPartitioning() {
-      
-    el->BuildElementNearVertex();
-
-
-    Buildkel();
-
-
-    InitializeTopologyStructures();
-
-
-    el->BuildElementNearElement();
-
-    el->ScatterElementQuantities();
-    el->ScatterElementDof();
-    el->ScatterElementNearFace();
-
-    _amrRestriction.resize(3);
+    ComputeCharacteristicLength();
 
     PrintInfo();
-    
+
   }
+
+
   
+  void Mesh::BuildTopologyStructures() {
+      
+
+    Topology_InitializeAndFillCoordinates();
+    Topology_InitializeAMR();
+    Topology_InitializeAndFillSolidNodeFlag();
+
+    _amrRestriction.resize(3); /* 3 Lagrange continuous families (linear, quadr, biquadr) */
 
 
-  void Mesh::InitializeTopologyStructures() {
+  }
 
+
+ /// this needs all the dof maps, for the continuous Lagrange elements
+  void Mesh::Topology_InitializeAndFillCoordinates() {
+      
     _topology = new Solution(this);
 
     _topology->AddSolution("X", LAGRANGE, SECOND, 1, 0);
     _topology->AddSolution("Y", LAGRANGE, SECOND, 1, 0);
     _topology->AddSolution("Z", LAGRANGE, SECOND, 1, 0);
 
-    _topology->ResizeSolutionVector("X");
-    _topology->ResizeSolutionVector("Y");
-    _topology->ResizeSolutionVector("Z");
+    _topology->ResizeSolutionVector("X");  //needs dofmap
+    _topology->ResizeSolutionVector("Y");  //needs dofmap
+    _topology->ResizeSolutionVector("Z");  //needs dofmap
 
+    //set coordinates -----------
+    _topology->GetSolutionName("X") = _coords[0];
+    _topology->GetSolutionName("Y") = _coords[1];
+    _topology->GetSolutionName("Z") = _coords[2];
+    //set coordinates -----------
+    
+
+  }
+  
+  
+/// This needs the dof maps, for the discontinuous Lagrange elements
+  void Mesh::Topology_InitializeAMR() {
+      
+    _topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
+
+    _topology->ResizeSolutionVector("AMR");
+
+  }
+  
+
+/// This needs the dof maps, for the continuous Lagrange elements
+  void Mesh::Topology_InitializeAndFillSolidNodeFlag() {
+      
+    _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
+    
+    AllocateAndMarkStructureNode();
+
+  }
+  
+
+  
+  void Mesh::ComputeCharacteristicLength() {
+      
     //compute max and min coords -----------
     std::vector < double > xMax(3, 0.);
     std::vector < double > xMin(3, 0.);
@@ -272,27 +323,13 @@ namespace femus {
         if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
       }
     }
-    _cLenght = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
+    
+    _cLength = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
     //compute max and min coords - end -----------
-
-
-    //set coordinates -----------
-    _topology->GetSolutionName("X") = _coords[0];
-    _topology->GetSolutionName("Y") = _coords[1];
-    _topology->GetSolutionName("Z") = _coords[2];
-    //set coordinates -----------
-
-
-    _topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
-
-    _topology->ResizeSolutionVector("AMR");
-
-    _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
-    AllocateAndMarkStructureNode();
-
+    
   }
-
-
+  
+  
   /**
    *  This function generates the coarse Box Mesh level using the built-in generator
    *   ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, need to check that
@@ -306,19 +343,21 @@ namespace femus {
 
     SetIfHomogeneous(true);
 
-    _coords.resize(3);
+    SetLevel(0);
 
-    _level = 0;
+    _coords.resize(3);
+    
 
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
 
 
-    BiquadraticNodesNotInGambit();
+    AddBiquadraticNodesNotInMeshFile();
 
     el->ShrinkToFit();
 
-    el->SetNodeNumber(_nnodes);
+    el->SetNodeNumber(_nnodes);  ///@todo are we sure we need it here? On the other ReadCoarse it is commented
 
+    
     std::vector < unsigned > materialElementCounter(3, 0);
     materialElementCounter[0] = GetNumberOfElements();
     el->SetMaterialElementCounter(materialElementCounter);
@@ -326,71 +365,21 @@ namespace femus {
 
     Partition();
 
+    GetMeshElements()->BuildMeshElemStructures();
+    
+    BuildTopologyStructures();
 
-    el->BuildElementNearVertex();
-
-    Buildkel();
-
-
-    InitializeTopologyStructures();
-
-
-    el->BuildElementNearElement();
-    el->DeleteElementNearVertex();  ///@todo check why it is needed here and not in the other similar function
-
-    el->ScatterElementQuantities();
-    el->ScatterElementDof();
-    el->ScatterElementNearFace();
-
-    _amrRestriction.resize(3);
-
+    ComputeCharacteristicLength();
+    
     PrintInfo();
+    
   }
+  
 
-  /** This function stores the element adiacent to the element face (iel,iface)
-   * and stores it in kel[iel][iface]
+  /** This function stores the element adiacent to the element face (iel, iface)
+   * and stores it in _elementNearFace[iel][iface]
+   * @todo this function should go inside the Elem class instead
    **/
-  void Mesh::Buildkel() {
-    for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
-      for(unsigned iface = 0; iface < el->GetElementFaceNumber(iel); iface++) {
-        if(el->GetFaceElementIndex(iel, iface) <= 0) {   //TODO probably just == -1
-          unsigned i1 = el->GetFaceVertexIndex(iel, iface, 0);
-          unsigned i2 = el->GetFaceVertexIndex(iel, iface, 1);
-          unsigned i3 = el->GetFaceVertexIndex(iel, iface, 2);
-
-          for(unsigned j = 0; j < el->GetElementNearVertexNumber(i1); j++) {
-            unsigned jel = el->GetElementNearVertex(i1, j);
-
-            if(jel > iel) {
-              for(unsigned jface = 0; jface < el->GetElementFaceNumber(jel); jface++) {
-                if(el->GetFaceElementIndex(jel, jface) <= 0) {
-                  unsigned j1 = el->GetFaceVertexIndex(jel, jface, 0);
-                  unsigned j2 = el->GetFaceVertexIndex(jel, jface, 1);
-                  unsigned j3 = el->GetFaceVertexIndex(jel, jface, 2);
-                  unsigned j4 = el->GetFaceVertexIndex(jel, jface, 3);
-
-                  if((Mesh::_dimension == 3 &&
-                      (i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
-                      (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
-                      (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4)) ||
-                      (Mesh::_dimension == 2 &&
-                       (i1 == j1 || i1 == j2) &&
-                       (i2 == j1 || i2 == j2)) ||
-                      (Mesh::_dimension == 1 &&
-                       (i1 == j1))
-                    ) {
-                    el->SetFaceElementIndex(iel, iface, jel + 1u);
-                    el->SetFaceElementIndex(jel, jface, iel + 1u);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
 
   void Mesh::AllocateAndMarkStructureNode() {
 
@@ -403,7 +392,7 @@ namespace femus {
     for(int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
       int flag_mat = GetElementMaterial(iel);
 
-      if(flag_mat == 4) {
+      if(flag_mat == 4) { ///@todo Where on Earth do we say that 4 is a special flag for the solid
         unsigned elementType = GetElementType(iel);
         unsigned nve = el->GetNVE(elementType, 2);
 
@@ -419,60 +408,25 @@ namespace femus {
   }
 
 
-  void Mesh::SetFiniteElementPtr(const elem_type* OtherFiniteElement[6][5]) {
-    for(int i = 0; i < 6; i++)
+  
+  void Mesh::SetFiniteElementPtr(/*const*/ elem_type* OtherFiniteElement[N_GEOM_ELS][5]) {
+      
+    for(int i = 0; i < N_GEOM_ELS; i++)
       for(int j = 0; j < 5; j++)
         _finiteElement[i][j] = OtherFiniteElement[i][j];
-  }
-
-  
-   std::vector <unsigned>  Mesh::from_mesh_file_to_femus_node_partition_mapping() {
-  
-     std::vector <unsigned> partition(GetNumberOfNodes(), _nprocs);
-  
-     std::vector <unsigned> mapping(GetNumberOfNodes(), 0.);
-
-
-    unsigned counter = 0;
-
-    for(int isdom = 0; isdom < _nprocs; isdom++) {
-      for(unsigned k = 0; k < 3; k++) {
-        for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-          unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
-          unsigned nodeEnd = el->GetElementDofNumber(iel, k);
-
-          for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-            unsigned ii = el->GetElementDofIndex(iel, inode);
-
-            if(partition[ii] > isdom) {
-              partition[ii] = isdom;
-              mapping[ii] = counter;
-              counter++;
-
-            }
-          }
-        }
-      }
-    }
-  
-      partition.resize(0);
-      
-      return mapping;
       
   }
+
   
+ 
   
 
-  void Mesh::from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector <unsigned> & mapping) {
+  std::vector <unsigned> Mesh::dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize() {
   // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
       
 
-      
-    // Initialization for k = 0,1,2
-    
-     partition.assign(GetNumberOfNodes(), _nprocs);
-  
-        mapping.resize(GetNumberOfNodes()); ///@todo I think this is bad because it doesn't clear the previous content!!!
+     std::vector<unsigned>  partition(GetNumberOfNodes(), _nprocs);
+    std::vector <unsigned>  mapping_from_mesh_file_to_femus(GetNumberOfNodes(), 0);
 
     for(unsigned k = 0; k < 3; k++) {
       _ownSize[k].assign(_nprocs, 0);
@@ -481,17 +435,18 @@ namespace femus {
     unsigned counter = 0;
 
     for(int isdom = 0; isdom < _nprocs; isdom++) {
+        
       for(unsigned k = 0; k < 3; k++) {
         for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
           unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
           unsigned nodeEnd = el->GetElementDofNumber(iel, k);
 
           for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-            unsigned ii = el->GetElementDofIndex(iel, inode);
+            unsigned ii = el->GetElementDofIndex(iel, inode); //at this point the elements were reordered, but not the nodes
 
             if(partition[ii] > isdom) {
               partition[ii] = isdom;
-              mapping[ii] = counter;
+              mapping_from_mesh_file_to_femus[ii] = counter;
               counter++;
 
               for(int j = k; j < 3; j++) {
@@ -501,39 +456,47 @@ namespace femus {
           }
         }
       }
+      
     }
   
-      partition.resize(0);
-      
+    
+    
+    return mapping_from_mesh_file_to_femus;
+  
   }
 // *******************************************************
 
 
-  void Mesh::initialize_elem_dof_offsets() {
+  void Mesh::initialize_elem_offsets() {
       
-    //BEGIN Initialization for k = 0,1,2,3,4
-
     _elementOffset.resize(_nprocs + 1);
     _elementOffset[0] = 0;
+    
+  }
+  
 
+  void Mesh::dofmap_all_fe_families_initialize() {
+      
+    //BEGIN Initialization for k = 0,1,2,3,4
     for(int k = 0; k < 5; k++) {
       _dofOffset[k].resize(_nprocs + 1);
       _dofOffset[k][0] = 0;
     }
-
+    
+    for(int k = 0; k < 5; k++) {
+              _ownSize[k].assign(_nprocs, 0); 
+            _ghostDofs[k].resize(_nprocs);
+    }
     //END Initialization for k = 0,1,2,3,4
+
     
   }
 
   
-   void Mesh::build_elem_offsets_and_dofs_element_based(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping)  {
- 
+   void Mesh::build_elem_offsets(const std::vector <unsigned> & partition)  {
        
-    //BEGIN building the  metis2Gambit_elem and  k = 3,4
-       
-    mapping.reserve(GetNumberOfNodes());  /// @todo is this done in order to guarantee some contiguous memory when resizing? 
-                                          /// otherwise things are resized later
-    mapping.resize(GetNumberOfElements());
+          //BEGIN building the  metis2mesh_file element list 
+    std::vector <unsigned>  mapping(GetNumberOfElements());
 
     unsigned counter = 0;
 
@@ -548,24 +511,23 @@ namespace femus {
       }
     }
 
-    el->ReorderMeshElements(mapping);
+    el->ReorderMeshElements(mapping);  ///this is needed because later there will be another reordering based on Group and Material
+  
+   }
+   
+   
+   
+  
+   void Mesh::mesh_reorder_elem_quantities()  {
+ 
 
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {
-//       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-//         std::cout << el->GetElementMaterial(iel) << " ";
-//       }
-//       std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
-//
-//     std::cout << GetNumberOfElements()<<std::endl;
 
     std::vector < unsigned > imapping(GetNumberOfElements());
 
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
       imapping[iel] = iel;
     }
-    // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
+
     for(int isdom = 0; isdom < _nprocs; isdom++) {
 
 // Old, much slower (while below is better) **********
@@ -591,6 +553,7 @@ namespace femus {
       short unsigned jelMat, jelGroup, ielMat, ielGroup;
 
       unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
+      
       while(n > 1) {
         unsigned newN = 0u;
         for(unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
@@ -602,7 +565,7 @@ namespace femus {
           ielMat = el->GetElementMaterial(iel);
           ielGroup = el->GetElementGroup(iel);
 
-          if(jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
+          if( jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel) ) ) ) {
             imapping[j - 1] = jel;
             imapping[j] = iel;
             newN = j - _elementOffset[isdom];
@@ -612,29 +575,27 @@ namespace femus {
       }
 
     }
+    
 
+    std::vector <unsigned>  mapping(GetNumberOfElements());
+        
     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
       mapping[imapping[i]] = i;
     }
 
-    std::vector < unsigned > ().swap(imapping);
-
-
-//     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
-//       std::cout << mapping[i] << " ";
-//     }
-//     std::cout << std::endl;
 
     el->ReorderMeshElements(mapping);
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {
-//       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-//         std::cout << "("<<el->GetElementMaterial(iel) << ", "<< el->GetElementGroup(iel)<<") ";
-//       }
-//       std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
+    
+    //END building the  metis2mesh_file element list 
+
+    
+}
 
 
+
+   void Mesh::dofmap_Element_based_dof_offsets_build()  {
+       
+    //BEGIN building element based dofs -  k = 3,4 
 
     // ghost vs owned nodes: 3 and 4 have no ghost nodes
     for(unsigned k = 3; k < 5; k++) {
@@ -655,18 +616,24 @@ namespace femus {
       }
     }
 
-    //END building the  metis2Gambit_elem and  k = 3,4
+    //END building element based dofs -  k = 3,4
 
-    
-}
+   }
+   
+   
 
+   void Mesh::dofmap_Node_based_dof_offsets_Continue_biquadratic()  {
 
-   void Mesh::end_building_dof_offset_biquadratic_and_coord_reordering(std::vector <unsigned> & mapping)  {
-       
     for(int i = 1 ; i <= _nprocs; i++) {
       _dofOffset[2][i] = _dofOffset[2][i - 1] + _ownSize[2][i - 1];
     }
 
+   }
+
+
+   void Mesh::mesh_reorder_node_quantities(const std::vector <unsigned> & mapping)  {
+       
+     
     el->ReorderMeshNodes(mapping);
 
     //reorder coordinate vector at coarse level ----
@@ -681,16 +648,14 @@ namespace femus {
         }
       }
     }
-    //reorder coordinate vector ----
+    //reorder coordinate vector at coarse level ----
 
-    mapping.resize(0);
 
    }
    
 
-    void Mesh::ghost_nodes_search() {
+    void Mesh::dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic() {
  
-    //BEGIN ghost nodes search k = 0, 1, 2
     for(int k = 0; k < 3; k++) {
       _ghostDofs[k].resize(_nprocs);
 
@@ -717,12 +682,11 @@ namespace femus {
       }
     }
 
-    //END ghost nodes search k = 0, 1, 2
-
   }
+  
 
   
-    void Mesh::complete_dof_offsets() {
+    void Mesh::dofmap_Node_based_dof_offsets_Complete_linear_quadratic() {
 
     //BEGIN completing k = 0, 1
 
@@ -774,12 +738,13 @@ namespace femus {
     }
 
     //END completing for k = 0, 1
+    
 
-
-    SetNumberOfNodes(_dofOffset[2][_nprocs]);
-    el->SetNodeNumber(_dofOffset[2][_nprocs]);
-
-
+  }
+  
+  
+  void Mesh::dofmap_all_fe_families_clear_ghost_dof_list_other_procs() {
+      
     //delete ghost dof list all but _iproc
     for(int isdom = 0; isdom < _nprocs; isdom++) {
       if(isdom != _iproc)
@@ -787,42 +752,87 @@ namespace femus {
           _ghostDofs[k][isdom].resize(0);
         }
     }
+      
 
+  }
+  
+  
+  
+  void Mesh::set_node_counts() {
+      
+    SetNumberOfNodes(_dofOffset[2][_nprocs]);
+    el->SetNodeNumber(_dofOffset[2][_nprocs]);
+
+  }
+  
+
+  void Mesh::set_elem_counts() {
+      
     el->SetElementOffsets(_elementOffset, _iproc, _nprocs);
 
-  }  
+  }
   
+  
+  void Mesh::deallocate_node_mapping(std::vector < unsigned > & node_mapping) const {
+      
+    std::vector<unsigned> ().swap(node_mapping);    //     node_mapping.resize(0);  //resize DOES NOT FREE memory!!!
+      
+  }
+
+  
+  
+  // // // ======== ELEM OFFSETS =========================================================  
+  void Mesh::FillISvectorElemOffsets(std::vector < unsigned >& partition) {
+      
+   
+   initialize_elem_offsets();
+   build_elem_offsets(partition);
+   mesh_reorder_elem_quantities();
+   set_elem_counts();
+   
+      
+  }
+  
+  
+  // // // ======== NODE OFFSETS =========================================================  
+  void Mesh::FillISvectorNodeOffsets() {
+      
+    std::vector < unsigned > node_mapping =  dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
+    mesh_reorder_node_quantities(node_mapping);
+    
+    deallocate_node_mapping(node_mapping);
+      
+  }
   
   
  /**
   * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
   */
-  void Mesh::FillISvector(vector < unsigned >& partition) {
+  void Mesh::FillISvector(std::vector < unsigned >& partition) {
 
-    initialize_elem_dof_offsets();
-    
-
-    std::vector < unsigned > mapping;
-
-    
-   build_elem_offsets_and_dofs_element_based(partition, mapping);
-   
+        dofmap_all_fe_families_initialize();
      
-   
-    //BEGIN building for k = 0,1,2
+     FillISvectorElemOffsets(partition);
+     
+        dofmap_Element_based_dof_offsets_build();  
 
-   from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
-
-   end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
-
-    //END building for k = 2, but incomplete for k = 0, 1
-
-   
-    ghost_nodes_search();
-
-
-    complete_dof_offsets();
+      //BEGIN building for k = 0,1,2
+     FillISvectorNodeOffsets();
     
+      dofmap_Node_based_dof_offsets_Continue_biquadratic();
+        //BEGIN ghost nodes search k = 0, 1, 2
+      dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
+        //END ghost nodes search k = 0, 1, 2
+      //END building for k = 2, but incomplete for k = 0, 1
+      //BEGIN completing for k = 0,1
+      dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
+      //END completing for k = 0,1
+    
+    set_node_counts(); //also, it shouldn't use dofOffset
+
+     
+     
+        dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
     
   }
 
@@ -850,6 +860,7 @@ namespace femus {
     unsigned dof;
 
     switch(solType) {
+        
       case 0: { // linear Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
         unsigned isdom = IsdomBisectionSearch(iNode, 2);
@@ -906,6 +917,7 @@ namespace femus {
     unsigned dof;
 
     switch(solType) {
+        
       case 0: { // linear Lagrange
         unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
         unsigned isdom = IsdomBisectionSearch(iNode, 2);
@@ -960,6 +972,7 @@ namespace femus {
 
 
   SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
+      
     if(itype < 3 && jtype < 3) {
       if(!_ProjQitoQj[itype][jtype]) {
         BuildQitoQjProjection(itype, jtype);
@@ -1203,11 +1216,9 @@ namespace femus {
 
 // *******************************************************
 
-  void Mesh::BiquadraticNodesNotInGambit() {
+  void Mesh::AddBiquadraticNodesNotInMeshFile() {
 
     unsigned int nnodes = GetNumberOfNodes();
-//     std::cout << " ********************************** "<< std::endl;
-//     std::cout << "nnodes before = "  << nnodes << std::endl;
 
     //intialize to UINT_MAX
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
@@ -1285,6 +1296,8 @@ namespace femus {
     el->SetNodeNumber(nnodes);
     SetNumberOfNodes(nnodes);
 //     std::cout <<"nnodes after="<< nnodes << std::endl;
+    
+    
 
     // add the coordinates of the biquadratic nodes not included in gambit
     _coords[0].resize(nnodes);
@@ -1314,10 +1327,34 @@ namespace femus {
         }
       }
     }
+    
+    
   }
+  
+  
 
   basis* Mesh::GetBasis(const short unsigned& ielType, const short unsigned& solType) {
     return _finiteElement[ielType][solType]->GetBasis();
   }
 
+  
+  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) {
+      
+    xv.resize(_dimension);
+    unsigned ndofs = el->GetElementDofNumber(iel, solType);
+    for(int d = 0; d < _dimension; d++) {
+      xv[d].resize(ndofs);
+    }
+    for(unsigned j = 0; j < ndofs; j++) {
+      unsigned xdof  = GetSolutionDof(j, iel, solType);
+      for(int d = 0; d < _dimension; d++) {
+        xv[d][j] = (*_topology->_Sol[d])(xdof);
+      }
+    }
+    
+  }
+
+  
+  
+  
 } //end namespace femus

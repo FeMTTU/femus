@@ -219,7 +219,7 @@ MED_IO::~MED_IO () {
        delete _geom_elems[4];
        delete _geom_elems[5];
 
-    _geom_elems.resize(0);
+    std::vector< GeomElemBase* > ().swap(_geom_elems);
     
 }
 
