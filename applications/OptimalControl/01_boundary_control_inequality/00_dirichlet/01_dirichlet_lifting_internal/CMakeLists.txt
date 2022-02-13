@@ -10,3 +10,6 @@ SET(MAIN_FILE "${THIS_APPLICATION}") # the name of the main file with no extensi
 SET(EXEC_FILE "${MAIN_FILE}") # the name of the executable file
 
 femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
+
+
+FILE(COPY ./run.sh DESTINATION ${PROJECT_BINARY_DIR})

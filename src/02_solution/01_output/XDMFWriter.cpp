@@ -100,7 +100,7 @@ namespace femus {
       abort();
     }
 
-    unsigned nvt = mesh->_dofOffset[index_nd][_nprocs];
+    unsigned nvt = mesh->dofmap_get_dof_offset(index_nd, _nprocs);
     unsigned nel = mesh->GetNumberOfElements();
     unsigned dim = mesh->GetDimension();
     unsigned maxDim = ( nvt > ( dim + 1 ) * nel ) ? nvt : ( dim + 1 ) * nel;
@@ -115,7 +115,7 @@ namespace femus {
     vector2.reserve( maxDim );
 
     NumericVector* numVector = NumericVector::build().release();
-    numVector->init( nvt, mesh->_ownSize[index_nd][_iproc], true, AUTOMATIC );
+    numVector->init( nvt, mesh->dofmap_get_own_size(index_nd, _iproc), true, AUTOMATIC );
 
     //BEGIN XMF FILE PRINT
 

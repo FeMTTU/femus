@@ -17,7 +17,7 @@ namespace femus
           
       public:
 
-     elem_type_templ_base(){};
+     elem_type_templ_base() {}
          
      virtual const double get_dphidxi_ref(const unsigned idim, const unsigned qp, const unsigned dof) = 0;
 
