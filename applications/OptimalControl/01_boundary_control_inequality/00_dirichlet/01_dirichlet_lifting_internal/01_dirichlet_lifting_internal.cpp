@@ -455,7 +455,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     }
  //***************************************************  
     
-    
+ 
+//=============   update_active_set BEGIN
+//=============   update_active_set BEGIN
+//=============   update_active_set BEGIN
+ 
 //   update_active_set_flag_for_current_nonlinear_iteration
 //          (msh, sol, iel, coords_at_dofs, sol_eldofs, Sol_n_el_dofs, pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
     
@@ -488,6 +492,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
     }    
     
+//=============   update_active_set END
+//=============   update_active_set END
+//=============   update_active_set END
     
     
  //******************** ALL VARS ********************* 
@@ -797,10 +804,24 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
       if (assembleMatrix)  KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
-    
+
+      
+
+      
+RES->close();
+if (assembleMatrix) KK->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
+      
+      
+      
+      
     
  //========== dof-based part, without summation
  
+  //============= node insertion begin
+  //============= node insertion begin
+  //============= node insertion begin
+      
+      
  //============= delta_mu row ===============================
       std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
       
@@ -834,9 +855,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 //  //============= delta_adj-delta_adj row ===============================
 //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
   
- //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);//------------------------------->>>>>>
-  
  //============= delta_mu-delta_ctrl row ===============================
  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
   
@@ -846,6 +864,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
+  
+  
+  //============= node insertion end
+  //============= node insertion end
+  //============= node insertion end
+  
+ //============= delta_ctrl-delta_mu row ===============================
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.); }//------------------------------->>>>>>
+  
+  
+  
   
 //     assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
 //     assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
