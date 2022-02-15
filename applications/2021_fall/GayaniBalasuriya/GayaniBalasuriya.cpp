@@ -47,7 +47,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
     }
   else if (face_name == 2) {
       dirichlet = false;
-        value = 1. //Neumann value
+        value = 1.; //Neumann value
     }
 
     
