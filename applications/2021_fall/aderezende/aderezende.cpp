@@ -23,6 +23,7 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
+
 double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
@@ -486,7 +487,9 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
       
+
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
         
@@ -643,8 +646,10 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     if (assembleMatrix) {
       JAC->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
+
    
    
+
   } //end element loop for each process
 
   RES->close();

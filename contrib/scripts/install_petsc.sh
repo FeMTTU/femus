@@ -6,7 +6,9 @@
 # we might install the code in other environments where petsc and mpi are already there,
 # so in that case the PETSC_DIR and PETSC_ARCH will be set by the system administrator
 
-PETSC_VERSION_GIT_TAG=v3.13
+PETSC_VERSION_GIT_TAG=
+#v3.16.4
+COMMON_PETSC_DIRNAME=petsc$PETSC_VERSION_GIT_TAG
 
 
 echo Install petsc
@@ -30,7 +32,7 @@ cd $SOFTWARE_DIR
 
 #######################################################################
 echo Download, extract, compile PETSC
-FM_PETSC_DIR_REL=petsc
+FM_PETSC_DIR_REL=$COMMON_PETSC_DIRNAME
 FM_PETSC_DIR_ABS=$SOFTWARE_DIR/$FM_PETSC_DIR_REL
 export PETSC_DIR=$FM_PETSC_DIR_ABS
 
@@ -42,7 +44,7 @@ echo =========== Remove previous installations
 rm -rf $FM_PETSC_DIR_REL/
 echo =========== Clone
 
-git clone https://gitlab.com/petsc/petsc $FM_PETSC_DIR_REL
+git clone -b release https://gitlab.com/petsc/petsc.git $FM_PETSC_DIR_REL
 
 
 cd $FM_PETSC_DIR_REL
