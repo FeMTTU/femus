@@ -6,7 +6,7 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL   2
+#define FACE_FOR_CONTROL   4
 #define FACE_FOR_TARGET    1
 
 #include "../../../param.hpp"
@@ -87,7 +87,7 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
-  const bool use_output_time_folder = true;
+  const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
@@ -121,15 +121,15 @@ int main(int argc, char** args) {
     // ======= Solution ========================
   MultiLevelSolution ml_sol(&ml_mesh);
 
-  ml_sol.AddSolution("state", LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("control", LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("adjoint", LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("mu", LAGRANGE, SECOND/*FIRST*/);  
+  ml_sol.AddSolution("state", LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("control", LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("adjoint", LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("mu", LAGRANGE, /*SECOND*/FIRST);  
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, SECOND/*FIRST*/, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);
@@ -217,8 +217,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id();
 
-  constexpr bool print_algebra_global = false;
-  constexpr bool print_algebra_local = false;
+  constexpr bool print_algebra_global = true;
+  constexpr bool print_algebra_local = true;
   
   //=============== Geometry ========================================
   unsigned solType_coords = FE_DOMAIN;
@@ -329,14 +329,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(max_size);
 
   
- //************** act flag **************************** 
-   std::string act_flag_name = "act_flag";
-   unsigned int solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
-   unsigned int solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
-      if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
-        *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
-      }
-  
+  //************** act flag ****************************   
+  unsigned int solIndex_act_flag_sol; 
+  unsigned int solFEType_act_flag_sol;
+  store_act_flag_in_old(mlPdeSys, ml_sol, sol,
+                        solIndex_act_flag_sol, //this becomes a vector
+                        solFEType_act_flag_sol //remove this one, only Index
+                       );
+    
   
   
   //********* variables for ineq constraints *****************
@@ -350,7 +350,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
 
-  const int n_unknowns = 4;
+  const int n_unknowns =  mlPdeSys->GetSolPdeIndex().size();
  
   vector< int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_unknowns*max_size);
@@ -400,7 +400,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-    vector < unsigned > Sol_n_el_dofs(n_unknowns);
+    vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
  //***************************************************  
 
 //***************************************************
@@ -422,7 +422,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double u_des = DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
-  double penalty_strong = 1.e50;
+  double penalty_outside_control_domain = 1.e50;         // penalty for zero control outside
  //***************************************************  
 
   RES->zero();
@@ -521,7 +521,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-	Sol_n_el_dofs[k] = ndofs_unk;
+	Sol_n_el_dofs_Mat_vol[k] = ndofs_unk;
   }
     
  //*************************************************** 
@@ -529,7 +529,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***** set control flag ****************************
   int control_el_flag = 0;
   control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
-  std::vector<int> control_node_flag(nDof_ctrl,0);
+  std::vector<int> control_node_flag(nDof_ctrl, 0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
   
@@ -579,10 +579,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < dim; d++)   sol_ctrl_x_gss[d] += sol_ctrl[i] * phi_ctrl_x[i * dim + d];
         }
         
-        for (unsigned i = 0; i < nDof_mu; i++) {
+    for (unsigned i = 0; i < nDof_mu; i++) {
 	                                                sol_mu_gss      += sol_mu[i] * phi_mu[i];
 		   for (unsigned d = 0; d < dim; d++)   sol_mu_x_gss[d] += sol_mu[i] * phi_mu_x[i * dim + d];
-          
 	}
         
 //==========FILLING WITH THE EQUATIONS ===========
@@ -618,16 +617,21 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  if (i < nDof_u)                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i );
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
-	     if ( control_el_flag == 1)        Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
+	     if ( control_el_flag == 1)    {    Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
-													      /*+ ineq_flag * sol_mu_gss*/ );
-	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i]);
+													      /*+ ineq_flag * sol_mu_gss*/ ); }
+	      else if ( control_el_flag == 0) { Res[nDof_u + i] +=   (- penalty_outside_control_domain) *  (1 - control_node_flag[i]) * (sol_ctrl[i] - 0.); }
 	  }
           // THIRD ROW
           if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i ) ;
 
+       if (i < nDof_mu)  {
+            if ( control_el_flag == 0) {  Res[nDof_u + nDof_ctrl + nDof_adj + i] +=   (- penalty_outside_control_domain) *  (1 - control_node_flag[i]) * (sol_mu[i] - 0.); }
+       }
+       
+           
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -664,7 +668,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               // BLOCK  delta_state - adjoint
               if ( i < nDof_u && j < nDof_adj )  
 		Jac[  (0 + i) * nDof_AllVars  +
-                      (nDof_u + nDof_ctrl + j)          ]  += weight * (-1) * laplace_mat_du_adj;
+                      (nDof_u + nDof_ctrl + j)          ]  += weight * (-1.) * laplace_mat_du_adj;
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
@@ -684,7 +688,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //BLOCK delta_control - adjoint
               if ( i < nDof_ctrl   && j < nDof_adj  ) 
 		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		     (nDof_u + nDof_ctrl + j)           ]  += ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
+		     (nDof_u + nDof_ctrl + j)           ]  += ( control_node_flag[i]) * weight * (-1.) * laplace_mat_dctrl_adj;
 	      	      
 	        }
 	      
@@ -693,7 +697,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
 		 Jac[ (nDof_u + i) * nDof_AllVars +
-		      (nDof_u + j)                      ]  += (1-control_node_flag[i]) * penalty_strong;
+		      (nDof_u + j)                      ]  +=  penalty_outside_control_domain * (1 - control_node_flag[i]);
 		}
 	      
 	      }
@@ -723,7 +727,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
 	      
 	      //============= delta_mu row ===============================
-//	      if (sol_actflag[i] == 0) //inactive
+                if ( i < nDof_mu && j < nDof_mu && i==j )  {   
+	        if ( control_el_flag == 0)  {  
+		  Jac[   (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +  (nDof_u + nDof_ctrl + nDof_adj + j) ]  += penalty_outside_control_domain * (1 - control_node_flag[i]);    //MU
+                }
+	      }
+	      
+//           if (sol_actflag[i] == 0) //inactive
 //	      { // BLOCK delta_mu - mu	      
 // 	        if ( i < nDof_mu && j < nDof_mu && i==j )   
 // 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
@@ -753,15 +763,15 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // //          for (unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) {
 // //     std::cout << " ======= Row === " << i_unk << " =================================================== " << std::endl;     
 // //         unsigned int row_block_offset = 0;
-// // 	         for (unsigned k = 0; k < i_unk; k++) row_block_offset += Sol_n_el_dofs[k];
+// // 	         for (unsigned k = 0; k < i_unk; k++) row_block_offset += Sol_n_el_dofs_Mat_vol[k];
 // //          for (unsigned j_unk = 0; j_unk < n_unknowns; j_unk++) {
 // //     std::cout << " ======= Column === " << j_unk << " ================== " << std::endl;     
 // //         unsigned int column_block_offset = 0;
-// // 	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs[k];
+// // 	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs_Mat_vol[k];
 // // 	  
-// //          for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
+// //          for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[i_unk]; i++) {
 // // // 	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
-// // 	   for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
+// // 	   for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[j_unk]; j++) {
 // // 	      std::cout <<  " " << std::setfill(' ') << std::setw(10) << Jac[ (row_block_offset + i) * nDof_AllVars + ( column_block_offset + j) ] << " ";
 // // 	    }
 // // 	      std::cout << std::endl;
@@ -801,6 +811,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       if (assembleMatrix)  KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
 
       
+     if (print_algebra_local) {
+         assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs_Mat_vol, 10, 5);
+     }
 
        
   } //end element loop for each process
@@ -857,59 +871,60 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                         SolFEType,
                         SolIndex,
                         SolPdeIndex,
-                        Sol_n_el_dofs,
+                        Sol_n_el_dofs_Mat_vol,
                         sol_eldofs_Mat,
                         L2G_dofmap_Mat);
 
+    ///@todo add restriction to only volume control lifting elements
       
 //=============   update_active_set BEGIN
 //=============   update_active_set 
 //=============   update_active_set 
  
-  update_active_set_flag_for_current_nonlinear_iteration
-  (msh,
-   sol,
-   iel,
-   geom_element_iel.get_coords_at_dofs_3d()/*coords_at_dofs*/,
-   sol_eldofs_Mat,
-   Sol_n_el_dofs,
-   pos_mat_mu,
-   pos_mat_ctrl,
-   c_compl,
-   ctrl_lower,
-   ctrl_upper,
-   sol_actflag,
-   solFEType_act_flag,
-   solIndex_act_flag);
+//   update_active_set_flag_for_current_nonlinear_iteration
+//   (msh,
+//    sol,
+//    iel,
+//    geom_element_iel.get_coords_at_dofs_3d()/*coords_at_dofs*/,
+//    sol_eldofs_Mat,
+//    Sol_n_el_dofs_Mat_vol,
+//    pos_mat_mu,
+//    pos_mat_ctrl,
+//    c_compl,
+//    ctrl_lower,
+//    ctrl_upper,
+//    sol_actflag,
+//    solFEType_act_flag_sol,
+//    solIndex_act_flag_sol);
     
       
       
-// // // // //  // 0: inactive; 1: active_a; 2: active_b
-// // // // //    assert(nDof_mu == nDof_ctrl);
-// // // // //    sol_actflag.resize(nDof_mu);
-// // // // //    ctrl_lower.resize(nDof_mu);
-// // // // //    ctrl_upper.resize(nDof_mu);
-// // // // //      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-// // // // //      std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
-// // // // //      std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
-// // // // //    
-// // // // //     for (unsigned i = 0; i < sol_actflag.size(); i++) {
-// // // // //         std::vector<double> node_coords_i(dim,0.);
-// // // // //         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = geom_element_iel.get_coords_at_dofs()[d][i];
-// // // // //         ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
-// // // // //         ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
-// // // // // 
-// // // // //         if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
-// // // // //         else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
-// // // // //     }
-// // // // // 
-// // // // //  //************** act flag **************************** 
-// // // // //     unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
-// // // // //     
-// // // // //     for (unsigned i = 0; i < nDof_act_flag; i++) {
-// // // // //       unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
-// // // // //       (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
-// // // // //     }    
+ // 0: inactive; 1: active_a; 2: active_b
+   assert(Sol_n_el_dofs_Mat_vol[pos_mat_mu] == Sol_n_el_dofs_Mat_vol[pos_mat_ctrl]);
+   sol_actflag.resize(Sol_n_el_dofs_Mat_vol[pos_mat_mu]);
+   ctrl_lower.resize(Sol_n_el_dofs_Mat_vol[pos_mat_mu]);
+   ctrl_upper.resize(Sol_n_el_dofs_Mat_vol[pos_mat_mu]);
+     std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+     std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+     std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+   
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim, 0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = geom_element_iel.get_coords_at_dofs()[d][i];
+        ctrl_lower[i] = InequalityConstraint(node_coords_i, false);
+        ctrl_upper[i] = InequalityConstraint(node_coords_i, true);
+
+        if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
+        else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
+    }
+
+ //************** act flag **************************** 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag_sol);    // number of solution element dofs
+    
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag_sol); 
+      (sol->_Sol[solIndex_act_flag_sol])->set(solDof_mu, sol_actflag[i]);     
+    }    
    
    
    
@@ -985,6 +1000,15 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
   if (assembleMatrix) KK->close();
   
   // ***************** END ASSEMBLY *******************
+  if (print_algebra_global) {
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, mlPdeSys->GetNonlinearIt());
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+
+  }
   
 
   return;

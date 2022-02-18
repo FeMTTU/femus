@@ -47,7 +47,7 @@
 
 
 //*********************** Lifting internal extension *******************************************************
-#define LIFTING_INTERNAL_DEPTH  1
+#define LIFTING_INTERNAL_DEPTH  0.5
 #define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
 #define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
 
@@ -283,7 +283,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         std::cout << std::endl;
         
         for (unsigned i = 0; i < sol_actflag.size(); i++) {
-            std::vector<double> node_coords_i(dim,0.);
+            std::vector<double> node_coords_i(dim, 0.);
             for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
             
             ctrl_lower[i] = InequalityConstraint(node_coords_i, false);
