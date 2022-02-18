@@ -19,6 +19,14 @@ notebook.set("L", 5)
 notebook.set("radius", 1)
 notebook.set("n_r", 7)
 notebook.set("n_s", 10)
+notebook.set("L", 5)
+notebook.set("radius", 1)
+notebook.set("n_r", 7)
+notebook.set("n_s", 10)
+notebook.set("L", 5)
+notebook.set("radius", 1)
+notebook.set("n_r", 7)
+notebook.set("n_s", 10)
 ####################################################
 ##        End of NoteBook variables section       ##
 ####################################################
@@ -112,14 +120,28 @@ status = Mesh_1.AddHypothesis(NETGEN_1D_2D)
 status = Mesh_1.AddHypothesis( Face_1, NETGEN_2D_Parameters_3 )
 status = Mesh_1.RemoveHypothesis(NETGEN_2D_Parameters_3)
 status = Mesh_1.AddHypothesis( Face_1, NETGEN_2D_Parameters_1 )
-isDone = Mesh_1.Compute()
-Mesh_1.ConvertToQuadratic(0)
 Group_1_0 = Mesh_1.GroupOnGeom(Edge_1,'Group_1_0',SMESH.EDGE)
 [ smeshObj_1, smeshObj_2, smeshObj_3, Group_1_0 ] = Mesh_1.GetGroups()
 Group_2_0 = Mesh_1.GroupOnGeom(Edge_2,'Group_2_0',SMESH.EDGE)
 [ smeshObj_1, smeshObj_2, smeshObj_3, Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
 Group_3_0 = Mesh_1.GroupOnGeom(Edge_3,'Group_3_0',SMESH.EDGE)
 [ smeshObj_1, smeshObj_2, smeshObj_3, Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
+smesh.SetName(Mesh_1, 'Mesh_1')
+try:
+  Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_1_assignment_1_triangular.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=1)
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+smesh.SetName(Mesh_1, 'Mesh_1')
+try:
+  Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_1_assignment_1_triangular.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=0)
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+isDone = Mesh_1.Compute()
+[ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
+Mesh_1.ConvertToQuadratic(0)
+[ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
 Sub_mesh_1 = Mesh_1.GetSubMesh( Edge_1, 'Sub-mesh_1' )
 Sub_mesh_2 = Mesh_1.GetSubMesh( Edge_2, 'Sub-mesh_2' )
 Sub_mesh_3 = Mesh_1.GetSubMesh( Edge_3, 'Sub-mesh_3' )
