@@ -1,5 +1,8 @@
 #!/bin/bash
 
+PETSC_VERSION_GIT_TAG=
+#v3.16.4
+COMMON_PETSC_DIRNAME=petsc$PETSC_VERSION_GIT_TAG
 
 echo -e "Source script for setting some environment variables for FEMuS to work\n"
 
@@ -44,7 +47,7 @@ fi
 
 ############# MACHINE DEPENDENT ###################
  FM_BASEPATH_TO_MPI=$EXTERNAL_BASEPATH    #NOW ALL THESE VARIABLES will APPEAR IN THE ENVIRONMENT... even if you don't put EXPORT... TODO see if i can improve this
- FM_MPI_FOLDER=petsc/$PETSC_ARCH
+ FM_MPI_FOLDER=$COMMON_PETSC_DIRNAME/$PETSC_ARCH
  FM_MPI_BIN=bin
  FM_MPI_LIB=lib
 ############# END MACHINE DEPENDENT ###################
@@ -104,7 +107,7 @@ fi
 
 ############ MACHINE DEPENDENT ###################
        FM_BASEPATH_TO_PETSC=$EXTERNAL_BASEPATH
-       FM_PETSC_FOLDER=petsc
+       FM_PETSC_FOLDER=$COMMON_PETSC_DIRNAME
 export PETSC_ARCH=arch-linux2-cxx-$PETSC_METHOD
 ############ END MACHINE DEPENDENT ###################
 
@@ -284,7 +287,7 @@ echo -e \
 ================ Welcome to FEMuS =========================  
 ===== The method for FEMuS will be given by CMake \n
 ===== The method for PETSc is  $PETSC_METHOD \n
-"
+$PETSC_DIRNAME"
 
 # ===== The method for LibMesh is $LIBMESH_METHOD \n
 
