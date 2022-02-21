@@ -144,14 +144,22 @@ namespace femus
 
 //   mesh.SetGridNumber(0);
 
-        if(nz != 0)
+        if(nz != 0) {
           mesh.SetDimension(3);
-        else if(ny != 0)
+          mesh.SetRefinementCellAndFaceIndices(3);
+        }
+        else if(ny != 0) {
           mesh.SetDimension(2);
-        else if(nx != 0)
+          mesh.SetRefinementCellAndFaceIndices(2);
+        }
+        else if(nx != 0) {
           mesh.SetDimension(1);
-        else
+          mesh.SetRefinementCellAndFaceIndices(1);
+        }
+        else {
           mesh.SetDimension(0);
+          mesh.SetRefinementCellAndFaceIndices(0);
+        }
 
         unsigned ngroup;
         unsigned nbcd;
@@ -282,7 +290,7 @@ namespace femus
 
               // Build the elements of the mesh
               unsigned iel = 0;
-              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el = new elem(mesh.GetNumberOfElements(), mesh.GetDimension());
               mesh.el->SetElementGroupNumber(1);
               // Build the elements.  Each one is a bit different.
               switch(type) {
@@ -521,7 +529,7 @@ namespace femus
 
 
               unsigned iel = 0;
-              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el = new elem(mesh.GetNumberOfElements(), mesh.GetDimension());
               mesh.el->SetElementGroupNumber(1);
               // Build the elements.  Each one is a bit different.
               switch(type) {
@@ -945,7 +953,7 @@ namespace femus
 
               // Build the elements.
               unsigned iel = 0;
-              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el = new elem(mesh.GetNumberOfElements(), mesh.GetDimension());
               mesh.el->SetElementGroupNumber(1);
               switch(type) {
 // 	  case INVALID_ELEM:

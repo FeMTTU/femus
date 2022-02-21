@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  1
-#define N_ERASED_LEVELS   0
+#define N_UNIFORM_LEVELS 3 
+#define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -32,18 +32,26 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 0.//1.e-2
-#define BETA_CTRL_BDRY  1.//1.e-2
+#define ALPHA_CTRL_BDRY 0.00000001 
+#define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 
-#define ALPHA_CTRL_VOL 1.e-3
-#define BETA_CTRL_VOL 1.e-2
+#define ALPHA_CTRL_VOL 0.00000001 
+#define BETA_CTRL_VOL ALPHA_CTRL_VOL
 
 
 //*********************** Control boundary extremes *******************************************************
 
 #define GAMMA_CONTROL_LOWER 0.25
 #define GAMMA_CONTROL_UPPER 0.75
+
+
+//*********************** Lifting internal extension *******************************************************
+#define LIFTING_INTERNAL_DEPTH  1
+#define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
+#define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
+
+
 
 
 //*********************** Control box constraints *******************************************************
@@ -133,9 +141,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
   
   const double offset_to_include_line = 1.e-5;
    
-  const int  target_line_sign = target_line_sign_func(FACE_FOR_CONTROL);
+  const int  target_line_sign = target_line_sign_func(/*FACE_FOR_CONTROL*/FACE_FOR_TARGET);
   
-  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_CONTROL);
+  const unsigned int axis_dir = axis_direction_target_reg(/*FACE_FOR_CONTROL*/FACE_FOR_TARGET);
    
    const double target_line = 0.5 + target_line_sign * offset_to_include_line; 
    
@@ -198,8 +206,10 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
   
   const double offset_to_include_line = 1.e-5;
   
-  double control_domain_width = 0.25;
+  const double control_domain_depth = LIFTING_INTERNAL_DEPTH;
   
+  const double control_domain_width_lower = LIFTING_INTERNAL_WIDTH_LOWER;
+  const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
    
    const int  target_line_sign = target_line_sign_func(FACE_FOR_CONTROL);
 
@@ -208,9 +218,9 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
    const unsigned int axis_dir = axis_direction_Gamma_control(FACE_FOR_CONTROL);
 
    
-   if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * ( extreme_pos + target_line_sign * control_domain_width ) )
-       && ( elem_center[axis_dir] > GAMMA_CONTROL_LOWER - offset_to_include_line ) 
-       && ( elem_center[axis_dir] < GAMMA_CONTROL_UPPER + offset_to_include_line ) )
+   if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * ( extreme_pos + target_line_sign * control_domain_depth ) )
+       && ( elem_center[axis_dir] > control_domain_width_lower - offset_to_include_line ) 
+       && ( elem_center[axis_dir] < control_domain_width_upper + offset_to_include_line ) )
       { control_el_flag = 1; }
    
      return control_el_flag;
