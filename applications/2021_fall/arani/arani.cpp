@@ -47,7 +47,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
     }
   else if (face_name == 2) {
       dirichlet = false;
-        value =1.;//Neumann value
+        value =0;//Neumann value
     }
 
     
@@ -70,7 +70,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   }
   else if (face_name == 4) {
       dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
+        value = 0 * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
   }
    
  
@@ -277,7 +277,8 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-   mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");
+//    mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");
+   mesh_files.push_back("mesh_cylinder_quadrilateral.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
