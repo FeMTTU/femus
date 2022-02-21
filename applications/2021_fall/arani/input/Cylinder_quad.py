@@ -125,17 +125,7 @@ Mesh_5.ConvertToQuadratic(0, Mesh_5,True)
 Mesh_6 = smesh.Concatenate( [ Mesh_2.GetMesh(), Mesh_1.GetMesh(), Mesh_3.GetMesh(), Mesh_4.GetMesh(), Mesh_5.GetMesh() ], 1, 1, 1e-05, False )
 Mesh_6.ExtrusionSweepObjects( [ Mesh_6 ], [ Mesh_6 ], [ Mesh_6 ], [ 0, 0, 2 ], 1, 1, [  ], 0, [  ], [  ], 0 )
 smesh.SetName(Mesh_6, 'Compound_Mesh_1')
-try:
-  Mesh_6.ExportMED(r'/home/student/software/femus/applications/2021_fall/arani/input/Cylinder_Quadrilateral.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=1)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
 smesh.SetName(Mesh_6, 'Mesh_6')
-try:
-  Mesh_6.ExportMED(r'/home/student/software/femus/applications/2021_fall/arani/input/mesh_cylinder_quadrilateral.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
 Group_1_0 = Mesh_6.CreateEmptyGroup( SMESH.FACE, 'Group_1_0' )
 nbAdd = Group_1_0.Add( [ 5, 10, 15, 20, 25 ] )
 [ Group_1_0 ] = Mesh_6.GetGroups()
@@ -146,11 +136,6 @@ Group_3_0 = Mesh_6.CreateEmptyGroup( SMESH.FACE, 'Group_3_0' )
 nbAdd = Group_3_0.Add( [ 12, 21, 31, 33 ] )
 [ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_6.GetGroups()
 smesh.SetName(Mesh_6, 'Mesh_6')
-try:
-  Mesh_6.ExportMED(r'/home/student/software/femus/applications/2021_fall/arani/input/mesh_cylinder_quadrilateral.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
 [ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_6.GetGroups()
 
 
