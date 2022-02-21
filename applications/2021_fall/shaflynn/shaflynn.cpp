@@ -276,8 +276,10 @@ int main(int argc, char** args) {
 
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
-   
-   mesh_files.push_back("Mesh_1_x_dir_neu.med");
+  
+   mesh_files.push_back("Mesh_1_assignment_1_triangular.med");
+   // mesh_files.push_back("Mesh_1_assignment_1_quadrangle.med");
+//   mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");

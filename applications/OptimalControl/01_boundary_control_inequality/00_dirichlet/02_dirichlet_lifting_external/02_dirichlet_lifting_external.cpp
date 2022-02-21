@@ -43,7 +43,7 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
  
  
 // //============ find interface boundary elements (now we do with coordinates, later we can do also with flag) =======================================
- bool find_control_boundary_nodes(std::vector<double> & interface_node_flag, const std::vector<double> & elem_center_bdry, const unsigned int nDofu_bdry, const unsigned int iel, const int jface, const Mesh * msh) {
+ bool find_control_boundary_nodes(std::vector<unsigned int> & interface_node_flag, const std::vector<double> & elem_center_bdry, const unsigned int nDofu_bdry, const unsigned int iel, const int jface, const Mesh * msh) {
    
   bool interface_elem_flag = false;
             const double my_eps = 1.e-6;
@@ -60,7 +60,7 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
                 
                 for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
                     unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-                    interface_node_flag[i_vol] = 1.;
+                    interface_node_flag[i_vol] = 1;
                    }
 
 
@@ -138,10 +138,12 @@ int main(int argc, char** args) {
     FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
     // ======= Files ========================
-    Files files;
-          files.CheckIODirectories(true);
-          files.RedirectCout(true);
-
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = true;
+  Files files; 
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
+ 
     // ======= Quad Rule ========================
     std::string fe_quad_rule("seventh");
     /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -272,6 +274,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
     const unsigned    iproc = msh->processor_id();
+  
+    
+    constexpr bool print_algebra_global = true;
+    constexpr bool print_algebra_local = true;
+  
+
 
 //***************************************************
   CurrentElem < double > geom_element(dim, msh); 
@@ -504,8 +512,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         
         //setting up control boundary region ***************************
         std::vector <bool> interface_elem_flag(n_faces);      for(unsigned j = 0; j < n_faces; j++) interface_elem_flag[j] = false;
-        std::vector <double> interface_node_flag(Sol_n_el_dofs[pos_state]);
-        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
+        std::vector <unsigned int> interface_node_flag(Sol_n_el_dofs[pos_state]);   ///@todo maybe it should be geometry-based
+        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0);
 
      for(unsigned jface = 0; jface < n_faces; jface++) {
             
@@ -575,8 +583,6 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     for (int iv = 0; iv < Sol_n_el_dofs[pos_adj]; iv++)  {
 
                         for (int d = 0; d < dim; d++) {
-//    std::cout << " ivol " << iv << std::endl;
-//    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
                             sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs[pos_adj][iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
                         }
                     }
@@ -673,11 +679,14 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
         }  //end boundary face loop
 
-        //************ Boundary loops ***************************************
 
-            for (unsigned j = 0; j < interface_node_flag.size(); j++) {
-                std::cout <<  " ** " << interface_node_flag[j] << " ";
-            }
+        
+        
+//             for (unsigned j = 0; j < interface_node_flag.size(); j++) {
+//                 std::cout <<  " ** " << interface_node_flag[j] << " ";
+//             }
+//             
+//            std::cout << std::endl; 
             
 
         for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
@@ -837,7 +846,6 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
             }
         }
 
-        for (unsigned i = 0; i < sol_actflag.size(); i++)        std::cout << " Res_mu = " << Res_mu[i] << std::endl;
      
         RES->insert(Res_mu, L2G_dofmap[pos_mu]);
 
@@ -854,9 +862,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
         KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag );
 
+     if (print_algebra_local) {
     assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
     assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
-    
+     }
+     
+     
     } //end element loop for each process
 
 
@@ -881,8 +892,17 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
      //print JAC and RES to files
     const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
-    assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
+  if (print_algebra_global) {
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, mlPdeSys->GetNonlinearIt());
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+
+  }
+//     assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
 
     return;
 }
