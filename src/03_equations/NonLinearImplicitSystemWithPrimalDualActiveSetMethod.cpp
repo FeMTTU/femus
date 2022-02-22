@@ -131,7 +131,7 @@ namespace femus {
 
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
-//***************
+//**** PREPARATION BEGIN***********
         clock_t start_preparation_time = clock();
         
    //---------------------
@@ -216,7 +216,7 @@ namespace femus {
         totalAssemblyTime += static_cast<double> ( (clock() - start_assembly_time)) / CLOCKS_PER_SEC;
         std::cout << "   ********* Level Max " << igridn + 1 << " PREPARATION TIME:\t" << \
                   static_cast<double> ( (clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
-//***************
+//**** PREPARATION END***********
                   
                   
         clock_t startUpdateResidualTime = clock();

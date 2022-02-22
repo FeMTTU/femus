@@ -269,18 +269,18 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
         std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
 
-        std::cout << " mu dofs " << std::endl;
-                for (unsigned i = 0; i < sol_actflag.size(); i++) {
-                std::cout << sol_eldofs[pos_mu][i] << " ";
-        }
+// // //         std::cout << " mu dofs " << std::endl;
+// // //                 for (unsigned i = 0; i < sol_actflag.size(); i++) {
+// // //                 std::cout << sol_eldofs[pos_mu][i] << " ";
+// // //         }
+// // //         
+// // //         std::cout << std::endl;
         
-        std::cout << std::endl;
-        
-        std::cout << " ctrl dofs " << std::endl;
-        for (unsigned i = 0; i < sol_actflag.size(); i++) {
-                std::cout << sol_eldofs[pos_ctrl][i] << " ";
-        }
-        std::cout << std::endl;
+// // //         std::cout << " ctrl dofs " << std::endl;
+// // //         for (unsigned i = 0; i < sol_actflag.size(); i++) {
+// // //                 std::cout << sol_eldofs[pos_ctrl][i] << " ";
+// // //         }
+// // //         std::cout << std::endl;
         
         for (unsigned i = 0; i < sol_actflag.size(); i++) {
             std::vector<double> node_coords_i(dim, 0.);
