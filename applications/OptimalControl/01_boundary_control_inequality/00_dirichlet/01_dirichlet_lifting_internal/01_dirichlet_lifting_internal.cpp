@@ -920,21 +920,17 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
   
  //***************** control ************************* 
     unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
-    sol_ctrl    .resize(nDof_ctrl);
     l2GMap_ctrl.resize(nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
       unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
-      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
       l2GMap_ctrl[i] = pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);
     } 
  //*************************************************** 
  //************** mu **************************** 
     unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);
-    sol_mu   .resize(nDof_mu);
     l2GMap_mu.resize(nDof_mu);
     for (unsigned i = 0; i < sol_mu.size(); i++) {
       unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);
-      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);
     }
  //***************************************************  
@@ -945,14 +941,14 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
       
     for (unsigned i = 0; i < sol_actflag.size(); i++) {
       if (sol_actflag[i] == 0){  //inactive
-         Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
+         Res_mu [i] = - ineq_flag * ( 1. * sol_eldofs_Mat[pos_mat_mu][i] - 0. ); 
 // 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower[i]);
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_lower[i]);
       }
       else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper[i]);
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_upper[i]);
       }
     }
 //          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper[i] - sol_ctrl[i])  ) ;
@@ -976,12 +972,12 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
  //============= delta_mu-delta_ctrl row ===============================
  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
   
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag); }
 
  //============= delta_mu-delta_mu row ===============================
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =   ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
-   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
+  if (assembleMatrix) {    KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );  }
   
   
   //============= node insertion end

@@ -65,7 +65,7 @@ namespace femus {
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper =  1000.;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper =  0.1000;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -431,17 +431,17 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     
  //============= delta_mu-delta_ctrl row ===============================
  //auxiliary volume vector for act flag
- unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
- std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+//  unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
+//  std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
 
 
  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
  
- std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
-       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
-    }
+//  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+//     for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+//        unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+//        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+//     }
  
 //  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_ctrl_bdry, sol_actflag); }
@@ -454,11 +454,11 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  
   for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
- std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
-       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
-    }
+//  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+//     for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+//        unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+//        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+//     }
   
 //   KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
   if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_mu_bdry, sol_actflag);  }
