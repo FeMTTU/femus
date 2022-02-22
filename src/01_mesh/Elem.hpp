@@ -16,26 +16,26 @@
 #ifndef __femus_mesh_Elem_hpp__
 #define __femus_mesh_Elem_hpp__
 
-#include <vector>
-#include <map>
 
-#include "Mesh.hpp"
-#include "NumericVector.hpp"
-
+#include "GeomElTypeEnum.hpp"
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
 #include "Basis.hpp"
 #include "PolynomialBases.hpp"
 
+
+#include <vector>
+#include <map>
+
+
 namespace femus {
 
+  //Forward declarations  
   class basis;
-  
   class Mesh;
-  
-  class NumericVector;
   /**
-   * The elem class
+   * The elem class: it contains the list of all Mesh Geometric Elements, along with several Element-based and also Node-based properties
+   * @todo I believe it would even be more linear if this class did not have any function at all involving the Mesh pointer, there are very few in any case
   */
   class elem {
 
@@ -43,15 +43,15 @@ namespace femus {
     public:
 
       /** constructors */
-      elem(const unsigned& other_nel);
+      elem(const unsigned& other_nel, const unsigned dim_in);
 
       //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
-      elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
-
-      void ShrinkToFit();
+      elem(elem* elc, const unsigned dim_in, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
 
       /** destructor */
       ~elem();
+
+      void ShrinkToFit();
 
       void ScatterElementNearFace();
       void LocalizeElementNearFace(const unsigned& jproc);
@@ -165,6 +165,11 @@ namespace femus {
 
       void BuildElementNearElement();
 
+      /** To be added */
+      void BuildElementNearFace();
+
+      void BuildMeshElemStructures();
+      
       const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers)  {
         return (layers == 0) ? 1 : _elementNearElement.end(iel);
       };
@@ -178,21 +183,25 @@ namespace femus {
       void SetElementLevel(const unsigned& iel, const short unsigned& level) {
         _elementLevel[iel] = level;
       }
+      
       short unsigned GetElementLevel(const unsigned &jel) {
         return _elementLevel[jel];
       }
+      
       void ScatterElementQuantities() {
         _elementLevel.scatter(_elementOffset);
         _elementType.scatter(_elementOffset);
         _elementMaterial.scatter(_elementOffset);
         _elementGroup.scatter(_elementOffset);
       }
+      
       void LocalizeElementQuantities(const unsigned &lproc) {
         _elementLevel.broadcast(lproc);
         _elementType.broadcast(lproc);
         _elementMaterial.broadcast(lproc);
         _elementGroup.broadcast(lproc);
       }
+      
       void FreeLocalizedElementQuantities() {
         _elementLevel.clearBroadcast();
         _elementType.clearBroadcast();
@@ -243,20 +252,34 @@ namespace femus {
         return _materialElementCounter;
       }
       
+      /** To be Added */
+      unsigned GetDimension() const { return _dim; }
+
       
     private:
 
-      elem* _coarseElem;
-            
       unsigned _iproc;
       unsigned _nprocs;
 
-      unsigned _nvt;
-      unsigned _nel, _nelt[6];
-      unsigned _nelr;
-      unsigned _ngroup;
+      /** Pointer to the list of coarser elements */
+      elem* _coarseElem;
+      /** level of refinement of this list of elements */
       unsigned _level;
+            
+      /** Dimension of the underlying Mesh */
+      unsigned _dim;
+      /** Number of nodes of the Mesh */
+      unsigned _nvt;
+      /** Number of elements of the Mesh */
+      unsigned _nel;
+      /** Number of elements of the Mesh for each Geometric type */
+      unsigned _nelt[N_GEOM_ELS];
+      /** Number of refined elements */
+      unsigned _nelr;
+      /** @todo group of all elements - seems to be unused */
+      unsigned _ngroup;
 
+      /** @todo Same as in Mesh, see if we can avoid duplication */
       std::vector < unsigned > _elementOffset;
       unsigned _elementOwned;
 
@@ -264,21 +287,31 @@ namespace femus {
       MyVector< short unsigned> _elementType;
       MyVector< short unsigned> _elementGroup;
       MyVector< short unsigned> _elementMaterial;
+      /** Volume elements, 3 types of material */
       std::vector<unsigned> _materialElementCounter;
 
+      /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
-      MyMatrix <int> _elementNearFace;  ///@todo this is about the elements attached to each face, but it is used for BCs as well
+      /** @todo this is about the elements attached to each face. It is used for BCs as well */
+      MyMatrix <int> _elementNearFace;
 
+      /** This is only going to all levels except the finest one  @todo I think it contains for each element the list of its child elements */
       MyMatrix <unsigned> _childElem;
+      /** This is only going to all levels except the finest one */
       MyMatrix <unsigned> _childElemDof;
 
-      MyMatrix <unsigned> _elementNearVertex;      // number of elements which have a given vertex
+      /** For each Node, it gives the list of elements having that Node as a vertex 
+        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
+      MyMatrix <unsigned> _elementNearVertex;
+      /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
+        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
       MyMatrix <unsigned> _elementNearElement;
 
   };
+  
 
 //linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
-  const unsigned NVE[6][5] = {
+  const unsigned NVE[N_GEOM_ELS][5] = {
     {8, 20, 27, 1, 4}, //hex
     {4, 10, 15, 1, 4}, //tet
     {6, 15, 21, 1, 4}, //wedge
@@ -290,14 +323,14 @@ namespace femus {
   /**
    * Number of elements obtained with one refinement
   **/
-  const unsigned NRE[6] = {8, 8, 8, 4, 4, 2};
+  const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
 
   /**
    * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
    * The 1st number is the quadrilaterals
    * The 2nd number is such that the different "2nd - 1st" is the number of triangular faces
    **/
-  const unsigned NFC[6][2] = {
+  const unsigned NFC[N_GEOM_ELS][2] = {
     {6, 6},
     {0, 4},
     {3, 5},
@@ -309,7 +342,7 @@ namespace femus {
   /**
    * Node ordering for each element face(3D), edge(2D) or point-extrema(1D) position for each considered element
    **/
-  const unsigned ig[6][6][9] = {
+  const unsigned ig[N_GEOM_ELS][6][9] = {
     { {0, 1, 5, 4, 8, 17, 12, 16, 20},
       {1, 2, 6, 5, 9, 18, 13, 17, 21},
       {2, 3, 7, 6, 10, 19, 14, 18, 22},
@@ -343,7 +376,7 @@ namespace femus {
   };
 
 
-  const unsigned NFACENODES[6][6][3] = {
+  const unsigned NFACENODES[N_GEOM_ELS][6][3] = {
     { {4, 8, 9}, // Hex
       {4, 8, 9},
       {4, 8, 9},
@@ -380,7 +413,7 @@ namespace femus {
 } //end namespace femus
 
 
-const unsigned referenceElementDirection[6][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
+const unsigned referenceElementDirection[N_GEOM_ELS][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
   {
     {23, 21}, {20, 22}, {24, 25}
   },
