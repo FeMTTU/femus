@@ -924,16 +924,16 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                    );
    
 
-  
+       }
+
  
     
     
  //============= delta_ctrl-delta_mu row ===============================
   if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }
-     }
   
   
-  } //end element loop for each process
+  }
 //   ***************** INSERT PART - END (must go AFTER the sum, clearly) *******************
   
   RES->close();
