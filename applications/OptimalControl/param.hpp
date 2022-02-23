@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS 3 
+#define N_UNIFORM_LEVELS 4 
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -32,11 +32,11 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 0.00000001 
+#define ALPHA_CTRL_BDRY 0.001 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 
-#define ALPHA_CTRL_VOL 0.00000001 
+#define ALPHA_CTRL_VOL 0.001 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
 
 
@@ -65,7 +65,7 @@ namespace femus {
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper =  0.2;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper =  1000.;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
