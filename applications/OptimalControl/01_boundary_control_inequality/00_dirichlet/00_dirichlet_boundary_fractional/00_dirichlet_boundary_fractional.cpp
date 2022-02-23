@@ -1434,7 +1434,8 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                       ineq_flag,
                       c_compl,
                       ctrl_lower, ctrl_upper,
-                      KK, RES,
+                      KK, 
+                      RES,
                       assembleMatrix
                       );
   

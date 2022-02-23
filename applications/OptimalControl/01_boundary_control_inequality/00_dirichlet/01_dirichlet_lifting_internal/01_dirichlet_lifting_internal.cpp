@@ -622,13 +622,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
 													      /*+ ineq_flag * sol_mu_gss*/ ); }
-	      else if ( control_el_flag == 0) { Res[nDof_u + i] +=   (- penalty_outside_control_domain) *  (1 - control_node_flag[i]) * (sol_ctrl[i] - 0.); }
+	      else if ( control_el_flag == 0) { Res[nDof_u + i] +=   (- penalty_outside_control_domain) /* *  (1 - control_node_flag[i])*/ * (sol_ctrl[i] - 0.); }
 	  }
           // THIRD ROW
           if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i ) ;
 
        if (i < nDof_mu)  {
-            if ( control_el_flag == 0) {  Res[nDof_u + nDof_ctrl + nDof_adj + i] +=   (- penalty_outside_control_domain) *  (1 - control_node_flag[i]) * (sol_mu[i] - 0.); }
+            if ( control_el_flag == 0) {  Res[nDof_u + nDof_ctrl + nDof_adj + i] +=   (- penalty_outside_control_domain) /**  (1 - control_node_flag[i])*/ * (sol_mu[i] - 0.); }
        }
        
            
@@ -681,8 +681,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl   )
 		Jac[ (nDof_u + i) * nDof_AllVars +
-		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * weight * ( beta * control_el_flag  * laplace_mat_dctrl_ctrl 
-		                                                                                + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] 
+		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * weight * ( beta * /*control_el_flag  **/ laplace_mat_dctrl_ctrl 
+		                                                                                + alpha * /*control_el_flag **/ phi_ctrl[i] * phi_ctrl[j] 
 		                                                                                            + target_flag * phi_ctrl[i] * phi_ctrl[j] );
               
 	      //BLOCK delta_control - adjoint
@@ -697,7 +697,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
 		 Jac[ (nDof_u + i) * nDof_AllVars +
-		      (nDof_u + j)                      ]  +=  penalty_outside_control_domain * (1 - control_node_flag[i]);
+		      (nDof_u + j)                      ]  +=  penalty_outside_control_domain/* * (1 - control_node_flag[i])*/;
 		}
 	      
 	      }
@@ -729,7 +729,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //============= delta_mu row ===============================
                 if ( i < nDof_mu && j < nDof_mu && i==j )  {   
 	        if ( control_el_flag == 0)  {  
-		  Jac[   (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +  (nDof_u + nDof_ctrl + nDof_adj + j) ]  += penalty_outside_control_domain * (1 - control_node_flag[i]);    //MU
+		  Jac[   (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +  (nDof_u + nDof_ctrl + nDof_adj + j) ]  += penalty_outside_control_domain /** (1 - control_node_flag[i])*/;    //MU
                 }
 	      }
 	      
@@ -865,6 +865,9 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
 
 // -------
    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+      
+   geom_element_iel.set_elem_center_3d(iel, solType_coords);
+// -------
    
 // -------
     el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
@@ -874,126 +877,64 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                         Sol_n_el_dofs_Mat_vol,
                         sol_eldofs_Mat,
                         L2G_dofmap_Mat);
-
-    ///@todo add restriction to only volume control lifting elements
       
-//=============   update_active_set BEGIN
-//=============   update_active_set 
-//=============   update_active_set 
+    //***** set control flag ****************************
+  int control_el_flag = 0;
+  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
-//   update_active_set_flag_for_current_nonlinear_iteration
-//   (msh,
-//    sol,
-//    iel,
-//    geom_element_iel.get_coords_at_dofs_3d()/*coords_at_dofs*/,
-//    sol_eldofs_Mat,
-//    Sol_n_el_dofs_Mat_vol,
-//    pos_mat_mu,
-//    pos_mat_ctrl,
-//    c_compl,
-//    ctrl_lower,
-//    ctrl_upper,
-//    sol_actflag,
-//    solFEType_act_flag_sol,
-//    solIndex_act_flag_sol);
     
+    if (control_el_flag == 1) {
+
+        
+  update_active_set_flag_for_current_nonlinear_iteration
+  (msh,
+   sol,
+   iel,
+   geom_element_iel.get_coords_at_dofs/*_3d*/(),
+   sol_eldofs_Mat,
+   Sol_n_el_dofs_Mat_vol,
+   pos_mat_mu,
+   pos_mat_ctrl,
+   c_compl,
+   ctrl_lower,
+   ctrl_upper,
+   sol_actflag,
+   solFEType_act_flag_sol,
+   solIndex_act_flag_sol);
+  
       
-      
- // 0: inactive; 1: active_a; 2: active_b
-   assert(Sol_n_el_dofs_Mat_vol[pos_mat_mu] == Sol_n_el_dofs_Mat_vol[pos_mat_ctrl]);
-   sol_actflag.resize(Sol_n_el_dofs_Mat_vol[pos_mat_mu]);
-   ctrl_lower.resize(Sol_n_el_dofs_Mat_vol[pos_mat_mu]);
-   ctrl_upper.resize(Sol_n_el_dofs_Mat_vol[pos_mat_mu]);
-     std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-     std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
-     std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+
+
+    node_insertion(iel,
+                   msh,
+                   L2G_dofmap_Mat,
+                   pos_mat_mu,
+                   pos_mat_ctrl,
+                   sol_eldofs_Mat,
+                   Sol_n_el_dofs_Mat_vol,
+                   sol_actflag,
+                   solFEType_act_flag_sol,
+                   ineq_flag,
+                   c_compl,
+                   ctrl_lower,
+                   ctrl_upper,
+                   KK,
+                   RES,
+                   assembleMatrix
+                   );
    
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-        std::vector<double> node_coords_i(dim, 0.);
-        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = geom_element_iel.get_coords_at_dofs()[d][i];
-        ctrl_lower[i] = InequalityConstraint(node_coords_i, false);
-        ctrl_upper[i] = InequalityConstraint(node_coords_i, true);
 
-        if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
-        else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
-    }
+       }
 
- //************** act flag **************************** 
-    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag_sol);    // number of solution element dofs
-    
-    for (unsigned i = 0; i < nDof_act_flag; i++) {
-      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag_sol); 
-      (sol->_Sol[solIndex_act_flag_sol])->set(solDof_mu, sol_actflag[i]);     
-    }    
-   
-   
-   
-//=============   update_active_set 
-//=============   update_active_set 
-//=============   update_active_set END
-    
-      
-      
-
-//============= node insertion BEGIN
-  //============= node insertion begin
-  //============= node insertion begin
-      
-      
- //============= delta_mu row ===============================
-      std::vector<double> Res_mu (sol_actflag.size()); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
-      
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i] == 0){  //inactive
-         Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
-// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
-      }
-      else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower[i]);
-      }
-      else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper[i]);
-      }
-    }
-//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper[i] - sol_ctrl[i])  ) ;
-//          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
-
-    
-    RES->insert(Res_mu, l2GMap_mu);
-//     RES->insert(Res_ctrl, l2GMap_ctrl);
-//     RES->insert(Res_u, l2GMap_u);
-//     RES->insert(Res_adj, l2GMap_adj);
-    
-//  //============= delta_state-delta_state row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
-
-//  //============= delta_ctrl-delta_ctrl row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_ctrl, 1.);
  
-//  //============= delta_adj-delta_adj row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
-  
- //============= delta_mu-delta_ctrl row ===============================
- for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
-  
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
-
- //============= delta_mu-delta_mu row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
-
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
-  
-  
-  //============= node insertion end
-  //============= node insertion end
-  //============= node insertion END
-  
+    
+    
  //============= delta_ctrl-delta_mu row ===============================
-  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.); }//------------------------------->>>>>>
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }
   
   
-  
-  } //end element loop for each process
+  }
+//   ***************** INSERT PART - END (must go AFTER the sum, clearly) *******************
   
   RES->close();
 

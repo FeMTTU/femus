@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS 1 
+#define N_UNIFORM_LEVELS 3 
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -65,7 +65,7 @@ namespace femus {
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper =  1000.;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper =  0.2;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -269,18 +269,18 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
         std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
 
-        std::cout << " mu dofs " << std::endl;
-                for (unsigned i = 0; i < sol_actflag.size(); i++) {
-                std::cout << sol_eldofs[pos_mu][i] << " ";
-        }
+// // //         std::cout << " mu dofs " << std::endl;
+// // //                 for (unsigned i = 0; i < sol_actflag.size(); i++) {
+// // //                 std::cout << sol_eldofs[pos_mu][i] << " ";
+// // //         }
+// // //         
+// // //         std::cout << std::endl;
         
-        std::cout << std::endl;
-        
-        std::cout << " ctrl dofs " << std::endl;
-        for (unsigned i = 0; i < sol_actflag.size(); i++) {
-                std::cout << sol_eldofs[pos_ctrl][i] << " ";
-        }
-        std::cout << std::endl;
+// // //         std::cout << " ctrl dofs " << std::endl;
+// // //         for (unsigned i = 0; i < sol_actflag.size(); i++) {
+// // //                 std::cout << sol_eldofs[pos_ctrl][i] << " ";
+// // //         }
+// // //         std::cout << std::endl;
         
         for (unsigned i = 0; i < sol_actflag.size(); i++) {
             std::vector<double> node_coords_i(dim, 0.);
@@ -431,17 +431,17 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     
  //============= delta_mu-delta_ctrl row ===============================
  //auxiliary volume vector for act flag
- unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
- std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+//  unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
+//  std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
 
 
  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
  
- std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
-       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
-    }
+//  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+//     for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+//        unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+//        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+//     }
  
 //  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_ctrl_bdry, sol_actflag); }
@@ -454,11 +454,11 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  
   for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
- std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
-       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
-    }
+//  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+//     for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+//        unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+//        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+//     }
   
 //   KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
   if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_mu_bdry, sol_actflag);  }
@@ -466,6 +466,90 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
   
 
 }
+
+
+
+
+ void node_insertion(const unsigned int iel,
+                         const   Mesh* msh,
+                         const     vector < vector < int > > & L2G_dofmap_Mat,
+                         const unsigned int pos_mat_mu,
+                         const unsigned int pos_mat_ctrl,
+                         const std::vector < std::vector < double > > & sol_eldofs_Mat,
+                         const std::vector < unsigned int > & Sol_n_el_dofs,
+                         std::vector < double > & sol_actflag,
+                         const unsigned int solFEType_act_flag,
+                         const double ineq_flag,
+                         const double c_compl,
+                         const std::vector < double > & ctrl_lower,
+                         const std::vector < double > & ctrl_upper,
+                         SparseMatrix*             KK,
+                         NumericVector* RES,
+                          const bool assembleMatrix
+                        ) {
+     
+     
+     
+      //*************************************************** 
+    std::vector < int > l2GMap_mu(sol_actflag.size());
+    std::vector < int > l2GMap_ctrl(sol_actflag.size());
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
+      l2GMap_mu[i]   = L2G_dofmap_Mat[pos_mat_mu][i];   //pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);
+      l2GMap_ctrl[i] = L2G_dofmap_Mat[pos_mat_ctrl][i]; //pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);
+    } 
+ //*************************************************** 
+
+ //============= delta_mu row ===============================
+      std::vector<double> Res_mu (sol_actflag.size()); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+      
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
+      if (sol_actflag[i] == 0){  //inactive
+         Res_mu [i] = - ineq_flag * ( 1. * sol_eldofs_Mat[pos_mat_mu][i] - 0. ); 
+// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else if (sol_actflag[i] == 1){  //active_a 
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_lower[i]);
+      }
+      else if (sol_actflag[i] == 2){  //active_b 
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_upper[i]);
+      }
+    }
+//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper[i] - sol_ctrl[i])  ) ;
+//          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+
+    
+    RES->insert(Res_mu, l2GMap_mu);
+//     RES->insert(Res_ctrl, l2GMap_ctrl);
+//     RES->insert(Res_u, l2GMap_u);
+//     RES->insert(Res_adj, l2GMap_adj);
+    
+//  //============= delta_state-delta_state row ===============================
+//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
+
+//  //============= delta_ctrl-delta_ctrl row ===============================
+//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_ctrl, 1.);
+ 
+//  //============= delta_adj-delta_adj row ===============================
+//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
+  
+ //============= delta_mu-delta_ctrl row ===============================
+ for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
+  
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag); }
+
+ //============= delta_mu-delta_mu row ===============================
+  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =   ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
+
+  if (assembleMatrix) {    KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );  }
+  
+
+     
+     
+
+
+
+ }
+
 
 
 ///@todo This is being added to a weak form?
