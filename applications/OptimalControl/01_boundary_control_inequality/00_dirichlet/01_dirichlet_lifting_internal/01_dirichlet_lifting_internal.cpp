@@ -877,8 +877,6 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                         Sol_n_el_dofs_Mat_vol,
                         sol_eldofs_Mat,
                         L2G_dofmap_Mat);
-
-    ///@todo add restriction to only volume control lifting elements
       
     //***** set control flag ****************************
   int control_el_flag = 0;
@@ -886,15 +884,13 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
  
     
     if (control_el_flag == 1) {
-//=============   update_active_set BEGIN
-//=============   update_active_set 
-//=============   update_active_set 
- 
+
+        
   update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
-   geom_element_iel.get_coords_at_dofs/*_3d*/()/*coords_at_dofs*/,
+   geom_element_iel.get_coords_at_dofs/*_3d*/(),
    sol_eldofs_Mat,
    Sol_n_el_dofs_Mat_vol,
    pos_mat_mu,
@@ -905,93 +901,40 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
    sol_actflag,
    solFEType_act_flag_sol,
    solIndex_act_flag_sol);
-
-//=============   update_active_set 
-//=============   update_active_set 
-//=============   update_active_set END
-    
-      
+  
       
 
-//============= node insertion BEGIN
-  //============= node insertion begin
-  //============= node insertion begin
+
+    node_insertion(iel,
+                   msh,
+                   L2G_dofmap_Mat,
+                   pos_mat_mu,
+                   pos_mat_ctrl,
+                   sol_eldofs_Mat,
+                   Sol_n_el_dofs_Mat_vol,
+                   sol_actflag,
+                   solFEType_act_flag_sol,
+                   ineq_flag,
+                   c_compl,
+                   ctrl_lower,
+                   ctrl_upper,
+                   KK,
+                   RES,
+                   assembleMatrix
+                   );
+   
 
   
- //***************** control ************************* 
-    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
-    l2GMap_ctrl.resize(nDof_ctrl);
-    for (unsigned i = 0; i < sol_ctrl.size(); i++) {
-      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
-      l2GMap_ctrl[i] = pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);
-    } 
- //*************************************************** 
- //************** mu **************************** 
-    unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);
-    l2GMap_mu.resize(nDof_mu);
-    for (unsigned i = 0; i < sol_mu.size(); i++) {
-      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);
-      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);
-    }
- //***************************************************  
-
  
- //============= delta_mu row ===============================
-      std::vector<double> Res_mu (sol_actflag.size()); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
-      
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i] == 0){  //inactive
-         Res_mu [i] = - ineq_flag * ( 1. * sol_eldofs_Mat[pos_mat_mu][i] - 0. ); 
-// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
-      }
-      else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_lower[i]);
-      }
-      else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_upper[i]);
-      }
-    }
-//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper[i] - sol_ctrl[i])  ) ;
-//          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
-
-    
-    RES->insert(Res_mu, l2GMap_mu);
-//     RES->insert(Res_ctrl, l2GMap_ctrl);
-//     RES->insert(Res_u, l2GMap_u);
-//     RES->insert(Res_adj, l2GMap_adj);
-    
-//  //============= delta_state-delta_state row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
-
-//  //============= delta_ctrl-delta_ctrl row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_ctrl, 1.);
- 
-//  //============= delta_adj-delta_adj row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
-  
- //============= delta_mu-delta_ctrl row ===============================
- for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
-  
-  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag); }
-
- //============= delta_mu-delta_mu row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =   ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
-
-  if (assembleMatrix) {    KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );  }
-  
-  
-  //============= node insertion end
-  //============= node insertion end
-  //============= node insertion END
-    }
     
     
  //============= delta_ctrl-delta_mu row ===============================
-  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.); }//------------------------------->>>>>>
-  
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }
+     }
   
   
   } //end element loop for each process
+//   ***************** INSERT PART - END (must go AFTER the sum, clearly) *******************
   
   RES->close();
 
