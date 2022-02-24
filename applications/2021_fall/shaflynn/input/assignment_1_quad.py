@@ -110,6 +110,7 @@ Face_3 = geompy.MakeFaceWires([Edge_6, Edge_7, Edge_8, Edge_9], 1)
 [Edge_14, Edge_15, Edge_16, Edge_17] = geompy.GetExistingSubObjects(Face_2, False)
 [Edge_18, Edge_19, Edge_20, Edge_21] = geompy.GetExistingSubObjects(Face_3, False)
 [Edge_18, Edge_19, Edge_20, Edge_21] = geompy.GetExistingSubObjects(Face_3, False)
+[Edge_18, Edge_19, Edge_20, Edge_21] = geompy.GetExistingSubObjects(Face_3, False)
 geompy.addToStudy( O, 'O' )
 geompy.addToStudy( OX, 'OX' )
 geompy.addToStudy( OY, 'OY' )
@@ -171,6 +172,8 @@ Number_of_Segments_2 = smesh.CreateHypothesis('NumberOfSegments')
 Number_of_Segments_2.SetNumberOfSegments( 15 )
 Number_of_Segments_3 = smesh.CreateHypothesis('NumberOfSegments')
 Number_of_Segments_3.SetNumberOfSegments( 15 )
+NETGEN_2D = smesh.CreateHypothesis('NETGEN_Remesher_2D', 'NETGENEngine')
+MG_CADSurf = smesh.CreateHypothesis('MG-CADSurf_NOGEOM', 'BLSURFEngine')
 try:
   pass
 except:
@@ -197,20 +200,7 @@ try:
 except:
   print('ExportMED() failed. Invalid file name?')
 s_Mesh_1 = smesh.Mesh(Face_1)
-Edge_10_1 = s_Mesh_1.GroupOnGeom(Edge_10,'Edge_10',SMESH.EDGE)
-Edge_11_1 = s_Mesh_1.GroupOnGeom(Edge_11,'Edge_11',SMESH.EDGE)
-Edge_12_1 = s_Mesh_1.GroupOnGeom(Edge_12,'Edge_12',SMESH.EDGE)
-Edge_13_1 = s_Mesh_1.GroupOnGeom(Edge_13,'Edge_13',SMESH.EDGE)
 s_Mesh_2 = smesh.Mesh(Face_2)
-Edge_14_1 = s_Mesh_2.GroupOnGeom(Edge_14,'Edge_14',SMESH.EDGE)
-Edge_15_1 = s_Mesh_2.GroupOnGeom(Edge_15,'Edge_15',SMESH.EDGE)
-Edge_16_1 = s_Mesh_2.GroupOnGeom(Edge_16,'Edge_16',SMESH.EDGE)
-Edge_17_1 = s_Mesh_2.GroupOnGeom(Edge_17,'Edge_17',SMESH.EDGE)
-s_Mesh_3 = smesh.Mesh(Face_3)
-Edge_18_1 = s_Mesh_3.GroupOnGeom(Edge_18,'Edge_18',SMESH.EDGE)
-Edge_19_1 = s_Mesh_3.GroupOnGeom(Edge_19,'Edge_19',SMESH.EDGE)
-Edge_20_1 = s_Mesh_3.GroupOnGeom(Edge_20,'Edge_20',SMESH.EDGE)
-Edge_21_1 = s_Mesh_3.GroupOnGeom(Edge_21,'Edge_21',SMESH.EDGE)
 Number_of_Segments_4 = smesh.CreateHypothesis('NumberOfSegments')
 Number_of_Segments_4.SetNumberOfSegments( "n_q" )
 status = s_Mesh_1.AddHypothesis(Regular_1D,Edge_10)
@@ -231,7 +221,6 @@ status = s_Mesh_1.AddHypothesis(Regular_1D)
 status = s_Mesh_1.AddHypothesis(Number_of_Segments_5)
 status = s_Mesh_1.AddHypothesis(Quadrangle_2D)
 isDone = s_Mesh_1.Compute()
-[ Edge_10_1, Edge_11_1, Edge_12_1, Edge_13_1 ] = s_Mesh_1.GetGroups()
 Number_of_Segments_6 = smesh.CreateHypothesis('NumberOfSegments')
 Number_of_Segments_6.SetNumberOfSegments( "n_s" )
 status = s_Mesh_2.AddHypothesis(Regular_1D,Edge_14)
@@ -243,13 +232,77 @@ Number_of_Segments_7.SetNumberOfSegments( 15 )
 status = s_Mesh_2.AddHypothesis(Regular_1D)
 status = s_Mesh_2.AddHypothesis(Number_of_Segments_7)
 status = s_Mesh_2.AddHypothesis(Quadrangle_2D)
-[ Edge_14_1, Edge_15_1, Edge_16_1, Edge_17_1 ] = s_Mesh_2.GetGroups()
 status = s_Mesh_2.AddHypothesis(Number_of_Segments_4,Edge_14)
 status = s_Mesh_2.AddHypothesis(Number_of_Segments_4,Edge_16)
 status = s_Mesh_2.AddHypothesis(Number_of_Segments_4,Edge_15)
 status = s_Mesh_2.AddHypothesis(Number_of_Segments_4,Edge_17)
 isDone = s_Mesh_2.Compute()
-[ Edge_14_1, Edge_15_1, Edge_16_1, Edge_17_1 ] = s_Mesh_2.GetGroups()
+Number_of_Segments_8 = smesh.CreateHypothesis('NumberOfSegments')
+Number_of_Segments_8.SetNumberOfSegments( 15 )
+smesh.SetName(s_Mesh_1, 'Mesh_1')
+try:
+  s_Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_2_xy_assignment1_quadrangle.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=1)
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+smesh.SetName(s_Mesh_1, 'Mesh_1')
+try:
+  s_Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_2_xy_assignment1_quadrangle.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=0)
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+s_Mesh_2.ConvertToQuadratic(0, s_Mesh_2,True)
+#smeshObj_4.SetName( 'Group_1_0' ) ### not created Object
+#smeshObj_5.SetName( 'Group_2_0' ) ### not created Object
+#smeshObj_6.SetName( 'Group_3_0' ) ### not created Object
+#smeshObj_7.SetName( 'Group_4_0' ) ### not created Object
+#smeshObj_8.SetName( 'Group_5_0' ) ### not created Object
+#smeshObj_9.SetName( 'Group_6_0' ) ### not created Object
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+try:
+  pass
+except:
+  #print('ExportMED() failed. Invalid file name?') ### not created Object
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+s_Mesh_3 = smesh.Mesh(Face_3)
+Edge_18_1 = s_Mesh_3.GroupOnGeom(Edge_18,'Edge_18',SMESH.EDGE)
+Edge_19_1 = s_Mesh_3.GroupOnGeom(Edge_19,'Edge_19',SMESH.EDGE)
+Edge_20_1 = s_Mesh_3.GroupOnGeom(Edge_20,'Edge_20',SMESH.EDGE)
+Edge_21_1 = s_Mesh_3.GroupOnGeom(Edge_21,'Edge_21',SMESH.EDGE)
 status = s_Mesh_3.AddHypothesis(Regular_1D,Edge_18)
 status = s_Mesh_3.AddHypothesis(Number_of_Segments_4,Edge_18)
 status = s_Mesh_3.AddHypothesis(Regular_1D,Edge_19)
@@ -258,54 +311,36 @@ status = s_Mesh_3.AddHypothesis(Regular_1D,Edge_20)
 status = s_Mesh_3.AddHypothesis(Number_of_Segments_4,Edge_20)
 status = s_Mesh_3.AddHypothesis(Regular_1D,Edge_21)
 status = s_Mesh_3.AddHypothesis(Number_of_Segments_4,Edge_21)
-Number_of_Segments_8 = smesh.CreateHypothesis('NumberOfSegments')
-Number_of_Segments_8.SetNumberOfSegments( 15 )
+Number_of_Segments_9 = smesh.CreateHypothesis('NumberOfSegments')
+Number_of_Segments_9.SetNumberOfSegments( 15 )
 status = s_Mesh_3.AddHypothesis(Regular_1D)
-status = s_Mesh_3.AddHypothesis(Number_of_Segments_8)
+status = s_Mesh_3.AddHypothesis(Number_of_Segments_9)
 status = s_Mesh_3.AddHypothesis(Quadrangle_2D)
 isDone = s_Mesh_3.Compute()
 [ Edge_18_1, Edge_19_1, Edge_20_1, Edge_21_1 ] = s_Mesh_3.GetGroups()
-Mesh_1 = smesh.Concatenate( [ s_Mesh_1.GetMesh(), s_Mesh_2.GetMesh(), s_Mesh_3.GetMesh() ], 1, 1, 1e-05, True )
-#Mesh_1.RemoveGroup( smeshObj_4 ) ### smeshObj_4 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_5 ) ### smeshObj_5 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_6 ) ### smeshObj_6 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_7 ) ### smeshObj_7 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_8 ) ### smeshObj_8 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_9 ) ### smeshObj_9 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_10 ) ### smeshObj_10 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_11 ) ### smeshObj_11 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_12 ) ### smeshObj_12 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_13 ) ### smeshObj_13 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_14 ) ### smeshObj_14 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_15 ) ### smeshObj_15 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_16 ) ### smeshObj_16 has not been yet created
-Mesh_1.ConvertToQuadratic(1, Mesh_1,True)
-#Mesh_1.RemoveGroup( smeshObj_17 ) ### smeshObj_17 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_18 ) ### smeshObj_18 has not been yet created
-#Mesh_1.RemoveGroup( smeshObj_19 ) ### smeshObj_19 has not been yet created
+s_Mesh_3.ConvertToQuadratic(0, s_Mesh_3,True)
+try:
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+Mesh_1 = smesh.Concatenate( [ s_Mesh_1.GetMesh(), s_Mesh_2.GetMesh(), s_Mesh_3.GetMesh() ], 1, 1, 1e-05, False )
+[ Edge_18_2, Edge_19_2, Edge_20_2, Edge_21_2 ] = Mesh_1.GetGroups()
+aCriteria = []
+aCriterion = smesh.GetCriterion(SMESH.EDGE,SMESH.FT_FreeBorders,SMESH.FT_Undefined,0,SMESH.FT_LogicalNOT)
+aCriteria.append(aCriterion)
+#isDone = smeshObj_10.RemoveElements( [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 51, 52, 53, 54, 55 ] ) ### not created Object
+[ Edge_18_2, Edge_19_2, Edge_20_2, Edge_21_2 ] = Mesh_1.GetGroups()
 Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_1_0' )
-nbAdd = Group_1_0.Add( [ 1, 2, 3, 4, 5, 46, 47, 48, 49, 50 ] )
-[ Group_1_0 ] = Mesh_1.GetGroups()
+nbAdd = Group_1_0.Add( [ 1, 2, 3, 4, 5, 36, 37, 38, 39, 40 ] )
+[ Edge_18_2, Edge_19_2, Edge_20_2, Edge_21_2, Group_1_0 ] = Mesh_1.GetGroups()
 Group_2_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_2_0' )
-nbAdd = Group_2_0.Add( [ 56, 57, 58, 59, 60, 86, 87, 88, 89, 90 ] )
-[ Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
+nbAdd = Group_2_0.Add( [ 41, 42, 43, 44, 45, 71, 72, 73, 74, 75 ] )
+[ Edge_18_2, Edge_19_2, Edge_20_2, Edge_21_2, Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
 Group_3_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_3_0' )
-nbAdd = Group_3_0.Add( [ 6, 7, 8, 9, 10, 91, 92, 93, 94, 95 ] )
-[ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
+nbAdd = Group_3_0.Add( [ 6, 7, 8, 9, 10, 76, 77, 78, 79, 80 ] )
+[ Edge_18_2, Edge_19_2, Edge_20_2, Edge_21_2, Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
 isDone = Mesh_1.Compute()
-[ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
-smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_2_xy_assignment1_quadrangle.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
-smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_2_xy_assignment1_quadrangle.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=1)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
+[ Edge_18_2, Edge_19_2, Edge_20_2, Edge_21_2, Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
 Sub_mesh_1 = s_Mesh_1.GetSubMesh( Edge_10, 'Sub-mesh_1' )
 Sub_mesh_2 = s_Mesh_1.GetSubMesh( Edge_11, 'Sub-mesh_2' )
 Sub_mesh_3 = s_Mesh_1.GetSubMesh( Edge_12, 'Sub-mesh_3' )
@@ -329,43 +364,42 @@ SO = salome.myStudy.FindObjectIOR(salome.myStudy.ConvertObjectToIOR(smeshObj_1))
 if SO: aStudyBuilder.RemoveObjectWithChildren(SO)
 
 ## Set names of Mesh objects
-smesh.SetName(Edge_19_1, 'Edge_19')
-smesh.SetName(Edge_20_1, 'Edge_20')
-smesh.SetName(Edge_18_1, 'Edge_18')
-smesh.SetName(Edge_21_1, 'Edge_21')
-smesh.SetName(Edge_13_1, 'Edge_13')
-smesh.SetName(Group_3_0, 'Group_3_0')
-smesh.SetName(Edge_10_1, 'Edge_10')
-smesh.SetName(Edge_11_1, 'Edge_11')
 smesh.SetName(Number_of_Segments_7, 'Number of Segments_7')
-smesh.SetName(Edge_12_1, 'Edge_12')
 smesh.SetName(Number_of_Segments_8, 'Number of Segments_8')
 smesh.SetName(Number_of_Segments_5, 'Number of Segments_5')
 smesh.SetName(Number_of_Segments_6, 'Number of Segments_6')
-smesh.SetName(Group_2_0, 'Group_2_0')
-smesh.SetName(Group_1_0, 'Group_1_0')
-smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
+smesh.SetName(Number_of_Segments_9, 'Number of Segments_9')
 smesh.SetName(Sub_mesh_8, 'Sub-mesh_8')
+smesh.SetName(s_Mesh_3.GetMesh(), 's_Mesh_3')
 smesh.SetName(Sub_mesh_5, 'Sub-mesh_5')
+smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
 smesh.SetName(Regular_1D, 'Regular_1D')
 smesh.SetName(Sub_mesh_7, 'Sub-mesh_7')
 smesh.SetName(Quadrangle_2D, 'Quadrangle_2D')
 smesh.SetName(Sub_mesh_6, 'Sub-mesh_6')
+smesh.SetName(NETGEN_2D, 'NETGEN 2D')
+smesh.SetName(MG_CADSurf, 'MG-CADSurf')
 smesh.SetName(QuadFromMedialAxis_1D2D, 'QuadFromMedialAxis_1D2D')
-smesh.SetName(Edge_16_1, 'Edge_16')
-smesh.SetName(Edge_15_1, 'Edge_15')
-smesh.SetName(Edge_14_1, 'Edge_14')
 smesh.SetName(s_Mesh_2.GetMesh(), 's_Mesh_2')
-smesh.SetName(s_Mesh_3.GetMesh(), 's_Mesh_3')
-smesh.SetName(Edge_17_1, 'Edge_17')
-smesh.SetName(Sub_mesh_12, 'Sub-mesh_12')
 smesh.SetName(s_Mesh_1.GetMesh(), 's_Mesh_1')
 smesh.SetName(Sub_mesh_9, 'Sub-mesh_9')
+smesh.SetName(Edge_21_2, 'Edge_21')
 smesh.SetName(Sub_mesh_10, 'Sub-mesh_10')
+smesh.SetName(Group_1_0, 'Group_1_0')
 smesh.SetName(Sub_mesh_11, 'Sub-mesh_11')
+smesh.SetName(Group_2_0, 'Group_2_0')
+smesh.SetName(Sub_mesh_12, 'Sub-mesh_12')
+smesh.SetName(Group_3_0, 'Group_3_0')
+smesh.SetName(Edge_18_2, 'Edge_18')
+smesh.SetName(Edge_19_2, 'Edge_19')
+smesh.SetName(Edge_20_2, 'Edge_20')
+smesh.SetName(Edge_21_1, 'Edge_21')
 smesh.SetName(Sub_mesh_2, 'Sub-mesh_2')
 smesh.SetName(Sub_mesh_3, 'Sub-mesh_3')
+smesh.SetName(Edge_19_1, 'Edge_19')
+smesh.SetName(Edge_20_1, 'Edge_20')
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
+smesh.SetName(Edge_18_1, 'Edge_18')
 smesh.SetName(Number_of_Segments_2, 'Number of Segments_2')
 smesh.SetName(Sub_mesh_4, 'Sub-mesh_4')
 smesh.SetName(Number_of_Segments_1, 'Number of Segments_1')

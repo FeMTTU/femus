@@ -39,20 +39,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   
   const double tolerance = 1.e-5;
   
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
   
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
-  else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
-
-    
- }
- 
  if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
      
      
@@ -68,10 +55,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
       dirichlet = true;
         value = 0.;
   }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
-  }
+
    
  
  }
@@ -357,7 +341,7 @@ int main(int argc, char** args) {
   
     // ======= System ========================
  // add system  in ml_prob as a Linear Implicit System
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("Laplace");
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("Poisson");
   
   system.SetDebugNonlinear(true);
  
@@ -398,7 +382,7 @@ int main(int argc, char** args) {
 template < class real_num, class real_num_mov >
 void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
