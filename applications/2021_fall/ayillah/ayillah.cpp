@@ -47,7 +47,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
         }
         else if (face_name == 2) {
             dirichlet = false;
-            value = -1.; //Neumann value
+            value = -1.;//Neumann value
         }
 
 
@@ -77,7 +77,27 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
     }
 
 
+    if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
 
+
+        if (face_name == 1) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 2) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 3) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 4) {
+            dirichlet = true;
+            value = 0.;
+        }
+
+    }
     return dirichlet;
 
 }
@@ -281,7 +301,7 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
     std::vector<std::string> mesh_files;
 
-    mesh_files.push_back("parametric_square.med");
+    mesh_files.push_back("assignment_prism_annular_base.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -485,15 +505,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
     real_num_mov detJac_qp;
 
-    std::vector < std::vector < real_num_mov > >  JacJacT(dim);
-    for (unsigned d = 0; d < dim; d++) {
-        JacJacT[d].resize(dim);
-    }
-
-    std::vector < std::vector < real_num_mov > >  JacJacT_inv(dim);
-    for (unsigned d = 0; d < dim; d++) {
-        JacJacT_inv[d].resize(dim);
-    }
+   
 
     //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
     std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
@@ -569,8 +581,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
             jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
             elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(i_qp, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
-            elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
-            elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+           
 
 //--------------
             std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
@@ -594,19 +605,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                 }
 //--------------
 
-//--------------
-                double laplace_beltrami_res_du_u_i = 0.;
-                if ( i < nDof_u ) {
-                    for (unsigned kdim = 0; kdim < dim; kdim++) {
-                        for (unsigned ldim = 0; ldim < dim; ldim++) {
-                            laplace_beltrami_res_du_u_i             +=   elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim, i_qp, i)
-                                    * JacJacT_inv[kdim][ldim]
-                                    /*phi_u_x   [i * space_dim + kdim]*/
-                                    * sol_u_x_gss[ldim];
-                        }
-                    }
-                }
-//--------------
+
 
 //======================Residuals=======================
                 // FIRST ROW
@@ -632,20 +631,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 //--------------
 
 
-//--------------
-                        double laplace_beltrami_mat_du_u_i_j = 0.;
-                        if ( i < nDof_u && j < nDof_u ) {
-                            for (unsigned kdim = 0; kdim < dim; kdim++) {
-                                for (unsigned ldim = 0; ldim < dim; ldim++) {
-                                    laplace_beltrami_mat_du_u_i_j             +=  elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim,i_qp,i)/*phi_u_x   [i * space_dim + kdim]*/
-                                            * JacJacT_inv[kdim][ldim] *
-                                            elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(ldim,i_qp,j)/*phi_u_x   [j * space_dim + ldim]*/;
-                                }
-                            }
 
-
-                        }
-//--------------
 
                         //============ delta_state row ============================
                         //DIAG BLOCK delta_state - state
@@ -682,6 +668,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
     return;
 }
+    
+
 
 
     //CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain
