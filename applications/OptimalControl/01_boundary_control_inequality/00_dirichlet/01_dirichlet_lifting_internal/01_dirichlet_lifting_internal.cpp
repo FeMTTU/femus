@@ -850,14 +850,13 @@ add_one_times_mu_res_ctrl(iproc,
                                RES);
     
     
-    // ***************** END ASSEMBLY - ADD PART *******************
     
      
 RES->close();
 if (assembleMatrix) KK->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
-      
+      // ***************** ADD PART - END  *******************
     
- //========== dof-based part, without summation
+    
  
 
 
