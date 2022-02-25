@@ -57,9 +57,10 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   }
 
    
+   
  
  }
- 
+
  
  
   return dirichlet;
@@ -266,6 +267,7 @@ int main(int argc, char** args) {
    
     mesh_files.push_back("Mesh_2_xy_assignment1_triangular.med");
     mesh_files.push_back("Mesh_2_xy_assignment1_quadrangle.med");
+    
    //mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
@@ -471,10 +473,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   ml_prob.get_all_abstract_fe(elem_all);
  //***************************************************  
   
-  
+  std::cout << "geom_elem" << std::endl;
+    std::cout << geom_element.GetNodeCoords() << std::endl;
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+      
+      //std::cout << "iel is: " << iel << std::endl; // iel stands for the ith element
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
         
@@ -526,11 +531,15 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  //===================================================   
     
     
+    
+    
       // *** Quadrature point loop ***
       for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
           
         // *** get gauss point weight, test function and test function partial derivatives ***
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    i_qp, weight,    phi_u,    phi_u_x,    boost::none /*phi_u_xx*/);
+          
+    
           
 	elem_all[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), i_qp, Jac_qp, JacI_qp, detJac_qp, space_dim);
     jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
@@ -565,7 +574,9 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+          
+          
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  100.0 ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
