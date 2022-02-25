@@ -116,6 +116,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
                  Res[i_vol] +=  grad_u_dot_n /* * phi[node] = 1. */;
                  
                          }
+
                          
                          
                          
