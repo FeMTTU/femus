@@ -110,9 +110,4 @@ IF(BUILD_NITSCHE)
   ADD_SUBDIRECTORY(Nitsche/)
 ENDIF(BUILD_NITSCHE)
 
-<<<<<<< HEAD
-
-    ADD_SUBDIRECTORY (2021_fall/)
-=======
   ADD_SUBDIRECTORY(2021_fall/)
->>>>>>> femttu/master
