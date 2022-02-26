@@ -474,8 +474,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   ml_prob.get_all_abstract_fe(elem_all);
  //***************************************************  
   
-  std::cout << "geom_elem" << std::endl;
-    std::cout << geom_element.GetNodeCoords() << std::endl;
+
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -549,6 +548,26 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 
+    
+    std::cout << "ielGeom iqp= " << i_qp << " .... What is this?" << std::endl;
+    std::cout << *(ml_prob.GetQuadratureRule(ielGeom).GetGaussCoordinatePointer(i_qp)) << std::endl;
+    
+    
+    // the coords that you get in this way are clearly already in the classical form - may need to back-out of classical in order to properly evaluate \Delta Uo
+    
+    // xi-location of quadrature point
+    //for (unsigned i = 0; i < nDof_u; i++){
+    //    x_qp[i_qp] +=  x * phi_u[i];
+    //    y_qp[i_qp] += y * phi_u[i];
+    //} 
+          // yi-location of quadrature point
+          
+          
+          // x-location of quadrature point ("real")
+          // y-location of quadrature point ("real")
+    
+    
+    
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
@@ -575,6 +594,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
+          
           
           
           if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  100.0 ) - laplace_res_du_u_i);
