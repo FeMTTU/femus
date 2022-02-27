@@ -114,10 +114,10 @@ using namespace femus;
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
  
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(FIRST/*SECOND*/);
  
 
   assert( feFamily.size() == feOrder.size() );
@@ -249,7 +249,7 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
-  const bool use_output_time_folder = true;
+  const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
@@ -429,7 +429,7 @@ int main(int argc, char** args) {
   //MU
   const std::string act_set_flag_name = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST/*SECOND*/, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
   
@@ -493,7 +493,7 @@ int main(int argc, char** args) {
   system.MGsolve();
 //   double totalAssemblyTime = 0.;
 //   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
-//   system.assemble_call_before_boundary_conditions(2);
+//   system.assemble_call_before_boundary_conditions(1);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
@@ -549,8 +549,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors();
 
-  constexpr bool print_algebra_global = false;
-  constexpr bool print_algebra_local = false;
+  constexpr bool print_algebra_global = true;
+  constexpr bool print_algebra_local = true;
   
   
 
@@ -748,7 +748,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
-  const double penalty_strong_bdry = 1.e20;  // penalty for boundary equation on Gamma_c
   const double penalty_ctrl = 1.e10;         //penalty for u=q
  //*************************************************** 
   
@@ -1390,8 +1389,12 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
    
 // -------
     el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
-                        SolFEType_Mat, SolIndex_Mat, SolPdeIndex,
-                        Sol_n_el_dofs_Mat_vol, sol_eldofs_Mat, L2G_dofmap_Mat);
+                         SolFEType_Mat,
+                         SolIndex_Mat,
+                         SolPdeIndex,
+                         Sol_n_el_dofs_Mat_vol, 
+                         sol_eldofs_Mat, 
+                         L2G_dofmap_Mat);
 // -------
 
 	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
@@ -1431,7 +1434,8 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                       ineq_flag,
                       c_compl,
                       ctrl_lower, ctrl_upper,
-                      KK, RES,
+                      KK, 
+                      RES,
                       assembleMatrix
                       );
   
