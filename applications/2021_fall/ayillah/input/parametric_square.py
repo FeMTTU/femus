@@ -10,7 +10,11 @@ import salome
 salome.salome_init()
 import salome_notebook
 notebook = salome_notebook.NoteBook()
+<<<<<<< HEAD
 sys.path.insert(0, r'/home/student/software/femus/applications/2021_fall/ayillah/input')
+=======
+sys.path.insert(0, r'/home/gbornia/software/femus/applications/2021_fall/gbornia/input')
+>>>>>>> femttu/master
 
 ####################################################
 ##       Begin of NoteBook variables section      ##
@@ -19,12 +23,15 @@ notebook.set("l_x", 3)
 notebook.set("l_y", 1)
 notebook.set("l_x_half", "0.5*l_x")
 notebook.set("l_y_half", "0.5*l_y")
+<<<<<<< HEAD
 notebook.set("l_x", 3)
 notebook.set("l_y", 1)
 notebook.set("l_x_half", "0.5*l_x")
 notebook.set("l_y_half", "0.5*l_y")
 notebook.set("n_x", 4)
 notebook.set("n_y", 3)
+=======
+>>>>>>> femttu/master
 ####################################################
 ##        End of NoteBook variables section       ##
 ####################################################
@@ -46,18 +53,24 @@ OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
 OZ = geompy.MakeVectorDXDYDZ(0, 0, 1)
 Face_1 = geompy.MakeFaceHW("l_x", "l_y", 1)
 Translation_1 = geompy.MakeTranslation(Face_1, "l_x_half", "l_y_half", 0)
+<<<<<<< HEAD
 [Edge_1,Edge_2,Edge_3,Edge_4] = geompy.ExtractShapes(Translation_1, geompy.ShapeType["EDGE"], True)
 [Edge_1, Edge_2, Edge_3, Edge_4] = geompy.GetExistingSubObjects(Translation_1, False)
+=======
+>>>>>>> femttu/master
 geompy.addToStudy( O, 'O' )
 geompy.addToStudy( OX, 'OX' )
 geompy.addToStudy( OY, 'OY' )
 geompy.addToStudy( OZ, 'OZ' )
 geompy.addToStudy( Face_1, 'Face_1' )
 geompy.addToStudy( Translation_1, 'Translation_1' )
+<<<<<<< HEAD
 geompy.addToStudyInFather( Translation_1, Edge_1, 'Edge_1' )
 geompy.addToStudyInFather( Translation_1, Edge_2, 'Edge_2' )
 geompy.addToStudyInFather( Translation_1, Edge_3, 'Edge_3' )
 geompy.addToStudyInFather( Translation_1, Edge_4, 'Edge_4' )
+=======
+>>>>>>> femttu/master
 
 ###
 ### SMESH component
@@ -71,6 +84,7 @@ smesh = smeshBuilder.New()
                                  # multiples meshes built in parallel, complex and numerous mesh edition (performance)
 
 Mesh_1 = smesh.Mesh(Translation_1)
+<<<<<<< HEAD
 Edge_1_1 = Mesh_1.GroupOnGeom(Edge_1,'Edge_1',SMESH.EDGE)
 Edge_2_1 = Mesh_1.GroupOnGeom(Edge_2,'Edge_2',SMESH.EDGE)
 Edge_3_1 = Mesh_1.GroupOnGeom(Edge_3,'Edge_3',SMESH.EDGE)
@@ -121,6 +135,15 @@ smesh.SetName(Edge_4_1, 'Edge_4')
 smesh.SetName(Group_1_0, 'Group_1_0')
 smesh.SetName(Edge_2_1, 'Edge_2')
 smesh.SetName(Edge_3_1, 'Edge_3')
+=======
+NETGEN_2D = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_2D)
+isDone = Mesh_1.Compute()
+
+
+## Set names of Mesh objects
+smesh.SetName(NETGEN_2D.GetAlgorithm(), 'NETGEN 2D')
+smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
+>>>>>>> femttu/master
 
 
 if salome.sg.hasDesktop():
