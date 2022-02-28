@@ -1,6 +1,7 @@
  
 Solve the Poisson problem with homogeneous Dirichlet boundary conditions on the domains given below. 
-Generate 1 mesh made of triangles and 1 mesh made of quadrilaterals.
+ If your domain is 2-dimensional, generate 1 mesh made of triangles and 1 mesh made of quadrilaterals.
+ If your domain is 3-dimensional, Generate 1 mesh made of tetrahedra and 1 mesh made of hexahedra.
 Parametrize your mesh files using the Notebook. 
 Save both the Python script and the Study file from Salome.
 Export the mesh files in MED format for them to be read in Femus.

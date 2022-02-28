@@ -39,20 +39,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   
   const double tolerance = 1.e-5;
   
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
   
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
-  else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
-
-    
- }
- 
  if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
      
      
@@ -68,14 +55,12 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
       dirichlet = true;
         value = 0.;
   }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
-  }
+
+   
    
  
  }
- 
+
  
  
   return dirichlet;
@@ -131,6 +116,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
                  Res[i_vol] +=  grad_u_dot_n /* * phi[node] = 1. */;
                  
                          }
+
                          
                          
                          
@@ -276,8 +262,14 @@ int main(int argc, char** args) {
 
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
+  
+   // note to self: for a function V which meets the boundary conditions: V= x*y*(1 - (x^2 + y^2))
+   // has a laplacian phi = -12*x*y
    
-   mesh_files.push_back("Mesh_1_x_dir_neu.med");
+    mesh_files.push_back("Mesh_2_xy_assignment1_triangular.med");
+    mesh_files.push_back("Mesh_2_xy_assignment1_quadrangle.med");
+    
+   //mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -312,7 +304,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -352,7 +344,7 @@ int main(int argc, char** args) {
   
     // ======= System ========================
  // add system  in ml_prob as a Linear Implicit System
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("Laplace");
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("Poisson");
   
   system.SetDebugNonlinear(true);
  
@@ -393,7 +385,7 @@ int main(int argc, char** args) {
 template < class real_num, class real_num_mov >
 void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -482,10 +474,12 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   ml_prob.get_all_abstract_fe(elem_all);
  //***************************************************  
   
-  
+
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+      
+      //std::cout << "iel is: " << iel << std::endl; // iel stands for the ith element
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
         
@@ -537,11 +531,15 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  //===================================================   
     
     
+    
+    
       // *** Quadrature point loop ***
       for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
           
         // *** get gauss point weight, test function and test function partial derivatives ***
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    i_qp, weight,    phi_u,    phi_u_x,    boost::none /*phi_u_xx*/);
+          
+    
           
 	elem_all[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), i_qp, Jac_qp, JacI_qp, detJac_qp, space_dim);
     jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
@@ -550,6 +548,26 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 
+    
+    std::cout << "ielGeom iqp= " << i_qp << " .... What is this?" << std::endl;
+    std::cout << *(ml_prob.GetQuadratureRule(ielGeom).GetGaussCoordinatePointer(i_qp)) << std::endl;
+    
+    
+    // the coords that you get in this way are clearly already in the classical form - may need to back-out of classical in order to properly evaluate \Delta Uo
+    
+    // xi-location of quadrature point
+    //for (unsigned i = 0; i < nDof_u; i++){
+    //    x_qp[i_qp] +=  x * phi_u[i];
+    //    y_qp[i_qp] += y * phi_u[i];
+    //} 
+          // yi-location of quadrature point
+          
+          
+          // x-location of quadrature point ("real")
+          // y-location of quadrature point ("real")
+    
+    
+    
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
@@ -572,23 +590,14 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
               }
 //--------------    
               
-//--------------    
-	      double laplace_beltrami_res_du_u_i = 0.;
-          if ( i < nDof_u ) {    
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            for (unsigned ldim = 0; ldim < dim; ldim++) {
-                       laplace_beltrami_res_du_u_i             +=   elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim, i_qp, i) 
-                                                                   * JacJacT_inv[kdim][ldim]
-                                                                   /*phi_u_x   [i * space_dim + kdim]*/
-                                                                 * sol_u_x_gss[ldim];
-            }
-         }
-       }
-//--------------    
+// removed laplace_beltrami  
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+          
+          
+          
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  100.0 ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
@@ -610,20 +619,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 //--------------    
 
 
-//--------------    
-              double laplace_beltrami_mat_du_u_i_j = 0.;
-              if ( i < nDof_u && j < nDof_u ) {
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            for (unsigned ldim = 0; ldim < dim; ldim++) {
-                       laplace_beltrami_mat_du_u_i_j             +=  elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim,i_qp,i)/*phi_u_x   [i * space_dim + kdim]*/ 
-                                                                   * JacJacT_inv[kdim][ldim] *
-                                                                     elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(ldim,i_qp,j)/*phi_u_x   [j * space_dim + ldim]*/;
-                     }
-                  }
-                  
-                  
-              }
-//--------------    
+// removed laplace_beltrami  
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
