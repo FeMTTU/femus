@@ -58,33 +58,44 @@ smesh = smeshBuilder.New()
 #smesh.SetEnablePublish( False ) # Set to False to avoid publish in study if not needed or in some particular situations:
                                  # multiples meshes built in parallel, complex and numerous mesh edition (performance)
 
-Regular_1D_4 = smesh.CreateHypothesis( "Regular_1D" )
-Quadrangle_2D_4 = smesh.CreateHypothesis( "Quadrangle_2D" )
+Mesh_1 = smesh.Mesh(Face_2)
+Regular_1D = Mesh_1.Segment()
+Quadrangle_2D = Mesh_1.Quadrangle(algo=smeshBuilder.QUADRANGLE)
+Number_of_Segments_1 = Regular_1D.NumberOfSegments(15)
+isDone = Mesh_1.Compute()
 Mesh_2 = smesh.Mesh(Face_3)
-#status = Mesh_2.AddHypothesis(Number_of_Segments_1) ### Number_of_Segments_1 has not been yet created
 Regular_1D_1 = Mesh_2.Segment()
+Number_of_Segments_2 = Regular_1D_1.NumberOfSegments(15)
 Quadrangle_2D_1 = Mesh_2.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 isDone = Mesh_2.Compute()
 Mesh_3 = smesh.Mesh(Face_4)
-#status = Mesh_3.AddHypothesis(Number_of_Segments_1) ### Number_of_Segments_1 has not been yet created
 Regular_1D_2 = Mesh_3.Segment()
+Number_of_Segments_3 = Regular_1D_2.NumberOfSegments(15)
 Quadrangle_2D_2 = Mesh_3.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 isDone = Mesh_3.Compute()
+Number_of_Segments_4 = smesh.CreateHypothesis('NumberOfSegments')
+Number_of_Segments_4.SetNumberOfSegments( 15 )
 Mesh_4 = smesh.Mesh(Face_5)
-#status = Mesh_4.AddHypothesis(Number_of_Segments_1) ### Number_of_Segments_1 has not been yet created
 Regular_1D_3 = Mesh_4.Segment()
+Number_of_Segments_5 = Regular_1D_3.NumberOfSegments(15)
 Quadrangle_2D_3 = Mesh_4.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 isDone = Mesh_4.Compute()
-#Mesh_1 = smesh.Concatenate( [ Mesh_2.GetMesh() ], 1, 1, 1e-05, True ,meshToAppendTo=Mesh_1.GetMesh()) ### Mesh_1 has not been yet created
-#[ GrMesh_2_Nodes, GrMesh_2_Edges, GrMesh_2_Faces ] = Mesh_1.GetGroups() ### not created Object
-#Compound_Mesh_1 = smesh.Concatenate( [ Mesh_1.GetMesh(), Mesh_2.GetMesh(), Mesh_3.GetMesh(), Mesh_4.GetMesh() ], 1, 1, 1e-05, False ) ### Mesh_1 has not been yet created
-#[ GrMesh_2_Nodes_1, GrMesh_2_Edges_1, GrMesh_2_Faces_1 ] = Compound_Mesh_1.GetGroups() ### not created Object
+Compound_Mesh_1 = smesh.Concatenate( [ Mesh_1.GetMesh(), Mesh_2.GetMesh(), Mesh_3.GetMesh(), Mesh_4.GetMesh() ], 1, 1, 1e-05, False )
 
 
 ## Set names of Mesh objects
-smesh.SetName(Mesh_4.GetMesh(), 'Mesh_4')
+smesh.SetName(Regular_1D.GetAlgorithm(), 'Regular_1D')
+smesh.SetName(Quadrangle_2D.GetAlgorithm(), 'Quadrangle_2D')
+smesh.SetName(Number_of_Segments_2, 'Number of Segments_2')
+smesh.SetName(Number_of_Segments_3, 'Number of Segments_3')
+smesh.SetName(Number_of_Segments_1, 'Number of Segments_1')
+smesh.SetName(Number_of_Segments_4, 'Number of Segments_4')
+smesh.SetName(Number_of_Segments_5, 'Number of Segments_5')
+smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
 smesh.SetName(Mesh_3.GetMesh(), 'Mesh_3')
 smesh.SetName(Mesh_2.GetMesh(), 'Mesh_2')
+smesh.SetName(Compound_Mesh_1.GetMesh(), 'Compound_Mesh_1')
+smesh.SetName(Mesh_4.GetMesh(), 'Mesh_4')
 
 
 if salome.sg.hasDesktop():
