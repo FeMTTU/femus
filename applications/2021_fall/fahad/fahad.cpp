@@ -74,8 +74,8 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
         value = 0.;
   }
   else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
+      dirichlet = true;
+        value = 0. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
   }
    
  
