@@ -156,9 +156,7 @@ int main(int argc, char** args) {
 
     // read coarse level mesh and generate finers level meshes
     std::string mesh_file = "./input/ext_box.med";
-//     std::string mesh_file = "./input/ext_box_50.med";
-//     std::string mesh_file = "./input/ext_box_2.med";
-//     std::string mesh_file = "./input/ext_box_longer.med";
+
     const double Lref = 1.;
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), Lref);
 
