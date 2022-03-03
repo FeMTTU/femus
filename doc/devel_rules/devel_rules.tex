@@ -684,7 +684,17 @@ corresponding to your hostname. So, you need to add the output of the command
 
   \section{Study HDF file}
 
+  
   \section{Python script}
+
+  
+    \subsection{When you REMOVE things, such as Mesh Elements, or Groups, the script may complain at loading. Then it is not hard to fix it}
+    
+    
+    You go in the script and you see where it says ``some objects were removed''.
+    Remove them manually.
+  
+  
   
    
  \chapter{How to parametrize your operations}
@@ -729,7 +739,7 @@ If you have to rotate, do not do that in the Geometry, because then the Mesh wil
 
 If you do it in the Mesh, the Geometry does not follow either.
 
-\subsection{SPLIT EDGES/FACES}
+\subsection{SPLIT EDGES/FACES - Partition, Explode}
 
 
 The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
@@ -737,22 +747,28 @@ It seems like Cut is not the right tool for splitting
 
 Pay attention to the difference between Common and Intersection
 
- \section{MESH}
 
+\subsubsection{When you mesh a Partition object, the Mesh module automatically generates Groups of Faces... Later you may use them, they are automatically Groups on Geometry!}
+
+
+ \section{MESH}
+ 
+
+ \chapter{Procedure - 1D, Edges}
 
  \chapter{Procedure - 2D, Triangles}
  
  \chapter{Procedure - 2D, Quadrangles: Mapping}
 
 
-\section{Geometry}
+\subsection{Geometry}
 
 
 Create faces (Draw points and lines if needed, or create Faces directly)
 
    --> Extract edges from a face (Explode)
    
-\section{Mesh}
+\subsection{Mesh}
  
 Create Mesh object (only initialize)
 
@@ -767,7 +783,7 @@ In Mesh:
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
 
   
-  \subsection{Create Mesh by pieces: CompoundMesh}
+  \subsubsection{Create Mesh by pieces: CompoundMesh}
   
 -- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
 
@@ -796,10 +812,8 @@ In Mesh:
   I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
     
  
- 
-\section{QUADRILATERAL MESH of CIRCLES/CYLINDERS/SPHERES}
 
-\section{Divided Disk}
+\subsection{Divided Disk}
 
 Divided Disk or Divided Cylinder do exactly what you are looking for!!!
 
@@ -807,7 +821,7 @@ Partition a semisphere using a Divided Disk!
 
 Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
 
-\section{From scratch}
+\subsection{From scratch}
 
 For a circle, just do a square in the middle, then divide the circumference into 4 parts,
 join the angles of the squares with the vertices of these parts and you are done.
@@ -838,12 +852,12 @@ So the idea seems to be NOT the following:
 
 \chapter{Procedure - 3D - Hexahedra}
 
-\section{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
+\subsection{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
 
   You can leave the edges where they are, because in 3d only Volumes and Faces will be read from the code
  
 
- \section{If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
+ \subsection{If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
   what is the best way to do that?}
   
 
@@ -867,7 +881,7 @@ I cannot create a Submesh of a Submesh
     
 
     
-\subsection{MESH EXTRUSION}
+\subsubsection{MESH EXTRUSION}
 
 
 - If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
@@ -879,13 +893,13 @@ I cannot create a Submesh of a Submesh
 
 
 
-\section{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
+\subsection{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
 
 
 When you explode adjacent faces, the edges are called differently... we should identify them
 
 
- \section{Change the Geometry in the Mesh with ``Move node''}
+ \subsection{Change the Geometry in the Mesh with ``Move node''}
 
 
  There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
@@ -893,7 +907,7 @@ When you explode adjacent faces, the edges are called differently... we should i
  - 
  
 
-\section{Translate Mesh}
+\subsection{Translate Mesh}
 
  
  Copy Mesh of course does not do the trick, you need ``Translation''
@@ -903,7 +917,7 @@ When you explode adjacent faces, the edges are called differently... we should i
  ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
 
  
-\section{Stretch elements}
+\subsection{Stretch elements}
 
   ``Scale transform'' does the trick
 
@@ -998,11 +1012,16 @@ When you explode adjacent faces, the edges are called differently... we should i
           
 \section{Groups: BOUNDARY CONDITIONS}
 
-
+\subsection{Requirement: give one and only one group for each boundary element}
    
+\subsection{Requirement: Remove inner boundary elements}
+
   
  \section{Groups: OTHER PROPERTIES}
  
+ You can specify geometrical regions
+ 
+\subsection{Requirement: give one and only one group for each element}
  
   
  \chapter{Mesh controls}
