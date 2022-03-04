@@ -23,11 +23,13 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
-// flynn, user-made equation
-double minus_Deltu_U0(const CurrentElem < double >* geom_element, const unsigned i ){
+// flynn, user-made equation - accepts only coordinates
+double minus_Deltu_U0(const std::vector<double> & x_qp){
     
-    double x = geom_element->get_coords_at_dofs_3d()[0][i];
-    double y = geom_element->get_coords_at_dofs_3d()[1][i];
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
     
     return -1.0 * -12 * x * y;
 }
@@ -314,7 +316,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/1;
+  unsigned numberOfUniformLevels = /*1*/4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -581,7 +583,14 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 //--------------    
           
           
-          //--------------    from giorgiobornia.cpp
+        //--------------    from giorgiobornia.cpp
+        std::vector<double> x_qp(dim, 0.);
+          
+        for (unsigned i = 0; i < nDof_u; i++) {
+          	for (unsigned d = 0; d < dim; d++) {
+	                                                x_qp[d]    += geom_element.get_coords_at_dofs_3d()[d][i] * phi_u[i]; // fetch of coordinate points
+            }
+        }
  /// @assignment You need to evaluate your manufactured right hand side at the quadrature point qp.
  /// Hence, you need to compute the coordinates of the quadrature point. Let us call them x_qp.
  /// These are obtained just like every quantity at a quadrature point, i.e., by interpolating the values of the quantity at the element nodes.
@@ -596,14 +605,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 //--------------   
 
         
-        //std::vector<double> xyz(geom_element.get_coords_at_dofs_3d().size(), 0);
-        
-    //for (int i_dim = 0; i_dim < geom_element.get_coords_at_dofs_3d().size(); i_dim++){
-     //   for (int i_node = 0; i_node < geom_element.get_coords_at_dofs_3d()[i_dim].size(); i_node++){
-      //      //xyz[i_dim] +=
-       // }
-    //}
-        
+
         
         
            
@@ -628,7 +630,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
 
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  minus_Deltu_U0(&geom_element, i )) - laplace_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( minus_Deltu_U0(x_qp) ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
