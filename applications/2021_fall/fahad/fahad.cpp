@@ -254,7 +254,18 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 
+double GetExactSolutionValue(const std::vector < double >& x) {
+    return 0.;
+};
 
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  
+};
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  //double pi = acos(-1.);
+  return 0.;
+};
 
 
  
