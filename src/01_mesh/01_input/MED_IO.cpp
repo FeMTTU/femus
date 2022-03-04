@@ -408,7 +408,7 @@ namespace femus {
     //check that all boundary faces were set in the mesh file
     for(unsigned i = 0; i < fam_map.size(); i++) {
       if(fam_map[i] == 0) {
-        std::cout << "Some boundary face was not set in the mesh MED file" << std::endl;
+        std::cout << "Some boundary elements were not set in the mesh MED file. If you believe all boundary elements belong to a Group, the error could be due to the presence of inner boundary elements. Please remove them in your mesh. " << std::endl;
         abort();
       }
     }
