@@ -50,6 +50,9 @@
  
  \subsection{Petsc}
 
+ \subsubsection{Metis/Parmetis}
+ 
+ 
  \subsection{Slepc}
 
  \subsection{HDF5}
@@ -95,17 +98,25 @@
 \chapter{ccmake vs. cmake-gui}
 
 
+\part{Library}
 
-\part{Application}
 
- \section{How to add source files to the library}
+ \chapter{How to add source files to the library}
  
 - NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to 
 update the LIST in the src/ cmake file!!! (use ls -1)
 
 - now go to the binary directory and type make to generate the library
 
- \section{How to SETUP a NEW APPLICATION of the LIBRARY (will do a script probably)}
+
+
+\part{Application}
+
+
+ \chapter{Setup}
+  
+  
+\section{How to SETUP a NEW APPLICATION (will do a script probably)}
 
 - Create a folder in the Applications directory with your main function and your src/header files
 
@@ -118,15 +129,11 @@ update the LIST in the src/ cmake file!!! (use ls -1)
 
 - now go to your application folder and run make to generate your executable
 
- \section{How to IMPLEMENT A NEW APPLICATION}
+  \chapter{Implementation}
 
 - Follow the examples
 
-\section{How to change the mesh file of an application}
-
-- Put the mesh file in the input/ directory
-
-- Set the filename in the main file
+ \chapter{Run}
 
  \section{How to run in parallel with threads instead of cores}
 
@@ -142,7 +149,14 @@ To overcome this, do
 
 - Script
 
- \section{When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!!}
+ \section{How to change the mesh file of an application}
+
+- Put the mesh file in the input/ directory
+
+- Set the filename in the main file
+
+\section{When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!!}
+ 
  
 
  \section{How to RESTART a run of an application}
@@ -170,7 +184,7 @@ To overcome this, do
 
 
 
-\part{Application: main stages}
+\part{Application: Implementation, main stages}
 
   
    \chapter{Main blocks}
@@ -670,30 +684,11 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
  
  - Salome also contain its own version of Paraview
 
-\chapter{Installation issues}
+ 
+ 
+ \section{Modules}
 
-  The first time you run Salome after installation,
-  you may have it asking for opening service...
-
-The "Failed to narrow the root naming context" 
-is an error displayed when there is no entry in /etc/hosts 
-corresponding to your hostname. So, you need to add the output of the command
- ``hostname'' to that file!
-
-\chapter{How to save/open your work}
-
-  \section{Study HDF file}
-
-  \section{Python script}
-  
-   
- \chapter{How to parametrize your operations}
-
-    Use the NoteBook tab to define variables 
-
- \chapter{Modules}
-
- \section{SHAPER}
+ \subsection{SHAPER}
 
 
 This is a new module that in the long run is supposed to replace the role of the GEOM module.
@@ -720,16 +715,65 @@ Ok, it seems like:
 
  - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
    
- \section{GEOMETRY}
+ \subsection{GEOMETRY}
  
- \subsection{ROTATIONS}
+
+ \subsection{MESH}
+
+ 
+\chapter{Installation issues}
+
+  The first time you run Salome after installation,
+  you may have it asking for opening service...
+
+The "Failed to narrow the root naming context" 
+is an error displayed when there is no entry in /etc/hosts 
+corresponding to your hostname. So, you need to add the output of the command
+ ``hostname'' to that file!
+
+\chapter{How to save/open your work}
+
+  \section{Study HDF file}
+
+  
+  \section{Python script}
+
+  
+    \subsection{When you REMOVE things, such as Mesh Elements, or Groups, the script may complain at loading. Then it is not hard to fix it}
+    
+    
+    You go in the script and you see where it says ``some objects were removed''.
+    Remove them manually.
+  
+  
+  
+  
+ \chapter{Procedure: Geometry and Mesh}
+
+   \section{General ideas}
+   
+   
+ \subsection{Parametrize your operations}
+
+    Use the NoteBook tab to define variables. You can then use them both in the Geometry and in the Mesh modules.
+
+ \subsection{Synergy between Geometry and Mesh}
+ 
+ 
+ \subsubsection{Do your Geometry in a way that you have Geometrical Objects for the upcoming Groups in the Mesh}
+ 
+  In that way, you will be able to construct ``Groups on Geometry'', which is flexible when you change your parameters in the Notebook
+ 
+ \subsubsection{Where to do certain operations}
+ 
+  \paragraph{ROTATIONS in Geometry or Mesh?}
 
 
 If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
 
 If you do it in the Mesh, the Geometry does not follow either.
 
-\subsection{SPLIT EDGES/FACES}
+\subsubsection{SPLIT EDGES/FACES - Partition, Explode}
 
 
 The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
@@ -737,21 +781,25 @@ It seems like Cut is not the right tool for splitting
 
 Pay attention to the difference between Common and Intersection
 
- \section{MESH}
 
+\paragraph{When you mesh a Partition object, the Mesh module automatically generates Groups of Faces... Later you may use them, they are automatically Groups on Geometry!}
 
  
- \chapter{Procedure - 2D, Mapping}
+ \section{1D, Edges}
+
+ \section{2D, Triangles}
+ 
+ \section{2D, Quadrangles}
 
 
-\section{Geometry}
+\subsection{Geometry}
 
 
 Create faces (Draw points and lines if needed, or create Faces directly)
 
    --> Extract edges from a face (Explode)
    
-\section{Mesh}
+\subsection{Mesh}
  
 Create Mesh object (only initialize)
 
@@ -766,7 +814,7 @@ In Mesh:
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
 
   
-  \subsection{Create Mesh by pieces: CompoundMesh}
+  \subsubsection{Create Mesh by pieces: CompoundMesh}
   
 -- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
 
@@ -791,23 +839,133 @@ In Mesh:
      --> Rename it to "Mesh" + something!!!
      
  
-- AAA: I think I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
+- AAA: I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
   I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
     
-\subsection{Groups of Mesh elements}
  
-  must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann).
-  
-  
-  What about the groups that are not for boundary conditions? In that case, first is ``flag'', second is ``type'', where ``type'' will have
-  a different meaning
 
-  In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
-  we have to define Groups of Edges, or Faces, or Volumes (also Groups of Nodes for the extremes of a 1d domain)
-  
-  The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
+\subsection{Divided Disk}
 
-- You can use Filters to define Groups of Mesh Elements
+Divided Disk or Divided Cylinder do exactly what you are looking for!!!
+
+Partition a semisphere using a Divided Disk!
+
+Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
+
+\subsection{From scratch}
+
+For a circle, just do a square in the middle, then divide the circumference into 4 parts,
+join the angles of the squares with the vertices of these parts and you are done.
+
+For the semisphere, if you try the same it doesn't work, because the faces that are constructed
+do not belong to the original semisphere...
+
+So the idea seems to be NOT the following:
+ - make curved edges on the semisphere
+ - use them to create curved faces
+  So, try to avoid starting from the Edges and instead keep yourself at the level of Faces.
+  Then only at the end you will Explode to get the Edges (that you may need later for submeshes)
+  
+  Also, try not to cut too much, because if you do so you may have multiple edges on one side and then it is not so easy to mesh...
+ 
+ The other way to go is to directly create subfaces by Partition of the semisphere!
+ 
+ First you split, then you join...
+ 
+ Now:
+ 
+ - Fuse doesn't work with non-planar faces...
+ - Glue Edges is to put together coincident edges, but not to remove them
+ - It seems like the right option is Sewing, then Union faces, then Explode to get the edges for the submeshes
+ - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
+   and that creates problems in the mapping algorithm. So, it's all about making 1 edge
+   
+
+\section{3D - Hexahedra}
+
+\subsection{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
+
+  You can leave the edges where they are, because in 3d only Volumes and Faces will be read from the code
+ 
+
+ \subsection{If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
+  what is the best way to do that?}
+  
+
+I cannot create a Submesh of a Submesh
+
+- Geometry
+  Create Volumes
+    ---> Extract Faces from a Volume
+    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
+- Mesh 
+  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
+  You don't want to do Automatic Hexahedralization or Tetrahedralization...
+  
+- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
+  Global Algorithms:
+    3d: Hexahedron (i,j,k)
+    2d: Quadrangle mapping
+    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
+    
+    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
+    
+
+    
+\subsubsection{MESH EXTRUSION}
+
+
+- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
+  is simply to do your 2D mesh and then extrude it
+  
+- Do extrusion only of faces to avoid generation of extra edges    
+
+- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
+
+
+
+\subsection{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
+
+
+When you explode adjacent faces, the edges are called differently... we should identify them
+
+
+ \subsection{Change the Geometry in the Mesh with ``Move node''}
+
+
+ There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
+
+ - 
+ 
+
+\subsection{Translate Mesh}
+
+ 
+ Copy Mesh of course does not do the trick, you need ``Translation''
+ 
+ ``Offset'' of a mesh does not work for Quadratic mesh
+ 
+ ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
+
+ 
+\subsection{Stretch elements}
+
+  ``Scale transform'' does the trick
+
+  \section{3D - Tetrahedra}
+  
+   \subsection{Algorithms}
+
+  \section{3D - Wedges}
+  
+  
+  \chapter{Procedure: Convert to biquadratic (for quad/hex) or to quadratic (for tri/tet)}
+  
+  This is because we need those nodes to construct quadratic/biquadratic dofs
+  
+  
+  \chapter{Procedure: Do Groups of Mesh elements}
+ 
 
 \subsubsection{Can I define more than one Group on the same element?}
 
@@ -866,130 +1024,54 @@ In Mesh:
  and then do ``Create boundary elements'' on that Group
  
  
- 
-\section{QUADRILATERAL MESH of CIRCLES/CYLINDERS/SPHERES}
+ \subsection{Do ``Group on Geometry'' or ``Group on Filter'' instead of ``Standalone group'',
+          whenever possible}
+          
+    The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
 
-\section{Divided Disk}
+- You can use Filters to define Groups of Mesh Elements
 
-Divided Disk or Divided Cylinder do exactly what you are looking for!!!
+        
+  \subsection{If you do Compound, do the ``Groups on Geometry'' before doing Compound, i.e., on the partial meshes}         
+          
+  In fact a Compound does not have an associated Geometry to it
+        
+          
+\section{Requirements for Groups: ALL}
 
-Partition a semisphere using a Divided Disk!
 
-Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
+\subsection{Name}
 
-\section{From scratch}
-
-For a circle, just do a square in the middle, then divide the circumference into 4 parts,
-join the angles of the squares with the vertices of these parts and you are done.
-
-For the semisphere, if you try the same it doesn't work, because the faces that are constructed
-do not belong to the original semisphere...
-
-So the idea seems to be NOT the following:
- - make curved edges on the semisphere
- - use them to create curved faces
-  So, try to avoid starting from the Edges and instead keep yourself at the level of Faces.
-  Then only at the end you will Explode to get the Edges (that you may need later for submeshes)
+  must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann).
   
-  Also, try not to cut too much, because if you do so you may have multiple edges on one side and then it is not so easy to mesh...
- 
- The other way to go is to directly create subfaces by Partition of the semisphere!
- 
- First you split, then you join...
- 
- Now:
- 
- - Fuse doesn't work with non-planar faces...
- - Glue Edges is to put together coincident edges, but not to remove them
- - It seems like the right option is Sewing, then Union faces, then Explode to get the edges for the submeshes
- - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
-   and that creates problems in the mapping algorithm. So, it's all about making 1 edge
+  
+  What about the groups that are not for boundary conditions? In that case, first is ``flag'', second is ``type'', where ``type'' will have
+  a different meaning
+
+  In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
+  we have to define Groups of Edges, or Faces, or Volumes (also Groups of Nodes for the extremes of a 1d domain)
+  
+
+
+\subsection{Give one and only one group for each element}
+
+ That's because we have not implemented reading when multiple groups are defined on the same element
+
+\section{Requirements for Groups: BOUNDARY CONDITIONS}
+
    
-
-\chapter{Procedure - 3D}
-
-\section{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
-
-  You can leave the edges where they are, because in 3d only Volumes and Faces will be read from the code
- 
-
- \section{If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
-  what is the best way to do that?}
-  
-
-I cannot create a Submesh of a Submesh
-
-- Geometry
-  Create Volumes
-    ---> Extract Faces from a Volume
-    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
-- Mesh 
-  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
-  You don't want to do Automatic Hexahedralization or Tetrahedralization...
-  
-- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
-  Global Algorithms:
-    3d: Hexahedron (i,j,k)
-    2d: Quadrangle mapping
-    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
-    
-    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
-    
-
-    
-\subsection{MESH EXTRUSION}
-
-
-- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
-  is simply to do your 2D mesh and then extrude it
-  
-- Do extrusion only of faces to avoid generation of extra edges    
-
-- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
-
-
-
-\section{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
-
-
-When you explode adjacent faces, the edges are called differently... we should identify them
-
-
- \section{Change the Geometry in the Mesh with ``Move node''}
-
-
- There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
-
- - 
- 
-
-\section{Translate Mesh}
-
- 
- Copy Mesh of course does not do the trick, you need ``Translation''
- 
- ``Offset'' of a mesh does not work for Quadratic mesh
- 
- ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
-
- 
-\section{Stretch elements}
-
-  ``Scale transform'' does the trick
+\subsection{Remove inner boundary elements}
 
   
-   
- \section{BOUNDARY CONDITIONS}
-
-
- I think it's best if I do the groups on the initial meshes (before doing the Compound)
-  because there I can do "Group on geometry",
-while a Compound does not have an associated Geometry to it
- (alternatively, one could do Group on Filter maybe)
-
- \section{Mesh controls}
+ \section{Requirements for Groups: OTHER PROPERTIES}
  
-  You want to check that there are 
+ You can specify geometrical regions
+ 
+ 
+  
+ \chapter{Procedure: Run some Mesh controls}
+ 
+ Before exporting the mesh file, it would be wise to check that there are 
   
   - no Free Nodes or Orphan Nodes (nodes that don't belong to any element)
   
@@ -998,11 +1080,20 @@ while a Compound does not have an associated Geometry to it
   - no Inner Edges (only Free Borders, i.e., edges that are at the boundary of the domain)
   
   
+ \chapter{Procedure: Export MED file}
+ 
+  Make sure you remove the check ``Automatically detect space dimension''.
+  
+  That's because we always read all 3D coordinates.
+  That can handle cases like 2d manifold in 3d space.
+  
+  
 
  
 
  \chapter{Questions}
 
+- What is the difference between SubMeshes and Groups? Are Submeshes exported in the MED file?
 
 - When I remove a Group, can I ask to remove also the elements of that group from the Mesh???
 
@@ -1034,7 +1125,7 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
     That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
 
 
-\part{Mesh Visualization: Paraview}
+\part{Visualization: Paraview}
 
 
 \chapter{Selections}
