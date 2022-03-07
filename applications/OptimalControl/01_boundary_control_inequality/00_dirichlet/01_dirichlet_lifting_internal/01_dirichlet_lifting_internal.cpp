@@ -6,8 +6,8 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL   4
-#define FACE_FOR_TARGET    1
+#define FACE_FOR_CONTROL   1
+#define FACE_FOR_TARGET    3
 
 #include "../../../param.hpp"
 
@@ -189,6 +189,7 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
 
   return 0;
+  
 }
 
 
@@ -622,13 +623,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
 													      /*+ ineq_flag * sol_mu_gss*/ ); }
-	      else if ( control_el_flag == 0) { Res[nDof_u + i] +=   (- penalty_outside_control_domain) /* *  (1 - control_node_flag[i])*/ * (sol_ctrl[i] - 0.); }
+	      else if ( control_el_flag == 0) { Res[nDof_u + i] +=   (- penalty_outside_control_domain)  *  (1 - control_node_flag[i]) * (sol_ctrl[i] - 0.); }
 	  }
           // THIRD ROW
           if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i ) ;
 
        if (i < nDof_mu)  {
-            if ( control_el_flag == 0) {  Res[nDof_u + nDof_ctrl + nDof_adj + i] +=   (- penalty_outside_control_domain) /**  (1 - control_node_flag[i])*/ * (sol_mu[i] - 0.); }
+            if ( control_el_flag == 0) {  Res[nDof_u + nDof_ctrl + nDof_adj + i] +=   (- penalty_outside_control_domain) *  (1 - control_node_flag[i]) * (sol_mu[i] - 0.); }
        }
        
            
@@ -697,7 +698,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
 		 Jac[ (nDof_u + i) * nDof_AllVars +
-		      (nDof_u + j)                      ]  +=  penalty_outside_control_domain/* * (1 - control_node_flag[i])*/;
+		      (nDof_u + j)                      ]  +=  penalty_outside_control_domain * (1 - control_node_flag[i]);
 		}
 	      
 	      }
@@ -729,7 +730,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //============= delta_mu row ===============================
                 if ( i < nDof_mu && j < nDof_mu && i==j )  {   
 	        if ( control_el_flag == 0)  {  
-		  Jac[   (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +  (nDof_u + nDof_ctrl + nDof_adj + j) ]  += penalty_outside_control_domain /** (1 - control_node_flag[i])*/;    //MU
+		  Jac[   (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +  (nDof_u + nDof_ctrl + nDof_adj + j) ]  += penalty_outside_control_domain * (1 - control_node_flag[i]);    //MU
                 }
 	      }
 	      
@@ -849,14 +850,13 @@ add_one_times_mu_res_ctrl(iproc,
                                RES);
     
     
-    // ***************** END ASSEMBLY - ADD PART *******************
     
      
 RES->close();
 if (assembleMatrix) KK->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
-      
+      // ***************** ADD PART - END  *******************
     
- //========== dof-based part, without summation
+    
  
 
 
