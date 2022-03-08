@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS 1
+#define N_UNIFORM_LEVELS 4
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -37,7 +37,7 @@
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
-#define ALPHA_CTRL_VOL 0.00001 
+#define ALPHA_CTRL_VOL 0.01 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
 
 
