@@ -292,8 +292,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     const unsigned    iproc = msh->processor_id();
   
     
-    constexpr bool print_algebra_global = true;
-    constexpr bool print_algebra_local = true;
+    constexpr bool print_algebra_global = false;
+    constexpr bool print_algebra_local = false;
   
 
 
@@ -1000,16 +1000,18 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     } //end element loop for each process    
  //   ***************** INSERT PART - END (must go AFTER the sum, clearly) *******************
    
+  RES->close();
+  if (assembleMatrix) KK->close();
 
  
      //print JAC and RES to files
     const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
   if (print_algebra_global) {
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, mlPdeSys->GetNonlinearIt());
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
 
     RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
     pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
 
   }
