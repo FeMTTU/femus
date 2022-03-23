@@ -265,6 +265,11 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 }
 
 
+// Changes by Aman
+double RHS(const std::vector < double >& x_qp) {
+  double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
+  return r;
+};
 
 
 
@@ -555,7 +560,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  //========= gauss value quantities ==================   
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
  //===================================================   
-    
+    std::vector<double> x_qp(dim, 0.);
+
     
       // *** Quadrature point loop ***
       for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
@@ -578,7 +584,20 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 //--------------    
-          
+
+
+//aman changes
+	std::fill(x_qp.begin(), x_qp.end(), 0.);
+
+   	for (unsigned d = 0; d < dim; d++) {
+         for (unsigned i = 0; i < dim; i++) {
+                    x_qp[d] += geom_element.get_coords_at_dofs_3d()[i][d]*phi_u[d];
+
+         }
+        }
+//    
+    
+    
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
@@ -608,7 +627,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+                  if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  RHS(x_qp) ) - laplace_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
