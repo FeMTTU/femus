@@ -110,15 +110,12 @@ update the LIST in the src/ cmake file!!! (use ls -1)
 
 
 
-\part{Application}
-
-
- \chapter{Setup}
+\part{Application: Creation}
   
   
 \section{How to SETUP a NEW APPLICATION (will do a script probably)}
 
-- Create a folder in the Applications directory with your main function and your src/header files
+- Create a folder in the ./applications directory with your main function and your src/header files
 
 - Write the Cmakelists.txt file for it
 
@@ -129,62 +126,532 @@ update the LIST in the src/ cmake file!!! (use ls -1)
 
 - now go to your application folder and run make to generate your executable
 
-  \chapter{Implementation}
 
-- Follow the examples
-
- \chapter{Run}
-
- \section{How to run in parallel with threads instead of cores}
+ 
+\part{Mesh Generation: Salome}
 
 
-"nproc" gives the number of threads. If your CPU has 2 threads per core, "mpirun -n " works up to nproc/2
-
-To overcome this, do
-
-"mpirun --map-by socket:OVERSUBSCRIBE -n ..."
+\chapter{Features}
 
 
- \section{How to schedule a suite of runs}
+ - {SUPPORT for DIFFERENT SHAPE ELEMENTS (quad, hex, tri, tet, ...)} 
 
-- Script
+ - {SUPPORT for HYBRID MESHES (different elements on the same mesh)}
+    
+ - {SUPPORT for BIQUADRATIC ELEMENTS}
+    
+ - {SUPPORT for SCRIPTING}
+  
+ - Possibility to define Data or Initial/Boundary conditions on your Mesh 
 
- \section{How to change the mesh file of an application}
+ - {An ACTIVE COMMUNITY of USERS}
 
-- Put the mesh file in the input/ directory
+ - Potentially, Salome is also available to be \textit{compiled} on your computer
+ 
+ - Salome also contain its own version of Paraview
 
-- Set the filename in the main file
-
-\section{When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!!}
  
  
+ \section{Modules}
 
- \section{How to RESTART a run of an application}
+ \subsection{SHAPER}
+
+
+This is a new module that in the long run is supposed to replace the role of the GEOM module.
+In the meantime, you can:
+  - perform drawing operations in the Shaper module 
+  - do "Export to Geom" if you want to then do the meshing.
+
+At the beginning you start with a "Partset" that contains 7 elements (Origin, axes, ...) that cannot be deleted  
+To draw stuff in Shaper, first create a Part with "New Part".
+
+Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
+If you have no object in the Results, nothing will be exported to Geometry.
+
+Then, it's not so clear how to start setting points... Should I use Construction, or Sketch... or Build...
+
+Ok, it seems like:
+ - Sketch is for drawing things "imprecisely", as if it was a real sketch, without specifying precise coordinates and so on.
+ - Construction allows to put precise information
+
+ When you do a Sketch, remove the Interaction Style Switch (white mouse icon)
  
-- THE WHOLE RUN is in a single "time" DIRECTORY...
-  so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
+ - If you built a Point as a Construction in the Partset and you want to REMOVE it, you have to click on "Partset" and say "Activate". 
+   Then you can right-click and finally "Delete" is active. Then, Deactivate again to continue drawing
 
-- Set the folder from which to restart in the file run\_to\_restart\_from
+ - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
+   
+ \subsection{GEOMETRY}
+ 
 
-- set the ITERATION NUMBER in the "initial\_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+ \subsection{MESH}
 
-- set the other parameters like "nsteps"
+ 
+  \subsection{PARAVIS}
+  
+  
+  It is Paraview with additional features, especially for MED files
+
+  
+  
+\chapter{Installation issues}
+
+  The first time you run Salome after installation,
+  you may have it asking for opening service...
+
+The "Failed to narrow the root naming context" 
+is an error displayed when there is no entry in /etc/hosts 
+corresponding to your hostname. So, you need to add the output of the command
+ ``hostname'' to that file!
+
+\chapter{How to save/open your work}
+
+  \section{Study HDF file}
+
+  
+  \section{Python script}
+
+  
+    \subsection{When you REMOVE things, such as Mesh Elements, or Groups, the script may complain at loading. Then it is not hard to fix it}
+    
+    
+    You go in the script and you see where it says ``some objects were removed''.
+    Remove them manually.
+  
+  
+  
+  
+ \chapter{Procedure: Geometry and Mesh}
+
+   \section{General ideas}
+   
+   
+ \subsection{Parametrize your operations}
+
+    Use the NoteBook tab to define variables. You can then use them both in the Geometry and in the Mesh modules.
+
+ \subsection{Synergy between Geometry and Mesh}
+ 
+ 
+ \subsubsection{Do your Geometry in a way that you have Geometrical Objects for the upcoming Groups in the Mesh}
+ 
+  In that way, you will be able to construct ``Groups on Geometry'', which is flexible when you change your parameters in the Notebook
+  
+  \paragraph{You need the Geometrical Objects for the Boundary conditions}
+ 
+  \paragraph{You may need the Geometrical Objects for Volume regions as well}
+  
+  
+  
+  \subsection{Try to do Geometry operations as opposed to Mesh operations}
+ 
+  
+  
+  
+  
+  
+ \subsubsection{Where to do certain operations}
+ 
+  \paragraph{ROTATIONS in Geometry or Mesh?}
 
 
-- We must be very careful.
+If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
 
-- We must change ALMOST NOTHING
+If you do it in the Mesh, the Geometry does not follow either.
 
-- Do not change NUMBER OF PROCESSORS
+\subsubsection{SPLIT EDGES/FACES - Partition, Explode}
 
-- Do not change NUMBER OF LEVELS
 
-- Do not change the OUTPUT FOLDERNAME (of course...)
+The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
+It seems like Cut is not the right tool for splitting
 
+Pay attention to the difference between Common and Intersection
+
+
+\paragraph{When you mesh a Partition object, the Mesh module automatically generates Groups of Faces... Later you may use them, they are automatically Groups on Geometry!}
+
+ 
+ \section{1D, Edges}
+
+ \section{2D, Triangles}
+ 
+ \section{2D, Quadrangles}
+
+
+\subsection{Geometry}
+
+
+Create faces (Draw points and lines if needed, or create Faces directly)
+
+   --> Extract edges from a face (Explode)
+   
+\subsection{Mesh}
+ 
+Create Mesh object (only initialize)
+
+Create SubMesh of Mesh over the wanted SubGeometry
+
+   --> Hypothesis: Propagation of 1D Hypothesis
+
+In Mesh:
+
+--   2D: Quadrangle Mapping
+
+   1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
+
+  
+  \subsubsection{Create Mesh by pieces: CompoundMesh}
+  
+-- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
+
+  You have to do this operation BEFORE creating a CompoundMesh,
+  because the compound mesh does not have an underlying geometry to use 
+   
+  You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
+
+  
+-- Build CompoundMesh to merge the meshes
+
+     --> Check the Boundary of the CompoundMesh!!! 
+     
+     ---> When you do a Compound, the double nodes are MERGED, but the inner edges or inner faces are not REMOVED! So, you have to remove them manually!!!
+     
+     ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
+     
+          To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
+          
+          Unfortunately you don't see this operation as a new object in the Mesh menu
+          
+     --> Rename it to "Mesh" + something!!!
+     
+ 
+- AAA: I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
+  I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
+    
+ 
+
+\subsection{Divided Disk}
+
+Divided Disk or Divided Cylinder do exactly what you are looking for!!!
+
+Partition a semisphere using a Divided Disk!
+
+Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
+
+\subsection{From scratch}
+
+For a circle, just do a square in the middle, then divide the circumference into 4 parts,
+join the angles of the squares with the vertices of these parts and you are done.
+
+For the semisphere, if you try the same it doesn't work, because the faces that are constructed
+do not belong to the original semisphere...
+
+So the idea seems to be NOT the following:
+ - make curved edges on the semisphere
+ - use them to create curved faces
+  So, try to avoid starting from the Edges and instead keep yourself at the level of Faces.
+  Then only at the end you will Explode to get the Edges (that you may need later for submeshes)
+  
+  Also, try not to cut too much, because if you do so you may have multiple edges on one side and then it is not so easy to mesh...
+ 
+ The other way to go is to directly create subfaces by Partition of the semisphere!
+ 
+ First you split, then you join...
+ 
+ Now:
+ 
+ - Fuse doesn't work with non-planar faces...
+ - Glue Edges is to put together coincident edges, but not to remove them
+ - It seems like the right option is Sewing, then Union faces, then Explode to get the edges for the submeshes
+ - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
+   and that creates problems in the mapping algorithm. So, it's all about making 1 edge
+   
+\section{3D}
+
+
+\subsection{When you do a 3d mesh, for Element Types not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
+
+  You can leave the edges where they are, 
+  you don't need to remove them,
+  because in 3d only Volumes and Faces will be read from the code
+ 
+
+
+\section{3D - Hexahedra}
+
+
+ \subsection{Parallelepiped with 3 arbitrary mesh discretizations in the 3 directions}
+
+I cannot create a Submesh of a Submesh
+
+- Geometry
+
+  Create Volumes
+  
+    ---> Extract Faces from a Volume
+    
+    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
+
+    
+    \subsubsection{Hexahedron (i,j,k)}
+    
+   Global Algorithms:
+    3d: Hexahedron (i,j,k)
+    2d: Quadrangle mapping
+    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
+    
+    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
+   
+    
+  \subsubsection{Extrusion 3d}
+  
+  
+  Box
+  
+  Explode the Faces (so that you can select the boundary conditions)
+  
+  Explode the Edges of the Faces
+  
+  
+  
+ \subsection{Geometry of Extrusion type}
+ 
+  
+  \subsubsection{BETTER: Do 2d Geometry, Extrude 2d Geometry, then 3d Mesh with Algorithm ``Extrusion 3d''}
+  
+  
+  \subsubsection{WORSE: Do 2d Geometry, then 2d Mesh, then Extrude the Mesh}
+ 
+ 
+ - Do extrusion only of faces to avoid generation of extra edges    
+
+  - "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
+
+
+
+\subsection{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
+
+
+When you explode adjacent faces, the edges are called differently... we should identify them
+
+ 
+ 
+  \section{3D - Tetrahedra}
+  
+   \subsection{Algorithms}
+   
+   
+   
+
+  \section{3D - Wedges}
+  
+  
+  \chapter{Procedure: Convert to biquadratic (for quad/hex) or to quadratic (for tri/tet)}
+  
+  This is because we need those nodes to construct quadratic/biquadratic dofs
+  
+  
+  
+  \chapter{Procedure: Mesh operations (avoid, whenever possible)}
+  
+   It is better to avoid them because they do not have underlying Geometrical Objects anymore
+   
+
+   
+\subsection{Compound Mesh}
+   
+   
+   
+\subsection{Translate Mesh}
+
+ 
+ Copy Mesh of course does not do the trick, you need ``Translation''
+ 
+ ``Offset'' of a mesh does not work for Quadratic mesh
+ 
+ ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
+
+
+\subsection{Stretch elements}
+
+  ``Scale transform'' does the trick
+
+   
+ \subsection{Move nodes}
+
+
+ There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
+
+
+
+  
+  
+  \chapter{Procedure: Do Groups of Mesh elements}
+ 
+
+\subsubsection{Can I define more than one Group on the same element?}
+
+ Yes, you can. It will be a bit more complicated to handle the reading, though.
+ In fact, when Groups of elements are intersection,
+ the naming inside the MED file changes
+ 
+ If there are groups that intersect, then Salome - when exporting to MED - 
+ will define intersecting families. 
+ 
+ If there are elements belonging to 2 groups,
+ they will define a FAM with its own index and the name of the 2 groups
+ 
+ So, the elements belonging only to 1 group will have a FAM with only one group
+ 
+ So, FAM are generated based on WHAT INTERSECTIONS BETWEEN GROUPS there are.
+ 
+ All of this is made in such a way that every element 
+ will have \textit{only one} FAM number in the FAM field of the elements.
+ 
+
+\subsubsection{Can I select faces INSIDE the domain, not at the boundary???}
+
+ The MED format exports only the BOUNDARY ELEMENTS...
+ How can I export INNER FACE ELEMENTS as well?
+ Well, when I draw a mesh by doing Submeshes and making a Compound,
+ there are still elements from the interfaces of the boundaries...
+ 
+ We could have some of the inner edges, coming from the result of drawing subpieces 
+
+ Perhaps what we can do is to not remove the inner faces used to build the submeshes.
+ 
+ Then, I have to change the way I check that ALL boundaries have been implemented,
+ because now I will have additional edges in the list of all edges
+ that are NOT boundary edges...
+ Basically, to check if an element is on the boundary I would 
+ just have to count how many volume elements it belongs to
+ (I am excluding a slit domain with this)
+ 
+ If an edge belongs only to 1 volume element, then it is a Boundary face.
+ 
+ 
+ - An alternative - by hand - could be to use ``Add Quadratic Edge''... but it's very tedious
+ 
+ - The solution of keeping the inner edges is constrained to the fact 
+   that I have to draw thinking of those inner edges ``ahead of time''.
+   For instance, assume you want to perform integration over a face 
+   that was not used to draw your mesh... 
+   Then you should draw your mesh using that face from the very beginning...
+   
+ - The third solution, in case we cannot create groups of inner edges graphically,
+    is to revert back to using if's on the coordinates...  
+ 
+ - Another way that is graphical consists in defining the Group of Volume Elements
+ whose Boundary you want to identify,
+ and then do ``Create boundary elements'' on that Group
+ 
+ 
+ \subsection{Do ``Group on Geometry'' or ``Group on Filter'' instead of ``Standalone group'',
+          whenever possible}
+          
+    The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
+
+- You can use Filters to define Groups of Mesh Elements
+
+        
+  \subsection{If you do Compound, do the ``Groups on Geometry'' before doing Compound, i.e., on the partial meshes}         
+          
+  In fact a Compound does not have an associated Geometry to it
+        
+          
+\section{Requirements for Groups: ALL}
+
+
+\subsection{Name}
+
+  must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann).
+  
+  
+  What about the groups that are not for boundary conditions? In that case, first is ``flag'', second is ``type'', where ``type'' will have
+  a different meaning
+
+  In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
+  we have to define Groups of Edges, or Faces, or Volumes (also Groups of Nodes for the extremes of a 1d domain)
+  
+
+
+\subsection{Give one and only one group for each element}
+
+ That's because we have not implemented reading when multiple groups are defined on the same element
+
+\section{Requirements for Groups: BOUNDARY CONDITIONS}
+
+   
+\subsection{Remove inner boundary elements}
+
+  
+ \section{Requirements for Groups: OTHER PROPERTIES}
+ 
+ You can specify geometrical regions
+ 
+ 
+  
+ \chapter{Procedure: Run some Mesh controls}
+ 
+ Before exporting the mesh file, it would be wise to check that there are 
+  
+  - no Free Nodes or Orphan Nodes (nodes that don't belong to any element)
+  
+  - no Double Nodes
+  
+  - no Inner Edges (only Free Borders, i.e., edges that are at the boundary of the domain)
+  
+  
+ \chapter{Procedure: Export MED file}
+ 
+  Make sure you remove the check ``Automatically detect space dimension''.
+  
+  That's because we always read all 3D coordinates.
+  That can handle cases like 2d manifold in 3d space.
+  
+  
+
+ 
+
+ \chapter{Questions}
+
+- What is the difference between SubMeshes and Groups? Are Submeshes exported in the MED file?
+
+- When I remove a Group, can I ask to remove also the elements of that group from the Mesh???
+
+- When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix \verb|_extruded|
+
+- When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
+On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.
+
+- Other times, you dump the script and the Shaper is gone!! It is a current bug! Up to now, you need to activate Shaper before any dumping. Sorry.
+
+- Operations in the Mesh such as "Convert to/from quadratic", "Remove elements" and others
+  are not shown as stages in the Mesh menu in Object Browser
+
+- Intersection vs. Common: the first does it with Edges, the second does it with Volumes, basically...
+
+- To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
+  then that face will be fixed!
+  Another trick is to put the Face in a Compound. There it works!
+
+- When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
+  Otherwise nothing happens!
+
+- What is the difference between Regular Faces and Free Faces in the Mesh algorithms? For instance, the Disk only shows algorithms for Free faces...
+
+- Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
+  where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?
+    
+  Possible answer: I think the way to go in these cases is to do, after Explode, a "Create Group" in the Geometry.
+    That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
 
 
 
 \part{Application: Implementation, main stages}
+
+
+  - Follow the examples
 
   
    \chapter{Main blocks}
@@ -661,468 +1128,55 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
  
    \chapter{System(s) (of a Problem): Example}
 
- 
-\part{Mesh Generation: Salome}
+
+ \part{Application: Run}
+
+ \section{How to run in parallel with threads instead of cores}
 
 
-\chapter{Features}
+"nproc" gives the number of threads. If your CPU has 2 threads per core, "mpirun -n " works up to nproc/2
+
+To overcome this, do
+
+"mpirun --map-by socket:OVERSUBSCRIBE -n ..."
 
 
- - {SUPPORT for DIFFERENT SHAPE ELEMENTS (quad, hex, tri, tet, ...)} 
+ \section{How to schedule a suite of runs}
 
- - {SUPPORT for HYBRID MESHES (different elements on the same mesh)}
-    
- - {SUPPORT for BIQUADRATIC ELEMENTS}
-    
- - {SUPPORT for SCRIPTING}
-  
- - Possibility to define Data or Initial/Boundary conditions on your Mesh 
+- Script
 
- - {An ACTIVE COMMUNITY of USERS}
+ \section{How to change the mesh file of an application}
 
- - Potentially, Salome is also available to be \textit{compiled} on your computer
- 
- - Salome also contain its own version of Paraview
+- Put the mesh file in the input/ directory
 
- 
- 
- \section{Modules}
+- Set the filename in the main file
 
- \subsection{SHAPER}
-
-
-This is a new module that in the long run is supposed to replace the role of the GEOM module.
-In the meantime, you can:
-  - perform drawing operations in the Shaper module 
-  - do "Export to Geom" if you want to then do the meshing.
-
-At the beginning you start with a "Partset" that contains 7 elements (Origin, axes, ...) that cannot be deleted  
-To draw stuff in Shaper, first create a Part with "New Part".
-
-Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
-If you have no object in the Results, nothing will be exported to Geometry.
-
-Then, it's not so clear how to start setting points... Should I use Construction, or Sketch... or Build...
-
-Ok, it seems like:
- - Sketch is for drawing things "imprecisely", as if it was a real sketch, without specifying precise coordinates and so on.
- - Construction allows to put precise information
-
- When you do a Sketch, remove the Interaction Style Switch (white mouse icon)
- 
- - If you built a Point as a Construction in the Partset and you want to REMOVE it, you have to click on "Partset" and say "Activate". 
-   Then you can right-click and finally "Delete" is active. Then, Deactivate again to continue drawing
-
- - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
-   
- \subsection{GEOMETRY}
- 
-
- \subsection{MESH}
-
- 
-\chapter{Installation issues}
-
-  The first time you run Salome after installation,
-  you may have it asking for opening service...
-
-The "Failed to narrow the root naming context" 
-is an error displayed when there is no entry in /etc/hosts 
-corresponding to your hostname. So, you need to add the output of the command
- ``hostname'' to that file!
-
-\chapter{How to save/open your work}
-
-  \section{Study HDF file}
-
-  
-  \section{Python script}
-
-  
-    \subsection{When you REMOVE things, such as Mesh Elements, or Groups, the script may complain at loading. Then it is not hard to fix it}
-    
-    
-    You go in the script and you see where it says ``some objects were removed''.
-    Remove them manually.
-  
-  
-  
-  
- \chapter{Procedure: Geometry and Mesh}
-
-   \section{General ideas}
-   
-   
- \subsection{Parametrize your operations}
-
-    Use the NoteBook tab to define variables. You can then use them both in the Geometry and in the Mesh modules.
-
- \subsection{Synergy between Geometry and Mesh}
+\section{When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!!}
  
  
- \subsubsection{Do your Geometry in a way that you have Geometrical Objects for the upcoming Groups in the Mesh}
+
+ \section{How to RESTART a run of an application}
  
-  In that way, you will be able to construct ``Groups on Geometry'', which is flexible when you change your parameters in the Notebook
- 
- \subsubsection{Where to do certain operations}
- 
-  \paragraph{ROTATIONS in Geometry or Mesh?}
+- THE WHOLE RUN is in a single "time" DIRECTORY...
+  so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
 
+- Set the folder from which to restart in the file run\_to\_restart\_from
 
-If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
+- set the ITERATION NUMBER in the "initial\_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
 
-If you do it in the Mesh, the Geometry does not follow either.
+- set the other parameters like "nsteps"
 
-\subsubsection{SPLIT EDGES/FACES - Partition, Explode}
 
+- We must be very careful.
 
-The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
-It seems like Cut is not the right tool for splitting
+- We must change ALMOST NOTHING
 
-Pay attention to the difference between Common and Intersection
+- Do not change NUMBER OF PROCESSORS
 
+- Do not change NUMBER OF LEVELS
 
-\paragraph{When you mesh a Partition object, the Mesh module automatically generates Groups of Faces... Later you may use them, they are automatically Groups on Geometry!}
+- Do not change the OUTPUT FOLDERNAME (of course...)
 
- 
- \section{1D, Edges}
-
- \section{2D, Triangles}
- 
- \section{2D, Quadrangles}
-
-
-\subsection{Geometry}
-
-
-Create faces (Draw points and lines if needed, or create Faces directly)
-
-   --> Extract edges from a face (Explode)
-   
-\subsection{Mesh}
- 
-Create Mesh object (only initialize)
-
-Create SubMesh of Mesh over the wanted SubGeometry
-
-   --> Hypothesis: Propagation of 1D Hypothesis
-
-In Mesh:
-
---   2D: Quadrangle Mapping
-
-   1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
-
-  
-  \subsubsection{Create Mesh by pieces: CompoundMesh}
-  
--- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
-
-  You have to do this operation BEFORE creating a CompoundMesh,
-  because the compound mesh does not have an underlying geometry to use 
-   
-  You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
-
-  
--- Build CompoundMesh to merge the meshes
-
-     --> Check the Boundary of the CompoundMesh!!! 
-     
-     ---> When you do a Compound, the double nodes are MERGED, but the inner edges or inner faces are not REMOVED! So, you have to remove them manually!!!
-     
-     ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
-     
-          To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
-          
-          Unfortunately you don't see this operation as a new object in the Mesh menu
-          
-     --> Rename it to "Mesh" + something!!!
-     
- 
-- AAA: I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
-  I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
-    
- 
-
-\subsection{Divided Disk}
-
-Divided Disk or Divided Cylinder do exactly what you are looking for!!!
-
-Partition a semisphere using a Divided Disk!
-
-Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
-
-\subsection{From scratch}
-
-For a circle, just do a square in the middle, then divide the circumference into 4 parts,
-join the angles of the squares with the vertices of these parts and you are done.
-
-For the semisphere, if you try the same it doesn't work, because the faces that are constructed
-do not belong to the original semisphere...
-
-So the idea seems to be NOT the following:
- - make curved edges on the semisphere
- - use them to create curved faces
-  So, try to avoid starting from the Edges and instead keep yourself at the level of Faces.
-  Then only at the end you will Explode to get the Edges (that you may need later for submeshes)
-  
-  Also, try not to cut too much, because if you do so you may have multiple edges on one side and then it is not so easy to mesh...
- 
- The other way to go is to directly create subfaces by Partition of the semisphere!
- 
- First you split, then you join...
- 
- Now:
- 
- - Fuse doesn't work with non-planar faces...
- - Glue Edges is to put together coincident edges, but not to remove them
- - It seems like the right option is Sewing, then Union faces, then Explode to get the edges for the submeshes
- - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
-   and that creates problems in the mapping algorithm. So, it's all about making 1 edge
-   
-
-\section{3D - Hexahedra}
-
-\subsection{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
-
-  You can leave the edges where they are, because in 3d only Volumes and Faces will be read from the code
- 
-
- \subsection{If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
-  what is the best way to do that?}
-  
-
-I cannot create a Submesh of a Submesh
-
-- Geometry
-  Create Volumes
-    ---> Extract Faces from a Volume
-    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
-- Mesh 
-  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
-  You don't want to do Automatic Hexahedralization or Tetrahedralization...
-  
-- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
-  Global Algorithms:
-    3d: Hexahedron (i,j,k)
-    2d: Quadrangle mapping
-    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
-    
-    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
-    
-
-    
-\subsubsection{MESH EXTRUSION}
-
-
-- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
-  is simply to do your 2D mesh and then extrude it
-  
-- Do extrusion only of faces to avoid generation of extra edges    
-
-- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
-
-
-
-\subsection{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
-
-
-When you explode adjacent faces, the edges are called differently... we should identify them
-
-
- \subsection{Change the Geometry in the Mesh with ``Move node''}
-
-
- There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
-
- - 
- 
-
-\subsection{Translate Mesh}
-
- 
- Copy Mesh of course does not do the trick, you need ``Translation''
- 
- ``Offset'' of a mesh does not work for Quadratic mesh
- 
- ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
-
- 
-\subsection{Stretch elements}
-
-  ``Scale transform'' does the trick
-
-  \section{3D - Tetrahedra}
-  
-   \subsection{Algorithms}
-
-  \section{3D - Wedges}
-  
-  
-  \chapter{Procedure: Convert to biquadratic (for quad/hex) or to quadratic (for tri/tet)}
-  
-  This is because we need those nodes to construct quadratic/biquadratic dofs
-  
-  
-  \chapter{Procedure: Do Groups of Mesh elements}
- 
-
-\subsubsection{Can I define more than one Group on the same element?}
-
- Yes, you can. It will be a bit more complicated to handle the reading, though.
- In fact, when Groups of elements are intersection,
- the naming inside the MED file changes
- 
- If there are groups that intersect, then Salome - when exporting to MED - 
- will define intersecting families. 
- 
- If there are elements belonging to 2 groups,
- they will define a FAM with its own index and the name of the 2 groups
- 
- So, the elements belonging only to 1 group will have a FAM with only one group
- 
- So, FAM are generated based on WHAT INTERSECTIONS BETWEEN GROUPS there are.
- 
- All of this is made in such a way that every element 
- will have \textit{only one} FAM number in the FAM field of the elements.
- 
-
-\subsubsection{Can I select faces INSIDE the domain, not at the boundary???}
-
- The MED format exports only the BOUNDARY ELEMENTS...
- How can I export INNER FACE ELEMENTS as well?
- Well, when I draw a mesh by doing Submeshes and making a Compound,
- there are still elements from the interfaces of the boundaries...
- 
- We could have some of the inner edges, coming from the result of drawing subpieces 
-
- Perhaps what we can do is to not remove the inner faces used to build the submeshes.
- 
- Then, I have to change the way I check that ALL boundaries have been implemented,
- because now I will have additional edges in the list of all edges
- that are NOT boundary edges...
- Basically, to check if an element is on the boundary I would 
- just have to count how many volume elements it belongs to
- (I am excluding a slit domain with this)
- 
- If an edge belongs only to 1 volume element, then it is a Boundary face.
- 
- 
- - An alternative - by hand - could be to use ``Add Quadratic Edge''... but it's very tedious
- 
- - The solution of keeping the inner edges is constrained to the fact 
-   that I have to draw thinking of those inner edges ``ahead of time''.
-   For instance, assume you want to perform integration over a face 
-   that was not used to draw your mesh... 
-   Then you should draw your mesh using that face from the very beginning...
-   
- - The third solution, in case we cannot create groups of inner edges graphically,
-    is to revert back to using if's on the coordinates...  
- 
- - Another way that is graphical consists in defining the Group of Volume Elements
- whose Boundary you want to identify,
- and then do ``Create boundary elements'' on that Group
- 
- 
- \subsection{Do ``Group on Geometry'' or ``Group on Filter'' instead of ``Standalone group'',
-          whenever possible}
-          
-    The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
-
-- You can use Filters to define Groups of Mesh Elements
-
-        
-  \subsection{If you do Compound, do the ``Groups on Geometry'' before doing Compound, i.e., on the partial meshes}         
-          
-  In fact a Compound does not have an associated Geometry to it
-        
-          
-\section{Requirements for Groups: ALL}
-
-
-\subsection{Name}
-
-  must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann).
-  
-  
-  What about the groups that are not for boundary conditions? In that case, first is ``flag'', second is ``type'', where ``type'' will have
-  a different meaning
-
-  In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
-  we have to define Groups of Edges, or Faces, or Volumes (also Groups of Nodes for the extremes of a 1d domain)
-  
-
-
-\subsection{Give one and only one group for each element}
-
- That's because we have not implemented reading when multiple groups are defined on the same element
-
-\section{Requirements for Groups: BOUNDARY CONDITIONS}
-
-   
-\subsection{Remove inner boundary elements}
-
-  
- \section{Requirements for Groups: OTHER PROPERTIES}
- 
- You can specify geometrical regions
- 
- 
-  
- \chapter{Procedure: Run some Mesh controls}
- 
- Before exporting the mesh file, it would be wise to check that there are 
-  
-  - no Free Nodes or Orphan Nodes (nodes that don't belong to any element)
-  
-  - no Double Nodes
-  
-  - no Inner Edges (only Free Borders, i.e., edges that are at the boundary of the domain)
-  
-  
- \chapter{Procedure: Export MED file}
- 
-  Make sure you remove the check ``Automatically detect space dimension''.
-  
-  That's because we always read all 3D coordinates.
-  That can handle cases like 2d manifold in 3d space.
-  
-  
-
- 
-
- \chapter{Questions}
-
-- What is the difference between SubMeshes and Groups? Are Submeshes exported in the MED file?
-
-- When I remove a Group, can I ask to remove also the elements of that group from the Mesh???
-
-- When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix \verb|_extruded|
-
-- When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
-On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.
-
-- Other times, you dump the script and the Shaper is gone!! It is a current bug! Up to now, you need to activate Shaper before any dumping. Sorry.
-
-- Operations in the Mesh such as "Convert to/from quadratic", "Remove elements" and others
-  are not shown as stages in the Mesh menu in Object Browser
-
-- Intersection vs. Common: the first does it with Edges, the second does it with Volumes, basically...
-
-- To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
-  then that face will be fixed!
-  Another trick is to put the Face in a Compound. There it works!
-
-- When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
-  Otherwise nothing happens!
-
-- What is the difference between Regular Faces and Free Faces in the Mesh algorithms? For instance, the Disk only shows algorithms for Free faces...
-
-- Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
-  where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?
-    
-  Possible answer: I think the way to go in these cases is to do, after Explode, a "Create Group" in the Geometry.
-    That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
 
 
 \part{Visualization: Paraview}
