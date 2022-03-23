@@ -283,6 +283,8 @@ int main(int argc, char** args) {
   
   my_specifics._mesh_files[0] = "Mesh_1_x_dir_neu_fine.med";
   
+  my_specifics._bdry_func = SetBoundaryCondition;
+  
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
@@ -347,7 +349,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(my_specifics._bdry_func);
   ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
