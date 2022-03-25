@@ -16,6 +16,11 @@
 #define GROUP_EXTERNAL  13
 
 
+//Flags for enforcement of Adjoint Neumann continuity on \Gamma_c 
+#define  NEUMANN_ADJOINT_EXPLICIT  0
+#define  U_MINUS_Q_STRONG  1
+
+
 using namespace femus;
 
 
@@ -644,33 +649,40 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
                         unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
-//============ Bdry Residuals ==================
+//============ Bdry Residuals - BEGIN ==================
 
-                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_state,i_vol)  ]  +=  -  weight_qp_bdry *  ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_state]][i_bdry] );
+                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_state, i_vol)  ]  +=  -  weight_qp_bdry *  ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_state]][i_bdry] );
 
                         
-//                         if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_ctrl, i_vol)  ]  +=  -  weight_qp_bdry *  ( grad_adj_ext_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );
+                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_ctrl, i_vol)  ]  +=  -  weight_qp_bdry *  ( grad_adj_ext_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );
   ///@todo check this term in control equation
                         
-                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj,i_vol)   ]  +=  -  penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol] - sol_eldofs_Mat[pos_ctrl][i_vol] ) ;    // u = q
+                        const unsigned gamma_c_u_minus_q_pos = pos_adj;
+                        const unsigned gamma_c_Neum_adj_continuity_pos = pos_adj_ext;
                         
-                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj_ext,i_vol)   ]  +=  - penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( -grad_adj_dot_n_res ) ;
-                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj_ext,i_vol)   ]  +=  - penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * (  grad_adj_ext_dot_n_res ) ;
-//============ Bdry Residuals ==================
+//                         if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i_vol)   ]  +=  -  penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol] - sol_eldofs_Mat[pos_ctrl][i_vol] ) ;    // u = q
+                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  U_MINUS_Q_STRONG * penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol]);    // u 
+                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  U_MINUS_Q_STRONG * penalty_interface * ( - sol_eldofs_Mat[pos_ctrl][i_vol]);    // - q
+                        
+                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - NEUMANN_ADJOINT_EXPLICIT * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( -grad_adj_dot_n_res ) ;
+                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - NEUMANN_ADJOINT_EXPLICIT * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * (  grad_adj_ext_dot_n_res ) ;
+//============ Bdry Residuals - END ==================
 
-//============ Bdry Jacobians ==================
+//============ Bdry Jacobians on Bdry - BEGIN ==================
                         for(unsigned j_bdry=0; j_bdry < nDofu_bdry; j_bdry ++) {
                             unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 
 //============ u = q =============================
                             if (i_vol == j_vol)  {
-                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_state, i_vol, j_vol) ]  += penalty_interface *  ( 1.);
-                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_ctrl, i_vol, j_vol) ]   += penalty_interface *  (-1.);
+                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_u_minus_q_pos, pos_state, i_vol, j_vol) ]  += U_MINUS_Q_STRONG * penalty_interface *  ( 1.);
+                                if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_u_minus_q_pos, pos_ctrl, i_vol, j_vol) ]   += U_MINUS_Q_STRONG * penalty_interface *  (-1.);
                             }
 //============ u = q =============================
 
                         } //end j_bdry
+//============ Bdry Jacobians on Bdry - END ==================
 
+//============ Bdry Jacobians on Volume - BEGIN ==================
 //===================loop over j in the VOLUME (while i is in the boundary)
                         for(unsigned j=0; j < nDof_max; j ++) {
 
@@ -693,15 +705,16 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                             }
                             
                             if ( group_flag == GROUP_EXTERNAL ) {  ///@todo check this term in control equation
-//                                 Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_adj_ext, i_vol, j) ]  += weight_qp_bdry * grad_adj_ext_dot_n_mat * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry];
+                                Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_adj_ext, i_vol, j) ]  += weight_qp_bdry * grad_adj_ext_dot_n_mat * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry];
                             }
                             
 
-                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj, i_vol, j) ]  += penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( -1.) * grad_adj_dot_n_mat;
-                                if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i_vol, j) ]   += penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( 1.) * grad_adj_ext_dot_n_mat;
+                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj, i_vol, j) ]  += NEUMANN_ADJOINT_EXPLICIT * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( -1.) * grad_adj_dot_n_mat;
+                                if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj_ext, i_vol, j) ]   += NEUMANN_ADJOINT_EXPLICIT * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( 1.) * grad_adj_ext_dot_n_mat;
 
 
                         } //end j
+//============ Bdry Jacobians on Volume - END ==================
 
                     } //end i_bdry
 
@@ -776,14 +789,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     if ( i < Sol_n_el_dofs_Mat_vol[pos_ctrl] )        laplace_rhs_dctrl_ctrl_i      +=  (phi_x_fe_qp[SolFEType[pos_ctrl]]    [i * dim + kdim] * sol_grad_qp[pos_ctrl][kdim]);
                 }
 
-//======================Volume Residuals=======================
+//======================Volume Residuals - BEGIN =======================
+//--- equations ---                
                 if ( group_flag == GROUP_INTERNAL )     {
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_state,i) ]  += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * ( sol_qp[pos_state] - u_des) - laplace_rhs_du_adj_i);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj,i)]     += - weight_qp *  ( - laplace_rhs_dadj_u_i    - 0.) ;
 //                                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj,  i) ]   += weight_qp * (-1.) * phi_fe_qp[SolFEType[pos_adj]][i] * sol_eldofs_Mat[pos_adj][i];
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj_ext,i)] += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * ( sol_eldofs_Mat[pos_adj_ext][i] - 0.);
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_ctrl,i)]    += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * (sol_eldofs_Mat[pos_ctrl][i] - 0.);
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_mu,i)]      += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * ( sol_eldofs_Mat[pos_mu][i] - 0.);
                 }
 
                 else if ( group_flag == GROUP_EXTERNAL )  {
@@ -791,10 +802,20 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                             + beta * laplace_rhs_dctrl_ctrl_i
                             - laplace_rhs_dctrl_adj_ext_i /*+ 7000. * phi_fe_qp[SolFEType[pos_ctrl]][i]*/);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj_ext,i)] += - weight_qp *  ( - laplace_rhs_dadj_ext_ctrl_i - 0.);
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_state,i) ]  += - (1 - interface_node_flag[i]) * penalty_strong_u * (sol_eldofs_Mat[pos_state][i] - 0.);
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj,i)]     += - (1 - interface_node_flag[i]) * penalty_strong_u * (  sol_eldofs_Mat[pos_adj][i] - 0.);
                 }
-//======================Volume Residuals=======================
+
+//--- extensions ---                
+                if ( group_flag == GROUP_INTERNAL )     {
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj_ext, i)] += - /*(1 - interface_node_flag[i]) **/ penalty_strong_ctrl * ( sol_eldofs_Mat[pos_adj_ext][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_ctrl, i)]    += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * (sol_eldofs_Mat[pos_ctrl][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mu, i)]      += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * ( sol_eldofs_Mat[pos_mu][i] - 0.);
+                }
+
+                else if ( group_flag == GROUP_EXTERNAL )  {
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i)]     += - /*(1 - interface_node_flag[i]) **/ penalty_strong_u * (  sol_eldofs_Mat[pos_adj][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_state, i) ]  += - (1 - interface_node_flag[i]) * penalty_strong_u * (sol_eldofs_Mat[pos_state][i] - 0.);
+                }
+//======================Volume Residuals - END =======================
 
                 if (assembleMatrix) {
 
@@ -816,25 +837,19 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                         }
 
 
+//--- equations ---                
                         if ( group_flag == GROUP_INTERNAL ) {
 
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ] += weight_qp * target_flag * phi_fe_qp[SolFEType[pos_state]][j] * phi_fe_qp[SolFEType[pos_state]][i];
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_adj, i, j) ]   += weight_qp * (-1.) * laplace_mat_du_adj;
 
-                            if ( i==j ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]      += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
-                            
-                                        Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_state, i, j) ]   += weight_qp * (-1.) * laplace_mat_dadj_u;
+                            Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_state, i, j) ]   += weight_qp * (-1.) * laplace_mat_dadj_u;
 //                                         Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]   += weight_qp * (-1.) * phi_fe_qp[SolFEType[pos_adj]][i] * phi_fe_qp[SolFEType[pos_adj]][j];
-
-                            if ( i==j ) Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
-                            if ( i==j ) Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]           += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
-                            
 
                         }
 
                         else if ( group_flag == GROUP_EXTERNAL ) {
 
-                            if (  i==j ) Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ]  += (1 - interface_node_flag[i]) * 1. * penalty_strong_u;
                             
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]     += weight_qp * ( 
                                  alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j]  
@@ -843,12 +858,34 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_adj_ext, i, j) ]  += weight_qp * (-1.) * laplace_mat_dctrl_adj_ext;
 
-                            if ( i==j ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]       += (1 - interface_node_flag[i]) * 1. * penalty_strong_u;
-
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_ctrl, i, j) ]  += weight_qp * (-1.) * laplace_mat_dadj_ext_ctrl;
 
                         }
 
+                        
+
+//--- extensions ---                
+                       if (  i == j ) {
+                                
+                        if ( group_flag == GROUP_INTERNAL ) {
+                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += /*(1 - interface_node_flag[i]) **/ penalty_strong_ctrl;
+                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]      += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
+                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]           += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
+                            }
+                            
+                        else if ( group_flag == GROUP_EXTERNAL ) {
+                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]      += /*(1 - interface_node_flag[i]) **/  penalty_strong_u;
+                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ]  += (1 - interface_node_flag[i]) *  penalty_strong_u;
+                            }
+
+                        }
+                        
+                        
+                        
+                        
+                        
+                        
+                        
                     } // end phi_j loop
 
                 } // endif assemble_matrix

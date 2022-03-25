@@ -17,6 +17,9 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
+#include "app_specifics.hpp"
+
+
 using namespace femus;
  
 
@@ -274,10 +277,18 @@ int main(int argc, char** args) {
   // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");
 
+    // ======= App Specifics  ==================
+  
+  app_specifics   my_specifics;
+  
+  my_specifics._mesh_files[0] = "Mesh_1_x_dir_neu_fine.med";
+  
+  my_specifics._bdry_func = SetBoundaryCondition;
+  
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-   mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");
+   mesh_files.push_back(my_specifics._mesh_files[0]);
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -338,7 +349,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(my_specifics._bdry_func);
   ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
