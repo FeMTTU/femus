@@ -46,7 +46,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
         value = 0; //Dirichlet value
     }
   else if (face_name == 2) {
-      dirichlet = false;
+      dirichlet = true;
         value =0;//Neumann value
     }
 
@@ -265,6 +265,11 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 }
 
 
+// Changes by Aman
+double RHS(const std::vector < double >& x_qp) {
+  double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
+  return r;
+};
 
 
 
@@ -295,9 +300,9 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
   
    
-   mesh_files.push_back("mesh_assignment_cylinder_triang2.med");
-//    mesh_files.push_back("mesh_assignment_cylinder_triang.med");
-//    mesh_files.push_back("mesh_assignment_cylinder_quadrilateral.med");
+//    mesh_files.push_back("assignment_mesh_cylinder_tetrahedron.med");
+    mesh_files.push_back("assignment_mesh_cylinder_tetrahedron2.med");
+//    mesh_files.push_back("assignment_mesh_cylinder_hexahedron.med");
 //    mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");   
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
@@ -333,7 +338,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -406,7 +411,6 @@ int main(int argc, char** args) {
  
   return 0;
 }
-
 
 
 
@@ -556,7 +560,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  //========= gauss value quantities ==================   
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
  //===================================================   
-    
+    std::vector<double> x_qp(dim, 0.);
+
     
       // *** Quadrature point loop ***
       for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
@@ -579,7 +584,20 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 //--------------    
-          
+
+
+//aman changes
+	std::fill(x_qp.begin(), x_qp.end(), 0.);
+
+   	for (unsigned d = 0; d < dim; d++) {
+         for (unsigned i = 0; i < dim; i++) {
+                    x_qp[d] += geom_element.get_coords_at_dofs_3d()[i][d]*phi_u[d];
+
+         }
+        }
+//    
+    
+    
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
@@ -609,7 +627,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+                  if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  RHS(x_qp) ) - laplace_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      

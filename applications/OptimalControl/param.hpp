@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS 1 
+#define N_UNIFORM_LEVELS 3
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -32,11 +32,12 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
+// for pure boundary approaches
 #define ALPHA_CTRL_BDRY 0.001 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
-
-#define ALPHA_CTRL_VOL 0.001 
+// for lifting approaches (both internal and external)
+#define ALPHA_CTRL_VOL 0.01 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
 
 
@@ -136,6 +137,7 @@ const double extreme_position(const unsigned int face_index) {
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
+    const double target_line_position_along_coordinate = 0.5;
  //***** set target domain flag ******
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
@@ -145,12 +147,12 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
   
   const unsigned int axis_dir = axis_direction_target_reg(/*FACE_FOR_CONTROL*/FACE_FOR_TARGET);
    
-   const double target_line = 0.5 + target_line_sign * offset_to_include_line; 
+   const double target_line = target_line_position_along_coordinate + target_line_sign * offset_to_include_line; 
    
    
    
       if ((  target_line_sign * elem_center[axis_dir] < target_line_sign * target_line ) && 
-          (  target_line_sign * elem_center[axis_dir] > - 0.5 + target_line_sign * (0.5 - target_line_sign * offset_to_include_line)))
+          (  target_line_sign * elem_center[axis_dir] > - target_line_position_along_coordinate + target_line_sign * (target_line_position_along_coordinate - target_line_sign * offset_to_include_line)))
           {  target_flag = 1;  }
   
      return target_flag;
