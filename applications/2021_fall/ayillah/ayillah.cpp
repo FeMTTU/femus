@@ -275,10 +275,10 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 
-//calculator: f = z(z - 1)(1 - x^2 - y^2)(1/2 - x^2 - y^2);
+//calculator: f = z(z - 1)(1 - x^2 - y^2)(1/4 - x^2 - y^2);
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double r2 = 0.5 - 2.5*pow(x[0],2) + 2*pow(x[0],4) - 2.5*pow(x[1],2) + 4*pow(x[0],2)*pow(x[1],2) + 2*pow(x[1],4) + 5.*x[2] - 16*pow(x[0],2)*x[2] - 16*pow(x[1],2)*x[2] - 5.*pow(x[2],2) + 16*pow(x[0],2)*pow(x[2],2) + 16*pow(x[1],2)*pow(x[2],2);
-   return r2;
+   return - r2;
 };
 
 
@@ -306,8 +306,8 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
     std::vector<std::string> mesh_files;
 
-//     mesh_files.push_back("assignment_tetra_prism_annular_base.med");
-    mesh_files.push_back("assignment_hexa_prism_annular_base.med");
+    mesh_files.push_back("assignment_tetra_prism_annular_base.med");
+ //   mesh_files.push_back("assignment_hexa_prism_annular_base.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
