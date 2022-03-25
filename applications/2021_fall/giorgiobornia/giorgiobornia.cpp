@@ -270,6 +270,7 @@ int main(int argc, char** args) {
   my_specifics._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
   
   my_specifics._bdry_func = SetBoundaryCondition;
+  my_specifics._rhs_func = laplacian_assignment_segment_dir_neu_fine;
   
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
@@ -605,7 +606,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
- if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  laplacian_assignment_segment_dir_neu_fine(x_qp)  ) - laplace_res_du_u_i);
+ if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( /*ml_prob.getAppSpecs()._rhs_func*/laplacian_assignment_segment_dir_neu_fine(x_qp)  ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
