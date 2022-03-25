@@ -26,6 +26,15 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
+// flynn, user-made equation - accepts only coordinates
+double laplacian_assignment_segment_dir_neu_fine(const std::vector<double> & x_qp){
+    
+    // for a 1d segment
+    
+    return  2.;
+}
+
+
 double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
@@ -49,34 +58,11 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
         value = 0.; //Dirichlet value
     }
   else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
+      dirichlet = true;
+        value = 0.; //Dirichlet value
     }
 
     
- }
- 
- if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
-     
-     
-    if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
-  }
-   
- 
  }
  
  
@@ -281,7 +267,7 @@ int main(int argc, char** args) {
   
   app_specifics   my_specifics;
   
-  my_specifics._mesh_files[0] = "Mesh_1_x_dir_neu_fine.med";
+  my_specifics._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
   
   my_specifics._bdry_func = SetBoundaryCondition;
   
@@ -590,6 +576,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
  ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
  
+ std::vector<double> x_qp(dim, 0.);
+          
+        for (unsigned i = 0; i < nDof_u; i++) {
+          	for (unsigned d = 0; d < dim; d++) {
+	                                                x_qp[d]    += geom_element.get_coords_at_dofs_3d()[d][i] * phi_u[i]; // fetch of coordinate points
+            }
+        }
  
 //--------------    
 
@@ -612,7 +605,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
- if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+ if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  laplacian_assignment_segment_dir_neu_fine(x_qp)  ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
