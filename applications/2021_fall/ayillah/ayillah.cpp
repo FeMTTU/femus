@@ -10,6 +10,8 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
+#include <cstdlib>
+#include <cmath>
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"
@@ -274,7 +276,11 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 
-
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double r2 = x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
+  r2 = x[2] * (10. - 6./sqrt(r2));
+  return r2;
+};
 
 
 
@@ -301,7 +307,8 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
     std::vector<std::string> mesh_files;
 
-    mesh_files.push_back("assignment_prism_annular_base.med");
+    mesh_files.push_back("assignment_prism_annular.med");
+//     mesh_files.push_back("assignment_prism_annular_base.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -475,6 +482,14 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     sol_u.reserve(maxSize);
     std::vector< int > l2GMap_u;
     l2GMap_u.reserve(maxSize);
+    
+    std::vector < vector < double > > x (dim);    // local coordinates
+  
+
+  for (unsigned i = 0; i < dim; i++) {
+    x[i].reserve(maxSize);
+  }
+    
 //***************************************************
 //***************************************************
 
@@ -543,6 +558,10 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
         std::fill(Jac.begin(), Jac.end(), 0.);
         l2GMap_AllVars.resize(0);
         l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
+        
+        for (int i = 0; i < dim; i++) {
+      x[i].resize(nDof_u);
+    }
 //***************************************************
 
 
@@ -570,6 +589,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
         std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 //===================================================
 
+        for (unsigned i = 0; i < nDof_u; i++) {
+      unsigned xDof  = msh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned jdim = 0; jdim < dim; jdim++) {
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      }
+    }
 
         // *** Quadrature point loop ***
         for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
@@ -581,7 +607,15 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
             jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
             elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(i_qp, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
+           std::vector < double > x_gss(dim, 0.);
            
+           for (unsigned i = 0; i < nDof_u; i++) {
+       
+            for (unsigned jdim = 0; jdim < dim; jdim++) {
+            //gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+            x_gss[jdim] += x[jdim][i] * phi_u[i];
+            }
+      }
 
 //--------------
             std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
@@ -609,7 +643,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
 //======================Residuals=======================
                 // FIRST ROW
-                if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+                if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  /*1.*/ GetExactSolutionLaplace(x_gss) ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 

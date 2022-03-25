@@ -941,12 +941,15 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
   if (assembleMatrix) KK->close();
   
   // ***************** END ASSEMBLY *******************
+  
+  
+    const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
   if (print_algebra_global) {
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, mlPdeSys->GetNonlinearIt());
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
 
     RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
     pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
 
   }
