@@ -22,6 +22,20 @@ using namespace femus;
 
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
+// Right-hand side for Dirichlet BC.
+double minus_Deltu_U0(const std::vector<double> & x_qp){
+    
+    // Quarter cylinder of radius 1 and length 2
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    double z = x_qp[2];
+    
+    // Function = x*y*z*(1.0-z)*(pow(x,2.0) + pow(y,2.0) - 1.0)
+    
+    // Return -Delta U0
+    return -( 12.0*x*y*z*(z-2.0) + 2*x*y*( pow(x,2.0) + pow(y,2.0) ) );
+}
 
 
 double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -40,21 +54,8 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   
   const double tolerance = 1.e-5;
   
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
-  
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
-  else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
 
-    
- }
- 
- if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
+ if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
      
      
     if (face_name == 1) {
@@ -70,10 +71,13 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
         value = 0.;
   }
   else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
+      dirichlet = true;
+        value = 0.;
   }
-   
+  else if (face_name == 5) {
+      dirichlet = true;
+        value = 0.;
+  }
  
  }
  
@@ -563,6 +567,32 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 //--------------    
+
+
+// @assignment: Get groups to be used in BCs
+
+        std::vector<double> x_qp(dim, 0.);
+          
+        for (unsigned i = 0; i < nDof_u; i++) {
+          	for (unsigned d = 0; d < dim; d++) {
+	                                                x_qp[d]    += geom_element.get_coords_at_dofs_3d()[d][i] * phi_u[i]; // fetch of coordinate points
+            }
+        }
+ /// @assignment You need to evaluate your manufactured right hand side at the quadrature point qp.
+ /// Hence, you need to compute the coordinates of the quadrature point. Let us call them x_qp.
+ /// These are obtained just like every quantity at a quadrature point, i.e., by interpolating the values of the quantity at the element nodes.
+ /// The interpolation is performed by using the shape functions.
+ /// In other words, 
+ ///         (x_qp) = summation of (x_nodes) * (shape function of that node, evaluated at qp)
+ /// 
+ ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
+ ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
+ 
+ 
+
+
+
+
           
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
