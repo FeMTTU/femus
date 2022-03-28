@@ -26,8 +26,8 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
-// flynn, user-made equation - accepts only coordinates
-double laplacian_assignment_segment_dir_neu_fine(const std::vector<double> & x_qp){
+// user-made equation - accepts only coordinates
+double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
     
     // for a 1d segment
     
@@ -35,16 +35,10 @@ double laplacian_assignment_segment_dir_neu_fine(const std::vector<double> & x_q
 }
 
 
-double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
-    
-  return 0.;
-  
-}
-
 
  
  
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool segment_dir_neu_fine__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
   value = 0.;
@@ -72,6 +66,12 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
  }
 
  
+double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+    
+  return 0.;
+  
+}
+
  
  //====== NEUMANN LOOP 1D =============================================   
 void neumann_loop_1d(const MultiLevelProblem *    ml_prob, 
@@ -264,17 +264,17 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
-  app_specifics   my_specifics;
+  std::vector<app_specifics>   my_specifics(1);
   
-  my_specifics._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
+  my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
   
-  my_specifics._bdry_func = SetBoundaryCondition;
-  my_specifics._rhs_func = laplacian_assignment_segment_dir_neu_fine;
+  my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
+  my_specifics[0]._rhs_func = segment_dir_neu_fine__laplacian__rhs;
   
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-   mesh_files.push_back(my_specifics._mesh_files[0]);
+   mesh_files.push_back(my_specifics[0]._mesh_files[0]);
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -335,14 +335,14 @@ int main(int argc, char** args) {
   ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(my_specifics._bdry_func);
+  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[0]._bdry_func);
   ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
 
   // ======= Problem, II ========================
   ml_prob.SetFilesHandler(&files);
-  ml_prob.set_app_specs_pointer(&my_specifics);
+  ml_prob.set_app_specs_pointer(&my_specifics[0]);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.set_all_abstract_fe_multiple();
   
