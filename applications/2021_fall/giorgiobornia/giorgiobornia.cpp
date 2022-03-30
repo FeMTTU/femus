@@ -74,7 +74,7 @@ double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < doub
 
  
  //====== NEUMANN LOOP 1D =============================================   
-void neumann_loop_1d(const MultiLevelProblem *    ml_prob, 
+void laplacian_natural_loop_1d(const MultiLevelProblem *    ml_prob, 
                      const Mesh *                    msh,
                      const MultiLevelSolution *    ml_sol, 
                      const unsigned iel,
@@ -135,7 +135,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
 
 
 template < class real_num, class real_num_mov >
-void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob, 
+void laplacian_natural_loop_2d3d(const MultiLevelProblem *    ml_prob, 
                        const Mesh *                    msh,
                        const MultiLevelSolution *    ml_sol, 
                        const unsigned iel,
@@ -244,7 +244,7 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
  
 
 template < class real_num, class real_num_mov >
-void AssembleProblemDirNeu(MultiLevelProblem& ml_prob);
+void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob);
 
 
 
@@ -268,8 +268,10 @@ int main(int argc, char** args) {
   
   my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
   
-  my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
+  my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
   my_specifics[0]._rhs_func = segment_dir_neu_fine__laplacian__rhs;
+  my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
+  
   
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
@@ -357,7 +359,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("u");
  
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleProblemDirNeu<double, double>);
+  system.SetAssembleFunction( my_specifics[0]._assemble_function );
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
@@ -389,7 +391,7 @@ int main(int argc, char** args) {
 
 
 template < class real_num, class real_num_mov >
-void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
+void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
 
   NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -508,13 +510,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     
 
  //========= BOUNDARY ==================   
-    if (dim == 1)   neumann_loop_1d(& ml_prob, msh, ml_sol,
+    if (dim == 1)   laplacian_natural_loop_1d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res
                      );
 
-    if (dim == 2 || dim == 3)   neumann_loop_2d3d(& ml_prob, msh, ml_sol,
+    if (dim == 2 || dim == 3)   laplacian_natural_loop_2d3d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res,
