@@ -623,7 +623,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (minus_Deltu_U0(x_qp) ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
