@@ -269,7 +269,8 @@ int main(int argc, char** args) {
   my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
   
   my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[0]._rhs_func = segment_dir_neu_fine__laplacian__rhs;
+  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
+  my_specifics[0]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
   
   
@@ -510,7 +511,7 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
     
 
  //========= BOUNDARY ==================   
-    if (dim == 1)   laplacian_natural_loop_1d(& ml_prob, msh, ml_sol,
+    if (dim == 1)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_1d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res
@@ -608,7 +609,7 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
- if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( ml_prob.get_app_specs_pointer()->_rhs_func(x_qp)  ) - laplace_res_du_u_i);
+ if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( ml_prob.get_app_specs_pointer()->_assemble_function_rhs(x_qp)  ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      

@@ -5,11 +5,14 @@
 #include <vector>
 #include <string>
 
+#include "CurrentElem.hpp"
 
 namespace femus {
     
     
 class MultiLevelProblem;
+class Mesh;
+class MultiLevelSolution;
 
 
 class app_specifics {
@@ -28,10 +31,25 @@ class app_specifics {
 
 
    //typedef for func pointer of RHS
-   typedef  double    (* RHSFunction )  (const std::vector<double> & x_qp);
+   typedef  double    (* AssembleFunctionRHS )  (const std::vector<double> & x_qp);
    
-   RHSFunction  _rhs_func;
+   AssembleFunctionRHS  _assemble_function_rhs;
    
+    //typedef for natural boundary integral loop - 1d
+   typedef  void   (* AssembleFunctionNaturalBoundaryLoop1d )   
+                     (const MultiLevelProblem *    ml_prob, 
+                     const Mesh *                    msh,
+                     const MultiLevelSolution *    ml_sol, 
+                     const unsigned iel,
+                     CurrentElem < double > & geom_element,
+                     const unsigned xType,
+                     const std::string solname_u,
+                     const unsigned solFEType_u,
+                     std::vector< double > & Res
+                    );
+   
+   
+   AssembleFunctionNaturalBoundaryLoop1d   _assemble_function_natural_boundary_loop_1d;
    
    
    //func pointer of Boundary Conditions: typedef
