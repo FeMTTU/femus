@@ -264,13 +264,14 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
-  std::vector<app_specifics>   my_specifics(1);
+  std::vector< app_specifics >   my_specifics(1);
   
   my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
   
   my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
   my_specifics[0]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[0]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
   my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
   
   
@@ -517,7 +518,7 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
                       Res
                      );
 
-    if (dim == 2 || dim == 3)   laplacian_natural_loop_2d3d(& ml_prob, msh, ml_sol,
+    if (dim == 2 || dim == 3)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_2d3d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res,
