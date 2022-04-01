@@ -26,9 +26,11 @@ class app_specifics {
    //func pointer of Boundary Conditions
     BoundaryFunction   _bdry_func;
 
-   //typedef for func pointer of Boundary Conditions
-
-    
+   //typedef for func pointer of RHS
+   typedef  double    (* RHSFunction )  (const std::vector<double> & x_qp);
+   
+   RHSFunction  _rhs_func;
+   
 };
 
 
