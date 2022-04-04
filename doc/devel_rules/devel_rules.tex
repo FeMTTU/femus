@@ -187,6 +187,13 @@ Ok, it seems like:
  \subsection{MESH}
 
  
+  \subsection{PARAVIS}
+  
+  
+  It is Paraview with additional features, especially for MED files
+
+  
+  
 \chapter{Installation issues}
 
   The first time you run Salome after installation,
@@ -229,7 +236,20 @@ corresponding to your hostname. So, you need to add the output of the command
  \subsubsection{Do your Geometry in a way that you have Geometrical Objects for the upcoming Groups in the Mesh}
  
   In that way, you will be able to construct ``Groups on Geometry'', which is flexible when you change your parameters in the Notebook
+  
+  \paragraph{You need the Geometrical Objects for the Boundary conditions}
  
+  \paragraph{You may need the Geometrical Objects for Volume regions as well}
+  
+  
+  
+  \subsection{Try to do Geometry operations as opposed to Mesh operations}
+ 
+  
+  
+  
+  
+  
  \subsubsection{Where to do certain operations}
  
   \paragraph{ROTATIONS in Geometry or Mesh?}
@@ -346,47 +366,66 @@ So the idea seems to be NOT the following:
  - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
    and that creates problems in the mapping algorithm. So, it's all about making 1 edge
    
+\section{3D}
+
+
+\subsection{When you do a 3d mesh, for Element Types not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
+
+  You can leave the edges where they are, 
+  you don't need to remove them,
+  because in 3d only Volumes and Faces will be read from the code
+ 
+
 
 \section{3D - Hexahedra}
 
-\subsection{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
 
-  You can leave the edges where they are, because in 3d only Volumes and Faces will be read from the code
- 
-
- \subsection{If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
-  what is the best way to do that?}
-  
+ \subsection{Parallelepiped with 3 arbitrary mesh discretizations in the 3 directions}
 
 I cannot create a Submesh of a Submesh
 
 - Geometry
+
   Create Volumes
-    ---> Extract Faces from a Volume
-    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
-- Mesh 
-  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
-  You don't want to do Automatic Hexahedralization or Tetrahedralization...
   
-- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
-  Global Algorithms:
+    ---> Extract Faces from a Volume
+    
+    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
+
+    
+    \subsubsection{Hexahedron (i,j,k)}
+    
+   Global Algorithms:
     3d: Hexahedron (i,j,k)
     2d: Quadrangle mapping
     1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
     
     Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
+   
     
-
-    
-\subsubsection{MESH EXTRUSION}
-
-
-- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
-  is simply to do your 2D mesh and then extrude it
+  \subsubsection{Extrusion 3d}
   
-- Do extrusion only of faces to avoid generation of extra edges    
+  
+  Box
+  
+  Explode the Faces (so that you can select the boundary conditions)
+  
+  Explode the Edges of the Faces
+  
+  
+  
+ \subsection{Geometry of Extrusion type}
+ 
+  
+  \subsubsection{BETTER: Do 2d Geometry, Extrude 2d Geometry, then 3d Mesh with Algorithm ``Extrusion 3d''}
+  
+  
+  \subsubsection{WORSE: Do 2d Geometry, then 2d Mesh, then Extrude the Mesh}
+ 
+ 
+ - Do extrusion only of faces to avoid generation of extra edges    
 
-- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
+  - "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
 
 
 
@@ -395,15 +434,34 @@ I cannot create a Submesh of a Submesh
 
 When you explode adjacent faces, the edges are called differently... we should identify them
 
-
- \subsection{Change the Geometry in the Mesh with ``Move node''}
-
-
- There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
-
- - 
  
+ 
+  \section{3D - Tetrahedra}
+  
+   \subsection{Algorithms}
+   
+   
+   
 
+  \section{3D - Wedges}
+  
+  
+  \chapter{Procedure: Convert to biquadratic (for quad/hex) or to quadratic (for tri/tet)}
+  
+  This is because we need those nodes to construct quadratic/biquadratic dofs
+  
+  
+  
+  \chapter{Procedure: Mesh operations (avoid, whenever possible)}
+  
+   It is better to avoid them because they do not have underlying Geometrical Objects anymore
+   
+
+   
+\subsection{Compound Mesh}
+   
+   
+   
 \subsection{Translate Mesh}
 
  
@@ -413,21 +471,19 @@ When you explode adjacent faces, the edges are called differently... we should i
  
  ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
 
- 
+
 \subsection{Stretch elements}
 
   ``Scale transform'' does the trick
 
-  \section{3D - Tetrahedra}
-  
-   \subsection{Algorithms}
+   
+ \subsection{Move nodes}
 
-  \section{3D - Wedges}
-  
-  
-  \chapter{Procedure: Convert to biquadratic (for quad/hex) or to quadratic (for tri/tet)}
-  
-  This is because we need those nodes to construct quadratic/biquadratic dofs
+
+ There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
+
+
+
   
   
   \chapter{Procedure: Do Groups of Mesh elements}
