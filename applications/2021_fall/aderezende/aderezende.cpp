@@ -282,7 +282,7 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-    mesh_files.push_back("assignment_quarter_cylinder_hexa.med");
+    mesh_files.push_back("assignment_quarter_cylinder_tetra.med");
    //mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
