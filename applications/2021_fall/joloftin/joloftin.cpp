@@ -291,12 +291,14 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_3_xyz_all_dir.med");
 //    mesh_files.push_back("dome_tri.med");
 //    mesh_files.push_back("dome_quad.med");
-    mesh_files.push_back("disk_quad.med");
+    //mesh_files.push_back("disk_quad.med");
 //    mesh_files.push_back("disk_quad_45x.med");
 //    mesh_files.push_back("disk_quad_90x.med");
 //    mesh_files.push_back("disk_tri.med");
 //    mesh_files.push_back("disk_tri_45x.med");
 //    mesh_files.push_back("disk_tri_90x.med");
+    mesh_files.push_back("triagle_jon.med");
+    //mesh_files.push_back("quad_jon.med");
    
 
 
@@ -316,7 +318,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/1;
+  unsigned numberOfUniformLevels = /*1*/6;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
