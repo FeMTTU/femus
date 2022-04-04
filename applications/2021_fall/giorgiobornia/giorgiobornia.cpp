@@ -316,6 +316,7 @@ int main(int argc, char** args) {
   
   //segment_dir_neu_fine
   my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
+  my_specifics[0]._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
   
   my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
   my_specifics[0]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -325,6 +326,7 @@ int main(int argc, char** args) {
   
   //assignment_tetra_prism_annular_base
   my_specifics[1]._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
+  my_specifics[1]._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
   
   my_specifics[1]._assemble_function = laplacian_dir_neu_eqn<double, double>;
   my_specifics[1]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -336,9 +338,10 @@ int main(int argc, char** args) {
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
       
    // ======= Mesh  ==================
-   std::vector<std::string> mesh_files;
-   
-   mesh_files.push_back(my_specifics[app]._mesh_files[0]);
+//    std::vector<std::string> mesh_files;
+//    
+//    mesh_files.push_back(my_specifics[app]._mesh_files[0]);
+//    mesh_files.push_back(my_specifics[app]._mesh_files[1]);
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -357,7 +360,7 @@ int main(int argc, char** args) {
    
 
 
- for (unsigned int m = 0; m < mesh_files.size(); m++)  {
+ for (unsigned int m = 0; m < my_specifics[app]._mesh_files/*mesh_files*/.size(); m++)  {
    
   // ======= Mesh  ==================
   // define multilevel mesh
@@ -367,7 +370,7 @@ int main(int argc, char** args) {
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
-  std::string mesh_file_tot = "./input/" + mesh_files[m];
+  std::string mesh_file_tot = "./input/" + my_specifics[app]._mesh_files/*mesh_files*/[m];
   
   ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
@@ -440,7 +443,7 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
   }
  
