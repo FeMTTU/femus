@@ -23,6 +23,22 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
+// the function for RHS
+double U0(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return  x * y * (1.0 - (x*x + y*y)); // forced to be zero on the x and y axis, and the circle edge
+}
+
+
+
+
+
+// this is specifically the laplacian of the function given above
 // flynn, user-made equation - accepts only coordinates
 double minus_Deltu_U0(const std::vector<double> & x_qp){
     
