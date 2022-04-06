@@ -17,7 +17,7 @@
 
 
 //Flags for enforcement of Adjoint Neumann continuity on \Gamma_c 
-#define  NEUMANN_ADJOINT_EXPLICIT  0
+#define  NEUMANN_ADJOINT_EXPLICIT  1
 #define  U_MINUS_Q_STRONG  1
 
 
@@ -195,16 +195,16 @@ int main(int argc, char** args) {
     MultiLevelSolution ml_sol(&ml_mesh);
 
     // add variables to ml_sol
-    ml_sol.AddSolution("state", LAGRANGE, SECOND);
-    ml_sol.AddSolution("control", LAGRANGE, SECOND);
-    ml_sol.AddSolution("adjoint", LAGRANGE, SECOND);
-    ml_sol.AddSolution("adjoint_ext", LAGRANGE, SECOND);
-    ml_sol.AddSolution("mu", LAGRANGE, SECOND);
+    ml_sol.AddSolution("state", LAGRANGE, FIRST);
+    ml_sol.AddSolution("control", LAGRANGE, FIRST);
+    ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
+    ml_sol.AddSolution("adjoint_ext", LAGRANGE, FIRST);
+    ml_sol.AddSolution("mu", LAGRANGE, FIRST);
     ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
     ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
     const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
     const std::string act_set_flag_name = "act_flag";
-    ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, SECOND, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+    ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
     // ======= Problem ========================
     MultiLevelProblem ml_prob(&ml_sol);
@@ -547,8 +547,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         
         //setting up control boundary region - BEGIN ***************************
         std::vector <bool> interface_elem_flag(n_faces);      for(unsigned j = 0; j < n_faces; j++) interface_elem_flag[j] = false;
-        std::vector <unsigned int> interface_node_flag(Sol_n_el_dofs_Mat_vol[pos_state]);   ///@todo maybe it should be geometry-based
-        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0);
+        std::vector <unsigned int> is_dof_on_Gamma_c(Sol_n_el_dofs_Mat_vol[pos_state]);   ///@todo maybe it should be geometry-based
+        std::fill(is_dof_on_Gamma_c.begin(), is_dof_on_Gamma_c.end(), 0);
 
      for(unsigned jface = 0; jface < n_faces; jface++) {
             
@@ -567,7 +567,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
             }
          //************** later try to avoid repeating this - END
                     
-           interface_elem_flag[jface] = find_control_boundary_nodes(interface_node_flag, geom_element_iel.get_elem_center_bdry_3d(), nDofu_bdry, iel, jface, msh);
+           interface_elem_flag[jface] = find_control_boundary_nodes(is_dof_on_Gamma_c, geom_element_iel.get_elem_center_bdry_3d(), nDofu_bdry, iel, jface, msh);
     
         }
        //setting up control boundary region - END ***************************
@@ -654,11 +654,11 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                         if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_state, i_vol)  ]  +=  -  weight_qp_bdry *  ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_state]][i_bdry] );
 
                         
-                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_ctrl, i_vol)  ]  +=  -  weight_qp_bdry *  ( grad_adj_ext_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );
+                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_ctrl, i_vol)  ]  +=  -  weight_qp_bdry *  ( grad_adj_ext_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );
   ///@todo check this term in control equation
                         
-                        const unsigned gamma_c_u_minus_q_pos = pos_adj;
-                        const unsigned gamma_c_Neum_adj_continuity_pos = pos_adj_ext;
+                        const unsigned gamma_c_u_minus_q_pos = pos_adj/*pos_state*/;
+                        const unsigned gamma_c_Neum_adj_continuity_pos = pos_adj_ext/*pos_ctrl*/;
                         
 //                         if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i_vol)   ]  +=  -  penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol] - sol_eldofs_Mat[pos_ctrl][i_vol] ) ;    // u = q
                         if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  U_MINUS_Q_STRONG * penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol]);    // u 
@@ -728,8 +728,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
         
         
-//             for (unsigned j = 0; j < interface_node_flag.size(); j++) {
-//                 std::cout <<  " ** " << interface_node_flag[j] << " ";
+//             for (unsigned j = 0; j < is_dof_on_Gamma_c.size(); j++) {
+//                 std::cout <<  " ** " << is_dof_on_Gamma_c[j] << " ";
 //             }
 //             
 //            std::cout << std::endl; 
@@ -794,7 +794,6 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                 if ( group_flag == GROUP_INTERNAL )     {
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_state,i) ]  += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * ( sol_qp[pos_state] - u_des) - laplace_rhs_du_adj_i);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj,i)]     += - weight_qp *  ( - laplace_rhs_dadj_u_i    - 0.) ;
-//                                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj,  i) ]   += weight_qp * (-1.) * phi_fe_qp[SolFEType[pos_adj]][i] * sol_eldofs_Mat[pos_adj][i];
                 }
 
                 else if ( group_flag == GROUP_EXTERNAL )  {
@@ -804,16 +803,16 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj_ext,i)] += - weight_qp *  ( - laplace_rhs_dadj_ext_ctrl_i - 0.);
                 }
 
-//--- extensions ---                
+//--- extensions to zero ---                
                 if ( group_flag == GROUP_INTERNAL )     {
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj_ext, i)] += - /*(1 - interface_node_flag[i]) **/ penalty_strong_ctrl * ( sol_eldofs_Mat[pos_adj_ext][i] - 0.);
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_ctrl, i)]    += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * (sol_eldofs_Mat[pos_ctrl][i] - 0.);
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mu, i)]      += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * ( sol_eldofs_Mat[pos_mu][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj_ext, i)] += - /*(1 - is_dof_on_Gamma_c[i]) **/ penalty_strong_ctrl * ( sol_eldofs_Mat[pos_adj_ext][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_ctrl, i)]    += - (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl * (sol_eldofs_Mat[pos_ctrl][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mu, i)]      += - (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl * ( sol_eldofs_Mat[pos_mu][i] - 0.);
                 }
 
                 else if ( group_flag == GROUP_EXTERNAL )  {
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i)]     += - /*(1 - interface_node_flag[i]) **/ penalty_strong_u * (  sol_eldofs_Mat[pos_adj][i] - 0.);
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_state, i) ]  += - (1 - interface_node_flag[i]) * penalty_strong_u * (sol_eldofs_Mat[pos_state][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i)]     += - /*(1 - is_dof_on_Gamma_c[i]) **/ penalty_strong_u * (  sol_eldofs_Mat[pos_adj][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_state, i) ]  += - (1 - is_dof_on_Gamma_c[i]) * penalty_strong_u * (sol_eldofs_Mat[pos_state][i] - 0.);
                 }
 //======================Volume Residuals - END =======================
 
@@ -844,7 +843,6 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_adj, i, j) ]   += weight_qp * (-1.) * laplace_mat_du_adj;
 
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_state, i, j) ]   += weight_qp * (-1.) * laplace_mat_dadj_u;
-//                                         Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]   += weight_qp * (-1.) * phi_fe_qp[SolFEType[pos_adj]][i] * phi_fe_qp[SolFEType[pos_adj]][j];
 
                         }
 
@@ -864,18 +862,18 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
                         
 
-//--- extensions ---                
+//--- extensions to zero ---                
                        if (  i == j ) {
                                 
                         if ( group_flag == GROUP_INTERNAL ) {
-                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += /*(1 - interface_node_flag[i]) **/ penalty_strong_ctrl;
-                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]      += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
-                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]           += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
+                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += /*(1 - is_dof_on_Gamma_c[i]) **/ penalty_strong_ctrl;
+                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]      += (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl;
+                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]           += (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl;
                             }
                             
                         else if ( group_flag == GROUP_EXTERNAL ) {
-                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]      += /*(1 - interface_node_flag[i]) **/  penalty_strong_u;
-                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ]  += (1 - interface_node_flag[i]) *  penalty_strong_u;
+                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]      += /*(1 - is_dof_on_Gamma_c[i]) **/  penalty_strong_u;
+                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ]  += (1 - is_dof_on_Gamma_c[i]) *  penalty_strong_u;
                             }
 
                         }
