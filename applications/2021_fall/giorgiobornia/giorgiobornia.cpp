@@ -23,7 +23,46 @@
 using namespace femus;
  
 
-/// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
+double  cylinder__laplacian__rhs(const std::vector < double >& x_qp) {
+   double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
+  return -r;
+}
+
+
+ 
+bool cylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  bool dirichlet = false;
+  value = 0.;
+  
+  const double tolerance = 1.e-5;
+  
+  
+  if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
+     
+     
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+   
+ 
+ }
+ 
+ 
+  return dirichlet;
+  
+ }
+
+
 
 // this is specifically the laplacian of the function given above
 // flynn, user-made equation - accepts only coordinates
@@ -360,7 +399,7 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
-  std::vector< app_specifics >   my_specifics(3);
+  std::vector< app_specifics >   my_specifics(4);
   
   //segment_dir_neu_fine
   my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
@@ -392,7 +431,17 @@ int main(int argc, char** args) {
   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
 
+   //assignment_cylinder
+  my_specifics[3]._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
+  my_specifics[3]._mesh_files[1] = "assignment_cylinder_hexahedral.med";
   
+  my_specifics[3]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  my_specifics[3]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[3]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[3]._assemble_function_rhs = cylinder__laplacian__rhs;
+  my_specifics[3]._bdry_func = cylinder__laplacian__bc;
+
+ 
   //assignment_semi_annulus
 //   my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
 //   my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";

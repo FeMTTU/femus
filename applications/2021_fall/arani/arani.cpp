@@ -269,7 +269,7 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 double RHS(const std::vector < double >& x_qp) {
    double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
   return -r;
-};
+}
 
 
 
