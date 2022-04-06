@@ -391,6 +391,28 @@ int main(int argc, char** args) {
   my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+
+  
+  //assignment_semi_annulus
+//   my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+//   my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+//   
+//   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+//   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
+//   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+
+//   //assignment_annulus - jon
+//   my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+//   my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+//   
+//   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+//   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
+//   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+
   
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
       
