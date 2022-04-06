@@ -25,6 +25,53 @@ using namespace femus;
 
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
+// this is specifically the laplacian of the function given above
+// flynn, user-made equation - accepts only coordinates
+double quarter_circle__laplacian__rhs(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return -1.0 * -12. * x * y;
+}
+
+
+
+bool quarter_circle__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  bool dirichlet = false;
+  value = 0.;
+  
+  const double tolerance = 1.e-5;
+  
+  
+ if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
+     
+     
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+
+
+ }
+
+ 
+  return dirichlet;
+  
+ }
+
+
 
 
 bool prism_annular_base__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
@@ -175,6 +222,7 @@ void laplacian_natural_loop_1d(const MultiLevelProblem *    ml_prob,
                     }
                   
               }
+
     }
     
 }
@@ -227,7 +275,7 @@ void laplacian_natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
        
        geom_element.set_elem_center_bdry_3d();
-       
+
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
        
 
@@ -312,7 +360,7 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
-  std::vector< app_specifics >   my_specifics(2);
+  std::vector< app_specifics >   my_specifics(3);
   
   //segment_dir_neu_fine
   my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
@@ -334,6 +382,15 @@ int main(int argc, char** args) {
   my_specifics[1]._assemble_function_rhs = prism_annular_base__laplacian__rhs;
   my_specifics[1]._bdry_func = prism_annular_base__laplacian__bc;
 
+  //assignment_quarter_circle
+  my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+  my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+  
+  my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
+  my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
   
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
       
