@@ -297,8 +297,8 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("disk_tri.med");
 //    mesh_files.push_back("disk_tri_45x.med");
 //    mesh_files.push_back("disk_tri_90x.med");
-    mesh_files.push_back("triagle_jon.med");
-    //mesh_files.push_back("quad_jon.med");
+    //mesh_files.push_back("triagle_jon.med");
+    mesh_files.push_back("Mesh_1.med");
    
 
 
