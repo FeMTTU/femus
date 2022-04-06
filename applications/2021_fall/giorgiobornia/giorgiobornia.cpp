@@ -26,6 +26,54 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
+
+bool prism_annular_base__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+    bool dirichlet = false;
+    value = 0.;
+
+    const double tolerance = 1.e-5;
+
+
+    if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
+
+
+        if (face_name == 1) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 2) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 3) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 4) {
+            dirichlet = true;
+            value = 0.;
+        }
+
+    }
+    return dirichlet;
+
+}
+
+
+//calculator: f = z(z - 1)(1 - x^2 - y^2)(1/4 - x^2 - y^2);
+double prism_annular_base__laplacian__rhs(const std::vector < double > & x) {
+    
+  double r2 = 0.5 - 2.5*pow(x[0],2) + 2*pow(x[0],4) - 2.5*pow(x[1],2) + 4*pow(x[0],2)*pow(x[1],2) + 2*pow(x[1],4) + 5.*x[2] - 16*pow(x[0],2)*x[2] - 16*pow(x[1],2)*x[2] - 5.*pow(x[2],2) + 16*pow(x[0],2)*pow(x[2],2) + 16*pow(x[1],2)*pow(x[2],2);
+  
+   return - r2;
+   
+  }
+
+
+
+
+
 // user-made equation - accepts only coordinates
 double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
     
@@ -182,9 +230,9 @@ void laplacian_natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
        
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
        
-       
-       std::vector  <  double > xx_face_elem_center(3, 0.); 
-          xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
+
+       std::vector <  double > xx_face_elem_center(3, 0.); 
+       xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
         
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
        
@@ -264,20 +312,36 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
-  std::vector<app_specifics>   my_specifics(1);
+  std::vector< app_specifics >   my_specifics(2);
   
+  //segment_dir_neu_fine
   my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
+  my_specifics[0]._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
   
   my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
   my_specifics[0]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[0]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
   my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
   
+  //assignment_tetra_prism_annular_base
+  my_specifics[1]._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
+  my_specifics[1]._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
   
-    // ======= Mesh  ==================
-   std::vector<std::string> mesh_files;
-   
-   mesh_files.push_back(my_specifics[0]._mesh_files[0]);
+  my_specifics[1]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  my_specifics[1]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[1]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[1]._assemble_function_rhs = prism_annular_base__laplacian__rhs;
+  my_specifics[1]._bdry_func = prism_annular_base__laplacian__bc;
+
+  
+  for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
+      
+   // ======= Mesh  ==================
+//    std::vector<std::string> mesh_files;
+//    
+//    mesh_files.push_back(my_specifics[app]._mesh_files[0]);
+//    mesh_files.push_back(my_specifics[app]._mesh_files[1]);
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -296,7 +360,7 @@ int main(int argc, char** args) {
    
 
 
- for (unsigned int m = 0; m < mesh_files.size(); m++)  {
+ for (unsigned int m = 0; m < my_specifics[app]._mesh_files/*mesh_files*/.size(); m++)  {
    
   // ======= Mesh  ==================
   // define multilevel mesh
@@ -306,13 +370,13 @@ int main(int argc, char** args) {
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
-  std::string mesh_file_tot = "./input/" + mesh_files[m];
+  std::string mesh_file_tot = "./input/" + my_specifics[app]._mesh_files/*mesh_files*/[m];
   
   ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -338,14 +402,14 @@ int main(int argc, char** args) {
   ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[0]._bdry_func);
+  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._bdry_func);
   ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
 
   // ======= Problem, II ========================
   ml_prob.SetFilesHandler(&files);
-  ml_prob.set_app_specs_pointer(&my_specifics[0]);
+  ml_prob.set_app_specs_pointer(&my_specifics[app]);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.set_all_abstract_fe_multiple();
   
@@ -360,7 +424,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("u");
  
   // attach the assembling function to system
-  system.SetAssembleFunction( my_specifics[0]._assemble_function );
+  system.SetAssembleFunction( my_specifics[app]._assemble_function );
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
@@ -379,10 +443,12 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
   }
  
+ 
+} //end app loop
  
   return 0;
 }
@@ -517,7 +583,7 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
                       Res
                      );
 
-    if (dim == 2 || dim == 3)   laplacian_natural_loop_2d3d(& ml_prob, msh, ml_sol,
+    if (dim == 2 || dim == 3)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_2d3d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res,
