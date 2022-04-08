@@ -302,7 +302,7 @@ int main(int argc, char** args) {
   
    
 //    mesh_files.push_back("Mesh_Assignment_semi_cylinder_hex.med");
-   mesh_files.push_back("Mesh_Assignment_semi_cylinder_hex.med");
+   mesh_files.push_back("Mesh_Assignment_semi_cylinder_tetrahedron.med");
    
 //    mesh_files.push_back("mesh_assignment_cylinder_triang.med");
 //    mesh_files.push_back("mesh_assignment_cylinder_quadrilateral.med");
