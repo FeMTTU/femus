@@ -300,9 +300,9 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
   
    
-    mesh_files.push_back("assignment_mesh_cylinder_tetrahedral3.med");
+     mesh_files.push_back("assignment_mesh_cylinder_tetrahedral.med");
 //    mesh_files.push_back("assignment_mesh_cylinder_tetrahedron2.med");
-//     mesh_files.push_back("assignment_mesh_cylinder_hexahedron.med");
+//      mesh_files.push_back("assignment_mesh_cylinder_hexahedron.med");
 //    mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");   
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
