@@ -249,7 +249,11 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 
-
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
+  r = 4. - 1.5 / r;
+  return r;
+};
 
 
  
@@ -287,12 +291,14 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_3_xyz_all_dir.med");
 //    mesh_files.push_back("dome_tri.med");
 //    mesh_files.push_back("dome_quad.med");
-    mesh_files.push_back("disk_quad.med");
+    //mesh_files.push_back("disk_quad.med");
 //    mesh_files.push_back("disk_quad_45x.med");
 //    mesh_files.push_back("disk_quad_90x.med");
 //    mesh_files.push_back("disk_tri.med");
 //    mesh_files.push_back("disk_tri_45x.med");
 //    mesh_files.push_back("disk_tri_90x.med");
+    //mesh_files.push_back("triagle_jon.med");
+    mesh_files.push_back("Mesh_1.med");
    
 
 
@@ -312,7 +318,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/1;
+  unsigned numberOfUniformLevels = /*1*/6;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -447,6 +453,12 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
   std::vector < double >  sol_u;     sol_u.reserve(maxSize);
   std::vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
+  
+  std::vector < vector < double > > x (dim);    // local coordinates
+
+  for (unsigned i = 0; i < dim; i++) {
+    x[i].reserve(maxSize);
+  }
  //***************************************************  
  //***************************************************  
 
@@ -530,8 +542,20 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                       space_dim,
                       maxSize
                      );
+    
+    for (int i = 0; i < dim; i++) {
+      x[i].resize(nDof_u);
+    }
  
  //========= VOLUME ==================   
+    
+    for (unsigned i = 0; i < nDof_u; i++) {
+      unsigned xDof  = msh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned jdim = 0; jdim < dim; jdim++) {
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      }
+    }
    
  //========= gauss value quantities ==================   
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
@@ -553,6 +577,15 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+    
+    std::vector < double > x_gss(dim, 0.);
+
+      for (unsigned i = 0; i < nDof_u; i++) {
+       
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          x_gss[jdim] += x[jdim][i] * phi_u[i];
+        }
+      }
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 // 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
@@ -589,7 +622,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+          if (i < nDof_u)    Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  GetExactSolutionLaplace(x_gss) ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      

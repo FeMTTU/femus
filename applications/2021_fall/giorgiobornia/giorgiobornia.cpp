@@ -23,39 +23,69 @@
 using namespace femus;
  
 
-/// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
-
-
-double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
-    
-  return 0.;
-  
+double  cylinder__laplacian__rhs(const std::vector < double >& x_qp) {
+   double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
+  return -r;
 }
 
 
  
- 
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool cylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
   value = 0.;
   
   const double tolerance = 1.e-5;
   
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
   
-  if (face_name == 1) {
+  if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
+     
+     
+    if (face_name == 1) {
       dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
+        value = 0.;
+  }
   else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
-
-    
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+   
+ 
  }
  
+ 
+  return dirichlet;
+  
+ }
+
+
+
+// this is specifically the laplacian of the function given above
+// flynn, user-made equation - accepts only coordinates
+double quarter_circle__laplacian__rhs(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return -1.0 * -12. * x * y;
+}
+
+
+
+bool quarter_circle__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  bool dirichlet = false;
+  value = 0.;
+  
+  const double tolerance = 1.e-5;
+  
+  
  if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
      
      
@@ -71,12 +101,96 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
       dirichlet = true;
         value = 0.;
   }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
-  }
-   
+
+
+ }
+
  
+  return dirichlet;
+  
+ }
+
+
+
+
+bool prism_annular_base__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+    bool dirichlet = false;
+    value = 0.;
+
+    const double tolerance = 1.e-5;
+
+
+    if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
+
+
+        if (face_name == 1) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 2) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 3) {
+            dirichlet = true;
+            value = 0.;
+        }
+        else if (face_name == 4) {
+            dirichlet = true;
+            value = 0.;
+        }
+
+    }
+    return dirichlet;
+
+}
+
+
+//calculator: f = z(z - 1)(1 - x^2 - y^2)(1/4 - x^2 - y^2);
+double prism_annular_base__laplacian__rhs(const std::vector < double > & x) {
+    
+  double r2 = 0.5 - 2.5*pow(x[0],2) + 2*pow(x[0],4) - 2.5*pow(x[1],2) + 4*pow(x[0],2)*pow(x[1],2) + 2*pow(x[1],4) + 5.*x[2] - 16*pow(x[0],2)*x[2] - 16*pow(x[1],2)*x[2] - 5.*pow(x[2],2) + 16*pow(x[0],2)*pow(x[2],2) + 16*pow(x[1],2)*pow(x[2],2);
+  
+   return - r2;
+   
+  }
+
+
+
+
+
+// user-made equation - accepts only coordinates
+double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
+    
+    // for a 1d segment
+    
+    return  2.;
+}
+
+
+
+ 
+ 
+bool segment_dir_neu_fine__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  bool dirichlet = false;
+  value = 0.;
+  
+  const double tolerance = 1.e-5;
+  
+ if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
+  
+  if (face_name == 1) {
+      dirichlet = true;
+        value = 0.; //Dirichlet value
+    }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.; //Dirichlet value
+    }
+
+    
  }
  
  
@@ -86,9 +200,15 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
  }
 
  
+double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+    
+  return 0.;
+  
+}
+
  
  //====== NEUMANN LOOP 1D =============================================   
-void neumann_loop_1d(const MultiLevelProblem *    ml_prob, 
+void laplacian_natural_loop_1d(const MultiLevelProblem *    ml_prob, 
                      const Mesh *                    msh,
                      const MultiLevelSolution *    ml_sol, 
                      const unsigned iel,
@@ -141,6 +261,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
                     }
                   
               }
+
     }
     
 }
@@ -149,7 +270,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
 
 
 template < class real_num, class real_num_mov >
-void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob, 
+void laplacian_natural_loop_2d3d(const MultiLevelProblem *    ml_prob, 
                        const Mesh *                    msh,
                        const MultiLevelSolution *    ml_sol, 
                        const unsigned iel,
@@ -193,12 +314,12 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
        
        geom_element.set_elem_center_bdry_3d();
-       
+
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
        
-       
-       std::vector  <  double > xx_face_elem_center(3, 0.); 
-          xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
+
+       std::vector <  double > xx_face_elem_center(3, 0.); 
+       xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
         
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
        
@@ -258,7 +379,7 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
  
 
 template < class real_num, class real_num_mov >
-void AssembleProblemDirNeu(MultiLevelProblem& ml_prob);
+void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob);
 
 
 
@@ -278,17 +399,77 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
+  std::vector< app_specifics >   my_specifics(4);
   
-  app_specifics   my_specifics;
+  //segment_dir_neu_fine
+  my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
+  my_specifics[0]._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
   
-  my_specifics._mesh_files[0] = "Mesh_1_x_dir_neu_fine.med";
+  my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  my_specifics[0]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[0]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
+  my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
   
-  my_specifics._bdry_func = SetBoundaryCondition;
+  //assignment_tetra_prism_annular_base
+  my_specifics[1]._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
+  my_specifics[1]._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
   
-    // ======= Mesh  ==================
-   std::vector<std::string> mesh_files;
-   
-   mesh_files.push_back(my_specifics._mesh_files[0]);
+  my_specifics[1]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  my_specifics[1]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[1]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[1]._assemble_function_rhs = prism_annular_base__laplacian__rhs;
+  my_specifics[1]._bdry_func = prism_annular_base__laplacian__bc;
+
+  //assignment_quarter_circle
+  my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+  my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+  
+  my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
+  my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+
+   //assignment_cylinder
+  my_specifics[3]._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
+  my_specifics[3]._mesh_files[1] = "assignment_cylinder_hexahedral.med";
+  
+  my_specifics[3]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  my_specifics[3]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  my_specifics[3]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  my_specifics[3]._assemble_function_rhs = cylinder__laplacian__rhs;
+  my_specifics[3]._bdry_func = cylinder__laplacian__bc;
+
+ 
+  //assignment_semi_annulus
+//   my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+//   my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+//   
+//   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+//   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
+//   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+
+//   //assignment_annulus - jon
+//   my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+//   my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+//   
+//   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+//   my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+//   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
+//   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+
+  
+  for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
+      
+   // ======= Mesh  ==================
+//    std::vector<std::string> mesh_files;
+//    
+//    mesh_files.push_back(my_specifics[app]._mesh_files[0]);
+//    mesh_files.push_back(my_specifics[app]._mesh_files[1]);
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -307,7 +488,7 @@ int main(int argc, char** args) {
    
 
 
- for (unsigned int m = 0; m < mesh_files.size(); m++)  {
+ for (unsigned int m = 0; m < my_specifics[app]._mesh_files/*mesh_files*/.size(); m++)  {
    
   // ======= Mesh  ==================
   // define multilevel mesh
@@ -317,13 +498,13 @@ int main(int argc, char** args) {
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
-  std::string mesh_file_tot = "./input/" + mesh_files[m];
+  std::string mesh_file_tot = "./input/" + my_specifics[app]._mesh_files/*mesh_files*/[m];
   
   ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -349,13 +530,14 @@ int main(int argc, char** args) {
   ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(my_specifics._bdry_func);
+  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._bdry_func);
   ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
 
   // ======= Problem, II ========================
   ml_prob.SetFilesHandler(&files);
+  ml_prob.set_app_specs_pointer(&my_specifics[app]);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.set_all_abstract_fe_multiple();
   
@@ -370,7 +552,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("u");
  
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleProblemDirNeu<double, double>);
+  system.SetAssembleFunction( my_specifics[app]._assemble_function );
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
@@ -389,10 +571,12 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
   }
  
+ 
+} //end app loop
  
   return 0;
 }
@@ -402,7 +586,7 @@ int main(int argc, char** args) {
 
 
 template < class real_num, class real_num_mov >
-void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
+void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
 
   NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -521,13 +705,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     
 
  //========= BOUNDARY ==================   
-    if (dim == 1)   neumann_loop_1d(& ml_prob, msh, ml_sol,
+    if (dim == 1)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_1d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res
                      );
 
-    if (dim == 2 || dim == 3)   neumann_loop_2d3d(& ml_prob, msh, ml_sol,
+    if (dim == 2 || dim == 3)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_2d3d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res,
@@ -542,6 +726,21 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  //========= gauss value quantities ==================   
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
  //===================================================   
+    
+    //--------------    from giorgiobornia.cpp
+ /// @assignment You need to evaluate your manufactured right hand side at the quadrature point qp.
+ /// Hence, you need to compute the coordinates of the quadrature point. Let us call them x_qp.
+ /// These are obtained just like every quantity at a quadrature point, i.e., by interpolating the values of the quantity at the element nodes.
+ /// The interpolation is performed by using the shape functions.
+ /// In other words, 
+ ///         (x_qp) = summation of (x_nodes) * (shape function of that node, evaluated at qp)
+ /// 
+ ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
+ ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
+ 
+ 
+//--------------   
+    
     
     
       // *** Quadrature point loop ***
@@ -575,6 +774,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
  ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
  
+ std::vector<double> x_qp(dim, 0.);
+          
+        for (unsigned i = 0; i < nDof_u; i++) {
+          	for (unsigned d = 0; d < dim; d++) {
+	                                                x_qp[d]    += geom_element.get_coords_at_dofs_3d()[d][i] * phi_u[i]; // fetch of coordinate points
+            }
+        }
  
 //--------------    
 
@@ -597,7 +803,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
- if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+ if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( ml_prob.get_app_specs_pointer()->_assemble_function_rhs(x_qp)  ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      

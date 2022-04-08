@@ -267,9 +267,9 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 // Changes by Aman
 double RHS(const std::vector < double >& x_qp) {
-  double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
-  return r;
-};
+   double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
+  return -r;
+}
 
 
 
@@ -300,9 +300,9 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
   
    
-//    mesh_files.push_back("assignment_mesh_cylinder_tetrahedron.med");
-    mesh_files.push_back("assignment_mesh_cylinder_tetrahedron2.med");
-//    mesh_files.push_back("assignment_mesh_cylinder_hexahedron.med");
+    mesh_files.push_back("assignment_mesh_cylinder_tetrahedral3.med");
+//    mesh_files.push_back("assignment_mesh_cylinder_tetrahedron2.med");
+//     mesh_files.push_back("assignment_mesh_cylinder_hexahedron.med");
 //    mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");   
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
@@ -590,8 +590,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	std::fill(x_qp.begin(), x_qp.end(), 0.);
 
    	for (unsigned d = 0; d < dim; d++) {
-         for (unsigned i = 0; i < dim; i++) {
-                    x_qp[d] += geom_element.get_coords_at_dofs_3d()[i][d]*phi_u[d];
+         for (unsigned i = 0; i < nDof_u; i++) {
+                    x_qp[d] += geom_element.get_coords_at_dofs_3d()[d][i]*phi_u[i];
 
          }
         }

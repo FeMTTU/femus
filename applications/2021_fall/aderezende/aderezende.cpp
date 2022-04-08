@@ -22,6 +22,20 @@ using namespace femus;
 
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
+// Right-hand side for Dirichlet BC.
+double minus_Deltu_U0(const std::vector<double> & x_qp){
+    
+    // Quarter cylinder of radius 1 and length 2
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    double z = x_qp[2];
+    
+    // Function = x*y*z*(2.0-z)*(pow(x,2.0) + pow(y,2.0) - 1.0)
+    
+    // Return -Delta U0
+    return -( 12.0 * x * y * z * (z - 2.0) + 2 * x * y * ( x * x + y * y ) );
+}
 
 
 double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -40,21 +54,8 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   
   const double tolerance = 1.e-5;
   
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
-  
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
-  else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
 
-    
- }
- 
- if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
+ if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
      
      
     if (face_name == 1) {
@@ -70,10 +71,13 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
         value = 0.;
   }
   else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
+      dirichlet = true;
+        value = 0.;
   }
-   
+  else if (face_name == 5) {
+      dirichlet = true;
+        value = 0.;
+  }
  
  }
  
@@ -278,7 +282,10 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-   mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");
+    //mesh_files.push_back("assignment_quarter_cylinder_tetra.med");
+    mesh_files.push_back("assignment_quarter_cylinder_hexa.med");
+    //mesh_files.push_back("assignment_quarter_cylinder_hexa_old.med");
+   //mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -313,7 +320,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -551,8 +558,6 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(i_qp, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
-    elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
-    elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
@@ -562,6 +567,32 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 //--------------    
+
+
+// @assignment: Get groups to be used in BCs
+
+        std::vector<double> x_qp(dim, 0.);
+          
+        for (unsigned i = 0; i < nDof_u; i++) {
+          	for (unsigned d = 0; d < dim; d++) {
+	                                                x_qp[d]    += geom_element.get_coords_at_dofs_3d()[d][i] * phi_u[i]; // fetch of coordinate points
+            }
+        }
+ /// @assignment You need to evaluate your manufactured right hand side at the quadrature point qp.
+ /// Hence, you need to compute the coordinates of the quadrature point. Let us call them x_qp.
+ /// These are obtained just like every quantity at a quadrature point, i.e., by interpolating the values of the quantity at the element nodes.
+ /// The interpolation is performed by using the shape functions.
+ /// In other words, 
+ ///         (x_qp) = summation of (x_nodes) * (shape function of that node, evaluated at qp)
+ /// 
+ ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
+ ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
+ 
+ 
+
+
+
+
           
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
@@ -576,24 +607,11 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
               }
 //--------------    
               
-//--------------    
-	      double laplace_beltrami_res_du_u_i = 0.;
-          if ( i < nDof_u ) {    
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            for (unsigned ldim = 0; ldim < dim; ldim++) {
-                       laplace_beltrami_res_du_u_i             +=   elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim, i_qp, i) 
-                                                                   * JacJacT_inv[kdim][ldim]
-                                                                   /*phi_u_x   [i * space_dim + kdim]*/
-                                                                 * sol_u_x_gss[ldim];
-            }
-         }
-       }
-//--------------    
+    
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
-//           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( minus_Deltu_U0(x_qp) ) - laplace_res_du_u_i);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -614,25 +632,11 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 //--------------    
 
 
-//--------------    
-              double laplace_beltrami_mat_du_u_i_j = 0.;
-              if ( i < nDof_u && j < nDof_u ) {
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            for (unsigned ldim = 0; ldim < dim; ldim++) {
-                       laplace_beltrami_mat_du_u_i_j             +=  elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim,i_qp,i)/*phi_u_x   [i * space_dim + kdim]*/ 
-                                                                   * JacJacT_inv[kdim][ldim] *
-                                                                     elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(ldim,i_qp,j)/*phi_u_x   [j * space_dim + ldim]*/;
-                     }
-                  }
-                  
-                  
-              }
-//--------------    
+ 
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_mat_du_u_i_j;
-// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_beltrami_mat_du_u_i_j; ///@todo On a flat domain, this must coincide with the standard Laplacian, so we can do a double check with this
             } // end phi_j loop
           } // endif assemble_matrix
 

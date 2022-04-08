@@ -23,6 +23,34 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
+// the function for RHS
+double U0(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return  x * y * (1.0 - (x*x + y*y)); // forced to be zero on the x and y axis, and the circle edge
+}
+
+
+
+
+
+// this is specifically the laplacian of the function given above
+// flynn, user-made equation - accepts only coordinates
+double minus_Deltu_U0(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return -1.0 * -12 * x * y;
+}
+
+
 double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
@@ -266,8 +294,8 @@ int main(int argc, char** args) {
    // note to self: for a function V which meets the boundary conditions: V= x*y*(1 - (x^2 + y^2))
    // has a laplacian phi = -12*x*y
    
-    mesh_files.push_back("Mesh_2_xy_assignment1_triangular.med");
-    mesh_files.push_back("Mesh_2_xy_assignment1_quadrangle.med");
+    mesh_files.push_back("assignment_quarter_circle_triangular.med");
+    mesh_files.push_back("assignment_quarter_circle_quadrangular.med");
     
    //mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
@@ -304,7 +332,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/1;
+  unsigned numberOfUniformLevels = /*1*/4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -531,6 +559,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
  //===================================================   
     
     
+        //std::cout << geom_element.get_coords_at_dofs_3d().size() << std::endl;
+        //double x_node = geom_element.get_coords_at_dofs_3d()[0][4];
+        //double y_node = geom_element.get_coords_at_dofs_3d()[1][4];
+        //double z_node = geom_element.get_coords_at_dofs_3d()[2][4];
+        //std::cout << std::endl;
+        //std::cout << "\t" << x_node << "\t" << y_node << "\t" << z_node << std::endl;
+    
     
     
       // *** Quadrature point loop ***
@@ -549,22 +584,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 
     
-    std::cout << "ielGeom iqp= " << i_qp << " .... What is this?" << std::endl;
-    std::cout << *(ml_prob.GetQuadratureRule(ielGeom).GetGaussCoordinatePointer(i_qp)) << std::endl;
-    
-    
-    // the coords that you get in this way are clearly already in the classical form - may need to back-out of classical in order to properly evaluate \Delta Uo
-    
-    // xi-location of quadrature point
-    //for (unsigned i = 0; i < nDof_u; i++){
-    //    x_qp[i_qp] +=  x * phi_u[i];
-    //    y_qp[i_qp] += y * phi_u[i];
-    //} 
-          // yi-location of quadrature point
-          
-          
-          // x-location of quadrature point ("real")
-          // y-location of quadrature point ("real")
+    //std::cout << "ielGeom iqp= " << i_qp << " .... What is this?" << std::endl;
+    //std::cout << *(ml_prob.GetQuadratureRule(ielGeom).GetGaussCoordinatePointer(i_qp)) << std::endl;
     
     
     
@@ -577,14 +598,45 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
           }
 //--------------    
           
+          
+        //--------------    from giorgiobornia.cpp
+        std::vector<double> x_qp(dim, 0.);
+          
+        for (unsigned i = 0; i < nDof_u; i++) {
+          	for (unsigned d = 0; d < dim; d++) {
+	                                                x_qp[d]    += geom_element.get_coords_at_dofs_3d()[d][i] * phi_u[i]; // fetch of coordinate points
+            }
+        }
+ /// @assignment You need to evaluate your manufactured right hand side at the quadrature point qp.
+ /// Hence, you need to compute the coordinates of the quadrature point. Let us call them x_qp.
+ /// These are obtained just like every quantity at a quadrature point, i.e., by interpolating the values of the quantity at the element nodes.
+ /// The interpolation is performed by using the shape functions.
+ /// In other words, 
+ ///         (x_qp) = summation of (x_nodes) * (shape function of that node, evaluated at qp)
+ /// 
+ ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
+ ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
+ 
+ 
+//--------------   
+
+        
+
+        
+        
+           
+          
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
 	  
+            //std::cout << "i is: " << i << std::endl; // i is the node point
+            
 //--------------    
 	      double laplace_res_du_u_i = 0.;
               if ( i < nDof_u ) {
                   for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+                      //std::cout << "kdim is: " << kdim << std::endl; // kdim is clearly the vein of xyz dims
                        laplace_res_du_u_i             +=  phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim];
 	             }
               }
@@ -593,11 +645,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 // removed laplace_beltrami  
 	      
 //======================Residuals=======================
-          // FIRST ROW
-          
-          
-          
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  100.0 ) - laplace_res_du_u_i);
+
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( minus_Deltu_U0(x_qp) ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
@@ -655,4 +704,6 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
   return;
 }
+
+
 

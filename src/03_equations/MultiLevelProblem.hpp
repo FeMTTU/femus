@@ -28,6 +28,7 @@
 #include "Files.hpp"
 #include "System.hpp"
 #include "ElemType_template.hpp"
+#include "app_specifics.hpp"
 
 #include <vector>
 #include <map>
@@ -286,6 +287,14 @@ public:
    
    }
    
+
+    /** Files Handler */
+  void set_app_specs_pointer(const app_specifics * ptr_in) { _app_specs_ptr = ptr_in; return; }
+  
+  inline const app_specifics * get_app_specs_pointer() const { return  _app_specs_ptr; }
+
+
+   
    
 private:
 
@@ -311,6 +320,7 @@ private:
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > > >    _elem_all_aa;  //[QRULES][Geom Elems][FE]
     
     
+    const app_specifics *  _app_specs_ptr;
     
 };
 
