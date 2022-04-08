@@ -301,7 +301,9 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
   
    
-   mesh_files.push_back("Mesh_Assignment_semi_cylinder_hex.med");
+//    mesh_files.push_back("Mesh_Assignment_semi_cylinder_hex.med");
+   mesh_files.push_back("Mesh_Assignment_Semi_cylinder_tetra.med");
+   
 //    mesh_files.push_back("mesh_assignment_cylinder_triang.med");
 //    mesh_files.push_back("mesh_assignment_cylinder_quadrilateral.med");
 //    mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");   
