@@ -434,7 +434,7 @@ int main(int argc, char** args) {
   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
 
    //assignment_cylinder
-  my_specifics[3]._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
+  my_specifics[3]._mesh_files[0] = "assignment_cylinder_tetrahedral_split.med";
   my_specifics[3]._mesh_files[1] = "assignment_cylinder_hexahedral.med";
   
   my_specifics[3]._assemble_function = laplacian_dir_neu_eqn<double, double>;
@@ -506,7 +506,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = 1 ;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
