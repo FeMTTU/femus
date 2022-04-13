@@ -159,6 +159,13 @@ double prism_annular_base__laplacian__rhs(const std::vector < double > & x) {
 
 
 
+double segment_dir_neu_fine__laplacian__true_solution(const std::vector<double> & x) {
+    
+    // for a 1d segment
+    
+    return  x[0] * (1. - x[0]);
+}
+
 
 // user-made equation - accepts only coordinates
 double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
@@ -418,6 +425,8 @@ int main(int argc, char** args) {
   app_segment._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
   app_segment._bdry_func = segment_dir_neu_fine__laplacian__bc;
+  
+  app_segment._norm_true_solution = segment_dir_neu_fine__laplacian__true_solution;
   
   //assignment_tetra_prism_annular_base
   app_prism_annular_base._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
@@ -934,6 +943,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
   solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
 
   std::vector < double >  sol_u;     sol_u.reserve(maxSize);
+  std::vector < double >  sol_u_true;     sol_u_true.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
@@ -1066,7 +1076,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
-/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * ( sol_u[i] * phi_u[i] /* * ( ml_prob.get_app_specs_pointer()->_assemble_function_rhs(x_qp)  )*/ );
+/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * ( sol_u[i] * phi_u[i]  /*- ml_prob.get_app_specs_pointer()->_norm_true_solution(x_qp)  )*/ );
 //======================Residuals=======================
 	      
 // // //           if (assembleMatrix) {
