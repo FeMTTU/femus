@@ -401,47 +401,53 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
-  std::vector< app_specifics >   my_specifics(4);
+  std::vector< app_specifics >   my_specifics;
+  
+  app_specifics  app_segment;
+  app_specifics  app_prism_annular_base;
+  app_specifics  app_quarter_circle;
+  app_specifics  app_cylinder;
+  
   
   //segment_dir_neu_fine
-  my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
-  my_specifics[0]._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
+  app_segment._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
+  app_segment._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
   
-  my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[0]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[0]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-  my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
+  app_segment._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_segment._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_segment._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
+  app_segment._bdry_func = segment_dir_neu_fine__laplacian__bc;
   
   //assignment_tetra_prism_annular_base
-  my_specifics[1]._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
-  my_specifics[1]._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
+  app_prism_annular_base._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
+  app_prism_annular_base._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
   
-  my_specifics[1]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[1]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[1]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[1]._assemble_function_rhs = prism_annular_base__laplacian__rhs;
-  my_specifics[1]._bdry_func = prism_annular_base__laplacian__bc;
+  app_prism_annular_base._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_prism_annular_base._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_prism_annular_base._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_prism_annular_base._assemble_function_rhs = prism_annular_base__laplacian__rhs;
+  app_prism_annular_base._bdry_func = prism_annular_base__laplacian__bc;
 
   //assignment_quarter_circle
-  my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
-  my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+  app_quarter_circle._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+  app_quarter_circle._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
   
-  my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
-  my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+  app_quarter_circle._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_quarter_circle._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_quarter_circle._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_quarter_circle._assemble_function_rhs = quarter_circle__laplacian__rhs;
+  app_quarter_circle._bdry_func = quarter_circle__laplacian__bc;
 
    //assignment_cylinder
-  my_specifics[3]._mesh_files[0] = "assignment_cylinder_tetrahedral_split.med";
-  my_specifics[3]._mesh_files[1] = "assignment_cylinder_hexahedral.med";
+  app_cylinder._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
+  app_cylinder._mesh_files[1] = "assignment_cylinder_hexahedral.med";
   
-  my_specifics[3]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[3]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[3]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[3]._assemble_function_rhs = cylinder__laplacian__rhs;
-  my_specifics[3]._bdry_func = cylinder__laplacian__bc;
+  app_cylinder._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_cylinder._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_cylinder._assemble_function_rhs = cylinder__laplacian__rhs;
+  app_cylinder._bdry_func = cylinder__laplacian__bc;
 
  
   //assignment_semi_annulus
@@ -464,6 +470,13 @@ int main(int argc, char** args) {
 //   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
 //   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
 
+  
+  my_specifics.push_back(app_segment);
+//   my_specifics.push_back(app_prism_annular_base);
+//   my_specifics.push_back(app_quarter_circle);
+//   my_specifics.push_back(app_cylinder);
+  
+  
   
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
       
