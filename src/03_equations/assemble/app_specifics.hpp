@@ -37,7 +37,12 @@ class app_specifics {
    typedef  double    (* AssembleFunctionRHS )  (const std::vector<double> & x_qp);
    
    AssembleFunctionRHS  _assemble_function_rhs;
+
+    //typedef for func pointer of RHS
+   typedef  double    (* NormTrueSolution )  (const std::vector<double> & x_qp);
    
+   NormTrueSolution  _norm_true_solution;
+  
     //typedef for natural boundary integral loop - 1d
    /// @todo this should be templated
    typedef  void   (* AssembleFunctionNaturalBoundaryLoop1d )   

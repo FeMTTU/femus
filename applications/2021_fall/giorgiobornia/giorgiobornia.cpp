@@ -159,6 +159,13 @@ double prism_annular_base__laplacian__rhs(const std::vector < double > & x) {
 
 
 
+double segment_dir_neu_fine__laplacian__true_solution(const std::vector<double> & x) {
+    
+    // for a 1d segment
+    
+    return  x[0] * (1. - x[0]);
+}
+
 
 // user-made equation - accepts only coordinates
 double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
@@ -401,47 +408,55 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
-  std::vector< app_specifics >   my_specifics(4);
+  std::vector< app_specifics >   my_specifics;
+  
+  app_specifics  app_segment;
+  app_specifics  app_prism_annular_base;
+  app_specifics  app_quarter_circle;
+  app_specifics  app_cylinder;
+  
   
   //segment_dir_neu_fine
-  my_specifics[0]._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
-  my_specifics[0]._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
+  app_segment._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
+  app_segment._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
   
-  my_specifics[0]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[0]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[0]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[0]._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-  my_specifics[0]._bdry_func = segment_dir_neu_fine__laplacian__bc;
+  app_segment._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_segment._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_segment._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
+  app_segment._bdry_func = segment_dir_neu_fine__laplacian__bc;
+  
+  app_segment._norm_true_solution = segment_dir_neu_fine__laplacian__true_solution;
   
   //assignment_tetra_prism_annular_base
-  my_specifics[1]._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
-  my_specifics[1]._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
+  app_prism_annular_base._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
+  app_prism_annular_base._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
   
-  my_specifics[1]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[1]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[1]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[1]._assemble_function_rhs = prism_annular_base__laplacian__rhs;
-  my_specifics[1]._bdry_func = prism_annular_base__laplacian__bc;
+  app_prism_annular_base._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_prism_annular_base._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_prism_annular_base._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_prism_annular_base._assemble_function_rhs = prism_annular_base__laplacian__rhs;
+  app_prism_annular_base._bdry_func = prism_annular_base__laplacian__bc;
 
   //assignment_quarter_circle
-  my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
-  my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+  app_quarter_circle._mesh_files[0] = "assignment_quarter_circle_triangular.med";
+  app_quarter_circle._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
   
-  my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
-  my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+  app_quarter_circle._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_quarter_circle._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_quarter_circle._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_quarter_circle._assemble_function_rhs = quarter_circle__laplacian__rhs;
+  app_quarter_circle._bdry_func = quarter_circle__laplacian__bc;
 
    //assignment_cylinder
-  my_specifics[3]._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
-  my_specifics[3]._mesh_files[1] = "assignment_cylinder_hexahedral.med";
+  app_cylinder._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
+  app_cylinder._mesh_files[1] = "assignment_cylinder_hexahedral.med";
   
-  my_specifics[3]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-  my_specifics[3]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-  my_specifics[3]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  my_specifics[3]._assemble_function_rhs = cylinder__laplacian__rhs;
-  my_specifics[3]._bdry_func = cylinder__laplacian__bc;
+  app_cylinder._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_cylinder._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  app_cylinder._assemble_function_rhs = cylinder__laplacian__rhs;
+  app_cylinder._bdry_func = cylinder__laplacian__bc;
 
  
   //assignment_semi_annulus
@@ -464,6 +479,13 @@ int main(int argc, char** args) {
 //   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
 //   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
 
+  
+  my_specifics.push_back(app_segment);
+//   my_specifics.push_back(app_quarter_circle);
+//   my_specifics.push_back(app_prism_annular_base);
+//   my_specifics.push_back(app_cylinder);
+  
+  
   
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
       
@@ -506,7 +528,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = 1 ;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -881,8 +903,6 @@ void compute_norm(MultiLevelProblem& ml_prob) {
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
-  SparseMatrix*             JAC = pdeSys->_KK;
-  NumericVector*           RES = pdeSys->_RES;
 
   const unsigned  dim = msh->GetDimension();
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
@@ -923,21 +943,10 @@ void compute_norm(MultiLevelProblem& ml_prob) {
   solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
 
   std::vector < double >  sol_u;     sol_u.reserve(maxSize);
-  std::vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
+  std::vector < double >  sol_u_true;     sol_u_true.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
-  
- //***************************************************  
- //********* WHOLE SET OF VARIABLES ****************** 
-
-  std::vector< int > l2GMap_AllVars; l2GMap_AllVars.reserve(n_vars*maxSize); // local to global mapping
-  std::vector< double >         Res;            Res.reserve(n_vars*maxSize);  // local redidual vector
-  std::vector < double >        Jac;            Jac.reserve(n_vars*maxSize * n_vars*maxSize);
- //***************************************************  
-
-  RES->zero();
-  if (assembleMatrix)  JAC->zero();
 
   
  //***************************************************  
@@ -968,12 +977,10 @@ void compute_norm(MultiLevelProblem& ml_prob) {
  //**************** state **************************** 
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solFEType_u);
     sol_u    .resize(nDof_u);
-    l2GMap_u.resize(nDof_u);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < sol_u.size(); i++) {
      unsigned solDof_u = msh->GetSolutionDof(i, iel, solFEType_u);
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
-      l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndex_u, i, iel);
     }
  //***************************************************  
  
@@ -981,9 +988,6 @@ void compute_norm(MultiLevelProblem& ml_prob) {
     unsigned nDof_AllVars = nDof_u; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
-    Res.resize(nDof_AllVars);                  std::fill(Res.begin(), Res.end(), 0.);
-    Jac.resize(nDof_AllVars * nDof_AllVars);   std::fill(Jac.begin(), Jac.end(), 0.);
-    l2GMap_AllVars.resize(0);                  l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
  //*************************************************** 
     
 
@@ -1056,7 +1060,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
           
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
-//         for (unsigned i = 0; i < nDof_max; i++) {
+        for (unsigned i = 0; i < nDof_max; i++) {
 	  
 // //--------------    
 // 	      double laplace_res_du_u_i = 0.;
@@ -1072,7 +1076,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
-/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * ( 1. /*phi_u[i] * ( ml_prob.get_app_specs_pointer()->_assemble_function_rhs(x_qp)  )*/ );
+/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * ( sol_u[i] * phi_u[i]  /*- ml_prob.get_app_specs_pointer()->_norm_true_solution(x_qp)  )*/ );
 //======================Residuals=======================
 	      
 // // //           if (assembleMatrix) {
@@ -1101,33 +1105,18 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 // // //             } // end phi_j loop
 // // //           } // endif assemble_matrix
 
-//         } // end phi_i loop
+        } // end phi_i loop
         
       } // end gauss point loop
 
 
-    RES->add_vector_blocked(Res, l2GMap_AllVars);
-
-    if (assembleMatrix) {
-      JAC->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
-    }
-   
    
   } //end element loop for each process
 
   
   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm: " << norm << std::endl;
   
-  
-//   RES->close();
-// 
-//   if (assembleMatrix) JAC->close();
-// 
-//      //print JAC and RES to files
-//     const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
-//     assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
-  
+
 
 
   return;
