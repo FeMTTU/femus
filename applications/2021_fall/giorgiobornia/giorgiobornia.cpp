@@ -62,7 +62,17 @@ bool cylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vecto
   
  }
 
+ double quarter_circle__laplacian__true_solution(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return  x * y * (1.0 - (x*x + y*y)); // forced to be zero on the x and y axis, and the circle edge
+}
 
+ 
 
 // this is specifically the laplacian of the function given above
 // flynn, user-made equation - accepts only coordinates
@@ -448,7 +458,9 @@ int main(int argc, char** args) {
   app_quarter_circle._assemble_function_rhs = quarter_circle__laplacian__rhs;
   app_quarter_circle._bdry_func = quarter_circle__laplacian__bc;
 
-   //assignment_cylinder
+  app_quarter_circle._norm_true_solution = quarter_circle__laplacian__true_solution;
+  
+  //assignment_cylinder
   app_cylinder._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
   app_cylinder._mesh_files[1] = "assignment_cylinder_hexahedral.med";
   
@@ -481,7 +493,7 @@ int main(int argc, char** args) {
 
   
   my_specifics.push_back(app_segment);
-//   my_specifics.push_back(app_quarter_circle);
+  my_specifics.push_back(app_quarter_circle);
 //   my_specifics.push_back(app_prism_annular_base);
 //   my_specifics.push_back(app_cylinder);
   
@@ -982,7 +994,19 @@ void compute_norm(MultiLevelProblem& ml_prob) {
      unsigned solDof_u = msh->GetSolutionDof(i, iel, solFEType_u);
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
     }
- //***************************************************  
+    
+ //**************** true sol **************************** 
+    sol_u_true    .resize(nDof_u);
+   // local storage of global mapping and solution
+    for (unsigned i = 0; i < sol_u.size(); i++) {
+        std::vector< double > xyz_i(dim);
+             	for (unsigned d = 0; d < xyz_i.size(); d++) {
+                   xyz_i[d] = geom_element.get_coords_at_dofs_3d()[d][i];
+                }
+               sol_u_true[i]  =   ml_prob.get_app_specs_pointer()->_norm_true_solution( xyz_i);  
+    }
+
+    //***************************************************  
  
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u; 
@@ -1060,9 +1084,17 @@ void compute_norm(MultiLevelProblem& ml_prob) {
           
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
+	double u_qp = 0.;
         for (unsigned i = 0; i < nDof_max; i++) {
-	  
-// //--------------    
+            u_qp +=  sol_u[i] * phi_u[i];
+        }
+
+ 	double u_true_qp = 0.;
+        for (unsigned i = 0; i < nDof_max; i++) {
+            u_true_qp +=  sol_u_true[i] * phi_u[i];
+        }
+       
+        // //--------------    
 // 	      double laplace_res_du_u_i = 0.;
 //               if ( i < nDof_u ) {
 //                   for (unsigned kdim = 0; kdim < space_dim; kdim++) {
@@ -1076,7 +1108,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
-/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * ( sol_u[i] * phi_u[i]  /*- ml_prob.get_app_specs_pointer()->_norm_true_solution(x_qp)  )*/ );
+/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * (  u_qp - u_true_qp) * (  u_qp - u_true_qp) ;
 //======================Residuals=======================
 	      
 // // //           if (assembleMatrix) {
@@ -1105,7 +1137,6 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 // // //             } // end phi_j loop
 // // //           } // endif assemble_matrix
 
-        } // end phi_i loop
         
       } // end gauss point loop
 
@@ -1114,7 +1145,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
 
   
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm: " << norm << std::endl;
+  std::cout << std::scientific << std::setw(20) << std::setprecision(15) << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm: " << norm << std::endl;
   
 
 
