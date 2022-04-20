@@ -22,7 +22,15 @@
 
 using namespace femus;
  
+// (z)(z-2)((x-1)^2 + (y-1)^2 - 1) 
+ double cylinder__laplacian__true_solution(const std::vector<double> & x_qp){
+  
+     double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
+  return -r;
 
+     
+}
+ 
 double  cylinder__laplacian__rhs(const std::vector < double >& x_qp) {
    double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
   return -r;
@@ -62,7 +70,17 @@ bool cylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vecto
   
  }
 
+ double quarter_circle__laplacian__true_solution(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return  x * y * (1.0 - (x*x + y*y)); // forced to be zero on the x and y axis, and the circle edge
+}
 
+ 
 
 // this is specifically the laplacian of the function given above
 // flynn, user-made equation - accepts only coordinates
@@ -146,6 +164,12 @@ bool prism_annular_base__laplacian__bc(const MultiLevelProblem * ml_prob, const 
 
 }
 
+
+ double prism_annular_base__laplacian__true_solution(const std::vector<double> & x) {
+     
+     return  x[2] * (x[2] - 1.) * (1. - x[0]*x[0] - x[1]*x[1]) * (0.25 - x[0]*x[0] - x[1]*x[1]);
+ }
+ 
 
 //calculator: f = z(z - 1)(1 - x^2 - y^2)(1/4 - x^2 - y^2);
 double prism_annular_base__laplacian__rhs(const std::vector < double > & x) {
@@ -417,8 +441,8 @@ int main(int argc, char** args) {
   
   
   //segment_dir_neu_fine
-  app_segment._mesh_files[0] = "assignment_segment_dir_neu_fine.med";
-  app_segment._mesh_files[1] = "assignment_segment_dir_neu_fine.med";
+  app_segment._mesh_files.push_back("assignment_segment_dir_neu_fine.med");
+  app_segment._mesh_files.push_back("assignment_segment_dir_neu_fine.med");
   
   app_segment._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_segment._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -429,8 +453,8 @@ int main(int argc, char** args) {
   app_segment._norm_true_solution = segment_dir_neu_fine__laplacian__true_solution;
   
   //assignment_tetra_prism_annular_base
-  app_prism_annular_base._mesh_files[0] = "assignment_prism_annular_base_tetrahedral.med";
-  app_prism_annular_base._mesh_files[1] = "assignment_prism_annular_base_hexahedral.med";
+  app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_tetrahedral.med");
+  app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_hexahedral.med");
   
   app_prism_annular_base._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_prism_annular_base._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -438,9 +462,11 @@ int main(int argc, char** args) {
   app_prism_annular_base._assemble_function_rhs = prism_annular_base__laplacian__rhs;
   app_prism_annular_base._bdry_func = prism_annular_base__laplacian__bc;
 
+  app_prism_annular_base._norm_true_solution = prism_annular_base__laplacian__true_solution;
+  
   //assignment_quarter_circle
-  app_quarter_circle._mesh_files[0] = "assignment_quarter_circle_triangular.med";
-  app_quarter_circle._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+  app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_triangular.med");
+  app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_quadrangular.med");
   
   app_quarter_circle._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_quarter_circle._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -448,9 +474,11 @@ int main(int argc, char** args) {
   app_quarter_circle._assemble_function_rhs = quarter_circle__laplacian__rhs;
   app_quarter_circle._bdry_func = quarter_circle__laplacian__bc;
 
-   //assignment_cylinder
-  app_cylinder._mesh_files[0] = "assignment_cylinder_tetrahedral.med";
-  app_cylinder._mesh_files[1] = "assignment_cylinder_hexahedral.med";
+  app_quarter_circle._norm_true_solution = quarter_circle__laplacian__true_solution;
+  
+  //assignment_cylinder
+  app_cylinder._mesh_files.push_back("assignment_cylinder_tetrahedral.med");
+  app_cylinder._mesh_files.push_back("assignment_cylinder_hexahedral.med");
   
   app_cylinder._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -458,10 +486,11 @@ int main(int argc, char** args) {
   app_cylinder._assemble_function_rhs = cylinder__laplacian__rhs;
   app_cylinder._bdry_func = cylinder__laplacian__bc;
 
+  app_cylinder._norm_true_solution = cylinder__laplacian__true_solution;
  
   //assignment_semi_annulus
-//   my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
-//   my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_triangular.med");
+//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_quadrangular.med");
 //   
 //   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
 //   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -470,8 +499,8 @@ int main(int argc, char** args) {
 //   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
 
 //   //assignment_annulus - jon
-//   my_specifics[2]._mesh_files[0] = "assignment_quarter_circle_triangular.med";
-//   my_specifics[2]._mesh_files[1] = "assignment_quarter_circle_quadrangular.med";
+//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_triangular.med");
+//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_quadrangular.med");
 //   
 //   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
 //   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
@@ -480,10 +509,10 @@ int main(int argc, char** args) {
 //   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
 
   
-  my_specifics.push_back(app_segment);
+//   my_specifics.push_back(app_segment);
 //   my_specifics.push_back(app_quarter_circle);
 //   my_specifics.push_back(app_prism_annular_base);
-//   my_specifics.push_back(app_cylinder);
+  my_specifics.push_back(app_cylinder);
   
   
   
@@ -528,7 +557,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 1 ;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -547,7 +576,7 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob(&ml_sol);
   
   // add variables to ml_sol
-  ml_sol.AddSolution("u", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+  ml_sol.AddSolution("u", LAGRANGE, SECOND/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
   
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all variables to zero
@@ -982,7 +1011,19 @@ void compute_norm(MultiLevelProblem& ml_prob) {
      unsigned solDof_u = msh->GetSolutionDof(i, iel, solFEType_u);
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
     }
- //***************************************************  
+    
+ //**************** true sol **************************** 
+    sol_u_true    .resize(nDof_u);
+   // local storage of global mapping and solution
+    for (unsigned i = 0; i < sol_u.size(); i++) {
+        std::vector< double > xyz_i(dim);
+             	for (unsigned d = 0; d < xyz_i.size(); d++) {
+                   xyz_i[d] = geom_element.get_coords_at_dofs_3d()[d][i];
+                }
+               sol_u_true[i]  =   ml_prob.get_app_specs_pointer()->_norm_true_solution( xyz_i);  
+    }
+
+    //***************************************************  
  
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u; 
@@ -1060,9 +1101,17 @@ void compute_norm(MultiLevelProblem& ml_prob) {
           
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
+	double u_qp = 0.;
         for (unsigned i = 0; i < nDof_max; i++) {
-	  
-// //--------------    
+            u_qp +=  sol_u[i] * phi_u[i];
+        }
+
+ 	double u_true_qp = 0.;
+        for (unsigned i = 0; i < nDof_max; i++) {
+            u_true_qp +=  sol_u_true[i] * phi_u[i];
+        }
+       
+        // //--------------    
 // 	      double laplace_res_du_u_i = 0.;
 //               if ( i < nDof_u ) {
 //                   for (unsigned kdim = 0; kdim < space_dim; kdim++) {
@@ -1076,7 +1125,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
-/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * ( sol_u[i] * phi_u[i]  /*- ml_prob.get_app_specs_pointer()->_norm_true_solution(x_qp)  )*/ );
+/* if (i < nDof_u) */                     /*Res[0      + i]*/ norm +=  jacXweight_qp * (  u_qp - u_true_qp) * (  u_qp - u_true_qp) ;
 //======================Residuals=======================
 	      
 // // //           if (assembleMatrix) {
@@ -1105,7 +1154,6 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 // // //             } // end phi_j loop
 // // //           } // endif assemble_matrix
 
-        } // end phi_i loop
         
       } // end gauss point loop
 
@@ -1114,7 +1162,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
 
   
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm: " << norm << std::endl;
+  std::cout << std::scientific << std::setw(20) << std::setprecision(15) << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm: " << norm << std::endl;
   
 
 

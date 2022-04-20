@@ -21,7 +21,7 @@ class app_specifics {
  
   public:
       
-      app_specifics() {  _mesh_files.resize(2); }
+      app_specifics() {  }
   
    std::vector< std::string >   _mesh_files;  //same domain, only potentially multiple mesh discretizations 
  
