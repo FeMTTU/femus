@@ -267,8 +267,8 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 // Changes by Aman
 double RHS(const std::vector < double >& x_qp) {
-   double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
-  return -r;
+   double r = 4*x_qp[2]*(x_qp[2] - 1)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
+  return r;
 };
 
 
@@ -300,7 +300,8 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
   
    
-     mesh_files.push_back("assignment_mesh_cylinder_tetrahedral.med");
+     mesh_files.push_back("assignment_mesh_cylinder_tetrahedral_new.med");
+     mesh_files.push_back("assignment_mesh_cylinder_hexahedral_new.med");
 //    mesh_files.push_back("assignment_mesh_cylinder_tetrahedron2.med");
 //      mesh_files.push_back("assignment_mesh_cylinder_hexahedron.med");
 //    mesh_files.push_back("Mesh_1_x_dir_neu_fine.med");   
@@ -338,7 +339,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/2;
+  unsigned numberOfUniformLevels = /*1*/1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
