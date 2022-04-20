@@ -268,6 +268,9 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 }
 
 
+//original form //f = y (1 - sqrt (x^2 + y^2)) (2 - z) (z)
+//c-form   // f = x[1] (1 - sqrt (x[0]^2 + x[1]^2)) (2 - x[2]) (x[2])   
+//laplacian f = -2 y + 2 sqrt x^2 y + 2 sqrt y^3 - 16 sqrt y z + 8 sqrt y z^2
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double F3 = -2*x[1] + ((2*x[0]*x[0]) + (2*x[1]*x[1]) + 3*x[2]*x[2] - 6*x[2])/ sqrt(x[0]*x[0]+x[1]*x[1]);
