@@ -22,6 +22,7 @@
 
 using namespace femus;
  
+// (z)(z-2)((x-1)^2 + (y-1)^2 - 1) 
  double cylinder__laplacian__true_solution(const std::vector<double> & x_qp){
   
      double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
