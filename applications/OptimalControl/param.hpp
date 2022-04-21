@@ -310,7 +310,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
         for (unsigned i = 0; i < sol_actflag.size(); i++) {
             unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag);
-            (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);
+            (sol->_Sol[solIndex_act_flag])->set(solDof_mu, sol_actflag[i]);
         }
 
 }

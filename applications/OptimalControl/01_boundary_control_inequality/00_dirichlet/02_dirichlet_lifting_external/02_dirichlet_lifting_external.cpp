@@ -126,26 +126,48 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 }
 
 
-bool Solution_set_boundary_conditions(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
-    bool dirichlet = true; //dirichlet
+    bool dirichlet = false; //dirichlet
     value = 0.;
 
-//   if(!strcmp(name,"control")) {
-//       value = 0.;
-//   if (faceName == 3)
-//     dirichlet = false;
-//
-//   }
-
-    if(!strcmp(name,"mu")) {
-//       value = 0.;
-//   if (faceName == 3)
+  if(!strcmp(name, "state")) {
+       dirichlet = true;
+       value = 0.;
+  }
+  else if(!strcmp(name, "control")) {
+       dirichlet = true;
+       value = 0.;
+  }
+  else if(!strcmp(name, "adjoint")) {
+       dirichlet = true;
+       value = 0.;
+  }
+  else if(!strcmp(name, "adjoint_ext")) {
+       dirichlet = true;
+       value = 0.;
+  }
+  else if(!strcmp(name, "mu")) {
         dirichlet = false;
     }
+    
+    
+  else if(!strcmp(name,"act_flag")) {
+        dirichlet = true;
+    }
+  else if(!strcmp(name,"TargReg")) {
+    }
+  else if(!strcmp(name,"ContReg")) {
+        dirichlet = true;
+    }
+  
 
     return dirichlet;
 }
+
+
+
+
 
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob);
@@ -221,20 +243,25 @@ int main(int argc, char** args) {
     ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("adjoint_ext", Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
+    
     ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
     ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
-    ml_sol.GenerateBdc("state");
-    ml_sol.GenerateBdc("control");
-    ml_sol.GenerateBdc("adjoint");
-    ml_sol.GenerateBdc("adjoint_ext");
-    ml_sol.GenerateBdc("mu");
+    ml_sol.GenerateBdc("state", "Steady", & ml_prob);
+    ml_sol.GenerateBdc("control", "Steady", & ml_prob);
+    ml_sol.GenerateBdc("adjoint", "Steady", & ml_prob);
+    ml_sol.GenerateBdc("adjoint_ext", "Steady", & ml_prob);
+    ml_sol.GenerateBdc("mu", "Steady", & ml_prob);
 
+    ml_sol.GenerateBdc("TargReg", "Steady", & ml_prob);
+    ml_sol.GenerateBdc("ContReg", "Steady", & ml_prob);
+    ml_sol.GenerateBdc(act_set_flag_name.c_str(), "Steady", & ml_prob);
+    
     // ======= System ========================
-    NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+    NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
 
     system.SetActiveSetFlagName(act_set_flag_name);
 
