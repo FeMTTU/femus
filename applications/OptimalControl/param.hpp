@@ -37,7 +37,7 @@
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
-#define ALPHA_CTRL_VOL 0.0009 
+#define ALPHA_CTRL_VOL 0.005 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
 
 
@@ -48,7 +48,7 @@
 
 
 //*********************** Lifting internal extension *******************************************************
-#define LIFTING_INTERNAL_DEPTH  0.5
+#define LIFTING_INTERNAL_DEPTH  0.25
 #define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
 #define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
 
