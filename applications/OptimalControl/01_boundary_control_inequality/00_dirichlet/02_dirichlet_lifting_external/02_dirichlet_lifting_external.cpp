@@ -18,6 +18,7 @@
 
 //Flags for enforcement of Adjoint Neumann continuity on \Gamma_c 
 #define  NEUMANN_ADJOINT_EXPLICIT  1
+#define  NEUMANN_ADJOINT_CONTINUITY_SIGN  -1.
 #define  U_MINUS_Q_STRONG  1
 
 
@@ -324,7 +325,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     const unsigned    iproc = msh->processor_id();
   
     
-    constexpr bool print_algebra_global = false;
+    constexpr bool print_algebra_global = true;
     constexpr bool print_algebra_local = false;
   
 
@@ -691,7 +692,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                         if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  U_MINUS_Q_STRONG * penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol]);    // u 
                         if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  U_MINUS_Q_STRONG * penalty_interface * ( - sol_eldofs_Mat[pos_ctrl][i_vol]);    // - q
                         
-                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - NEUMANN_ADJOINT_EXPLICIT * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( -grad_adj_dot_n_res ) ;
+                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - NEUMANN_ADJOINT_EXPLICIT * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( NEUMANN_ADJOINT_CONTINUITY_SIGN ) * grad_adj_dot_n_res ;
                         if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - NEUMANN_ADJOINT_EXPLICIT * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * (  grad_adj_ext_dot_n_res ) ;
 //============ Bdry Residuals - END ==================
 
@@ -736,7 +737,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                             }
                             
 
-                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj, i_vol, j) ]  += NEUMANN_ADJOINT_EXPLICIT * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( -1.) * grad_adj_dot_n_mat;
+                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj, i_vol, j) ]  += NEUMANN_ADJOINT_EXPLICIT * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( NEUMANN_ADJOINT_CONTINUITY_SIGN ) * grad_adj_dot_n_mat;
                                 if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj_ext, i_vol, j) ]   += NEUMANN_ADJOINT_EXPLICIT * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( 1.) * grad_adj_ext_dot_n_mat;
 
 
@@ -830,15 +831,18 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj_ext,i)] += - weight_qp *  ( - laplace_rhs_dadj_ext_ctrl_i - 0.);
                 }
 
-//--- extensions to zero ---                
+//--- extensions to zero ---
+            const double exclude_Dirichlet_Gamma_c_for_Adjoint =  (1 - is_dof_on_Gamma_c[i]);
+            const double exclude_Dirichlet_Gamma_c_for_Adjoint_Ext =  (1 - is_dof_on_Gamma_c[i]);
+            
                 if ( group_flag == GROUP_INTERNAL )     {
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj_ext, i)] += - /*(1 - is_dof_on_Gamma_c[i]) **/ penalty_strong_ctrl * ( sol_eldofs_Mat[pos_adj_ext][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj_ext, i)] += - exclude_Dirichlet_Gamma_c_for_Adjoint_Ext * penalty_strong_ctrl * ( sol_eldofs_Mat[pos_adj_ext][i] - 0.);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_ctrl, i)]    += - (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl * (sol_eldofs_Mat[pos_ctrl][i] - 0.);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mu, i)]      += - (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl * ( sol_eldofs_Mat[pos_mu][i] - 0.);
                 }
 
                 else if ( group_flag == GROUP_EXTERNAL )  {
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i)]     += - /*(1 - is_dof_on_Gamma_c[i]) **/ penalty_strong_u * (  sol_eldofs_Mat[pos_adj][i] - 0.);
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i)]     += - exclude_Dirichlet_Gamma_c_for_Adjoint * penalty_strong_u * (  sol_eldofs_Mat[pos_adj][i] - 0.);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_state, i) ]  += - (1 - is_dof_on_Gamma_c[i]) * penalty_strong_u * (sol_eldofs_Mat[pos_state][i] - 0.);
                 }
 //======================Volume Residuals - END =======================
@@ -893,13 +897,13 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                        if (  i == j ) {
                                 
                         if ( group_flag == GROUP_INTERNAL ) {
-                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += /*(1 - is_dof_on_Gamma_c[i]) **/ penalty_strong_ctrl;
+                             Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += exclude_Dirichlet_Gamma_c_for_Adjoint_Ext * penalty_strong_ctrl;
                              Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]      += (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl;
                              Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]           += (1 - is_dof_on_Gamma_c[i]) * penalty_strong_ctrl;
                             }
                             
                         else if ( group_flag == GROUP_EXTERNAL ) {
-                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]      += /*(1 - is_dof_on_Gamma_c[i]) **/  penalty_strong_u;
+                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]      += exclude_Dirichlet_Gamma_c_for_Adjoint *  penalty_strong_u;
                              Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ]  += (1 - is_dof_on_Gamma_c[i]) *  penalty_strong_u;
                             }
 
