@@ -255,6 +255,11 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
   return r;
 };
 
+double GetExactSolution(const std::vector < double >& x) {
+  double r = (1. - sqrt(x[0] * x[0] + x[1] * x[1])) * (0.5 - sqrt(x[0] * x[0] + x[1] * x[1]));
+  return r;
+};
+
 
  
 
@@ -299,8 +304,8 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("disk_tri_90x.med");
     //mesh_files.push_back("triagle_jon.med");
     
-   //mesh_files.push_back("assignment_annulus_quadrilateral.med");
-   mesh_files.push_back("assignment_annulus_triangular.med");
+   mesh_files.push_back("assignment_annulus_quadrilateral.med");
+   //mesh_files.push_back("assignment_annulus_triangular.med");
    
 
 
