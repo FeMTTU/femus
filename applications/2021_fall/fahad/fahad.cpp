@@ -1,6 +1,6 @@
 /**
  * Solve 
- *     - \Delta u = 1
+ *     - \Delta u = \Delta u_my_u
 */
 
 
@@ -265,6 +265,7 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
   
     double r2 = x[0] * x[0] + x[1] * x[1];
     double temp = x[0] * (8. - 4.5 / (sqrt(r2)));
+    //double temp = (4. - 1.5 / (sqrt(r2)));
   return temp;
 };
 
@@ -294,7 +295,10 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-   mesh_files.push_back("assignment_semiannulus.med");
+   //mesh_files.push_back("assignment_semiannulus.med");
+   mesh_files.push_back("assignment_semiannulus_tri_mesh.med");
+   //mesh_files.push_back("triagle_jon.med");
+   //mesh_files.push_back("Mesh_1.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -329,7 +333,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = /*1*/6;
+  unsigned numberOfUniformLevels = /*1*/2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
