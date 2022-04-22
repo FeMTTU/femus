@@ -22,6 +22,65 @@
 
 using namespace femus;
  
+
+bool semiannulus__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  bool dirichlet = false;
+  value = 0.;
+  
+  const double tolerance = 1.e-5;
+  
+ 
+ if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
+     
+     
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 4) {
+      dirichlet = true;
+        value = 0. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
+  }
+   
+ 
+ }
+ 
+ 
+ 
+  return dirichlet;
+  
+ }
+
+
+double semiannulus__laplacian__rhs(const std::vector < double >& x) {
+  
+    double r2 = x[0] * x[0] + x[1] * x[1];
+    double temp = x[0] * (8. - 4.5 / (sqrt(r2)));
+    //double temp = (4. - 1.5 / (sqrt(r2)));
+  return temp;
+
+//   return - 20. * x[0] * (-0.45 + x[0] * x[0] - 0.6 * x[1] * x[1] );
+    
+}
+
+double semiannulus__laplacian__true_solution(const std::vector < double >& x) {
+    
+     double r2 = x[0] * x[0] + x[1] * x[1];
+
+     return   x[0] * (sqrt(r2) - 1. ) * (.5 - sqrt(r2) );
+//      return   x[0] * (r2 - 1. ) * (.25 - r2);
+}
+
+
 // (z)(z-2)((x-1)^2 + (y-1)^2 - 1) 
  double cylinder__laplacian__true_solution(const std::vector<double> & x_qp){
   
@@ -438,6 +497,7 @@ int main(int argc, char** args) {
   app_specifics  app_prism_annular_base;
   app_specifics  app_quarter_circle;
   app_specifics  app_cylinder;
+  app_specifics  app_semiannulus;
   
   
   //segment_dir_neu_fine
@@ -488,15 +548,18 @@ int main(int argc, char** args) {
 
   app_cylinder._norm_true_solution = cylinder__laplacian__true_solution;
  
-  //assignment_semi_annulus
-//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_triangular.med");
-//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_quadrangular.med");
-//   
-//   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-//   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-//   my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-//   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
-//   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
+  //assignment_semiannulus
+  app_semiannulus._mesh_files.push_back("assignment_semiannulus_triangular.med");
+  app_semiannulus._mesh_files.push_back("assignment_semiannulus_quadrangular.med");
+  
+  app_semiannulus._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_semiannulus._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_semiannulus._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  
+  app_semiannulus._assemble_function_rhs = semiannulus__laplacian__rhs;
+  app_semiannulus._bdry_func = semiannulus__laplacian__bc;
+  app_semiannulus._norm_true_solution = semiannulus__laplacian__true_solution;
+ 
 
 //   //assignment_annulus - jon
 //   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_triangular.med");
@@ -512,7 +575,8 @@ int main(int argc, char** args) {
 //   my_specifics.push_back(app_segment);
 //   my_specifics.push_back(app_quarter_circle);
 //   my_specifics.push_back(app_prism_annular_base);
-  my_specifics.push_back(app_cylinder);
+//   my_specifics.push_back(app_cylinder);
+  my_specifics.push_back(app_semiannulus);
   
   
   
@@ -557,7 +621,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);

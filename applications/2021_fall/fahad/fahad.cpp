@@ -31,31 +31,13 @@ double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < doub
 
  
  
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool semiannulus__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
   value = 0.;
   
   const double tolerance = 1.e-5;
   
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
-  //left endpoint is given dirchlet bd condition i.e. u(0) = 0
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-        //dirichlet = false;
-       // value = 1.; //Neumann value
-    }
-    //right endpoint is given neuman bd condition i.e. u'(1) = 1
-  else if (face_name == 2) {
-       // dirichlet = true;
-       // value = 0.; //Dirichlet value
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
-
-    
- }
  
  if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
      
@@ -255,19 +237,19 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 double GetExactSolutionValue(const std::vector < double >& x) {
     return 0.;
-};
+}
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   
-};
+}
 
-double GetExactSolutionLaplace(const std::vector < double >& x) {
+double semiannulus__laplacian__rhs(const std::vector < double >& x) {
   
     double r2 = x[0] * x[0] + x[1] * x[1];
     double temp = x[0] * (8. - 4.5 / (sqrt(r2)));
     //double temp = (4. - 1.5 / (sqrt(r2)));
   return temp;
-};
+}
 
 
  
@@ -296,7 +278,7 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
    
    //mesh_files.push_back("assignment_semiannulus.med");
-   mesh_files.push_back("assignment_semiannulus_tri_mesh.med");
+   mesh_files.push_back("assignment_semiannulus_triangular.med");
    //mesh_files.push_back("triagle_jon.med");
    //mesh_files.push_back("Mesh_1.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
@@ -359,7 +341,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(semiannulus__laplacian__bc);
   ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
@@ -647,8 +629,8 @@ for (unsigned i = 0; i < nDof_u; i++) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( /*1.*/  GetExactSolutionLaplace(x_gss) ) - laplace_res_du_u_i); //integral grad_u grad_v - integral vf
-          //Res[i] += ( - GetExactSolutionLaplace(x_gss) * phi[i] + weakLaplace) * weight;
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( /*1.*/  semiannulus__laplacian__rhs(x_gss) ) - laplace_res_du_u_i); //integral grad_u grad_v - integral vf
+          //Res[i] += ( - semiannulus__laplacian__rhs(x_gss) * phi[i] + weakLaplace) * weight;
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
