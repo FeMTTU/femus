@@ -32,26 +32,11 @@ double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < doub
 
  
  
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool annulus__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
   value = 0.;
-  
-  const double tolerance = 1.e-5;
-  
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
-  
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
-  else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
-
     
- }
  
  if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
      
@@ -63,14 +48,6 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   else if (face_name == 2) {
       dirichlet = true;
         value = 0.;
-  }
-  else if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
   }
    
  
@@ -249,13 +226,13 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 
-double GetExactSolutionLaplace(const std::vector < double >& x) {
+double annulus__laplacian__rhs(const std::vector < double >& x) {
   double r = x[0] * x[0] + x[1] * x[1];
   r = 16. * (0.3125 - r);
   return -r;
 };
 
-double GetExactSolution(const std::vector < double >& x) {
+double annulus__laplacian__true_solution(const std::vector < double >& x) {
   double r = (1. - x[0] * x[0] + x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
   return r;
 };
@@ -351,7 +328,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("u", InitialValueU, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(annulus__laplacian__bc);
   ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   
@@ -629,7 +606,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)    Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  GetExactSolutionLaplace(x_gss) ) - laplace_res_du_u_i);
+          if (i < nDof_u)    Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  annulus__laplacian__rhs(x_gss) ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      

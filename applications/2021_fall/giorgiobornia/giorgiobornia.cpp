@@ -21,7 +21,104 @@
 
 
 using namespace femus;
+
+
+
+
+
+bool annulus__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+    bool dirichlet = false;
+  value = 0.;
+    
  
+ if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
+     
+     
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+   
+ 
+ }
+
+    
+}
+
+double annulus__laplacian__rhs(const std::vector < double >& x) {
+    
+  double r2 = x[0] * x[0] + x[1] * x[1];
+  double y = 16. * (0.3125 - r2);
+  return -y;
+  
+}
+
+double annulus__laplacian__true_solution(const std::vector < double >& x) {
+    
+  double r2 = x[0] * x[0] + x[1] * x[1];
+  double y = (1. - r2) * (-0.25 + r2);
+  return y;
+
+    
+}
+
+
+
+
+bool quarter_cylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+}
+
+double quarter_cylinder__laplacian__rhs(const std::vector < double >& x) {
+}
+
+double quarter_cylinder__laplacian__true_solution(const std::vector < double >& x) {
+}
+
+
+
+
+bool semicylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+}
+
+double semicylinder__laplacian__rhs(const std::vector < double >& x) {
+}
+
+double semicylinder__laplacian__true_solution(const std::vector < double >& x) {
+}
+
+
+
+
+
+bool semicircle__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+}
+
+double semicircle__laplacian__rhs(const std::vector < double >& x) {
+}
+
+double semicircle__laplacian__true_solution(const std::vector < double >& x) {
+}
+
+
+
+
+
+bool circle__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+}
+
+double circle__laplacian__rhs(const std::vector < double >& x) {
+}
+
+double circle__laplacian__true_solution(const std::vector < double >& x) {
+}
+
+
+
 
 bool semiannulus__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
@@ -493,11 +590,16 @@ int main(int argc, char** args) {
     // ======= App Specifics  ==================
   std::vector< app_specifics >   my_specifics;
   
-  app_specifics  app_segment;
-  app_specifics  app_prism_annular_base;
-  app_specifics  app_quarter_circle;
-  app_specifics  app_cylinder;
-  app_specifics  app_semiannulus;
+  app_specifics  app_segment;   //me
+  app_specifics  app_prism_annular_base;  //Abu
+  app_specifics  app_quarter_circle;      //Max
+  app_specifics  app_cylinder;            //Aman
+  app_specifics  app_semiannulus;        //Fahad
+  app_specifics  app_annulus;       //Jon
+//   app_specifics  app_quarter_cylinder; //Armando
+//   app_specifics  app_semicylinder;   //Rifat
+//   app_specifics  app_semicircle;   //Himali
+//   app_specifics  app_circle;   //Gayani
   
   
   //segment_dir_neu_fine
@@ -560,23 +662,29 @@ int main(int argc, char** args) {
   app_semiannulus._bdry_func = semiannulus__laplacian__bc;
   app_semiannulus._norm_true_solution = semiannulus__laplacian__true_solution;
  
+  
+  
+  //assignment_annulus
+//   app_annulus._mesh_files.push_back("assignment_annulus_triangular.med");
+  app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
+  
+  app_annulus._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_annulus._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_annulus._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  
+  app_annulus._assemble_function_rhs = annulus__laplacian__rhs;
+  app_annulus._bdry_func = annulus__laplacian__bc;
+  app_annulus._norm_true_solution = annulus__laplacian__true_solution;
+ 
 
-//   //assignment_annulus - jon
-//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_triangular.med");
-//   my_specifics[2]._mesh_files.push_back("assignment_quarter_circle_quadrangular.med");
-//   
-//   my_specifics[2]._assemble_function = laplacian_dir_neu_eqn<double, double>;
-//   my_specifics[2]._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
-//   my_specifics[2]._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-//   my_specifics[2]._assemble_function_rhs = quarter_circle__laplacian__rhs;
-//   my_specifics[2]._bdry_func = quarter_circle__laplacian__bc;
 
   
 //   my_specifics.push_back(app_segment);
 //   my_specifics.push_back(app_quarter_circle);
 //   my_specifics.push_back(app_prism_annular_base);
 //   my_specifics.push_back(app_cylinder);
-  my_specifics.push_back(app_semiannulus);
+//   my_specifics.push_back(app_semiannulus);
+  my_specifics.push_back(app_annulus);
   
   
   
@@ -621,7 +729,10 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 6;
+
+ for (unsigned int r = 1; r < 5; r++)  {
+
+  unsigned numberOfUniformLevels = r;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -692,7 +803,9 @@ int main(int argc, char** args) {
  
   ml_sol.GetWriter()->Write(my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
-  }
+  }  //end refinement loop
+  
+  }  //end mesh file loop
  
  
 } //end app loop
@@ -1225,7 +1338,8 @@ void compute_norm(MultiLevelProblem& ml_prob) {
    
   } //end element loop for each process
 
-  
+   double norm_parallel = 0.; MPI_Allreduce( &norm, &norm_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+ 
   std::cout << std::scientific << std::setw(20) << std::setprecision(15) << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm: " << norm << std::endl;
   
 
