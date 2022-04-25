@@ -23,6 +23,18 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
+//editied by himali for semicircle
+double Assignment_semicircle_RHS(const std::vector<double> & x_qp){
+    
+    
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    double r = (x*x+y*y-1.)*y;
+    
+    return -r;
+}
+//////////////////////himali end
 
 double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
@@ -277,8 +289,10 @@ int main(int argc, char** args) {
 
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
+
    
-   mesh_files.push_back("Assignment_semicircle_quad.med");
+  
+      mesh_files.push_back("Assignment_semicircle_quad.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -561,7 +575,16 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 //--------------    
+ // from Dr.Bonia's code (edited by himali)
+ std::vector<double> x_qp(dim, 0.);
           
+        for (unsigned i = 0; i < nDof_u; i++) {
+          	for (unsigned d = 0; d < dim; d++) {
+	                                                x_qp[d]    += geom_element.get_coords_at_dofs_3d()[d][i] * phi_u[i]; // fetch of coordinate points
+            }
+        }  
+        
+//end himali
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
@@ -591,7 +614,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( Assignment_semicircle_RHS(x_qp) ) - laplace_res_du_u_i);
 //           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
