@@ -250,13 +250,13 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
-  r = 4. - 1.5 / r;
-  return r;
+  double r = x[0] * x[0] + x[1] * x[1];
+  r = 16. * (0.3125 - r);
+  return -r;
 };
 
 double GetExactSolution(const std::vector < double >& x) {
-  double r = (1. - sqrt(x[0] * x[0] + x[1] * x[1])) * (0.5 - sqrt(x[0] * x[0] + x[1] * x[1]));
+  double r = (1. - x[0] * x[0] + x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
   return r;
 };
 
