@@ -71,12 +71,72 @@ double annulus__laplacian__true_solution(const std::vector < double >& x) {
 
 
 bool quarter_cylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+ 
+  bool dirichlet = false;
+  value = 0.;
+    
+
+ if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
+     
+     
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 4) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 5) {
+      dirichlet = true;
+        value = 0.;
+  }
+ 
+ }
+ 
+ 
+ 
+  return dirichlet;
+  
+   
+    
+    
 }
 
-double quarter_cylinder__laplacian__rhs(const std::vector < double >& x) {
+double quarter_cylinder__laplacian__rhs(const std::vector < double >& x_qp) {
+
+      
+    // Quarter cylinder of radius 1 and length 2
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    double z = x_qp[2];
+    
+    // Function = x*y*z*(z-2.0)*(x*x + y*y - 1.0)
+    
+    // Return -Delta U0
+    return ( 12.0 * x * y * z * (z - 2.0) + 2 * x * y * ( x * x + y * y ) );
+  
+    
+    
 }
 
-double quarter_cylinder__laplacian__true_solution(const std::vector < double >& x) {
+double quarter_cylinder__laplacian__true_solution(const std::vector < double >& x_qp) {
+
+    double x = x_qp[0];
+    double y = x_qp[1];
+    double z = x_qp[2];
+    
+     return  x*y*z*(z-2.0)*(x*x + y*y - 1.0);
 }
 
 
@@ -596,7 +656,7 @@ int main(int argc, char** args) {
   app_specifics  app_cylinder;            //Aman
   app_specifics  app_semiannulus;        //Fahad
   app_specifics  app_annulus;       //Jon
-//   app_specifics  app_quarter_cylinder; //Armando
+  app_specifics  app_quarter_cylinder; //Armando
 //   app_specifics  app_semicylinder;   //Rifat
 //   app_specifics  app_semicircle;   //Himali
 //   app_specifics  app_circle;   //Gayani
@@ -677,6 +737,18 @@ int main(int argc, char** args) {
   app_annulus._norm_true_solution = annulus__laplacian__true_solution;
  
 
+  //assignment_quarter_cylinder
+  app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_tetrahedral.med");
+  app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral.med");
+  
+  app_quarter_cylinder._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_quarter_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_quarter_cylinder._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+
+  app_quarter_cylinder._assemble_function_rhs = quarter_cylinder__laplacian__rhs;
+  app_quarter_cylinder._bdry_func = quarter_cylinder__laplacian__bc;
+  app_quarter_cylinder._norm_true_solution = quarter_cylinder__laplacian__true_solution;
+ 
 
   
 //   my_specifics.push_back(app_segment);
@@ -684,7 +756,8 @@ int main(int argc, char** args) {
 //   my_specifics.push_back(app_prism_annular_base);
 //   my_specifics.push_back(app_cylinder);
 //   my_specifics.push_back(app_semiannulus);
-  my_specifics.push_back(app_annulus);
+//   my_specifics.push_back(app_annulus);
+  my_specifics.push_back(app_quarter_cylinder);
   
   
   
@@ -730,7 +803,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
 
- for (unsigned int r = 1; r < 5; r++)  {
+ for (unsigned int r = 2; r < 3; r++)  {
 
   unsigned numberOfUniformLevels = r;
   unsigned numberOfSelectiveLevels = 0;
