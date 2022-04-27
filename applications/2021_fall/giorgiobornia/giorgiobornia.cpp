@@ -53,15 +53,17 @@ bool annulus__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector
 double annulus__laplacian__rhs(const std::vector < double >& x) {
     
   double r2 = x[0] * x[0] + x[1] * x[1];
-  double y = 16. * (0.3125 - r2);
-  return -y;
+  double y = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
+//   double y = 16. * (0.3125 - r2);
+  return y;
   
 }
 
 double annulus__laplacian__true_solution(const std::vector < double >& x) {
     
   double r2 = x[0] * x[0] + x[1] * x[1];
-  double y = (1. - r2) * (-0.25 + r2);
+  double y = (1. - r2) * ( r2 - 0.25 );
+//   double yprime = (1. - r2)' * ( r2 - 0.25 ) +   (1. - r2) * ( r2 - 0.25 )'; 
   return y;
 
     
@@ -112,6 +114,17 @@ bool quarter_cylinder__laplacian__bc(const MultiLevelProblem * ml_prob, const st
     
 }
 
+
+double quarter_cylinder__laplacian__true_solution(const std::vector < double >& x_qp) {
+
+    double x = x_qp[0];
+    double y = x_qp[1];
+    double z = x_qp[2];
+    
+     return  x*y*z * (2.0 - z)*(-x*x - y*y + 1.0);
+}
+
+
 double quarter_cylinder__laplacian__rhs(const std::vector < double >& x_qp) {
 
       
@@ -124,19 +137,10 @@ double quarter_cylinder__laplacian__rhs(const std::vector < double >& x_qp) {
     // Function = x*y*z*(z-2.0)*(x*x + y*y - 1.0)
     
     // Return -Delta U0
-    return ( 12.0 * x * y * z * (z - 2.0) + 2 * x * y * ( x * x + y * y ) );
+    return ( - 12.0 * x * y * z * (2.0 - z) + 2 * x * y * ( x * x + y * y ) );
   
     
     
-}
-
-double quarter_cylinder__laplacian__true_solution(const std::vector < double >& x_qp) {
-
-    double x = x_qp[0];
-    double y = x_qp[1];
-    double z = x_qp[2];
-    
-     return  x*y*z*(z-2.0)*(x*x + y*y - 1.0);
 }
 
 
@@ -217,6 +221,14 @@ bool semiannulus__laplacian__bc(const MultiLevelProblem * ml_prob, const std::ve
   
  }
 
+double semiannulus__laplacian__true_solution(const std::vector < double >& x) {
+    
+     double r2 = x[0] * x[0] + x[1] * x[1];
+
+     return   x[0] * (1. - sqrt(r2) ) * ( sqrt(r2) - .5);
+//      return   x[0] * (r2 - 1. ) * (.25 - r2);
+}
+
 
 double semiannulus__laplacian__rhs(const std::vector < double >& x) {
   
@@ -229,27 +241,23 @@ double semiannulus__laplacian__rhs(const std::vector < double >& x) {
     
 }
 
-double semiannulus__laplacian__true_solution(const std::vector < double >& x) {
-    
-     double r2 = x[0] * x[0] + x[1] * x[1];
 
-     return   x[0] * (sqrt(r2) - 1. ) * (.5 - sqrt(r2) );
-//      return   x[0] * (r2 - 1. ) * (.25 - r2);
-}
-
-
-// (z)(z-2)((x-1)^2 + (y-1)^2 - 1) 
- double cylinder__laplacian__true_solution(const std::vector<double> & x_qp){
+// 
+ double cylinder__laplacian__true_solution(const std::vector<double> & xxx){
   
-     double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
-  return -r;
+      double x = xxx[0];
+      double y = xxx[1];
+      double z = xxx[2];
+     double r = z * (2. - z) * ( 1 - (x-1) * (x-1) - (y-1) * (y-1) ) ;
+  return r;
 
      
 }
  
 double  cylinder__laplacian__rhs(const std::vector < double >& x_qp) {
-   double r = 4*x_qp[2]*(x_qp[2] - 2)  +  2*((x_qp[0] - 1)*(x_qp[0] - 1)  +  (x_qp[1] - 1)*(x_qp[1] - 1) - 1);
-  return -r;
+    
+   double r = 4*x_qp[2]*(x_qp[2] - 2.)  +  2*( (x_qp[0] - 1.)*(x_qp[0] - 1.)  +  (x_qp[1] - 1.)*(x_qp[1] - 1.) - 1.);
+  return r;
 }
 
 
@@ -307,7 +315,7 @@ double quarter_circle__laplacian__rhs(const std::vector<double> & x_qp){
     double x = x_qp[0];
     double y = x_qp[1];
     
-    return -1.0 * -12. * x * y;
+    return  -12. * x * y;
 }
 
 
@@ -383,7 +391,7 @@ bool prism_annular_base__laplacian__bc(const MultiLevelProblem * ml_prob, const 
 
  double prism_annular_base__laplacian__true_solution(const std::vector<double> & x) {
      
-     return  x[2] * (x[2] - 1.) * (1. - x[0]*x[0] - x[1]*x[1]) * (0.25 - x[0]*x[0] - x[1]*x[1]);
+     return  x[2] * (1. - x[2] ) * (1. - x[0]*x[0] - x[1]*x[1]) * (-0.25 + x[0]*x[0] + x[1]*x[1]);
  }
  
 
@@ -392,7 +400,7 @@ double prism_annular_base__laplacian__rhs(const std::vector < double > & x) {
     
   double r2 = 0.5 - 2.5*pow(x[0],2) + 2*pow(x[0],4) - 2.5*pow(x[1],2) + 4*pow(x[0],2)*pow(x[1],2) + 2*pow(x[1],4) + 5.*x[2] - 16*pow(x[0],2)*x[2] - 16*pow(x[1],2)*x[2] - 5.*pow(x[2],2) + 16*pow(x[0],2)*pow(x[2],2) + 16*pow(x[1],2)*pow(x[2],2);
   
-   return - r2;
+   return  r2;
    
   }
 
@@ -412,7 +420,7 @@ double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
     
     // for a 1d segment
     
-    return  2.;
+    return  -2.;
 }
 
 
@@ -656,14 +664,13 @@ int main(int argc, char** args) {
   app_specifics  app_cylinder;            //Aman
   app_specifics  app_semiannulus;        //Fahad
   app_specifics  app_annulus;       //Jon
-  app_specifics  app_quarter_cylinder; //Armando
+  app_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
 //   app_specifics  app_semicylinder;   //Rifat
 //   app_specifics  app_semicircle;   //Himali
 //   app_specifics  app_circle;   //Gayani
   
   
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("assignment_segment_dir_neu_fine.med");
   app_segment._mesh_files.push_back("assignment_segment_dir_neu_fine.med");
   
   app_segment._assemble_function = laplacian_dir_neu_eqn<double, double>;
@@ -753,11 +760,11 @@ int main(int argc, char** args) {
   
 //   my_specifics.push_back(app_segment);
 //   my_specifics.push_back(app_quarter_circle);
-//   my_specifics.push_back(app_prism_annular_base);
-//   my_specifics.push_back(app_cylinder);
 //   my_specifics.push_back(app_semiannulus);
 //   my_specifics.push_back(app_annulus);
-  my_specifics.push_back(app_quarter_cylinder);
+//   my_specifics.push_back(app_cylinder);
+//   my_specifics.push_back(app_quarter_cylinder);
+  my_specifics.push_back(app_prism_annular_base);
   
   
   
@@ -803,7 +810,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
 
- for (unsigned int r = 2; r < 3; r++)  {
+ for (unsigned int r = 1; r < 4; r++)  {
 
   unsigned numberOfUniformLevels = r;
   unsigned numberOfSelectiveLevels = 0;
@@ -1107,8 +1114,8 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
           // FIRST ROW
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
- if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * ( ml_prob.get_app_specs_pointer()->_assemble_function_rhs(x_qp)  ) - laplace_res_du_u_i);
-//           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
+ if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  -ml_prob.get_app_specs_pointer()->_assemble_function_rhs(x_qp)  ) - laplace_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
