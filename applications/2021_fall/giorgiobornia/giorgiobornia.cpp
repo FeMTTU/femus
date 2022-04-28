@@ -351,7 +351,7 @@ double semiannulus__laplacian__true_solution(const std::vector < double >& x) {
 double semiannulus__laplacian__rhs(const std::vector < double >& x) {
   
     double r2 = x[0] * x[0] + x[1] * x[1];
-    double temp = x[0] * (8. - 4.5 / (sqrt(r2)));
+    double temp = -x[0] * (8. - 4.5 / (sqrt(r2)));
     //double temp = (4. - 1.5 / (sqrt(r2)));
   return temp;
 
@@ -632,12 +632,12 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
   app_specifics  app_square;   //me
   app_specifics  app_cube;   //me
-  app_specifics  app_prism_annular_base;  //Abu
   app_specifics  app_quarter_circle;      //Max
-  app_specifics  app_cylinder;            //Aman
   app_specifics  app_semiannulus;        //Fahad
   app_specifics  app_annulus;       //Jon
+  app_specifics  app_cylinder;            //Aman
   app_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
+  app_specifics  app_prism_annular_base;  //Abu
 //   app_specifics  app_semicylinder;   //Rifat
 //   app_specifics  app_semicircle;   //Himali
 //   app_specifics  app_circle;   //Gayani
@@ -649,10 +649,12 @@ int main(int argc, char** args) {
   app_segment._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_segment._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_segment._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
-  app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-  app_segment._bdry_func = segment_dir_neu_fine__laplacian__bc;
   
-  app_segment._norm_true_solution = segment_dir_neu_fine__laplacian__true_solution;
+  app_segment._bdry_func             = segment_dir_neu_fine__laplacian__bc;
+  app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
+  app_segment._norm_true_solution    = segment_dir_neu_fine__laplacian__true_solution;
+  
+  
   
   //assignment_tetra_prism_annular_base
   app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_tetrahedral.med");
@@ -661,22 +663,26 @@ int main(int argc, char** args) {
   app_prism_annular_base._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_prism_annular_base._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_prism_annular_base._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  
+  app_prism_annular_base._bdry_func             = prism_annular_base__laplacian__bc;
   app_prism_annular_base._assemble_function_rhs = prism_annular_base__laplacian__rhs;
-  app_prism_annular_base._bdry_func = prism_annular_base__laplacian__bc;
-
-  app_prism_annular_base._norm_true_solution = prism_annular_base__laplacian__true_solution;
+  app_prism_annular_base._norm_true_solution    = prism_annular_base__laplacian__true_solution;
+  
+  
   
   //assignment_quarter_circle
   app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_triangular.med");
-  app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_quadrangular.med");
+  app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
   
   app_quarter_circle._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_quarter_circle._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_quarter_circle._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  
+  app_quarter_circle._bdry_func             = quarter_circle__laplacian__bc;
   app_quarter_circle._assemble_function_rhs = quarter_circle__laplacian__rhs;
-  app_quarter_circle._bdry_func = quarter_circle__laplacian__bc;
-
-  app_quarter_circle._norm_true_solution = quarter_circle__laplacian__true_solution;
+  app_quarter_circle._norm_true_solution    = quarter_circle__laplacian__true_solution;
+  
+  
   
   //assignment_cylinder
   app_cylinder._mesh_files.push_back("assignment_cylinder_tetrahedral.med");
@@ -685,22 +691,22 @@ int main(int argc, char** args) {
   app_cylinder._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_cylinder._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  
+  app_cylinder._bdry_func             = cylinder__laplacian__bc;
   app_cylinder._assemble_function_rhs = cylinder__laplacian__rhs;
-  app_cylinder._bdry_func = cylinder__laplacian__bc;
-
-  app_cylinder._norm_true_solution = cylinder__laplacian__true_solution;
+  app_cylinder._norm_true_solution    = cylinder__laplacian__true_solution;
  
   //assignment_semiannulus
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_triangular.med");
-  app_semiannulus._mesh_files.push_back("assignment_semiannulus_quadrangular.med");
+  app_semiannulus._mesh_files.push_back("assignment_semiannulus_quadrilateral.med");
   
   app_semiannulus._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_semiannulus._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_semiannulus._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
   
+  app_semiannulus._bdry_func             = semiannulus__laplacian__bc;
   app_semiannulus._assemble_function_rhs = semiannulus__laplacian__rhs;
-  app_semiannulus._bdry_func = semiannulus__laplacian__bc;
-  app_semiannulus._norm_true_solution = semiannulus__laplacian__true_solution;
+  app_semiannulus._norm_true_solution    = semiannulus__laplacian__true_solution;
  
   
   
@@ -712,9 +718,9 @@ int main(int argc, char** args) {
   app_annulus._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_annulus._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
   
+  app_annulus._bdry_func             = annulus__laplacian__bc;
   app_annulus._assemble_function_rhs = annulus__laplacian__rhs;
-  app_annulus._bdry_func = annulus__laplacian__bc;
-  app_annulus._norm_true_solution = annulus__laplacian__true_solution;
+  app_annulus._norm_true_solution    = annulus__laplacian__true_solution;
  
 
   //assignment_quarter_cylinder
@@ -727,10 +733,12 @@ int main(int argc, char** args) {
   app_quarter_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_quarter_cylinder._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
 
+  app_quarter_cylinder._bdry_func             = quarter_cylinder__laplacian__bc;
   app_quarter_cylinder._assemble_function_rhs = quarter_cylinder__laplacian__rhs;
-  app_quarter_cylinder._bdry_func = quarter_cylinder__laplacian__bc;
-  app_quarter_cylinder._norm_true_solution = quarter_cylinder__laplacian__true_solution;
- 
+  app_quarter_cylinder._norm_true_solution    = quarter_cylinder__laplacian__true_solution;
+
+
+  
  //assignment_square
   app_square._mesh_files.push_back("assignment_square_quadrilateral.med");
   
@@ -741,6 +749,8 @@ int main(int argc, char** args) {
   app_square._bdry_func             = square__laplacian__bc;
   app_square._assemble_function_rhs = square__laplacian__rhs;
   app_square._norm_true_solution    = square__laplacian__true_solution;
+
+
   
 
  //assignment_cube
@@ -758,10 +768,10 @@ int main(int argc, char** args) {
   
 //   my_specifics.push_back(app_segment);
 //   my_specifics.push_back(app_square);
-  my_specifics.push_back(app_cube);
+//   my_specifics.push_back(app_cube);
 //   my_specifics.push_back(app_quarter_circle);
 //   my_specifics.push_back(app_semiannulus);
-//   my_specifics.push_back(app_annulus);
+  my_specifics.push_back(app_annulus);
 //   my_specifics.push_back(app_cylinder);
 //   my_specifics.push_back(app_quarter_cylinder);
 //   my_specifics.push_back(app_prism_annular_base);
@@ -769,32 +779,7 @@ int main(int argc, char** args) {
   
   
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
-      
-   // ======= Mesh  ==================
-//    std::vector<std::string> mesh_files;
-//    
-//    mesh_files.push_back(my_specifics[app]._mesh_files[0]);
-//    mesh_files.push_back(my_specifics[app]._mesh_files[1]);
-//    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
-//    mesh_files.push_back("Mesh_1_x_all_dir.med");
-//    mesh_files.push_back("Mesh_1_y_all_dir.med");
-//    mesh_files.push_back("Mesh_1_z_all_dir.med");
-//    mesh_files.push_back("Mesh_2_xz_all_dir.med");
-//    mesh_files.push_back("Mesh_2_yz_all_dir.med");
-//    mesh_files.push_back("Mesh_3_xyz_all_dir.med");
-//    mesh_files.push_back("dome_tri.med");
-//    mesh_files.push_back("dome_quad.med");
-//    mesh_files.push_back("disk_quad.med");
-//    mesh_files.push_back("disk_quad_45x.med");
-//    mesh_files.push_back("disk_quad_90x.med");
-//    mesh_files.push_back("disk_tri.med");
-//    mesh_files.push_back("disk_tri_45x.med");
-//    mesh_files.push_back("disk_tri_90x.med");
-   
-
-
- for (unsigned int m = 0; m < my_specifics[app]._mesh_files/*mesh_files*/.size(); m++)  {
-   
+        
   // ======= Mesh  ==================
   // define multilevel mesh
   MultiLevelMesh ml_mesh;
@@ -803,14 +788,18 @@ int main(int argc, char** args) {
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
-  std::string mesh_file_tot = "./input/" + my_specifics[app]._mesh_files/*mesh_files*/[m];
+
+
+ for (unsigned int m = 0; m < my_specifics[app]._mesh_files.size(); m++)  {
+   
+  std::string mesh_file_tot = "./input/" + my_specifics[app]._mesh_files[m];
   
   ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
 
- for (unsigned int r = 1; r < 6; r++)  {
+ for (unsigned int r = 1; r < 4; r++)  {
 
   unsigned numberOfUniformLevels = r;
   unsigned numberOfSelectiveLevels = 0;
@@ -1192,15 +1181,12 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 
   NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
   elem*                     el = msh->el;
 
   MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
-
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
 
   const unsigned  dim = msh->GetDimension();
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
@@ -1305,9 +1291,6 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 
     //***************************************************  
  
- //******************** ALL VARS ********************* 
-    unsigned nDof_AllVars = nDof_u; 
-    int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
  //*************************************************** 
     
@@ -1352,7 +1335,7 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
-	for (unsigned i = 0; i < nDof_u; i++) {
+	for (unsigned i = 0; i < sol_u.size(); i++) {
 // 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
@@ -1380,20 +1363,12 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 //--------------    
 
           
-//==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
 	double u_qp = 0.;        for (unsigned i = 0; i < phi_u.size(); i++) {            u_qp +=  sol_u[i] * phi_u[i];        }
 
  	double u_true_qp = 0.;   for (unsigned i = 0; i < phi_u.size(); i++) {            u_true_qp +=  sol_u_true[i] * phi_u[i];        }
        
-        // //--------------    
-// 	      double laplace_res_du_u_i = 0.;
-//               if ( i < nDof_u ) {
-//                   for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-//                        laplace_res_du_u_i             +=  phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim];
-// 	             }
-//               }
-// //--------------    
+  
 	      
        norm_dof_based +=  jacXweight_qp * (  u_qp - u_true_qp) * (  u_qp - u_true_qp) ;
        norm_qp_based  +=  jacXweight_qp * (  u_qp -  ml_prob.get_app_specs_pointer()->_norm_true_solution( x_qp )) * (  u_qp - ml_prob.get_app_specs_pointer()->_norm_true_solution( x_qp )) ;
