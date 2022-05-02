@@ -52,20 +52,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   
   const double tolerance = 1.e-5;
   
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
-  
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
-  else if (face_name == 2) {
-      dirichlet = false;
-        value = 1.; //Neumann value
-    }
 
-    
- }
- 
  if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
      
      
@@ -77,14 +64,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
       dirichlet = true;
         value = 0.;
   }
-  else if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
-  }
+
    
  
  }

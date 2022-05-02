@@ -267,19 +267,42 @@ double semicylinder__laplacian__true_solution(const std::vector < double >& x) {
 
 
 bool semicircle__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-
-    if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
- 
     
-//        return dirichlet;
+   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+
+  bool dirichlet = false;
+  value = 0.;
+   
+   
+     if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }   
+  
+       return dirichlet;
 
     
 }
 
 double semicircle__laplacian__rhs(const std::vector < double >& x) {
+
+   return  - 8. * x[1]; 
+    
 }
 
 double semicircle__laplacian__true_solution(const std::vector < double >& x) {
+    
+    double xxx = x[0];
+    double yyy = x[1];
+    const double r2 = xxx * xxx + yyy * yyy;
+    double r = (1. - r2) * yyy;
+    
+    return r;
+   
 }
 
 
@@ -638,8 +661,8 @@ int main(int argc, char** args) {
   app_specifics  app_cylinder;            //Aman
   app_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
   app_specifics  app_prism_annular_base;  //Abu
+  app_specifics  app_semicircle;   //Himali
 //   app_specifics  app_semicylinder;   //Rifat
-//   app_specifics  app_semicircle;   //Himali
 //   app_specifics  app_circle;   //Gayani
  
   
@@ -764,17 +787,34 @@ int main(int argc, char** args) {
   app_cube._assemble_function_rhs = cube__laplacian__rhs;
   app_cube._norm_true_solution    = cube__laplacian__true_solution;
   
+
+  //assignment_quarter_circle
+//   app_semicircle._mesh_files.push_back("assignment_semicircle_triangular.med");
+  app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
+  
+  app_semicircle._assemble_function = laplacian_dir_neu_eqn<double, double>;
+  app_semicircle._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
+  app_semicircle._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
+  
+  app_semicircle._bdry_func             = semicircle__laplacian__bc;
+  app_semicircle._assemble_function_rhs = semicircle__laplacian__rhs;
+  app_semicircle._norm_true_solution    = semicircle__laplacian__true_solution;
   
   
-//   my_specifics.push_back(app_segment);
-//   my_specifics.push_back(app_square);
-//   my_specifics.push_back(app_cube);
-//   my_specifics.push_back(app_quarter_circle);
-//   my_specifics.push_back(app_semiannulus);
+
+
+  
+  
+  my_specifics.push_back(app_segment);
+  my_specifics.push_back(app_square);
+  my_specifics.push_back(app_cube);
+  my_specifics.push_back(app_quarter_circle);
+  my_specifics.push_back(app_semiannulus);
   my_specifics.push_back(app_annulus);
-//   my_specifics.push_back(app_cylinder);
-//   my_specifics.push_back(app_quarter_cylinder);
-//   my_specifics.push_back(app_prism_annular_base);
+  my_specifics.push_back(app_cylinder);
+  my_specifics.push_back(app_quarter_cylinder);
+  my_specifics.push_back(app_prism_annular_base);
+  my_specifics.push_back(app_semicircle);
   
   
   
@@ -799,7 +839,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
 
- for (unsigned int r = 1; r < 4; r++)  {
+ for (unsigned int r = 1; r < 2; r++)  {
 
   unsigned numberOfUniformLevels = r;
   unsigned numberOfSelectiveLevels = 0;
