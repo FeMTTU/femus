@@ -25,7 +25,8 @@ class app_specifics {
   
    std::vector< std::string >   _mesh_files;  //same domain, only potentially multiple mesh discretizations 
  
- 
+   std::string  _system_name;  //for now we only accept 1 System in a certain App. This name is needed to retrieve the equation from the Problem
+   
    //typedef for func pointer of EQUATION
    /// @todo this should be templated
    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob);

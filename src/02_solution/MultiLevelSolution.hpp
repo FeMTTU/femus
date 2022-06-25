@@ -119,15 +119,29 @@ public:
         return _solType.size();
     };
     
+    
     /** To be Added */
-    vector <char*>  GetSolName() {
-        return _solName;
-    };
+    std::vector <std::string>  GetSolName_string_vec() {
+        
+        std::vector <std::string> solName_strings(_solName.size());
+        
+              for(unsigned s = 0; s < solName_strings.size(); s++){
+                  solName_strings[s] = _solName[s];
+              }
+        
+        return solName_strings;
+    }
+    
 
     /** To be Added */
-    vector <int>  GetSolType() {
+    std::vector <char*>  GetSolName() {
+        return _solName;
+    }
+
+    /** To be Added */
+    std::vector <int>  GetSolType() {
         return _solType;
-    };
+    }
 
     /** To be Added */
     void AttachSetBoundaryConditionFunction( BoundaryFunc SetBoundaryConditionFunction );

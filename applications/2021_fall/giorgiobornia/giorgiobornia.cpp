@@ -629,7 +629,42 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob);
 
 
 template < class real_num, class real_num_mov >
-void compute_norm(MultiLevelProblem& ml_prob);
+void compute_norm_of_unknowns(MultiLevelProblem& ml_prob);
+
+
+ //Unknown definition  ==================
+ const std::vector< Unknown >  provide_list_of_unknowns() {
+     
+     
+  std::vector< FEFamily > feFamily;
+  std::vector< FEOrder >   feOrder;
+
+                        feFamily.push_back(LAGRANGE);
+ 
+                        feOrder.push_back(/*FIRST*/SECOND);
+ 
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Unknown >  unknowns(feFamily.size());
+
+   unknowns[0]._name      = "u";
+
+   unknowns[0]._is_sparse = true;
+   
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+         
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
+              
+     }
+ 
+ 
+   return unknowns;
+     
+}
 
 
 
@@ -650,6 +685,7 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= App Specifics  ==================
+  std::string system_common_name = "Laplace";
   std::vector< app_specifics >   my_specifics;
   
   app_specifics  app_segment;   //me
@@ -669,6 +705,7 @@ int main(int argc, char** args) {
   //segment_dir_neu_fine
   app_segment._mesh_files.push_back("assignment_segment_dir_neu_fine.med");
   
+  app_segment._system_name = system_common_name;
   app_segment._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_segment._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_segment._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -683,6 +720,7 @@ int main(int argc, char** args) {
   app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_tetrahedral.med");
   app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_hexahedral.med");
   
+  app_prism_annular_base._system_name = system_common_name;
   app_prism_annular_base._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_prism_annular_base._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_prism_annular_base._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -697,6 +735,7 @@ int main(int argc, char** args) {
   app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_triangular.med");
   app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
   
+  app_quarter_circle._system_name = system_common_name;
   app_quarter_circle._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_quarter_circle._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_quarter_circle._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -711,6 +750,7 @@ int main(int argc, char** args) {
   app_cylinder._mesh_files.push_back("assignment_cylinder_tetrahedral.med");
   app_cylinder._mesh_files.push_back("assignment_cylinder_hexahedral.med");
   
+  app_cylinder._system_name = system_common_name;
   app_cylinder._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_cylinder._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -723,6 +763,7 @@ int main(int argc, char** args) {
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_triangular.med");
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_quadrilateral.med");
   
+  app_semiannulus._system_name = system_common_name;
   app_semiannulus._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_semiannulus._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_semiannulus._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -737,6 +778,7 @@ int main(int argc, char** args) {
 //   app_annulus._mesh_files.push_back("assignment_annulus_triangular.med");
   app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
   
+  app_annulus._system_name = system_common_name;
   app_annulus._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_annulus._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_annulus._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -752,6 +794,7 @@ int main(int argc, char** args) {
 //   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral_0.med");
 //   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral_1.med");
   
+  app_quarter_cylinder._system_name = system_common_name;
   app_quarter_cylinder._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_quarter_cylinder._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_quarter_cylinder._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -765,6 +808,7 @@ int main(int argc, char** args) {
  //assignment_square
   app_square._mesh_files.push_back("assignment_square_quadrilateral.med");
   
+  app_square._system_name = system_common_name;
   app_square._assemble_function                            = laplacian_dir_neu_eqn<double, double>;
   app_square._assemble_function_natural_boundary_loop_1d   = laplacian_natural_loop_1d;
   app_square._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -779,6 +823,7 @@ int main(int argc, char** args) {
  //assignment_cube
   app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
   
+  app_cube._system_name = system_common_name;
   app_cube._assemble_function                            = laplacian_dir_neu_eqn<double, double>;
   app_cube._assemble_function_natural_boundary_loop_1d   = laplacian_natural_loop_1d;
   app_cube._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -792,6 +837,7 @@ int main(int argc, char** args) {
 //   app_semicircle._mesh_files.push_back("assignment_semicircle_triangular.med");
   app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
   
+  app_semicircle._system_name = system_common_name;
   app_semicircle._assemble_function = laplacian_dir_neu_eqn<double, double>;
   app_semicircle._assemble_function_natural_boundary_loop_1d = laplacian_natural_loop_1d;
   app_semicircle._assemble_function_natural_boundary_loop_2d3d = laplacian_natural_loop_2d3d;
@@ -859,34 +905,44 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the ml_sol object to it
   MultiLevelProblem ml_prob(&ml_sol);
   
-  // add variables to ml_sol
-  ml_sol.AddSolution("u", LAGRANGE, SECOND/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
-  
-  // ======= Solution: Initial Conditions ==================
-  ml_sol.Initialize("All");    // initialize all variables to zero
-  ml_sol.Initialize("u", InitialValueU, & ml_prob);
-
-  // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._bdry_func);
-  ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
-
-  
-
   // ======= Problem, II ========================
   ml_prob.SetFilesHandler(&files);
   ml_prob.set_app_specs_pointer(&my_specifics[app]);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.set_all_abstract_fe_multiple();
   
+  // ======= Solutions that are Unknowns - BEGIN ==================
+
+ // ======= Solution: Add ==================
+  std::vector< Unknown > unknowns = provide_list_of_unknowns();   ///@todo probably this should go in the Problem, to be accessed from other places
+  
+   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
+  }
+ // ======= Solution: Initial Conditions ==================
+   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.Initialize(unknowns[u]._name.c_str(), InitialValueU, & ml_prob);
+  }
+  // ======= Solution: Boundary Conditions ==================
+  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._bdry_func);
+   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+  }
+
+  // ======= Solutions that are Unknowns - END ==================
+
+  
+
 //   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all = ml_prob.evaluate_all_fe<double, double>();
   
     // ======= System ========================
  // add system  in ml_prob as a Linear Implicit System
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("Laplace");
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > (my_specifics[app]._system_name);
   
   system.SetDebugNonlinear(true);
  
-  system.AddSolutionToSystemPDE("u");
+       // ======= System Unknowns ========================
+  for (unsigned int u = 0; u < unknowns.size(); u++)  system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  
  
   // attach the assembling function to system
   system.SetAssembleFunction( my_specifics[app]._assemble_function );
@@ -902,7 +958,7 @@ int main(int argc, char** args) {
   
   system.MGsolve();
   
-  compute_norm<double, double>(ml_prob);
+  compute_norm_of_unknowns<double, double>(ml_prob);
   
     // ======= Print ========================
   // print solutions
@@ -910,7 +966,7 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
   }  //end refinement loop
   
@@ -929,7 +985,7 @@ int main(int argc, char** args) {
 template < class real_num, class real_num_mov >
 void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> (ml_prob.get_app_specs_pointer()->_system_name);  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -958,6 +1014,11 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
 //***************************************************  
 
 
+//***************** Check Number of Unknowns **********************************  
+  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
+  if (n_vars != 1)  { std::cout << "Function written for only 1 scalar unknown";  abort();  }
+
+  
  //******************** quadrature *******************************  
   double jacXweight_qp; 
 
@@ -974,7 +1035,6 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
   
  //********************* quadrature, unknowns *********************** 
  //***************************************************  
-  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
   std::vector <double> phi_u;
   std::vector <double> phi_u_x; 
   std::vector <double> phi_u_xx;
@@ -983,9 +1043,10 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
   phi_u_x.reserve(maxSize * space_dim);
   phi_u_xx.reserve(maxSize * dim2);
   
-  const std::string solname_u = "u";
-  unsigned solIndex_u;
-  solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
+  
+  const std::string solname_u = ml_sol->GetSolName_string_vec()[0];
+  
+  unsigned solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
 
   unsigned solPdeIndex_u;
@@ -1217,9 +1278,9 @@ void laplacian_dir_neu_eqn(MultiLevelProblem& ml_prob) {
 
 
 template < class real_num, class real_num_mov >
-void compute_norm(MultiLevelProblem& ml_prob) {
+void compute_norm_of_unknowns(MultiLevelProblem& ml_prob) {
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> (ml_prob.get_app_specs_pointer()->_system_name);  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
@@ -1243,6 +1304,10 @@ void compute_norm(MultiLevelProblem& ml_prob) {
 //***************************************************  
 
 
+//***************** Check Number of Unknowns **********************************  
+  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
+  if (n_vars != 1)  { std::cout << "Function written for only 1 scalar unknown";  abort();  }
+
  //******************** quadrature *******************************  
   double jacXweight_qp; 
 
@@ -1259,7 +1324,6 @@ void compute_norm(MultiLevelProblem& ml_prob) {
   
  //********************* quadrature, unknowns *********************** 
  //***************************************************  
-  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
   std::vector <double> phi_u;
   std::vector <double> phi_u_x; 
   std::vector <double> phi_u_xx;
@@ -1268,9 +1332,8 @@ void compute_norm(MultiLevelProblem& ml_prob) {
   phi_u_x.reserve(maxSize * space_dim);
   phi_u_xx.reserve(maxSize * dim2);
   
-  const std::string solname_u = "u";
-  unsigned solIndex_u;
-  solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
+  const std::string solname_u = ml_sol->GetSolName_string_vec()[0];
+  unsigned solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
 
   unsigned solPdeIndex_u;

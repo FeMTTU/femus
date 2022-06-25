@@ -133,10 +133,10 @@ protected:
     MultiLevelProblem& _equation_systems;
 
     /** Mesh vector, dimension _gridn */
-    vector<Mesh*> _msh;
+    std::vector<Mesh*> _msh;
 
     /** Solution vector, dimension _gridn */
-    vector<Solution*> _solution;
+    std::vector<Solution*> _solution;
 
     /** pointer */
     MultiLevelSolution* _ml_sol;
@@ -145,7 +145,7 @@ protected:
     MultiLevelMesh* _ml_msh;
 
     /** indices of the solutions, dynamical dimension */
-    vector <unsigned> _SolSystemPdeIndex;
+    std::vector <unsigned> _SolSystemPdeIndex;
 
     /** Number of Levels */
     unsigned _gridn;

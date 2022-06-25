@@ -444,15 +444,17 @@ int main(int argc, char** args) {
   delete ml_sol_aux;
   //---- node_based_bdry_flag ------
 
+  
+
+  // ======= Solutions that are not Unknowns - END  ==================
+  
+  
   //-- CHECK SOLUTION FE TYPES --------
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
   //-- CHECK SOLUTION FE TYPES --------
   
-  
-
-  // ======= Solutions that are not Unknowns - END  ==================
 
   
   // ======= System - BEGIN ========================
