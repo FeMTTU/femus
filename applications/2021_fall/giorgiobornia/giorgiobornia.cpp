@@ -902,11 +902,11 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
   
   // ======= Problem ========================
-  // define the multilevel problem attach the ml_sol object to it
-  MultiLevelProblem ml_prob(&ml_sol);
+  MultiLevelProblem ml_prob;
   
   // ======= Problem, II ========================
   ml_prob.SetFilesHandler(&files);
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
   ml_prob.set_app_specs_pointer(&my_specifics[app]);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.set_all_abstract_fe_multiple();

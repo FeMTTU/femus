@@ -923,7 +923,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   ml_sol.GetWriter()->SetDebugOutput(true);
   
   // ======= Problem ========================
-  ml_prob.SetMultiLevelMeshAndSolution(& ml_mesh, & ml_sol);
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
   
   ml_prob.get_systems_map().clear();
 

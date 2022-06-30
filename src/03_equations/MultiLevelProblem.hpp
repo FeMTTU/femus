@@ -214,7 +214,7 @@ public:
 
   void set_current_system_number(const unsigned current_system_number_in) { _current_system_number = current_system_number_in; }
 
-  void SetMultiLevelMeshAndSolution(MultiLevelMesh * ml_mesh, MultiLevelSolution * ml_sol);
+  void SetMultiLevelMeshAndSolution(MultiLevelSolution * ml_sol);
   
   //   Returns a non-const reference to the map of Systems
   std::map<std::string, System*> & get_systems_map() { return _systems; }
