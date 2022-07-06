@@ -386,11 +386,12 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   // ======= Problem  ==================
-  MultiLevelProblem ml_prob(&ml_sol);
+  MultiLevelProblem ml_prob;
   
-  // ======= Problem, Files  ==================
+  // ======= Problem, II  ==================
   ml_prob.SetFilesHandler(&files);
-  
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+
   // ======= Problem, Quad Rule ========================
   //right now only one quadrature rule is used in the FE type under Mesh, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
   //quadr rule order
