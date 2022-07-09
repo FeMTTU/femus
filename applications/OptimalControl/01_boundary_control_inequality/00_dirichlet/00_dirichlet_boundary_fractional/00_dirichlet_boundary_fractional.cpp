@@ -568,20 +568,18 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   std::vector< double > normal(space_dim, 0.);
   
  //************ geom ***************************************  
-  vector < double > coord_at_qp_bdry(space_dim);
+  std::vector < double > coord_at_qp_bdry(space_dim);
   
-  vector <double> phi_coords;
-  vector <double> phi_coords_x;
-  vector <double> phi_coords_xx; 
+  std::vector < double > phi_coords;
+  std::vector < double > phi_coords_x;
 
   phi_coords.reserve(max_size);
   phi_coords_x.reserve(max_size * space_dim);
-  phi_coords_xx.reserve(max_size * dim2);
   
  //********************* bdry cont *******************
  //*************************************************** 
-  vector <double> phi_coords_iqp_bdry;  
-  vector <double> phi_coords_x_iqp_bdry; 
+  std::vector <double> phi_coords_iqp_bdry;  
+  std::vector <double> phi_coords_x_iqp_bdry; 
 
   phi_coords_iqp_bdry.reserve(max_size);
   phi_coords_x_iqp_bdry.reserve(max_size * space_dim);
@@ -590,18 +588,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  //********************* state *********************** 
  //*************************************************** 
-  vector <double> phi_u;
-  vector <double> phi_u_x;
-  vector <double> phi_u_xx;
+  std::vector <double> phi_u;
+  std::vector <double> phi_u_x;
 
   phi_u.reserve(max_size);
   phi_u_x.reserve(max_size * space_dim);
-  phi_u_xx.reserve(max_size * dim2);
   
   
   //boundary state shape functions
-  vector <double> phi_u_bdry;  
-  vector <double> phi_u_x_bdry; 
+  std::vector <double> phi_u_bdry;  
+  std::vector <double> phi_u_x_bdry; 
 
   phi_u_bdry.reserve(max_size);
   phi_u_x_bdry.reserve(max_size * space_dim);
@@ -612,37 +608,36 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  //********************** adjoint ********************
  //*************************************************** 
-  vector <double> phi_adj;
-  vector <double> phi_adj_x;
-  vector <double> phi_adj_xx;
+  std::vector <double> phi_adj;
+  std::vector <double> phi_adj_x;
 
   phi_adj.reserve(max_size);
   phi_adj_x.reserve(max_size * space_dim);
-  phi_adj_xx.reserve(max_size * dim2);
  
 
   //boundary adjoint shape functions  
-  vector <double> phi_adj_bdry;  
-  vector <double> phi_adj_x_bdry; 
+  std::vector <double> phi_adj_bdry;  
+  std::vector <double> phi_adj_x_bdry; 
 
   phi_adj_bdry.reserve(max_size);
   phi_adj_x_bdry.reserve(max_size * space_dim);
 
   
   //volume shape functions at boundary
-  vector <double> phi_adj_vol_at_bdry;
-  vector <double> phi_adj_x_vol_at_bdry;
+  std::vector <double> phi_adj_vol_at_bdry;
+  std::vector <double> phi_adj_x_vol_at_bdry;
   phi_adj_vol_at_bdry.reserve(max_size);
   phi_adj_x_vol_at_bdry.reserve(max_size * space_dim);
-  vector <double> sol_adj_x_vol_at_bdry_gss(space_dim);
+  
+  std::vector <double> sol_adj_x_vol_at_bdry_gss(space_dim);
  //*************************************************** 
  //*************************************************** 
 
   
  //********************* bdry cont *******************
  //*************************************************** 
-  vector <double> phi_ctrl_bdry;  
-  vector <double> phi_ctrl_x_bdry; 
+  std::vector <double> phi_ctrl_bdry;  
+  std::vector <double> phi_ctrl_x_bdry; 
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
@@ -659,9 +654,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   
   //********* variables for ineq constraints *****************
-  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(max_size); //flag for active set
-  vector < double >  ctrl_lower;   ctrl_lower.reserve(max_size);
-  vector < double >  ctrl_upper;   ctrl_upper.reserve(max_size);
+  std::vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(max_size); //flag for active set
+  std::vector < double >  ctrl_lower;   ctrl_lower.reserve(max_size);
+  std::vector < double >  ctrl_upper;   ctrl_upper.reserve(max_size);
   const int ineq_flag = INEQ_FLAG;
   const double c_compl = C_COMPL;
   //***************************************************  
@@ -684,7 +679,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     assert(pos_mat_mu      == mlPdeSys->GetSolPdeIndex("mu"));
 //***************************************************
 
-    vector < std::string > Solname_Mat(n_unknowns);  //this coincides with Pos_in_matrix
+    std::vector < std::string > Solname_Mat(n_unknowns);  //this coincides with Pos_in_matrix
     Solname_Mat[0] = "state";
     Solname_Mat[1] = "control";
     Solname_Mat[2] = "adjoint";
@@ -697,20 +692,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //***************************************************
     
  //***************************************************
-    vector < std::string > Solname_quantities(n_quantities);
+    std::vector < std::string > Solname_quantities(n_quantities);
     
         for(unsigned ivar=0; ivar < Solname_quantities.size(); ivar++) {
             Solname_quantities[ivar] = ml_sol->GetSolutionName(ivar);
         }
  //***************************************************
         
-    vector < unsigned > SolIndex_Mat(n_unknowns);      //should have Mat order
-    vector < unsigned > SolFEType_Mat(n_unknowns);       //should have Mat order
-    vector < unsigned > SolPdeIndex(n_unknowns);     //should have Mat order, of course
+    std::vector < unsigned > SolIndex_Mat(n_unknowns);      //should have Mat order
+    std::vector < unsigned > SolFEType_Mat(n_unknowns);       //should have Mat order
+    std::vector < unsigned > SolPdeIndex(n_unknowns);     //should have Mat order, of course
 
-    vector < unsigned > SolIndex_quantities(n_quantities);      //should have Sol order
-    vector < unsigned > SolFEType_quantities(n_quantities);     //should have Sol order
-    vector < unsigned > Sol_n_el_dofs_quantities_vol(n_quantities); //should have Sol order
+    std::vector < unsigned > SolIndex_quantities(n_quantities);      //should have Sol order
+    std::vector < unsigned > SolFEType_quantities(n_quantities);     //should have Sol order
+    std::vector < unsigned > Sol_n_el_dofs_quantities_vol(n_quantities); //should have Sol order
  
   
 
@@ -725,17 +720,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         SolFEType_quantities[ivar]   = ml_sol->GetSolutionType(SolIndex_quantities[ivar]);
     }    
 
-    vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);    //should have Mat order
+    std::vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);    //should have Mat order
 
 //***************************************************
-    vector < vector < double > >  sol_eldofs_Mat(n_unknowns);  //should have Mat order
+    std::vector < std::vector < double > >  sol_eldofs_Mat(n_unknowns);  //should have Mat order
     for(int k = 0; k < n_unknowns; k++) {        sol_eldofs_Mat[k].reserve(max_size);    }
 
 
     //----------- quantities (at dof objects) ------------------------------
     std::vector< int >       L2G_dofmap_Mat_AllVars;
     L2G_dofmap_Mat_AllVars.reserve( n_unknowns * max_size );
-    vector < vector < int > >     L2G_dofmap_Mat(n_unknowns);     //should have Mat order
+    std::vector < std::vector < int > >     L2G_dofmap_Mat(n_unknowns);     //should have Mat order
     for(int i = 0; i < n_unknowns; i++) {
         L2G_dofmap_Mat[i].reserve(max_size);
     }
@@ -769,7 +764,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 // ---
     std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
-     std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
+    std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
     for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {   Jac_iqp_bdry[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_iqp_bdry.size(); d++) { JacI_iqp_bdry[d].resize(dim-1); }
     
@@ -877,10 +872,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     JacI_iqp_bdry,
                     detJac_iqp_bdry,
                     weight_iqp_bdry,
-                    phi_ctrl_bdry,
-                    phi_ctrl_x_bdry, 
                     phi_coords_iqp_bdry,
                     phi_coords_x_iqp_bdry, 
+                    phi_ctrl_bdry,
+                    phi_ctrl_x_bdry, 
                     //-----------
                     Jac_jqp_bdry,
                     JacI_jqp_bdry,
@@ -1252,8 +1247,8 @@ if ( i_vol == j_vol )  {
     elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
     weight_iqp = detJac_iqp * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussWeightsPointer()[ig];
 
-    elem_all[qrule_i][ielGeom][SolFEType_quantities[pos_sol_state]]->shape_funcs_current_elem(ig, JacI_iqp, phi_u, phi_u_x, phi_u_xx, space_dim);
-    elem_all[qrule_i][ielGeom][SolFEType_quantities[pos_sol_adj]]  ->shape_funcs_current_elem(ig, JacI_iqp, phi_adj, phi_adj_x, phi_adj_xx, space_dim);
+    elem_all[qrule_i][ielGeom][SolFEType_quantities[pos_sol_state]]->shape_funcs_current_elem(ig, JacI_iqp, phi_u, phi_u_x, boost::none, space_dim);
+    elem_all[qrule_i][ielGeom][SolFEType_quantities[pos_sol_adj]]  ->shape_funcs_current_elem(ig, JacI_iqp, phi_adj, phi_adj_x, boost::none, space_dim);
 
           
 	sol_u_gss = 0.;
@@ -1516,14 +1511,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
  //*************************************************** 
   vector <double> phi_u;     phi_u.reserve(max_size);
   vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
-  vector <double> phi_u_xx;  phi_u_xx.reserve(max_size * dim2);
 
  
-  unsigned solIndex_u;
-  solIndex_u = ml_sol->GetIndex("state");    // get the position of "state" in the ml_sol object
-  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
+  unsigned solIndex_u = ml_sol->GetIndex("state");
+  unsigned solType_u  = ml_sol->GetSolutionType(solIndex_u);
 
-  vector < double >  sol_u; // local solution
+  vector < double >  sol_u;
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
@@ -1531,28 +1524,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
  //***************************************************
 
   
- //************** desired ****************************
- //***************************************************
-  vector <double> phi_udes;
-  vector <double> phi_udes_x;
-  vector <double> phi_udes_xx;
-
-    phi_udes.reserve(max_size);
-    phi_udes_x.reserve(max_size * space_dim);
-    phi_udes_xx.reserve(max_size * dim2);
- 
-  
-//  unsigned solIndexTdes;
-//   solIndexTdes = ml_sol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
-//   unsigned solTypeTdes = ml_sol->GetSolutionType(solIndexTdes);    // get the finite element type for "state"
-
-  vector < double >  sol_udes;
-  sol_udes.reserve(max_size);
-
-  double udes_gss = 0.;
- //***************************************************
- //***************************************************
-
  //************** cont *******************************
  //***************************************************
   vector <double> phi_ctrl_bdry;  
@@ -1568,6 +1539,27 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
  //***************************************************
  //*************************************************** 
   
+  
+ //************** desired ****************************
+ //***************************************************
+  vector <double> phi_udes;
+  vector <double> phi_udes_x;
+
+    phi_udes.reserve(max_size);
+    phi_udes_x.reserve(max_size * space_dim);
+ 
+  
+//  unsigned solIndexTdes;
+//   solIndexTdes = ml_sol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
+//   unsigned solTypeTdes = ml_sol->GetSolutionType(solIndexTdes);    // get the finite element type for "state"
+
+  vector < double >  sol_udes;
+  sol_udes.reserve(max_size);
+
+  double udes_gss = 0.;
+ //***************************************************
+ //***************************************************
+
  //********** DATA *********************************** 
   double u_des = DesiredTarget();
  //*************************************************** 
@@ -1595,7 +1587,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
     
     double detJac_iqp_bdry;
   
-  double weight_iqp; 
+  double weight_iqp = 0.;
   double weight_iqp_bdry = 0.;
     
       //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
@@ -1734,8 +1726,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
     elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_iqp, space_dim);
     weight_iqp = detJac_iqp * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussWeightsPointer()[ig];
 
-    elem_all[qrule_i][ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
-    elem_all[qrule_i][ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, phi_udes_xx, space_dim);
+    elem_all[qrule_i][ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, boost::none, space_dim);
+    elem_all[qrule_i][ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, boost::none, space_dim);
     
 	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
 	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  

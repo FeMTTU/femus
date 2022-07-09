@@ -1,5 +1,4 @@
 
-#include <stdio.h>
 #include "adept.h"
 
 #include "FemusInit.hpp"
@@ -43,7 +42,7 @@ using namespace femus;
 //**************************************
 
 //****** Mesh ********************************
-#define no_of_ref /*N_UNIFORM_LEVELS*/3     //mesh refinements
+#define no_of_ref /*N_UNIFORM_LEVELS*/ 6    //mesh refinements
 
 
 
@@ -198,6 +197,79 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 }
 
 
+ //Unknown definition  ==================
+ const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
+     
+     
+  std::vector< FEFamily > feFamily;
+  std::vector< FEOrder >   feOrder;
+
+                        feFamily.push_back(LAGRANGE);   //state
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+                        feFamily.push_back(LAGRANGE);   //adjoint
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+                        feFamily.push_back(LAGRANGE);   //control
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+  
+                        feFamily.push_back(DISCONTINUOUS_POLYNOMIAL);
+ 
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+  
+                        feOrder.push_back(ZERO);
+ 
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Unknown >  unknowns(feFamily.size());
+ 
+  const int adj_pos_begin   = dimension + 1;
+  const int ctrl_pos_begin  = 2 * (dimension + 1);
+
+                                        unknowns[0]._name      = "U";
+                                        unknowns[1]._name      = "V";
+  if (dimension == 3)                   unknowns[2]._name      = "W";
+                                unknowns[dimension]._name      = "P";
+                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
+                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
+                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
+                       unknowns[ctrl_pos_begin + 0]._name      = "GX";
+                       unknowns[ctrl_pos_begin + 1]._name      = "GY";
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "GZ";
+  
+               unknowns[ctrl_pos_begin + dimension]._name      = "THETA";
+
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+         
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
+              unknowns[u]._is_sparse = true;
+              
+     }
+ 
+ 
+ unknowns[ctrl_pos_begin + dimension]._is_sparse = false;
+ 
+   return unknowns;
+     
+}
 
 
 
@@ -228,10 +300,7 @@ int main(int argc, char** args) {
   fe_quad_rule_vec.push_back("seventh");
 //   fe_quad_rule_vec.push_back("eighth");
     
-  MultiLevelMesh ml_mesh;			// define multilevel mesh
-  MultiLevelMesh ml_mesh_all_levels;
-  double scalingFactor = 1.;		// read coarse level mesh and generate finers level meshes
-
+  // ======= Parameter  ==================
    //Adimensional quantity (Lref,Uref)
   double Lref = 1.;
   double Uref = 1.;
@@ -243,24 +312,28 @@ int main(int argc, char** args) {
   Fluid fluid(parameter, 1, FLUID_DENSITY, "Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
+
   
-// *************************
+  // ======= Mesh  ==================
+  MultiLevelMesh ml_mesh;
 	
   std::string input_file = "square_parametric.med";
 //   std::string input_file = "square_4x5.med";
-//   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
-  //   MultiLevelMesh ml_mesh;
  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
-// //  ml_mesh.RefineMesh(2, 2, NULL);
-// //  ml_mesh.EraseCoarseLevels(2-1);
-#if compute_conv_flag == 1
- ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
-#endif
-//     ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule_vec[0].c_str());
-//     ml_mesh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule_vec[0].c_str());
+
+
+  // ======= Problem  ==================
+  MultiLevelProblem ml_prob; 
+
+  ml_prob.SetFilesHandler(&files);
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
+    
+  // ======= Refinement  ==================
     
   unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
@@ -270,9 +343,20 @@ int main(int argc, char** args) {
   } else {
     maxNumberOfMeshes = 2;
   }
+  
+  
+  
+   // ======= Solutions that are Unknowns - BEGIN  ==================
+  std::vector< Unknown > unknowns = provide_list_of_unknowns( dim );
+   // ======= Solutions that are Unknowns - END  ==================
 
-
+  
+  
 #if compute_conv_flag == 1
+  MultiLevelMesh ml_mesh_all_levels;
+  
+     ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
+ 
      double comp_conv[maxNumberOfMeshes][NO_OF_L2_NORMS+NO_OF_H1_NORMS];
  
   
@@ -283,28 +367,33 @@ int main(int argc, char** args) {
         //store the fine solution  ==================
             MultiLevelSolution * ml_sol_all_levels;
             ml_sol_all_levels = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-         // add variables to ml_sol_all_levels
-        // state =====================  
-            ml_sol_all_levels->AddSolution("U", LAGRANGE, SECOND);
-            ml_sol_all_levels->AddSolution("V", LAGRANGE, SECOND);
-            if (dim == 3) ml_sol_all_levels->AddSolution("W", LAGRANGE, SECOND);
-            ml_sol_all_levels->AddSolution("P", LAGRANGE, FIRST);
-        // adjoint =====================  
-            ml_sol_all_levels->AddSolution("UADJ", LAGRANGE, SECOND);
-            ml_sol_all_levels->AddSolution("VADJ", LAGRANGE, SECOND);
-            if (dim == 3) ml_sol_all_levels->AddSolution("WADJ", LAGRANGE, SECOND);
-            ml_sol_all_levels->AddSolution("PADJ", LAGRANGE, FIRST);
-        // boundary condition =====================
-            ml_sol_all_levels->AddSolution("GX", LAGRANGE, SECOND);
-            ml_sol_all_levels->AddSolution("GY", LAGRANGE, SECOND);
-            if (dim == 3) ml_sol_all_levels->AddSolution("GZ", LAGRANGE, SECOND);
-            ml_sol_all_levels->AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
-            ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-            ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+
             
-            ml_sol_all_levels->Initialize("All");
-            ml_sol_all_levels->AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
-            ml_sol_all_levels->GenerateBdc("All");
+  
+   // ======= Solutions that are Unknowns - BEGIN  ==================
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol_all_levels->AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
+   }
+   
+ for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol_all_levels->Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  }
+  
+      ml_sol_all_levels->AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+     ml_sol_all_levels->GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+  }
+   // ======= Solutions that are Unknowns - END  ==================
+
+
+  // ======= Solutions that are not Unknowns - BEGIN  ==================
+            ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+            ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+   ml_sol_all_levels->Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+   ml_sol_all_levels->Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  // ======= Solutions that are not Unknowns - END  ==================
+            
+            
 #endif
 
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
@@ -320,73 +409,50 @@ int main(int argc, char** args) {
   ml_mesh.PrintInfo();
 
   MultiLevelSolution ml_sol(&ml_mesh);
-
-  // add variables to ml_sol
-  // state =====================  
-  ml_sol.AddSolution("U", LAGRANGE, SECOND);
-  ml_sol.AddSolution("V", LAGRANGE, SECOND);
-  if (dim == 3) ml_sol.AddSolution("W", LAGRANGE, SECOND);
-  ml_sol.AddSolution("P", LAGRANGE, FIRST);
-  // adjoint =====================  
-  ml_sol.AddSolution("UADJ", LAGRANGE, SECOND);
-  ml_sol.AddSolution("VADJ", LAGRANGE, SECOND);
-  if (dim == 3) ml_sol.AddSolution("WADJ", LAGRANGE, SECOND);
-  ml_sol.AddSolution("PADJ", LAGRANGE, FIRST);
-  // boundary condition =====================
-  ml_sol.AddSolution("GX", LAGRANGE, SECOND);
-  ml_sol.AddSolution("GY", LAGRANGE, SECOND);
-  if (dim == 3) ml_sol.AddSolution("GZ", LAGRANGE, SECOND);
-  ml_sol.AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
-  // control ===================== 
-  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   
-   // ======= Problem  ==================
-  MultiLevelProblem ml_prob(&ml_sol); 
-
-  ml_prob.SetFilesHandler(&files);
-  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-  ml_prob.set_all_abstract_fe_multiple();
-    
+  // ======= Problem  ==================
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+ 
   
-  // ======= Solution: Initial Conditions ==================
-   ml_sol.Initialize("All");    // initialize all varaibles to zero
+   // ======= Solutions that are Unknowns - BEGIN  ==================
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
+   }
+   
+ for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  }
+  
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+     ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+  }
+  
+  // ======= Solutions that are Unknowns - END  ==================
+
+  // ======= Solutions that are not Unknowns - BEGIN  ==================
+  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
    ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
-
-//   ml_sol.Initialize("GX", SetInitialCondition,&ml_prob);
-//   ml_sol.Initialize("GY", SetInitialCondition,&ml_prob);
-  
-  
-  // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
-  ml_sol.GenerateBdc("All");
-  
+  // ======= Solutions that are not Unknowns - END  ==================
 
  
-  // add system OptBdryCtrl in ml_prob as a NonLinear Implicit System
+  // ======= System - BEGIN ========================
   NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
 
-  // ST ===================
-  system_opt.AddSolutionToSystemPDE("U");
-  system_opt.AddSolutionToSystemPDE("V");
-  if (dim == 3) system_opt.AddSolutionToSystemPDE("W");
-  system_opt.AddSolutionToSystemPDE("P");
-//   ADJ ===================
-  system_opt.AddSolutionToSystemPDE("UADJ");
-  system_opt.AddSolutionToSystemPDE("VADJ");
-  if (dim == 3) system_opt.AddSolutionToSystemPDE("WADJ");
-  system_opt.AddSolutionToSystemPDE("PADJ");
-  // BD ===================
-  system_opt.AddSolutionToSystemPDE("GX");
-  system_opt.AddSolutionToSystemPDE("GY");
-  if (dim == 3)  system_opt.AddSolutionToSystemPDE("GZ");
-  system_opt.AddSolutionToSystemPDE("THETA");
- 
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+  system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
+  }
+   
   
   // attach the assembling function to system
    system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
+
+   
+  system_opt.init();
+  set_dense_pattern_for_unknowns(system_opt, unknowns);
+  // ======= System  - END ========================
 
    
   // initialize and solve the system
@@ -404,8 +470,12 @@ int main(int argc, char** args) {
 //     system_opt.SetMaxNumberOfLinearIterations(6);
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
     system_opt.SetOuterSolver(PREONLY);
+    
     system_opt.MGsolve();
+//   system_opt.assemble_call_before_boundary_conditions(1);
 
+  
+  
 #if compute_conv_flag == 1
     if ( i > 0 ) {
         
@@ -432,7 +502,7 @@ int main(int argc, char** args) {
  #endif
        
  
-  // print solutions
+  // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 

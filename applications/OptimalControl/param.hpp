@@ -768,7 +768,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
 
   
-  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystemWithPrimalDualActiveSetMethod  & system, const std::vector < Unknown > unknowns)  {
+  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystem/*WithPrimalDualActiveSetMethod*/  & system, const std::vector < Unknown > unknowns)  {
   
 ///     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
 
@@ -1121,10 +1121,10 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                         std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
                         double detJac_iel_bdry_iqp_bdry,
                         double weight_iqp_bdry,
-                        vector <double> phi_ctrl_iel_bdry_iqp_bdry,
-                        vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
                         vector <double> phi_coords_iel_bdry_iqp_bdry,
                         vector <double> phi_coords_x_iel_bdry_iqp_bdry, 
+                        vector <double> phi_ctrl_iel_bdry_iqp_bdry,
+                        vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
                         //-----------
                         std::vector < std::vector < double > >  Jac_jel_bdry_jqp_bdry,
                         std::vector < std::vector < double > >  JacI_jel_bdry_jqp_bdry,
