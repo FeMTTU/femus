@@ -2,8 +2,6 @@
 // boundary conditions were set in 2D as, no slip in left,right of the box and top to bottom gravity is enforced
 // therefore, U=V=0 on left and right, U=0 on top and bottom, V is free 
 
-
-#include <stdio.h>
 #include "adept.h"
 
 #include "FemusInit.hpp"
@@ -37,9 +35,13 @@
   const double alpha = ALPHA_CTRL_VOL;
   const double beta  = BETA_CTRL_VOL;
 
+  
+//****** Mesh ********************************
+  #define no_of_ref 5     //mesh refinements
+
+  
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-#define no_of_ref 2     //mesh refinements
 
 #define NO_OF_L2_NORMS 11   //U,V,P,UADJ,VADJ,PADJ,UCTRL,VCTRL,PCTRL,U+U0,V+V0
 #define NO_OF_H1_NORMS 8    //U,V,UADJ,VADJ,UCTRL,VCTRL,U+U0,V+V0
@@ -48,7 +50,7 @@
 using namespace femus;
 
  
-bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
   //1: bottom  //2: right  //3: top  //4: left  (2D square)
   //1: bottom  //2: top    //3: side            (3D cylinder)
     
@@ -58,50 +60,32 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 
 #if exact_sol_flag == 0
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
-// TOP ==========================  
-      if (facename == FACE_FOR_CONTROL) 
-     {
+
+   if (faceName == FACE_FOR_CONTROL)  {
+        if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
   else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false; } 
   else if (!strcmp(SolName, "WCTRL"))    { dirichlet = false; } 
-	
-      }   
+              }
+              else {
+       if (!strcmp(SolName, "UCTRL"))    { dirichlet = true; }
+  else if (!strcmp(SolName, "VCTRL"))    { dirichlet = true; } 
+  else if (!strcmp(SolName, "WCTRL"))    { dirichlet = true; } 
+              }
+      }
 #endif
 
 #if exact_sol_flag == 1
   //b.c. for manufactured lid driven cavity
 // TOP ==========================  
    double pi = acos(-1.);
-     if (facename == FACE_FOR_CONTROL) {
+     if (faceName == FACE_FOR_CONTROL) {
        if (!strcmp(SolName, "UCTRL"))    { value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);} //lid - driven
   else if (!strcmp(SolName, "VCTRL"))    { value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);} 
   	
       }
 #endif
 
-
-//    //Poiseuille problem---------------------------------------------------------------
-// // LEFT ==========================  
-//       if (facename == 4) { 
-// 	if(x[1] > 0.3  && x[1] < 0.7){
-// 		if (!strcmp(SolName, "UCTRL"))    {dirichlet = false; }
-// 	    else if (!strcmp(SolName, "VCTRL"))    { value = 0.; } 
-// 	}
-//       }
-//       
-// // RIGHT ==========================  
-//      if (facename == 2) {
-//        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
-//   else if (!strcmp(SolName, "VCTRL"))    { value = 0.; } 
-//       }
-//       
-//       if (!strcmp(SolName, "P"))  { 
-// 	 dirichlet = false;
-//            if (facename == 4)  value = 1.; 
-//            if (facename == 2)  value = 0.;
-//    
-//       }
-//    //Poiseuille problem---------------------------------------------------------------
       
   return dirichlet;
 }
@@ -121,21 +105,6 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     return value;
 }
 
-// //    //lid-driven problem----------------------------------------------------------------------
-// // //============== initial conditions =========
-// // double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &x, const char SolName[]) {
-// //   
-// //   double value = 0.;
-// //   
-// //   if (x[1] < 1+ 1.e-5 && x[1] > 1 - 1.e-5 ) {
-// //                 if (!strcmp(SolName, "UCTRL"))       { value = 1.; }
-// //                 if (!strcmp(SolName, "VCTRL"))       { value = 0.; }
-// //   }
-// //   
-// //   return value;
-// // }
-// // //============== initial conditions =========
-// //    //lid-driven problem----------------------------------------------------------------------
 
 
 void AssembleNavierStokesOpt_nonAD(MultiLevelProblem &ml_prob);
@@ -153,18 +122,20 @@ int main(int argc, char** args) {
 
 
 
-  // init Petsc-MPI communicator
+  // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
        // ======= Files ========================
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
-        files.CheckIODirectories(true);
-	    files.RedirectCout(true);
+        files.CheckIODirectories(use_output_time_folder);
+	    files.RedirectCout(redirect_cout_to_file);
  
     std::string mesh_folder_file = "input/";
-//   std::string input_file = "square_parametric.med";
+  std::string input_file = "square_parametric.med";  //this doesn't work
 //   std::string input_file = "square_4x5.med";
-    std::string input_file = "Mesh_3_groups.med";
+//     std::string input_file = "Mesh_3_groups.med";
 //   std::string input_file = "cyl.med"; // "fifth"
   std::ostringstream mystream; mystream << "./" << /*DEFAULT_INPUTDIR*/ mesh_folder_file << input_file;
   const std::string infile = mystream.str();
@@ -176,14 +147,10 @@ int main(int argc, char** args) {
   
 // define multilevel mesh
   MultiLevelMesh mlMsh;
-  MultiLevelMesh mlMsh_all_levels;
- // read coarse level mesh and generate finers level meshes
-  double scalingFactor = 1.;
  
- //Adimensional quantity (Lref,Uref)
+  // ======= Parameter  ==================
   double Lref = 1.;
   double Uref = 1.;
- // *** apparently needed by non-AD assemble only **********************
   // add fluid material
   Parameter parameter(Lref,Uref);
   
@@ -200,12 +167,8 @@ int main(int argc, char** args) {
 //    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule_vec[0].c_str());
 //     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule_vec[0].c_str());
    mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
-#if compute_conv_flag == 1
-   mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
-#endif
-    
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-     probably in the furure it is not going to be an argument of this function   */
+
+   
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -219,6 +182,8 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
      double comp_conv[maxNumberOfMeshes][NO_OF_L2_NORMS+NO_OF_H1_NORMS];
  
+  MultiLevelMesh mlMsh_all_levels;
+   mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
   
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
         mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
@@ -250,7 +215,7 @@ int main(int argc, char** args) {
             mlSol_all_levels->GenerateBdc("All");
 #endif
 
-         for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
+         for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
   unsigned numberOfUniformLevels = i + 1; 
   unsigned numberOfSelectiveLevels = 0;
@@ -330,7 +295,7 @@ int main(int argc, char** args) {
   
   
   // attach the assembling function to system
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
+//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);  //AD doesn't seem to work now
   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
     
   // initilaize and solve the system

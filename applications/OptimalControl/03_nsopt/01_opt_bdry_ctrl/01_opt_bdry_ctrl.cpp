@@ -319,6 +319,7 @@ int main(int argc, char** args) {
 	
   std::string input_file = "square_parametric.med";
 //   std::string input_file = "square_4x5.med";
+//     std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
