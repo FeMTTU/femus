@@ -613,15 +613,15 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               if ( i < nDof_adj )         laplace_rhs_dadj_ctrl_i        +=  (phi_adj_x   [i * dim + kdim] * sol_ctrl_x_gss[kdim]);
 	      }
-//======================Residuals=======================
+//======================Residuals - BEGIN =======================
           // FIRST ROW
 	  if (i < nDof_u)                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i );
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
 	     if ( control_el_flag == 1)    {    Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
-													      + alpha * phi_ctrl[i] * sol_ctrl_gss
-		                                                                                              - laplace_rhs_dctrl_adj_i 
+													                                                  + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
+		                                                                                              - laplace_rhs_dctrl_adj_i /// @todo this is here because variations of restricted functions are also restricted
 													      /*+ ineq_flag * sol_mu_gss*/ ); }
 	      else if ( control_el_flag == 0) { Res[nDof_u + i] +=   (- penalty_outside_control_domain)  *  (1 - control_node_flag[i]) * (sol_ctrl[i] - 0.); }
 	  }
@@ -633,7 +633,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
        }
        
            
-//======================Residuals=======================
+//======================Residuals - END =======================
 	      
           if (assembleMatrix) {
 	    
