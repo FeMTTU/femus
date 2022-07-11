@@ -2114,24 +2114,27 @@ for (unsigned k = 0; k < dim; k++){
 
 //============ delta_control row - BEGIN ==================================================================================================
 
+      for (unsigned kdim = 0; kdim < dim; kdim++) {
+          
 for (unsigned i = 0; i < nDofsVctrl; i++) {
       
-      for (unsigned kdim = 0; kdim < dim; kdim++) { 
-		    double lap_res_dctrl_ctrl 			 = 0.;
-		    double lap_res_dctrl_adj 			 = 0.;
-		    double adv_res_phictrl_nablauold_uadjold 	 = 0.;
-		    double adv_res_uold_nablaphictrl_uadjold 	 = 0.;
-		    double adv_res_phictrl_nablauctrlold_uadjold = 0.;
-		    double adv_res_uctrlold_nablaphictrl_uadjold = 0.;
+		    double lap_res_dctrl_ctrl_kdim_i 			 = 0.;
+		    double lap_res_dctrl_adj_kdim_i 			 = 0.;
+		    double adv_res_phictrl_nablauold_uadjold_kdim_i 	 = 0.;
+		    double adv_res_uold_nablaphictrl_uadjold_kdim_i 	 = 0.;
+		    double adv_res_phictrl_nablauctrlold_uadjold_kdim_i = 0.;
+		    double adv_res_uctrlold_nablaphictrl_uadjold_kdim_i = 0.;
+            
      for (unsigned jdim = 0; jdim < dim_offset_grad /*space_dim*/; jdim++) {
-		lap_res_dctrl_ctrl		      += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim] 	*   phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim];
-		lap_res_dctrl_adj 		      += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim] 	*   phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim];
+		lap_res_dctrl_ctrl_kdim_i		      += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim] 	*   phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim];
+		lap_res_dctrl_adj_kdim_i 		      += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim] 	*   phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim];
          }
+         
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-		adv_res_uold_nablaphictrl_uadjold     += SolVAR_qp[SolPdeIndex[jdim]]			 * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]  * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
-		adv_res_phictrl_nablauold_uadjold     += phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[jdim]][kdim]   			   * SolVAR_qp[SolPdeIndex[jdim + adj_pos_begin]];
-		adv_res_phictrl_nablauctrlold_uadjold += phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[jdim  + ctrl_pos_begin]][kdim]	   * SolVAR_qp[SolPdeIndex[jdim + adj_pos_begin]];
-		adv_res_uctrlold_nablaphictrl_uadjold += SolVAR_qp[SolPdeIndex[jdim + ctrl_pos_begin]]   * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]  * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
+		adv_res_uold_nablaphictrl_uadjold_kdim_i     += SolVAR_qp[SolPdeIndex[jdim]]			 * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]  * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
+		adv_res_phictrl_nablauold_uadjold_kdim_i     += phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[jdim]][kdim]   			   * SolVAR_qp[SolPdeIndex[jdim + adj_pos_begin]];
+		adv_res_phictrl_nablauctrlold_uadjold_kdim_i += phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[jdim  + ctrl_pos_begin]][kdim]	   * SolVAR_qp[SolPdeIndex[jdim + adj_pos_begin]];
+		adv_res_uctrlold_nablaphictrl_uadjold_kdim_i += SolVAR_qp[SolPdeIndex[jdim + ctrl_pos_begin]]   * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]  * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
       }
       
       
@@ -2146,120 +2149,143 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 					 - cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
 					 - cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
 					 - alpha * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					 - beta * lap_res_dctrl_ctrl
-					 + IRe * lap_res_dctrl_adj
-					+ advection_flag * adv_res_uold_nablaphictrl_uadjold
-					+ advection_flag * adv_res_phictrl_nablauold_uadjold
-					+ advection_flag * adv_res_phictrl_nablauctrlold_uadjold
-					+ advection_flag * adv_res_uctrlold_nablaphictrl_uadjold				
+					 - beta * lap_res_dctrl_ctrl_kdim_i
+					 + IRe * lap_res_dctrl_adj_kdim_i
+					+ advection_flag * adv_res_uold_nablaphictrl_uadjold_kdim_i
+					+ advection_flag * adv_res_phictrl_nablauold_uadjold_kdim_i
+					+ advection_flag * adv_res_phictrl_nablauctrlold_uadjold_kdim_i
+					+ advection_flag * adv_res_uctrlold_nablaphictrl_uadjold_kdim_i				
 					);
-      
-      
-      Res[kdim + ctrl_pos_begin][i] +=  weight * ( SolVAR_qp[SolPdeIndex[press_type_pos + ctrl_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + kdim]);   //pressure
       
       
       
       }
+}
 
 //BLOCK delta_control - state------------------------------------------------------------------------------------------------
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+   for (unsigned kdim = 0; kdim < dim; kdim++) {
+
+     for (unsigned i = 0; i < nDofsVctrl; i++) {
+    
       for (unsigned j = 0; j < nDofsV; j++) {
+          
 	      Jac[kdim + ctrl_pos_begin][kdim][i*nDofsV + j] +=  weight * (
                                  + cost_functional_coeff * target_flag * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
 								 - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim] ][j] 		       * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_hat_new, delta_u0, lambda_old) diagonal blocks  ......unew_nablaphictrl_uadjold
 								 - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i]  * phi_x_gss_fe[ SolFEType[kdim] ][j*dim_offset_grad /*space_dim*/ + kdim] 			* SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u0, u_hat_new, lambda_old)  diagonal blocks  ......phictrl_nablaunew_uadjold 
 								    );
-               unsigned int off_kdim = (kdim+1)%dim; //off-diagonal blocks
-	      Jac[kdim + ctrl_pos_begin][off_kdim][i*nDofsV + j] +=  weight * ( - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[off_kdim] ][j] 		   * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + off_kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_hat_new, delta_u0, lambda_old) off-diagonal blocks  ......unew_nablaphictrl_uadjold
+          
+               unsigned int off_kdim = (kdim+1) % dim; //off-diagonal blocks
+               
+	      Jac[kdim + ctrl_pos_begin][off_kdim][i * nDofsV + j] +=  weight * ( - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[off_kdim] ][j] 		   * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + off_kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_hat_new, delta_u0, lambda_old) off-diagonal blocks  ......unew_nablaphictrl_uadjold
 								      - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i] * phi_x_gss_fe[ SolFEType[off_kdim] ][j*dim_offset_grad /*space_dim*/ + kdim] 			* SolVAR_qp[SolPdeIndex[off_kdim + adj_pos_begin]]   //c(delta_u0, u_hat_new, lambda_old)  off-diagonal blocks  ......phictrl_nablaunew_uadjold 
 								    );
 	    
-      }//j_dctrl_u loop
-	  }
+        }//j_dctrl_u loop
+     }
+  }
       
 //BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
+ for (unsigned  kdim = 0; kdim < dim; kdim++) {
+              
+   for (unsigned i = 0; i < nDofsVctrl; i++) {
       for (unsigned j = 0; j < nDofsVadj; j++) {
           
-		    vector < double > lap_jac_dctrl_adj(dim,0.);
-		    vector < double > adv_uold_nablaphictrl_uadjnew(dim, 0.);
-		    vector < double > adv_uctrlold_nablaphictrl_uadjnew(dim, 0.);
- 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+		    double  lap_jac_dctrl_adj_kdim_i_j = 0.;
+		    double  adv_uold_nablaphictrl_uadjnew_kdim_i_j = 0.;
+		    double  adv_uctrlold_nablaphictrl_uadjnew_kdim_i_j = 0.;
+            
             for (unsigned  jdim = 0; jdim < dim_offset_grad /*space_dim*/; jdim++) { 
-		lap_jac_dctrl_adj[kdim] += phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]	*	phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][j * dim_offset_grad /*space_dim*/ + jdim];
+		lap_jac_dctrl_adj_kdim_i_j += phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]	*	phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][j * dim_offset_grad /*space_dim*/ + jdim];
             }
-          }
-      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-	    for (unsigned jdim = 0; jdim < dim; jdim++) { //diagonal blocks only
-	     adv_uold_nablaphictrl_uadjnew[kdim]     += SolVAR_qp[SolPdeIndex[jdim]] 		     * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + jdim] * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j] ;
-	     adv_uctrlold_nablaphictrl_uadjnew[kdim] += SolVAR_qp[SolPdeIndex[jdim + ctrl_pos_begin]]* phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + jdim] * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j] ;
+
+            for (unsigned jdim = 0; jdim < dim; jdim++) { //diagonal blocks only
+	     adv_uold_nablaphictrl_uadjnew_kdim_i_j     += SolVAR_qp[SolPdeIndex[jdim]] 		     * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + jdim] * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j] ;
+	     adv_uctrlold_nablaphictrl_uadjnew_kdim_i_j += SolVAR_qp[SolPdeIndex[jdim + ctrl_pos_begin]]* phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + jdim] * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j] ;
 	   }
-	  }
-	  
-	  
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += ( - IRe * lap_jac_dctrl_adj[kdim] 
-										    - advection_flag * adv_uold_nablaphictrl_uadjnew[kdim] 	//c(u_hat_old, delta_u0, lambda_new)
+	   
+
+	   Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += ( - IRe * lap_jac_dctrl_adj_kdim_i_j 
+										    - advection_flag * adv_uold_nablaphictrl_uadjnew_kdim_i_j 	//c(u_hat_old, delta_u0, lambda_new)
 										    - advection_flag * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] 		    * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j]   //c(delta_u0, u_hat_old, lambda_new)  diagonal blocks  ......phictrl_nablauold_uadjnew  
 										    - advection_flag * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i] * gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][kdim]  * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j]   //c(delta_u0, u_0_old, lambda_new)  diagonal blocks  ......phictrl_nablauctrlold_uadjnew  
-										    - advection_flag * adv_uctrlold_nablaphictrl_uadjnew[kdim] 	//c(u_0_old, delta_u0, lambda_new)
+										    - advection_flag * adv_uctrlold_nablaphictrl_uadjnew_kdim_i_j 	//c(u_0_old, delta_u0, lambda_new)
 										      ) * weight;
+                                              
                unsigned int off_kdim = (kdim+1)%dim; //off-diagonal blocks
+               
 	      Jac[kdim + ctrl_pos_begin][off_kdim + adj_pos_begin][i*nDofsVadj + j] += ( - advection_flag * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i] * gradSolVAR_qp[SolPdeIndex[off_kdim]][kdim]  		     * phi_gss_fe[ SolFEType[off_kdim + adj_pos_begin] ][j]   //c(delta_u0, u_hat_old, lambda_new)  off-diagonal blocks  ......phictrl_nablauold_uadjnew  
 										         - advection_flag * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i] * gradSolVAR_qp[SolPdeIndex[off_kdim + ctrl_pos_begin]][kdim]  * phi_gss_fe[ SolFEType[off_kdim + adj_pos_begin] ][j]   //c(delta_u0, u_0_old, lambda_new)  off-diagonal blocks  ......phictrl_nablauctrlold_uadjnew  
 										      ) * weight;
 	    
-	  }
-      }//j_dctrl_adj loop
-
+	     } //j_dctrl_adj loop
+      }
+ }
+ 
 //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
+ for (unsigned  kdim = 0; kdim < dim; kdim++) {
+    for (unsigned i = 0; i < nDofsVctrl; i++) {
       for (unsigned j = 0; j < nDofsVctrl; j++) {
           
-		      vector < double > lap_jac_dctrl_ctrl(dim,0.);
- 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+            double  lap_jac_dctrl_ctrl_kdim_i_j = 0.;
+              
             for (unsigned  jdim = 0; jdim < dim_offset_grad /*space_dim*/; jdim++) { 
-		lap_jac_dctrl_ctrl[kdim] += phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]	*	phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j * dim_offset_grad /*space_dim*/ + jdim];
+		lap_jac_dctrl_ctrl_kdim_i_j += phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim]	*	phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j * dim_offset_grad /*space_dim*/ + jdim];
             }
-          }
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  + (cost_functional_coeff * target_flag + alpha) * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
-											+  beta * lap_jac_dctrl_ctrl[kdim] 
+
+            Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  + (cost_functional_coeff * target_flag + alpha) * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
+											+  beta * lap_jac_dctrl_ctrl_kdim_i_j 
 											- advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i]    * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u0, u_0_new, lambda_old)  diagonal blocks  ......phictrl_nablauctrlnew_uadjold 
 											- advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j] 	* phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_0_new, delta_u0, lambda_old) diagonal blocks  ......uctrlnew_nablaphictrl_uadjold
 											) * weight;
+                                            
                unsigned int off_kdim = (kdim+1)%dim; //off-diagonal blocks
+               
 	      Jac[kdim + ctrl_pos_begin][off_kdim + ctrl_pos_begin][i*nDofsVctrl + j] += ( - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i]     * phi_x_gss_fe[ SolFEType[off_kdim + ctrl_pos_begin] ][j*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[off_kdim + adj_pos_begin]]   //c(delta_u0, u_0_new, lambda_old)  off-diagonal blocks  ......phictrl_nablauctrlnew_uadjold 
 											   - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[off_kdim + ctrl_pos_begin] ][j] * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + off_kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_0_new, delta_u0, lambda_old) off-diagonal blocks  ......uctrlnew_nablaphictrl_uadjold
 											) * weight;
 	    
-	  }
       }//j_dctrl_ctrl loop
 
+    }//i_ctrl loop
+
+  }
+    
+    
 //BLOCK Pressure_ctrl
+  for (unsigned kdim = 0; kdim < dim; kdim++) {
+          
+for (unsigned i = 0; i < nDofsVctrl; i++) {      
+            Res[kdim + ctrl_pos_begin][i] +=  weight * ( SolVAR_qp[SolPdeIndex[press_type_pos + ctrl_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + kdim]);   //pressure
+
       for (unsigned j = 0; j < nDofsPctrl; j++) {
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+          
 	      Jac[kdim + ctrl_pos_begin][press_type_pos + ctrl_pos_begin][i*nDofsPctrl + j] += -( phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][j] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim_offset_grad /*space_dim*/ + kdim] ) * weight;
-	  }
       }//j_press_ctrl
       
       
   }//i_ctrl loop
+ }
 
+  
 //DIV_ctrl
-  for (unsigned i = 0; i < nDofsPctrl; i++) {
-      
 		  double div_ctrl_dctrl_qp = 0.;
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 		div_ctrl_dctrl_qp += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][kdim] ;
 	  }
 	  
+  for (unsigned i = 0; i < nDofsPctrl; i++) {
 	  Res[press_type_pos + ctrl_pos_begin][i] += ( (div_ctrl_dctrl_qp) * phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i] ) * weight;
+  }//i_div_ctrl
+  
       
+ for (unsigned kdim = 0; kdim < dim; kdim++) {
+   for (unsigned i = 0; i < nDofsPctrl; i++) {
 	  for (unsigned j = 0; j < nDofsVctrl; j++) {
-	      for (unsigned kdim = 0; kdim < dim; kdim++) {
 		Jac[press_type_pos + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += - ( phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j * dim_offset_grad /*space_dim*/ + kdim] ) * weight;
-	      }
 	  }//j loop
   }//i_div_ctrl
+ }
  
 //============ delta_control row - END ==================================================================================================
  
