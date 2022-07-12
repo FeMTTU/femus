@@ -1481,7 +1481,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   
   
       const unsigned int n_components_ctrl = dim;
-  double penalty_outside_control_domain = 1.e50;         // penalty for zero control outside
+  double penalty_outside_control_domain = 1.e20;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
 
       
   //==========================================================================================
@@ -1626,7 +1626,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = 1;//ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
 
   std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
        
@@ -2025,6 +2025,7 @@ for (unsigned k = 0; k < dim; k++){
    
 //BLOCK delta_adjoint - control-----------------------------------------------------------------------------------------
   for (unsigned kdim = 0; kdim < dim; kdim++) {
+      
    for (unsigned i = 0; i < nDofsVadj; i++) {
        
      for (unsigned j = 0; j < nDofsVctrl; j++) {

@@ -237,19 +237,15 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
   vector <double> phi_u; 
   vector <double> phi_u_x;
-  vector <double> phi_u_xx;
 
   phi_u.reserve(max_size);
   phi_u_x.reserve(max_size * dim);
-  phi_u_xx.reserve(max_size * dim2);
   
  
-  unsigned solIndex_u;
-  solIndex_u = ml_sol->GetIndex("state");
+  unsigned solIndex_u =  solIndex_u = ml_sol->GetIndex("state");
   unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);
 
-  unsigned solPdeIndex_u;
-  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");
+  unsigned solPdeIndex_u  =  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");
 
   vector < double >  sol_u;
   sol_u.reserve(max_size);
@@ -263,11 +259,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************   
   vector <double> phi_ctrl;
   vector <double> phi_ctrl_x;
-  vector <double> phi_ctrl_xx;
 
   phi_ctrl.reserve(max_size);
   phi_ctrl_x.reserve(max_size * dim);
-  phi_ctrl_xx.reserve(max_size * dim2);
   
   unsigned solIndex_ctrl;
   solIndex_ctrl = ml_sol->GetIndex("control");
@@ -288,11 +282,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
   vector <double> phi_adj;
   vector <double> phi_adj_x;
-  vector <double> phi_adj_xx;
 
   phi_adj.reserve(max_size);
   phi_adj_x.reserve(max_size * dim);
-  phi_adj_xx.reserve(max_size * dim2);
  
   
   unsigned solIndex_adj;
@@ -313,12 +305,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
   vector <double> phi_mu;
   vector <double> phi_mu_x;
-  vector <double> phi_mu_xx;
 
   phi_mu.reserve(max_size);
   phi_mu_x.reserve(max_size * dim);
-  phi_mu_xx.reserve(max_size * dim2);
-    
+
+  
   unsigned solIndex_mu;
   solIndex_mu = ml_sol->GetIndex("mu");
    
@@ -549,10 +540,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx);
-    msh->_finiteElement[ielGeom][solType_ctrl]->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
-    msh->_finiteElement[ielGeom][solType_adj] ->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-	msh->_finiteElement[ielGeom][solType_mu]  ->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
+	msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, boost::none);
+    msh->_finiteElement[ielGeom][solType_ctrl]->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_ctrl, phi_ctrl_x, boost::none);
+    msh->_finiteElement[ielGeom][solType_adj] ->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_adj, phi_adj_x, boost::none);
+	msh->_finiteElement[ielGeom][solType_mu]  ->Jacobian(geom_element_iel.get_coords_at_dofs_3d(), ig, weight, phi_mu, phi_mu_x, boost::none);
 
 	
     sol_u_gss = 0.;
