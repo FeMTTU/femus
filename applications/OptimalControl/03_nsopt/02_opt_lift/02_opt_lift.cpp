@@ -1642,8 +1642,19 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   }
   //*************************************************** 
    
+ ///@todo if I want to restrict the control lifting, I might just set to zero the dof values here! Also, I have to remove the equations for the unneeded dofs with a PENALTY!
+ /// Well, this can also be done in the Initialization function I think... 
+ /// The problem there is that it is only DOF-BASED, it doesn't receive the ELEMENT INFORMATION. We should change that
 
-   
+//    if (control_el_flag == 0) {
+// 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
+//       std::fill(SolVAR_eldofs[ctrl_pos_begin + c].begin(), SolVAR_eldofs[ctrl_pos_begin + c].end(), 0.);
+//          }
+//    }
+
+// it seems that with this the convergence for the control variables is worse...
+ 
+ 
    
       // ********************** Gauss point loop *******************************
       for(unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
