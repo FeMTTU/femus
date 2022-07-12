@@ -48,7 +48,7 @@
 
 
 //*********************** Lifting internal extension *******************************************************
-#define LIFTING_INTERNAL_DEPTH  1.
+#define LIFTING_INTERNAL_DEPTH  1.   //how far it goes orthogonally to the Control piece of the Boundary 
 #define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
 #define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
 

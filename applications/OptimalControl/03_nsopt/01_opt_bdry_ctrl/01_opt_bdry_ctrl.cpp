@@ -21,7 +21,7 @@ using namespace femus;
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL          3        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL          1        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 #define FACE_FOR_TARGET    1
 
@@ -42,7 +42,7 @@ using namespace femus;
 //**************************************
 
 //****** Mesh ********************************
-#define no_of_ref /*N_UNIFORM_LEVELS*/ 6    //mesh refinements
+#define no_of_ref /*N_UNIFORM_LEVELS*/ 5    //mesh refinements
 
 
 
@@ -103,7 +103,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 
 
-bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
   
   bool dirichlet = true;
@@ -558,7 +558,6 @@ int main(int argc, char** args) {
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
      
-  //pointers
   NonLinearImplicitSystem& mlPdeSys  = ml_prob.get_system<NonLinearImplicitSystem>("NSOpt");
  const unsigned level = mlPdeSys.GetLevelToAssemble();
 
@@ -965,7 +964,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     if (k == SolPdeIndex[theta_index] && L2G_dofmap_Mat[k][i] == global_row_index_bdry_constr) {       fake_iel_flag = iel;  }
     }
   }
-  //CTRL###################################################################
+  //###################################################################
     
    //************ set fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable *********************
     std::vector<int>  bdry_int_constr_pos_vec(1,global_row_index_bdry_constr); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
@@ -1033,7 +1032,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
 		  std::vector<bool> dir_bool(dim);
 		  for(unsigned idim = 0; idim < dim; idim++) {
-		      dir_bool[idim] = /*false; //*/ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry_3d(),ctrl_name[idim].c_str(),tau,face_in_rectangle_domain,0.);
+		      dir_bool[idim] = /*false; //*/ml_sol->GetBdcFunctionMLProb()(& ml_prob, geom_element_iel.get_elem_center_bdry_3d(),ctrl_name[idim].c_str(),tau,face_in_rectangle_domain,0.);
 		  }
 	  
 	

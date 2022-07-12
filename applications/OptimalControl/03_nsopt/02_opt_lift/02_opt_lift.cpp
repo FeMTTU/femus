@@ -50,7 +50,7 @@
 using namespace femus;
 
  
-bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
   //1: bottom  //2: right  //3: top  //4: left  (2D square)
   //1: bottom  //2: top    //3: side            (3D cylinder)
     
@@ -1162,11 +1162,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   
   vector <double> phiV_gss;  // local test function
   vector <double> phiV_x_gss; // local test function first order partial derivatives
-  vector <double> phiV_xx_gss; // local test function second order partial derivatives
 
   phiV_gss.reserve(maxSize);
   phiV_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
-  phiV_xx_gss.reserve(maxSize * dim2);
   
 //STATE######################################################################
   
@@ -1190,22 +1188,18 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   
   vector <double> phiVctrl_gss;  // local test function
   vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
-  vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
 
   phiVctrl_gss.reserve(maxSize);
   phiVctrl_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
-  phiVctrl_xx_gss.reserve(maxSize * dim2);
   
 //CONTROL######################################################################
 
 // Vel_desired##################################################################
   vector <double> phiVdes_gss;  // local test function
   vector <double> phiVdes_x_gss; // local test function first order partial derivatives
-  vector <double> phiVdes_xx_gss; // local test function second order partial derivatives
 
   phiVdes_gss.reserve(maxSize);
   phiVdes_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
-  phiVdes_xx_gss.reserve(maxSize * dim2);
 
   vector <double>  solVdes(dim,0.);
   vector<double> Vdes_gss(dim, 0.);  
@@ -1242,9 +1236,9 @@ double	integral_gamma  = 0.;
   // geometry end *****************************
    
 // equation
-    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-//     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);    // number of solution element dofs
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);
+//     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType); 
+    unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);
     
      
     for (unsigned  k = 0; k < dim; k++)  {
@@ -1314,9 +1308,9 @@ double	integral_gamma  = 0.;
     elem_all[ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
    
-    elem_all[ielGeom][solVType]->shape_funcs_current_elem(ig, JacI_qp, phiV_gss, phiV_x_gss, phiV_xx_gss , space_dim);
-    elem_all[ielGeom][solVctrlType]->shape_funcs_current_elem(ig, JacI_qp, phiVctrl_gss, phiVctrl_x_gss, phiVctrl_xx_gss , space_dim);
-    elem_all[ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(ig, JacI_qp, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss , space_dim);
+    elem_all[ielGeom][solVType]->shape_funcs_current_elem(ig, JacI_qp, phiV_gss, phiV_x_gss, boost::none , space_dim);
+    elem_all[ielGeom][solVctrlType]->shape_funcs_current_elem(ig, JacI_qp, phiVctrl_gss, phiVctrl_x_gss,  boost::none, space_dim);
+    elem_all[ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(ig, JacI_qp, phiVdes_gss, phiVdes_x_gss,  boost::none, space_dim);
 
 	
 	  vector < vector < double > > gradVctrl_gss(dim);

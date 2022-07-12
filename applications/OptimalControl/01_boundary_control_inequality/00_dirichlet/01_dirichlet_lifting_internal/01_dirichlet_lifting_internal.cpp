@@ -52,7 +52,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 
 
-bool Solution_set_boundary_conditions(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
   value = 0.;
