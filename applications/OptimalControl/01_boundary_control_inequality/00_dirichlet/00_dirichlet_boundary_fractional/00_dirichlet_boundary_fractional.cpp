@@ -114,10 +114,10 @@ using namespace femus;
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
  
-                        feOrder.push_back(FIRST/*SECOND*/);
-                        feOrder.push_back(FIRST/*SECOND*/);
-                        feOrder.push_back(FIRST/*SECOND*/);
-                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
  
 
   assert( feFamily.size() == feOrder.size() );
@@ -430,7 +430,7 @@ int main(int argc, char** args) {
   //MU
   const std::string act_set_flag_name = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST/*SECOND*/, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
   
@@ -493,10 +493,10 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
   //----
 
-  system.MGsolve();
+//   system.MGsolve();
 //   double totalAssemblyTime = 0.;
 //   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
-//   system.assemble_call_before_boundary_conditions(1);
+  system.assemble_call_before_boundary_conditions(1);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
