@@ -37,7 +37,7 @@
 
   
 //****** Mesh ********************************
-  #define no_of_ref 5     //mesh refinements
+  #define no_of_ref    N_UNIFORM_LEVELS  //mesh refinements
 
   
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention

@@ -1,4 +1,3 @@
-
 #include "adept.h"
 
 #include "FemusInit.hpp"
@@ -42,7 +41,7 @@ using namespace femus;
 //**************************************
 
 //****** Mesh ********************************
-#define no_of_ref /*N_UNIFORM_LEVELS*/ 5    //mesh refinements
+#define no_of_ref N_UNIFORM_LEVELS     //mesh refinements
 
 
 
@@ -317,7 +316,8 @@ int main(int argc, char** args) {
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
 	
-  std::string input_file = "square_parametric.med";
+//   std::string input_file = "square_parametric.med";
+  std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "square_4x5.med";
 //     std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
@@ -552,7 +552,8 @@ int main(int argc, char** args) {
 
 
 
-
+///@todo we have to decide if order the phi by fem families, by Unknowns or by Quantities
+/// I say the best way is by Quantity, because they have all the need to have phi functions as Unknowns
 
         
 
@@ -585,7 +586,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   unsigned dim2     = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   unsigned igrid	= msh->GetLevel();
   unsigned iproc 	= msh->processor_id();
+  unsigned   nprocs = msh->n_processors();
 
+
+  constexpr bool print_algebra_local = true;
+
+  
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
 
 
@@ -682,7 +688,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     SolFEType_Mat[ivar]	= ml_sol->GetSolutionType(SolIndex_Mat[ivar]);
   }
 
-  vector < unsigned > Sol_n_el_dofs_Mat(n_unknowns);
+  vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
   //=== Unknowns - END ========================================================
   
   //=== Sol (quantities, not unknowns) - BEGIN ========================================================
@@ -862,7 +868,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                     SolFEType_Mat,
                     SolIndex_Mat,
                     SolPdeIndex,
-                    Sol_n_el_dofs_Mat, 
+                    Sol_n_el_dofs_Mat_vol, 
                     sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
                     max_size,
@@ -953,7 +959,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     unsigned int global_row_index_bdry_constr = pdeSys->KKoffset[SolPdeIndex[theta_index]][iproc];
   for (unsigned  k = 0; k < n_unknowns; k++) {
 	unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType_Mat[k]);	//nDofs_V,P_of_st,adj,ctrl
-	Sol_n_el_dofs_Mat[k]=ndofs_unk;
+	Sol_n_el_dofs_Mat_vol[k] = ndofs_unk;
 	sol_eldofs_Mat[k].resize(ndofs_unk);	//sol_V,P_of_st,adj,ctrl
 	L2G_dofmap_Mat[k].resize(ndofs_unk); 
     for (unsigned i = 0; i < ndofs_unk; i++) {
@@ -978,15 +984,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 // setting Jac and Res to zero ******************************* 
     for(int ivar=0; ivar<n_unknowns; ivar++) {
-              Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs_Mat[ivar]);
-      memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs_Mat[ivar]*sizeof(double));
+              Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs_Mat_vol[ivar]);
+      memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs_Mat_vol[ivar]*sizeof(double));
     }
    
     for(int ivar=0; ivar<n_unknowns; ivar++) {
       for(int jvar=0; jvar<n_unknowns; jvar++) {
 	    if(assembleMatrix){  //MISMATCH
-                  Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ].resize(Sol_n_el_dofs_Mat[ivar]*Sol_n_el_dofs_Mat[jvar]);
-		  memset(&Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ][0], 0., Sol_n_el_dofs_Mat[ivar]*Sol_n_el_dofs_Mat[jvar]*sizeof(double));
+                  Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ].resize(Sol_n_el_dofs_Mat_vol[ivar]*Sol_n_el_dofs_Mat_vol[jvar]);
+		  memset(&Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ][0], 0., Sol_n_el_dofs_Mat_vol[ivar]*Sol_n_el_dofs_Mat_vol[jvar]*sizeof(double));
            }
         }
      }
@@ -1280,7 +1286,7 @@ for(unsigned iqp = 0;iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumb
 		gradSolVAR_qp[unk][ivar2] = 0.; 
 	    }
 	  
-	    for(unsigned i = 0; i < Sol_n_el_dofs_Mat[unk]; i++) {
+	    for(unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[unk]; i++) {
                         SolVAR_qp[unk] += phi_gss_fe[ SolFEType_Mat[unk] ][i]             * sol_eldofs_Mat[SolPdeIndex[unk]][i];
 		for(unsigned ivar2 = 0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) {       
 		    gradSolVAR_qp[unk][ivar2]  += phi_x_gss_fe[ SolFEType_Mat[unk] ][i * dim_offset_grad /*space_dim*/ + ivar2] * sol_eldofs_Mat[SolPdeIndex[unk]][i]; 
@@ -1524,8 +1530,8 @@ for (unsigned k = 0; k < dim; k++){
 
 // //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsGctrl; j++) {
-	    if (i==j) {
-		Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] += penalty_outside_control_boundary *(1 - control_node_flag[kdim][i]);              //enforce control zero outside the control boundary
+	    if (i == j) {
+		Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] += penalty_outside_control_boundary * (1 - control_node_flag[kdim][i]);              //enforce control zero outside the control boundary
                   } //end i==j
       }//j_dctrl_ctrl loop
   }//i_ctrl loop
@@ -1592,7 +1598,17 @@ for (unsigned k = 0; k < dim; k++){
 	  
      /* if (L2G_dofmap_Mat[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta(fake)*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       L2G_dofmap_Mat[n_unknowns-1]);
 	  
-   //--------------------------------------------------------------------------------------------------------  
+
+  
+     if (print_algebra_local) {
+	      for (unsigned kdim = 0; kdim < dim; kdim++) {
+         assemble_jacobian<double,double>::print_element_residual(iel, Res[kdim + ctrl_pos_begin], Sol_n_el_dofs_Mat_vol, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin], Sol_n_el_dofs_Mat_vol, 10, 5);
+          }
+    }
+     
+    
+     //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
   
   
