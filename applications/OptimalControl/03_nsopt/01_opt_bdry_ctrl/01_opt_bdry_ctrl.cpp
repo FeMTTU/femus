@@ -37,7 +37,7 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0  //for now: 1 internal routine; 0 external routine
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  //for now: 1 internal routine; 0 external routine
 //**************************************
 
 //****** Mesh ********************************
@@ -472,8 +472,8 @@ int main(int argc, char** args) {
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
     system_opt.SetOuterSolver(PREONLY);
     
-//     system_opt.MGsolve();
-  system_opt.assemble_call_before_boundary_conditions(1);
+    system_opt.MGsolve();
+//   system_opt.assemble_call_before_boundary_conditions(1);
 
   
   
@@ -589,7 +589,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   unsigned   nprocs = msh->n_processors();
 
 
-  constexpr bool print_algebra_local = true;
+  constexpr bool print_algebra_local = false;
 
   
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -1601,9 +1601,13 @@ for (unsigned k = 0; k < dim; k++){
 
   
      if (print_algebra_local) {
-	      for (unsigned kdim = 0; kdim < /*dim*/1; kdim++) {
-         assemble_jacobian<double,double>::print_element_residual(iel, Res[kdim + ctrl_pos_begin], Sol_n_el_dofs_Mat_vol, 10, 5);
-         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin], Sol_n_el_dofs_Mat_vol, 10, 5);
+         
+         //extract only the ctrl range
+         std::vector <unsigned>   Sol_n_el_dofs_Mat_vol_only_ctrl(1, 0);
+	      for (unsigned kdim = 0; kdim < dim; kdim++) {
+	       Sol_n_el_dofs_Mat_vol_only_ctrl[0] = Sol_n_el_dofs_Mat_vol[kdim + ctrl_pos_begin];
+         assemble_jacobian<double,double>::print_element_residual(iel, Res[kdim + ctrl_pos_begin], Sol_n_el_dofs_Mat_vol_only_ctrl, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin], Sol_n_el_dofs_Mat_vol_only_ctrl, 10, 5);
           }
     }
      
