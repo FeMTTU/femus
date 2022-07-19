@@ -2250,8 +2250,8 @@ unsigned nDof_iel_vec = 0;
    
    const unsigned  elem_dof_size_max = n_components_ctrl * max_size;
    
-   std::vector < double >  Res;      Res.reserve( elem_dof_size_max );                         //should have Mat order
-   std::vector < double >  Jac;      Jac.reserve( elem_dof_size_max * elem_dof_size_max);   //should have Mat order
+   std::vector < double >  Res_ctrl_only;      Res_ctrl_only.reserve( elem_dof_size_max );                         //should have Mat order
+   std::vector < double >  Jac_ctrl_only;      Jac_ctrl_only.reserve( elem_dof_size_max * elem_dof_size_max);   //should have Mat order
 
  
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -2297,9 +2297,9 @@ unsigned nDof_iel_vec = 0;
  //***************************************************
     const unsigned int res_length =  n_components_ctrl * Sol_n_el_dofs_Mat[pos_mat_ctrl];
 
-    Res.resize(res_length);                 std::fill(Res.begin(), Res.end(), 0.);
+    Res_ctrl_only.resize(res_length);                 std::fill(Res_ctrl_only.begin(), Res_ctrl_only.end(), 0.);
 
-    Jac.resize(res_length * res_length);    std::fill(Jac.begin(), Jac.end(), 0.);
+    Jac_ctrl_only.resize(res_length * res_length);    std::fill(Jac_ctrl_only.begin(), Jac_ctrl_only.end(), 0.);
  //***************************************************
 
   
@@ -2392,11 +2392,11 @@ unsigned nDof_iel_vec = 0;
 //============ Bdry Residuals - BEGIN ==================	
            const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_ctrl_only, /*pos_mat_ctrl +*/ c, i_vol);
            
-                Res[ res_pos ]  +=  - control_node_flag[c][i_vol] *  weight_iqp_bdry *
+                Res_ctrl_only[ res_pos ]  +=  - control_node_flag[c][i_vol] *  weight_iqp_bdry *
                                          (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
 							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
 							                         );  //boundary optimality condition
-                Res[ res_pos ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+                Res_ctrl_only[ res_pos ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
                           
 //============ Bdry Residuals - END ==================    
 		    
@@ -2414,7 +2414,7 @@ unsigned nDof_iel_vec = 0;
 
           
            const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(Sol_n_el_dofs_Mat_ctrl_only, sum_Sol_n_el_dofs_ctrl_only, /*pos_mat_ctrl +*/ c, /*pos_mat_ctrl +*/ e, i_vol, j_vol);
-              Jac[ jac_pos ]   +=  control_node_flag[c][i_vol] *  weight_iqp_bdry * (
+              Jac_ctrl_only[ jac_pos ]   +=  control_node_flag[c][i_vol] *  weight_iqp_bdry * (
                                     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
 			                      + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_mat_dctrl_ctrl_bdry_gss);   
 				
@@ -2436,13 +2436,17 @@ unsigned nDof_iel_vec = 0;
 
 	
   /*is_res_control_only*/
-                    RES->add_vector_blocked(Res, L2G_dofmap_Mat_ctrl_only);
+                    RES->add_vector_blocked(Res_ctrl_only, L2G_dofmap_Mat_ctrl_only);
               
                   if (assembleMatrix) {
-                     KK->add_matrix_blocked(Jac, L2G_dofmap_Mat_ctrl_only, L2G_dofmap_Mat_ctrl_only);
+                     KK->add_matrix_blocked(Jac_ctrl_only, L2G_dofmap_Mat_ctrl_only, L2G_dofmap_Mat_ctrl_only);
                   }   
                
-      
+     
+         assemble_jacobian<double,double>::print_element_residual(iel, Res_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
+     
+     
     }  //iel
 
     

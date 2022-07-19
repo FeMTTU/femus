@@ -37,7 +37,8 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  //for now: 1 internal routine; 0 external routine
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
+// you have to be careful with the nonlinear iterations, because sometimes the algorithm restarts and the nonlinear index is set back to zero!!!
 //**************************************
 
 //****** Mesh ********************************
@@ -289,7 +290,7 @@ int main(int argc, char** args) {
   
     // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -466,12 +467,15 @@ int main(int argc, char** args) {
     
     system_opt.SetDebugNonlinear(true);
     system_opt.SetDebugFunction(ComputeIntegral);
-//   system_opt.SetMaxNumberOfNonLinearIterations(30);
+    
+  system_opt.SetMaxNumberOfNonLinearIterations(2);
+  
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
-//     system_opt.SetMaxNumberOfLinearIterations(6);
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
     system_opt.SetOuterSolver(PREONLY);
     
+    
+   
     system_opt.MGsolve();
 //   system_opt.assemble_call_before_boundary_conditions(1);
 
@@ -557,16 +561,16 @@ int main(int argc, char** args) {
 
         
 
-void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
+void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
      
-  NonLinearImplicitSystem& mlPdeSys  = ml_prob.get_system<NonLinearImplicitSystem>("NSOpt");
- const unsigned level = mlPdeSys.GetLevelToAssemble();
+  NonLinearImplicitSystem * mlPdeSys  = & ml_prob.get_system< NonLinearImplicitSystem >("NSOpt");
+ const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  bool assembleMatrix = mlPdeSys.GetAssembleMatrix(); 
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix(); 
    
   Solution*	 sol  	         = ml_prob._ml_sol->GetSolutionLevel(level);
-  LinearEquationSolver*  pdeSys	 = mlPdeSys._LinSolver[level];   
-  const char* pdename            = mlPdeSys.name().c_str();
+  LinearEquationSolver*  pdeSys	 = mlPdeSys->_LinSolver[level];   
+  const char* pdename            = mlPdeSys->name().c_str();
   
   MultiLevelSolution* ml_sol = ml_prob._ml_sol;
   
@@ -589,7 +593,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   unsigned   nprocs = msh->n_processors();
 
 
-  constexpr bool print_algebra_local = false;
+  constexpr bool print_algebra_global = true;
+  constexpr bool print_algebra_local = true;
 
   
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -683,7 +688,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(Solname_Mat[ivar].c_str());
+    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname_Mat[ivar].c_str());
     SolIndex_Mat[ivar]	= ml_sol->GetIndex        (Solname_Mat[ivar].c_str());
     SolFEType_Mat[ivar]	= ml_sol->GetSolutionType(SolIndex_Mat[ivar]);
   }
@@ -1069,7 +1074,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 										  SolVAR_bd_qp[ SolPdeIndex[ctrl_index] ] = 0.;
 			  for(unsigned ivar2=0; ivar2< dim_offset_grad /*space_dim*/; ivar2++) {  gradSolVAR_bd_qp[ SolPdeIndex[ctrl_index] ][ivar2] = 0.; }
 	  
-			  for(int i_bd = 0; i_bd < nve_bd; i_bd++) {
+			  for(int i_bd = 0; i_bd < nve_bd/**@todo are we sure this is correct?*/; i_bd++) {
 		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
                                                                     SolVAR_bd_qp[SolPdeIndex[ctrl_index]]           += phi_bd_gss_fe  [ SolFEType_Mat[ctrl_index] ][i_bd]                  * sol_eldofs_Mat[ SolPdeIndex[ ctrl_index ] ][i_vol];
 			      for(unsigned ivar2=0; ivar2< dim_offset_grad /*space_dim*/; ivar2++) {  gradSolVAR_bd_qp[SolPdeIndex[ctrl_index]][ivar2] 	+= phi_x_bd_gss_fe[ SolFEType_Mat[ctrl_index] ][i_bd * dim_offset_grad /*space_dim*/ + ivar2 /*i_bd + ivar2 * nve_bd*/] * sol_eldofs_Mat[ SolPdeIndex[ ctrl_index ] ][i_vol];     /* }*/
@@ -1094,7 +1099,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		      
 		  grad_dot_n_adj_res[ldim] = 0.;
 		  for(unsigned d=0; d < dim_offset_grad /*space_dim*/; d++) {
-		      grad_dot_n_adj_res[ldim] += sol_adj_x_vol_at_bdry_gss[ldim][d]*normal[d];  
+		      grad_dot_n_adj_res[ldim] += sol_adj_x_vol_at_bdry_gss[ldim][d] * normal[d];  
 		  }
 		}
 		
@@ -1282,8 +1287,8 @@ for(unsigned iqp = 0;iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumb
 //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
 	    SolVAR_qp[unk] = 0.;
-	    for(unsigned ivar2=0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++){ 
-		gradSolVAR_qp[unk][ivar2] = 0.; 
+	    for(unsigned ivar2 = 0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) {
+           gradSolVAR_qp[unk][ivar2] = 0.; 
 	    }
 	  
 	    for(unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[unk]; i++) {
@@ -1583,7 +1588,7 @@ for (unsigned k = 0; k < dim; k++){
 	    
      if (control_el_flag == 1) {
 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
-                          /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],L2G_dofmap_Mat[n_unknowns-2-kdim]); 
+                          /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]], L2G_dofmap_Mat[n_unknowns-2-kdim]); 
 		if(assembleMatrix) {
                           /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, L2G_dofmap_Mat[n_unknowns-2-kdim]);
                           /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], L2G_dofmap_Mat[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
@@ -1593,7 +1598,7 @@ for (unsigned k = 0; k < dim; k++){
      
      
           if (control_el_flag == 1) {
-          /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res_outer,bdry_int_constr_pos_vec);
+          /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res_outer, bdry_int_constr_pos_vec);
 	  }
 	  
      /* if (L2G_dofmap_Mat[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta(fake)*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       L2G_dofmap_Mat[n_unknowns-1]);
@@ -1618,6 +1623,18 @@ for (unsigned k = 0; k < dim; k++){
   
   JAC->close();
   RES->close();
+  
+    if (print_algebra_global) {
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, mlPdeSys->GetNonlinearIt());
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+
+  }
+
+  
   
 //     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/matrix_non_ad" << mlPdeSys.GetNonlinearIt()  << ".txt";
 //   JAC->print_matlab(mat_out.str(),"ascii");
