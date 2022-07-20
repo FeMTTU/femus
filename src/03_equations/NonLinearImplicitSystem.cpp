@@ -421,8 +421,6 @@ restart:
      
     _nonliniteration = 0;
     
-//     System::assemble_call_before_boundary_conditions(n_times);
-     
      _levelToAssemble = 0;  //because of this, this function cannot be const
      
    for (unsigned it = 0; it < n_times; it++) {

@@ -37,8 +37,10 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  // 1 internal routine; 0 external routine
 // you have to be careful with the nonlinear iterations, because sometimes the algorithm restarts and the nonlinear index is set back to zero!!!
+// The first matrix before the boundary conditions and the first residual seem to be exactly the same...
+// Maybe what is different is the matrix and residual AFTER the Boundary Conditions...  
 //**************************************
 
 //****** Mesh ********************************
@@ -127,7 +129,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
                 
                 
-                if (!strcmp(SolName, "GY"))       { 
+           else if (!strcmp(SolName, "GY"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
      if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -144,7 +146,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
                 
                 
-                if (!strcmp(SolName, "GZ"))       { 
+           else if (!strcmp(SolName, "GZ"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
      if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -162,11 +164,11 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
                 
                 
-                if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
+                else if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
 
                 
                 
-                if (!strcmp(SolName, "W"))       { 
+                else if (!strcmp(SolName, "W"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
    if (faceName == FACE_FOR_CONTROL) {
      if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -181,15 +183,15 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
      
 #if exact_sol_flag == 0
-                if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
-                if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
+                else if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
+                else if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
 #endif
      
 #if exact_sol_flag == 1
   //b.c. for manufactured lid driven cavity
   double pi = acos(-1.);
-                if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
-                if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
+                else if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
+                else if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
  #endif
                
   return dirichlet;
@@ -290,7 +292,7 @@ int main(int argc, char** args) {
   
     // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = true;
+  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -468,7 +470,7 @@ int main(int argc, char** args) {
     system_opt.SetDebugNonlinear(true);
     system_opt.SetDebugFunction(ComputeIntegral);
     
-  system_opt.SetMaxNumberOfNonLinearIterations(2);
+//   system_opt.SetMaxNumberOfNonLinearIterations(2);
   
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);

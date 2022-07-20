@@ -690,12 +690,13 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
           
 	      const unsigned int face_in_rectangle_domain = - ( msh->el->GetFaceElementIndex(iel,iface) + 1);
-	     double tau = 0.;
          
          
          
 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
           
+	     double tau = 0.;
+         
 	      const bool  dir_bool = ml_sol->GetBdcFunctionMLProb()(ml_prob, geom_element_iel.get_elem_center_bdry_3d(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
 
 	      if (dir_bool == false) { 
@@ -2436,7 +2437,7 @@ unsigned nDof_iel_vec = 0;
 
 	
   /*is_res_control_only*/
-                    RES->add_vector_blocked(Res_ctrl_only, L2G_dofmap_Mat_ctrl_only);
+                     RES->add_vector_blocked(Res_ctrl_only, L2G_dofmap_Mat_ctrl_only);
               
                   if (assembleMatrix) {
                      KK->add_matrix_blocked(Jac_ctrl_only, L2G_dofmap_Mat_ctrl_only, L2G_dofmap_Mat_ctrl_only);
