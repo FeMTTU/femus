@@ -689,6 +689,10 @@ void el_dofs_unknowns_vol(const Solution*                sol,
        geom_element_iel.set_elem_center_bdry_3d();
 
           
+	    // look for boundary faces
+            const int bdry_index = msh->el->GetFaceElementIndex(iel, iface);
+            
+	    if( bdry_index < 0) {
 	      const unsigned int face_in_rectangle_domain = - ( msh->el->GetFaceElementIndex(iel,iface) + 1);
          
          
@@ -697,25 +701,27 @@ void el_dofs_unknowns_vol(const Solution*                sol,
           
 	     double tau = 0.;
          
-	      const bool  dir_bool = ml_sol->GetBdcFunctionMLProb()(ml_prob, geom_element_iel.get_elem_center_bdry_3d(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
+	      const bool  dir_bool_c = ml_sol->GetBdcFunctionMLProb()(ml_prob, geom_element_iel.get_elem_center_bdry_3d(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
 
-	      if (dir_bool == false) { 
 
           const unsigned ndofs_ctrl_bdry = msh->GetElementFaceDofNumber(iel, iface, SolFEType_Mat[pos_mat_ctrl + c]);
 		  for(unsigned i_bdry = 0; i_bdry < ndofs_ctrl_bdry; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 		
+	      if (dir_bool_c == false) { 
 // 		std::cout << " found boundary control nodes ==== " << std::endl;
 			for(unsigned k = 0; k < control_node_flag[c].size(); k++) {
 				  control_node_flag[c][i_vol] = 1;
 			    }
+			    
+			    
               }
-        }
+         }
       } 
         
         
-          
+      }   
     }
     
     return   control_node_flag;
@@ -2307,6 +2313,8 @@ unsigned nDof_iel_vec = 0;
  //************ set control flag *********************
   std::vector< std::vector< int > > control_node_flag = 
        is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
+       
+       ///@todo here I have to do it "on the go", for each boundary dof!!!
   //*************************************************** 
       
 

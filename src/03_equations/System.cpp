@@ -103,8 +103,8 @@ const unsigned System::GetSolPdeIndex(const char solname[]) const {
   unsigned index=0;
   while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
     index++;
-    if (index==_SolSystemPdeIndex.size()) {
-      std::cout<<"error! invalid name entry" << std::endl;
+    if (index == _SolSystemPdeIndex.size()) {
+      std::cout << "error! invalid name entry" << std::endl;
       abort();
     }
   }

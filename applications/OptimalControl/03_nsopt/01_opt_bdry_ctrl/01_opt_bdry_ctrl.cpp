@@ -954,8 +954,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
  //************ set control flag *********************
     int control_el_flag = 0;
         control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
-    std::vector< std::vector<int> > control_node_flag(dim);
-	    for(unsigned idim=0; idim < dim; idim++) {
+    std::vector< std::vector<int> > control_node_flag(n_components_ctrl);
+	    for(unsigned idim=0; idim < control_node_flag.size(); idim++) {
 	          control_node_flag[idim].resize(nDofsGctrl);
     std::fill(control_node_flag[idim].begin(), control_node_flag[idim].end(), 0);
 	    }
@@ -1045,7 +1045,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
 		  std::vector<bool> dir_bool(dim);
 		  for(unsigned idim = 0; idim < dim; idim++) {
-		      dir_bool[idim] = /*false; //*/ml_sol->GetBdcFunctionMLProb()(& ml_prob, geom_element_iel.get_elem_center_bdry_3d(),ctrl_name[idim].c_str(),tau,face_in_rectangle_domain,0.);
+		      dir_bool[idim] = /*false; //*/ml_sol->GetBdcFunctionMLProb()(& ml_prob, geom_element_iel.get_elem_center_bdry_3d(), ctrl_name[idim].c_str(), tau, face_in_rectangle_domain, 0.);
 		  }
 	  
 	
@@ -1127,7 +1127,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 	      /* (control_node_flag[i])       picks nodes on \Gamma_c
 	         (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
 	       */
-		    for(unsigned idim=0; idim<dim; idim++) {
+		    for(unsigned idim = 0; idim < control_node_flag.size(); idim++) {
 			if (dir_bool[idim] == false) { 
 // 		std::cout << " found boundary control nodes ==== " << std::endl;
 			    for(unsigned k=0; k < control_node_flag[idim].size(); k++) {
@@ -1886,11 +1886,6 @@ double integral_g_dot_n = 0.;
  //************ set control flag *********************
   int control_el_flag = 0;
         control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
-  std::vector< std::vector<int> > control_node_flag(dim);
-	    for(unsigned idim=0; idim<dim; idim++) {
-	      control_node_flag[idim].resize(nDofsVctrl);
-   /*if (control_el_flag == 0)*/ std::fill(control_node_flag[idim].begin(), control_node_flag[idim].end(), 0);
-	    }
  //*************************************************** 
 
 //========BoundaryLoop=====================================================================
