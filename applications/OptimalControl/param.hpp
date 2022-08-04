@@ -703,18 +703,14 @@ void el_dofs_unknowns_vol(const Solution*                sol,
          
 	      const bool  dir_bool_c = ml_sol->GetBdcFunctionMLProb()(ml_prob, geom_element_iel.get_elem_center_bdry_3d(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
 
-
+	      if (dir_bool_c == false) {
+              
           const unsigned ndofs_ctrl_bdry = msh->GetElementFaceDofNumber(iel, iface, SolFEType_Mat[pos_mat_ctrl + c]);
 		  for(unsigned i_bdry = 0; i_bdry < ndofs_ctrl_bdry; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 		
-	      if (dir_bool_c == false) { 
-// 		std::cout << " found boundary control nodes ==== " << std::endl;
-			for(unsigned k = 0; k < control_node_flag_iel_all_faces[c].size(); k++) {
 				  control_node_flag_iel_all_faces[c][i_vol] = 1;
-			    }
-			    
 			    
               }
          }

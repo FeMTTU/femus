@@ -37,7 +37,7 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  // 1 internal routine; 0 external routine
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
 // you have to be careful with the nonlinear iterations, because sometimes the algorithm restarts and the nonlinear index is set back to zero!!!
 // The first matrix before the boundary conditions and the first residual seem to be exactly the same...
 // Maybe what is different is the matrix and residual AFTER the Boundary Conditions...  
@@ -727,7 +727,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(max_size);
-      phi_x_gss_fe[fe].reserve(max_size*dim_offset_grad /*space_dim*/);
+      phi_x_gss_fe[fe].reserve(max_size * dim_offset_grad);
    }
    
    
@@ -735,16 +735,20 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   vector < vector < double > > phi_bd_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_bd_gss_fe(NFE_FAMS);
 
+    for(int fe=0; fe < NFE_FAMS; fe++) {  
+        phi_bd_gss_fe[fe].reserve(max_size);
+      phi_x_bd_gss_fe[fe].reserve(max_size * dim_offset_grad);
+  //bdry vol adj  evaluated at bdry points
+    }
+    
+    
   //bdry vol adj  evaluated at bdry points
    vector < vector < double > > phi_vol_at_bdry_fe(NFE_FAMS);
    vector < vector < double > > phi_x_vol_at_bdry_fe(NFE_FAMS);
 
     for(int fe=0; fe < NFE_FAMS; fe++) {  
-        phi_bd_gss_fe[fe].reserve(max_size);
-      phi_x_bd_gss_fe[fe].reserve(max_size * dim_offset_grad /*space_dim*/);
-  //bdry vol adj  evaluated at bdry points
          phi_vol_at_bdry_fe[fe].reserve(max_size);
-       phi_x_vol_at_bdry_fe[fe].reserve(max_size * dim_offset_grad /*space_dim*/);    
+       phi_x_vol_at_bdry_fe[fe].reserve(max_size * dim_offset_grad);
     }
   //==========================================================================================
    
@@ -948,7 +952,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   // equation end *****************************
   
   //***** set target domain flag ********************************** 
-
    int target_flag = 0;
        target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
    //***************************************       
@@ -1019,11 +1022,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   if (does_iel_contain_a_bdry_control_face == 1) {
 	  
       double tau = 0.;
-      vector<double> normal(dim_offset_grad /*space_dim*/,0);
+      vector<double> normal(dim_offset_grad, 0);
 	       
 	  // loop on faces of the current element
 
-      for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+      for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
 //-------          
        const unsigned ielGeom_bd = msh->GetElementFaceType(iel, jface);    
@@ -1046,7 +1049,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
 		  std::vector<bool> is_bc_for_control_dirichlet_on_jface(n_components_ctrl);
 		  for(unsigned idim = 0; idim < is_bc_for_control_dirichlet_on_jface.size(); idim++) {
-		      is_bc_for_control_dirichlet_on_jface[idim] = /*false; //*/ml_sol->GetBdcFunctionMLProb()(& ml_prob, geom_element_iel.get_elem_center_bdry_3d(), ctrl_name[idim].c_str(), tau, face_in_rectangle_domain, 0.);
+		      is_bc_for_control_dirichlet_on_jface[idim] = ml_sol->GetBdcFunctionMLProb()(& ml_prob, geom_element_iel.get_elem_center_bdry_3d(), ctrl_name[idim].c_str(), tau, face_in_rectangle_domain, 0.);
 		  }
 	  
 	
@@ -1255,7 +1258,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 			  //=============== grad dot n  =========================================    
 
 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
-				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*nDofsVadj + j] += control_node_flag_iel_jface[kdim][i_vol] * (-1.) * (weight_iqp_bdry  * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry]* IRe * grad_adj_dot_n_jac[kdim]);    		      
+				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*nDofsVadj + j] += control_node_flag_iel_jface[kdim][i_vol] * (-1.) * (weight_iqp_bdry  * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry] * IRe * grad_adj_dot_n_jac[kdim]);    		      
 			  }
 		} // end j loop for volume 
 //============ Jac mixed i-BDRY/j-VOL - END  ==================================================================================================
@@ -1265,7 +1268,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                 }  //end iqp_bdry loop
 	  
              }    //end if control face
-	 }  //end if boundary faces
+	     }  //end if boundary faces
       }  // loop over element faces //jface   
   } //end if control element flag
 
@@ -1633,6 +1636,7 @@ for (unsigned k = 0; k < dim; k++){
   
   JAC->close();
   RES->close();
+  
   
     if (print_algebra_global) {
     assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, mlPdeSys->GetNonlinearIt());
