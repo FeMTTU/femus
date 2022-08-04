@@ -674,11 +674,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
            * (1 - control_node_flag[c][i])   picks nodes on \Omega \setminus \Gamma_c
 	       */
           
-       std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
+       std::vector< std::vector< int > > control_node_flag_iel_all_faces(n_components_ctrl);
        
 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
-              control_node_flag[c].resize(Sol_n_el_dofs_Mat[pos_mat_ctrl + c]);
-              std::fill(control_node_flag[c].begin(), control_node_flag[c].end(), 0);   
+              control_node_flag_iel_all_faces[c].resize(Sol_n_el_dofs_Mat[pos_mat_ctrl + c]);
+              std::fill(control_node_flag_iel_all_faces[c].begin(), control_node_flag_iel_all_faces[c].end(), 0);   
          }
        
           
@@ -693,7 +693,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
             const int bdry_index = msh->el->GetFaceElementIndex(iel, iface);
             
 	    if( bdry_index < 0) {
-	      const unsigned int face_in_rectangle_domain = - ( msh->el->GetFaceElementIndex(iel,iface) + 1);
+	      const unsigned int face_in_rectangle_domain = - ( msh->el->GetFaceElementIndex(iel, iface) + 1);
          
          
          
@@ -711,8 +711,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 		
 	      if (dir_bool_c == false) { 
 // 		std::cout << " found boundary control nodes ==== " << std::endl;
-			for(unsigned k = 0; k < control_node_flag[c].size(); k++) {
-				  control_node_flag[c][i_vol] = 1;
+			for(unsigned k = 0; k < control_node_flag_iel_all_faces[c].size(); k++) {
+				  control_node_flag_iel_all_faces[c][i_vol] = 1;
 			    }
 			    
 			    
@@ -724,7 +724,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       }   
     }
     
-    return   control_node_flag;
+    return   control_node_flag_iel_all_faces;
     
   }
   
@@ -2315,7 +2315,7 @@ unsigned nDof_iel_vec = 0;
         
   
  //************ set control flag *********************
-  std::vector< std::vector< int > > control_node_flag = 
+  std::vector< std::vector< int > > control_node_flag_iel_all_faces = 
        is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
        
        ///@todo here I have to do it "on the go", for each boundary dof!!!
@@ -2402,7 +2402,7 @@ unsigned nDof_iel_vec = 0;
 //============ Bdry Residuals - BEGIN ==================	
            const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_ctrl_only, /*pos_mat_ctrl +*/ c, i_vol);
            
-                Res_ctrl_only[ res_pos ]  +=  - control_node_flag[c][i_vol] *  weight_iqp_bdry *
+                Res_ctrl_only[ res_pos ]  +=  - control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry *
                                          (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
 							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
 							                         );  //boundary optimality condition
@@ -2424,7 +2424,7 @@ unsigned nDof_iel_vec = 0;
 
           
            const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(Sol_n_el_dofs_Mat_ctrl_only, sum_Sol_n_el_dofs_ctrl_only, /*pos_mat_ctrl +*/ c, /*pos_mat_ctrl +*/ e, i_vol, j_vol);
-              Jac_ctrl_only[ jac_pos ]   +=  control_node_flag[c][i_vol] *  weight_iqp_bdry * (
+              Jac_ctrl_only[ jac_pos ]   +=  control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry * (
                                     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
 			                      + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_mat_dctrl_ctrl_bdry_gss);   
 				
