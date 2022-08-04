@@ -2229,11 +2229,12 @@ unsigned nDof_iel_vec = 0;
                         vector < unsigned > SolFEType_quantities,
                         //---- Quadrature - FE Evaluations -------
                         std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
-                        //---- Quadrature ------
+                        //---- Quadrature, Geometry ------
                         std::vector < std::vector < double > >  Jac_iel_bdry_iqp_bdry,
                         std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
                         double detJac_iel_bdry_iqp_bdry,
                         double weight_iqp_bdry,
+                        //---- Quadrature, Control ------
                         vector <double> phi_ctrl_iel_bdry_iqp_bdry,
                         vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
                         //---- Control -------
@@ -2309,6 +2310,9 @@ unsigned nDof_iel_vec = 0;
     Jac_ctrl_only.resize(res_length * res_length);    std::fill(Jac_ctrl_only.begin(), Jac_ctrl_only.end(), 0.);
  //***************************************************
 
+
+    if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
+        
   
  //************ set control flag *********************
   std::vector< std::vector< int > > control_node_flag = 
@@ -2317,9 +2321,6 @@ unsigned nDof_iel_vec = 0;
        ///@todo here I have to do it "on the go", for each boundary dof!!!
   //*************************************************** 
       
-
-    if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
-        
 	  
 	  // loop on faces of the current element
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
