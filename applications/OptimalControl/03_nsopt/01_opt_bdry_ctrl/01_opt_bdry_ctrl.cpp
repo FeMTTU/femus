@@ -37,10 +37,12 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  // 1 internal routine; 0 external routine
 // you have to be careful with the nonlinear iterations, because sometimes the algorithm restarts and the nonlinear index is set back to zero!!!
 // The first matrix before the boundary conditions and the first residual seem to be exactly the same...
 // Maybe what is different is the matrix and residual AFTER the Boundary Conditions...  
+  
+  //Maybe the problem is the normal derivative of the adjoint..., all its vector components...
 //**************************************
 
 //****** Mesh ********************************
@@ -959,7 +961,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
  //************ set control flag *********************
     int does_iel_contain_a_bdry_control_face = 0;
         does_iel_contain_a_bdry_control_face = ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
- //************ set control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
+ //************ initialize control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
     std::vector< std::vector<int> > control_node_flag_iel_jface(n_components_ctrl);
 	    for(unsigned idim=0; idim < control_node_flag_iel_jface.size(); idim++) {
 	          control_node_flag_iel_jface[idim].resize(nDofsGctrl);
@@ -967,7 +969,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 	    }
  //*************************************************** 
   
-   //STATE###################################################################  
+   //###################################################################  
     unsigned int fake_iel_flag = 0;
     unsigned int global_row_index_bdry_constr = pdeSys->KKoffset[SolPdeIndex[theta_index]][iproc];
   for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -995,7 +997,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
    
  //************ end set fake theta flag *********************
 
-// setting Jac and Res to zero ******************************* 
+// setting Jac and Res to zero  - BEGIN ******************************* 
     for(int ivar=0; ivar<n_unknowns; ivar++) {
               Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs_Mat_vol[ivar]);
       memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs_Mat_vol[ivar]*sizeof(double));
@@ -1012,7 +1014,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
      
     for(int ivar = 0; ivar < dim; ivar++)     std::fill(Jac_outer[ivar].begin(), Jac_outer[ivar].end(), 0.); //did not use Jac_outer as Jac itself was placing the values as expected
     Res_outer[0] = 0.;
- // setting Jac and Res to zero ******************************* 
+// setting Jac and Res to zero  - END ******************************* 
 
   
   
@@ -1135,7 +1137,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 		  
 //============ Res _ Boundary Integral Constraint - END ============================================================================================
 		
-//=============== construct control node flag  =========================================    
+//=============== construct control node flag - BEGIN =========================================    
 //this is all based on jface only!!!
 
 	      /* (control_node_flag_iel_jface)       picks nodes on \Gamma_c
@@ -1156,7 +1158,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 		    }
 		
         }
-//=============== construct control node flag  =========================================    
+//=============== construct control node flag - END =========================================    
         
 
         const unsigned nve_bdry_max = msh->GetElementFaceDofNumber(iel, jface, solType_coords);
@@ -1164,8 +1166,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   // *** phi_i loop ***
         		for(unsigned i_bdry = 0; i_bdry < nve_bdry_max; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-
-//Boundary Residuals  and Jacobians ==================	
 
 		  
 //============ Boundary Residuals - BEGIN ============================================================================================
@@ -1192,7 +1192,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 //============ Boundary Residuals - END ==================================================================================================
 
 
-//============ Jac _ Boundary Integral Constraint - BEGIN ============================================================================================
+//============ Jac _ Boundary Integral Constraint ///@todo why not a residual here as well?! - BEGIN ============================================================================================
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 			  for(unsigned i =0; i < nDofsThetactrl; i ++) {
 			    if(i_vol < nDofsGctrl) {
@@ -1208,7 +1208,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
 
 
-//============ Jac on BDRY - BEGIN  ==================================================================================================
+//============ Boundary Jacobians - BEGIN  ==================================================================================================
 		  
 		      for(unsigned j_bdry=0; j_bdry < nve_bdry_max; j_bdry ++) {
 			  unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
@@ -1241,7 +1241,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 			  }//endif
                    
                        }//end j_bdry loop
-//============ Jac - END  ==================================================================================================
+//============ Boundary Jacobians - END  ==================================================================================================
 		    
 //============ Jac mixed i-BDRY/j-VOL - BEGIN  ==================================================================================================
 //BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
@@ -1274,7 +1274,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
 //======== BoundaryLoop - END ==== End Boundary Residuals  and Jacobians ==================	
     
-    
+    ///@todo at this point, the node flag has been filled for ALL faces
     
     
 //======================= Loop without Integration - BEGIN =====================================================    
@@ -1288,12 +1288,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
         }//i_theta loop
    
  //============ delta_theta row ==================================================================================================
- //======================= Loop without Integration - END =====================================================    
+//======================= Loop without Integration - END =====================================================    
 
  
  
  
-//======================= VolumeLoop with Integration (and fake boundary) - BEGIN =====================================================    
+//======================= VolumeLoop with Integration (and Zero boundary control outside Gamma_c) - BEGIN =====================================================    
 
 for(unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 	
@@ -1581,11 +1581,11 @@ for (unsigned k = 0; k < dim; k++){
  
       }  // end gauss point loop
       
-//======================= VolumeLoop with Integration (and fake boundary) - END =====================================================    
+//======================= VolumeLoop with Integration (and Zero boundary control outside Gamma_c) - END =====================================================    
 
     
     
-      //***************************************************************************************************************
+ //======================= From local to global - BEGIN =====================================================    
 
     //Sum the local matrices/vectors into the Global Matrix/Vector
     // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN 
@@ -1629,8 +1629,8 @@ for (unsigned k = 0; k < dim; k++){
           }
     }
      
-    
-     //--------------------------------------------------------------------------------------------------------  
+ //======================= From local to global - END =====================================================    
+   
   } //end list of elements loop for each subdomain
   
   
