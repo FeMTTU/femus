@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 #ns_poiseuille - Poiseuille flow in a 2d box
 ADD_SUBDIRECTORY(./ns_poiseuille) 
