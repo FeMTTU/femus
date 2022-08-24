@@ -37,7 +37,7 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  // 1 internal routine; 0 external routine
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
 // you have to be careful with the nonlinear iterations, because sometimes the algorithm restarts and the nonlinear index is set back to zero!!!
 // The first matrix before the boundary conditions and the first residual seem to be exactly the same...
 // Maybe what is different is the matrix and residual AFTER the Boundary Conditions...  
@@ -62,7 +62,7 @@ using namespace femus;
 
 //**************************************
  double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
- double penalty_ctrl = 1.e10;         //penalty for u=q
+ double penalty_ctrl = 1.e10;         //penalty for u = q
  double theta_value_outside_fake_element = 0.;
  //**************************************
  
@@ -503,9 +503,9 @@ int main(int argc, char** args) {
 // 
        const unsigned level_index_current = 0;
       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-       const unsigned n_vars = ml_sol.GetSolutionLevel(level_index_current)->_Sol.size();
+       const unsigned n_vars_sol = ml_sol.GetSolutionLevel(level_index_current)->_Sol.size();
        
-        for(unsigned short j = 0; j < n_vars; j++) {  
+        for(unsigned short j = 0; j < n_vars_sol; j++) {  
                *(ml_sol_all_levels->GetLevel(i)->_Sol[j]) = *(ml_sol.GetSolutionLevel(level_index_current)->_Sol[j]);
         }
  #endif
@@ -654,16 +654,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
  
   
   //=== Unknowns - BEGIN ========================================================
-  const int n_vars = dim + 1;
-  const int n_unknowns = 3*n_vars; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
+  const int n_vars_state = dim + 1;
+  const int n_unknowns = 3 * n_vars_state; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
   
-  const int vel_type_pos     = 0;
-  const int press_type_pos   = dim;
-  const int adj_vel_type_pos = vel_type_pos;
   const int state_pos_begin  = 0;
-  const int adj_pos_begin    = dim + 1;
+  const int press_type_pos   = dim;
+  const int adj_pos_begin    = press_type_pos + 1;
   const int ctrl_pos_begin   = 2 * (dim + 1);
-  const int theta_index      = press_type_pos + ctrl_pos_begin;
+  const int theta_index      = ctrl_pos_begin + dim;
   
   
   const int pos_mat_ctrl = ctrl_pos_begin;
@@ -938,7 +936,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   // geometry end *****************************
   
   // equation *****************************
-    unsigned nDofsV = msh->GetElementDofNumber(iel, SolFEType_Mat[vel_type_pos]);
+    unsigned nDofsV = msh->GetElementDofNumber(iel, SolFEType_Mat[state_pos_begin]);
     unsigned nDofsP = msh->GetElementDofNumber(iel, SolFEType_Mat[state_pos_begin + press_type_pos]);
     
     unsigned nDofsVadj = msh->GetElementDofNumber(iel,SolFEType_Mat[adj_pos_begin]);
@@ -1079,7 +1077,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
 //========== compute gauss quantities on the boundary - BEGIN ===============================================
 
-//=============== control ========================================= 
+//=============== control - BEGIN ========================================= 
 		    for (unsigned  kdim = 0; kdim < n_components_ctrl; kdim++) {
                 
 			    unsigned int ctrl_index = kdim + ctrl_pos_begin;
@@ -1101,9 +1099,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 			  }
 			  
 		    }
-//=============== control ========================================= 
+//=============== control - END ========================================= 
  
-//=============== grad dot n for residual ========================================= 
+//=============== grad dot n - BEGIN ========================================= 
 //     compute gauss quantities on the boundary through VOLUME interpolation
 		for(unsigned ldim = 0; ldim<dim; ldim++) {   sol_adj_x_vol_at_bdry_gss[ldim].resize(dim_offset_grad); }
 		grad_adj_dot_n_res.resize(dim);
@@ -1123,19 +1121,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 		  }
 		}
 		
-//=============== grad dot n  for residual =========================================       
+//=============== grad dot n - END =========================================       
 		  
 //========== compute gauss quantities on the boundary - END ================================================
 
-		
-//============ Res _ Boundary Integral Constraint - BEGIN ============================================================================================
-	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
-// 		for(unsigned i=0; i < nDofsThetactrl; i ++) { avoid because it is an element dof
-/*delta_theta row */ 	/* Res[theta_index][i]*/ Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_iqp_bdry * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
-// 		}  
-	  }
-		  
-//============ Res _ Boundary Integral Constraint - END ============================================================================================
 		
 //=============== construct control node flag - BEGIN =========================================    
 //this is all based on jface only!!!
@@ -1167,8 +1156,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
         		for(unsigned i_bdry = 0; i_bdry < nve_bdry_max; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
-		  
-//============ Boundary Residuals - BEGIN ============================================================================================
+//============ Boundary and Mixed Boundary-Volume Residuals - BEGIN ============================================================================================
 		  
 		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
 			
@@ -1189,26 +1177,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                                                                                         );	    
 		      }//kdim  
 
-//============ Boundary Residuals - END ==================================================================================================
+//============ Boundary and Mixed Boundary-Volume Residuals - END ==================================================================================================
 
-
-//============ Jac _ Boundary Integral Constraint ///@todo why not a residual here as well?! - BEGIN ============================================================================================
-		    for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-			  for(unsigned i =0; i < nDofsThetactrl; i ++) {
-			    if(i_vol < nDofsGctrl) {
-				double temp = weight_iqp_bdry * ( phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);
-//ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
-			      Jac[theta_index][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol]     += - temp; /*weight_iqp_bdry * ( phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim])*/
-//COLUMN_BLOCK delta_control - theta ---- loop over j in the VOLUME (while i(/i_vol) is in the boundary) ---------------------------------------------------------------------------------------------------
-			      Jac[ctrl_pos_begin + kdim][theta_index][i_vol*nDofsThetactrl + i] += - control_node_flag_iel_jface[kdim][i_vol] /** phi_bd_gss_fe[SolFEType_Mat[theta_index]][i]*/*temp; /*weight_iqp_bdry * ( phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);*/
-			    }//endif
-			  }// i 
-		    }//kdim
-//============ Jac _ Boundary Integral Constraint - END ============================================================================================
-
-
-
-//============ Boundary Jacobians - BEGIN  ==================================================================================================
+//============ Boundary and Mixed Boundary-Volume Jacobians - BEGIN  ==================================================================================================
 		  
 		      for(unsigned j_bdry=0; j_bdry < nve_bdry_max; j_bdry ++) {
 			  unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
@@ -1241,7 +1212,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 			  }//endif
                    
                        }//end j_bdry loop
-//============ Boundary Jacobians - END  ==================================================================================================
 		    
 //============ Jac mixed i-BDRY/j-VOL - BEGIN  ==================================================================================================
 //BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
@@ -1262,9 +1232,43 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 			  }
 		} // end j loop for volume 
 //============ Jac mixed i-BDRY/j-VOL - END  ==================================================================================================
+
+//============ Boundary and Mixed Boundary-Volume Jacobians - END  ==================================================================================================
 		  
 		    }//end i_bdry loop
 
+
+		    
+//============ Boundary Integral Constraint Residual - BEGIN ============================================================================================
+	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
+// 		for(unsigned i=0; i < nDofsThetactrl; i ++) { avoid because it is an element dof
+/*delta_theta row */ 	/* Res[theta_index][i]*/ Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_iqp_bdry * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
+// 		}  
+	  }
+		  
+//============ Boundary Integral Constraint Residual - END ============================================================================================
+		
+//============ Boundary Integral Constraint Jacobian - BEGIN ============================================================================================
+       		for(unsigned i_bdry = 0; i_bdry < nve_bdry_max; i_bdry++) {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+            
+ 		    for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+			  for(unsigned i =0; i < nDofsThetactrl; i ++) {
+			    if(i_vol < nDofsGctrl) {
+				double temp = weight_iqp_bdry * ( phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);
+//ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
+			      Jac[theta_index][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol]     += - temp; /*weight_iqp_bdry * ( phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim])*/
+//COLUMN_BLOCK delta_control - theta ---- loop over j in the VOLUME (while i(/i_vol) is in the boundary) ---------------------------------------------------------------------------------------------------
+			      Jac[ctrl_pos_begin + kdim][theta_index][i_vol*nDofsThetactrl + i] += - control_node_flag_iel_jface[kdim][i_vol] /** phi_bd_gss_fe[SolFEType_Mat[theta_index]][i]*/*temp; /*weight_iqp_bdry * ( phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);*/
+			    }//endif
+			  }// i 
+		    }//kdim           
+            
+            
+            }		    
+//============ Boundary Integral Constraint Jacobian - END ============================================================================================
+		    
+		    
                 }  //end iqp_bdry loop
 	  
              }    //end if control face
@@ -1317,7 +1321,7 @@ for(unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNum
 //geometry eval at gauss points - END  ********************************
 
 //begin unknowns eval at gauss points ********************************
-	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
+	for(unsigned unk = 0; unk < n_unknowns; unk++) {
 	    SolVAR_qp[unk] = 0.;
 	    for(unsigned ivar2 = 0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) {
            gradSolVAR_qp[unk][ivar2] = 0.; 
@@ -1590,7 +1594,7 @@ for (unsigned k = 0; k < dim; k++){
     //Sum the local matrices/vectors into the Global Matrix/Vector
     // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN 
     for(unsigned i_unk = 0; i_unk < n_unknowns-1; i_unk++) {
-      RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],L2G_dofmap_Mat[i_unk]);
+      RES->add_vector_blocked(Res[SolPdeIndex[i_unk]], L2G_dofmap_Mat[i_unk]);
         for(unsigned j_unk = 0; j_unk < n_unknowns-1; j_unk++) {
 	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], L2G_dofmap_Mat[i_unk], L2G_dofmap_Mat[j_unk]);
         }
@@ -2052,11 +2056,9 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
   //geometry *******************************
 
  // solution variables *******************************************
-  const int n_vars = dim+1;
-  const int n_unknowns = 3*n_vars; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
-  const int vel_type_pos = 0;
+  const int n_vars_state = dim+1;
+  const int n_unknowns = 3*n_vars_state; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
   const int press_type_pos = dim;
-  const int adj_vel_type_pos = vel_type_pos;
   const int state_pos_begin = 0;
   const int adj_pos_begin   = dim+1;
   const int ctrl_pos_begin   = 2*(dim+1);
@@ -2171,7 +2173,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
   
   
  // equation *****************************
-    unsigned nDofsV = msh->GetElementDofNumber(iel, SolFEType_Mat[vel_type_pos]);    // number of solution element dofs
+    unsigned nDofsV = msh->GetElementDofNumber(iel, SolFEType_Mat[state_pos_begin]);    // number of solution element dofs
     unsigned nDofsP = msh->GetElementDofNumber(iel, SolFEType_Mat[state_pos_begin + press_type_pos]);    // number of solution element dofs
     
     unsigned nDofsVadj = msh->GetElementDofNumber(iel,SolFEType_Mat[adj_pos_begin]);    // number of solution element dofs
