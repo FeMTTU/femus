@@ -986,8 +986,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   //###################################################################
     
    //************ set fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable *********************
-    std::vector<int>  bdry_int_constr_pos_vec(1,global_row_index_bdry_constr); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
-    std::vector<int> fake_theta_flag(nDofsThetactrl,0);
+    std::vector<int>  bdry_int_constr_pos_vec(1, global_row_index_bdry_constr); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
+    std::vector<int> fake_theta_flag(nDofsThetactrl, 0);
     for (unsigned i = 0; i < nDofsThetactrl; i++) {
       if ( L2G_dofmap_Mat[ SolPdeIndex[theta_index] ] [i] == bdry_int_constr_pos_vec[0]) { 	fake_theta_flag[i] = 1;       }
     }
@@ -1280,20 +1280,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
     
     ///@todo at this point, the node flag has been filled for ALL faces
     
-    
-//======================= Loop without Integration - BEGIN =====================================================    
-    
-        //============ delta_theta - theta row ==================================================================================================
-  for (unsigned i = 0; i < nDofsThetactrl; i++) {
-             /* if ( fake_theta_flag[i] != 1 ) */             Res[ theta_index ][i]    = - (1 - fake_theta_flag[i]) * ( theta_value_outside_fake_element - sol_eldofs_Mat[SolPdeIndex[theta_index]][i]);  // Res_outer for the exact row (i.e. when fakeflag=1 , res =0(use Res_outer) and if not 1 this loop) and this is to take care of fake placement for the rest of dofs of theta values as 8
-     for (unsigned j = 0; j < nDofsThetactrl; j++) {
-			         if(i == j)  Jac[ theta_index ][ theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.; //likewise Jac_outer (actually Jac itself works in the correct placement) for bdry integral and this is for rest of dofs
-             }//j_theta loop
-        }//i_theta loop
-   
- //============ delta_theta row ==================================================================================================
-//======================= Loop without Integration - END =====================================================    
-
  
  
  
@@ -1589,6 +1575,21 @@ for (unsigned k = 0; k < dim; k++){
 
     
     
+//======================= Loop without Integration For Fake Dofs related to Compatibility Condition - BEGIN =====================================================    
+    
+        //============ delta_theta - theta row ==================================================================================================
+  for (unsigned i = 0; i < nDofsThetactrl; i++) {
+             /* if ( fake_theta_flag[i] != 1 ) */             Res[ theta_index ][i]    = - (1 - fake_theta_flag[i]) * ( theta_value_outside_fake_element - sol_eldofs_Mat[SolPdeIndex[theta_index]][i]);  // Res_outer for the exact row (i.e. when fakeflag=1 , res =0(use Res_outer) and if not 1 this loop) and this is to take care of fake placement for the rest of dofs of theta values as 8
+     for (unsigned j = 0; j < nDofsThetactrl; j++) {
+			         if(i == j)  Jac[ theta_index ][ theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.; //likewise Jac_outer (actually Jac itself works in the correct placement) for bdry integral and this is for rest of dofs
+             }//j_theta loop
+        }//i_theta loop
+   
+ //============ delta_theta row ==================================================================================================
+//======================= Loop without Integration For Fake Dofs related to Compatibility Condition - END =====================================================    
+
+
+
  //======================= From local to global - BEGIN =====================================================    
 
     //Sum the local matrices/vectors into the Global Matrix/Vector
