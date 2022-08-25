@@ -37,7 +37,7 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  // 1 internal routine; 0 external routine
 // you have to be careful with the nonlinear iterations, because sometimes the algorithm restarts and the nonlinear index is set back to zero!!!
 // The first matrix before the boundary conditions and the first residual seem to be exactly the same...
 // Maybe what is different is the matrix and residual AFTER the Boundary Conditions...  
@@ -597,8 +597,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   unsigned   nprocs = msh->n_processors();
 
 
-  constexpr bool print_algebra_global = true;
-  constexpr bool print_algebra_local = true;
+  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_local = false;
 
   
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -998,14 +998,16 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 // setting Jac and Res to zero  - BEGIN ******************************* 
     for(int ivar=0; ivar<n_unknowns; ivar++) {
               Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs_Mat_vol[ivar]);
-      memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs_Mat_vol[ivar]*sizeof(double));
+     std::fill(Res[SolPdeIndex[ivar]].begin(), Res[SolPdeIndex[ivar]].end(), 0.);         
+//       memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs_Mat_vol[ivar]*sizeof(double));
     }
    
     for(int ivar=0; ivar<n_unknowns; ivar++) {
       for(int jvar=0; jvar<n_unknowns; jvar++) {
 	    if(assembleMatrix){  //MISMATCH
                   Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ].resize(Sol_n_el_dofs_Mat_vol[ivar]*Sol_n_el_dofs_Mat_vol[jvar]);
-		  memset(&Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ][0], 0., Sol_n_el_dofs_Mat_vol[ivar]*Sol_n_el_dofs_Mat_vol[jvar]*sizeof(double));
+     std::fill(Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ].begin(), Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ].end(), 0.);         
+// 		  memset(&Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ][0], 0., Sol_n_el_dofs_Mat_vol[ivar]*Sol_n_el_dofs_Mat_vol[jvar]*sizeof(double));
            }
         }
      }
