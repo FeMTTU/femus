@@ -962,7 +962,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     alpha,
                     beta,
                     RHS_ONE,
-                    qrule_i
+                    qrule_i,
+                    //-----------
+                    print_algebra_local
+
                     ) ;
   
   }

@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS   1
+#define N_UNIFORM_LEVELS   6
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -2248,7 +2248,9 @@ unsigned nDof_iel_vec = 0;
                         const double beta,
                         const double RHS_ONE,
                         //-----------
-                        const unsigned qrule_i
+                        const unsigned qrule_i,
+                        //-----------
+                        const bool print_algebra_local
                        ) {
       
    
@@ -2447,11 +2449,14 @@ unsigned nDof_iel_vec = 0;
                   if (assembleMatrix) {
                      KK->add_matrix_blocked(Jac_ctrl_only, L2G_dofmap_Mat_ctrl_only, L2G_dofmap_Mat_ctrl_only);
                   }   
-               
-     
-         assemble_jacobian<double,double>::print_element_residual(iel, Res_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
-         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
-     
+         
+         
+         
+        if (print_algebra_local) {
+  
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
+        }
      
     }  //iel
 

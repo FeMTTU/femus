@@ -37,12 +37,7 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   1  // 1 internal routine; 0 external routine
-// you have to be careful with the nonlinear iterations, because sometimes the algorithm restarts and the nonlinear index is set back to zero!!!
-// The first matrix before the boundary conditions and the first residual seem to be exactly the same...
-// Maybe what is different is the matrix and residual AFTER the Boundary Conditions...  
-  
-  //Maybe the problem is the normal derivative of the adjoint..., all its vector components...
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
 //**************************************
 
 //****** Mesh ********************************
@@ -293,8 +288,8 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
     // ======= Files ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool use_output_time_folder = true;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -597,7 +592,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   unsigned   nprocs = msh->n_processors();
 
 
-  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_global = true;
   constexpr bool print_algebra_local = false;
 
   
@@ -910,7 +905,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                     alpha,
                     beta,
                     RHS_ONE,
-                    qrule_i
+                    qrule_i,
+                    //-----------
+                    print_algebra_local
                     ) ;
   
   }
@@ -1183,7 +1180,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                                                                                         + IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_res_dctrl_ctrl_bd_kdim
                                                                                         - IRe * grad_adj_dot_n_res[kdim]  * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry]
                                                                                         - /*(*sol->_Sol[SolIndex_Mat[theta_index]])(0)*/solTheta * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]      //*sol->_Sol[SolIndex_Mat[theta_index]])(0) finds the global value from KKDof pos(72, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
-                                                                                        );	    
+                                                                                        );
+
 		      }//kdim  
 
 //============ Boundary-Boundary and Boundary-Volume Residuals - END ==================================================================================================
@@ -1605,23 +1603,24 @@ for (unsigned k = 0; k < dim; k++){
  //======================= From local to global - BEGIN =====================================================    
 
     //Sum the local matrices/vectors into the Global Matrix/Vector
-    // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN 
+    // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN - BEGIN 
     for(unsigned i_unk = 0; i_unk < n_unknowns-1; i_unk++) {
       RES->add_vector_blocked(Res[SolPdeIndex[i_unk]], L2G_dofmap_Mat[i_unk]);
         for(unsigned j_unk = 0; j_unk < n_unknowns-1; j_unk++) {
 	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], L2G_dofmap_Mat[i_unk], L2G_dofmap_Mat[j_unk]);
         }
     }
+    // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN - END 
     
-    // THEN THE BLOCKS WITH THETA ROW OR COLUMN 
+    // THEN THE BLOCKS WITH THETA ROW OR COLUMN - BEGIN
 	/*delta_theta-theta*/    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], L2G_dofmap_Mat[n_unknowns-1], L2G_dofmap_Mat[n_unknowns-1]);
 	    
      if (does_iel_contain_a_bdry_control_face == 1) {
 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
-                          /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]], L2G_dofmap_Mat[n_unknowns-2-kdim]); 
+// // //                           /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]], L2G_dofmap_Mat[n_unknowns-2-kdim]); 
 		if(assembleMatrix) {
                           /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, L2G_dofmap_Mat[n_unknowns-2-kdim]);
-                          /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], L2G_dofmap_Mat[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
+                          /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], L2G_dofmap_Mat[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
 		}
       }  //kdim
      }  //add control boundary element contributions
@@ -1632,6 +1631,7 @@ for (unsigned k = 0; k < dim; k++){
 	  }
 	  
      /* if (L2G_dofmap_Mat[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta(fake)*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       L2G_dofmap_Mat[n_unknowns-1]);
+    // THEN THE BLOCKS WITH THETA ROW OR COLUMN - END
 	  
 
   
