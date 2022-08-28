@@ -24,22 +24,9 @@
 #include "../../../param.hpp"
 
 
-//***** Implementation-related ****************** 
+//***** Implementation-related: where are L2 and H1 norms implemented ****************** 
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
-//**************************************
-
-//***** Quadrature-related ****************** 
-// for integrations in the same element
-#define Nsplit 0
-#define Quadrature_split_index  0
-
-//for semi-analytical integration in the unbounded domain
-#define N_DIV_UNBOUNDED  10
-
-#define QRULE_I   0
-#define QRULE_J   1
-#define QRULE_K   QRULE_I
-//**************************************
+//***********************************************************************
 
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
@@ -72,18 +59,25 @@
 //**************************************
 
 
-//***** Domain-related ****************** 
-#define EX_1        GAMMA_CONTROL_LOWER
-#define EX_2        GAMMA_CONTROL_UPPER
-#define EY_1        0.
-#define EY_2        1.   ///@todo  see here
 
-#define DOMAIN_EX_1 0
-#define DOMAIN_EX_2 1
+#define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
+
+
+//***** Quadrature-related ****************** 
+// for integrations in the same element
+#define Nsplit 0
+#define Quadrature_split_index  0
+
+//for semi-analytical integration in the unbounded domain
+#define N_DIV_UNBOUNDED  10
+
+#define QRULE_I   0
+#define QRULE_J   1
+#define QRULE_K   QRULE_I
 //**************************************
 
 
-#define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
+
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
@@ -542,7 +536,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
-  SparseMatrix*             KK = pdeSys->_KK;
+  SparseMatrix*            JAC = pdeSys->_KK;
   NumericVector*           RES = pdeSys->_RES;
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -576,15 +570,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   phi_coords.reserve(max_size);
   phi_coords_x.reserve(max_size * space_dim);
   
- //********************* bdry cont *******************
- //*************************************************** 
-  std::vector <double> phi_coords_iqp_bdry;  
-  std::vector <double> phi_coords_x_iqp_bdry; 
-
-  phi_coords_iqp_bdry.reserve(max_size);
-  phi_coords_x_iqp_bdry.reserve(max_size * space_dim);
-
- //*************************************************** 
 
  //********************* state *********************** 
  //*************************************************** 
@@ -750,7 +735,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
   
   RES->zero();  
-  if (assembleMatrix)  KK->zero();
+  if (assembleMatrix)  JAC->zero();
 
  //*************************************************** 
 // ---
@@ -760,6 +745,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     for (unsigned d = 0; d < JacI_iqp.size(); d++) { JacI_iqp[d].resize(dim); }
     
     double detJac_iqp;
+  double weight_iqp = 0.;
 // ---
 
 // ---
@@ -769,20 +755,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     for (unsigned d = 0; d < JacI_iqp_bdry.size(); d++) { JacI_iqp_bdry[d].resize(dim-1); }
     
     double detJac_iqp_bdry;
-// ---
-    
-// ---
-     std::vector < std::vector < double > >  JacI_jqp_bdry(space_dim);
-     std::vector < std::vector < double > >  Jac_jqp_bdry(dim-1);
-    for (unsigned d = 0; d < Jac_jqp_bdry.size(); d++) {   Jac_jqp_bdry[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_jqp_bdry.size(); d++) { JacI_jqp_bdry[d].resize(dim-1); }
-    
-    double detJac_jqp_bdry;
-    
-  double weight_iqp = 0.;
   double weight_iqp_bdry = 0.;
 
 // ---
+    
 //*************************************************** 
 
     //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
@@ -797,31 +773,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
 
-  double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
   
-//*************************************************** 
-  unsigned n_max = pow(2,dim_bdry);
-  std::vector < double > extremes(n_max);
-  extremes[0] = EX_1;
-  extremes[1] = EX_2;
-  if(dim_bdry == 2){
-    extremes[2] = EY_1;
-    extremes[3] = EY_2;
-  }
-  
-  std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 ) 
-  for(unsigned d = 0; d < dim; d++) {
-      ex_control[d].reserve(n_max);
-  }
-  int control_xyz = (FACE_FOR_CONTROL - 1) / 2;
-  bool ctrl_min_max = (FACE_FOR_CONTROL - 1) % 2;
-  for(unsigned d = 0; d < dim; d++) {
-    for(unsigned n_e = 0; n_e < n_max; n_e++){
-      if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
-      else ex_control[d][n_e] = extremes[n_e];
-    }
-  }
-//*************************************************** 
 
 
   //--- quadrature rules -------------------
@@ -846,7 +798,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     pdeSys,
                     //-----------
                     geom_element_iel,
-                    geom_element_jel,
                     solType_coords,
                     dim,
                     space_dim,
@@ -872,24 +823,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     JacI_iqp_bdry,
                     detJac_iqp_bdry,
                     weight_iqp_bdry,
-                    phi_coords_iqp_bdry,
-                    phi_coords_x_iqp_bdry, 
                     phi_ctrl_bdry,
                     phi_ctrl_x_bdry, 
-                    //-----------
-                    Jac_jqp_bdry,
-                    JacI_jqp_bdry,
-                    detJac_jqp_bdry,
-//                     weight_bdry,
-//                     phi_ctrl_bdry,
-//                     phi_ctrl_x_bdry, 
                     //-----------
                     n_components_ctrl,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
                     IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
                     //-----------
-                    KK,
+                    JAC,
                     RES,
                     assembleMatrix,
                     //-----------
@@ -897,20 +839,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     beta,     
                     s_frac,
                     check_limits,
-                    C_ns,
+                    USE_Cns,
                     OP_Hhalf,
                     OP_L2,
                     RHS_ONE,
                     UNBOUNDED,
-                    //-----------
-                    ex_control,
                     //-----------
                     qrule_i,
                     qrule_j,
                     qrule_k,
                     Nsplit,
                     Quadrature_split_index,
-                    N_DIV_UNBOUNDED
+                    N_DIV_UNBOUNDED,
+                    //-----------
+                    print_algebra_local
                     );
                     
   }
@@ -955,7 +897,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     pos_sol_ctrl,
                     IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
                     //-----------
-                    KK,
+                    JAC,
                     RES,
                     assembleMatrix,
                     //-----------
@@ -965,7 +907,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     qrule_i,
                     //-----------
                     print_algebra_local
-
                     ) ;
   
   }
@@ -974,16 +915,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 //**************************                    
 // AAA do not close this because later they will be filled with the rest of the system!!!      
-//    KK->close();
+//    JAC->close();
 //   RES->close();
 
    //print JAC and RES to files
    //You print only what is being sent to the global matrix. If nothing is sent, nothing is printed                 
    // I will keep this print here for later because it highlights what positions were filled in the matrix
    // If I remove everything above here, it seems like the very last diagonal position is filled... why? from where?
-//   KK->close(); //KK->zero();
+//   JAC->close(); //JAC->zero();
 //   const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
-//     assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
 // //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
 //   std::cout << "****************************" << std::endl;
 //**************************                    
@@ -1340,7 +1281,7 @@ if ( i_vol == j_vol )  {
     RES->add_vector_blocked(Res, L2G_dofmap_Mat_AllVars);
 
     if (assembleMatrix) {
-      KK->add_matrix_blocked(Jac, L2G_dofmap_Mat_AllVars, L2G_dofmap_Mat_AllVars);
+      JAC->add_matrix_blocked(Jac, L2G_dofmap_Mat_AllVars, L2G_dofmap_Mat_AllVars);
     }
     
     
@@ -1370,7 +1311,7 @@ add_one_times_mu_res_ctrl(iproc,
   // ***************** END ASSEMBLY - ADD PART *******************
 
 RES->close();
-if (assembleMatrix) KK->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
+if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
 
 
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
@@ -1435,7 +1376,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                       ineq_flag,
                       c_compl,
                       ctrl_lower, ctrl_upper,
-                      KK, 
+                      JAC, 
                       RES,
                       assembleMatrix
                       );
@@ -1447,7 +1388,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
 
 
      //============= delta_ctrl-delta_mu row ===============================
- if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl],  L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }   //this becomes a vector
+ if (assembleMatrix) { JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl],  L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }   //this becomes a vector
 
    }
    
@@ -1455,11 +1396,11 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
   // ***************** INSERT PART - END *******************
 
   RES->close();
-  if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
+  if (assembleMatrix) JAC->close();  ///@todo is it needed? I think so
     
     
   if (print_algebra_global) {
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, mlPdeSys->GetNonlinearIt());
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, mlPdeSys->GetNonlinearIt());
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
 
     RES->close();

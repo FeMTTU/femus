@@ -21,7 +21,6 @@ using namespace femus;
 #include   "../manufactured_solutions.hpp"
 
 #define FACE_FOR_CONTROL          1        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
-
 #define FACE_FOR_TARGET    1
 
 
@@ -31,26 +30,58 @@ using namespace femus;
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
 
+  
+//***** Operator-related ****************** 
   #define RHS_ONE             0.
 
-  
-#define QRULE_I   0
+  #define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
+#define S_FRAC 0.5
 
-//***** Implementation-related ****************** 
+#define NORM_GIR_RAV  0
+
+#if NORM_GIR_RAV == 0
+
+  #define OP_L2       0
+  #define OP_H1       0
+  #define OP_Hhalf    1
+
+  #define UNBOUNDED   1
+
+  #define USE_Cns     1
+
+#elif NORM_GIR_RAV == 1 
+
+  #define OP_L2       1
+  #define OP_H1       0
+  #define OP_Hhalf    1
+
+  #define UNBOUNDED   0
+
+  #define USE_Cns     0
+#endif
+//**************************************
+
+  
+//***** Quadrature-related ****************** 
+// for integrations in the same element
+#define Nsplit 0
+#define Quadrature_split_index  0
+
+//for semi-analytical integration in the unbounded domain
+#define N_DIV_UNBOUNDED  10
+
+#define QRULE_I   0
+#define QRULE_J   1
+#define QRULE_K   QRULE_I
+//**************************************
+
+  
+//***** Implementation-related: where are L2 and H1 norms implemented ****************** 
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
 //**************************************
 
 //****** Mesh ********************************
 #define no_of_ref N_UNIFORM_LEVELS     //mesh refinements
-
-
-
-//****** Convergence ********************************
-#define exact_sol_flag      0  // 1 = if we want to use manufactured solution; 0 = if we use regular convention
-#define compute_conv_flag   0  // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-
-#define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
-#define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
 //**************************************
 
 
@@ -60,6 +91,17 @@ using namespace femus;
  double penalty_ctrl = 1.e10;         //penalty for u = q
  double theta_value_outside_fake_element = 0.;
  //**************************************
+ 
+ 
+//****** Convergence ********************************
+#define exact_sol_flag      0  // 1 = if we want to use manufactured solution; 0 = if we use regular convention
+#define compute_conv_flag   0  // 1 = if we want to compute the convergence and error ; 0 =  no error computation
+
+#define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
+#define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
+//**************************************
+
+
  
  
  
@@ -294,10 +336,10 @@ int main(int argc, char** args) {
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
   
-    // ======= Quad Rule ========================
+    // ======= Problem, Quad Rule ========================
   std::vector< std::string > fe_quad_rule_vec;
   fe_quad_rule_vec.push_back("seventh");
-//   fe_quad_rule_vec.push_back("eighth");
+  fe_quad_rule_vec.push_back("eighth");
     
   // ======= Parameter  ==================
    //Adimensional quantity (Lref,Uref)
@@ -579,7 +621,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   NumericVector* RES 	= pdeSys->_RES;
   
   
-   //***** @todo to avoid Petsc complaint *******************************
+   //***** @todo to avoid Petsc complaint about out-of-bounds allocation *******************************
 //  MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
    //************************************
 
@@ -851,12 +893,97 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
     
  
-  constexpr unsigned qrule_i = QRULE_I;
   //----------------------
 
     const unsigned int n_components_ctrl = dim;
  
- 
+  const unsigned dim_bdry = dim - 1;
+    
+   
+  const double s_frac = S_FRAC;
+
+  const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
+   
+  //--- quadrature rules -------------------
+  constexpr unsigned qrule_i = QRULE_I;
+  constexpr unsigned qrule_j = QRULE_J;
+  constexpr unsigned qrule_k = QRULE_K;
+  //----------------------
+    
+    
+
+    if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
+  
+     control_eqn_bdry_fractional(iproc,
+                   nprocs,
+                    ml_prob,
+                    ml_sol,
+                    sol,
+                    msh,
+                    pdeSys,
+                    //-----------
+                    geom_element_iel,
+                    solType_coords,
+                    dim,
+                    space_dim,
+                    dim_bdry,
+                    //-----------
+                    n_unknowns,
+                    Solname_Mat,
+                    SolFEType_Mat,
+                    SolIndex_Mat,
+                    SolPdeIndex,
+                    Sol_n_el_dofs_Mat_vol, 
+                    sol_eldofs_Mat,  
+                    L2G_dofmap_Mat,
+                    max_size,
+                    //-----------
+                    n_quantities,
+                    SolFEType_quantities,
+//                     Sol_n_el_dofs_quantities, //filled inside
+                    //-----------
+                    elem_all,
+                     //-----------
+                    Jac_iqp_bdry,
+                    JacI_iqp_bdry,
+                    detJac_iqp_bdry,
+                    weight_iqp_bdry,
+                    phi_ctrl_bdry,
+                    phi_ctrl_x_bdry, 
+                    //-----------
+                    n_components_ctrl,
+                    pos_mat_ctrl,
+                    pos_sol_ctrl,
+                    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
+                    //-----------
+                    JAC,
+                    RES,
+                    assembleMatrix,
+                    //-----------
+                    alpha,
+                    beta,     
+                    //-----------
+                    s_frac,
+                    check_limits,
+                    USE_Cns,
+                    OP_Hhalf,
+                    OP_L2,
+                    RHS_ONE,
+                    UNBOUNDED,
+                    //-----------
+                    qrule_i,
+                    qrule_j,
+                    qrule_k,
+                    Nsplit,
+                    Quadrature_split_index,
+                    N_DIV_UNBOUNDED,
+                    //-----------
+                    print_algebra_local
+                    );
+                    
+  }  
+    
+    
    if ( !(IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY) ) {
                       
    control_eqn_bdry(iproc,
@@ -891,7 +1018,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                     weight_iqp_bdry,
                      //-----------
                     phi_ctrl_bdry,
-                    phi_ctrl_x_bdry, ///@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ todo
+                    phi_ctrl_x_bdry, ///@todo this should be done for all components of ctrl
                     //-----------
                     n_components_ctrl,
                     pos_mat_ctrl,

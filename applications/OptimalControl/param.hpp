@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS   6
+#define N_UNIFORM_LEVELS   1
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -45,6 +45,16 @@
 
 #define GAMMA_CONTROL_LOWER 0.25
 #define GAMMA_CONTROL_UPPER 0.75
+//***** Domain-related ****************** 
+#define EX_1        GAMMA_CONTROL_LOWER
+#define EX_2        GAMMA_CONTROL_UPPER
+#define EY_1        0.
+#define EY_2        1.   ///@todo  see here
+
+#define DOMAIN_EX_1 0
+#define DOMAIN_EX_2 1
+//**************************************
+
 
 
 //*********************** Lifting internal extension *******************************************************
@@ -1086,7 +1096,14 @@ void el_dofs_unknowns_vol(const Solution*                sol,
  }
   
   
+  double  compute_C_ns(const unsigned dim_bdry,
+                       const double s_frac,
+                       const unsigned USE_Cns) {
+      
+  const double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
   
+  return C_ns;
+}
   
     //********** FRAC CONTROL - BEGIN *****************************************
 
@@ -1099,7 +1116,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                         const  LinearEquationSolver* pdeSys,
                         //-----------
                         CurrentElem < double > & geom_element_iel,
-                        CurrentElem < double > & geom_element_jel,
                         const unsigned int solType_coords,
                         const unsigned int dim,
                         const unsigned int space_dim,
@@ -1124,17 +1140,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                         std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
                         double detJac_iel_bdry_iqp_bdry,
                         double weight_iqp_bdry,
-                        vector <double> phi_coords_iel_bdry_iqp_bdry,
-                        vector <double> phi_coords_x_iel_bdry_iqp_bdry, 
                         vector <double> phi_ctrl_iel_bdry_iqp_bdry,
                         vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
-                        //-----------
-                        std::vector < std::vector < double > >  Jac_jel_bdry_jqp_bdry,
-                        std::vector < std::vector < double > >  JacI_jel_bdry_jqp_bdry,
-                        double detJac_jel_bdry_jqp_bdry,
-//                         double weight_jqp_bdry,
-//                         vector <double> phi_ctrl_jel_bdry_jqp_bdry,    //it is a stored vector below
-//                         vector <double> phi_ctrl_x_jel_bdry_jqp_bdry,    //it is a stored vector below 
                         //---- Control unknown -------
                         const unsigned int n_components_ctrl,
                         const unsigned int pos_mat_ctrl,
@@ -1150,24 +1157,82 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                         //-----------
                         const double s_frac,
                         const double check_limits,
-                        const double C_ns,
+                        const unsigned USE_Cns,
                         const unsigned int OP_Hhalf,
                         const unsigned int OP_L2,
                         const double RHS_ONE,
                         const unsigned int UNBOUNDED,
-                        //--- Control domain -------
-                        const std::vector < std::vector < double > > & ex_control,
                         //--- Quadrature --------
                         const unsigned qrule_i,
                         const unsigned qrule_j,
                         const unsigned qrule_k,
                         const unsigned int Nsplit,
                         const unsigned int Quadrature_split_index,
-                        const unsigned int N_div_unbounded
+                        const unsigned int N_div_unbounded,
+                        //-----------
+                        const bool print_algebra_local
                        ) {
+
+// --- Fractional
+const double C_ns =    compute_C_ns(dim_bdry, s_frac, USE_Cns);  
+// --- Fractional
       
       
+// --- Geometry
+  CurrentElem < double > geom_element_jel(dim, msh);            // must be adept if the domain is moving, otherwise double
+// --- Geometry
       
+// --- Quadrature
+     std::vector < std::vector < double > >  JacI_jel_bdry_jqp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_jel_bdry_jqp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_jel_bdry_jqp_bdry.size(); d++) {   Jac_jel_bdry_jqp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_jel_bdry_jqp_bdry.size(); d++) { JacI_jel_bdry_jqp_bdry[d].resize(dim-1); }
+    
+    double detJac_jel_bdry_jqp_bdry;
+// --- Quadrature
+
+
+//--- Control domain -------
+//*************************************************** 
+  unsigned n_max = pow(2,dim_bdry);
+  std::vector < double > extremes(n_max);
+  extremes[0] = EX_1;
+  extremes[1] = EX_2;
+  if(dim_bdry == 2){
+    extremes[2] = EY_1;
+    extremes[3] = EY_2;
+  }
+  
+  std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 ) 
+  for(unsigned d = 0; d < dim; d++) {
+      ex_control[d].reserve(n_max);
+  }
+  int control_xyz = (FACE_FOR_CONTROL - 1) / 2;
+  bool ctrl_min_max = (FACE_FOR_CONTROL - 1) % 2;
+  for(unsigned d = 0; d < dim; d++) {
+    for(unsigned n_e = 0; n_e < n_max; n_e++){
+      if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
+      else ex_control[d][n_e] = extremes[n_e];
+    }
+  }
+//*************************************************** 
+
+
+//--- Control domain -------
+  
+
+
+ //********************* bdry cont *******************
+ //*************************************************** 
+  std::vector <double> phi_coords_iel_bdry_iqp_bdry;  
+  std::vector <double> phi_coords_x_iel_bdry_iqp_bdry; 
+
+  phi_coords_iel_bdry_iqp_bdry.reserve(max_size);
+  phi_coords_x_iel_bdry_iqp_bdry.reserve(max_size * space_dim);
+
+ //*************************************************** 
+
+  
   std::vector <unsigned> solType_ctrl(n_components_ctrl);
   std::vector <unsigned> solIndex_ctrl(n_components_ctrl);
   std::vector <unsigned> solPdeIndex_ctrl(n_components_ctrl);
