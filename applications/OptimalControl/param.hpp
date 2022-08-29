@@ -70,6 +70,12 @@
 #define  C_COMPL 1.
 
 
+
+//*********************** Fractional stuff *******************************************************
+
+#define  NODE_BASED_BDRY_BDRY "node_based_bdry_bdry_flag"
+
+
 namespace femus {
 
 
@@ -866,7 +872,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                      ) {
       
      
-  const unsigned  sol_node_flag_index =  ml_sol->GetIndex("node_based_bdry_flag");
+  const unsigned  sol_node_flag_index =  ml_sol->GetIndex(NODE_BASED_BDRY_BDRY);
   const unsigned  group_salome = 2;   ///@todo fix here, maybe pass it in the args
   
   const unsigned int n_components_ctrl = nDof_vol_iel.size();

@@ -320,7 +320,7 @@ int main(int argc, char** args) {
   //RefineMesh contains a similar procedure as ReadCoarseMesh. In particular, the dofmap at each level is filled there
 
   // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
-  const std::string node_based_bdry_bdry_flag_name = "node_based_bdry_bdry_flag";
+  const std::string node_based_bdry_bdry_flag_name = NODE_BASED_BDRY_BDRY;
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
   
