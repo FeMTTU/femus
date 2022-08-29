@@ -34,7 +34,7 @@ using namespace femus;
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
 
-  #define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
+  #define IS_CTRL_FRACTIONAL_SOBOLEV  1 /*1*/ 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -305,8 +305,13 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
               
      }
  
+ for (unsigned int u = 0; u < dimension; u++) {
+   unknowns[ctrl_pos_begin + u]._is_sparse = IS_CTRL_FRACTIONAL_SOBOLEV ? false: true;
+     }
+ 
  
  unknowns[ctrl_pos_begin + dimension]._is_sparse = false;
+ 
  
    return unknowns;
      
@@ -330,17 +335,12 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
     // ======= Files ========================
-  const bool use_output_time_folder = true;
-  const bool redirect_cout_to_file = true;
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
   
-    // ======= Problem, Quad Rule ========================
-  std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  fe_quad_rule_vec.push_back("eighth");
-    
   // ======= Parameter  ==================
    //Adimensional quantity (Lref,Uref)
   double Lref = 1.;
@@ -365,7 +365,25 @@ int main(int argc, char** args) {
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
- ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
+  const bool read_groups = true;
+  const bool read_boundary_groups = true;
+    
+    ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
+    
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
+
+           std::vector < unsigned > elem_partition_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->elem_offsets();
+  
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->node_offsets();
+           
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
+       
+           ml_mesh.GetLevelZero(0)->BuildElementAndNodeStructures();
+ 
+
+  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+  
+  ml_mesh.PrepareNewLevelsForRefinement();
 
 
   // ======= Problem  ==================
@@ -373,8 +391,15 @@ int main(int argc, char** args) {
 
   ml_prob.SetFilesHandler(&files);
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  
+  // ======= Problem, Quad Rule ========================
+  std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  fe_quad_rule_vec.push_back("eighth");
+    
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
     
   // ======= Refinement  ==================
     
@@ -442,11 +467,34 @@ int main(int argc, char** args) {
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
   unsigned numberOfUniformLevels = i + 1; 
+  const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
+  // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
+  const std::string node_based_bdry_bdry_flag_name = NODE_BASED_BDRY_BDRY;
+  const unsigned  steady_flag = 0;
+  const bool      is_an_unknown_of_a_pde = false;
+  
+  const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
+  const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
+  
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = bdry_bdry_flag(files,
+                                                              ml_mesh, 
+                                                              infile,
+                                                              node_mapping_from_mesh_file_to_new,
+                                                              node_based_bdry_bdry_flag_name,
+                                                              steady_flag,
+                                                              is_an_unknown_of_a_pde,
+                                                              node_bdry_bdry_flag_fe_fam,
+                                                              node_bdry_bdry_flag_fe_ord);
+  
+  // ======= Solution, auxiliary - END  ==================
+  
+  
+  
   // ======= Mesh: COARSE ERASING ========================
-  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.EraseCoarseLevels(erased_levels);
   ml_mesh.PrintInfo();
 
   MultiLevelSolution ml_sol(&ml_mesh);
@@ -476,6 +524,19 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
    ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+   
+   
+ bdry_bdry_flag_copy_and_delete(ml_prob,
+                                ml_sol,
+                                ml_mesh, 
+                                erased_levels,
+                                ml_sol_bdry_bdry_flag,
+                                node_based_bdry_bdry_flag_name,
+                                steady_flag,
+                                is_an_unknown_of_a_pde,
+                                node_bdry_bdry_flag_fe_fam,
+                                node_bdry_bdry_flag_fe_ord);
+   
   // ======= Solutions that are not Unknowns - END  ==================
 
  
@@ -979,11 +1040,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                     print_algebra_local
                     );
                     
-  }  
-    
-    
-   if ( !(IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY) ) {
-                      
+
+   }
+  
+  else {
+  
    control_eqn_bdry(iproc,
                     ml_prob,
                     ml_sol,
