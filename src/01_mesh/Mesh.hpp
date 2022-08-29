@@ -331,6 +331,10 @@ public:
     
     void set_elem_counts();
     
+    std::vector < unsigned >  elem_offsets();
+  
+    std::vector < unsigned >  node_offsets();
+  
     void mesh_reorder_node_quantities(const std::vector <unsigned> & mapping);
     
     void set_node_counts();
@@ -359,7 +363,7 @@ public:
     
     void dofmap_all_fe_families_initialize();
     
-    void dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
+    void dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
     
     void dofmap_Element_based_dof_offsets_build();
 

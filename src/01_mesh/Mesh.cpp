@@ -747,7 +747,7 @@ namespace femus {
   }
   
   
-  void Mesh::dofmap_all_fe_families_clear_ghost_dof_list_other_procs() {
+  void Mesh::dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs() {
       
     //delete ghost dof list all but _iproc
     for(int isdom = 0; isdom < _nprocs; isdom++) {
@@ -796,6 +796,18 @@ namespace femus {
    
       
   }
+
+  std::vector < unsigned >  Mesh::elem_offsets() {
+
+      std::vector < unsigned > elem_partition_from_mesh_file_to_new = PartitionForElements(); 
+           
+      FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
+           
+      dofmap_Element_based_dof_offsets_build();
+      
+      return elem_partition_from_mesh_file_to_new;
+      
+}
   
   
   // // // ======== NODE OFFSETS =========================================================  
@@ -808,7 +820,20 @@ namespace femus {
       
   }
   
+  std::vector < unsigned >  Mesh::node_offsets() {
+      
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
+           
+           mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
+           
+           dofmap_Node_based_dof_offsets_Continue_biquadratic();
+           dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
+           dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
+           
+           set_node_counts();
   
+      return node_mapping_from_mesh_file_to_new;
+}  
  /**
   * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
   */
@@ -836,7 +861,7 @@ namespace femus {
 
      
      
-        dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
+        dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
     
   }
 

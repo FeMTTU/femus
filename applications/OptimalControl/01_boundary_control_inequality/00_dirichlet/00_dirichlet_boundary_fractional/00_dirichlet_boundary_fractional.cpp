@@ -281,34 +281,17 @@ int main(int argc, char** args) {
 // // // =================================================================  
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
   
-    ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
+    ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     ml_mesh.GetLevelZero(0)->Partition();
     
 // // //  BEGIN FillISvector
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
 
-           // // // ======== ELEM OFFSETS - BEGIN =========================================================  
-           std::vector < unsigned > elem_partition_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->PartitionForElements(); 
+           std::vector < unsigned > elem_partition_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->elem_offsets();
+  
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->node_offsets();
            
-           ml_mesh.GetLevelZero(0)->FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
-           
-           ml_mesh.GetLevelZero(0)->dofmap_Element_based_dof_offsets_build();  
-
-           // // // ======== ELEM OFFSETS - END =========================================================
-           
-           // // // ======== NODE OFFSETS - BEGIN =========================================================  
-           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
-           
-           ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
-           
-           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Continue_biquadratic();
-           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
-           ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
-           
-           ml_mesh.GetLevelZero(0)->set_node_counts();
-           // // // ======== NODE OFFSETS - END =========================================================  
-           
-           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
 
 // // //   END FillISvector
        

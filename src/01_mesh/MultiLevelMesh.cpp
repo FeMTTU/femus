@@ -394,7 +394,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
    
 }
 
-void MultiLevelMesh::ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
+void MultiLevelMesh::ReadCoarseMeshFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
 {
     
     _gridn0 = 1;
