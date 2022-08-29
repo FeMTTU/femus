@@ -142,8 +142,10 @@ namespace femus {
 
 
 
-  void Mesh::PartitionForElements(std::vector < unsigned > & partition) {
+  std::vector < unsigned >  Mesh::PartitionForElements() {
 
+    std::vector < unsigned > partition;
+    
     const bool flag_for_ncommon_in_metis = false;
 
     partition.resize(GetNumberOfElements());
@@ -152,14 +154,14 @@ namespace femus {
     
     meshMetisPartitioning.DoPartition(partition, flag_for_ncommon_in_metis);
 
+    return partition;
+    
   }
   
   
   void Mesh::Partition() {
 
-    std::vector < unsigned > partition;
-    
-    PartitionForElements(partition);
+    std::vector < unsigned > partition = PartitionForElements();
     
     FillISvector(partition);
     
@@ -243,17 +245,25 @@ namespace femus {
     
     Partition();
 
-    GetMeshElements()->BuildMeshElemStructures();
+    BuildElementAndNodeStructures();
+   
+  }
+  
+  
+
+  void Mesh::BuildElementAndNodeStructures() {
+      
+    GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
     
-    BuildTopologyStructures();
+    BuildTopologyStructures();  //needs dofmap
 
-    ComputeCharacteristicLength();
+    ComputeCharacteristicLength();  //doesn't need dofmap
 
-    PrintInfo();
+    PrintInfo();  //needs dofmap
 
   }
-
-
+  
+  
   
   void Mesh::BuildTopologyStructures() {
       
@@ -365,13 +375,7 @@ namespace femus {
 
     Partition();
 
-    GetMeshElements()->BuildMeshElemStructures();
-    
-    BuildTopologyStructures();
-
-    ComputeCharacteristicLength();
-    
-    PrintInfo();
+    BuildElementAndNodeStructures();
     
   }
   

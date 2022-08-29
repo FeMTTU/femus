@@ -92,6 +92,16 @@
 ///@todo put assembleMatrix everywhere there is a filling of the matrix!
 ///@todo Give the option to provide your own name to the run folder instead of the time instant. I think I did something like this when running with the external script already
 
+
+           // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
+           //I will loop over the elements and take all the node dofs either of order 1 or 2, counted with repetition
+           //Then I have to take the mesh skeleton (without repetition)
+           //Then for the dofs on the edges how do I do? 
+           // In every subdomain I will have nelems x element nodes + n skeleton dofs in that subdomain 
+           // Then, when it comes to retrieving such dofs for each element, i'll retrieve the interior element nodes + the boundary dofs
+           
+
+
 using namespace femus;
 
 
@@ -274,27 +284,21 @@ int main(int argc, char** args) {
     ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     ml_mesh.GetLevelZero(0)->Partition();
     
-           std::vector < unsigned > elem_partition_from_mesh_file_to_new;
-           ml_mesh.GetLevelZero(0)->PartitionForElements(elem_partition_from_mesh_file_to_new); 
-           
 // // //  BEGIN FillISvector
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
 
-           // // // ======== ELEM OFFSETS =========================================================  
+           // // // ======== ELEM OFFSETS - BEGIN =========================================================  
+           std::vector < unsigned > elem_partition_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->PartitionForElements(); 
+           
            ml_mesh.GetLevelZero(0)->FillISvectorElemOffsets(elem_partition_from_mesh_file_to_new);
            
            ml_mesh.GetLevelZero(0)->dofmap_Element_based_dof_offsets_build();  
 
-           // 1 scalar weak Galerkin variable will first have element-based nodes of a certain order.
-           //I will loop over the elements and take all the node dofs either of order 1 or 2, counted with repetition
-           //Then I have to take the mesh skeleton (without repetition)
-           //Then for the dofs on the edges how do I do? 
-           // In every subdomain I will have nelems x element nodes + n skeleton dofs in that subdomain 
-           // Then, when it comes to retrieving such dofs for each element, i'll retrieve the interior element nodes + the boundary dofs
+           // // // ======== ELEM OFFSETS - END =========================================================
            
-           // // // ======== NODE OFFSETS =========================================================  
-           //there should be a distinction here between "node offsets" and "dof offsets"
+           // // // ======== NODE OFFSETS - BEGIN =========================================================  
            std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Compute_Node_mapping_and_Node_ownSize();
+           
            ml_mesh.GetLevelZero(0)->mesh_reorder_node_quantities(node_mapping_from_mesh_file_to_new);
            
            ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Continue_biquadratic();
@@ -302,19 +306,14 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
            
            ml_mesh.GetLevelZero(0)->set_node_counts();
-           // // // ======== NODE OFFSETS - end =========================================================  
+           // // // ======== NODE OFFSETS - END =========================================================  
            
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_other_procs();
 
 // // //   END FillISvector
        
-   
-           ml_mesh.GetLevelZero(0)->GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
-           
-           ml_mesh.GetLevelZero(0)->BuildTopologyStructures();  //needs dofmap
-
-           ml_mesh.GetLevelZero(0)->ComputeCharacteristicLength();//doesn't need dofmap
-           ml_mesh.GetLevelZero(0)->PrintInfo();   //needs dofmap
+           ml_mesh.GetLevelZero(0)->BuildElementAndNodeStructures();
+ 
 
   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
 //   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); 
@@ -339,20 +338,22 @@ int main(int argc, char** args) {
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   //RefineMesh contains a similar procedure as ReadCoarseMesh. In particular, the dofmap at each level is filled there
 
-  // ======= Solution, auxiliary - BEFORE COARSE ERASING  ==================
-  const unsigned  steady_flag = 0;
-  const bool      is_an_unknown_of_a_pde = false;
+  // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
   MultiLevelSolution * ml_sol_aux = new MultiLevelSolution(&ml_mesh);
-  
   ml_sol_aux->SetWriter(VTK);
   ml_sol_aux->GetWriter()->SetDebugOutput(true);
   
+
   const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
+  const unsigned  steady_flag = 0;
+  const bool      is_an_unknown_of_a_pde = false;
+  
   const FEFamily node_flag_fe_fam = LAGRANGE;
   const FEOrder node_flag_fe_ord = SECOND;
   ml_sol_aux->AddSolution(node_based_bdry_flag_name.c_str(), node_flag_fe_fam, node_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
   ml_sol_aux->Initialize(node_based_bdry_flag_name.c_str());
-      // ======= COARSE READING and REFINEMENT ========================
+
+  // ======= COARSE READING and REFINEMENT ========================
   ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
 
   ml_mesh.GetLevelZero(0)->deallocate_node_mapping(node_mapping_from_mesh_file_to_new);
@@ -366,6 +367,7 @@ int main(int argc, char** args) {
   for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
   ml_sol_aux->GetWriter()->Write(l+1, "aux", files.GetOutputPath(), "", "biquadratic", variablesToBePrinted_aux);
    }
+  // ======= Solution, auxiliary - END  ==================
 
   
   // ======= Mesh: COARSE ERASING ========================
@@ -487,10 +489,10 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
   //----
 
-//   system.MGsolve();
+  system.MGsolve();
 //   double totalAssemblyTime = 0.;
 //   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
-  system.assemble_call_before_boundary_conditions(1);
+//   system.assemble_call_before_boundary_conditions(1);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;

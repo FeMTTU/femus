@@ -233,7 +233,7 @@ public:
 
     void Partition();
     
-    void PartitionForElements(std::vector < unsigned > & partition);
+    std::vector < unsigned > PartitionForElements();
     
 
 // =========================
@@ -451,6 +451,8 @@ public:
     const unsigned GetAmrIndex()        const { return _amrIndex; }
     const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; }
     
+    void BuildElementAndNodeStructures();
+  
     void BuildTopologyStructures();
     
     void Topology_InitializeAndFillCoordinates();

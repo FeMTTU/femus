@@ -445,10 +445,8 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  // erase all the coarse mesh levels
+  // ======= Mesh: COARSE ERASING ========================
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
-
-  // print mesh info
   ml_mesh.PrintInfo();
 
   MultiLevelSolution ml_sol(&ml_mesh);
