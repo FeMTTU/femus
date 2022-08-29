@@ -106,13 +106,92 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 }
 
 
+ //Unknown definition  ==================
+ const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
+     
+     
+  std::vector< FEFamily > feFamily;
+  std::vector< FEOrder >   feOrder;
+
+                        feFamily.push_back(LAGRANGE);   //state
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+  
+                        feFamily.push_back(LAGRANGE);   //adjoint
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+  
+                        feFamily.push_back(LAGRANGE);   //control
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+  
+                        feFamily.push_back(LAGRANGE);
+ 
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+  
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+  
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+ 
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Unknown >  unknowns(feFamily.size());
+ 
+  const int adj_pos_begin   = dimension + 1;
+  const int ctrl_pos_begin  = 2 * (dimension + 1);
+  
+                                        unknowns[0]._name      = "U";
+                                        unknowns[1]._name      = "V";
+  if (dimension == 3)                   unknowns[2]._name      = "W";
+                                unknowns[dimension]._name      = "P";
+  
+                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
+                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
+                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
+  
+                       unknowns[ctrl_pos_begin + 0]._name      = "UCTRL";
+                       unknowns[ctrl_pos_begin + 1]._name      = "VCTRL";
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "WCTRL";
+               unknowns[ctrl_pos_begin + dimension]._name      = "PCTRL";
+
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+         
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
+              unknowns[u]._is_sparse = true;
+              
+     }
+     
+ 
+   return unknowns;
+     
+}
+
+
+
+
 
 void AssembleNavierStokesOpt_nonAD(MultiLevelProblem &ml_prob);
 void AssembleNavierStokesOpt_AD   (MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
-double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated);
+double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated);
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
@@ -132,44 +211,67 @@ int main(int argc, char** args) {
         files.CheckIODirectories(use_output_time_folder);
 	    files.RedirectCout(redirect_cout_to_file);
  
-    std::string mesh_folder_file = "input/";
-  std::string input_file = "square_parametric.med";  //this doesn't work
-//   std::string input_file = "square_4x5.med";
-//     std::string input_file = "Mesh_3_groups.med";
-//   std::string input_file = "cyl.med"; // "fifth"
-  std::ostringstream mystream; mystream << "./" << /*DEFAULT_INPUTDIR*/ mesh_folder_file << input_file;
-  const std::string infile = mystream.str();
-
-    // ======= Quad Rule ========================
-  std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-
-  
-// define multilevel mesh
-  MultiLevelMesh mlMsh;
- 
   // ======= Parameter  ==================
   double Lref = 1.;
   double Uref = 1.;
   // add fluid material
-  Parameter parameter(Lref,Uref);
+  Parameter parameter(Lref, Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
   Fluid fluid(parameter,1,FLUID_DENSITY,"Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
   
-// *************************
+  // ======= Mesh  ==================
+  MultiLevelMesh ml_mesh;
+ 
+    std::string mesh_folder_file = "input/";
+//   std::string input_file = "parametric_square_1x1.med";
+  std::string input_file = "parametric_square_1x2.med";
+//   std::string input_file = "cyl.med"; // "fifth"
+  std::ostringstream mystream; mystream << "./" << /*DEFAULT_INPUTDIR*/ mesh_folder_file << input_file;
+  const std::string infile = mystream.str();
+
   
+  const bool read_groups = true;
+  const bool read_boundary_groups = true;
+    
+    ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
+    
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
 
-//   MultiLevelMesh mlMsh;
-//  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-//    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule_vec[0].c_str());
-//     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule_vec[0].c_str());
-   mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
+           std::vector < unsigned > elem_partition_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->elem_offsets();
+  
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->node_offsets();
+           
+           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
+       
+           ml_mesh.GetLevelZero(0)->BuildElementAndNodeStructures();
+ 
 
+  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+  
+  ml_mesh.PrepareNewLevelsForRefinement();
+
+
+   // ======= Problem  ==================
+  MultiLevelProblem ml_prob;
+  
+  ml_prob.SetFilesHandler(&files);
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  
+  // ======= Problem, Quad Rule ========================
+    std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+
+  
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+
+  // ======= Refinement  ==================
    
-  unsigned dim = mlMsh.GetDimension();
+  unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
@@ -178,133 +280,117 @@ int main(int argc, char** args) {
     maxNumberOfMeshes = no_of_ref /*4*/;
   }
 
+ 
+ 
+   // ======= Solutions that are Unknowns - BEGIN  ==================
+  std::vector< Unknown > unknowns = provide_list_of_unknowns( dim );
+   // ======= Solutions that are Unknowns - END  ==================
+
+  
 
 #if compute_conv_flag == 1
      double comp_conv[maxNumberOfMeshes][NO_OF_L2_NORMS+NO_OF_H1_NORMS];
  
-  MultiLevelMesh mlMsh_all_levels;
-   mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
+  MultiLevelMesh ml_mesh_all_levels;
+   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
   
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
-        mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
-//      mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
+        ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//      ml_mesh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
         
         //store the fine solution  ==================
-            MultiLevelSolution * mlSol_all_levels;
-            mlSol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-         // add variables to mlSol_all_levels
-        // state =====================  
-            mlSol_all_levels->AddSolution("U", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("V", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_all_levels->AddSolution("W", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("P", LAGRANGE, FIRST);
-        // adjoint =====================  
-            mlSol_all_levels->AddSolution("UADJ", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("VADJ", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_all_levels->AddSolution("WADJ", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("PADJ", LAGRANGE, FIRST);
-        // boundary condition =====================
-            mlSol_all_levels->AddSolution("UCTRL", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("VCTRL", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_all_levels->AddSolution("WCTRL", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("PCTRL", LAGRANGE, FIRST);
-            mlSol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-            mlSol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-            mlSol_all_levels->Initialize("All");
-            mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
-            mlSol_all_levels->GenerateBdc("All");
+            MultiLevelSolution * ml_sol_all_levels;
+            ml_sol_all_levels = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+         // add variables to ml_sol_all_levels
+
+   // ======= Solutions that are Unknowns - BEGIN  ==================
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol_all_levels->AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
+   }
+   
+ for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol_all_levels->Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  }
+  
+      ml_sol_all_levels->AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+     ml_sol_all_levels->GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+  }
+   // ======= Solutions that are Unknowns - END  ==================
+
+
+  // ======= Solutions that are not Unknowns - BEGIN  ==================
+            ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+            ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+   ml_sol_all_levels->Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+   ml_sol_all_levels->Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  // ======= Solutions that are not Unknowns - END  ==================
+
 #endif
 
+            
+            
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
+  // ======= Refinement  ==================
   unsigned numberOfUniformLevels = i + 1; 
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  // ======= Mesh: COARSE ERASING ========================
+  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.PrintInfo();
 
-  // print mesh info
-  mlMsh.PrintInfo();
-
-  MultiLevelSolution mlSol(&mlMsh);
-
-  // add variables to mlSol
-  // state =====================  
-  mlSol.AddSolution("U", LAGRANGE, SECOND);
-  mlSol.AddSolution("V", LAGRANGE, SECOND);
-  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P", LAGRANGE, FIRST);
-  // adjoint =====================  
-  mlSol.AddSolution("UADJ", LAGRANGE, SECOND);
-  mlSol.AddSolution("VADJ", LAGRANGE, SECOND);
-  if (dim == 3) mlSol.AddSolution("WADJ", LAGRANGE, SECOND);
-  mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
-  // control =====================  
-  mlSol.AddSolution("UCTRL", LAGRANGE, SECOND);
-  mlSol.AddSolution("VCTRL", LAGRANGE, SECOND);
-  if (dim == 3) mlSol.AddSolution("WCTRL", LAGRANGE, SECOND);
-  mlSol.AddSolution("PCTRL", LAGRANGE, FIRST);
-  // control ===================== 
-  mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  // ======= Solution  ==================
+  MultiLevelSolution ml_sol(&ml_mesh);
   
-  
- // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem ml_prob(&mlSol);
-  
-    ml_prob.SetFilesHandler(&files);
-    ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-    ml_prob.set_all_abstract_fe_multiple();
-
-    mlSol.Initialize("All");
-    mlSol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
-    mlSol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
-
-//   mlSol.Initialize("UCTRL", SetInitialCondition,&ml_prob);
-//   mlSol.Initialize("VCTRL", SetInitialCondition,&ml_prob);
-  
-  // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
-  mlSol.GenerateBdc("All");
-  
+  // ======= Problem  ==================
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
  
-  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-  ml_prob.SetFilesHandler(&files);
 
+  // ======= Solutions that are Unknowns - BEGIN  ==================
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
+   }
+   
+ for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  }
+  
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+     ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+  }
+  // ======= Solutions that are Unknowns - END  ==================
+
+
+  // ======= Solutions that are not Unknowns - BEGIN  ==================
+  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  // ======= Solutions that are not Unknowns - END  ==================
+  
+
+  // ======= System - BEGIN ========================
   // add system NSOptLifting in ml_prob as a NonLinear Implicit System
   NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
 
-  // NS ===================
-  system_opt.AddSolutionToSystemPDE("U");
-  system_opt.AddSolutionToSystemPDE("V");
-  if (dim == 3) system_opt.AddSolutionToSystemPDE("W");
-  system_opt.AddSolutionToSystemPDE("P");
-//   // NSADJ ===================
-  system_opt.AddSolutionToSystemPDE("UADJ");
-  system_opt.AddSolutionToSystemPDE("VADJ");
-  if (dim == 3) system_opt.AddSolutionToSystemPDE("WADJ");
-  system_opt.AddSolutionToSystemPDE("PADJ");
-  // NSCTRL ===================
-  system_opt.AddSolutionToSystemPDE("UCTRL");
-  system_opt.AddSolutionToSystemPDE("VCTRL");
-  if (dim == 3) system_opt.AddSolutionToSystemPDE("WCTRL");
-  system_opt.AddSolutionToSystemPDE("PCTRL");
-  
-  
-  
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+  system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
+  }
   
   // attach the assembling function to system
 //   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);  //AD doesn't seem to work now
   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
     
-  // initilaize and solve the system
+  // initialize and solve the system
   system_opt.init();
   system_opt.ClearVariablesToBeSolved();
   system_opt.AddVariableToBeSolved("All");
 
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
   
  
   system_opt.SetDebugNonlinear(true);
@@ -317,15 +403,18 @@ int main(int argc, char** args) {
 
   system_opt.SetOuterSolver(PREONLY);
   system_opt.MGsolve();
+  // ======= System - END ========================
 
+  
+  
 #if compute_conv_flag == 1
     if ( i > 0 ) {
         
 //prolongation of coarser  
-      mlSol_all_levels->RefineSolution(i);
-      Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
+      ml_sol_all_levels->RefineSolution(i);
+      Solution* sol_coarser_prolongated = ml_sol_all_levels->GetSolutionLevel(i);
   
-      double* norm = GetErrorNorm(ml_prob,&mlSol,sol_coarser_prolongated);
+      double* norm = GetErrorNorm(ml_prob,&ml_sol,sol_coarser_prolongated);
     
       for(int j = 0; j < NO_OF_L2_NORMS+NO_OF_H1_NORMS; j++)       comp_conv[i-1][j] = norm[j];
   
@@ -336,10 +425,10 @@ int main(int argc, char** args) {
 // 
        const unsigned level_index_current = 0;
       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-       const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
+       const unsigned n_vars = ml_sol.GetSolutionLevel(level_index_current)->_Sol.size();
        
         for(unsigned short j = 0; j < n_vars; j++) {  
-               *(mlSol_all_levels->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+               *(ml_sol_all_levels->GetLevel(i)->_Sol[j]) = *(ml_sol.GetSolutionLevel(level_index_current)->_Sol[j]);
         }
  #endif
        
@@ -348,13 +437,10 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,  "biquadratic", variablesToBePrinted, i);
+  ml_sol.GetWriter()->Write(files.GetOutputPath(),  "biquadratic", variablesToBePrinted, i);
 
-  //Destroy all the new systems
-//   ml_prob.clear();
  }
 
-//  delete mlSol_all_levels; 
 
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
@@ -412,7 +498,7 @@ std::cout << " ********************************  AD SYSTEM *********************
   Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*  ml_sol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
 
@@ -447,12 +533,12 @@ std::cout << " ********************************  AD SYSTEM *********************
 //STATE######################################################################
   //velocity *******************************
   vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
+  solVIndex[0] = ml_sol->GetIndex("U");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = ml_sol->GetIndex("V");    // get the position of "V" in the ml_sol object
 
-  if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "W" in the ml_sol object
+  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("W");      // get the position of "W" in the ml_sol object
 
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys.GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys.GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
@@ -481,8 +567,8 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   //pressure *******************************
   unsigned solPIndex;
-  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
-  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "P"
+  solPIndex = ml_sol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  unsigned solPType = ml_sol->GetSolutionType(solPIndex);    // get the finite element type for "P"
 
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys.GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
@@ -500,12 +586,12 @@ std::cout << " ********************************  AD SYSTEM *********************
 //ADJOINT######################################################################
   //velocity *******************************
   vector < unsigned > solVadjIndex(dim);
-  solVadjIndex[0] = mlSol->GetIndex("UADJ");    // get the position of "UADJ" in the ml_sol object
-  solVadjIndex[1] = mlSol->GetIndex("VADJ");    // get the position of "VADJ" in the ml_sol object
+  solVadjIndex[0] = ml_sol->GetIndex("UADJ");    // get the position of "UADJ" in the ml_sol object
+  solVadjIndex[1] = ml_sol->GetIndex("VADJ");    // get the position of "VADJ" in the ml_sol object
 
-  if (dim == 3) solVadjIndex[2] = mlSol->GetIndex("WADJ");      // get the position of "WADJ" in the ml_sol object
+  if (dim == 3) solVadjIndex[2] = ml_sol->GetIndex("WADJ");      // get the position of "WADJ" in the ml_sol object
 
-  unsigned solVadjType = mlSol->GetSolutionType(solVadjIndex[0]);    // get the finite element type for "uADJ"
+  unsigned solVadjType = ml_sol->GetSolutionType(solVadjIndex[0]);    // get the finite element type for "uADJ"
  vector < unsigned > solVPdeadjIndex(dim);
   solVPdeadjIndex[0] = mlPdeSys.GetSolPdeIndex("UADJ");    // get the position of "UADJ" in the pdeSys object
   solVPdeadjIndex[1] = mlPdeSys.GetSolPdeIndex("VADJ");    // get the position of "VADJ" in the pdeSys object
@@ -533,8 +619,8 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   //pressure *******************************
   unsigned solPadjIndex;
-  solPadjIndex = mlSol->GetIndex("PADJ");    // get the position of "PADJ" in the ml_sol object
-  unsigned solPadjType = mlSol->GetSolutionType(solPadjIndex);    // get the finite element type for "PADJ"
+  solPadjIndex = ml_sol->GetIndex("PADJ");    // get the position of "PADJ" in the ml_sol object
+  unsigned solPadjType = ml_sol->GetSolutionType(solPadjIndex);    // get the finite element type for "PADJ"
 
   unsigned solPPdeadjIndex;
   solPPdeadjIndex = mlPdeSys.GetSolPdeIndex("PADJ");    // get the position of "PADJ" in the pdeSys object
@@ -553,12 +639,12 @@ std::cout << " ********************************  AD SYSTEM *********************
 //CONTROL######################################################################
   //velocity *******************************
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = mlSol->GetIndex("UCTRL");    // get the position of "UCTRL" in the ml_sol object
-  solVctrlIndex[1] = mlSol->GetIndex("VCTRL");    // get the position of "VCTRL" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("UCTRL");    // get the position of "UCTRL" in the ml_sol object
+  solVctrlIndex[1] = ml_sol->GetIndex("VCTRL");    // get the position of "VCTRL" in the ml_sol object
 
-  if (dim == 3) solVctrlIndex[2] = mlSol->GetIndex("WCTRL");      // get the position of "WCTRL" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("WCTRL");      // get the position of "WCTRL" in the ml_sol object
 
-  unsigned solVctrlType = mlSol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "uCTRL"
+  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "uCTRL"
  vector < unsigned > solVPdectrlIndex(dim);
   solVPdectrlIndex[0] = mlPdeSys.GetSolPdeIndex("UCTRL");    // get the position of "UCTRL" in the pdeSys object
   solVPdectrlIndex[1] = mlPdeSys.GetSolPdeIndex("VCTRL");    // get the position of "VCTRL" in the pdeSys object
@@ -587,8 +673,8 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   //pressure *******************************
   unsigned solPctrlIndex;
-  solPctrlIndex = mlSol->GetIndex("PCTRL");    // get the position of "PCTRL" in the ml_sol object
-  unsigned solPctrlType = mlSol->GetSolutionType(solPctrlIndex);    // get the finite element type for "PCTRL"
+  solPctrlIndex = ml_sol->GetIndex("PCTRL");    // get the position of "PCTRL" in the ml_sol object
+  unsigned solPctrlType = ml_sol->GetSolutionType(solPctrlIndex);    // get the finite element type for "PCTRL"
 
   unsigned solPPdectrlIndex;
   solPPdectrlIndex = mlPdeSys.GetSolPdeIndex("PCTRL");    // get the position of "PCTRL" in the pdeSys object
@@ -1112,7 +1198,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*  ml_sol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
   
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -1145,12 +1231,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //STATE######################################################################
   vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
+  solVIndex[0] = ml_sol->GetIndex("U");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = ml_sol->GetIndex("V");    // get the position of "V" in the ml_sol object
 
-  if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("W");      // get the position of "V" in the ml_sol object
 
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   
   vector < vector < double > >  solV(dim);    // local solution
   vector <double >  V_gss(dim, 0.);    //  solution
@@ -1171,12 +1257,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //CONTROL######################################################################
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = mlSol->GetIndex("UCTRL");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = mlSol->GetIndex("VCTRL");    // get the position of "V" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("UCTRL");    // get the position of "U" in the ml_sol object
+  solVctrlIndex[1] = ml_sol->GetIndex("VCTRL");    // get the position of "V" in the ml_sol object
 
-  if (dim == 3) solVctrlIndex[2] = mlSol->GetIndex("WCTRL");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("WCTRL");      // get the position of "V" in the ml_sol object
 
-  unsigned solVctrlType = mlSol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
+  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
   
   vector < vector < double > >  solVctrl(dim);    // local solution
   vector < double >   Vctrl_gss(dim, 0.);    //  solution
@@ -1401,7 +1487,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   LinearEquationSolver*  pdeSys	 = mlPdeSys._LinSolver[level];   
   const char* pdename            = mlPdeSys.name().c_str();
   
-  MultiLevelSolution* mlSol = ml_prob._ml_sol;
+  MultiLevelSolution* ml_sol = ml_prob._ml_sol;
   
   Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
   elem*		 el	= msh->el;
@@ -1467,8 +1553,8 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(Solname[ivar].c_str());
-    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
   vector < double > Sol_n_el_dofs(n_unknowns);
@@ -2366,15 +2452,15 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
  
 
  
- double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
+ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated) {
   
     static double ErrorNormArray[NO_OF_L2_NORMS+NO_OF_H1_NORMS];
     
-  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
-  Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)
-  Solution* sol = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
   
@@ -2426,8 +2512,8 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
   vector < double > Sol_n_el_dofs(n_unknowns);

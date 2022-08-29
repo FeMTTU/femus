@@ -466,6 +466,7 @@ int main(int argc, char** args) {
 
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
+  // ======= Refinement  ==================
   unsigned numberOfUniformLevels = i + 1; 
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -497,13 +498,14 @@ int main(int argc, char** args) {
   ml_mesh.EraseCoarseLevels(erased_levels);
   ml_mesh.PrintInfo();
 
+  // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
   // ======= Problem  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
  
   
-   // ======= Solutions that are Unknowns - BEGIN  ==================
+  // ======= Solutions that are Unknowns - BEGIN  ==================
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
    }
@@ -611,13 +613,10 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted, i);
- 
-  //Destroy all the new systems
-//   ml_prob.clear();
+  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted, i);
+
   }
 
-//  delete ml_sol_all_levels; 
 
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
