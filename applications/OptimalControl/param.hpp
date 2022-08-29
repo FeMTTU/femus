@@ -1096,6 +1096,72 @@ void el_dofs_unknowns_vol(const Solution*                sol,
  }
   
   
+    void   bdry_bdry_flag_copy_and_delete(   MultiLevelProblem & ml_prob,
+                                             MultiLevelSolution & ml_sol,
+                                           const MultiLevelMesh & ml_mesh, 
+                                              const unsigned erased_levels,
+                                             MultiLevelSolution *  ml_sol_bdry_bdry_flag,
+                                             const std::string node_based_bdry_bdry_flag_name,
+                                             const unsigned  steady_flag,
+                                             const bool      is_an_unknown_of_a_pde,
+                                             const FEFamily node_bdry_bdry_flag_fe_fam,
+                                             const FEOrder node_bdry_bdry_flag_fe_ord) {
+        
+ ml_sol.AddSolution(node_based_bdry_bdry_flag_name.c_str(), node_bdry_bdry_flag_fe_fam, node_bdry_bdry_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize(node_based_bdry_bdry_flag_name.c_str());
+  // copy ml_sol_bdry_bdry_flag at the non-removed levels into ml_sol
+  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
+      *(ml_sol.GetSolutionLevel(l)->_Sol[ ml_sol.GetIndex(node_based_bdry_bdry_flag_name.c_str()) ]) =
+      *(ml_sol_bdry_bdry_flag->GetSolutionLevel(l + erased_levels)->_Sol[ ml_sol_bdry_bdry_flag->GetIndex(node_based_bdry_bdry_flag_name.c_str()) ]);
+  }
+  
+  delete ml_sol_bdry_bdry_flag;
+     
+     }  
+
+  
+     MultiLevelSolution *  bdry_bdry_flag(  Files & files,
+                                            MultiLevelMesh & ml_mesh, 
+                                               const std::string infile,
+                                               std::vector < unsigned > & node_mapping_from_mesh_file_to_new,
+                                             const std::string node_based_bdry_bdry_flag_name,
+                                             const unsigned  steady_flag,
+                                             const bool      is_an_unknown_of_a_pde,
+                                             const FEFamily node_bdry_bdry_flag_fe_fam,
+                                             const FEOrder node_bdry_bdry_flag_fe_ord) {
+     
+     
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = new MultiLevelSolution(&ml_mesh);
+  ml_sol_bdry_bdry_flag->SetWriter(VTK);
+  ml_sol_bdry_bdry_flag->GetWriter()->SetDebugOutput(true);
+  
+
+  ml_sol_bdry_bdry_flag->AddSolution(node_based_bdry_bdry_flag_name.c_str(), node_bdry_bdry_flag_fe_fam, node_bdry_bdry_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol_bdry_bdry_flag->Initialize(node_based_bdry_bdry_flag_name.c_str());
+
+  // ======= COARSE READING and REFINEMENT ========================
+  ml_sol_bdry_bdry_flag->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
+
+  ml_mesh.GetLevelZero(0)->deallocate_node_mapping(node_mapping_from_mesh_file_to_new);
+
+  for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
+     ml_sol_bdry_bdry_flag->RefineSolution(l);
+  }
+  
+  std::vector < std::string > variablesToBePrinted_aux;
+  variablesToBePrinted_aux.push_back("all");
+  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
+  ml_sol_bdry_bdry_flag->GetWriter()->Write(l+1, "aux", files.GetOutputPath(), "", "biquadratic", variablesToBePrinted_aux);
+   }
+ 
+ 
+ return ml_sol_bdry_bdry_flag;
+ 
+}
+
+
+  
+  
   double  compute_C_ns(const unsigned dim_bdry,
                        const double s_frac,
                        const unsigned USE_Cns) {

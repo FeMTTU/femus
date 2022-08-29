@@ -279,10 +279,8 @@ int main(int argc, char** args) {
 // // // =================================================================  
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - BEGIN ================================================  
 // // // =================================================================  
-//   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
   
     ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
-//     ml_mesh.GetLevelZero(0)->Partition();
     
 // // //  BEGIN FillISvector
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
@@ -322,34 +320,23 @@ int main(int argc, char** args) {
   //RefineMesh contains a similar procedure as ReadCoarseMesh. In particular, the dofmap at each level is filled there
 
   // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
-  MultiLevelSolution * ml_sol_aux = new MultiLevelSolution(&ml_mesh);
-  ml_sol_aux->SetWriter(VTK);
-  ml_sol_aux->GetWriter()->SetDebugOutput(true);
-  
-
-  const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
+  const std::string node_based_bdry_bdry_flag_name = "node_based_bdry_bdry_flag";
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
   
-  const FEFamily node_flag_fe_fam = LAGRANGE;
-  const FEOrder node_flag_fe_ord = SECOND;
-  ml_sol_aux->AddSolution(node_based_bdry_flag_name.c_str(), node_flag_fe_fam, node_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol_aux->Initialize(node_based_bdry_flag_name.c_str());
-
-  // ======= COARSE READING and REFINEMENT ========================
-  ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
-
-  ml_mesh.GetLevelZero(0)->deallocate_node_mapping(node_mapping_from_mesh_file_to_new);
-
-  for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
-     ml_sol_aux->RefineSolution(l);
-  }
+  const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
+  const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  std::vector < std::string > variablesToBePrinted_aux;
-  variablesToBePrinted_aux.push_back("all");
-  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
-  ml_sol_aux->GetWriter()->Write(l+1, "aux", files.GetOutputPath(), "", "biquadratic", variablesToBePrinted_aux);
-   }
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = bdry_bdry_flag(files,
+                                                              ml_mesh, 
+                                                              infile,
+                                                              node_mapping_from_mesh_file_to_new,
+                                                              node_based_bdry_bdry_flag_name,
+                                                              steady_flag,
+                                                              is_an_unknown_of_a_pde,
+                                                              node_bdry_bdry_flag_fe_fam,
+                                                              node_bdry_bdry_flag_fe_ord);
+  
   // ======= Solution, auxiliary - END  ==================
 
   
@@ -372,8 +359,7 @@ int main(int argc, char** args) {
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
 
   // ======= Problem, Quad Rule ========================
-  //right now only one quadrature rule is used in the FE type under Mesh, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
-  //quadr rule order
+  //right now only one quadrature rule is used in the FE type under Mesh
   /*const*/ std::vector< std::string > fe_quad_rule_vec;
   fe_quad_rule_vec.push_back("seventh");
   fe_quad_rule_vec.push_back("eighth");
@@ -413,17 +399,17 @@ int main(int argc, char** args) {
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
   
-  //---- node_based_bdry_flag ------
-  ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), node_flag_fe_fam, node_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
-  // copy ml_sol_aux at the non-removed levels into ml_sol
-  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
-      *(ml_sol.GetSolutionLevel(l)->_Sol[ ml_sol.GetIndex(node_based_bdry_flag_name.c_str()) ]) =
-      *(ml_sol_aux->GetSolutionLevel(l + erased_levels)->_Sol[ ml_sol_aux->GetIndex(node_based_bdry_flag_name.c_str()) ]);
-  }
-  delete ml_sol_aux;
-  //---- node_based_bdry_flag ------
-
+  
+ bdry_bdry_flag_copy_and_delete(ml_prob,
+                                ml_sol,
+                                ml_mesh, 
+                                erased_levels,
+                                ml_sol_bdry_bdry_flag,
+                                node_based_bdry_bdry_flag_name,
+                                steady_flag,
+                                is_an_unknown_of_a_pde,
+                                node_bdry_bdry_flag_fe_fam,
+                                node_bdry_bdry_flag_fe_ord);
   
 
   // ======= Solutions that are not Unknowns - END  ==================
