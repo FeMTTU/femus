@@ -34,7 +34,7 @@ using namespace femus;
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
 
-  #define IS_CTRL_FRACTIONAL_SOBOLEV  1 /*1*/ 
+  #define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -350,7 +350,7 @@ int main(int argc, char** args) {
   ml_prob.SetFilesHandler(&files);
   
   
-  // ======= Parameter  ==================
+  // ======= Parameters  ==================
    //Adimensional quantity (Lref,Uref)
   double Lref = 1.;
   double Uref = 1.;
@@ -381,7 +381,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 	
 //   std::string input_file = "parametric_square_1x1.med";
-  std::string input_file = "parametric_square_1x2.med";
+//   std::string input_file = "parametric_square_1x2.med";
+  std::string input_file = "parametric_square_2x2.med";
   
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -551,14 +552,13 @@ int main(int argc, char** args) {
 
  
   // ======= System - BEGIN ========================
-  NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
+  NonLinearImplicitSystem & system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
 
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
   system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
   }
    
   
-  // attach the assembling function to system
    system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
 
    
@@ -1526,6 +1526,7 @@ for(unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNum
 	} //unk 
  //end unknowns eval at gauss points ********************************
 	
+#if exact_sol_flag == 1
 //======= computation of RHS (force and desired velocity) using MMS - BEGIN =============================================== 
 //state values-------------------- //non-hom bdry
 vector <double>  exact_stateVel(dim);
@@ -1582,7 +1583,10 @@ for (unsigned k = 0; k < dim; k++){
                     + (1./cost_functional_coeff) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k]);
 }
 //======= computation of RHS (force and desired velocity) using MMS - END =============================================== 
- 
+#endif
+
+
+
 //============ delta_state row - BEGIN ============================================================================================
 
   for (unsigned i = 0; i < nDofsV; i++) {

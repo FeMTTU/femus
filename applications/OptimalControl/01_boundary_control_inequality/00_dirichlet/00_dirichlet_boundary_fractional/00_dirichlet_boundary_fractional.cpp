@@ -444,7 +444,6 @@ int main(int argc, char** args) {
    system.init();  /// I need to put this init before, later I will remove it   /// @todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
  
   set_dense_pattern_for_unknowns(system, unknowns);
-  // ======= System  - END ========================
 
   //   initialize and solve the system
   system.init();
@@ -462,6 +461,8 @@ int main(int argc, char** args) {
 //   double totalAssemblyTime = 0.;
 //   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
 //   system.assemble_call_before_boundary_conditions(1);
+  // ======= System  - END ========================
+
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
