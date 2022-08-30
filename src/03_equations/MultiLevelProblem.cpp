@@ -140,8 +140,14 @@ void MultiLevelProblem::clear ()
   // Clear any additional parameters
   parameters.clear();
 
-  // clear the systems.  We must delete them
-  // since we newed them!
+  // clear the systems.  We must delete them since we newed them!
+  clear_systems();
+}
+
+
+
+void MultiLevelProblem::clear_systems() {
+
   while (!_systems.empty())
   {
     system_iterator pos = _systems.begin();
@@ -152,7 +158,10 @@ void MultiLevelProblem::clear ()
 
     _systems.erase (pos);
   }
+    
 }
+
+
 
 
 // void MultiLevelProblem::init()

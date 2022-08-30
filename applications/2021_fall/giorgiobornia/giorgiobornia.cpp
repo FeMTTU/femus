@@ -671,9 +671,12 @@ void compute_norm_of_unknowns(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
-  // init Petsc-MPI communicator
+  // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  // ======= Problem ========================
+  MultiLevelProblem ml_prob;
+  
   // ======= Files ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
@@ -681,9 +684,15 @@ int main(int argc, char** args) {
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
-  // ======= Quad Rule ========================
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+  
+  // ======= Problem, Quad Rule ========================
   std::string fe_quad_rule("seventh");
-
+  
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.set_all_abstract_fe_multiple();
+  
     // ======= App Specifics  ==================
   std::string system_common_name = "Laplace";
   std::vector< app_specifics >   my_specifics;
@@ -866,10 +875,13 @@ int main(int argc, char** args) {
   
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
         
+  // ======= Problem, App ========================
+  ml_prob.set_app_specs_pointer(&my_specifics[app]);
+  
+  
   // ======= Mesh  ==================
-  // define multilevel mesh
   MultiLevelMesh ml_mesh;
-  double scalingFactor = 1.;
+  double Lref = 1.;
  
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
@@ -880,20 +892,28 @@ int main(int argc, char** args) {
    
   std::string mesh_file_tot = "./input/" + my_specifics[app]._mesh_files[m];
   
-  ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
-//     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
-//     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
+  ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(mesh_file_tot.c_str(), Lref, read_groups, read_boundary_groups);
+    
+  ml_mesh.GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
  
+
+  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+  
+  ml_mesh.PrepareNewLevelsForRefinement();
+
+
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule.c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+
+
 
  for (unsigned int r = 1; r < 2; r++)  {
 
+  // ======= Mesh: Refinement  ==================
   unsigned numberOfUniformLevels = r;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
   ml_mesh.PrintInfo();
-
-  
   
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
@@ -901,15 +921,8 @@ int main(int argc, char** args) {
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);
   
-  // ======= Problem ========================
-  MultiLevelProblem ml_prob;
-  
-  // ======= Problem, II ========================
-  ml_prob.SetFilesHandler(&files);
+  // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
-  ml_prob.set_app_specs_pointer(&my_specifics[app]);
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  ml_prob.set_all_abstract_fe_multiple();
   
   // ======= Solutions that are Unknowns - BEGIN ==================
 
@@ -935,9 +948,10 @@ int main(int argc, char** args) {
 
 //   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all = ml_prob.evaluate_all_fe<double, double>();
   
-    // ======= System ========================
- // add system  in ml_prob as a Linear Implicit System
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > (my_specifics[app]._system_name);
+    // ======= System - BEGIN ========================
+  ml_prob.clear_systems();
+  
+  NonLinearImplicitSystem & system = ml_prob.add_system < NonLinearImplicitSystem > (my_specifics[app]._system_name);
   
   system.SetDebugNonlinear(true);
  
@@ -959,9 +973,10 @@ int main(int argc, char** args) {
   system.MGsolve();
   
   compute_norm_of_unknowns<double, double>(ml_prob);
+    // ======= System - END ========================
+  
   
     // ======= Print ========================
-  // print solutions
   const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");

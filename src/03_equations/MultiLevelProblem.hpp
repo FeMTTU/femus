@@ -144,8 +144,11 @@ public:
     /** @returns the number of equation systems. */
     unsigned int n_systems() const;
 
-    /** Clear all the Sytems PDE structures */
+    /** Clear parameters and systems */
     void clear();
+
+    /** Clear systems */
+    void clear_systems();
 
 //   /** init the system pde structures */
 //   void init();
