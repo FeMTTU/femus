@@ -865,6 +865,7 @@ std::cout << " ********************************  AD SYSTEM *********************
 //STATE#############################################################################3	
         // *** get gauss point weight, test function and test function partial derivatives ***
    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+   
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
    
     elem_all[ielGeom][solVType]->shape_funcs_current_elem(ig, JacI_qp, phiV_gss, phiV_x_gss, phiV_xx_gss , space_dim);
@@ -877,20 +878,26 @@ std::cout << " ********************************  AD SYSTEM *********************
         vector < double > coordX_gss(dim, 0.);
 
         for (unsigned  k = 0; k < dim; k++) {
-          gradSolV_gss[k].resize(dim_offset_grad /*space_dim*/);
+          gradSolV_gss[k].resize(dim_offset_grad);
           std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
         }
 
-        for (unsigned i = 0; i < nDofsV; i++) {  ///@todo mistake here
           for (unsigned  k = 0; k < dim; k++) {
-            solV_gss[k] += phiV_gss[i] * solV[k][i];
-            coordX_gss[k] += coordX[k][i] * phiV_gss[i];
-        }
+        for (unsigned i = 0; i < geom_element_iel.get_coords_at_dofs_3d()[k].size(); i++) {
+            coordX_gss[k] += geom_element_iel.get_coords_at_dofs_3d()[k][i] * phiV_gss[i];    ///@todo change phiV into phi_coords!!!
+             }
+          }
+          
+          for (unsigned  k = 0; k < dim; k++) {
+        for (unsigned i = 0; i < solV[k].size(); i++) {
+            
+            solV_gss[k]   += solV[k][i] * phiV_gss[i];
+        
 
-          for (unsigned j = 0; j < dim_offset_grad /*space_dim*/; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              gradSolV_gss[k][j] += phiV_x_gss[i * dim_offset_grad /*space_dim*/ + j] * solV[k][i];
+          for (unsigned j = 0; j < dim_offset_grad; j++) {
+              gradSolV_gss[k][j] += solV[k][i] * phiV_x_gss[i * dim_offset_grad + j] ;
             }
+            
           }
         }
 
@@ -975,6 +982,7 @@ std::cout << " ********************************  AD SYSTEM *********************
 //CONTROL###############################################################################
 
 
+#if exact_sol_flag == 1
 //computation of RHS (force and desired velocity) using MMS=============================================== 
 //state values--------------------
 vector <double>  exact_stateVel(dim, 0.);
@@ -1045,7 +1053,7 @@ for (unsigned k = 0; k < dim; k++){
 }
 
 //computation of RHS (force and desired velocity) using MMS=============================================== 
-
+#endif
 
 
 
@@ -1793,6 +1801,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
 //  // I x = 5 test ********************************
  
 
+#if exact_sol_flag == 1
 //computation of RHS (force and desired velocity) using MMS - BEGIN =============================================== 
 //state values--------------------
 vector <double>  exact_stateVel(dim, 0.);
@@ -1863,7 +1872,7 @@ for (unsigned k = 0; k < dim; k++){
 }
 
 //computation of RHS (force and desired velocity) using MMS - END =============================================== 
-
+#endif
 
  
  
