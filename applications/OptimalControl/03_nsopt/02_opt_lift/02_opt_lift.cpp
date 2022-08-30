@@ -204,25 +204,46 @@ int main(int argc, char** args) {
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-       // ======= Files ========================
+   // ======= Problem  ==================
+  MultiLevelProblem ml_prob;
+
+  
+  // ======= Files ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
 	    files.RedirectCout(redirect_cout_to_file);
  
-  // ======= Parameter  ==================
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+
+  
+  // ======= Parameters  ==================
   double Lref = 1.;
   double Uref = 1.;
   // add fluid material
   Parameter parameter(Lref, Uref);
   
-  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,FLUID_DENSITY,"Newtonian");
+       // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+  Fluid fluid(parameter, 1, FLUID_DENSITY, "Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
   
-  // ======= Mesh  ==================
+  // ======= Problem, Parameters ========================
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+
+  
+  // ======= Problem, Quad Rule ========================
+    std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+
+  
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
+  
+  
+  // ======= Mesh ==================
   MultiLevelMesh ml_mesh;
  
     std::string mesh_folder_file = "input/";
@@ -236,17 +257,9 @@ int main(int argc, char** args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
     
-    ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
+  ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
     
-           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
-
-           std::vector < unsigned > elem_partition_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->elem_offsets();
-  
-           std::vector < unsigned > node_mapping_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->node_offsets();
-           
-           ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
-       
-           ml_mesh.GetLevelZero(0)->BuildElementAndNodeStructures();
+  ml_mesh.GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
  
 
   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
@@ -254,23 +267,10 @@ int main(int argc, char** args) {
   ml_mesh.PrepareNewLevelsForRefinement();
 
 
-   // ======= Problem  ==================
-  MultiLevelProblem ml_prob;
-  
-  ml_prob.SetFilesHandler(&files);
-  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-  
-  // ======= Problem, Quad Rule ========================
-    std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-
-  
-  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
 
-  // ======= Refinement  ==================
-   
+  
+  // ======= Mesh: Refinement  ==================
   unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -291,6 +291,7 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
      double comp_conv[maxNumberOfMeshes][NO_OF_L2_NORMS+NO_OF_H1_NORMS];
  
+  // ======= Mesh ==================
   MultiLevelMesh ml_mesh_all_levels;
    ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
   
@@ -298,10 +299,9 @@ int main(int argc, char** args) {
         ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
 //      ml_mesh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
         
-        //store the fine solution  ==================
+  // ======= Solution  ==================
             MultiLevelSolution * ml_sol_all_levels;
             ml_sol_all_levels = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-         // add variables to ml_sol_all_levels
 
    // ======= Solutions that are Unknowns - BEGIN  ==================
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
@@ -321,8 +321,8 @@ int main(int argc, char** args) {
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
             ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
-            ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
    ml_sol_all_levels->Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+            ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
    ml_sol_all_levels->Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
 
@@ -332,7 +332,7 @@ int main(int argc, char** args) {
             
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-  // ======= Refinement  ==================
+  // ======= Mesh: Refinement  ==================
   unsigned numberOfUniformLevels = i + 1; 
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
@@ -341,10 +341,11 @@ int main(int argc, char** args) {
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
   ml_mesh.PrintInfo();
 
+  
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
-  // ======= Problem  ==================
+  // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
  
 
@@ -366,21 +367,20 @@ int main(int argc, char** args) {
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
-  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  
+  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
   
 
   // ======= System - BEGIN ========================
-  // add system NSOptLifting in ml_prob as a NonLinear Implicit System
-  NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
+  NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");  ///@todo this MUST return a REFERENCE, otherwise it doesn't run!
 
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
   system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
   }
   
-  // attach the assembling function to system
 //   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);  //AD doesn't seem to work now
   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
     
@@ -433,7 +433,7 @@ int main(int argc, char** args) {
  #endif
        
    
-  // print solutions
+  // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 

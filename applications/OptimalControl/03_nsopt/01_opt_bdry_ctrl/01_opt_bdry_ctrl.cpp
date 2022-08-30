@@ -334,12 +334,21 @@ int main(int argc, char** args) {
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
+  
+  // ======= Problem  ==================
+  MultiLevelProblem ml_prob; 
+
+  
     // ======= Files ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
+  
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+  
   
   // ======= Parameter  ==================
    //Adimensional quantity (Lref,Uref)
@@ -354,14 +363,26 @@ int main(int argc, char** args) {
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
 
+  // ======= Problem, Parameters ========================
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  
+  
+  // ======= Problem, Quad Rule ========================
+  std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  fe_quad_rule_vec.push_back("eighth");
+    
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
+
+
   
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
 	
-//   std::string input_file = "square_parametric.med";
-  std::string input_file = "parametric_square_1x1.med";
-//   std::string input_file = "square_4x5.med";
-//     std::string input_file = "Mesh_3_groups.med";
+//   std::string input_file = "parametric_square_1x1.med";
+  std::string input_file = "parametric_square_1x2.med";
+  
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
@@ -386,22 +407,9 @@ int main(int argc, char** args) {
   ml_mesh.PrepareNewLevelsForRefinement();
 
 
-  // ======= Problem  ==================
-  MultiLevelProblem ml_prob; 
-
-  ml_prob.SetFilesHandler(&files);
-  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-  
-  // ======= Problem, Quad Rule ========================
-  std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  fe_quad_rule_vec.push_back("eighth");
-    
-  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
     
-  // ======= Refinement  ==================
+  // ======= Mesh: Refinement  ==================
     
   unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
@@ -466,7 +474,7 @@ int main(int argc, char** args) {
 
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-  // ======= Refinement  ==================
+  // ======= Mesh: Refinement  ==================
   unsigned numberOfUniformLevels = i + 1; 
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -501,7 +509,7 @@ int main(int argc, char** args) {
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
-  // ======= Problem  ==================
+  // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
  
   
@@ -556,7 +564,6 @@ int main(int argc, char** args) {
    
   system_opt.init();
   set_dense_pattern_for_unknowns(system_opt, unknowns);
-  // ======= System  - END ========================
 
    
   // initialize and solve the system
@@ -580,6 +587,7 @@ int main(int argc, char** args) {
    
     system_opt.MGsolve();
 //   system_opt.assemble_call_before_boundary_conditions(1);
+  // ======= System  - END ========================
 
   
   

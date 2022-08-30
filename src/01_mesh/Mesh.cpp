@@ -760,6 +760,21 @@ namespace femus {
 
   }
   
+ 
+  void Mesh::build_dofmap_all_fe_families_and_elem_and_node_structures() {
+      
+            dofmap_all_fe_families_initialize();
+
+           std::vector < unsigned > elem_partition_from_mesh_file_to_new = elem_offsets();   ///@todo these are actually unused returns
+  
+           std::vector < unsigned > node_mapping_from_mesh_file_to_new = node_offsets();     ///@todo these are actually unused returns
+           
+           dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
+       
+           BuildElementAndNodeStructures();
+
+  }
+
   
   
   void Mesh::set_node_counts() {

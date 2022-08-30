@@ -455,6 +455,8 @@ public:
     const unsigned GetAmrIndex()        const { return _amrIndex; }
     const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; }
     
+    void build_dofmap_all_fe_families_and_elem_and_node_structures();
+    
     void BuildElementAndNodeStructures();
   
     void BuildTopologyStructures();
