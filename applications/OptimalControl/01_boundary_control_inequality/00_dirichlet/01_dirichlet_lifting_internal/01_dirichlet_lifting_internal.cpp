@@ -98,8 +98,10 @@ int main(int argc, char** args) {
   ml_prob.SetFilesHandler(&files);
 
   // ======= Problem, Quad Rule ========================
-  std::string fe_quad_rule("seventh");
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+    std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
 
   
@@ -113,12 +115,29 @@ int main(int argc, char** args) {
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
-  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 
+  const bool read_groups = true;
+  const bool read_boundary_groups = true;
+    
+  ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
+    
+  ml_mesh.GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
+ 
+
+  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+  
+  ml_mesh.PrepareNewLevelsForRefinement();
+
+
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+
+  // ======= Mesh: Refinement  ==================
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
   const unsigned erased_levels = N_ERASED_LEVELS;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+
+  // ======= Mesh: COARSE ERASING ========================
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
   ml_mesh.PrintInfo();
 
@@ -136,31 +155,33 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("state", LAGRANGE, /*SECOND*/FIRST);
   ml_sol.AddSolution("control", LAGRANGE, /*SECOND*/FIRST);
   ml_sol.AddSolution("adjoint", LAGRANGE, /*SECOND*/FIRST);
-  ml_sol.AddSolution("mu", LAGRANGE, /*SECOND*/FIRST);  
+  ml_sol.AddSolution("mu", LAGRANGE, /*SECOND*/FIRST);  //MU
 
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);  //MU
 
   // ======= Solution: Boundary Conditions ==================
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   ml_sol.GenerateBdc("state");
   ml_sol.GenerateBdc("control");
   ml_sol.GenerateBdc("adjoint");
-  ml_sol.GenerateBdc("mu");
+  ml_sol.GenerateBdc("mu");  //MU
  // ======= Solutions that are Unknowns - END ==================
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
+
+  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
 
@@ -173,16 +194,15 @@ int main(int argc, char** args) {
   
 
   // ======= Problem, System - BEGIN ========================
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr"); //MU
   
-  system.SetActiveSetFlagName(act_set_flag_name);
+  system.SetActiveSetFlagName(act_set_flag_name); //MU
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
   system.AddSolutionToSystemPDE("adjoint");  
-  system.AddSolutionToSystemPDE("mu");  
+  system.AddSolutionToSystemPDE("mu");   //MU
   
-  // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftRestrProblem);
   
   system.SetDebugNonlinear(true);

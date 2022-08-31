@@ -510,6 +510,9 @@ int main(int argc, char** args) {
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+    
   // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
  
@@ -551,7 +554,7 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - END  ==================
 
  
-  // ======= System - BEGIN ========================
+  // ======= Problem, System - BEGIN ========================
   NonLinearImplicitSystem & system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
 
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
@@ -568,26 +571,19 @@ int main(int argc, char** args) {
    
   // initialize and solve the system
     system_opt.init();
-    system_opt.ClearVariablesToBeSolved();
-    system_opt.AddVariableToBeSolved("All");
   
-    ml_sol.SetWriter(VTK);
-    ml_sol.GetWriter()->SetDebugOutput(true);
-    
     system_opt.SetDebugNonlinear(true);
     system_opt.SetDebugFunction(ComputeIntegral);
     
 //   system_opt.SetMaxNumberOfNonLinearIterations(2);
-  
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
     system_opt.SetOuterSolver(PREONLY);
     
-    
    
     system_opt.MGsolve();
 //   system_opt.assemble_call_before_boundary_conditions(1);
-  // ======= System  - END ========================
+  // ======= Problem, System  - END ========================
 
   
   

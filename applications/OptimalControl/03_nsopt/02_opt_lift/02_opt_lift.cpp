@@ -237,7 +237,6 @@ int main(int argc, char** args) {
   // ======= Problem, Quad Rule ========================
     std::vector< std::string > fe_quad_rule_vec;
   fe_quad_rule_vec.push_back("seventh");
-
   
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
@@ -250,7 +249,7 @@ int main(int argc, char** args) {
 //   std::string input_file = "parametric_square_1x1.med";
   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "cyl.med"; // "fifth"
-  std::ostringstream mystream; mystream << "./" << /*DEFAULT_INPUTDIR*/ mesh_folder_file << input_file;
+  std::ostringstream mystream; mystream << "./" << mesh_folder_file << input_file;
   const std::string infile = mystream.str();
 
   
@@ -345,6 +344,9 @@ int main(int argc, char** args) {
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  
   // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
  
@@ -374,9 +376,10 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - END  ==================
   
 
-  // ======= System - BEGIN ========================
-  NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");  ///@todo this MUST return a REFERENCE, otherwise it doesn't run!
+  // ======= Problem, System - BEGIN ========================
+  NonLinearImplicitSystem & system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");  ///@todo this MUST return a REFERENCE, otherwise it doesn't run!
 
+  
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
   system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
   }
@@ -384,17 +387,15 @@ int main(int argc, char** args) {
 //   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);  //AD doesn't seem to work now
   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
     
-  // initialize and solve the system
-  system_opt.init();
-  system_opt.ClearVariablesToBeSolved();
-  system_opt.AddVariableToBeSolved("All");
-
-  ml_sol.SetWriter(VTK);
-  ml_sol.GetWriter()->SetDebugOutput(true);
-  
- 
+// *****************
   system_opt.SetDebugNonlinear(true);
   system_opt.SetDebugFunction(ComputeIntegral);
+// *****************
+  
+  
+  // initialize and solve the system
+  system_opt.init();
+ 
 //   system_opt.SetMaxNumberOfNonLinearIterations(30);
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
 //   system_opt.SetDebugLinear(true);
@@ -403,7 +404,7 @@ int main(int argc, char** args) {
 
   system_opt.SetOuterSolver(PREONLY);
   system_opt.MGsolve();
-  // ======= System - END ========================
+  // ======= Problem, System - END ========================
 
   
   

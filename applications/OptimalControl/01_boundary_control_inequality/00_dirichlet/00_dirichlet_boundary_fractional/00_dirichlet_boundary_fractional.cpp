@@ -428,26 +428,27 @@ int main(int argc, char** args) {
   // ======= Problem, System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
+       // ======= Not an Unknown, but needed in the System with PDAS ========================
+  system.SetActiveSetFlagName(act_set_flag_name);    //MU
+       // ======= Not an Unknown, but needed in the System with PDAS ========================
+  
+       // ======= System Unknowns ========================
+  for (unsigned int u = 0; u < unknowns.size(); u++) { system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  }
+       // ======= System Unknowns ========================
+
   system.SetAssembleFunction(AssembleOptSys);
 
 // *****************
   system.SetDebugNonlinear(true);
-  system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
+  system.SetDebugFunction(ComputeIntegral);  ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
 // *****************
   
-       // ======= System Unknowns ========================
-  for (unsigned int u = 0; u < unknowns.size(); u++)  system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  
-  
-       // ======= Not an Unknown, but needed in the System with PDAS ========================
-  system.SetActiveSetFlagName(act_set_flag_name);    //MU
-       // ======= Not an Unknown, but needed in the System with PDAS ========================
 
  
-   system.init();  /// I need to put this init before, later I will remove it   /// @todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
+  system.init();  /// I need to put this init before, later I will remove it   /// @todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
  
   set_dense_pattern_for_unknowns(system, unknowns);
 
-  //   initialize and solve the system
   system.init();
 
   //----

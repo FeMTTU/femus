@@ -119,9 +119,9 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  const unsigned int fake_time_dep_flag = 2;
+  const unsigned int act_set_fake_time_dep_flag = 2;
   const std::string act_set_flag_name = "act_flag";
-  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
