@@ -875,7 +875,7 @@ int main(int argc, char** args) {
   
   for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
         
-  // ======= Problem, App ========================
+  // ======= Problem, App (every Problem has 1 App for now) ========================
   ml_prob.set_app_specs_pointer(&my_specifics[app]);
   
   
@@ -948,7 +948,7 @@ int main(int argc, char** args) {
 
 //   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all = ml_prob.evaluate_all_fe<double, double>();
   
-    // ======= System - BEGIN ========================
+    // ======= Problem, System - BEGIN ========================
   ml_prob.clear_systems();
   
   NonLinearImplicitSystem & system = ml_prob.add_system < NonLinearImplicitSystem > (my_specifics[app]._system_name);
@@ -973,7 +973,7 @@ int main(int argc, char** args) {
   system.MGsolve();
   
   compute_norm_of_unknowns<double, double>(ml_prob);
-    // ======= System - END ========================
+    // ======= Problem, System - END ========================
   
   
     // ======= Print ========================
@@ -983,7 +983,7 @@ int main(int argc, char** args) {
  
   ml_sol.GetWriter()->Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
-  }  //end refinement loop
+    }  //end refinement loop
   
   }  //end mesh file loop
  

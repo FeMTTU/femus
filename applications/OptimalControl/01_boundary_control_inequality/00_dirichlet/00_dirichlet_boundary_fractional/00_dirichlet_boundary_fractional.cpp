@@ -252,12 +252,27 @@ int main(int argc, char** args) {
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
+  // ======= Problem  ==================
+  MultiLevelProblem ml_prob;
+  
   // ======= Files ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
+
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+
+  // ======= Problem, Quad Rule ========================
+  //right now only one quadrature rule is used in the FE type under Mesh
+  /*const*/ std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  fe_quad_rule_vec.push_back("eighth");
+
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
 
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
@@ -309,6 +324,9 @@ int main(int argc, char** args) {
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
 // // // =================================================================
   
+  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+  // I should put it inside a Mesh constructor with whatever argument so I hide it from the main
+  // No it must be at the very end of ReadCoarseMesh
 
 
   // ======= Mesh: REFINING ========================
@@ -351,24 +369,8 @@ int main(int argc, char** args) {
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);
 
-  // ======= Problem  ==================
-  MultiLevelProblem ml_prob;
-  
-  // ======= Problem, II  ==================
-  ml_prob.SetFilesHandler(&files);
-  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
-
-  // ======= Problem, Quad Rule ========================
-  //right now only one quadrature rule is used in the FE type under Mesh
-  /*const*/ std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  fe_quad_rule_vec.push_back("eighth");
-
-  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
-  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
-  // I should put it inside a Mesh constructor with whatever argument so I hide it from the main
-  // No it must be at the very end of ReadCoarseMesh
+ // ======= Problem, Mesh and Solution  ==================
+ ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
 
   
   // ======= Solutions that are Unknowns - BEGIN ==================
@@ -415,15 +417,15 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - END  ==================
   
   
-  //-- CHECK SOLUTION FE TYPES --------
+  //== Solution: CHECK SOLUTION FE TYPES ==
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
-  //-- CHECK SOLUTION FE TYPES --------
+  //== Solution: CHECK SOLUTION FE TYPES ==
   
 
   
-  // ======= System - BEGIN ========================
+  // ======= Problem, System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
   system.SetAssembleFunction(AssembleOptSys);
@@ -461,7 +463,7 @@ int main(int argc, char** args) {
 //   double totalAssemblyTime = 0.;
 //   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
 //   system.assemble_call_before_boundary_conditions(1);
-  // ======= System  - END ========================
+  // ======= Problem, System  - END ========================
 
   
   // ======= Print ========================

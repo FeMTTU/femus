@@ -291,7 +291,7 @@ public:
    }
    
 
-    /** Files Handler */
+    /** App Specifics Pointer */
   void set_app_specs_pointer(const app_specifics * ptr_in) { _app_specs_ptr = ptr_in; return; }
   
   inline const app_specifics * get_app_specs_pointer() const { return  _app_specs_ptr; }

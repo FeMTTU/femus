@@ -181,17 +181,23 @@ int main(int argc, char** args) {
   // ======= Init ========================
     FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+    // ======= Problem ========================
+    MultiLevelProblem ml_prob;
+
     // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = true;
+  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
  
-    // ======= Quad Rule ========================
-    std::string fe_quad_rule("seventh");
-    /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-         probably in the furure it is not going to be an argument of this function   */
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+
+  // ======= Problem, Quad Rule ========================
+  std::string fe_quad_rule("seventh");
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.set_all_abstract_fe_multiple();
 
     // ======= Mesh  ==================
     MultiLevelMesh ml_mesh;
@@ -217,37 +223,26 @@ int main(int argc, char** args) {
     // ======= Solution  ==================
     MultiLevelSolution ml_sol(&ml_mesh);
 
-    // add variables to ml_sol
+    ml_sol.SetWriter(VTK);
+    ml_sol.GetWriter()->SetDebugOutput(true);
+  
+ // ======= Problem, Mesh and Solution  ==================
+ ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+
+
+  // ======= Solutions that are Unknowns - BEGIN ==================
     ml_sol.AddSolution("state", LAGRANGE, FIRST);
     ml_sol.AddSolution("control", LAGRANGE, FIRST);
     ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
     ml_sol.AddSolution("adjoint_ext", LAGRANGE, FIRST);
     ml_sol.AddSolution("mu", LAGRANGE, FIRST);
-    ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-    ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-    const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
-    const std::string act_set_flag_name = "act_flag";
-    ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
-
-    // ======= Problem ========================
-    MultiLevelProblem ml_prob(&ml_sol);
-
-    ml_prob.SetFilesHandler(&files);
-    ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-    ml_prob.set_all_abstract_fe_multiple();
 
   // ======= Solution: Initial Conditions ==================
-    ml_sol.Initialize("All");    // initialize all variables to zero
-
     ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("adjoint_ext", Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
-    
-    ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
-    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
-    ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
     ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
@@ -256,12 +251,35 @@ int main(int argc, char** args) {
     ml_sol.GenerateBdc("adjoint", "Steady", & ml_prob);
     ml_sol.GenerateBdc("adjoint_ext", "Steady", & ml_prob);
     ml_sol.GenerateBdc("mu", "Steady", & ml_prob);
+  // ======= Solutions that are Unknowns - END ==================
+
+  // ======= Solutions that are not Unknowns - BEGIN  ==================
+    ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+    ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+    const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
+    const std::string act_set_flag_name = "act_flag";
+    ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+
+    ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+    ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
 
     ml_sol.GenerateBdc("TargReg", "Steady", & ml_prob);
     ml_sol.GenerateBdc("ContReg", "Steady", & ml_prob);
     ml_sol.GenerateBdc(act_set_flag_name.c_str(), "Steady", & ml_prob);
+  // ======= Solutions that are not Unknowns - END  ==================
+
     
-    // ======= System ========================
+  //==== Solution: CHECK SOLUTION FE TYPES ==
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
+  //==== Solution: CHECK SOLUTION FE TYPES ==
+
+  
+
+    
+  // ======= Problem, System - BEGIN ========================
     NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
 
     system.SetActiveSetFlagName(act_set_flag_name);
@@ -275,9 +293,6 @@ int main(int argc, char** args) {
     // attach the assembling function to system
     system.SetAssembleFunction(AssembleLiftExternalProblem);
 
-    ml_sol.SetWriter(VTK);
-    ml_sol.GetWriter()->SetDebugOutput(true);
-
     system.SetDebugNonlinear(true);
     system.SetDebugFunction(ComputeIntegral);
     // system.SetMaxNumberOfNonLinearIterations(4);
@@ -286,11 +301,12 @@ int main(int argc, char** args) {
     system.init();
 //     system.assemble_call_before_boundary_conditions(2);
     system.MGsolve();
+  // ======= Problem, System  - END ========================
 
     // ======= Print ========================
     std::vector < std::string > variablesToBePrinted;
     variablesToBePrinted.push_back("all");
-    ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
+    ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
 
     return 0;
 
@@ -1306,11 +1322,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
         } // end gauss point loop
     } //end element loop
+    
+//     std::ios_base::fmtflags f( std::cout.flags() );
 
     std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
     std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
     std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
     std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta << std::endl;
+
+//     std::cout.flags( f );  ///@todo attempt at restoring default cout flags
 
     return;
 
