@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
-#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
+// #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
@@ -14,6 +14,55 @@
 #define FE_DOMAIN  2
 
 using namespace femus;
+
+
+
+ //Unknown definition  ==================
+ const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
+     
+     
+  std::vector< FEFamily > feFamily;
+  std::vector< FEOrder >   feOrder;
+
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+ 
+                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(FIRST/*SECOND*/);
+ 
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Unknown >  unknowns(feFamily.size());
+
+   unknowns[0]._name      = "state";
+   unknowns[1]._name      = "control";
+   unknowns[2]._name      = "adjoint";
+   unknowns[3]._name      = "mu";
+
+   unknowns[0]._is_sparse = true;
+   unknowns[1]._is_sparse = true;
+   unknowns[2]._is_sparse = true;
+   unknowns[3]._is_sparse = true;
+   
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+         
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
+              
+     }
+ 
+ 
+   return unknowns;
+     
+}
+
 
 
 
@@ -152,32 +201,28 @@ int main(int argc, char** args) {
 
 
   // ======= Solutions that are Unknowns - BEGIN ==================
-  ml_sol.AddSolution("state", LAGRANGE, /*SECOND*/FIRST);
-  ml_sol.AddSolution("control", LAGRANGE, /*SECOND*/FIRST);
-  ml_sol.AddSolution("adjoint", LAGRANGE, /*SECOND*/FIRST);
-  ml_sol.AddSolution("mu", LAGRANGE, /*SECOND*/FIRST);  //MU
-
-  // ======= Solution: Initial Conditions ==================
-  ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);  //MU
-
-  // ======= Solution: Boundary Conditions ==================
+  std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
+ 
+  for (unsigned int u = 0; u < unknowns.size(); u++) { ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown); }
+   
+ for (unsigned int u = 0; u < unknowns.size(); u++)  { ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob); }
+  
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
-  ml_sol.GenerateBdc("state");
-  ml_sol.GenerateBdc("control");
-  ml_sol.GenerateBdc("adjoint");
-  ml_sol.GenerateBdc("mu");  //MU
+   for (unsigned int u = 0; u < unknowns.size(); u++)  {  ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);  }
  // ======= Solutions that are Unknowns - END ==================
 
+ 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
+  unsigned int u_control = 0;
+    for (unsigned int u = 0; u < unknowns.size(); u++) {
+        if ( !(unknowns[u]._name.compare("control")) ) u_control = u;
+    }
   const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), unknowns[u_control]._fe_family, unknowns[u_control]._fe_order, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
@@ -198,10 +243,10 @@ int main(int argc, char** args) {
   
   system.SetActiveSetFlagName(act_set_flag_name); //MU
 
-  system.AddSolutionToSystemPDE("state");  
-  system.AddSolutionToSystemPDE("control");  
-  system.AddSolutionToSystemPDE("adjoint");  
-  system.AddSolutionToSystemPDE("mu");   //MU
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+  system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
+  }
+  
   
   system.SetAssembleFunction(AssembleLiftRestrProblem);
   

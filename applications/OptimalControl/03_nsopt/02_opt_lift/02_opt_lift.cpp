@@ -5,22 +5,15 @@
 #include "adept.h"
 
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
-#include "NumericVector.hpp"
-#include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
-// #include "MultiLevelMesh.hpp"
-#include "LinearImplicitSystem.hpp"
-// #include "WriterEnum.hpp"
-#include "Fluid.hpp"
-#include "Parameter.hpp"
 #include "Files.hpp"
+#include "Parameter.hpp"
+#include "Fluid.hpp"
+#include "MultiLevelSolution.hpp"
+#include "NumericVector.hpp"
 #include "paral.hpp"//to get iproc HAVE_MPI is inside here
 
 #include "Assemble_jacobian.hpp"
-
-#include "ElemType.hpp"
 
 
 #include   "../manufactured_solutions.hpp"
@@ -370,16 +363,24 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+
+  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
+  const std::string act_set_flag_name = "act_flag";
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+
+  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
   
 
   // ======= Problem, System - BEGIN ========================
-  NonLinearImplicitSystem & system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");  ///@todo this MUST return a REFERENCE, otherwise it doesn't run!
-
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system_opt    = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("NSOpt");  ///@todo this MUST return a REFERENCE, otherwise it doesn't run!
   
+  system_opt.SetActiveSetFlagName(act_set_flag_name); //MU
+
+
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
   system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
   }
