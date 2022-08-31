@@ -27,6 +27,7 @@
   const double cost_functional_coeff = 1.;
   const double alpha = ALPHA_CTRL_VOL;
   const double beta  = BETA_CTRL_VOL;
+  const double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         // penalty for zero control outside
 
   
 //****** Mesh ********************************
@@ -99,6 +100,37 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 }
 
 
+
+ void  name_of_unknowns(std::vector< Unknown > & unknowns, const unsigned int dimension) {
+
+  const int state_pos_begin = 0;
+  const int adj_pos_begin   =      dimension + 1;
+  const int ctrl_pos_begin  = 2 * (dimension + 1);
+  const int mu_pos_begin    = 3 * (dimension + 1);
+  
+                        unknowns[state_pos_begin + 0]._name      = "U";
+                        unknowns[state_pos_begin + 1]._name      = "V";
+  if (dimension == 3)   unknowns[state_pos_begin + 2]._name      = "W";
+                                unknowns[dimension]._name      = "P";
+  
+                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
+                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
+                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
+  
+                       unknowns[ctrl_pos_begin + 0]._name      = "UCTRL";
+                       unknowns[ctrl_pos_begin + 1]._name      = "VCTRL";
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "WCTRL";
+               unknowns[ctrl_pos_begin + dimension]._name      = "PCTRL";
+
+                       unknowns[mu_pos_begin + 0]._name      = "mu_0";
+                       unknowns[mu_pos_begin + 1]._name      = "mu_1";
+  if (dimension == 3)  unknowns[mu_pos_begin + 2]._name      = "mu_2";
+ 
+     
+}
+
+
  //Unknown definition  ==================
  const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
      
@@ -119,9 +151,14 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
                         feFamily.push_back(LAGRANGE);   //control
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
-  
                         feFamily.push_back(LAGRANGE);
  
+                        feFamily.push_back(LAGRANGE);   //mu
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+ 
+  
+  
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
@@ -137,29 +174,16 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
   if (dimension == 3)   feOrder.push_back(SECOND);
                         feOrder.push_back(FIRST);
  
+                        feOrder.push_back(SECOND);   //mu
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
 
   assert( feFamily.size() == feOrder.size() );
  
  std::vector< Unknown >  unknowns(feFamily.size());
  
-  const int adj_pos_begin   = dimension + 1;
-  const int ctrl_pos_begin  = 2 * (dimension + 1);
+    name_of_unknowns(unknowns, dimension);
   
-                                        unknowns[0]._name      = "U";
-                                        unknowns[1]._name      = "V";
-  if (dimension == 3)                   unknowns[2]._name      = "W";
-                                unknowns[dimension]._name      = "P";
-  
-                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
-                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
-  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
-                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
-  
-                       unknowns[ctrl_pos_begin + 0]._name      = "UCTRL";
-                       unknowns[ctrl_pos_begin + 1]._name      = "VCTRL";
-  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "WCTRL";
-               unknowns[ctrl_pos_begin + dimension]._name      = "PCTRL";
-
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
               unknowns[u]._fe_family  = feFamily[u];
@@ -1483,7 +1507,7 @@ double	integral_gamma  = 0.;
 
 
 
-void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
+void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
      
  std::cout << " ********************************  NON-AD SYSTEM ******************************************** " << std::endl;
  //pointers
@@ -1532,29 +1556,32 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   
   // solution variables *******************************************
   const int n_vars = dim + 1;
-  const int n_unknowns = 3*n_vars; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
   const int vel_type_pos = 0;
   const int press_type_pos = dim;
-  const int adj_vel_type_pos = vel_type_pos;
-  const int state_pos_begin = 0;
-  const int adj_pos_begin   = dim + 1;
-  const int ctrl_pos_begin   = 2*(dim + 1);
-  
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
-  Solname              [state_pos_begin+0] =                "U";
-  Solname              [state_pos_begin+1] =                "V";
-  if (dim == 3) Solname[state_pos_begin+2] =                "W";
-  Solname              [state_pos_begin + press_type_pos] = "P";
-  
-  Solname              [adj_pos_begin + 0] =              "UADJ";
-  Solname              [adj_pos_begin + 1] =              "VADJ";
-  if (dim == 3) Solname[adj_pos_begin + 2] =              "WADJ";
-  Solname              [adj_pos_begin + press_type_pos] = "PADJ";
 
-  Solname              [ctrl_pos_begin + 0] =              "UCTRL";
-  Solname              [ctrl_pos_begin + 1] =              "VCTRL";
-  if (dim == 3) Solname[ctrl_pos_begin + 2] =              "WCTRL";
-  Solname              [ctrl_pos_begin + press_type_pos] = "PCTRL";
+  const int state_pos_begin = 0;               ///@todo make in agreement with Unknowns function
+  const int adj_pos_begin    =    dim + 1;
+  const int ctrl_pos_begin   = 2*(dim + 1);
+
+  if (dim != 2) abort();
+  
+    enum Pos_in_matrix {pos_mat_state_0 = 0, 
+                        pos_mat_state_1, 
+                        pos_mat_state_p,
+                        pos_mat_adj_0,
+                        pos_mat_adj_1,
+                        pos_mat_adj_p, 
+                        pos_mat_ctrl_0,
+                        pos_mat_ctrl_1,
+                        pos_mat_ctrl_p, 
+                        pos_mat_mu_0,
+                        pos_mat_mu_1}; //these are known at compile-time 
+
+  
+  std::vector< Unknown > unknowns = provide_list_of_unknowns( dim );
+  
+  const int n_unknowns = unknowns.size();
+ 
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
@@ -1562,8 +1589,8 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(Solname[ivar].c_str());
-    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(unknowns[ivar]._name.c_str());
+    SolIndex[ivar]	= ml_sol->GetIndex        (unknowns[ivar]._name.c_str());
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
@@ -1784,11 +1811,11 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
     }
 	
 //  // I x = 5 test ********************************
-// 	for(unsigned i_unk=dim; i_unk<n_unknowns; i_unk++) { 
+// 	for(unsigned i_unk = 0; i_unk<n_unknowns; i_unk++) { 
 // 	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
 // 		/*if ( i_unk!=0 && i_unk!=1 && i_unk!=2 && i_unk!=3 && i_unk!=4 && i_unk!=6 && i_unk!=7 )*/  Res[SolPdeIndex[i_unk]][i_dof] +=  (               0.* phi_gss_fe[SolFEType[i_unk]][i_dof] 
 // 		                                    - SolVAR_qp[i_unk]*phi_gss_fe[SolFEType[i_unk]][i_dof] )*weight;
-// 		  for(unsigned j_unk=dim; j_unk<n_unknowns; j_unk++) {
+// 		  for(unsigned j_unk = 0; j_unk<n_unknowns; j_unk++) {
 // 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
 // 			  
 // 		              if (i_unk==j_unk /*&& i_unk!=0 && i_unk!=1 && i_unk!=2 && i_unk!=3 && i_unk!=4 && i_unk!=6 && i_unk!=7*/)   {
@@ -2435,6 +2462,39 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
  
 //============ delta_control row - END ==================================================================================================
  
+//============ delta_mu row - BEGIN  ============================================================================================
+
+//************ Residual, BEGIN *********************
+  for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+          
+  for (unsigned i = 0; i < Sol_n_el_dofs[pos_mat_mu_0 + kdim]; i++) {
+      
+       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (SolVAR_eldofs[pos_mat_mu_0 + kdim][i] - 0.);
+      
+     }
+  }
+//************ Residual, END *********************
+
+//************ Jacobian, BEGIN *********************
+  for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+    for (unsigned i = 0; i < Sol_n_el_dofs[pos_mat_mu_0 + kdim]; i++) {
+      for (unsigned j = 0; j < Sol_n_el_dofs[pos_mat_mu_0 + kdim]; j++) {
+            if (i == j) {
+               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);
+            }
+         }
+      }
+  }
+
+// //                 if ( i < nDof_mu && j < nDof_mu && i==j )  {   
+// // 	        if ( control_el_flag == 0)  {  
+// // 		  Jac[   (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +  (nDof_u + nDof_ctrl + nDof_adj + j) ]  += penalty_outside_control_domain * (1 - control_node_flag[i]);    //MU
+// //                 }
+// // 	      }
+//************ Jacobian, END *********************
+
+
+//============ delta_mu row - END  ============================================================================================
  
  
  
@@ -2497,7 +2557,6 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   const int n_unknowns = 3*n_vars; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
   const int vel_type_pos = 0;
   const int press_type_pos = dim;
-  const int adj_vel_type_pos = vel_type_pos;
   const int state_pos_begin = 0;
   const int adj_pos_begin   = dim+1;
   const int ctrl_pos_begin   = 2*(dim+1);

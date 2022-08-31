@@ -39,6 +39,7 @@
 // for lifting approaches (both internal and external)
 #define ALPHA_CTRL_VOL 0.01 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e50;         // penalty for zero control outside
 
 
 //*********************** Control boundary extremes *******************************************************

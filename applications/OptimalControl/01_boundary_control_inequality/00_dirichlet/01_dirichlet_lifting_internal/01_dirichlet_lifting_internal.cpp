@@ -492,7 +492,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double u_des = DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
-  double penalty_outside_control_domain = 1.e50;         // penalty for zero control outside
+  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         // penalty for zero control outside
  //***************************************************  
 
   RES->zero();
@@ -699,7 +699,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
           // FOURTH ROW
        if (i < nDof_mu)  {
-            if ( control_el_flag == 0) {  Res[nDof_u + nDof_ctrl + nDof_adj + i] +=   (- penalty_outside_control_domain) *  (1 - control_node_flag[i]) * (sol_mu[i] - 0.); }
+            if ( control_el_flag == 0) {  Res[nDof_u + nDof_ctrl + nDof_adj + i] +=   (- penalty_outside_control_domain) *  (1 - control_node_flag[i]) * (sol_mu[i] - 0.); }   //MU
        }
        
            
@@ -804,18 +804,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
                 }
 	      }
 	      
-//           if (sol_actflag[i] == 0) //inactive
-//	      { // BLOCK delta_mu - mu	      
-// 	        if ( i < nDof_mu && j < nDof_mu && i==j )   
-// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-// 		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
-// 	     // }
-// 	      else //active
-// 	      { // BLOCK delta_mu - ctrl	      
-//                 if ( i < nDof_mu && j < nDof_ctrl && i==j )   
-// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-// 		       (nDof_u + j)                       ]  = c_compl * 1. ; 
-	     // }
 	      
             } // end phi_j loop
           } // endif assemble_matrix
