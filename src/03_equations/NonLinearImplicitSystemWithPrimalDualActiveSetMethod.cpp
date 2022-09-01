@@ -272,13 +272,27 @@ namespace femus {
 
         // ***************** check active flag sets *******************
         Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel (_levelToAssemble);   // pointer to the solution (level) object
-        unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex (_active_flag_name.c_str());
+
+        
+        std::vector< bool > compare_bool(_active_flag_name.size(), false);
+        
+  for (unsigned int c = 0; c < _active_flag_name.size(); c++)  {
+        unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex (_active_flag_name[c].c_str());
 
         int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare (* (sol->_Sol[solIndex_act_flag])));     ///@todo perhaps this one slows things down in parallel!!!
-        bool compare_bool = false;
-        if (compare_return == -1) compare_bool = true;
+
+        if (compare_return == -1) compare_bool[c] = true;
+  }
+  
+   //turn compare_bool into a scalar boolean
+      bool compare_bool_total = false;
+        for (unsigned int c = 0; c < _active_flag_name.size(); c++)  {
+            
+            
+        }
+        
         if (compare_bool && (_nonliniteration  > 0)) {
-          std::cout << "Active set did not change at iteration " << _nonliniteration << std::endl;
+          std::cout << "Active set for variable " << " did not change at iteration " << _nonliniteration << std::endl;
           break;
         }
 

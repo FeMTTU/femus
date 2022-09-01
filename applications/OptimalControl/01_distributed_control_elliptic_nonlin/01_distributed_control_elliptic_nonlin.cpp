@@ -129,9 +129,12 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
-  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
-  const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,act_set_fake_time_dep_flag);               
+  //MU
+  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+  const unsigned int act_set_fake_time_dep_flag = 2;
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+  //MU
 
     // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);

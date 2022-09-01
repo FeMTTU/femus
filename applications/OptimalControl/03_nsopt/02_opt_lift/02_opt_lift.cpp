@@ -723,8 +723,8 @@ std::cout << " ********************************  AD SYSTEM *********************
   double weight; // gauss point weight
   
   
-  vector< int > JACDof; // local to global pdeSys dofs
-  JACDof.reserve(3 *(dim + 1) *maxSize);
+  vector< int > L2G_dofmap_Mat; // local to global pdeSys dofs
+  L2G_dofmap_Mat.reserve(3 *(dim + 1) *maxSize);
 
   vector< double > Res; // local redidual vector
   Res.reserve(3 *(dim + 1) *maxSize);
@@ -786,7 +786,7 @@ std::cout << " ********************************  AD SYSTEM *********************
 
 //element matrices and vectors
     // resize local arrays
-    JACDof.resize(nDofsVP_tot);
+    L2G_dofmap_Mat.resize(nDofsVP_tot);
     
 //     Jac.resize(nDofsVP * nDofsVP);
 
@@ -828,7 +828,7 @@ std::cout << " ********************************  AD SYSTEM *********************
 
       for (unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-        JACDof[i + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+        L2G_dofmap_Mat[i + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);
       }
     }
     
@@ -836,7 +836,7 @@ std::cout << " ********************************  AD SYSTEM *********************
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof // via local to global solution node
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
-      JACDof[i + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+      L2G_dofmap_Mat[i + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 //STATE###################################################################
 
@@ -847,7 +847,7 @@ std::cout << " ********************************  AD SYSTEM *********************
 
       for (unsigned  k = 0; k < dim; k++) {
         solVadj[k][i] = (*sol->_Sol[solVadjIndex[k]])(solVadjDof);      // global extraction and local storage for the solution
-        JACDof[i + k * nDofsV +nDofsVP] = pdeSys->GetSystemDof(solVadjIndex[k], solVPdeadjIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+        L2G_dofmap_Mat[i + k * nDofsV +nDofsVP] = pdeSys->GetSystemDof(solVadjIndex[k], solVPdeadjIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
     
@@ -855,7 +855,7 @@ std::cout << " ********************************  AD SYSTEM *********************
     for (unsigned i = 0; i < nDofsPadj; i++) {
       unsigned solPadjDof = msh->GetSolutionDof(i, iel, solPadjType);    // global to global mapping between solution node and solution dof // via local to global solution node
       solPadj[i] = (*sol->_Sol[solPadjIndex])(solPadjDof);      // global extraction and local storage for the solution
-      JACDof[i + dim * nDofsV +nDofsVP] = pdeSys->GetSystemDof(solPadjIndex, solPPdeadjIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+      L2G_dofmap_Mat[i + dim * nDofsV +nDofsVP] = pdeSys->GetSystemDof(solPadjIndex, solPPdeadjIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 //ADJ###################################################################
 
@@ -867,7 +867,7 @@ std::cout << " ********************************  AD SYSTEM *********************
 
       for (unsigned  k = 0; k < dim; k++) {
         solVctrl[k][i] = (*sol->_Sol[solVctrlIndex[k]])(solVctrlDof);      // global extraction and local storage for the solution
-        JACDof[i + k * nDofsV + 2*nDofsVP] = pdeSys->GetSystemDof(solVctrlIndex[k], solVPdectrlIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+        L2G_dofmap_Mat[i + k * nDofsV + 2*nDofsVP] = pdeSys->GetSystemDof(solVctrlIndex[k], solVPdectrlIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
     
@@ -875,7 +875,7 @@ std::cout << " ********************************  AD SYSTEM *********************
     for (unsigned i = 0; i < nDofsPctrl; i++) {
       unsigned solPctrlDof = msh->GetSolutionDof(i, iel, solPctrlType);    // global to global mapping between solution node and solution dof // via local to global solution node
       solPctrl[i] = (*sol->_Sol[solPctrlIndex])(solPctrlDof);      // global extraction and local storage for the solution
-      JACDof[i + dim * nDofsV + 2*nDofsVP] = pdeSys->GetSystemDof(solPctrlIndex, solPPdectrlIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+      L2G_dofmap_Mat[i + dim * nDofsV + 2*nDofsVP] = pdeSys->GetSystemDof(solPctrlIndex, solPPdectrlIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 //CTRL###################################################################
 
@@ -1188,7 +1188,7 @@ for (unsigned k = 0; k < dim; k++){
     }
   
 
-    RES->add_vector_blocked(Res, JACDof);
+    RES->add_vector_blocked(Res, L2G_dofmap_Mat);
 
     //Extarct and store the Jacobian
        Jac.resize(nDofsVP_tot * nDofsVP_tot);
@@ -1206,7 +1206,7 @@ for (unsigned k = 0; k < dim; k++){
       // get the and store jacobian matrix (row-major)
       s.jacobian(&Jac[0] , true);
       
-      JAC->add_matrix_blocked(Jac, JACDof, JACDof);
+      JAC->add_matrix_blocked(Jac, L2G_dofmap_Mat, L2G_dofmap_Mat);
  
       s.clear_independents();
       s.clear_dependents();
@@ -1510,9 +1510,9 @@ double	integral_gamma  = 0.;
 void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
      
  std::cout << " ********************************  NON-AD SYSTEM ******************************************** " << std::endl;
- //pointers
-  NonLinearImplicitSystem& mlPdeSys  = ml_prob.get_system<NonLinearImplicitSystem>("NSOpt");
-//   LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
+
+ NonLinearImplicitSystemWithPrimalDualActiveSetMethod & mlPdeSys  = ml_prob.get_system< NonLinearImplicitSystemWithPrimalDualActiveSetMethod >("NSOpt");
+  
   const unsigned level = mlPdeSys.GetLevelToAssemble();
 
   bool assembleMatrix = mlPdeSys.GetAssembleMatrix(); 
@@ -1551,8 +1551,6 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
        coordX[i].reserve(maxSize);
   }
   // geometry *******************************************
-
- 
   
   // solution variables *******************************************
   const int n_vars = dim + 1;
@@ -1560,8 +1558,9 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   const int press_type_pos = dim;
 
   const int state_pos_begin = 0;               ///@todo make in agreement with Unknowns function
-  const int adj_pos_begin    =    dim + 1;
-  const int ctrl_pos_begin   = 2*(dim + 1);
+  const int adj_pos_begin   =      dim + 1;
+  const int ctrl_pos_begin  = 2 * (dim + 1);
+  const int mu_pos_begin    = 3 * (dim + 1);
 
   if (dim != 2) abort();
   
@@ -1594,13 +1593,38 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-  vector < double > Sol_n_el_dofs(n_unknowns);
+  vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
   
   
       const unsigned int n_components_ctrl = dim;
   double penalty_outside_control_domain = 1.e20;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
 
       
+  //************** variables for ineq constraints: act flag ****************************   
+  std::vector<unsigned int> solIndex_act_flag_sol(n_components_ctrl); 
+  std::vector<unsigned int> solFEType_act_flag_sol(n_components_ctrl);
+  
+  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
+                        solIndex_act_flag_sol, //this becomes a vector
+                        solFEType_act_flag_sol //remove this one, only Index
+                       );
+    
+
+  //********* variables for ineq constraints *****************
+  const int ineq_flag = INEQ_FLAG;
+  const double c_compl = C_COMPL;
+  vector < vector < double/*int*/ > > sol_actflag(n_components_ctrl);   
+  vector < vector < double > > ctrl_lower(n_components_ctrl);           
+  vector < vector < double > > ctrl_upper(n_components_ctrl);           
+	  for (unsigned c = 0; c < n_components_ctrl; c++) {
+      sol_actflag[c].reserve(max_size);
+      ctrl_lower[c].reserve(max_size);
+      ctrl_upper[c].reserve(max_size);
+      }
+//********* variables for ineq constraints *****************
+ 
+
+
   //==========================================================================================
   // velocity ************************************
   //-----------state------------------------------
@@ -1618,12 +1642,12 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   double weight = 0.;
   
   // equation ***********************************
-  vector < vector < int > > JACDof(n_unknowns); 
+  vector < vector < int > > L2G_dofmap_Mat(n_unknowns); 
   vector < vector < double > > Res(n_unknowns); /*was F*/
   vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
  
   for(int i = 0; i < n_unknowns; i++) {     
-    JACDof[i].reserve(maxSize);
+    L2G_dofmap_Mat[i].reserve(maxSize);
       Res[i].reserve(maxSize);
   }
    
@@ -1637,12 +1661,12 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   }
   
   //----------- dofs ------------------------------
-  vector < vector < double > > SolVAR_eldofs(n_unknowns);
-  vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
+  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
+  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
   for(int k=0; k<n_unknowns; k++) {
-    SolVAR_eldofs[k].reserve(maxSize);
-    gradSolVAR_eldofs[k].reserve(maxSize*dim);    
+    Sol_eldofs_Mat[k].reserve(maxSize);
+    gradSol_eldofs_Mat[k].reserve(maxSize*dim);    
   }
 
   //------------ at quadrature points ---------------------
@@ -1709,13 +1733,13 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
    //STATE###################################################################  
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-	Sol_n_el_dofs[k]=ndofs_unk;
-       SolVAR_eldofs[k].resize(ndofs_unk);
-       JACDof[k].resize(ndofs_unk); 
+	Sol_n_el_dofs_Mat_vol[k]=ndofs_unk;
+       Sol_eldofs_Mat[k].resize(ndofs_unk);
+       L2G_dofmap_Mat[k].resize(ndofs_unk); 
     for (unsigned i = 0; i < ndofs_unk; i++) {
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
-       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
-       JACDof[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+       Sol_eldofs_Mat[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
+       L2G_dofmap_Mat[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
 
@@ -1723,15 +1747,15 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
     //###################################################################
     for(int ivar=0; ivar<n_unknowns; ivar++) {
       
-      Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs[ivar]);
-      memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs[ivar]*sizeof(double));
+      Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs_Mat_vol[ivar]);
+      memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs_Mat_vol[ivar]*sizeof(double));
     }
    
     for(int ivar=0; ivar<n_unknowns; ivar++) {
       for(int jvar=0; jvar<n_unknowns; jvar++) {
       if(assembleMatrix){  //MISMATCH
-	Jac[ SolPdeIndex[ivar] ][ SolPdeIndex[jvar] ].resize(Sol_n_el_dofs[ivar]*Sol_n_el_dofs[jvar]);
-	memset(&Jac[SolPdeIndex[ivar]][SolPdeIndex[jvar]][0],0.,Sol_n_el_dofs[ivar]*Sol_n_el_dofs[jvar]*sizeof(double));
+	Jac[ SolPdeIndex[ivar] ][ SolPdeIndex[jvar] ].resize(Sol_n_el_dofs_Mat_vol[ivar]*Sol_n_el_dofs_Mat_vol[jvar]);
+	memset(&Jac[SolPdeIndex[ivar]][SolPdeIndex[jvar]][0],0.,Sol_n_el_dofs_Mat_vol[ivar]*Sol_n_el_dofs_Mat_vol[jvar]*sizeof(double));
       }
     }
   }
@@ -1748,7 +1772,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
        
 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
-              control_node_flag[c].resize(Sol_n_el_dofs[ctrl_pos_begin + c]);
+              control_node_flag[c].resize(Sol_n_el_dofs_Mat_vol[ctrl_pos_begin + c]);
               std::fill(control_node_flag[c].begin(), control_node_flag[c].end(), 0);   
          }
 
@@ -1765,7 +1789,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
 
 //    if (control_el_flag == 0) {
 // 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
-//       std::fill(SolVAR_eldofs[ctrl_pos_begin + c].begin(), SolVAR_eldofs[ctrl_pos_begin + c].end(), 0.);
+//       std::fill(Sol_eldofs_Mat[ctrl_pos_begin + c].begin(), Sol_eldofs_Mat[ctrl_pos_begin + c].end(), 0.);
 //          }
 //    }
 
@@ -1793,10 +1817,10 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
 	    gradSolVAR_qp[unk][ivar2] = 0.; 
 	  }
 	  
-	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
-	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
+	  for(unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[unk]; i++) {
+	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * Sol_eldofs_Mat[unk][i];
 	    for(unsigned ivar2=0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) {
-	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim_offset_grad /*space_dim*/+ivar2] * SolVAR_eldofs[unk][i]; 
+	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim_offset_grad /*space_dim*/+ivar2] * Sol_eldofs_Mat[unk][i]; 
 	    }
 	  }
 	  
@@ -1805,21 +1829,21 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
 	
       vector < double > coordX_gss(dim, 0.);
  	for(unsigned k = 0; k <  dim; k++) {
-	  for(unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
+	  for(unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[k]; i++) {
          coordX_gss[k] += coordX[k][i] * phi_gss_fe[ SolFEType[k] ][i];
       }
     }
 	
 //  // I x = 5 test ********************************
 // 	for(unsigned i_unk = 0; i_unk<n_unknowns; i_unk++) { 
-// 	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
+// 	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs_Mat_vol[i_unk]; i_dof++) {
 // 		/*if ( i_unk!=0 && i_unk!=1 && i_unk!=2 && i_unk!=3 && i_unk!=4 && i_unk!=6 && i_unk!=7 )*/  Res[SolPdeIndex[i_unk]][i_dof] +=  (               0.* phi_gss_fe[SolFEType[i_unk]][i_dof] 
 // 		                                    - SolVAR_qp[i_unk]*phi_gss_fe[SolFEType[i_unk]][i_dof] )*weight;
 // 		  for(unsigned j_unk = 0; j_unk<n_unknowns; j_unk++) {
-// 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
+// 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs_Mat_vol[j_unk]; j_dof++) {
 // 			  
 // 		              if (i_unk==j_unk /*&& i_unk!=0 && i_unk!=1 && i_unk!=2 && i_unk!=3 && i_unk!=4 && i_unk!=6 && i_unk!=7*/)   {
-// 				Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += 
+// 				Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs_Mat_vol[i_unk] + j_dof ] += 
 // 				        ( phi_gss_fe[SolFEType[i_unk]][i_dof]*phi_gss_fe[SolFEType[j_unk]][j_dof] )*weight;
 // 			      }
 // 			  
@@ -2311,7 +2335,7 @@ for (unsigned k = 0; k < dim; k++){
         for (unsigned kdim = 0; kdim < dim; kdim++) {
            for (unsigned i = 0; i < nDofsVctrl; i++) {
 
-        Res[kdim + ctrl_pos_begin][i] +=       (- penalty_outside_control_domain)  *  (1 - control_node_flag[kdim][i]) * (SolVAR_eldofs[kdim + ctrl_pos_begin][i] - 0.);
+        Res[kdim + ctrl_pos_begin][i] +=       (- penalty_outside_control_domain)  *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[kdim + ctrl_pos_begin][i] - 0.);
                  }
             }
     }
@@ -2467,9 +2491,9 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 //************ Residual, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
           
-  for (unsigned i = 0; i < Sol_n_el_dofs[pos_mat_mu_0 + kdim]; i++) {
+  for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
       
-       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (SolVAR_eldofs[pos_mat_mu_0 + kdim][i] - 0.);
+       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);
       
      }
   }
@@ -2477,10 +2501,10 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 
 //************ Jacobian, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
-    for (unsigned i = 0; i < Sol_n_el_dofs[pos_mat_mu_0 + kdim]; i++) {
-      for (unsigned j = 0; j < Sol_n_el_dofs[pos_mat_mu_0 + kdim]; j++) {
+    for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
+      for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; j++) {
             if (i == j) {
-               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);
+               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);
             }
          }
       }
@@ -2506,9 +2530,9 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 
     //Sum the local matrices/vectors into the Global Matrix/Vector
     for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) {
-      RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],JACDof[i_unk]);
+      RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],L2G_dofmap_Mat[i_unk]);
         for(unsigned j_unk=0; j_unk < n_unknowns; j_unk++) {
-	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], JACDof[i_unk], JACDof[j_unk]);
+	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], L2G_dofmap_Mat[i_unk], L2G_dofmap_Mat[j_unk]);
         }
     }
  
@@ -2516,9 +2540,117 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   } //end list of elements loop for each subdomain
   
   
+   std::vector<unsigned int> ctrl_index(n_components_ctrl); 
+  std::vector<unsigned int>   mu_index(n_components_ctrl);    
+      for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+           ctrl_index[kdim] =  SolPdeIndex[ctrl_pos_begin + kdim];
+             mu_index[kdim] =  SolPdeIndex[mu_pos_begin + kdim];
+      }
+      
+ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+                               ineq_flag,
+                               ctrl_index,
+                               mu_index,
+                               SolIndex,
+                               sol,
+                               & mlPdeSys,
+                               pdeSys,
+                               RES);
+    
+    
+    
+     
+RES->close();
+if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
+      // ***************** ADD PART - END  *******************
+ 
+  
+
+//   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+// -------
+   geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+      
+   geom_element_iel.set_elem_center_3d(iel, solType_coords);
+// -------
+   
+// -------
+    el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
+                        SolFEType,
+                        SolIndex,
+                        SolPdeIndex,
+                        Sol_n_el_dofs_Mat_vol,
+                        Sol_eldofs_Mat,
+                        L2G_dofmap_Mat);
+      
+    //***** set control flag ****************************
+  int control_el_flag = 0;
+  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+ 
+    
+    if (control_el_flag == 1) {
+
+        
+  ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  (msh,
+   sol,
+   iel,
+   geom_element_iel.get_coords_at_dofs/*_3d*/(),
+   Sol_eldofs_Mat,
+   Sol_n_el_dofs_Mat_vol,
+   c_compl,
+   mu_index,
+   ctrl_index,
+   ctrl_lower,
+   ctrl_upper,
+   sol_actflag,
+   solFEType_act_flag_sol, //
+   solIndex_act_flag_sol); //
+  
+      
+
+// // // 
+// // //     ctrl_inequality::node_insertion(iel,
+// // //                    msh,
+// // //                    L2G_dofmap_Mat,
+// // //                    pos_mat_mu,
+// // //                    pos_mat_ctrl,
+// // //                    sol_eldofs_Mat,
+// // //                    Sol_n_el_dofs_Mat_vol,
+// // //                    sol_actflag,
+// // //                    solFEType_act_flag_sol,
+// // //                    ineq_flag,
+// // //                    c_compl,
+// // //                    ctrl_lower,
+// // //                    ctrl_upper,
+// // //                    JAC,
+// // //                    RES,
+// // //                    assembleMatrix
+// // //                    );
+// // //    
+// // // 
+       }
+// // // 
+// // //  
+// // //     
+// // //     
+// // //  //============= delta_ctrl-delta_mu row ===============================
+// // //   if (assembleMatrix) { JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }
+  
+  
+  }
+//   ***************** INSERT PART - END (must go AFTER the sum, clearly) *******************
+  
+  
+  
   JAC->close();
   RES->close();
   // ***************** END ASSEMBLY *******************
+
+    
+
+
 }
  
 
@@ -2586,7 +2718,7 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-  vector < double > Sol_n_el_dofs(n_unknowns);
+  vector < double > Sol_n_el_dofs_Mat_vol(n_unknowns);
   
   //==========================================================================================
   // velocity ************************************
@@ -2605,16 +2737,16 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   
   
   //----------- dofs ------------------------------
-  vector < vector < double > > SolVAR_eldofs(n_unknowns);
-  vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
+  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
+  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
   vector < vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
   vector < vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
 
 
   for(int k = 0; k < n_unknowns; k++) {
-    SolVAR_eldofs[k].reserve(maxSize);
-    gradSolVAR_eldofs[k].reserve(maxSize*dim); 
+    Sol_eldofs_Mat[k].reserve(maxSize);
+    gradSol_eldofs_Mat[k].reserve(maxSize*dim); 
     
     SolVAR_coarser_prol_eldofs[k].reserve(maxSize);
     gradSolVAR_coarser_prol_eldofs[k].reserve(maxSize*dim);    
@@ -2685,12 +2817,12 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
    //STATE###################################################################  
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-	Sol_n_el_dofs[k]=ndofs_unk;
-       SolVAR_eldofs[k].resize(ndofs_unk);
+	Sol_n_el_dofs_Mat_vol[k]=ndofs_unk;
+       Sol_eldofs_Mat[k].resize(ndofs_unk);
        SolVAR_coarser_prol_eldofs[k].resize(ndofs_unk);
     for (unsigned i = 0; i < ndofs_unk; i++) {
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
-       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
+       Sol_eldofs_Mat[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
        SolVAR_coarser_prol_eldofs[k][i] = (*sol_coarser_prolongated->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
       }
     }
@@ -2718,12 +2850,12 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
     }
 	  
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
-	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
-	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
+	  for(unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[unk]; i++) {
+	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * Sol_eldofs_Mat[unk][i];
 	    SolVAR_coarser_prol_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_coarser_prol_eldofs[unk][i];
 //         std::cout << SolVAR_qp[unk] << " \t " << SolVAR_coarser_prol_qp[unk] << std::endl;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * Sol_eldofs_Mat[unk][i]; 
 	      gradSolVAR_coarser_prol_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_coarser_prol_eldofs[unk][i]; 
 //         std::cout << gradSolVAR_qp[unk][ivar2] << " \t " << gradSolVAR_coarser_prol_qp[unk][ivar2] << std::endl;
 	    }

@@ -395,10 +395,10 @@ int main(int argc, char** args) {
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   
   //MU
-  const std::string act_set_flag_name = "act_flag";
+  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
   
   
@@ -420,7 +420,7 @@ int main(int argc, char** args) {
   //== Solution: CHECK SOLUTION FE TYPES ==
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
-  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name[0].c_str())) abort();
   //== Solution: CHECK SOLUTION FE TYPES ==
   
 
@@ -1272,10 +1272,13 @@ if ( i_vol == j_vol )  {
   
 
   //MU
+  std::vector<unsigned int> ctrl_index(1);  ctrl_index[0] = pos_mat_ctrl;
+  std::vector<unsigned int>   mu_index(1);    mu_index[0] = pos_mat_mu;
+
 ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
-                               pos_mat_ctrl,
-                               pos_mat_mu,
+                               ctrl_index,
+                               mu_index,
                                SolIndex_Mat,
                                sol,
                                mlPdeSys,
@@ -1330,9 +1333,9 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
     sol_eldofs_Mat, 
     Sol_n_el_dofs_Mat_vol, 
+    c_compl, 
     pos_mat_mu,               //this becomes a vector
     pos_mat_ctrl,             //this becomes a vector
-    c_compl, 
     ctrl_lower, ctrl_upper,   //this becomes a vector
     sol_actflag,              //this becomes a vector
     solFEType_act_flag_sol, //remove this one, only Index

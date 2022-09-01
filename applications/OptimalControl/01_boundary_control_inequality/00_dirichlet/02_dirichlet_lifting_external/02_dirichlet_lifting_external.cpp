@@ -256,13 +256,16 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - BEGIN  ==================
     ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
     ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-    const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
-    const std::string act_set_flag_name = "act_flag";
-    ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+ 
+  //MU
+  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+  const unsigned int act_set_fake_time_dep_flag = 2;
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  //MU
 
     ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
-    ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+    ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
 
     ml_sol.GenerateBdc("TargReg", "Steady", & ml_prob);
     ml_sol.GenerateBdc("ContReg", "Steady", & ml_prob);
@@ -570,7 +573,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         //all vars###################################################################
 
         ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
-         (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag_sol, solIndex_act_flag_sol);
+         (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, c_compl, pos_mu, pos_ctrl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag_sol, solIndex_act_flag_sol);
 
 
 //******************** ALL VARS *********************
@@ -1013,9 +1016,9 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
    geom_element_iel.get_coords_at_dofs/*_3d*/(),
    sol_eldofs_Mat,
    Sol_n_el_dofs_Mat_vol,
+   c_compl,
    pos_mat_mu,
    pos_mat_ctrl,
-   c_compl,
    ctrl_lower,
    ctrl_upper,
    sol_actflag,

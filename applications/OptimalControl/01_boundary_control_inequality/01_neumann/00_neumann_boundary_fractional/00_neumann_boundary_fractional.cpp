@@ -119,9 +119,13 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+
+  //MU
+  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  const std::string act_set_flag_name = "act_flag";
-  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+  //MU
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
@@ -520,8 +524,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //             for (unsigned i = 0; i < sol_actflag.size(); i++) {
         std::vector<double> node_coords_i(dim,0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x_bdry[d][i_bdry];
-        ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i,false);
-        ctrl_upper[i_bdry] = InequalityConstraint(node_coords_i,true);
+        ctrl_lower[i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i,true);
 
         if      ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_lower[i_bdry] )) < 0 )  sol_actflag[i_bdry] = 1;
         else if ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_upper[i_bdry] )) > 0 )  sol_actflag[i_bdry] = 2;

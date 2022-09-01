@@ -216,18 +216,25 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
+  //MU
+  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+  const unsigned int act_set_fake_time_dep_flag = 2;
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+  //MU
+
   unsigned int u_control = 0;
     for (unsigned int u = 0; u < unknowns.size(); u++) {
         if ( !(unknowns[u]._name.compare("control")) ) u_control = u;
     }
   const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
-  const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), unknowns[u_control]._fe_family, unknowns[u_control]._fe_order, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+-  ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[u_control]._fe_family, unknowns[u_control]._fe_order, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
-  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
 
   
@@ -287,7 +294,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
-  SparseMatrix*             KK = pdeSys->_KK;
+  SparseMatrix*             JAC = pdeSys->_KK;
   NumericVector*           RES = pdeSys->_RES;
 
   const unsigned  dim = msh->GetDimension();
@@ -399,7 +406,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(max_size);
 
   
-  //************** act flag ****************************   
+  //************** variables for ineq constraints: act flag ****************************   
   unsigned int solIndex_act_flag_sol; 
   unsigned int solFEType_act_flag_sol;
   ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
@@ -495,8 +502,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         // penalty for zero control outside
  //***************************************************  
 
+ 
+ 
+      // ***************** ADD PART - BEGIN *******************
   RES->zero();
-  if (assembleMatrix)  KK->zero();
+  if (assembleMatrix)  JAC->zero();
 
     
 
@@ -844,7 +854,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
-      if (assembleMatrix)  KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
+      if (assembleMatrix)  JAC->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
 
       
      if (print_algebra_local) {
@@ -871,8 +881,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // // //     one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
 // // //   }
 // // //     RES->add_vector_blocked(one_times_mu, positions);
-  unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
-  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
+  std::vector<unsigned int> ctrl_index(1);  ctrl_index[0] = mlPdeSys->GetSolPdeIndex("control");
+  std::vector<unsigned int>   mu_index(1);    mu_index[0] = mlPdeSys->GetSolPdeIndex("mu");
     
 ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
@@ -888,7 +898,7 @@ ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
     
      
 RES->close();
-if (assembleMatrix) KK->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
+if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
       // ***************** ADD PART - END  *******************
     
     
@@ -928,9 +938,9 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
    geom_element_iel.get_coords_at_dofs/*_3d*/(),
    sol_eldofs_Mat,
    Sol_n_el_dofs_Mat_vol,
+   c_compl,
    pos_mat_mu,
    pos_mat_ctrl,
-   c_compl,
    ctrl_lower,
    ctrl_upper,
    sol_actflag,
@@ -953,7 +963,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                    c_compl,
                    ctrl_lower,
                    ctrl_upper,
-                   KK,
+                   JAC,
                    RES,
                    assembleMatrix
                    );
@@ -965,7 +975,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
     
     
  //============= delta_ctrl-delta_mu row ===============================
-  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }
+  if (assembleMatrix) { JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }
   
   
   }
@@ -973,14 +983,14 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
   
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  if (assembleMatrix) JAC->close();
   
   // ***************** END ASSEMBLY *******************
   
   
     const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
   if (print_algebra_global) {
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
 
     RES->close();
