@@ -405,7 +405,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   //************** act flag ****************************   
   unsigned int solIndex_act_flag_sol; 
   unsigned int solFEType_act_flag_sol;
-  store_act_flag_in_old(mlPdeSys, ml_sol, sol,
+  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
                         solIndex_act_flag_sol, //this becomes a vector
                         solFEType_act_flag_sol //remove this one, only Index
                        );
@@ -569,7 +569,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         }
         //all vars###################################################################
 
-        update_active_set_flag_for_current_nonlinear_iteration
+        ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
          (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag_sol, solIndex_act_flag_sol);
 
 
@@ -1006,7 +1006,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     if (control_el_flag == 1) {
 
         
-  update_active_set_flag_for_current_nonlinear_iteration
+  ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -1025,7 +1025,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       
 
 
-    node_insertion(iel,
+    ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    pos_mat_mu,

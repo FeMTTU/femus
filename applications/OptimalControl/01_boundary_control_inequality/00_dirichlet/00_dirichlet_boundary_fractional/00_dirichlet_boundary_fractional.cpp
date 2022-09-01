@@ -607,7 +607,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   //************** act flag ****************************   
   unsigned int solIndex_act_flag_sol; 
   unsigned int solFEType_act_flag_sol;
-  store_act_flag_in_old(mlPdeSys, ml_sol, sol,
+  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
                         solIndex_act_flag_sol, //this becomes a vector
                         solFEType_act_flag_sol //remove this one, only Index
                        );
@@ -1272,7 +1272,7 @@ if ( i_vol == j_vol )  {
   
 
   //MU
-add_one_times_mu_res_ctrl(iproc,
+ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                pos_mat_ctrl,
                                pos_mat_mu,
@@ -1324,7 +1324,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                 
        if(  face_is_a_boundary_control_face( el, iel, iface) ) {
 
-       update_active_set_flag_for_current_nonlinear_iteration_bdry
+       ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
     iel, iface,
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
@@ -1339,7 +1339,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     solIndex_act_flag_sol);   //this becomes a vector
  
 
-  node_insertion_bdry(iel, iface, 
+  ctrl_inequality::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
                       pos_mat_mu, 

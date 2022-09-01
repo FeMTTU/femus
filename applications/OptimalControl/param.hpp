@@ -262,6 +262,9 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
 
 
+namespace ctrl_inequality {
+
+
  void update_active_set_flag_for_current_nonlinear_iteration(const femus::Mesh* msh,
                                                              const femus::Solution* sol,
                                                              const unsigned int iel,
@@ -607,6 +610,30 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     
  }
  
+
+ 
+  void store_act_flag_in_old(  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys,
+                               const MultiLevelSolution *    ml_sol,
+                              Solution *                sol,
+                             unsigned int & solIndex_act_flag,
+                             unsigned int & solFEType_act_flag) {
+      
+      
+  const std::string act_flag_name = mlPdeSys->GetActiveSetFlagName();
+  solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
+  solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+     }
+     
+  }
+  
+  
+  
+} //end namespace ctrl_inequality
+
+
+
  
 void el_dofs_quantities_vol(const Solution*                sol,
                         const Mesh * msh,
@@ -653,23 +680,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
 }
 
-
-  void store_act_flag_in_old(  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys,
-                               const MultiLevelSolution *    ml_sol,
-                              Solution *                sol,
-                             unsigned int & solIndex_act_flag,
-                             unsigned int & solFEType_act_flag) {
-      
-      
-  const std::string act_flag_name = mlPdeSys->GetActiveSetFlagName();
-  solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
-  solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
-     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
-       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
-     }
-     
-  }
-  
 
 //=============== construct control node flag field  =========================================    
   std::vector< std::vector< int > > is_dof_associated_to_boundary_control_equation(

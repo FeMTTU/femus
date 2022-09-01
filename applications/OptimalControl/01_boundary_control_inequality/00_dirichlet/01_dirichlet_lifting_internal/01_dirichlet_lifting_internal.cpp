@@ -402,7 +402,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //************** act flag ****************************   
   unsigned int solIndex_act_flag_sol; 
   unsigned int solFEType_act_flag_sol;
-  store_act_flag_in_old(mlPdeSys, ml_sol, sol,
+  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
                         solIndex_act_flag_sol, //this becomes a vector
                         solFEType_act_flag_sol //remove this one, only Index
                        );
@@ -703,8 +703,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
        }
        
            
-//======================Residuals - END =======================
+//====================== Residuals - END =======================
 	      
+//====================== Jacobians - BEGIN =======================
           if (assembleMatrix) {
 	    
             // *** phi_j loop ***
@@ -773,11 +774,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      
 	      }
 	      
-// 	      //BLOCK delta_control - mu
-//              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
-// 		Jac[ (nDof_u + i) * nDof_AllVars  + 
-// 		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  ineq_flag * control_node_flag[i] *  phi_mu[j] * phi_ctrl[i] ;
-		     
 		     
 	      //=========== delta_adjoint row ===========================
               // BLOCK delta_adjoint - state	      
@@ -807,6 +803,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      
             } // end phi_j loop
           } // endif assemble_matrix
+//====================== Jacobians - END =======================
 
         } // end phi_i loop
         
@@ -841,27 +838,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	 
 	 
 // // // 	}
-    //std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
-    for (unsigned i = 0; i < sol_ctrl.size(); i++){
-       unsigned n_els_that_node = 1;
-     if ( control_el_flag == 1) {
-// 	Res[nDof_u + i] += - ( + n_els_that_node * ineq_flag * sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
-// 	Res_ctrl[i] =  Res[nDof_u + i];
-      }
-    }//------------------------------->>>>>>
-    
-//     std::vector<double> Res_u (nDof_u); std::fill(Res_u.begin(),Res_u.end(), 0.);
-//     for (unsigned i = 0; i < sol_u.size(); i++){
-// 	Res[0 + i] = - ( sol_u[i] - 8. );
-// 	Res_u[i] = Res[0 + i];
-//     }
-    
-//     std::vector<double> Res_adj (nDof_adj); std::fill(Res_adj.begin(),Res_adj.end(), 0.);
-//     for (unsigned i = 0; i < sol_adj.size(); i++){
-// 	Res[nDof_u + nDof_ctrl + i] = - (sol_adj[i] - 7.);
-// 	Res_adj[i] = Res[nDof_u + nDof_ctrl + i];
-//     }
-    
+
 
  //========== end of integral-based part
 
@@ -897,7 +874,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
   unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
     
-add_one_times_mu_res_ctrl(iproc,
+ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index,
                                mu_index,
@@ -944,7 +921,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
     if (control_el_flag == 1) {
 
         
-  update_active_set_flag_for_current_nonlinear_iteration
+  ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -963,7 +940,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
       
 
 
-    node_insertion(iel,
+    ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    pos_mat_mu,
