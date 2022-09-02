@@ -395,7 +395,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   
   //MU
-  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+  std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
   ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
@@ -603,22 +603,30 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
  //*************************************************** 
 
-  //MU
+    const unsigned int n_components_ctrl = 1;
+    const unsigned int first_loc_comp_ctrl = 0;
+
+
+    //MU
   //************** act flag ****************************   
-  unsigned int solIndex_act_flag_sol; 
-  unsigned int solFEType_act_flag_sol;
-  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
-                        solIndex_act_flag_sol, //this becomes a vector
-                        solFEType_act_flag_sol //remove this one, only Index
-                       );
+    std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
+
+    ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   
   
   //********* variables for ineq constraints *****************
-  std::vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(max_size); //flag for active set
-  std::vector < double >  ctrl_lower;   ctrl_lower.reserve(max_size);
-  std::vector < double >  ctrl_upper;   ctrl_upper.reserve(max_size);
-  const int ineq_flag = INEQ_FLAG;
-  const double c_compl = C_COMPL;
+     std::vector <std::vector < double/*int*/ > > sol_actflag(n_components_ctrl);    //flag for active set
+     std::vector <std::vector < double > > ctrl_lower(n_components_ctrl);  
+     std::vector <std::vector < double > > ctrl_upper(n_components_ctrl);  
+  
+     for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) {
+          sol_actflag[kdim].reserve(max_size);
+           ctrl_lower[kdim].reserve(max_size);
+           ctrl_upper[kdim].reserve(max_size);
+     }
+     
+     const int ineq_flag = INEQ_FLAG;
+     const double c_compl = C_COMPL;
   //***************************************************  
   //MU
   
@@ -648,7 +656,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //***************************************************
    enum Pos_in_Sol {pos_sol_state = 0, pos_sol_ctrl, pos_sol_adj, pos_sol_mu, pos_sol_targreg, pos_sol_contreg, pos_sol_actflag}; //these are known at compile-time 
 
-        assert(pos_sol_actflag == solIndex_act_flag_sol);
+        assert(pos_sol_actflag == solIndex_act_flag_sol[0]);
 //***************************************************
     
  //***************************************************
@@ -756,9 +764,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   constexpr unsigned qrule_j = QRULE_J;
   constexpr unsigned qrule_k = QRULE_K;
   //----------------------
-
-    const unsigned int n_components_ctrl = 1;
-    const unsigned int first_loc_comp_ctrl = 0;
 
 
     
@@ -1333,27 +1338,25 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
     sol_eldofs_Mat, 
     Sol_n_el_dofs_Mat_vol, 
-    c_compl, 
-    pos_mat_mu,               //this becomes a vector
-    pos_mat_ctrl,             //this becomes a vector
+    c_compl,
+    mu_index,               //this becomes a vector
+    ctrl_index,             //this becomes a vector
+    solIndex_act_flag_sol,             //this becomes a vector
     ctrl_lower, ctrl_upper,   //this becomes a vector
-    sol_actflag,              //this becomes a vector
-    solFEType_act_flag_sol, //remove this one, only Index
-    solIndex_act_flag_sol);   //this becomes a vector
+    sol_actflag);   //this becomes a vector
  
 
   ctrl_inequality::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
-                      pos_mat_mu, 
-                      pos_mat_ctrl,
+                      mu_index, 
+                      ctrl_index,
                       sol_eldofs_Mat,
                       Sol_n_el_dofs_Mat_vol,
                       sol_actflag, 
-                      solFEType_act_flag_sol,  //remove this one, only Index
+                      ctrl_lower, ctrl_upper,
                       ineq_flag,
                       c_compl,
-                      ctrl_lower, ctrl_upper,
                       JAC, 
                       RES,
                       assembleMatrix
@@ -1366,7 +1369,11 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
      //============= delta_ctrl-delta_mu row ===============================
- if (assembleMatrix) { JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl],  L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }   //this becomes a vector
+ if (assembleMatrix) {
+       for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+         JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ctrl_index[kdim]],  L2G_dofmap_Mat[mu_index[kdim]], ineq_flag * 1.);
+       }
+}   //this becomes a vector
 
    }
    

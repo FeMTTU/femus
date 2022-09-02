@@ -53,8 +53,8 @@ public:
     }
     
     /** Set the active set flag name */
-    std::string GetActiveSetFlagName(const unsigned kdim) const {
-        return _active_flag_name[kdim];
+    std::vector<std::string> GetActiveSetFlagName() const {
+        return _active_flag_name;
     }
     
     /** Solves the system. */

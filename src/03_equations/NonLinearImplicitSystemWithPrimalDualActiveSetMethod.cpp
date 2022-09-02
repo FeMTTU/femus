@@ -270,7 +270,7 @@ namespace femus {
         print_iteration_and_do_additional_computations(nonLinearIterator);
 
 
-        // ***************** check active flag sets *******************
+        // ***************** check active flag sets - BEGIN *******************
         Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel (_levelToAssemble);   // pointer to the solution (level) object
 
         
@@ -287,14 +287,14 @@ namespace femus {
    //turn compare_bool into a scalar boolean
       bool compare_bool_total = false;
         for (unsigned int c = 0; c < _active_flag_name.size(); c++)  {
-            
-            
+            if (compare_bool[c] == true) compare_bool_total = true;
         }
         
-        if (compare_bool && (_nonliniteration  > 0)) {
+        if (compare_bool_total && (_nonliniteration  > 0)) {
           std::cout << "Active set for variable " << " did not change at iteration " << _nonliniteration << std::endl;
           break;
         }
+        // ***************** check active flag sets - END *******************
 
 
         if (nonLinearIsConverged || _bitFlipOccurred) break;

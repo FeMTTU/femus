@@ -157,6 +157,10 @@ namespace femus {
 	return _SolType[index];
       }
       
+     const unsigned GetSolutionType(const unsigned &index ) const {
+	return _SolType[index];
+      }
+      
       void SetIfFSI(const bool &FSI = true){
 	_FSI = FSI; 
       }

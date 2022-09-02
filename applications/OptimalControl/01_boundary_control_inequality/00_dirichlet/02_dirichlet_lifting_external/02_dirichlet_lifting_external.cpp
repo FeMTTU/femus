@@ -258,9 +258,10 @@ int main(int argc, char** args) {
     ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
  
   //MU
-  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+  const bool      act_flag_is_an_unknown_of_a_pde = false;
+  std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);
   //MU
 
     ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
@@ -269,14 +270,14 @@ int main(int argc, char** args) {
 
     ml_sol.GenerateBdc("TargReg", "Steady", & ml_prob);
     ml_sol.GenerateBdc("ContReg", "Steady", & ml_prob);
-    ml_sol.GenerateBdc(act_set_flag_name.c_str(), "Steady", & ml_prob);
+    ml_sol.GenerateBdc(act_set_flag_name[0].c_str(), "Steady", & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
 
     
   //==== Solution: CHECK SOLUTION FE TYPES ==
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
-  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name[0].c_str())) abort();
   //==== Solution: CHECK SOLUTION FE TYPES ==
 
   
@@ -405,25 +406,29 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     vector <double> sol_adj_ext_x_vol_at_bdry_gss(dim);
 //***************************************************
 
+    const unsigned int n_components_ctrl = 1;
+    const unsigned int first_loc_comp_ctrl = 0;
+
   //************** act flag ****************************   
-  unsigned int solIndex_act_flag_sol; 
-  unsigned int solFEType_act_flag_sol;
-  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
-                        solIndex_act_flag_sol, //this becomes a vector
-                        solFEType_act_flag_sol //remove this one, only Index
-                       );
+    std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
+
+  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
 
 
     //********* variables for ineq constraints *****************
+     std::vector <std::vector < double/*int*/ > > sol_actflag(n_components_ctrl);    //flag for active set
+     std::vector <std::vector < double > > ctrl_lower(n_components_ctrl);  
+     std::vector <std::vector < double > > ctrl_upper(n_components_ctrl);  
+  
+     for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) {
+          sol_actflag[kdim].reserve(max_size);
+           ctrl_lower[kdim].reserve(max_size);
+           ctrl_upper[kdim].reserve(max_size);
+     }
+     
     const int ineq_flag = INEQ_FLAG;
     const double c_compl = C_COMPL;
-    vector < double/*int*/ >  sol_actflag;
-    sol_actflag.reserve(max_size); //flag for active set
-    vector < double >  ctrl_lower;
-    ctrl_lower.reserve(max_size);
-    vector < double >  ctrl_upper;
-    ctrl_upper.reserve(max_size);
     //***************************************************
 
 //***************************************************
@@ -573,7 +578,13 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         //all vars###################################################################
 
         ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
-         (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, c_compl, pos_mu, pos_ctrl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag_sol, solIndex_act_flag_sol);
+         (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, 
+          c_compl, 
+          pos_mu,
+          pos_ctrl, 
+          solIndex_act_flag_sol,
+          ctrl_lower, ctrl_upper, 
+          sol_actflag);
 
 
 //******************** ALL VARS *********************
@@ -1036,11 +1047,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                    sol_eldofs_Mat,
                    Sol_n_el_dofs_Mat_vol,
                    sol_actflag,
-                   solFEType_act_flag_sol,
-                   ineq_flag,
-                   c_compl,
                    ctrl_lower,
                    ctrl_upper,
+                   ineq_flag,
+                   c_compl,
                    KK,
                    RES,
                    assembleMatrix

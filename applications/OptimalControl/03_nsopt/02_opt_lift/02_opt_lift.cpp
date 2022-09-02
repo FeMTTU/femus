@@ -1602,12 +1602,8 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
       
   //************** variables for ineq constraints: act flag ****************************   
   std::vector<unsigned int> solIndex_act_flag_sol(n_components_ctrl); 
-  std::vector<unsigned int> solFEType_act_flag_sol(n_components_ctrl);
   
-  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol,
-                        solIndex_act_flag_sol, //this becomes a vector
-                        solFEType_act_flag_sol //remove this one, only Index
-                       );
+  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
 
   //********* variables for ineq constraints *****************
@@ -2619,11 +2615,10 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 // // //                    sol_eldofs_Mat,
 // // //                    Sol_n_el_dofs_Mat_vol,
 // // //                    sol_actflag,
-// // //                    solFEType_act_flag_sol,
-// // //                    ineq_flag,
-// // //                    c_compl,
 // // //                    ctrl_lower,
 // // //                    ctrl_upper,
+// // //                    ineq_flag,
+// // //                    c_compl,
 // // //                    JAC,
 // // //                    RES,
 // // //                    assembleMatrix

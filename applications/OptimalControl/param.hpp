@@ -2257,63 +2257,63 @@ namespace ctrl_inequality {
                                                              const double c_compl,
                                                              const unsigned int pos_mu,
                                                              const unsigned int pos_ctrl,
-                                                                   std::vector < double > & ctrl_lower,
-                                                                   std::vector < double > & ctrl_upper,
-                                                                   std::vector < double > & sol_actflag,
-                                                             const unsigned int solFEType_act_flag,
+                                                                   std::vector < double > & ctrl_lower_dofs,
+                                                                   std::vector < double > & ctrl_upper_dofs,
+                                                                   std::vector < double > & sol_actflag_dofs,
                                                              const unsigned int solIndex_act_flag) {
      
         const unsigned int dim = coords_at_dofs.size();
         
 // 0: inactive; 1: active_a; 2: active_b
         assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
-        sol_actflag.resize(Sol_n_el_dofs[pos_mu]);
-        ctrl_lower.resize(Sol_n_el_dofs[pos_mu]);
-        ctrl_upper.resize(Sol_n_el_dofs[pos_mu]);
-        std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-        std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
-        std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+        sol_actflag_dofs.resize(Sol_n_el_dofs[pos_mu]);
+        ctrl_lower_dofs.resize(Sol_n_el_dofs[pos_mu]);
+        ctrl_upper_dofs.resize(Sol_n_el_dofs[pos_mu]);
+        std::fill(sol_actflag_dofs.begin(), sol_actflag_dofs.end(), 0);
+        std::fill(ctrl_lower_dofs.begin(), ctrl_lower_dofs.end(), 0.);
+        std::fill(ctrl_upper_dofs.begin(), ctrl_upper_dofs.end(), 0.);
 
 // // //         std::cout << " mu dofs " << std::endl;
-// // //                 for (unsigned i = 0; i < sol_actflag.size(); i++) {
+// // //                 for (unsigned i = 0; i < sol_actflag_dofs.size(); i++) {
 // // //                 std::cout << sol_eldofs[pos_mu][i] << " ";
 // // //         }
 // // //         
 // // //         std::cout << std::endl;
         
 // // //         std::cout << " ctrl dofs " << std::endl;
-// // //         for (unsigned i = 0; i < sol_actflag.size(); i++) {
+// // //         for (unsigned i = 0; i < sol_actflag_dofs.size(); i++) {
 // // //                 std::cout << sol_eldofs[pos_ctrl][i] << " ";
 // // //         }
 // // //         std::cout << std::endl;
         
-        for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        for (unsigned i = 0; i < sol_actflag_dofs.size(); i++) {
             std::vector<double> node_coords_i(dim, 0.);
             for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
             
-            ctrl_lower[i] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
-            ctrl_upper[i] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
+            ctrl_lower_dofs[i] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
+            ctrl_upper_dofs[i] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
             
-            const double lower_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower[i] );
-            const double upper_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper[i] );
+            const double lower_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower_dofs[i] );
+            const double upper_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper_dofs[i] );
 
             if      ( lower_test_value < 0. )  {
                 std::cout << "Found active node below" << std::endl;
                 std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
-                   sol_actflag[i] = 1;
+                   sol_actflag_dofs[i] = 1;
             }
             else if ( upper_test_value > 0. )  {
                 std::cout << "Found active node above" << std::endl;
                 std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
-                sol_actflag[i] = 2;
+                sol_actflag_dofs[i] = 2;
             }
         }
 
 //************** local to global act flag ***************************
+     const unsigned solFEType_act_flag = sol->GetSolutionType(solIndex_act_flag/*[kdim]*/);
 
-        for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        for (unsigned i = 0; i < sol_actflag_dofs.size(); i++) {
             unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag);
-            (sol->_Sol[solIndex_act_flag])->set(solDof_mu, sol_actflag[i]);
+            (sol->_Sol[solIndex_act_flag])->set(solDof_mu, sol_actflag_dofs[i]);
         }
 
 }
@@ -2330,50 +2330,58 @@ namespace ctrl_inequality {
                                                              const std::vector < std::vector < double > > sol_eldofs,  ///@todo why not a reference?
                                                              const std::vector < unsigned int > & Sol_n_el_dofs,
                                                              const double c_compl,
-                                                             const unsigned int pos_mu,
-                                                             const unsigned int pos_ctrl,
-                                                                   std::vector < double > & ctrl_lower,
-                                                                   std::vector < double > & ctrl_upper,
-                                                                   std::vector < double > & sol_actflag,
-                                                             const unsigned int solFEType_act_flag,
-                                                             const unsigned int solIndex_act_flag) {
+                                                             const std::vector<unsigned int> pos_mu,
+                                                             const std::vector<unsigned int> pos_ctrl,
+                                                              const std::vector<unsigned int>  solIndex_act_flag,                                                                  std::vector < std::vector < double > > & ctrl_lower_dofs, 
+                                                              std::vector < std::vector < double > > & ctrl_upper_dofs,
+                                                              std::vector < std::vector < double > > & sol_actflag_dofs) {
      
-		const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel, iface, solFEType_act_flag);
+   const unsigned int   n_components_ctrl = pos_ctrl.size();
+    
+       for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+     
+
+     
+     const unsigned solFEType_act_flag = sol->GetSolutionType(solIndex_act_flag[kdim]);
+     
+     const unsigned ndofs_bdry = msh->GetElementFaceDofNumber(iel, iface, solFEType_act_flag);
         
         const unsigned dim = coords_at_dofs.size();
         
          // 0: inactive; 1: active_a; 2: active_b
-        assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);///@todo More appropriately, 
-            sol_actflag.resize(nve_bdry/*nDof_mu*/);
-            ctrl_lower.resize(nve_bdry/*nDof_mu*/);
-            ctrl_upper.resize(nve_bdry/*nDof_mu*/);
-           std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-           std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
-           std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+        assert(Sol_n_el_dofs[ pos_mu[kdim] ] == Sol_n_el_dofs[ pos_ctrl[kdim] ]);///@todo More appropriately, 
+            sol_actflag_dofs[kdim].resize(ndofs_bdry/*nDof_mu*/);
+            ctrl_lower_dofs[kdim].resize(ndofs_bdry/*nDof_mu*/);
+            ctrl_upper_dofs[kdim].resize(ndofs_bdry/*nDof_mu*/);
+           std::fill(sol_actflag_dofs[kdim].begin(), sol_actflag_dofs[kdim].end(), 0);
+           std::fill(ctrl_lower_dofs[kdim].begin(), ctrl_lower_dofs[kdim].end(), 0.);
+           std::fill(ctrl_upper_dofs[kdim].begin(), ctrl_upper_dofs[kdim].end(), 0.);
 
-      for (unsigned int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+      for (unsigned int i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
         std::vector<double> node_coords_i(dim, 0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i_bdry];
         
-        ctrl_lower[i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
-        ctrl_upper[i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
+        ctrl_lower_dofs[kdim][i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
+        ctrl_upper_dofs[kdim][i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
 
-        const double lower_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_lower[i_bdry] );
-        const double upper_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_upper[i_bdry] );
+        const double lower_test_value = sol_eldofs[ pos_mu[kdim] ][i_vol] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i_vol] - ctrl_lower_dofs[kdim][i_bdry] );
+        const double upper_test_value = sol_eldofs[ pos_mu[kdim] ][i_vol] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i_vol] - ctrl_upper_dofs[kdim][i_bdry] );
         
-        if      ( lower_test_value < 0. )  sol_actflag[i_bdry] = 1;
-        else if ( upper_test_value > 0. )  sol_actflag[i_bdry] = 2;
+        if      ( lower_test_value < 0. )  sol_actflag_dofs[kdim][i_bdry] = 1;
+        else if ( upper_test_value > 0. )  sol_actflag_dofs[kdim][i_bdry] = 2;
             }
             
         //************** act flag **************************** 
-      for (unsigned int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+      for (unsigned int i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
       unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 
-      (sol->_Sol[solIndex_act_flag])->set(solDof_actflag, sol_actflag[i_bdry]);     
-    }
+      (sol->_Sol[solIndex_act_flag[kdim]])->set(solDof_actflag, sol_actflag_dofs[kdim][i_bdry]);     
+           }
     
-    
+       }
+       
+       
     }
     
  
@@ -2382,94 +2390,102 @@ namespace ctrl_inequality {
                          const unsigned int iface,
                          const   Mesh* msh,
                          const     vector < vector < int > > & L2G_dofmap,
-                         const unsigned int pos_mu,
-                         const unsigned int pos_ctrl,
+                                                             const std::vector<unsigned int> pos_mu,
+                                                             const std::vector<unsigned int> pos_ctrl,
                          const std::vector < std::vector < double > > & sol_eldofs,
                          const std::vector < unsigned int > & Sol_n_el_dofs,
-                         std::vector < double > & sol_actflag,
-                         const unsigned int solFEType_act_flag,
+                         std::vector < std::vector < double > > & sol_actflag_dofs,
+                         const std::vector < std::vector < double > > & ctrl_lower_dofs,
+                         const std::vector < std::vector < double > > & ctrl_upper_dofs,
                          const double ineq_flag,
                          const double c_compl,
-                         const std::vector < double > & ctrl_lower,
-                         const std::vector < double > & ctrl_upper,
                          SparseMatrix*             KK,
                          NumericVector* RES,
                           const bool assembleMatrix
                         ) {
 
+     
+   const unsigned int   n_components_ctrl = pos_ctrl.size();
+    
+       for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+     
+     
+     
 // Create the L2G boundary maps from the volume ones
-  std::vector < int > L2G_dofmap_mu_bdry(sol_actflag.size());
-  std::vector < int > L2G_dofmap_ctrl_bdry(sol_actflag.size());
+  std::vector < int > L2G_dofmap_mu_bdry(sol_actflag_dofs[kdim].size());
+  std::vector < int > L2G_dofmap_ctrl_bdry(sol_actflag_dofs[kdim].size());
 
-      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+      for (int i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-  L2G_dofmap_mu_bdry[i_bdry]   = L2G_dofmap[pos_mu][i_vol];
-  L2G_dofmap_ctrl_bdry[i_bdry] = L2G_dofmap[pos_ctrl][i_vol];
+  L2G_dofmap_mu_bdry[i_bdry]   = L2G_dofmap[ pos_mu[kdim]  ][i_vol];
+  L2G_dofmap_ctrl_bdry[i_bdry] = L2G_dofmap[ pos_ctrl[kdim] ][i_vol];
       }
       
- //============= delta_mu row ===============================
-      std::vector<double> Res_mu_bdry (sol_actflag.size());     std::fill(Res_mu_bdry.begin(),Res_mu_bdry.end(), 0.);
+ //============= delta_mu row - BEGIN ===============================
+      std::vector<double> Res_mu_bdry (sol_actflag_dofs[kdim].size());     std::fill(Res_mu_bdry.begin(),Res_mu_bdry.end(), 0.);
 //       std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]);       std::fill(Res_mu.begin(),Res_mu.end(), 0.);
       
-      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+      for (int i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
         
-      if (sol_actflag[i_bdry] == 0) {  //inactive
-//          Res_mu [i_vol]      = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
-         Res_mu_bdry[i_bdry] = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
+      if (sol_actflag_dofs[kdim][i_bdry] == 0) {  //inactive
+//          Res_mu [i_vol]      = - ineq_flag * ( 1. * sol_eldofs[pos_mu[kdim]][i_vol] - 0. ); 
+         Res_mu_bdry[i_bdry] = - ineq_flag * ( 1. * sol_eldofs[pos_mu[kdim]][i_vol] - 0. ); 
       }
-      else if (sol_actflag[i_bdry] == 1) {  //active_a 
-// 	 Res_mu [i_vol]      = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
-     Res_mu_bdry[i_bdry] = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
+      else if (sol_actflag_dofs[kdim][i_bdry] == 1) {  //active_a 
+// 	 Res_mu [i_vol]      = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl[kdim]][i_vol] - c_compl * ctrl_lower_dofs[kdim][i_bdry]);
+     Res_mu_bdry[i_bdry] = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl[kdim]][i_vol] - c_compl * ctrl_lower_dofs[kdim][i_bdry]);
           
     }
-      else if (sol_actflag[i_bdry] == 2) {  //active_b 
-// 	Res_mu [i_vol]      =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
-    Res_mu_bdry[i_bdry] =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
+      else if (sol_actflag_dofs[kdim][i_bdry] == 2) {  //active_b 
+// 	Res_mu [i_vol]      =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl[kdim]][i_vol] - c_compl * ctrl_upper_dofs[kdim][i_bdry]);
+    Res_mu_bdry[i_bdry] =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl[kdim]][i_vol] - c_compl * ctrl_upper_dofs[kdim][i_bdry]);
       }
     }
 
     
 //     RES->insert(Res_mu,  L2G_dofmap[pos_mu]);    
     RES->insert(Res_mu_bdry,  L2G_dofmap_mu_bdry);    
- //============= delta_mu row - end ===============================
+ //============= delta_mu row - END ===============================
     
- //============= delta_mu-delta_ctrl row ===============================
+ //============= delta_mu-delta_ctrl row  - BEGIN ===============================
  //auxiliary volume vector for act flag
 //  unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
-//  std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+//  std::vector<double> sol_actflag_dofs_vol(nDof_actflag_vol); 
 
 
- for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
+ for (unsigned i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++) if (sol_actflag_dofs[kdim][i_bdry] != 0 ) sol_actflag_dofs[kdim][i_bdry] = ineq_flag * c_compl;    
  
-//  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-//     for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+//  std::fill(sol_actflag_dofs_vol.begin(), sol_actflag_dofs_vol.end(), 0.);
+//     for (int i_bdry = 0; i_bdry < sol_actflag_dofs.size(); i_bdry++)  {
 //        unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-//        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+//        sol_actflag_dofs_vol[i_vol] = sol_actflag_dofs[i_bdry];
 //     }
  
-//  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
- if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_ctrl_bdry, sol_actflag); }
- //============= delta_mu-delta_ctrl row - end ===============================
+//  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_dofs_vol);
+ if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_ctrl_bdry, sol_actflag_dofs[kdim]); }
+ //============= delta_mu-delta_ctrl row - END ===============================
 
- //============= delta_mu-delta_mu row ===============================
+ //============= delta_mu-delta_mu row - BEGIN ===============================
  // Attention: this equation goes in contrast with \mu = 0 on \Omega \setminus \Gamma_c
  // In fact, here we shouldn't insert all VOLUME values, but only the BOUNDARY ones
  // The best way is to then do a L2G_map ON THE BOUNDARY only
  
-  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
+  for (unsigned i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++) sol_actflag_dofs[kdim][i_bdry] =  ineq_flag * (1 - sol_actflag_dofs[kdim][i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
-//  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-//     for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+//  std::fill(sol_actflag_dofs_vol.begin(), sol_actflag_dofs_vol.end(), 0.);
+//     for (int i_bdry = 0; i_bdry < sol_actflag_dofs.size(); i_bdry++)  {
 //        unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-//        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+//        sol_actflag_dofs_vol[i_vol] = sol_actflag_dofs[i_bdry];
 //     }
   
-//   KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
-  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_mu_bdry, sol_actflag);  }
- //============= delta_mu-delta_mu row - end ===============================
+//   KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_dofs_vol );
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_mu_bdry, sol_actflag_dofs[kdim]);  }
+ //============= delta_mu-delta_mu row - END ===============================
   
-
+       }//kdim
+       
+       
 }
 
 
@@ -2478,48 +2494,52 @@ namespace ctrl_inequality {
  void node_insertion(const unsigned int iel,
                          const   Mesh* msh,
                          const     vector < vector < int > > & L2G_dofmap_Mat,
-                         const unsigned int pos_mat_mu,
-                         const unsigned int pos_mat_ctrl,
+                                                             const std::vector<unsigned int> pos_mat_mu,
+                                                             const std::vector<unsigned int> pos_mat_ctrl,
                          const std::vector < std::vector < double > > & sol_eldofs_Mat,
                          const std::vector < unsigned int > & Sol_n_el_dofs,
-                         std::vector < double > & sol_actflag,
-                         const unsigned int solFEType_act_flag,
+                         std::vector < std::vector < double > > & sol_actflag_dofs,
+                         const std::vector < std::vector < double > > & ctrl_lower_dofs,
+                         const std::vector < std::vector < double > > & ctrl_upper_dofs,
                          const double ineq_flag,
                          const double c_compl,
-                         const std::vector < double > & ctrl_lower,
-                         const std::vector < double > & ctrl_upper,
                          SparseMatrix*             KK,
                          NumericVector* RES,
                           const bool assembleMatrix
                         ) {
      
+      
+   const unsigned int   n_components_ctrl = pos_mat_ctrl.size();
+    
+       for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
      
+    
      
       //*************************************************** 
-    std::vector < int > l2GMap_mu(sol_actflag.size());
-    std::vector < int > l2GMap_ctrl(sol_actflag.size());
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      l2GMap_mu[i]   = L2G_dofmap_Mat[pos_mat_mu][i];   //pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);
-      l2GMap_ctrl[i] = L2G_dofmap_Mat[pos_mat_ctrl][i]; //pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);
+    std::vector < int > l2GMap_mu(sol_actflag_dofs[kdim].size());
+    std::vector < int > l2GMap_ctrl(sol_actflag_dofs[kdim].size());
+    for (unsigned i = 0; i < sol_actflag_dofs[kdim].size(); i++) {
+      l2GMap_mu[i]   = L2G_dofmap_Mat[ pos_mat_mu[kdim]  ][i];   //pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);
+      l2GMap_ctrl[i] = L2G_dofmap_Mat[ pos_mat_ctrl[kdim] ][i]; //pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);
     } 
  //*************************************************** 
 
- //============= delta_mu row ===============================
-      std::vector<double> Res_mu (sol_actflag.size()); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+ //============= delta_mu row - BEGIN ===============================
+      std::vector<double> Res_mu (sol_actflag_dofs[kdim].size()); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
       
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i] == 0){  //inactive
-         Res_mu [i] = - ineq_flag * ( 1. * sol_eldofs_Mat[pos_mat_mu][i] - 0. ); 
+    for (unsigned i = 0; i < sol_actflag_dofs[kdim].size(); i++) {
+      if (sol_actflag_dofs[kdim][i] == 0){  //inactive
+         Res_mu [i] = - ineq_flag * ( 1. * sol_eldofs_Mat[pos_mat_mu[kdim]][i] - 0. ); 
 // 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
-      else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_lower[i]);
+      else if (sol_actflag_dofs[kdim][i] == 1){  //active_a 
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl[kdim]][i] - c_compl * ctrl_lower_dofs[kdim][i]);
       }
-      else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl][i] - c_compl * ctrl_upper[i]);
+      else if (sol_actflag_dofs[kdim][i] == 2){  //active_b 
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_eldofs_Mat[pos_mat_ctrl[kdim]][i] - c_compl * ctrl_upper_dofs[kdim][i]);
       }
     }
-//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper[i] - sol_ctrl[i])  ) ;
+//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag_dofs[i]) * (ctrl_lower_dofs[i] - sol_ctrl[i]) + ( sol_actflag_dofs[i] - 1 ) * (ctrl_upper_dofs[i] - sol_ctrl[i])  ) ;
 //          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
 
     
@@ -2527,6 +2547,7 @@ namespace ctrl_inequality {
 //     RES->insert(Res_ctrl, l2GMap_ctrl);
 //     RES->insert(Res_u, l2GMap_u);
 //     RES->insert(Res_adj, l2GMap_adj);
+ //============= delta_mu row - END ===============================
     
 //  //============= delta_state-delta_state row ===============================
 //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
@@ -2537,21 +2558,21 @@ namespace ctrl_inequality {
 //  //============= delta_adj-delta_adj row ===============================
 //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
   
- //============= delta_mu-delta_ctrl row ===============================
- for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
+ //============= delta_mu-delta_ctrl row  - BEGIN ===============================
+ for (unsigned i = 0; i < sol_actflag_dofs[kdim].size(); i++) if (sol_actflag_dofs[kdim][i] != 0 ) sol_actflag_dofs[kdim][i] = ineq_flag * c_compl;    
   
-  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag); }
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag_dofs[kdim]); }
+ //============= delta_mu-delta_ctrl row  - END ===============================
 
- //============= delta_mu-delta_mu row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =   ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
+ //============= delta_mu-delta_mu row - BEGIN ===============================
+  for (unsigned i = 0; i < sol_actflag_dofs[kdim].size(); i++) sol_actflag_dofs[kdim][i] =   ineq_flag * (1 - sol_actflag_dofs[kdim][i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
-  if (assembleMatrix) {    KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );  }
+  if (assembleMatrix) {    KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag_dofs[kdim] );  }
+ //============= delta_mu-delta_mu row - END ===============================
   
-
-     
-     
-
-
+  
+       }//kdim
+       
 
  }
 
@@ -2611,18 +2632,18 @@ namespace ctrl_inequality {
   void store_act_flag_in_old(  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys,
                                const MultiLevelSolution *    ml_sol,
                               Solution *                sol,
-                             std::vector<unsigned int>  & solIndex_act_flag,
-                             std::vector<unsigned int>  & solFEType_act_flag) {
+                             std::vector<unsigned int>  & solIndex_act_flag) {
       
-      
+     const unsigned int   n_components_ctrl = mlPdeSys->GetActiveSetFlagName().size();
+     
           for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
    
   const std::string act_flag_name = mlPdeSys->GetActiveSetFlagName()[kdim];
   
-  solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
-  solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
-     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
-       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+  solIndex_act_flag[kdim]  = ml_sol->GetIndex(act_flag_name.c_str());
+  
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag[kdim]) == 2) {
+       *(sol->_SolOld[solIndex_act_flag[kdim]]) = *(sol->_Sol[solIndex_act_flag[kdim]]);
      }
      
   }
