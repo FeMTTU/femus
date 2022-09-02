@@ -2255,12 +2255,12 @@ namespace ctrl_inequality {
                                                              const std::vector < std::vector < double > > sol_eldofs,  ///@todo why not a reference?
                                                              const std::vector < unsigned int > & Sol_n_el_dofs,
                                                              const double c_compl,
-                                                             const unsigned int pos_mu,
-                                                             const unsigned int pos_ctrl,
-                                                                   std::vector < double > & ctrl_lower_dofs,
-                                                                   std::vector < double > & ctrl_upper_dofs,
-                                                                   std::vector < double > & sol_actflag_dofs,
-                                                             const unsigned int solIndex_act_flag) {
+                                                             const std::vector<unsigned int>  pos_mu,
+                                                             const std::vector<unsigned int>  pos_ctrl,
+                                                             const std::vector<unsigned int>  solIndex_act_flag,
+                                                                 std::vector <   std::vector < double > > & ctrl_lower_dofs,
+                                                                 std::vector <   std::vector < double > > & ctrl_upper_dofs,
+                                                                 std::vector <   std::vector < double > > & sol_actflag_dofs) {
      
         const unsigned int dim = coords_at_dofs.size();
         
@@ -2316,7 +2316,10 @@ namespace ctrl_inequality {
             (sol->_Sol[solIndex_act_flag])->set(solDof_mu, sol_actflag_dofs[i]);
         }
 
-}
+
+                                                                 
+                                                                 
+   }
 
 
 
@@ -2332,7 +2335,8 @@ namespace ctrl_inequality {
                                                              const double c_compl,
                                                              const std::vector<unsigned int> pos_mu,
                                                              const std::vector<unsigned int> pos_ctrl,
-                                                              const std::vector<unsigned int>  solIndex_act_flag,                                                                  std::vector < std::vector < double > > & ctrl_lower_dofs, 
+                                                             const std::vector<unsigned int>  solIndex_act_flag,
+                                                              std::vector < std::vector < double > > & ctrl_lower_dofs, 
                                                               std::vector < std::vector < double > > & ctrl_upper_dofs,
                                                               std::vector < std::vector < double > > & sol_actflag_dofs) {
      

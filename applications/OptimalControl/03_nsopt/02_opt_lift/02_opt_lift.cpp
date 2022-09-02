@@ -37,8 +37,8 @@
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 
-#define NO_OF_L2_NORMS 11   //U,V,P,UADJ,VADJ,PADJ,UCTRL,VCTRL,PCTRL,U+U0,V+V0
-#define NO_OF_H1_NORMS 8    //U,V,UADJ,VADJ,UCTRL,VCTRL,U+U0,V+V0
+#define NO_OF_L2_NORMS 11   //U,V,P,UADJ,VADJ,PADJ,ctrl_0,ctrl_1,PCTRL,U+U0,V+V0
+#define NO_OF_H1_NORMS 8    //U,V,UADJ,VADJ,ctrl_0,ctrl_1,U+U0,V+V0
 
 
 using namespace femus;
@@ -57,14 +57,14 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
    if (faceName == FACE_FOR_CONTROL)  {
         if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
-       if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false; } 
-  else if (!strcmp(SolName, "WCTRL"))    { dirichlet = false; } 
+       if (!strcmp(SolName, "ctrl_0"))    { dirichlet = false; }
+  else if (!strcmp(SolName, "ctrl_1"))    { dirichlet = false; } 
+  else if (!strcmp(SolName, "ctrl_2"))    { dirichlet = false; } 
               }
               else {
-       if (!strcmp(SolName, "UCTRL"))    { dirichlet = true; }
-  else if (!strcmp(SolName, "VCTRL"))    { dirichlet = true; } 
-  else if (!strcmp(SolName, "WCTRL"))    { dirichlet = true; } 
+       if (!strcmp(SolName, "ctrl_0"))    { dirichlet = true; }
+  else if (!strcmp(SolName, "ctrl_1"))    { dirichlet = true; } 
+  else if (!strcmp(SolName, "ctrl_2"))    { dirichlet = true; } 
               }
       }
 #endif
@@ -74,8 +74,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 // TOP ==========================  
    double pi = acos(-1.);
      if (faceName == FACE_FOR_CONTROL) {
-       if (!strcmp(SolName, "UCTRL"))    { value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);} //lid - driven
-  else if (!strcmp(SolName, "VCTRL"))    { value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);} 
+       if (!strcmp(SolName, "ctrl_0"))    { value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);} //lid - driven
+  else if (!strcmp(SolName, "ctrl_1"))    { value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);} 
   	
       }
 #endif
@@ -118,9 +118,9 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
   if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
                 unknowns[adj_pos_begin + dimension]._name      = "PADJ";
   
-                       unknowns[ctrl_pos_begin + 0]._name      = "UCTRL";
-                       unknowns[ctrl_pos_begin + 1]._name      = "VCTRL";
-  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "WCTRL";
+                       unknowns[ctrl_pos_begin + 0]._name      = "ctrl_0";
+                       unknowns[ctrl_pos_begin + 1]._name      = "ctrl_1";
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "ctrl_2";
                unknowns[ctrl_pos_begin + dimension]._name      = "PCTRL";
 
                        unknowns[mu_pos_begin + 0]._name      = "mu_0";
@@ -388,15 +388,27 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
 
-  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
-  const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, act_set_fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
-  
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
-  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
-  // ======= Solutions that are not Unknowns - END  ==================
+  const unsigned int  n_components_ctrl = dim;
+  
+  const bool      act_flag_is_an_unknown_of_a_pde = false;
+
+  unsigned int index_control = 0;
+    for (unsigned int u = 0; u < unknowns.size(); u++) {
+        if ( !(unknowns[u]._name.compare("ctrl_0")) ) index_control = u;
+    }
+  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
+   std::vector<std::string> act_set_flag_name(n_components_ctrl);
+   
+   for(unsigned int d = 0; d <  act_set_flag_name.size(); d++)  {
+       act_set_flag_name[d] = "act_flag_" + d;
+    ml_sol.AddSolution(act_set_flag_name[d].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);
+    ml_sol.Initialize(act_set_flag_name[d].c_str(), Solution_set_initial_conditions, & ml_prob);
+   }
+   
+// ======= Solutions that are not Unknowns - END  ==================
   
 
   // ======= Problem, System - BEGIN ========================
@@ -471,7 +483,7 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
   std::cout << " L2-NORM ERROR and ORDER OF CONVERGENCE:\n\n";
-   std::vector< std::string > norm_names_L2 = {"U  ","V  ", "P  ", "UADJ","VADJ", "PADJ", "UCTRL","VCTRL", "PCTRL", "Vel_X" , "Vel_Y"};
+   std::vector< std::string > norm_names_L2 = {"U  ","V  ", "P  ", "UADJ","VADJ", "PADJ", "ctrl_0","ctrl_1", "PCTRL", "Vel_X" , "Vel_Y"};
 
    for(int j = 0; j <  norm_names_L2.size(); j++)  {
   std::cout << std::endl;
@@ -484,7 +496,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "=======================================================================" << std::endl;
   std::cout << " H1-NORM ERROR and ORDER OF CONVERGENCE:" << std::endl;
-  std::vector< std::string > norm_names_H1 = {"U  ","V  ", "UADJ","VADJ", "UCTRL","VCTRL", "Vel_X" , "Vel_Y"};
+  std::vector< std::string > norm_names_H1 = {"U  ","V  ", "UADJ","VADJ", "ctrl_0","ctrl_1", "Vel_X" , "Vel_Y"};
 
    for(int j = 0; j <  norm_names_H1.size(); j++)  {
   std::cout << std::endl;
@@ -665,17 +677,17 @@ std::cout << " ********************************  AD SYSTEM *********************
 //CONTROL######################################################################
   //velocity *******************************
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = ml_sol->GetIndex("UCTRL");    // get the position of "UCTRL" in the ml_sol object
-  solVctrlIndex[1] = ml_sol->GetIndex("VCTRL");    // get the position of "VCTRL" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");    // get the position of "ctrl_0" in the ml_sol object
+  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");    // get the position of "ctrl_1" in the ml_sol object
 
-  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("WCTRL");      // get the position of "WCTRL" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");      // get the position of "ctrl_2" in the ml_sol object
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "uCTRL"
  vector < unsigned > solVPdectrlIndex(dim);
-  solVPdectrlIndex[0] = mlPdeSys.GetSolPdeIndex("UCTRL");    // get the position of "UCTRL" in the pdeSys object
-  solVPdectrlIndex[1] = mlPdeSys.GetSolPdeIndex("VCTRL");    // get the position of "VCTRL" in the pdeSys object
+  solVPdectrlIndex[0] = mlPdeSys.GetSolPdeIndex("ctrl_0");    // get the position of "ctrl_0" in the pdeSys object
+  solVPdectrlIndex[1] = mlPdeSys.GetSolPdeIndex("ctrl_1");    // get the position of "ctrl_1" in the pdeSys object
 
-  if (dim == 3) solVPdectrlIndex[2] = mlPdeSys.GetSolPdeIndex("WCTRL");
+  if (dim == 3) solVPdectrlIndex[2] = mlPdeSys.GetSolPdeIndex("ctrl_2");
   
   vector < vector < adept::adouble > >  solVctrl(dim);    // local solution
    vector< vector < adept::adouble > > aResVctrl(dim);    // local redidual vector
@@ -1291,10 +1303,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //CONTROL######################################################################
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = ml_sol->GetIndex("UCTRL");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = ml_sol->GetIndex("VCTRL");    // get the position of "V" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");    // get the position of "U" in the ml_sol object
+  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");    // get the position of "V" in the ml_sol object
 
-  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("WCTRL");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");      // get the position of "V" in the ml_sol object
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
   
@@ -2598,11 +2610,10 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
    c_compl,
    mu_index,
    ctrl_index,
+   solIndex_act_flag_sol,
    ctrl_lower,
    ctrl_upper,
-   sol_actflag,
-   solFEType_act_flag_sol, //
-   solIndex_act_flag_sol); //
+   sol_actflag); //
   
       
 
@@ -2699,9 +2710,9 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   if (dim == 3) Solname[adj_pos_begin + 2] =              "WADJ";
   Solname              [adj_pos_begin + press_type_pos] = "PADJ";
 
-  Solname              [ctrl_pos_begin + 0] =              "UCTRL";
-  Solname              [ctrl_pos_begin + 1] =              "VCTRL";
-  if (dim == 3) Solname[ctrl_pos_begin + 2] =              "WCTRL";
+  Solname              [ctrl_pos_begin + 0] =              "ctrl_0";
+  Solname              [ctrl_pos_begin + 1] =              "ctrl_1";
+  if (dim == 3) Solname[ctrl_pos_begin + 2] =              "ctrl_2";
   Solname              [ctrl_pos_begin + press_type_pos] = "PCTRL";
   
   vector < unsigned > SolIndex(n_unknowns);  

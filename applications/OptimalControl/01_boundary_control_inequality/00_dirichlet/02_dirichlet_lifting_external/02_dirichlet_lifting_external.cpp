@@ -583,7 +583,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
           pos_mu,
           pos_ctrl, 
           solIndex_act_flag_sol,
-          ctrl_lower, ctrl_upper, 
+          ctrl_lower,
+          ctrl_upper, 
           sol_actflag);
 
 
@@ -1030,11 +1031,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
    c_compl,
    pos_mat_mu,
    pos_mat_ctrl,
+   solIndex_act_flag_sol,
    ctrl_lower,
    ctrl_upper,
-   sol_actflag,
-   solFEType_act_flag_sol,
-   solIndex_act_flag_sol);
+   sol_actflag);
   
       
 

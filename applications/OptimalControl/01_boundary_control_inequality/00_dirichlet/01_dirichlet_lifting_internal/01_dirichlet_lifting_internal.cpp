@@ -214,21 +214,22 @@ int main(int argc, char** args) {
  
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
   //MU
   const bool      act_flag_is_an_unknown_of_a_pde = false;
 
-  unsigned int u_control = 0;
+  unsigned int index_control = 0;
     for (unsigned int u = 0; u < unknowns.size(); u++) {
-        if ( !(unknowns[u]._name.compare("control")) ) u_control = u;
+        if ( !(unknowns[u]._name.compare("control")) ) index_control = u;
     }
   const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
-  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
--  ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[u_control]._fe_family, unknowns[u_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);               
+   std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);               
 
-  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
@@ -944,11 +945,10 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
    c_compl,
    pos_mat_mu,
    pos_mat_ctrl,
+   solIndex_act_flag_sol,
    ctrl_lower,
    ctrl_upper,
-   sol_actflag,
-   solFEType_act_flag_sol,
-   solIndex_act_flag_sol);
+   sol_actflag);
   
       
 

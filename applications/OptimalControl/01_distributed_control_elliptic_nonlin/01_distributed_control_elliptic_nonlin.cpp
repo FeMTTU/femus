@@ -35,7 +35,7 @@ double  nonlin_term_derivative(const double& v) {
 
 
 
-double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double Solution_set_initial_conditions (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
          
            double value = 0.;
 
@@ -100,15 +100,23 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
+    // ======= Problem ========================
+  MultiLevelProblem ml_prob;
+  
     // ======= Files ========================
   Files files; 
         files.CheckIODirectories(true);
         files.RedirectCout(true);
 
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+
+  
     // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");
- /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    In the future it is not going to be an argument of the mesh function   */
+
+  // ======= Problem,  Quad Rule ========================
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   
     // ======= Mesh ========================
   MultiLevelMesh ml_mesh;
@@ -121,38 +129,38 @@ int main(int argc, char** args) {
     // ======= Solution ========================
   MultiLevelSolution ml_sol(&ml_mesh);  // define the multilevel solution and attach the ml_mesh object to it
 
+  
+  // ======= Problem, Mesh and Solution  ==================
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+
   // add variables to ml_sol
   ml_sol.AddSolution("state",   LAGRANGE, FIRST);
   ml_sol.AddSolution("control", LAGRANGE, FIRST);
   ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
   ml_sol.AddSolution("mu",      LAGRANGE, FIRST);  
+
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
   //MU
-  const std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
+  std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag, false);
   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
 
-    // ======= Problem ========================
-  MultiLevelProblem ml_prob(&ml_sol);
-
-  ml_prob.SetFilesHandler(&files);
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  
     // ======= Solution: Initial values ========================
   ml_sol.Initialize("All");    // initialize all variables to zero
 
-//   ml_sol.Initialize("All", SetInitialCondition, &ml_prob); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
-  ml_sol.Initialize("state",   SetInitialCondition, &ml_prob);
-  ml_sol.Initialize("control", SetInitialCondition, &ml_prob);
-  ml_sol.Initialize("adjoint", SetInitialCondition, &ml_prob);
-  ml_sol.Initialize("mu",      SetInitialCondition, &ml_prob);
-  ml_sol.Initialize("TargReg", SetInitialCondition, &ml_prob);
-  ml_sol.Initialize("ContReg", SetInitialCondition, &ml_prob);
-  ml_sol.Initialize(act_set_flag_name.c_str(),  SetInitialCondition, &ml_prob);
+//   ml_sol.Initialize("All", Solution_set_initial_conditions, &ml_prob); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
+  ml_sol.Initialize("state",   Solution_set_initial_conditions, &ml_prob);
+  ml_sol.Initialize("control", Solution_set_initial_conditions, &ml_prob);
+  ml_sol.Initialize("adjoint", Solution_set_initial_conditions, &ml_prob);
+  ml_sol.Initialize("mu",      Solution_set_initial_conditions, &ml_prob);
+
+  ml_sol.Initialize("TargReg", Solution_set_initial_conditions, &ml_prob);
+  ml_sol.Initialize("ContReg", Solution_set_initial_conditions, &ml_prob);
+  ml_sol.Initialize(act_set_flag_name[0].c_str(),  Solution_set_initial_conditions, &ml_prob);
 
     // ======= Solution: Boundary Conditions ========================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data

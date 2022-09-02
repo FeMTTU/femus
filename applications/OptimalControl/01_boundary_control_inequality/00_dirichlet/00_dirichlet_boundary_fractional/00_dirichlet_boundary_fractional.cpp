@@ -1342,7 +1342,8 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     mu_index,               //this becomes a vector
     ctrl_index,             //this becomes a vector
     solIndex_act_flag_sol,             //this becomes a vector
-    ctrl_lower, ctrl_upper,   //this becomes a vector
+    ctrl_lower,
+    ctrl_upper,   //this becomes a vector
     sol_actflag);   //this becomes a vector
  
 
