@@ -403,7 +403,7 @@ int main(int argc, char** args) {
    std::vector<std::string> act_set_flag_name(n_components_ctrl);
    
    for(unsigned int d = 0; d <  act_set_flag_name.size(); d++)  {
-       act_set_flag_name[d] = "act_flag_" + d;
+       act_set_flag_name[d] = "act_flag_" + std::to_string(d);
     ml_sol.AddSolution(act_set_flag_name[d].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);
     ml_sol.Initialize(act_set_flag_name[d].c_str(), Solution_set_initial_conditions, & ml_prob);
    }
@@ -2500,7 +2500,7 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
           
   for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
       
-       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);
+       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);  //MU
       
      }
   }
@@ -2511,17 +2511,11 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
     for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
       for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; j++) {
             if (i == j) {
-               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);
+               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);  //MU
             }
          }
       }
   }
-
-// //                 if ( i < nDof_mu && j < nDof_mu && i==j )  {   
-// // 	        if ( control_el_flag == 0)  {  
-// // 		  Jac[   (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +  (nDof_u + nDof_ctrl + nDof_adj + j) ]  += penalty_outside_control_domain * (1 - control_node_flag[i]);    //MU
-// //                 }
-// // 	      }
 //************ Jacobian, END *********************
 
 
@@ -2547,17 +2541,17 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   } //end list of elements loop for each subdomain
   
   
-   std::vector<unsigned int> ctrl_index(n_components_ctrl); 
-  std::vector<unsigned int>   mu_index(n_components_ctrl);    
+   std::vector<unsigned int> ctrl_index_in_mat(n_components_ctrl); 
+  std::vector<unsigned int>   mu_index_in_mat(n_components_ctrl);    
       for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
-           ctrl_index[kdim] =  SolPdeIndex[ctrl_pos_begin + kdim];
-             mu_index[kdim] =  SolPdeIndex[mu_pos_begin + kdim];
+           ctrl_index_in_mat[kdim] =  SolPdeIndex[ctrl_pos_begin + kdim];
+             mu_index_in_mat[kdim] =  SolPdeIndex[mu_pos_begin + kdim];
       }
       
 ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
-                               ctrl_index,
-                               mu_index,
+                               ctrl_index_in_mat,
+                               mu_index_in_mat,
                                SolIndex,
                                sol,
                                mlPdeSys,
@@ -2607,41 +2601,45 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
    Sol_eldofs_Mat,
    Sol_n_el_dofs_Mat_vol,
    c_compl,
-   mu_index,
-   ctrl_index,
+   mu_index_in_mat,
+   ctrl_index_in_mat,
    solIndex_act_flag_sol,
    ctrl_lower,
    ctrl_upper,
-   sol_actflag); //
+   sol_actflag);
   
       
 
-// // // 
-// // //     ctrl_inequality::node_insertion(iel,
-// // //                    msh,
-// // //                    L2G_dofmap_Mat,
-// // //                    pos_mat_mu,
-// // //                    pos_mat_ctrl,
-// // //                    sol_eldofs_Mat,
-// // //                    Sol_n_el_dofs_Mat_vol,
-// // //                    sol_actflag,
-// // //                    ctrl_lower,
-// // //                    ctrl_upper,
-// // //                    ineq_flag,
-// // //                    c_compl,
-// // //                    JAC,
-// // //                    RES,
-// // //                    assembleMatrix
-// // //                    );
-// // //    
-// // // 
+
+    ctrl_inequality::node_insertion(iel,
+                   msh,
+                   L2G_dofmap_Mat,
+                   mu_index_in_mat,
+                   ctrl_index_in_mat,
+                    Sol_eldofs_Mat,
+                   Sol_n_el_dofs_Mat_vol,
+                   sol_actflag,
+                   ctrl_lower,
+                   ctrl_upper,
+                   ineq_flag,
+                   c_compl,
+                   JAC,
+                   RES,
+                   assembleMatrix
+                   );
+   
+
        }
-// // // 
-// // //  
-// // //     
-// // //     
-// // //  //============= delta_ctrl-delta_mu row ===============================
-// // //   if (assembleMatrix) { JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }
+
+ 
+    
+    
+ //============= delta_ctrl-delta_mu row ===============================
+  if (assembleMatrix) { 
+             for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ ctrl_index_in_mat[kdim] ], L2G_dofmap_Mat[ mu_index_in_mat[kdim] ], ineq_flag * 1.);
+             }
+            }
   
   
   }
