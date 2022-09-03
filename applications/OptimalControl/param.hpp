@@ -2228,16 +2228,37 @@ unsigned nDof_iel_vec = 0;
 namespace ctrl_inequality {
 
 
- 
- double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
+ ///@@@@@@@@@@@@@@@@@@@todo I believe you need to pass other rows here.........
+    // Also, I think you the active flag should be frozen if it was frozen once...!!!
+ std::vector<double>  InequalityConstraint(const unsigned n_components_ctrl, const std::vector<double> & dof_obj_coord, const bool upper) {
 
-     double constr_value = 0.;
-     double constr_value_upper =  .2;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
-     double constr_value_lower = -1000.; //-3.e-13;
-     assert(constr_value_lower < constr_value_upper); 
+     const unsigned dim = dof_obj_coord.size();
      
-    if (upper)   constr_value = constr_value_upper;
-    else         constr_value = constr_value_lower; 
+     std::vector<double> constr_value(n_components_ctrl, 0.);
+     
+     
+     double constr_value_upper_0 =  .1;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_lower_0 = -1000.; //-3.e-13;
+     assert(constr_value_lower_0 < constr_value_upper_0); 
+     
+     double constr_value_upper_1 =  .1;
+     double constr_value_lower_1 = -1000.;
+     assert(constr_value_lower_1 < constr_value_upper_1); 
+     
+     double constr_value_upper_2 =  1000.;
+     double constr_value_lower_2 = -1000.;
+     assert(constr_value_lower_2 < constr_value_upper_2); 
+     
+    if (upper)   { 
+                      constr_value[0] = constr_value_upper_0; 
+                      constr_value[1] = constr_value_upper_1; 
+       if (dim == 3)  constr_value[2] = constr_value_upper_2;
+    }
+    else         { 
+                      constr_value[0] = constr_value_lower_0; 
+                      constr_value[1] = constr_value_lower_1; 
+       if (dim == 3)  constr_value[2] = constr_value_lower_2; 
+    }
     
     
   return constr_value;
@@ -2296,8 +2317,8 @@ namespace ctrl_inequality {
             std::vector<double> node_coords_i(dim, 0.);
             for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
             
-            ctrl_lower_dofs[kdim][i] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
-            ctrl_upper_dofs[kdim][i] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
+            ctrl_lower_dofs[kdim][i] = ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[kdim];
+            ctrl_upper_dofs[kdim][i] = ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[kdim];
             
             const double lower_test_value = sol_eldofs[ pos_mu[kdim] ][i] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i] - ctrl_lower_dofs[kdim][i] );
             const double upper_test_value = sol_eldofs[ pos_mu[kdim] ][i] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i] - ctrl_upper_dofs[kdim][i] );
@@ -2375,8 +2396,8 @@ namespace ctrl_inequality {
         std::vector<double> node_coords_i(dim, 0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i_bdry];
         
-        ctrl_lower_dofs[kdim][i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
-        ctrl_upper_dofs[kdim][i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
+        ctrl_lower_dofs[kdim][i_bdry] = ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[kdim];
+        ctrl_upper_dofs[kdim][i_bdry] = ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[kdim];
 
         const double lower_test_value = sol_eldofs[ pos_mu[kdim] ][i_vol] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i_vol] - ctrl_lower_dofs[kdim][i_bdry] );
         const double upper_test_value = sol_eldofs[ pos_mu[kdim] ][i_vol] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i_vol] - ctrl_upper_dofs[kdim][i_bdry] );

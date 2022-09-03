@@ -309,6 +309,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
  //*************************************************** 
   
+ 
+     const unsigned int n_components_ctrl = 1;
+
+     
  //****************** mu ******************************  
  //***************************************************  
   unsigned solIndex_mu;
@@ -538,8 +542,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //             for (unsigned i = 0; i < sol_actflag.size(); i++) {
         std::vector<double> node_coords_i(dim,0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x_bdry[d][i_bdry];
-        ctrl_lower[i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i,false);
-        ctrl_upper[i_bdry] = ctrl_inequality::InequalityConstraint(node_coords_i,true);
+        ctrl_lower[i_bdry] = ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[0];
+        ctrl_upper[i_bdry] = ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[0];
 
         if      ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_lower[i_bdry] )) < 0 )  sol_actflag[i_bdry] = 1;
         else if ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_upper[i_bdry] )) > 0 )  sol_actflag[i_bdry] = 2;
