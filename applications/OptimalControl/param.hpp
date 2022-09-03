@@ -2264,14 +2264,20 @@ namespace ctrl_inequality {
      
         const unsigned int dim = coords_at_dofs.size();
         
+    const unsigned int   n_components_ctrl = pos_ctrl.size();
+    
+    
+              for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+
+        
 // 0: inactive; 1: active_a; 2: active_b
-        assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
-        sol_actflag_dofs.resize(Sol_n_el_dofs[pos_mu]);
-        ctrl_lower_dofs.resize(Sol_n_el_dofs[pos_mu]);
-        ctrl_upper_dofs.resize(Sol_n_el_dofs[pos_mu]);
-        std::fill(sol_actflag_dofs.begin(), sol_actflag_dofs.end(), 0);
-        std::fill(ctrl_lower_dofs.begin(), ctrl_lower_dofs.end(), 0.);
-        std::fill(ctrl_upper_dofs.begin(), ctrl_upper_dofs.end(), 0.);
+        assert(Sol_n_el_dofs[pos_mu[kdim] ] == Sol_n_el_dofs[ pos_ctrl[kdim] ]);
+        sol_actflag_dofs[kdim].resize(Sol_n_el_dofs[pos_mu[kdim] ]);
+        ctrl_lower_dofs[kdim].resize(Sol_n_el_dofs[pos_mu[kdim] ]);
+        ctrl_upper_dofs[kdim].resize(Sol_n_el_dofs[pos_mu[kdim] ]);
+        std::fill(sol_actflag_dofs[kdim].begin(), sol_actflag_dofs[kdim].end(), 0);
+        std::fill(ctrl_lower_dofs[kdim].begin(),   ctrl_lower_dofs[kdim].end(), 0.);
+        std::fill(ctrl_upper_dofs[kdim].begin(),   ctrl_upper_dofs[kdim].end(), 0.);
 
 // // //         std::cout << " mu dofs " << std::endl;
 // // //                 for (unsigned i = 0; i < sol_actflag_dofs.size(); i++) {
@@ -2286,38 +2292,39 @@ namespace ctrl_inequality {
 // // //         }
 // // //         std::cout << std::endl;
         
-        for (unsigned i = 0; i < sol_actflag_dofs.size(); i++) {
+        for (unsigned i = 0; i < sol_actflag_dofs[kdim].size(); i++) {
             std::vector<double> node_coords_i(dim, 0.);
             for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
             
-            ctrl_lower_dofs[i] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
-            ctrl_upper_dofs[i] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
+            ctrl_lower_dofs[kdim][i] = ctrl_inequality::InequalityConstraint(node_coords_i, false);
+            ctrl_upper_dofs[kdim][i] = ctrl_inequality::InequalityConstraint(node_coords_i, true);
             
-            const double lower_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower_dofs[i] );
-            const double upper_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper_dofs[i] );
+            const double lower_test_value = sol_eldofs[ pos_mu[kdim] ][i] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i] - ctrl_lower_dofs[kdim][i] );
+            const double upper_test_value = sol_eldofs[ pos_mu[kdim] ][i] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i] - ctrl_upper_dofs[kdim][i] );
 
             if      ( lower_test_value < 0. )  {
                 std::cout << "Found active node below" << std::endl;
-                std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
-                   sol_actflag_dofs[i] = 1;
+                std::cout << "The current value of mu is " <<  sol_eldofs[ pos_mu[kdim] ][i] << std::endl;
+                   sol_actflag_dofs[kdim][i] = 1;
             }
             else if ( upper_test_value > 0. )  {
                 std::cout << "Found active node above" << std::endl;
-                std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
-                sol_actflag_dofs[i] = 2;
+                std::cout << "The current value of mu is " <<  sol_eldofs[ pos_mu[kdim] ][i] << std::endl;
+                sol_actflag_dofs[kdim][i] = 2;
             }
         }
 
 //************** local to global act flag ***************************
-     const unsigned solFEType_act_flag = sol->GetSolutionType(solIndex_act_flag/*[kdim]*/);
+     const unsigned solFEType_act_flag = sol->GetSolutionType(solIndex_act_flag[kdim]);
 
-        for (unsigned i = 0; i < sol_actflag_dofs.size(); i++) {
+        for (unsigned i = 0; i < sol_actflag_dofs[kdim].size(); i++) {
             unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag);
-            (sol->_Sol[solIndex_act_flag])->set(solDof_mu, sol_actflag_dofs[i]);
+            (sol->_Sol[ solIndex_act_flag[kdim] ])->set(solDof_mu, sol_actflag_dofs[kdim][i]);
         }
 
 
-                                                                 
+      }
+      
                                                                  
    }
 
@@ -2340,7 +2347,9 @@ namespace ctrl_inequality {
                                                               std::vector < std::vector < double > > & ctrl_upper_dofs,
                                                               std::vector < std::vector < double > > & sol_actflag_dofs) {
      
-   const unsigned int   n_components_ctrl = pos_ctrl.size();
+         const unsigned dim = coords_at_dofs.size();
+         
+      const unsigned int   n_components_ctrl = pos_ctrl.size();
     
        for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
      
@@ -2350,7 +2359,6 @@ namespace ctrl_inequality {
      
      const unsigned ndofs_bdry = msh->GetElementFaceDofNumber(iel, iface, solFEType_act_flag);
         
-        const unsigned dim = coords_at_dofs.size();
         
          // 0: inactive; 1: active_a; 2: active_b
         assert(Sol_n_el_dofs[ pos_mu[kdim] ] == Sol_n_el_dofs[ pos_ctrl[kdim] ]);///@todo More appropriately, 
@@ -2361,6 +2369,7 @@ namespace ctrl_inequality {
            std::fill(ctrl_lower_dofs[kdim].begin(), ctrl_lower_dofs[kdim].end(), 0.);
            std::fill(ctrl_upper_dofs[kdim].begin(), ctrl_upper_dofs[kdim].end(), 0.);
 
+           
       for (unsigned int i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
         std::vector<double> node_coords_i(dim, 0.);
@@ -2376,7 +2385,7 @@ namespace ctrl_inequality {
         else if ( upper_test_value > 0. )  sol_actflag_dofs[kdim][i_bdry] = 2;
             }
             
-        //************** act flag **************************** 
+//************** local to global act flag ***************************
       for (unsigned int i_bdry = 0; i_bdry < sol_actflag_dofs[kdim].size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
       unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 

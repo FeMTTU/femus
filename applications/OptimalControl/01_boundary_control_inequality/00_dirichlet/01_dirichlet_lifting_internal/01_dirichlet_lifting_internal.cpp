@@ -238,7 +238,7 @@ int main(int argc, char** args) {
   //==== Solution: CHECK SOLUTION FE TYPES ==
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
-  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name[0].c_str())) abort();
   //==== Solution: CHECK SOLUTION FE TYPES ==
   
 
@@ -433,7 +433,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   const int n_unknowns =  mlPdeSys->GetSolPdeIndex().size();
  
-  vector< int > l2GMap_AllVars; // local to global mapping
+  vector< int > l2GMap_AllVars;
   l2GMap_AllVars.reserve(n_unknowns*max_size);
   
   vector< double > Res;
@@ -452,7 +452,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     assert(pos_mat_ctrl    == mlPdeSys->GetSolPdeIndex("control"));
     assert(pos_mat_adj     == mlPdeSys->GetSolPdeIndex("adjoint"));
     assert(pos_mat_mu      == mlPdeSys->GetSolPdeIndex("mu"));
-//***************************************************
+
+ std::vector < unsigned >   pos_ctrl_in_mat(n_components_ctrl);  pos_ctrl_in_mat[0] = pos_mat_ctrl;
+ std::vector < unsigned >   pos_mu_in_mat(n_components_ctrl);    pos_mu_in_mat[0] = pos_mat_mu;
+    
+    //***************************************************
 
   vector < std::string > Solname(n_unknowns);
   Solname[0] = "state";
@@ -464,7 +468,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************
    enum Pos_in_Sol {pos_sol_state = 0, pos_sol_ctrl, pos_sol_adj, pos_sol_mu, pos_sol_targreg, pos_sol_contreg, pos_sol_actflag}; //these are known at compile-time 
 
-        assert(pos_sol_actflag == solIndex_act_flag_sol);
+        assert(pos_sol_actflag == solIndex_act_flag_sol[0]);
 //***************************************************
     
   
@@ -943,8 +947,8 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
    sol_eldofs_Mat,
    Sol_n_el_dofs_Mat_vol,
    c_compl,
-   pos_mat_mu,
-   pos_mat_ctrl,
+   pos_mu_in_mat,
+   pos_ctrl_in_mat,
    solIndex_act_flag_sol,
    ctrl_lower,
    ctrl_upper,
@@ -956,8 +960,8 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
-                   pos_mat_mu,
-                   pos_mat_ctrl,
+                   pos_mu_in_mat,
+                   pos_ctrl_in_mat,
                    sol_eldofs_Mat,
                    Sol_n_el_dofs_Mat_vol,
                    sol_actflag,

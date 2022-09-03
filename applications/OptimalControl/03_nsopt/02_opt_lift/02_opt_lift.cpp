@@ -529,9 +529,8 @@ std::cout << " ********************************  AD SYSTEM *********************
   adept::Stack& s = FemusInit::_adeptStack;
 
   //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem& mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt" 
-//   LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
-   const unsigned level = mlPdeSys.GetLevelToAssemble();
+  NonLinearImplicitSystem * mlPdeSys   = & ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt" 
+   const unsigned level = mlPdeSys->GetLevelToAssemble();
  
   Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
@@ -540,7 +539,7 @@ std::cout << " ********************************  AD SYSTEM *********************
   Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
 
-   LinearEquationSolver*  pdeSys	 = mlPdeSys._LinSolver[level];   
+   LinearEquationSolver*  pdeSys	 = mlPdeSys->_LinSolver[level];   
  SparseMatrix*    JAC         	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*   RES          = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
@@ -550,7 +549,7 @@ std::cout << " ********************************  AD SYSTEM *********************
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
 
   // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //geometry *******************************
   unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
@@ -564,7 +563,7 @@ std::cout << " ********************************  AD SYSTEM *********************
   vector < vector < double > > coordX(dim);    // local coordinates
 
   for (unsigned  k = 0; k < dim; k++) { 
-    coordX[k].reserve(maxSize);
+    coordX[k].reserve(max_size);
   }
   //geometry *******************************
 
@@ -578,17 +577,17 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   vector < unsigned > solVPdeIndex(dim);
-  solVPdeIndex[0] = mlPdeSys.GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
-  solVPdeIndex[1] = mlPdeSys.GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
+  solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
+  solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
 
-  if (dim == 3) solVPdeIndex[2] = mlPdeSys.GetSolPdeIndex("W");
+  if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
   
   vector < vector < adept::adouble > >  solV(dim);    // local solution
    vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
-    solV[k].reserve(maxSize);
-    aResV[k].reserve(maxSize);
+    solV[k].reserve(max_size);
+    aResV[k].reserve(max_size);
   }
 
   
@@ -596,9 +595,9 @@ std::cout << " ********************************  AD SYSTEM *********************
   vector <double> phiV_x_gss; // local test function first order partial derivatives
   vector <double> phiV_xx_gss; // local test function second order partial derivatives
 
-  phiV_gss.reserve(maxSize);
-  phiV_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
-  phiV_xx_gss.reserve(maxSize * dim2);
+  phiV_gss.reserve(max_size);
+  phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
+  phiV_xx_gss.reserve(max_size * dim2);
   
 
   //velocity *******************************
@@ -609,13 +608,13 @@ std::cout << " ********************************  AD SYSTEM *********************
   unsigned solPType = ml_sol->GetSolutionType(solPIndex);    // get the finite element type for "P"
 
   unsigned solPPdeIndex;
-  solPPdeIndex = mlPdeSys.GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
+  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
   vector < adept::adouble >  solP; // local solution
   vector< adept::adouble > aResP; // local redidual vector
   
-  solP.reserve(maxSize);
-  aResP.reserve(maxSize);
+  solP.reserve(max_size);
+  aResP.reserve(max_size);
   
   double* phiP_gss;
   //pressure *******************************
@@ -631,17 +630,17 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   unsigned solVadjType = ml_sol->GetSolutionType(solVadjIndex[0]);    // get the finite element type for "uADJ"
  vector < unsigned > solVPdeadjIndex(dim);
-  solVPdeadjIndex[0] = mlPdeSys.GetSolPdeIndex("UADJ");    // get the position of "UADJ" in the pdeSys object
-  solVPdeadjIndex[1] = mlPdeSys.GetSolPdeIndex("VADJ");    // get the position of "VADJ" in the pdeSys object
+  solVPdeadjIndex[0] = mlPdeSys->GetSolPdeIndex("UADJ");    // get the position of "UADJ" in the pdeSys object
+  solVPdeadjIndex[1] = mlPdeSys->GetSolPdeIndex("VADJ");    // get the position of "VADJ" in the pdeSys object
 
-  if (dim == 3) solVPdeadjIndex[2] = mlPdeSys.GetSolPdeIndex("WADJ");
+  if (dim == 3) solVPdeadjIndex[2] = mlPdeSys->GetSolPdeIndex("WADJ");
   
   vector < vector < adept::adouble > >  solVadj(dim);    // local solution
    vector< vector < adept::adouble > > aResVadj(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
-    solVadj[k].reserve(maxSize);
-    aResVadj[k].reserve(maxSize);
+    solVadj[k].reserve(max_size);
+    aResVadj[k].reserve(max_size);
   }
 
   
@@ -649,9 +648,9 @@ std::cout << " ********************************  AD SYSTEM *********************
   vector <double> phiVadj_x_gss; // local test function first order partial derivatives
   vector <double> phiVadj_xx_gss; // local test function second order partial derivatives
 
-  phiVadj_gss.reserve(maxSize);
-  phiVadj_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
-  phiVadj_xx_gss.reserve(maxSize * dim2);
+  phiVadj_gss.reserve(max_size);
+  phiVadj_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
+  phiVadj_xx_gss.reserve(max_size * dim2);
   
   //velocity *******************************
 
@@ -661,13 +660,13 @@ std::cout << " ********************************  AD SYSTEM *********************
   unsigned solPadjType = ml_sol->GetSolutionType(solPadjIndex);    // get the finite element type for "PADJ"
 
   unsigned solPPdeadjIndex;
-  solPPdeadjIndex = mlPdeSys.GetSolPdeIndex("PADJ");    // get the position of "PADJ" in the pdeSys object
+  solPPdeadjIndex = mlPdeSys->GetSolPdeIndex("PADJ");    // get the position of "PADJ" in the pdeSys object
 
   vector < adept::adouble >  solPadj; // local solution
   vector< adept::adouble > aResPadj; // local redidual vector
   
-  solPadj.reserve(maxSize);
-  aResPadj.reserve(maxSize);
+  solPadj.reserve(max_size);
+  aResPadj.reserve(max_size);
   
   double* phiPadj_gss;
   //pressure *******************************
@@ -684,17 +683,17 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "uCTRL"
  vector < unsigned > solVPdectrlIndex(dim);
-  solVPdectrlIndex[0] = mlPdeSys.GetSolPdeIndex("ctrl_0");    // get the position of "ctrl_0" in the pdeSys object
-  solVPdectrlIndex[1] = mlPdeSys.GetSolPdeIndex("ctrl_1");    // get the position of "ctrl_1" in the pdeSys object
+  solVPdectrlIndex[0] = mlPdeSys->GetSolPdeIndex("ctrl_0");    // get the position of "ctrl_0" in the pdeSys object
+  solVPdectrlIndex[1] = mlPdeSys->GetSolPdeIndex("ctrl_1");    // get the position of "ctrl_1" in the pdeSys object
 
-  if (dim == 3) solVPdectrlIndex[2] = mlPdeSys.GetSolPdeIndex("ctrl_2");
+  if (dim == 3) solVPdectrlIndex[2] = mlPdeSys->GetSolPdeIndex("ctrl_2");
   
   vector < vector < adept::adouble > >  solVctrl(dim);    // local solution
    vector< vector < adept::adouble > > aResVctrl(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
-    solVctrl[k].reserve(maxSize);
-    aResVctrl[k].reserve(maxSize);
+    solVctrl[k].reserve(max_size);
+    aResVctrl[k].reserve(max_size);
   }
 
   
@@ -702,9 +701,9 @@ std::cout << " ********************************  AD SYSTEM *********************
   vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
   vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
 
-  phiVctrl_gss.reserve(maxSize);
-  phiVctrl_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
-  phiVctrl_xx_gss.reserve(maxSize * dim2);
+  phiVctrl_gss.reserve(max_size);
+  phiVctrl_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
+  phiVctrl_xx_gss.reserve(max_size * dim2);
   
 
   //velocity *******************************
@@ -715,13 +714,13 @@ std::cout << " ********************************  AD SYSTEM *********************
   unsigned solPctrlType = ml_sol->GetSolutionType(solPctrlIndex);    // get the finite element type for "PCTRL"
 
   unsigned solPPdectrlIndex;
-  solPPdectrlIndex = mlPdeSys.GetSolPdeIndex("PCTRL");    // get the position of "PCTRL" in the pdeSys object
+  solPPdectrlIndex = mlPdeSys->GetSolPdeIndex("PCTRL");    // get the position of "PCTRL" in the pdeSys object
 
   vector < adept::adouble >  solPctrl; // local solution
   vector< adept::adouble > aResPctrl; // local redidual vector
   
-  solPctrl.reserve(maxSize);
-  aResPctrl.reserve(maxSize);
+  solPctrl.reserve(max_size);
+  aResPctrl.reserve(max_size);
   
   double* phiPctrl_gss;
   //pressure *******************************
@@ -736,13 +735,13 @@ std::cout << " ********************************  AD SYSTEM *********************
   
   
   vector< int > L2G_dofmap_Mat; // local to global pdeSys dofs
-  L2G_dofmap_Mat.reserve(3 *(dim + 1) *maxSize);
+  L2G_dofmap_Mat.reserve(3 *(dim + 1) *max_size);
 
   vector< double > Res; // local redidual vector
-  Res.reserve(3 *(dim + 1) *maxSize);
+  Res.reserve(3 *(dim + 1) *max_size);
 
   vector < double > Jac;
-  Jac.reserve(3* (dim + 1) *maxSize * 3*(dim + 1) *maxSize);
+  Jac.reserve(3* (dim + 1) *max_size * 3*(dim + 1) *max_size);
 
   JAC->zero(); // Set to zero all the entries of the Global Matrix
 
@@ -1236,9 +1235,9 @@ for (unsigned k = 0; k < dim; k++){
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
-   const NonLinearImplicitSystem&  mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt"
+   const NonLinearImplicitSystem * mlPdeSys   = & ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt"
  
-  const unsigned level = mlPdeSys.GetLevelToAssemble();
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
  
 
   Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -1253,7 +1252,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
 
   // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //geometry *******************************
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
@@ -1267,7 +1266,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   vector < vector < double > > coordX(dim);    // local coordinates
 
   for (unsigned  k = 0; k < dim; k++) { 
-    coordX[k].reserve(maxSize);
+    coordX[k].reserve(max_size);
   }
   
   double weight;
@@ -1288,15 +1287,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   vector <double >  V_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
-    solV[k].reserve(maxSize);
+    solV[k].reserve(max_size);
   }
 
   
   vector <double> phiV_gss;  // local test function
   vector <double> phiV_x_gss; // local test function first order partial derivatives
 
-  phiV_gss.reserve(maxSize);
-  phiV_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
+  phiV_gss.reserve(max_size);
+  phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
   
 //STATE######################################################################
   
@@ -1314,15 +1313,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   vector < double >   Vctrl_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
-    solVctrl[k].reserve(maxSize);
+    solVctrl[k].reserve(max_size);
   }
 
   
   vector <double> phiVctrl_gss;  // local test function
   vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
 
-  phiVctrl_gss.reserve(maxSize);
-  phiVctrl_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
+  phiVctrl_gss.reserve(max_size);
+  phiVctrl_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
   
 //CONTROL######################################################################
 
@@ -1330,8 +1329,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   vector <double> phiVdes_gss;  // local test function
   vector <double> phiVdes_x_gss; // local test function first order partial derivatives
 
-  phiVdes_gss.reserve(maxSize);
-  phiVdes_x_gss.reserve(maxSize * dim_offset_grad /*space_dim*/);
+  phiVdes_gss.reserve(max_size);
+  phiVdes_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
 
   vector <double>  solVdes(dim,0.);
   vector<double> Vdes_gss(dim, 0.);  
@@ -1496,7 +1495,7 @@ double	integral_gamma  = 0.;
        std::ofstream intgr_fstream;
   if (paral::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
-      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
+      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys->GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
       intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
       intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
       intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
@@ -1523,15 +1522,15 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
      
  std::cout << " ********************************  NON-AD SYSTEM ******************************************** " << std::endl;
 
- NonLinearImplicitSystemWithPrimalDualActiveSetMethod & mlPdeSys  = ml_prob.get_system< NonLinearImplicitSystemWithPrimalDualActiveSetMethod >("NSOpt");
+ NonLinearImplicitSystemWithPrimalDualActiveSetMethod * mlPdeSys  = & ml_prob.get_system< NonLinearImplicitSystemWithPrimalDualActiveSetMethod >("NSOpt");
   
-  const unsigned level = mlPdeSys.GetLevelToAssemble();
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  bool assembleMatrix = mlPdeSys.GetAssembleMatrix(); 
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix(); 
    
   Solution*	 sol  	         = ml_prob._ml_sol->GetSolutionLevel(level);
-  LinearEquationSolver*  pdeSys	 = mlPdeSys._LinSolver[level];   
-  const char* pdename            = mlPdeSys.name().c_str();
+  LinearEquationSolver*  pdeSys	 = mlPdeSys->_LinSolver[level];   
+  const char* pdename            = mlPdeSys->name().c_str();
   
   MultiLevelSolution* ml_sol = ml_prob._ml_sol;
   
@@ -1547,7 +1546,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   unsigned igrid	= msh->GetLevel();
   unsigned iproc 	= msh->processor_id();
  
-  const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim)));
+  const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
 
   // geometry *******************************************
   unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
@@ -1560,7 +1559,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
  
   vector< vector < double> > coordX(dim);	//local coordinates
  for(int i = 0; i < dim; i++) {
-       coordX[i].reserve(maxSize);
+       coordX[i].reserve(max_size);
   }
   // geometry *******************************************
   
@@ -1600,7 +1599,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(unknowns[ivar]._name.c_str());
+    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(unknowns[ivar]._name.c_str());
     SolIndex[ivar]	= ml_sol->GetIndex        (unknowns[ivar]._name.c_str());
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
@@ -1640,8 +1639,8 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
-        phi_gss_fe[fe].reserve(maxSize);
-      phi_x_gss_fe[fe].reserve(maxSize*dim_offset_grad /*space_dim*/);
+        phi_gss_fe[fe].reserve(max_size);
+      phi_x_gss_fe[fe].reserve(max_size * dim_offset_grad /*space_dim*/);
    }
    
   //=================================================================================================
@@ -1655,15 +1654,15 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
  
   for(int i = 0; i < n_unknowns; i++) {     
-    L2G_dofmap_Mat[i].reserve(maxSize);
-      Res[i].reserve(maxSize);
+    L2G_dofmap_Mat[i].reserve(max_size);
+      Res[i].reserve(max_size);
   }
    
   if(assembleMatrix){
     for(int i = 0; i < n_unknowns; i++) {
       Jac[i].resize(n_unknowns);    
       for(int j = 0; j < n_unknowns; j++) {
-	Jac[i][j].reserve(maxSize*maxSize);	
+	Jac[i][j].reserve(max_size*max_size);	
       }
     }
   }
@@ -1673,8 +1672,8 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
   for(int k=0; k<n_unknowns; k++) {
-    Sol_eldofs_Mat[k].reserve(maxSize);
-    gradSol_eldofs_Mat[k].reserve(maxSize*dim);    
+    Sol_eldofs_Mat[k].reserve(max_size);
+    gradSol_eldofs_Mat[k].reserve(max_size*dim);    
   }
 
   //------------ at quadrature points ---------------------
@@ -2561,7 +2560,7 @@ ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                mu_index,
                                SolIndex,
                                sol,
-                               & mlPdeSys,
+                               mlPdeSys,
                                pdeSys,
                                RES);
     
@@ -2677,7 +2676,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
 
  // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //geometry *******************************
   vector < vector < double > > coordX(dim);    // local coordinates
@@ -2685,7 +2684,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
 
   for (unsigned  k = 0; k < dim; k++) { 
-    coordX[k].reserve(maxSize);
+    coordX[k].reserve(max_size);
   }
    
   //geometry *******************************
@@ -2732,8 +2731,8 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
-        phi_gss_fe[fe].reserve(maxSize);
-      phi_x_gss_fe[fe].reserve(maxSize*dim);
+        phi_gss_fe[fe].reserve(max_size);
+      phi_x_gss_fe[fe].reserve(max_size*dim);
    }
   
   //=================================================================================================
@@ -2751,11 +2750,11 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
   for(int k = 0; k < n_unknowns; k++) {
-    Sol_eldofs_Mat[k].reserve(maxSize);
-    gradSol_eldofs_Mat[k].reserve(maxSize*dim); 
+    Sol_eldofs_Mat[k].reserve(max_size);
+    gradSol_eldofs_Mat[k].reserve(max_size*dim); 
     
-    SolVAR_coarser_prol_eldofs[k].reserve(maxSize);
-    gradSolVAR_coarser_prol_eldofs[k].reserve(maxSize*dim);    
+    SolVAR_coarser_prol_eldofs[k].reserve(max_size);
+    gradSolVAR_coarser_prol_eldofs[k].reserve(max_size*dim);    
   }
 
   //------------ at quadrature points ---------------------
@@ -2764,8 +2763,8 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   vector < vector < double > > gradSolVAR_qp(n_unknowns);
   vector < vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
   for(int k = 0; k < n_unknowns; k++) {
-      gradSolVAR_qp[k].reserve(maxSize);  
-      gradSolVAR_coarser_prol_qp[k].reserve(maxSize);  
+      gradSolVAR_qp[k].reserve(max_size);  
+      gradSolVAR_coarser_prol_qp[k].reserve(max_size);  
   }
       
   vector  < double > l2norm (NO_OF_L2_NORMS,0.);

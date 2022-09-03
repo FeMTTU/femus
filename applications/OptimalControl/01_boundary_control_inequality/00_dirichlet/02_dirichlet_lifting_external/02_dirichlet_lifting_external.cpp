@@ -336,7 +336,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
     LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
-    SparseMatrix*             KK = pdeSys->_KK;
+    SparseMatrix*             JAC = pdeSys->_KK;
     NumericVector*           RES = pdeSys->_RES;
 
     const unsigned  dim = msh->GetDimension();
@@ -445,6 +445,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     assert(pos_mat_mu      == mlPdeSys->GetSolPdeIndex("mu"));
 //***************************************************
 
+
+ std::vector < unsigned >   pos_ctrl_in_mat(n_components_ctrl);  pos_ctrl_in_mat[0] = pos_mat_ctrl;
+ std::vector < unsigned >   pos_mu_in_mat(n_components_ctrl);    pos_mu_in_mat[0] = pos_mat_mu;
+    
+    
+    
     const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
 
     enum Sol_pos {pos_state=0, pos_ctrl, pos_adj, pos_adj_ext, pos_mu}; //these are known at compile-time
@@ -515,7 +521,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //***************************************************
 
     RES->zero();
-    if (assembleMatrix)  KK->zero();
+    if (assembleMatrix)  JAC->zero();
 
 
     // element loop: each process loops only on the elements that owns
@@ -580,8 +586,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
          (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, 
           c_compl, 
-          pos_mu,
-          pos_ctrl, 
+          pos_mu_in_mat,
+          pos_ctrl_in_mat, 
           solIndex_act_flag_sol,
           ctrl_lower,
           ctrl_upper, 
@@ -958,7 +964,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //========== sum-based part ================================
 
         RES->add_vector_blocked(Res, L2G_dofmap_Mat_AllVars);
-        if (assembleMatrix) KK->add_matrix_blocked(Jac, L2G_dofmap_Mat_AllVars, L2G_dofmap_Mat_AllVars);
+        if (assembleMatrix) JAC->add_matrix_blocked(Jac, L2G_dofmap_Mat_AllVars, L2G_dofmap_Mat_AllVars);
 
         
         
@@ -987,7 +993,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
     
     RES->close();
-    if (assembleMatrix)   KK->close();
+    if (assembleMatrix)   JAC->close();
       // ***************** ADD PART - END  *******************
       
         
@@ -1029,8 +1035,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
    sol_eldofs_Mat,
    Sol_n_el_dofs_Mat_vol,
    c_compl,
-   pos_mat_mu,
-   pos_mat_ctrl,
+   pos_mu_in_mat,
+   pos_ctrl_in_mat,
    solIndex_act_flag_sol,
    ctrl_lower,
    ctrl_upper,
@@ -1042,8 +1048,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
-                   pos_mat_mu,
-                   pos_mat_ctrl,
+                   pos_mu_in_mat,
+                   pos_ctrl_in_mat,
                    sol_eldofs_Mat,
                    Sol_n_el_dofs_Mat_vol,
                    sol_actflag,
@@ -1051,7 +1057,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                    ctrl_upper,
                    ineq_flag,
                    c_compl,
-                   KK,
+                   JAC,
                    RES,
                    assembleMatrix
                    );
@@ -1081,29 +1087,29 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 // // //         //============= delta_mu-delta_ctrl row ===============================
 // // //         for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;
 // // // 
-// // //         KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mu], L2G_dofmap_Mat[pos_ctrl], sol_actflag);
+// // //         JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mu], L2G_dofmap_Mat[pos_ctrl], sol_actflag);
 // // // 
 // // //         //============= delta_mu-delta_mu row ===============================
 // // //         for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;
 // // // 
-// // //         KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mu], L2G_dofmap_Mat[pos_mu], sol_actflag );
+// // //         JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mu], L2G_dofmap_Mat[pos_mu], sol_actflag );
 // // // 
      
         //============= delta_ctrl-delta_mu row ===============================
-        KK->matrix_set_off_diagonal_values_blocked( L2G_dofmap_Mat[pos_ctrl], L2G_dofmap_Mat[pos_mu], ineq_flag * 1.);
+        JAC->matrix_set_off_diagonal_values_blocked( L2G_dofmap_Mat[pos_ctrl], L2G_dofmap_Mat[pos_mu], ineq_flag * 1.);
 
      
     } //end element loop for each process    
  //   ***************** INSERT PART - END (must go AFTER the sum, clearly) *******************
    
   RES->close();
-  if (assembleMatrix) KK->close();
+  if (assembleMatrix) JAC->close();
 
  
      //print JAC and RES to files
     const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
   if (print_algebra_global) {
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
 
     RES->close();
