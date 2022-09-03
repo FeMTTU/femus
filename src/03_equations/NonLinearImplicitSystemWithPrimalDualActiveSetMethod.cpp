@@ -281,17 +281,31 @@ namespace femus {
 
         int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare (* (sol->_Sol[solIndex_act_flag])));     ///@todo perhaps this one slows things down in parallel!!!
 
-        if (compare_return == -1) compare_bool[c] = true;
+            if (_nonliniteration  > 0) {
+               std::cout << "At iteration " << _nonliniteration << ", active set for variable " << _active_flag_name[c];
+        if (compare_return == -1) {
+            compare_bool[c] = true;
+               std::cout << " did not change" << std::endl;
+              }
+              else {
+               std::cout << " did change" << std::endl;
+              }
+        }
+        
   }
   
    //turn compare_bool into a scalar boolean
       bool compare_bool_total = false;
+      unsigned count_not_changed = 0;
         for (unsigned int c = 0; c < _active_flag_name.size(); c++)  {
-            if (compare_bool[c] == true) compare_bool_total = true;
+            if (compare_bool[c] == true) count_not_changed++;
         }
         
+       if ( count_not_changed == _active_flag_name.size() )  { compare_bool_total = true; }
+        
+        
         if (compare_bool_total && (_nonliniteration  > 0)) {
-          std::cout << "Active set for variable " << " did not change at iteration " << _nonliniteration << std::endl;
+          std::cout <<  "At iteration " << _nonliniteration << ", active set for all variables " << " did not change" << std::endl;
           break;
         }
         // ***************** check active flag sets - END *******************
