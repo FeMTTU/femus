@@ -37,8 +37,8 @@
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 
-#define NO_OF_L2_NORMS 11   //U,V,P,UADJ,VADJ,PADJ,ctrl_0,ctrl_1,PCTRL,U+U0,V+V0
-#define NO_OF_H1_NORMS 8    //U,V,UADJ,VADJ,ctrl_0,ctrl_1,U+U0,V+V0
+#define NO_OF_L2_NORMS 11   //U,V,P,adj_0,adj_1,PADJ,ctrl_0,ctrl_1,PCTRL,U+U0,V+V0
+#define NO_OF_H1_NORMS 8    //U,V,adj_0,adj_1,ctrl_0,ctrl_1,U+U0,V+V0
 
 
 using namespace femus;
@@ -108,20 +108,20 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
   const int ctrl_pos_begin  = 2 * (dimension + 1);
   const int mu_pos_begin    = 3 * (dimension + 1);
   
-                        unknowns[state_pos_begin + 0]._name      = "U";
-                        unknowns[state_pos_begin + 1]._name      = "V";
-  if (dimension == 3)   unknowns[state_pos_begin + 2]._name      = "W";
-                                unknowns[dimension]._name      = "P";
+                        unknowns[state_pos_begin + 0]._name    = "u_0";
+                        unknowns[state_pos_begin + 1]._name    = "u_1";
+  if (dimension == 3)   unknowns[state_pos_begin + 2]._name    = "u_2";
+                                unknowns[dimension]._name      = "p_u";
   
-                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
-                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
-  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
-                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
+                        unknowns[adj_pos_begin + 0]._name      = "adj_0";
+                        unknowns[adj_pos_begin + 1]._name      = "adj_1";
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "adj_2";
+                unknowns[adj_pos_begin + dimension]._name      = "p_adj";
   
                        unknowns[ctrl_pos_begin + 0]._name      = "ctrl_0";
                        unknowns[ctrl_pos_begin + 1]._name      = "ctrl_1";
   if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "ctrl_2";
-               unknowns[ctrl_pos_begin + dimension]._name      = "PCTRL";
+               unknowns[ctrl_pos_begin + dimension]._name      = "p_ctrl";
 
                        unknowns[mu_pos_begin + 0]._name      = "mu_0";
                        unknowns[mu_pos_begin + 1]._name      = "mu_1";
@@ -483,7 +483,7 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
   std::cout << " L2-NORM ERROR and ORDER OF CONVERGENCE:\n\n";
-   std::vector< std::string > norm_names_L2 = {"U  ","V  ", "P  ", "UADJ","VADJ", "PADJ", "ctrl_0","ctrl_1", "PCTRL", "Vel_X" , "Vel_Y"};
+   std::vector< std::string > norm_names_L2 = {"U  ","V  ", "P  ", "adj_0","adj_1", "p_adj", "ctrl_0","ctrl_1", "p_ctrl", "Vel_X" , "Vel_Y"};
 
    for(int j = 0; j <  norm_names_L2.size(); j++)  {
   std::cout << std::endl;
@@ -496,7 +496,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "=======================================================================" << std::endl;
   std::cout << " H1-NORM ERROR and ORDER OF CONVERGENCE:" << std::endl;
-  std::vector< std::string > norm_names_H1 = {"U  ","V  ", "UADJ","VADJ", "ctrl_0","ctrl_1", "Vel_X" , "Vel_Y"};
+  std::vector< std::string > norm_names_H1 = {"U  ","V  ", "adj_0","adj_1", "ctrl_0","ctrl_1", "Vel_X" , "Vel_Y"};
 
    for(int j = 0; j <  norm_names_H1.size(); j++)  {
   std::cout << std::endl;
@@ -570,17 +570,17 @@ std::cout << " ********************************  AD SYSTEM *********************
 //STATE######################################################################
   //velocity *******************************
   vector < unsigned > solVIndex(dim);
-  solVIndex[0] = ml_sol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = ml_sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+  solVIndex[0] = ml_sol->GetIndex("u_0");
+  solVIndex[1] = ml_sol->GetIndex("u_1");
 
-  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("W");      // get the position of "W" in the ml_sol object
+  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("u_2");
 
   unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   vector < unsigned > solVPdeIndex(dim);
-  solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
-  solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
+  solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("u_0");
+  solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("u_1");
 
-  if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
+  if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("u_2");
   
   vector < vector < adept::adouble > >  solV(dim);    // local solution
    vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
@@ -604,11 +604,11 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   //pressure *******************************
   unsigned solPIndex;
-  solPIndex = ml_sol->GetIndex("P");    // get the position of "P" in the ml_sol object
-  unsigned solPType = ml_sol->GetSolutionType(solPIndex);    // get the finite element type for "P"
+  solPIndex = ml_sol->GetIndex("p_u");    // get the position of "p_u" in the ml_sol object
+  unsigned solPType = ml_sol->GetSolutionType(solPIndex);    // get the finite element type for "p_u"
 
   unsigned solPPdeIndex;
-  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
+  solPPdeIndex = mlPdeSys->GetSolPdeIndex("p_u");    // get the position of "p_u" in the pdeSys object
 
   vector < adept::adouble >  solP; // local solution
   vector< adept::adouble > aResP; // local redidual vector
@@ -623,20 +623,20 @@ std::cout << " ********************************  AD SYSTEM *********************
 //ADJOINT######################################################################
   //velocity *******************************
   vector < unsigned > solVadjIndex(dim);
-  solVadjIndex[0] = ml_sol->GetIndex("UADJ");    // get the position of "UADJ" in the ml_sol object
-  solVadjIndex[1] = ml_sol->GetIndex("VADJ");    // get the position of "VADJ" in the ml_sol object
+  solVadjIndex[0] = ml_sol->GetIndex("adj_0");
+  solVadjIndex[1] = ml_sol->GetIndex("adj_1");
 
-  if (dim == 3) solVadjIndex[2] = ml_sol->GetIndex("WADJ");      // get the position of "WADJ" in the ml_sol object
+  if (dim == 3) solVadjIndex[2] = ml_sol->GetIndex("adj_2");
 
-  unsigned solVadjType = ml_sol->GetSolutionType(solVadjIndex[0]);    // get the finite element type for "uADJ"
+  unsigned solVadjType = ml_sol->GetSolutionType(solVadjIndex[0]);
  vector < unsigned > solVPdeadjIndex(dim);
-  solVPdeadjIndex[0] = mlPdeSys->GetSolPdeIndex("UADJ");    // get the position of "UADJ" in the pdeSys object
-  solVPdeadjIndex[1] = mlPdeSys->GetSolPdeIndex("VADJ");    // get the position of "VADJ" in the pdeSys object
+  solVPdeadjIndex[0] = mlPdeSys->GetSolPdeIndex("adj_0");
+  solVPdeadjIndex[1] = mlPdeSys->GetSolPdeIndex("adj_1");
 
-  if (dim == 3) solVPdeadjIndex[2] = mlPdeSys->GetSolPdeIndex("WADJ");
+  if (dim == 3) solVPdeadjIndex[2] = mlPdeSys->GetSolPdeIndex("adj_2");
   
-  vector < vector < adept::adouble > >  solVadj(dim);    // local solution
-   vector< vector < adept::adouble > > aResVadj(dim);    // local redidual vector
+  vector < vector < adept::adouble > >  solVadj(dim);
+   vector< vector < adept::adouble > > aResVadj(dim);
    
  for (unsigned  k = 0; k < dim; k++) {
     solVadj[k].reserve(max_size);
@@ -656,11 +656,11 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   //pressure *******************************
   unsigned solPadjIndex;
-  solPadjIndex = ml_sol->GetIndex("PADJ");    // get the position of "PADJ" in the ml_sol object
-  unsigned solPadjType = ml_sol->GetSolutionType(solPadjIndex);    // get the finite element type for "PADJ"
+  solPadjIndex = ml_sol->GetIndex("p_adj");
+  unsigned solPadjType = ml_sol->GetSolutionType(solPadjIndex);    // get the finite element type for "p_adj"
 
   unsigned solPPdeadjIndex;
-  solPPdeadjIndex = mlPdeSys->GetSolPdeIndex("PADJ");    // get the position of "PADJ" in the pdeSys object
+  solPPdeadjIndex = mlPdeSys->GetSolPdeIndex("p_adj");    // get the position of "p_adj" in the pdeSys object
 
   vector < adept::adouble >  solPadj; // local solution
   vector< adept::adouble > aResPadj; // local redidual vector
@@ -676,16 +676,16 @@ std::cout << " ********************************  AD SYSTEM *********************
 //CONTROL######################################################################
   //velocity *******************************
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");    // get the position of "ctrl_0" in the ml_sol object
-  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");    // get the position of "ctrl_1" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
+  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
 
-  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");      // get the position of "ctrl_2" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");
 
-  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "uCTRL"
+  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);
  vector < unsigned > solVPdectrlIndex(dim);
-  solVPdectrlIndex[0] = mlPdeSys->GetSolPdeIndex("ctrl_0");    // get the position of "ctrl_0" in the pdeSys object
-  solVPdectrlIndex[1] = mlPdeSys->GetSolPdeIndex("ctrl_1");    // get the position of "ctrl_1" in the pdeSys object
-
+ 
+  solVPdectrlIndex[0] = mlPdeSys->GetSolPdeIndex("ctrl_0");
+  solVPdectrlIndex[1] = mlPdeSys->GetSolPdeIndex("ctrl_1");
   if (dim == 3) solVPdectrlIndex[2] = mlPdeSys->GetSolPdeIndex("ctrl_2");
   
   vector < vector < adept::adouble > >  solVctrl(dim);    // local solution
@@ -710,11 +710,11 @@ std::cout << " ********************************  AD SYSTEM *********************
 
   //pressure *******************************
   unsigned solPctrlIndex;
-  solPctrlIndex = ml_sol->GetIndex("PCTRL");    // get the position of "PCTRL" in the ml_sol object
-  unsigned solPctrlType = ml_sol->GetSolutionType(solPctrlIndex);    // get the finite element type for "PCTRL"
+  solPctrlIndex = ml_sol->GetIndex("p_ctrl");    // get the position of "p_ctrl" in the ml_sol object
+  unsigned solPctrlType = ml_sol->GetSolutionType(solPctrlIndex);    // get the finite element type for "p_ctrl"
 
   unsigned solPPdectrlIndex;
-  solPPdectrlIndex = mlPdeSys->GetSolPdeIndex("PCTRL");    // get the position of "PCTRL" in the pdeSys object
+  solPPdectrlIndex = mlPdeSys->GetSolPdeIndex("p_ctrl");    // get the position of "p_ctrl" in the pdeSys object
 
   vector < adept::adouble >  solPctrl; // local solution
   vector< adept::adouble > aResPctrl; // local redidual vector
@@ -731,7 +731,8 @@ std::cout << " ********************************  AD SYSTEM *********************
   //Nondimensional values ******************
   double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   //Nondimensional values ******************
-  double weight; // gauss point weight
+  
+  
   
   
   vector< int > L2G_dofmap_Mat; // local to global pdeSys dofs
@@ -751,7 +752,8 @@ std::cout << " ********************************  AD SYSTEM *********************
     for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
     
-    double detJac_qp;
+   double weight; // gauss point weight
+   double detJac_qp;
 
     //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
@@ -1276,10 +1278,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //STATE######################################################################
   vector < unsigned > solVIndex(dim);
-  solVIndex[0] = ml_sol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = ml_sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+  solVIndex[0] = ml_sol->GetIndex("u_0");
+  solVIndex[1] = ml_sol->GetIndex("u_1");
 
-  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("W");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("u_2");
 
   unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   
@@ -1302,12 +1304,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //CONTROL######################################################################
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");    // get the position of "V" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
+  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
 
-  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");
 
-  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
+  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);
   
   vector < vector < double > >  solVctrl(dim);    // local solution
   vector < double >   Vctrl_gss(dim, 0.);    //  solution
@@ -2696,21 +2698,21 @@ JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ ctrl_index_in_mat[kd
   const int adj_pos_begin   = dim+1;
   const int ctrl_pos_begin   = 2*(dim+1);
   
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
-  Solname              [state_pos_begin+0] =                "U";
-  Solname              [state_pos_begin+1] =                "V";
-  if (dim == 3) Solname[state_pos_begin+2] =                "W";
-  Solname              [state_pos_begin + press_type_pos] = "P";
+  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"u_0","u_1","u_2","p_u"};
+  Solname              [state_pos_begin+0] =                "u_0";
+  Solname              [state_pos_begin+1] =                "u_1";
+  if (dim == 3) Solname[state_pos_begin+2] =                "u_2";
+  Solname              [state_pos_begin + press_type_pos] = "p_u";
   
-  Solname              [adj_pos_begin + 0] =              "UADJ";
-  Solname              [adj_pos_begin + 1] =              "VADJ";
-  if (dim == 3) Solname[adj_pos_begin + 2] =              "WADJ";
-  Solname              [adj_pos_begin + press_type_pos] = "PADJ";
+  Solname              [adj_pos_begin + 0] =              "adj_0";
+  Solname              [adj_pos_begin + 1] =              "adj_1";
+  if (dim == 3) Solname[adj_pos_begin + 2] =              "adj_2";
+  Solname              [adj_pos_begin + press_type_pos] = "p_adj";
 
   Solname              [ctrl_pos_begin + 0] =              "ctrl_0";
   Solname              [ctrl_pos_begin + 1] =              "ctrl_1";
   if (dim == 3) Solname[ctrl_pos_begin + 2] =              "ctrl_2";
-  Solname              [ctrl_pos_begin + press_type_pos] = "PCTRL";
+  Solname              [ctrl_pos_begin + press_type_pos] = "p_ctrl";
   
   vector < unsigned > SolIndex(n_unknowns);  
   vector < unsigned > SolFEType(n_unknowns);  

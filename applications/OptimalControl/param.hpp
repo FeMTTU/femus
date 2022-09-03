@@ -2230,6 +2230,9 @@ namespace ctrl_inequality {
 
  ///@@@@@@@@@@@@@@@@@@@todo I believe you need to pass other rows here.........
     // Also, I think you the active flag should be frozen if it was frozen once...!!!
+    //I don't think I have to put other mu's for the other constraint equations... there is a mu per constrained variable... 
+    //just make sure where they go
+    //only try to constrain each component, and see how it behaves.
  std::vector<double>  InequalityConstraint(const unsigned n_components_ctrl, const std::vector<double> & dof_obj_coord, const bool upper) {
 
      const unsigned dim = dof_obj_coord.size();
@@ -2237,11 +2240,11 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  .1;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  .3;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      
-     double constr_value_upper_1 =  .1;
+     double constr_value_upper_1 =  1000.;
      double constr_value_lower_1 = -1000.;
      assert(constr_value_lower_1 < constr_value_upper_1); 
      
