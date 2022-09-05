@@ -29,10 +29,10 @@ using namespace femus;
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
  
-                        feOrder.push_back(FIRST/*SECOND*/);
-                        feOrder.push_back(FIRST/*SECOND*/);
-                        feOrder.push_back(FIRST/*SECOND*/);
-                        feOrder.push_back(FIRST/*SECOND*/);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
  
 
   assert( feFamily.size() == feOrder.size() );
@@ -157,7 +157,7 @@ int main(int argc, char** args) {
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
    
-  std::string input_file = "parametric_square_2x2.med";
+  std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "square_parametric.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
@@ -254,8 +254,10 @@ int main(int argc, char** args) {
   
   system.SetAssembleFunction(AssembleLiftRestrProblem);
   
+// *****************
   system.SetDebugNonlinear(true);
   system.SetDebugFunction(ComputeIntegral);
+// *****************
 //   system.SetMaxNumberOfNonLinearIterations(2);
 
   // initialize and solve the system

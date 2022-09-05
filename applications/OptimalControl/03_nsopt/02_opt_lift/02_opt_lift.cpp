@@ -263,8 +263,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
  
     std::string mesh_folder_file = "input/";
-//   std::string input_file = "parametric_square_1x1.med";
-  std::string input_file = "parametric_square_1x2.med";
+  std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "cyl.med"; // "fifth"
   std::ostringstream mystream; mystream << "./" << mesh_folder_file << input_file;
   const std::string infile = mystream.str();
@@ -346,7 +346,7 @@ int main(int argc, char** args) {
 
             
             
-         for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
+         for (int i = 0/*maxNumberOfMeshes - 1*/; i < 1/*maxNumberOfMeshes*/; i++) {   // loop on the mesh level
 
   // ======= Mesh: Refinement  ==================
   unsigned numberOfUniformLevels = i + 1; 
@@ -438,8 +438,8 @@ int main(int argc, char** args) {
 //   system_opt.SetDebugLinear(true);
 //   system_opt.SetMaxNumberOfLinearIterations(6);
 //   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
+//   system_opt.SetOuterSolver(PREONLY);
 
-  system_opt.SetOuterSolver(PREONLY);
   system_opt.MGsolve();
   // ======= Problem, System - END ========================
 
@@ -483,7 +483,7 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
   std::cout << " L2-NORM ERROR and ORDER OF CONVERGENCE:\n\n";
-   std::vector< std::string > norm_names_L2 = {"U  ","V  ", "P  ", "adj_0","adj_1", "p_adj", "ctrl_0","ctrl_1", "p_ctrl", "Vel_X" , "Vel_Y"};
+   std::vector< std::string > norm_names_L2 = {"u_0","u_1", "p_u", "adj_0", "adj_1", "p_adj", "ctrl_0", "ctrl_1", "p_ctrl", "Vel_X" , "Vel_Y"};
 
    for(int j = 0; j <  norm_names_L2.size(); j++)  {
   std::cout << std::endl;
@@ -496,7 +496,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "=======================================================================" << std::endl;
   std::cout << " H1-NORM ERROR and ORDER OF CONVERGENCE:" << std::endl;
-  std::vector< std::string > norm_names_H1 = {"U  ","V  ", "adj_0","adj_1", "ctrl_0","ctrl_1", "Vel_X" , "Vel_Y"};
+  std::vector< std::string > norm_names_H1 = {"u_0","u_1", "adj_0","adj_1", "ctrl_0","ctrl_1", "Vel_X" , "Vel_Y"};
 
    for(int j = 0; j <  norm_names_H1.size(); j++)  {
   std::cout << std::endl;
