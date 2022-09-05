@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  1
+#define N_UNIFORM_LEVELS  4
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -2272,7 +2272,7 @@ namespace ctrl_inequality {
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      
-     double constr_value_upper_1 =  .1;
+     double constr_value_upper_1 =  .2;
      double constr_value_lower_1 = -1000.;
      assert(constr_value_lower_1 < constr_value_upper_1); 
      

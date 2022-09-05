@@ -353,7 +353,7 @@ int main(int argc, char** args) {
 
             
             
-         for (int i = 0/*maxNumberOfMeshes - 1*/; i < 1/*maxNumberOfMeshes*/; i++) {   // loop on the mesh level
+         for (int i = /*0*/maxNumberOfMeshes - 1; i < /*1*/maxNumberOfMeshes; i++) {   // loop on the mesh level
 
   // ======= Mesh: Refinement  ==================
   unsigned numberOfUniformLevels = i + 1; 
