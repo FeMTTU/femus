@@ -2260,6 +2260,7 @@ namespace ctrl_inequality {
     //only try to constrain each component, and see how it behaves.
     //So, the active set is correctly found, but mu does not change, and it must! Maybe I didn't put all the pieces from the scalar to the vector routine?!
     //ctrl is not modified correctly...
+    //I think the constraint is only acting on the interior nodes but not on the boundary, just check the boundary conditions!!!
  std::vector<double>  InequalityConstraint(const unsigned n_components_ctrl, const std::vector<double> & dof_obj_coord, const bool upper) {
 
      const unsigned dim = dof_obj_coord.size();
@@ -2271,7 +2272,7 @@ namespace ctrl_inequality {
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      
-     double constr_value_upper_1 =  1000.;
+     double constr_value_upper_1 =  .1;
      double constr_value_lower_1 = -1000.;
      assert(constr_value_lower_1 < constr_value_upper_1); 
      

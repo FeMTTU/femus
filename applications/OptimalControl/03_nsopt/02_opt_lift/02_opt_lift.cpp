@@ -67,6 +67,13 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   else if (!strcmp(SolName, "ctrl_2"))    { dirichlet = true; } 
               }
       }
+      
+   
+       if (!strcmp(SolName, "mu_0"))    { dirichlet = false; }
+  else if (!strcmp(SolName, "mu_1"))    { dirichlet = false; } 
+  else if (!strcmp(SolName, "mu_2"))    { dirichlet = false; } 
+     
+      
 #endif
 
 #if exact_sol_flag == 1
