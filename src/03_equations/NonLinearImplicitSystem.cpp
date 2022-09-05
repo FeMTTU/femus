@@ -325,7 +325,7 @@ restart:
 
                   
         // ***************** 
-        print_iteration_and_do_additional_computations(nonLinearIterator);
+        print_iteration_and_do_additional_computations_with_given_function(nonLinearIterator);
               
     
         if(nonLinearIsConverged || _bitFlipOccurred) break;
@@ -361,7 +361,7 @@ restart:
 
 
   
-  void NonLinearImplicitSystem::print_iteration_and_do_additional_computations(const unsigned nonLinearIterator) const {
+  void NonLinearImplicitSystem::print_iteration_and_do_additional_computations_with_given_function(const unsigned nonLinearIterator) const {
   
           if (_debug_nonlinear)  {
             

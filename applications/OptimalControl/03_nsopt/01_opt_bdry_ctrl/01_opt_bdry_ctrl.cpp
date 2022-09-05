@@ -1848,15 +1848,16 @@ for (unsigned k = 0; k < dim; k++){
   RES->close();
   
   
-    if (print_algebra_global) {
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, mlPdeSys->GetNonlinearIt());
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
-
-    RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
-
-  }
+  
+  print_global_residual_jacobian(print_algebra_global,
+                                 ml_prob,
+                                 mlPdeSys,
+                                 pdeSys,
+                                 RES,
+                                 JAC,
+                                 iproc,
+                                 assembleMatrix);
+  
 
   
 }

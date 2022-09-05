@@ -31,7 +31,7 @@
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV  1 /*1*/ 
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -1383,19 +1383,17 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
   RES->close();
   if (assembleMatrix) JAC->close();  ///@todo is it needed? I think so
-    
-    
-  if (print_algebra_global) {
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, mlPdeSys->GetNonlinearIt());
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
-
-    RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
-
-  }
-     
-     
+   
+  
+  print_global_residual_jacobian(print_algebra_global,
+                                 ml_prob,
+                                 mlPdeSys,
+                                 pdeSys,
+                                 RES,
+                                 JAC,
+                                 iproc,
+                                 assembleMatrix);
+  
 
   return;
 }

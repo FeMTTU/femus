@@ -105,7 +105,7 @@ public:
     /** Only call assemble function */
     virtual void assemble_call_before_boundary_conditions(const unsigned int n_times);
     
-    void print_iteration_and_do_additional_computations(const unsigned nonLinearIterator) const;
+    void print_iteration_and_do_additional_computations_with_given_function(const unsigned nonLinearIterator) const;
     
 protected:
 

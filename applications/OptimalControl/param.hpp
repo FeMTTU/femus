@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS   4
+#define N_UNIFORM_LEVELS  4
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -2225,6 +2225,31 @@ unsigned nDof_iel_vec = 0;
 
 
 
+void  print_global_residual_jacobian(const bool print_algebra_global,
+                                     const MultiLevelProblem& ml_prob,
+                                     const NonLinearImplicitSystem * mlPdeSys,
+                                       LinearEquationSolver* pdeSys,
+                                     NumericVector*           RES,
+                                     SparseMatrix*             JAC,
+                                     const unsigned iproc,
+                                     const bool assembleMatrix)  {
+
+
+  if (print_algebra_global) {
+    const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+
+     } 
+  
+  }
+
+
+
 namespace ctrl_inequality {
 
 
@@ -2233,6 +2258,8 @@ namespace ctrl_inequality {
     //I don't think I have to put other mu's for the other constraint equations... there is a mu per constrained variable... 
     //just make sure where they go
     //only try to constrain each component, and see how it behaves.
+    //So, the active set is correctly found, but mu does not change, and it must! Maybe I didn't put all the pieces from the scalar to the vector routine?!
+    //ctrl is not modified correctly...
  std::vector<double>  InequalityConstraint(const unsigned n_components_ctrl, const std::vector<double> & dof_obj_coord, const bool upper) {
 
      const unsigned dim = dof_obj_coord.size();
@@ -2240,7 +2267,7 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  .3;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  .1;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      

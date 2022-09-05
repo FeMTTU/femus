@@ -104,7 +104,7 @@ namespace femus {
       };
 
       /** */
-      bool IsLinearConverged (const unsigned igridn);
+      bool HasLinearConverged (const unsigned igridn);
 
       /** Set the type of multigrid */
       void SetMgType (const MgType mgtype) {

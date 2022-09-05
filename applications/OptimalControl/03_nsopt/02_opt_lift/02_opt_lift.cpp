@@ -1550,6 +1550,12 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
  
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
 
+
+  constexpr bool print_algebra_global = true;
+  constexpr bool print_algebra_local = true;
+  
+  
+  
   // geometry *******************************************
   unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   unsigned solType_coords = coordXType;  //FE_DOMAIN = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -2654,6 +2660,16 @@ JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ ctrl_index_in_mat[kd
   // ***************** END ASSEMBLY *******************
 
     
+  
+  print_global_residual_jacobian(print_algebra_global,
+                                 ml_prob,
+                                 mlPdeSys,
+                                 pdeSys,
+                                 RES,
+                                 JAC,
+                                 iproc,
+                                 assembleMatrix);
+  
 
 
 }

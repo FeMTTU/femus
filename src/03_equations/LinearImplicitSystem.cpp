@@ -399,7 +399,7 @@ namespace femus {
 
   // ********************************************
 
-  bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
+  bool LinearImplicitSystem::HasLinearConverged(const unsigned igridn) {
 
     _bitFlipOccurred = false;
 
@@ -466,7 +466,7 @@ namespace femus {
       bool ksp_clean = !linearIterator * _assembleMatrix;
       _LinSolver[level]->MGSolve(ksp_clean);
       _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
-      linearIsConverged = IsLinearConverged(level);
+      linearIsConverged = HasLinearConverged(level);
 
       if(linearIsConverged || _bitFlipOccurred)  break;
     }

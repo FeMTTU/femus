@@ -260,28 +260,34 @@ namespace femus {
         }
 
         double nonLinearEps;
-        bool nonLinearIsConverged = HasNonLinearConverged (igridn, nonLinearEps);
+        bool nonLinearHasConverged = HasNonLinearConverged (igridn, nonLinearEps);
 
         std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw (11) << std::setprecision (6) << std::fixed
                   << static_cast<double> ( (clock() - startUpdateResidualTime)) / CLOCKS_PER_SEC << std::endl;
 
 
         // ***************** 
-        print_iteration_and_do_additional_computations(nonLinearIterator);
+        print_iteration_and_do_additional_computations_with_given_function(nonLinearIterator);
 
 
         // ***************** check active flag sets - BEGIN *******************
-        Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel (_levelToAssemble);   // pointer to the solution (level) object
 
-        
+    bool are_all_active_flag_components_the_same;
+    
+    if (_nonliniteration  == 0) {  //do not do any active flag check in the first iteration
+            are_all_active_flag_components_the_same = true;
+    }
+    else if (_nonliniteration  > 0) {
+         Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel (_levelToAssemble);   // pointer to the solution (level) object
+       
         std::vector< bool > compare_bool(_active_flag_name.size(), false);
         
+
   for (unsigned int c = 0; c < _active_flag_name.size(); c++)  {
         unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex (_active_flag_name[c].c_str());
 
         int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare (* (sol->_Sol[solIndex_act_flag])));     ///@todo perhaps this one slows things down in parallel!!!
 
-            if (_nonliniteration  > 0) {
                std::cout << "At iteration " << _nonliniteration << ", active set for variable " << _active_flag_name[c];
         if (compare_return == -1) {
             compare_bool[c] = true;
@@ -291,28 +297,31 @@ namespace femus {
                std::cout << " did change" << std::endl;
               }
         }
-        
-  }
   
    //turn compare_bool into a scalar boolean
-      bool compare_bool_total = false;
-      unsigned count_not_changed = 0;
+       are_all_active_flag_components_the_same = false;
+      unsigned count_unchanged_active_flag_components = 0;
         for (unsigned int c = 0; c < _active_flag_name.size(); c++)  {
-            if (compare_bool[c] == true) count_not_changed++;
+            if (compare_bool[c] == true) count_unchanged_active_flag_components++;
         }
         
-       if ( count_not_changed == _active_flag_name.size() )  { compare_bool_total = true; }
+       if ( count_unchanged_active_flag_components == _active_flag_name.size() )  { are_all_active_flag_components_the_same = true; }
         
-        
-        if (compare_bool_total && (_nonliniteration  > 0)) {
-          std::cout <<  "At iteration " << _nonliniteration << ", active set for all variables " << " did not change" << std::endl;
+         if (are_all_active_flag_components_the_same ) {
+          std::cout <<  "At iteration " << _nonliniteration << ", active set for all variables " << "    did not change" << std::endl;
           break;
         }
-        // ***************** check active flag sets - END *******************
+            
+    }
+     
+      // ***************** check active flag sets - END *******************
 
 
-        if (nonLinearIsConverged || _bitFlipOccurred) break;
-
+        if (are_all_active_flag_components_the_same && (nonLinearHasConverged || _bitFlipOccurred)) break;
+         ///@todo what is the relationship between the PDAS convergence and the nonlinear convergence?
+        /// well, for a LINEAR problem, there should only be PDAS convergence
+        /// Instead, for nonlinear problems, we may have 2 things to consider!
+        
       }   
       
       
