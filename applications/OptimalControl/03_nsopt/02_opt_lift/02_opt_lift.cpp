@@ -1648,8 +1648,6 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
 
 
   //==========================================================================================
-  // velocity ************************************
-  //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
  
@@ -1662,25 +1660,8 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   
   // quadratures ********************************
   double weight = 0.;
-  
-  // equation ***********************************
-  vector < vector < int > > L2G_dofmap_Mat(n_unknowns); 
-  vector < vector < double > > Res(n_unknowns); /*was F*/
-  vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
- 
-  for(int i = 0; i < n_unknowns; i++) {     
-    L2G_dofmap_Mat[i].reserve(max_size);
-      Res[i].reserve(max_size);
-  }
-   
-  if(assembleMatrix){
-    for(int i = 0; i < n_unknowns; i++) {
-      Jac[i].resize(n_unknowns);    
-      for(int j = 0; j < n_unknowns; j++) {
-	Jac[i][j].reserve(max_size*max_size);	
-      }
-    }
-  }
+    double detJac_qp;
+
   
   //----------- dofs ------------------------------
   vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
@@ -1699,7 +1680,26 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
     
   double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
 
-  // Set to zero all the global structures
+  // equation, local ***********************************
+  vector < vector < int > > L2G_dofmap_Mat(n_unknowns); 
+  vector < vector < double > > Res(n_unknowns); /*was F*/
+  vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
+ 
+  for(int i = 0; i < n_unknowns; i++) {     
+    L2G_dofmap_Mat[i].reserve(max_size);
+      Res[i].reserve(max_size);
+  }
+   
+  if(assembleMatrix) {
+    for(int i = 0; i < n_unknowns; i++) {
+      Jac[i].resize(n_unknowns);    
+      for(int j = 0; j < n_unknowns; j++) {
+	Jac[i][j].reserve(max_size*max_size);	
+      }
+    }
+  }
+  
+  // equation, global ***********************************
    RES->zero();
     if(assembleMatrix) JAC->zero();
   
@@ -1709,8 +1709,6 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
     for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
     
-    double detJac_qp;
-
     //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
@@ -1752,7 +1750,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
    target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
    //***************************************       
    
-   //STATE###################################################################  
+   //###################################################################  
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
 	Sol_n_el_dofs_Mat_vol[k]=ndofs_unk;
@@ -2299,6 +2297,9 @@ for (unsigned k = 0; k < dim; k++){
 
 //============ delta_control row - BEGIN ==================================================================================================
 
+
+//************ Residual, BEGIN *********************
+
       if ( control_el_flag == 1)    {
           
       for (unsigned kdim = 0; kdim < dim; kdim++) {
@@ -2362,7 +2363,9 @@ for (unsigned k = 0; k < dim; k++){
             }
     }
   
+//************ Residual, END *********************
 
+//************ Jacobian, BEGIN *********************
       if ( control_el_flag == 1)    {
 //BLOCK delta_control - state------------------------------------------------------------------------------------------------
    for (unsigned kdim = 0; kdim < dim; kdim++) {
@@ -2469,7 +2472,8 @@ for (unsigned k = 0; k < dim; k++){
   }
         
     } 
-    
+ //************ Jacobian, END *********************
+   
     
     
 //BLOCK Pressure_ctrl
@@ -2490,11 +2494,11 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 //DIV_ctrl
 		  double div_ctrl_dctrl_qp = 0.;
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-		div_ctrl_dctrl_qp += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][kdim] ;
+		div_ctrl_dctrl_qp += gradSolVAR_qp[ SolPdeIndex[ctrl_pos_begin + kdim] ][kdim] ;
 	  }
 	  
   for (unsigned i = 0; i < nDofsPctrl; i++) {
-	  Res[press_type_pos + ctrl_pos_begin][i] += ( (div_ctrl_dctrl_qp) * phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i] ) * weight;
+	  Res[press_type_pos + ctrl_pos_begin][i] += ( (div_ctrl_dctrl_qp) * phi_gss_fe[ SolFEType[ctrl_pos_begin + press_type_pos ] ][i] ) * weight;
   }//i_div_ctrl
   
       
