@@ -83,6 +83,8 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     else if(!strcmp(name,"mu")) {
         value = 0.;
     }
+    
+    
     else if(!strcmp(name,"TargReg")) {
         value = ElementTargetFlag(x);
     }
@@ -112,6 +114,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
     }
   }
   
+  
+  //MU
   if(!strcmp(name,"mu")) {
 //       value = 0.;
 //   if (faceName == FACE_FOR_CONTROL)
@@ -219,19 +223,24 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
+  // ******** active flag - BEGIN 
   //MU
-  const bool      act_flag_is_an_unknown_of_a_pde = false;
+  const unsigned int  n_components_ctrl = 1;
+  
+  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
+  const bool         act_flag_is_an_unknown_of_a_pde = false;
 
   unsigned int index_control = 0;
     for (unsigned int u = 0; u < unknowns.size(); u++) {
         if ( !(unknowns[u]._name.compare("control")) ) index_control = u;
     }
-  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
-   std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);               
+   std::vector<std::string> act_set_flag_name(n_components_ctrl);
+   act_set_flag_name[0] = "act_flag";
 
+   ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);               
+   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+  // ******** active flag - END 
 
-  ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
 
   
@@ -313,8 +322,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   constexpr unsigned int space_dim = 3;
    //***************************************************  
   
- //***************************************************  
-  double weight; // gauss point weight
+  // quadratures ********************************
+  double weight;
   
 
  //********************* state *********************** 

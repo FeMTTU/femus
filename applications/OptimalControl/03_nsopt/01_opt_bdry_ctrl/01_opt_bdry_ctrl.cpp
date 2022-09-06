@@ -4,7 +4,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "Files.hpp"
@@ -97,8 +97,8 @@ using namespace femus;
 #define exact_sol_flag      0  // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag   0  // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 
-#define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
-#define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
+#define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,ctrl_0,ctrl_1,THETA
+#define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,ctrl_0, ctrl_1
 //**************************************
 
 
@@ -151,7 +151,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
    value = 0.;
  
 
-                if (!strcmp(SolName, "GX"))       {
+                if (!strcmp(SolName, "ctrl_0"))       {
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
      if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -168,7 +168,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
                 
                 
-           else if (!strcmp(SolName, "GY"))       { 
+           else if (!strcmp(SolName, "ctrl_1"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
      if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -185,7 +185,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
                 
                 
-           else if (!strcmp(SolName, "GZ"))       { 
+           else if (!strcmp(SolName, "ctrl_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
      if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -220,7 +220,14 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 }
                 
                 
+   //MU
+       if (!strcmp(SolName, "mu_0"))    { dirichlet = false; }
+  else if (!strcmp(SolName, "mu_1"))    { dirichlet = false; } 
+  else if (!strcmp(SolName, "mu_2"))    { dirichlet = false; } 
      
+
+                
+                
 #if exact_sol_flag == 0
                 else if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
                 else if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
@@ -259,6 +266,11 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   
                         feFamily.push_back(DISCONTINUOUS_POLYNOMIAL);
  
+                        feFamily.push_back(LAGRANGE);   //mu
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+ 
+  
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
@@ -273,28 +285,39 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   
                         feOrder.push_back(ZERO);
  
+                        feOrder.push_back(SECOND);   //mu
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
 
   assert( feFamily.size() == feOrder.size() );
  
  std::vector< Unknown >  unknowns(feFamily.size());
  
-  const int adj_pos_begin   = dimension + 1;
+  const int adj_pos_begin   =       dimension + 1;
   const int ctrl_pos_begin  = 2 * (dimension + 1);
+  const int mu_pos_begin    = 3 * (dimension + 1);
 
                                         unknowns[0]._name      = "U";
                                         unknowns[1]._name      = "V";
   if (dimension == 3)                   unknowns[2]._name      = "W";
                                 unknowns[dimension]._name      = "P";
+  
                         unknowns[adj_pos_begin + 0]._name      = "UADJ";
                         unknowns[adj_pos_begin + 1]._name      = "VADJ";
   if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
                 unknowns[adj_pos_begin + dimension]._name      = "PADJ";
-                       unknowns[ctrl_pos_begin + 0]._name      = "GX";
-                       unknowns[ctrl_pos_begin + 1]._name      = "GY";
-  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "GZ";
+  
+                       unknowns[ctrl_pos_begin + 0]._name      = "ctrl_0";
+                       unknowns[ctrl_pos_begin + 1]._name      = "ctrl_1";
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "ctrl_2";
   
                unknowns[ctrl_pos_begin + dimension]._name      = "THETA";
 
+                       unknowns[mu_pos_begin + 0]._name      = "mu_0";
+                       unknowns[mu_pos_begin + 1]._name      = "mu_1";
+  if (dimension == 3)  unknowns[mu_pos_begin + 2]._name      = "mu_2";
+ 
+  
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
               unknowns[u]._fe_family  = feFamily[u];
@@ -535,8 +558,9 @@ int main(int argc, char** args) {
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
-  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
    ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+
+   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
    
    
@@ -550,12 +574,36 @@ int main(int argc, char** args) {
                                 is_an_unknown_of_a_pde,
                                 node_bdry_bdry_flag_fe_fam,
                                 node_bdry_bdry_flag_fe_ord);
+
+ 
+ 
+  // ******** active flag - BEGIN 
+  const unsigned int  n_components_ctrl = dim;
+  
+  const bool      act_flag_is_an_unknown_of_a_pde = false;
+
+  unsigned int index_control = 0;
+    for (unsigned int u = 0; u < unknowns.size(); u++) {
+        if ( !(unknowns[u]._name.compare("ctrl_0")) ) index_control = u;
+    }
+  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
+   std::vector<std::string> act_set_flag_name(n_components_ctrl);
    
-  // ======= Solutions that are not Unknowns - END  ==================
+   for(unsigned int d = 0; d <  act_set_flag_name.size(); d++)  {
+       act_set_flag_name[d] = "act_flag_" + std::to_string(d);
+    ml_sol.AddSolution(act_set_flag_name[d].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);
+    ml_sol.Initialize(act_set_flag_name[d].c_str(), Solution_set_initial_conditions, & ml_prob);
+   }
+  // ******** active flag - END 
+
+ 
+ // ======= Solutions that are not Unknowns - END  ==================
 
  
   // ======= Problem, System - BEGIN ========================
-  NonLinearImplicitSystem & system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system_opt    = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("NSOpt");
+  
+  system_opt.SetActiveSetFlagName(act_set_flag_name); //MU
 
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
   system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
@@ -625,7 +673,7 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
    std::cout << " L2-NORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::vector< std::string > norm_names_L2 = {"U","V", "P", "UADJ","VADJ", "PADJ", "GX","GY", "THETA"};
+  std::vector< std::string > norm_names_L2 = {"U","V", "P", "UADJ","VADJ", "PADJ", "ctrl_0","ctrl_1", "THETA"};
 
    for(int j = 0; j <  norm_names_L2.size(); j++)  {
   std::cout << std::endl;
@@ -638,7 +686,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "=======================================================================" << std::endl;
   std::cout << " H1-NORM ERROR and ORDER OF CONVERGENCE:" << std::endl;
-  std::vector< std::string > norm_names_H1 = {"U","V", "UADJ","VADJ", "GX","GY"};
+  std::vector< std::string > norm_names_H1 = {"U","V", "UADJ","VADJ", "ctrl_0","ctrl_1"};
 
    for(int j = 0; j <  norm_names_H1.size(); j++)  {
   std::cout << std::endl;
@@ -665,45 +713,47 @@ int main(int argc, char** args) {
         
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
-     
-  NonLinearImplicitSystem * mlPdeSys  = & ml_prob.get_system< NonLinearImplicitSystem >("NSOpt");
- const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  bool assembleMatrix = mlPdeSys->GetAssembleMatrix(); 
-   
-  Solution*	 sol  	         = ml_prob._ml_sol->GetSolutionLevel(level);
-  LinearEquationSolver*  pdeSys	 = mlPdeSys->_LinSolver[level];   
-  const char* pdename            = mlPdeSys->name().c_str();
-  
-  MultiLevelSolution* ml_sol = ml_prob._ml_sol;
-  
-  Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
-  elem*		 el	= msh->el;
-  SparseMatrix*	 JAC	= pdeSys->_KK;
-  NumericVector* RES 	= pdeSys->_RES;
-  
-  
-   //***** @todo to avoid Petsc complaint about out-of-bounds allocation *******************************
+   ///@todo to avoid Petsc complaint about out-of-bounds allocation *******************************
 //  MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
    //************************************
+     
+  // Main objects - BEGIN *******************************************
+ NonLinearImplicitSystemWithPrimalDualActiveSetMethod * mlPdeSys  = & ml_prob.get_system< NonLinearImplicitSystemWithPrimalDualActiveSetMethod >("NSOpt");
+  
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-    
-  //data
+  //Mesh
+  Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
+  elem*		 el	= msh->el;
   const unsigned dim 	= msh->GetDimension();
   unsigned dim2     = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  unsigned nel		= msh->GetNumberOfElements();
   unsigned igrid	= msh->GetLevel();
   unsigned iproc 	= msh->processor_id();
   unsigned   nprocs = msh->n_processors();
-
-
-  constexpr bool print_algebra_global = true;
-  constexpr bool print_algebra_local = false;
-
-  
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
 
 
-   //=============== Geometry ========================================
+  //Solution
+  MultiLevelSolution* ml_sol = ml_prob._ml_sol;
+  Solution*	 sol  	         = ml_prob._ml_sol->GetSolutionLevel(level);
+  
+  //Equation
+  const char* system_name            = mlPdeSys->name().c_str();
+  LinearEquationSolver*  pdeSys	 = mlPdeSys->_LinSolver[level];   
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix(); 
+   
+  SparseMatrix*	 JAC	= pdeSys->_KK;
+  NumericVector* RES 	= pdeSys->_RES;
+    
+
+  constexpr bool print_algebra_global = true;
+  constexpr bool print_algebra_local = false;
+  // Main objects - END *******************************************
+
+
+  // ======= Geometry - BEGIN  =======
    unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
    unsigned solType_coords = coordXType;  //FE_DOMAIN = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
  
@@ -712,47 +762,19 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   constexpr unsigned int space_dim = 3;
   const unsigned int dim_offset_grad = /*dim*/  3  /*2*/    ;
  
-  std::vector<double> normal(dim_offset_grad /*space_dim*/, 0.);
- 
-  // geometry *******************************************
   vector< vector < double> > coordX(dim);
+  for(int i=0;i < dim;i++) {   coordX[i].reserve(max_size);   }
+  
   vector< vector < double> > coordX_bd(/*space_*/dim);
-  for(int i=0;i<dim;i++) {   
-       coordX[i].reserve(max_size); 
-       coordX_bd[i].reserve(max_size); 
-  }
-  // geometry *******************************************
+  for(int i=0;i < dim;i++) { coordX_bd[i].reserve(max_size);  }
+ 
+  std::vector<double> normal(dim_offset_grad /*space_dim*/, 0.);
 
-// //  //***************************************************  
-// //   
-// //   vector < double > coord_at_qp_bdry(space_dim);
-// //   
-// //   vector <double> phi_coords;
-// //   vector <double> phi_coords_x;
-// //   vector <double> phi_coords_xx; 
-// // 
-// //   phi_coords.reserve(max_size);
-// //   phi_coords_x.reserve(max_size * space_dim);
-// //   phi_coords_xx.reserve(max_size * dim2);
-// //   
-// //   //boundary shape functions
-// //   vector <double> phi_coords_bdry;  
-// //   vector <double> phi_coords_x_bdry; 
-// // 
-// //   phi_coords_bdry.reserve(max_size);
-// //   phi_coords_x_bdry.reserve(max_size * space_dim);
-// //  //*************************************************** 
- 
-  // solution variables *******************************************
-  
-    std::vector<std::string> ctrl_name;
-    ctrl_name.resize(dim);
-    ctrl_name[0] = "GX";
-    ctrl_name[1] = "GY";
-     if (dim == 3)  ctrl_name[2] = "GZ";
- 
-  
-  //=== Unknowns - BEGIN ========================================================
+  const unsigned dim_bdry = dim - 1;
+  // ======= Geometry - END  =======
+
+
+ // ======= Solutions, Unknowns - BEGIN =======
   const int n_vars_state = dim + 1;
   const int n_unknowns = 3 * n_vars_state; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
   
@@ -762,11 +784,20 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   const int ctrl_pos_begin   = 2 * (dim + 1);
   const int theta_index      = ctrl_pos_begin + dim;
   
-  
   const int pos_mat_ctrl = ctrl_pos_begin;
 
-  
-  
+    std::vector<std::string> ctrl_name;
+    ctrl_name.resize(dim);
+    ctrl_name[0] = "ctrl_0";
+    ctrl_name[1] = "ctrl_1";
+     if (dim == 3)  ctrl_name[2] = "ctrl_2";
+ 
+  const int pos_sol_ctrl = ctrl_pos_begin;
+
+    const unsigned int n_components_ctrl = dim;
+
+    
+
   vector < std::string > Solname_Mat(n_unknowns);  // const char Solname_Mat[4][8] = {"U","V","W","P"};
   Solname_Mat              [state_pos_begin+0] =                "U";
   Solname_Mat              [state_pos_begin+1] =                "V";
@@ -795,10 +826,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   }
 
   vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
-  //=== Unknowns - END ========================================================
   
+ // ======= Solutions, Unknowns - END =======
+  
+     
   //=== Sol (quantities, not unknowns) - BEGIN ========================================================
-  const int pos_sol_ctrl = ctrl_pos_begin;
   
   const unsigned int n_quantities = ml_sol->GetSolutionSize();
   
@@ -820,6 +852,57 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
     }
   //=== Sol (quantities, not unknowns) - END ========================================================
   
+
+  
+  // ======= Solutions, Unknowns at dofs - BEGIN =======
+  vector < vector < double > > sol_eldofs_Mat(n_unknowns);
+  vector < vector < double > > gradsol_eldofs_Mat(n_unknowns);
+  
+  for(int k = 0; k < n_unknowns; k++) {
+    sol_eldofs_Mat[k].reserve(max_size);
+    gradsol_eldofs_Mat[k].reserve(max_size*dim);    
+  }
+  // ======= Solutions, Unknowns at dofs - END =======
+
+
+  // ======= Solutions, Unknowns at quadrature points - BEGIN =======
+    vector < double > SolVAR_qp(n_unknowns);   //sol_V,P_gss_of_st,adj,ctrl_ie@quadraturepoints
+    vector < vector < double > > gradSolVAR_qp(n_unknowns);
+    for(int k = 0; k < n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim_offset_grad /*space_dim*/);  }
+
+
+  vector < vector < double > >  sol_adj_x_vol_at_bdry_gss(dim);
+  for (int ldim =0; ldim < dim; ldim++) sol_adj_x_vol_at_bdry_gss[ldim].reserve(max_size);
+  
+  vector < double > grad_adj_dot_n_res;
+  vector < double > grad_adj_dot_n_jac;
+  grad_adj_dot_n_res.reserve(max_size);
+  grad_adj_dot_n_jac.reserve(max_size);
+  // ======= Solutions, Unknowns at quadrature points - END =======
+      
+      
+// ======= Quadrature, all - BEGIN =======
+      //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all;
+  ml_prob.get_all_abstract_fe_multiple(elem_all);
+  
+     std::vector < std::vector < double > >  JacI_qp(space_dim);
+     std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;
+    double weight_iqp = 0.;
+
+     std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {   Jac_iqp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_iqp_bdry.size(); d++) { JacI_iqp_bdry[d].resize(dim-1); }
+    
+    double detJac_iqp_bdry;
+    double weight_iqp_bdry = 0.;
+
+
   //==========================================================================================
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
@@ -850,16 +933,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
        phi_x_vol_at_bdry_fe[fe].reserve(max_size * dim_offset_grad);
     }
   //==========================================================================================
-   
 
-  vector < vector < double > >  sol_adj_x_vol_at_bdry_gss(dim);
-  for (int ldim =0; ldim < dim; ldim++) sol_adj_x_vol_at_bdry_gss[ldim].reserve(max_size);
-  
-  vector < double > grad_adj_dot_n_res;
-  vector < double > grad_adj_dot_n_jac;
-  grad_adj_dot_n_res.reserve(max_size);
-  grad_adj_dot_n_jac.reserve(max_size);
-  
  //********************* bdry cont *******************
  //*************************************************** 
   vector <double> phi_ctrl_bdry;  
@@ -868,11 +942,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
  //*************************************************** 
-
-  //=================================================================================================
+    
+// ======= Quadrature, all - END =======
   
   
-  // equation - BEGIN  ***********************************
+  // ======= Equation, local - BEGIN =======
   vector < vector < int > > L2G_dofmap_Mat(n_unknowns); 
   vector < vector < double > > Res(n_unknowns);
   vector < vector < vector < double > > > Jac(n_unknowns);
@@ -898,70 +972,27 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
          for(int i = 0; i < dim; i++) {  Jac_outer[i].reserve(max_size); }
     
   }
-  // equation - END  ***********************************
+  // ======= Equation, local - END =======
 
-  
-  //----------- dofs - BEGIN  ------------------------------
-  vector < vector < double > > sol_eldofs_Mat(n_unknowns); //sol_V,P_of_st,adj,ctrl
-  vector < vector < double > > gradsol_eldofs_Mat(n_unknowns);
-  
-  for(int k = 0; k < n_unknowns; k++) {
-    sol_eldofs_Mat[k].reserve(max_size);
-    gradsol_eldofs_Mat[k].reserve(max_size*dim);    
-  }
-  //----------- dofs - END  ------------------------------
 
-  //------------ at quadrature points - BEGIN ---------------------
-    vector < double > SolVAR_qp(n_unknowns);   //sol_V,P_gss_of_st,adj,ctrl_ie@quadraturepoints
-    vector < vector < double > > gradSolVAR_qp(n_unknowns);
-    for(int k = 0; k < n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim_offset_grad /*space_dim*/);  }
-      
-      
- //*************************************************** 
-     std::vector < std::vector < double > >  JacI_qp(space_dim);
-     std::vector < std::vector < double > >  Jac_qp(dim);
-    for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
-    
-    double detJac_qp;
-
-     std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
-     std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
-    for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {   Jac_iqp_bdry[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_iqp_bdry.size(); d++) { JacI_iqp_bdry[d].resize(dim-1); }
-    
-    double detJac_iqp_bdry;
-    
-    double weight_iqp = 0.;
-    double weight_iqp_bdry = 0.;
-    
-      //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all;
-  ml_prob.get_all_abstract_fe_multiple(elem_all);
-//*************************************************** 
-  //------------ at quadrature points - END ---------------------
- 
-  
-//************** how to retrieve theta from proc0 ************************************* 
- double solTheta = get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
-//*************************************************** 
-
-  const double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
-  
-  
-  // Set to zero all the global structures
+  // ======= Equation, global - BEGIN =======
     RES->zero();
     if(assembleMatrix) JAC->zero();
+  // ======= Equation, global - END =======
 
-    
  
-  //----------------------
+  // ======= Parameters - BEGIN ======= 
+  const double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
+  // ======= Parameters - END =======
+  
+  
+// ======= how to retrieve theta from proc0 - BEGIN 
+  double solTheta = get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
+// ======= how to retrieve theta from proc0  - END
 
-    const unsigned int n_components_ctrl = dim;
- 
-  const unsigned dim_bdry = dim - 1;
     
    
+  // ======= Fractional - BEGIN =======
   const double s_frac = S_FRAC;
 
   const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
@@ -971,6 +1002,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   constexpr unsigned qrule_j = QRULE_J;
   constexpr unsigned qrule_k = QRULE_K;
   //----------------------
+  // ======= Fractional - END =======
     
     
 
@@ -1846,6 +1878,9 @@ for (unsigned k = 0; k < dim; k++){
   
   JAC->close();
   RES->close();
+
+
+
   
   
   
@@ -1868,7 +1903,7 @@ for (unsigned k = 0; k < dim; k++){
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
-   const NonLinearImplicitSystem & mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   
+   const NonLinearImplicitSystemWithPrimalDualActiveSetMethod & mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("NSOpt");   
    const unsigned level = mlPdeSys.GetLevelToAssemble();
  
 
@@ -1940,9 +1975,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //CONTROL_@bdry######################################################################
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = ml_sol->GetIndex("GX");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = ml_sol->GetIndex("GY");    // get the position of "V" in the ml_sol object
-  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("GZ");      // get the position of "V" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");    // get the position of "U" in the ml_sol object
+  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");    // get the position of "V" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");      // get the position of "V" in the ml_sol object
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
   
@@ -2282,9 +2317,9 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
   if (dim == 3) Solname_Mat[adj_pos_begin + 2] =              "WADJ";
   Solname_Mat              [adj_pos_begin + press_type_pos] = "PADJ";
 
-  Solname_Mat              [ctrl_pos_begin + 0] =              "GX";
-  Solname_Mat              [ctrl_pos_begin + 1] =              "GY";
-  if (dim == 3) Solname_Mat[ctrl_pos_begin + 2] =              "GZ";
+  Solname_Mat              [ctrl_pos_begin + 0] =              "ctrl_0";
+  Solname_Mat              [ctrl_pos_begin + 1] =              "ctrl_1";
+  if (dim == 3) Solname_Mat[ctrl_pos_begin + 2] =              "ctrl_2";
   Solname_Mat              [ctrl_pos_begin + press_type_pos] = "THETA";
   
   vector < unsigned > SolIndex_Mat(n_unknowns);  
