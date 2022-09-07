@@ -786,6 +786,24 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   
   const int pos_mat_ctrl = ctrl_pos_begin;
 
+
+  if (dim != 2) abort();
+  
+    enum Pos_in_matrix {pos_mat_state_0 = 0, 
+                        pos_mat_state_1, 
+                        pos_mat_state_p,
+                        pos_mat_adj_0,
+                        pos_mat_adj_1,
+                        pos_mat_adj_p, 
+                        pos_mat_ctrl_0,
+                        pos_mat_ctrl_1,
+                        pos_mat_theta, 
+                        pos_mat_mu_0,
+                        pos_mat_mu_1}; //these are known at compile-time 
+
+  
+  
+  
     std::vector<std::string> ctrl_name;
     ctrl_name.resize(dim);
     ctrl_name[0] = "ctrl_0";
@@ -816,6 +834,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
   vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
   
+  double penalty_outside_control_domain = 1.e20;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
  // ======= Solutions, Unknowns - END =======
   
      
@@ -876,12 +895,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
   
   // ======= Solutions, Unknowns at dofs - BEGIN =======
-  vector < vector < double > > sol_eldofs_Mat(n_unknowns);
-  vector < vector < double > > gradsol_eldofs_Mat(n_unknowns);
+  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
+  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
   for(int k = 0; k < n_unknowns; k++) {
-    sol_eldofs_Mat[k].reserve(max_size);
-    gradsol_eldofs_Mat[k].reserve(max_size*dim);    
+    Sol_eldofs_Mat[k].reserve(max_size);
+    gradSol_eldofs_Mat[k].reserve(max_size*dim);    
   }
   
   
@@ -1028,7 +1047,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   //----------------------
   // ======= Fractional - END =======
     
+  
+  
     
+      // ***************** ADD PART - BEGIN  *******************
 
     if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
@@ -1052,7 +1074,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                     SolIndex_Mat,
                     SolPdeIndex,
                     Sol_n_el_dofs_Mat_vol, 
-                    sol_eldofs_Mat,  
+                    Sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
                     max_size,
                     //-----------
@@ -1121,7 +1143,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                     SolIndex_Mat,
                     SolPdeIndex,
                     Sol_n_el_dofs_Mat_vol, 
-                    sol_eldofs_Mat,  
+                    Sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
                     max_size,
                     //-----------
@@ -1214,11 +1236,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   for (unsigned  k = 0; k < n_unknowns; k++) {
 	unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType_Mat[k]);	//nDofs_V,P_of_st,adj,ctrl
 	Sol_n_el_dofs_Mat_vol[k] = ndofs_unk;
-	sol_eldofs_Mat[k].resize(ndofs_unk);	//sol_V,P_of_st,adj,ctrl
+	Sol_eldofs_Mat[k].resize(ndofs_unk);	//sol_V,P_of_st,adj,ctrl
 	L2G_dofmap_Mat[k].resize(ndofs_unk); 
     for (unsigned i = 0; i < ndofs_unk; i++) {
 	      unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType_Mat[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
-	  sol_eldofs_Mat[k][i] = (*sol->_Sol[SolIndex_Mat[k]])(solDof);      // global extraction and local storage for the solution
+	  Sol_eldofs_Mat[k][i] = (*sol->_Sol[SolIndex_Mat[k]])(solDof);      // global extraction and local storage for the solution
 	         L2G_dofmap_Mat[k][i] = pdeSys->GetSystemDof(SolIndex_Mat[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
  
     if (k == SolPdeIndex[theta_index] && L2G_dofmap_Mat[k][i] == global_row_index_bdry_constr) {       fake_iel_flag = iel;  }
@@ -1226,13 +1248,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   }
   //############################ fake_iel_flag - END #######################################
     
-   //************ set fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable  - BEGIN *********************
+  //************ fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable  - BEGIN *********************
     std::vector<int>  bdry_int_constr_pos_vec(1, global_row_index_bdry_constr); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
     std::vector<int> fake_theta_flag(nDofsThetactrl, 0);
     for (unsigned i = 0; i < nDofsThetactrl; i++) {
       if ( L2G_dofmap_Mat[ SolPdeIndex[theta_index] ] [i] == bdry_int_constr_pos_vec[0]) { 	fake_theta_flag[i] = 1;       }
     }
- //************ end set fake theta flag - END *********************
+ //************ fake theta flag - END *********************
 
 // setting Jac and Res to zero  - BEGIN ******************************* 
     for(int ivar=0; ivar<n_unknowns; ivar++) {
@@ -1339,10 +1361,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 			  for(int i_bd = 0; i_bd < ndof_bdry; i_bd++) {
 		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
                           
-                       SolVAR_bd_qp[SolPdeIndex[ctrl_index]]            += phi_bd_gss_fe  [ SolFEType_Mat[ctrl_index] ][i_bd]                  * sol_eldofs_Mat[ SolPdeIndex[ ctrl_index ] ][i_vol];
+                       SolVAR_bd_qp[SolPdeIndex[ctrl_index]]            += phi_bd_gss_fe  [ SolFEType_Mat[ctrl_index] ][i_bd]                  * Sol_eldofs_Mat[ SolPdeIndex[ ctrl_index ] ][i_vol];
 
 			      for(unsigned ivar2 = 0; ivar2 < dim_offset_grad; ivar2++) { 
-                      gradSolVAR_bd_qp[SolPdeIndex[ctrl_index]][ivar2]  += phi_x_bd_gss_fe[ SolFEType_Mat[ctrl_index] ][i_bd * dim_offset_grad + ivar2] * sol_eldofs_Mat[ SolPdeIndex[ ctrl_index ] ][i_vol];
+                      gradSolVAR_bd_qp[SolPdeIndex[ctrl_index]][ivar2]  += phi_x_bd_gss_fe[ SolFEType_Mat[ctrl_index] ][i_bd * dim_offset_grad + ivar2] * Sol_eldofs_Mat[ SolPdeIndex[ ctrl_index ] ][i_vol];
                         }
                         
 			  }
@@ -1360,7 +1382,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 		for(unsigned ldim=0; ldim<dim; ldim++) {  
 		  for (int iv = 0; iv < nDofsVadj; iv++)  {
                      for (int d = 0; d < dim_offset_grad /*space_dim*/; d++) {
-			   sol_adj_x_vol_at_bdry_gss[ldim][d] += sol_eldofs_Mat[SolPdeIndex[ldim + adj_pos_begin]][iv] * phi_x_vol_at_bdry_fe[SolFEType_Mat[ldim + adj_pos_begin]][iv * dim_offset_grad /*space_dim*/ + d];//notice that the convention of the orders x y z is different from vol to bdry
+			   sol_adj_x_vol_at_bdry_gss[ldim][d] += Sol_eldofs_Mat[SolPdeIndex[ldim + adj_pos_begin]][iv] * phi_x_vol_at_bdry_fe[SolFEType_Mat[ldim + adj_pos_begin]][iv * dim_offset_grad /*space_dim*/ + d];//notice that the convention of the orders x y z is different from vol to bdry
                     }
 		  }  
 		      
@@ -1418,7 +1440,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 			      }//jdim
                  }
 			
-/*delta_state row */	   if (i_vol < nDofsV)      Res[kdim]                 [i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * penalty_ctrl * (sol_eldofs_Mat[SolPdeIndex[kdim + state_pos_begin]][i_vol] - sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
+/*delta_state row */	   if (i_vol < nDofsV)      Res[kdim]                 [i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * penalty_ctrl * (Sol_eldofs_Mat[SolPdeIndex[kdim + state_pos_begin]][i_vol] - Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if (i_vol < nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
 /*delta_control row */     if (i_vol < nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * AbsDetJxWeight_iqp_bdry * (
                                                                                           IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry]
@@ -1569,9 +1591,9 @@ for(unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNum
 	    }
 	  
 	    for(unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[unk]; i++) {
-                        SolVAR_qp[unk] += phi_gss_fe[ SolFEType_Mat[unk] ][i]             * sol_eldofs_Mat[SolPdeIndex[unk]][i];
+                        SolVAR_qp[unk] += phi_gss_fe[ SolFEType_Mat[unk] ][i]             * Sol_eldofs_Mat[SolPdeIndex[unk]][i];
 		for(unsigned ivar2 = 0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) {       
-		    gradSolVAR_qp[unk][ivar2]  += phi_x_gss_fe[ SolFEType_Mat[unk] ][i * dim_offset_grad /*space_dim*/ + ivar2] * sol_eldofs_Mat[SolPdeIndex[unk]][i]; 
+		    gradSolVAR_qp[unk][ivar2]  += phi_x_gss_fe[ SolFEType_Mat[unk] ][i * dim_offset_grad /*space_dim*/ + ivar2] * Sol_eldofs_Mat[SolPdeIndex[unk]][i]; 
 		}
 	    }//ndofsunk
 	  
@@ -1812,7 +1834,7 @@ for (unsigned k = 0; k < dim; k++){
     for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) {
         
          for (unsigned i = 0; i < nDofsGctrl; i++) {
-       Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag_iel_jface[kdim][i]) * (  sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i] - 0.)  );              //enforce control zero outside the control boundary
+       Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag_iel_jface[kdim][i]) * (  Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i] - 0.)  );              //enforce control zero outside the control boundary
 
 
 // //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
@@ -1827,8 +1849,41 @@ for (unsigned k = 0; k < dim; k++){
 
 //============ delta_control row - END  ==================================================================================================
  
+
  
-      }  // end gauss point loop
+//============ delta_mu row - BEGIN  ============================================================================================
+
+  //MU
+//************ Residual, BEGIN *********************
+  for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+          
+  for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
+      
+       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag_iel_jface[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);
+      
+     }
+  }
+//************ Residual, END *********************
+
+  //MU
+//************ Jacobian, BEGIN *********************
+  for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+    for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
+      for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; j++) {
+            if (i == j) {
+               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag_iel_jface[kdim][i]);
+            }
+         }
+      }
+  }
+//************ Jacobian, END *********************
+
+
+//============ delta_mu row - END  ============================================================================================
+ 
+ 
+ 
+      }  // end quadrature point loop
       
 //======================= VolumeLoop with Integration (and Zero boundary control outside Gamma_c) - END =====================================================    
 
@@ -1838,7 +1893,7 @@ for (unsigned k = 0; k < dim; k++){
     
         //============ delta_theta - theta row ==================================================================================================
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
-             /* if ( fake_theta_flag[i] != 1 ) */             Res[ theta_index ][i]    = - (1 - fake_theta_flag[i]) * ( theta_value_outside_fake_element - sol_eldofs_Mat[SolPdeIndex[theta_index]][i]);  // Res_outer for the exact row (i.e. when fakeflag=1 , res =0(use Res_outer) and if not 1 this loop) and this is to take care of fake placement for the rest of dofs of theta values as 8
+             /* if ( fake_theta_flag[i] != 1 ) */             Res[ theta_index ][i]    = - (1 - fake_theta_flag[i]) * ( theta_value_outside_fake_element - Sol_eldofs_Mat[SolPdeIndex[theta_index]][i]);  // Res_outer for the exact row (i.e. when fakeflag=1 , res =0(use Res_outer) and if not 1 this loop) and this is to take care of fake placement for the rest of dofs of theta values as 8
      for (unsigned j = 0; j < nDofsThetactrl; j++) {
 			         if(i == j)  Jac[ theta_index ][ theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.; //likewise Jac_outer (actually Jac itself works in the correct placement) for bdry integral and this is for rest of dofs
              }//j_theta loop
@@ -1897,9 +1952,115 @@ for (unsigned k = 0; k < dim; k++){
    
   } //end list of elements loop for each subdomain
   
+
+  //MU in res ctrl - BEGIN  ***********************************
+ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+                               ineq_flag,
+                               ctrl_index_in_mat,
+                               mu_index_in_mat,
+                               SolIndex_Mat,
+                               sol,
+                               mlPdeSys,
+                               pdeSys,
+                               RES);
+  //MU in res ctrl - END ***********************************
+
   
-  JAC->close();
+  
+  
+RES->close();
+if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
+      // ***************** ADD PART - END  *******************
+
+
+
+//   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
+    
+     //MU
+
+   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+       
+// -------
+   geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+      
+   geom_element_iel.set_elem_center_3d(iel, solType_coords);
+// -------
+   
+// -------
+    el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
+                         SolFEType_Mat,
+                         SolIndex_Mat,
+                         SolPdeIndex,
+                         Sol_n_el_dofs_Mat_vol, 
+                         Sol_eldofs_Mat, 
+                         L2G_dofmap_Mat);
+// -------
+
+	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+
+
+    	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
+
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
+
+                
+       if(  face_is_a_boundary_control_face( el, iel, iface) ) {
+
+       ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
+   (msh, sol,
+    iel, iface,
+    geom_element_iel.get_coords_at_dofs_bdry_3d(), 
+    Sol_eldofs_Mat, 
+    Sol_n_el_dofs_Mat_vol, 
+    c_compl,
+    mu_index_in_mat,
+    ctrl_index_in_mat,
+    solIndex_act_flag_sol,
+    ctrl_lower,
+    ctrl_upper,
+    sol_actflag);
+ 
+
+  ctrl_inequality::node_insertion_bdry(iel, iface, 
+                      msh,
+                      L2G_dofmap_Mat,
+                      mu_index_in_mat, 
+                      ctrl_index_in_mat,
+                      Sol_eldofs_Mat,
+                      Sol_n_el_dofs_Mat_vol,
+                      sol_actflag, 
+                      ctrl_lower, ctrl_upper,
+                      ineq_flag,
+                      c_compl,
+                      JAC, 
+                      RES,
+                      assembleMatrix
+                      );
+  
+             }
+             
+       }
+     }
+
+
+     //============= delta_ctrl-delta_mu row ===============================
+ if (assembleMatrix) {
+       for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
+         JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ctrl_index_in_mat[kdim]],  L2G_dofmap_Mat[mu_index_in_mat[kdim]], ineq_flag * 1.);
+       }
+}
+
+   }
+   
+   
+  // ***************** INSERT PART - END *******************
+
+
+
+
   RES->close();
+  if (assembleMatrix) JAC->close();
+   
 
 
 
@@ -2375,16 +2536,16 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
   
   
   //----------- dofs ------------------------------
-  vector < vector < double > > sol_eldofs_Mat(n_unknowns);
-  vector < vector < double > > gradsol_eldofs_Mat(n_unknowns);
+  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
+  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
   vector < vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
   vector < vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
 
 
   for(int k = 0; k < n_unknowns; k++) {
-    sol_eldofs_Mat[k].reserve(max_size);
-    gradsol_eldofs_Mat[k].reserve(max_size*dim); 
+    Sol_eldofs_Mat[k].reserve(max_size);
+    gradSol_eldofs_Mat[k].reserve(max_size*dim); 
     
     SolVAR_coarser_prol_eldofs[k].reserve(max_size);
     gradSolVAR_coarser_prol_eldofs[k].reserve(max_size*dim);    
@@ -2458,11 +2619,11 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType_Mat[k]);
 	Sol_n_el_dofs[k]=ndofs_unk;
-       sol_eldofs_Mat[k].resize(ndofs_unk);
+       Sol_eldofs_Mat[k].resize(ndofs_unk);
        SolVAR_coarser_prol_eldofs[k].resize(ndofs_unk);
     for (unsigned i = 0; i < ndofs_unk; i++) {
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType_Mat[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
-       sol_eldofs_Mat[k][i] = (*sol->_Sol[SolIndex_Mat[k]])(solDof);      // global extraction and local storage for the solution
+       Sol_eldofs_Mat[k][i] = (*sol->_Sol[SolIndex_Mat[k]])(solDof);      // global extraction and local storage for the solution
        SolVAR_coarser_prol_eldofs[k][i] = (*sol_coarser_prolongated->_Sol[SolIndex_Mat[k]])(solDof);      // global extraction and local storage for the solution
       }
     }
@@ -2491,10 +2652,10 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
 	  
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
-	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType_Mat[unk] ][i] * sol_eldofs_Mat[unk][i];
+	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType_Mat[unk] ][i] * Sol_eldofs_Mat[unk][i];
 	    SolVAR_coarser_prol_qp[unk] += phi_gss_fe[ SolFEType_Mat[unk] ][i] * SolVAR_coarser_prol_eldofs[unk][i];
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType_Mat[unk] ][i*dim+ivar2] * sol_eldofs_Mat[unk][i]; 
+	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType_Mat[unk] ][i*dim+ivar2] * Sol_eldofs_Mat[unk][i]; 
 	      gradSolVAR_coarser_prol_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType_Mat[unk] ][i*dim+ivar2] * SolVAR_coarser_prol_eldofs[unk][i]; 
 	    }
 	  }

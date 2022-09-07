@@ -657,6 +657,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    enum Pos_in_Sol {pos_sol_state = 0, pos_sol_ctrl, pos_sol_adj, pos_sol_mu, pos_sol_targreg, pos_sol_contreg, pos_sol_actflag}; //these are known at compile-time 
 
         assert(pos_sol_actflag == solIndex_act_flag_sol[0]);
+        
+        
+  std::vector<unsigned int> ctrl_index_in_mat(1);  ctrl_index_in_mat[0] = pos_mat_ctrl;
+  std::vector<unsigned int>   mu_index_in_mat(1);    mu_index_in_mat[0] = pos_mat_mu;
+
 //***************************************************
     
  //***************************************************
@@ -691,8 +696,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     std::vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);    //should have Mat order
 
 //***************************************************
-    std::vector < std::vector < double > >  sol_eldofs_Mat(n_unknowns);  //should have Mat order
-    for(int k = 0; k < n_unknowns; k++) {        sol_eldofs_Mat[k].reserve(max_size);    }
+    std::vector < std::vector < double > >  Sol_eldofs_Mat(n_unknowns);  //should have Mat order
+    for(int k = 0; k < n_unknowns; k++) {        Sol_eldofs_Mat[k].reserve(max_size);    }
 
 
     //----------- quantities (at dof objects) ------------------------------
@@ -789,7 +794,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     SolIndex_Mat,
                     SolPdeIndex,
                     Sol_n_el_dofs_Mat_vol, 
-                    sol_eldofs_Mat,  
+                    Sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
                     max_size,
                     //-----------
@@ -856,7 +861,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     SolIndex_Mat,
                     SolPdeIndex,
                     Sol_n_el_dofs_Mat_vol, 
-                    sol_eldofs_Mat,  
+                    Sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
                     max_size,
                     //-----------
@@ -929,7 +934,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                         SolIndex_Mat,
                         SolPdeIndex,
                         Sol_n_el_dofs_Mat_vol, 
-                        sol_eldofs_Mat,  
+                        Sol_eldofs_Mat,  
                         L2G_dofmap_Mat);
   
    el_dofs_quantities_vol(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities_vol); 
@@ -1028,9 +1033,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      for (unsigned int i_bdry = 0; i_bdry < phi_ctrl_bdry.size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-			sol_ctrl_bdry_gss +=  sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
+			sol_ctrl_bdry_gss +=  Sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
                             for (unsigned int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_bdry_gss[d] += sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
+			      sol_ctrl_x_bdry_gss[d] += Sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
 			    }
 		      }
 		      
@@ -1039,7 +1044,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      for (unsigned int i_bdry = 0; i_bdry <  phi_adj_bdry.size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-			sol_adj_bdry_gss  +=  sol_eldofs_Mat[pos_mat_adj][i_vol] * phi_adj_bdry[i_bdry];
+			sol_adj_bdry_gss  +=  Sol_eldofs_Mat[pos_mat_adj][i_vol] * phi_adj_bdry[i_bdry];
               }		      
 		      
 //=============== grad dot n for residual ========================================= 
@@ -1048,7 +1053,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      for (unsigned int iv = 0; iv < Sol_n_el_dofs_Mat_vol[pos_mat_adj]; iv++)  {
 			
          for (unsigned int d = 0; d < space_dim; d++) {
-			      sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs_Mat[pos_mat_adj][iv] * phi_adj_x_vol_at_bdry[iv * space_dim + d];
+			      sol_adj_x_vol_at_bdry_gss[d] += Sol_eldofs_Mat[pos_mat_adj][iv] * phi_adj_x_vol_at_bdry[iv * space_dim + d];
 			    }
 		      }  
 		      
@@ -1073,7 +1078,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		 
 //============ Bdry Residuals - BEGIN  ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_state, i_vol) ] +=
-                    - control_node_flag[first_loc_comp_ctrl][i_vol] * penalty_ctrl     * KEEP_ADJOINT_PUSH * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
+                    - control_node_flag[first_loc_comp_ctrl][i_vol] * penalty_ctrl     * KEEP_ADJOINT_PUSH * (   Sol_eldofs_Mat[pos_mat_state][i_vol] - Sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
                     - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
 
 
@@ -1181,13 +1186,13 @@ if ( i_vol == j_vol )  {
 	std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_state]; i++) {
-	                                                sol_u_gss      += sol_eldofs_Mat[pos_mat_state][i] * phi_u[i];
-                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss[d] += sol_eldofs_Mat[pos_mat_state][i] * phi_u_x[i * space_dim + d];
+	                                                sol_u_gss      += Sol_eldofs_Mat[pos_mat_state][i] * phi_u[i];
+                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss[d] += Sol_eldofs_Mat[pos_mat_state][i] * phi_u_x[i * space_dim + d];
           }
 	
 	for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_adj]; i++) {
-	                                                sol_adj_gss      += sol_eldofs_Mat[pos_mat_adj][i] * phi_adj[i];
-                   for (unsigned d = 0; d < space_dim; d++)   sol_adj_x_gss[d] += sol_eldofs_Mat[pos_mat_adj][i] * phi_adj_x[i * space_dim + d];
+	                                                sol_adj_gss      += Sol_eldofs_Mat[pos_mat_adj][i] * phi_adj[i];
+                   for (unsigned d = 0; d < space_dim; d++)   sol_adj_x_gss[d] += Sol_eldofs_Mat[pos_mat_adj][i] * phi_adj_x[i * space_dim + d];
         }
 
 //==========FILLING WITH THE EQUATIONS ===========
@@ -1203,9 +1208,9 @@ if ( i_vol == j_vol )  {
 	      
 //============ Volume residuals - BEGIN  ==================	    
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_state, i) ] += - weight_iqp * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  Sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_adj, i) ]   += - weight_iqp * (-1.) * (laplace_rhs_dadj_u_i);
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_mu, i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_mu, i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  Sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
 //============  Volume Residuals - END ==================	    
 	      
 	      
@@ -1276,19 +1281,18 @@ if ( i_vol == j_vol )  {
   } //end element loop for each process
   
 
-  //MU
-  std::vector<unsigned int> ctrl_index(1);  ctrl_index[0] = pos_mat_ctrl;
-  std::vector<unsigned int>   mu_index(1);    mu_index[0] = pos_mat_mu;
 
+  //MU in res ctrl - BEGIN  ***********************************
 ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
-                               ctrl_index,
-                               mu_index,
+                               ctrl_index_in_mat,
+                               mu_index_in_mat,
                                SolIndex_Mat,
                                sol,
                                mlPdeSys,
                                pdeSys,
                                RES);
+  //MU in res ctrl - END ***********************************
 
     
   // ***************** END ASSEMBLY - ADD PART *******************
@@ -1318,7 +1322,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          SolIndex_Mat,
                          SolPdeIndex,
                          Sol_n_el_dofs_Mat_vol, 
-                         sol_eldofs_Mat, 
+                         Sol_eldofs_Mat, 
                          L2G_dofmap_Mat);
 // -------
 
@@ -1336,23 +1340,23 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
    (msh, sol,
     iel, iface,
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
-    sol_eldofs_Mat, 
+    Sol_eldofs_Mat, 
     Sol_n_el_dofs_Mat_vol, 
     c_compl,
-    mu_index,               //this becomes a vector
-    ctrl_index,             //this becomes a vector
-    solIndex_act_flag_sol,             //this becomes a vector
+    mu_index_in_mat,
+    ctrl_index_in_mat,
+    solIndex_act_flag_sol,
     ctrl_lower,
-    ctrl_upper,   //this becomes a vector
-    sol_actflag);   //this becomes a vector
+    ctrl_upper,
+    sol_actflag);
  
 
   ctrl_inequality::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
-                      mu_index, 
-                      ctrl_index,
-                      sol_eldofs_Mat,
+                      mu_index_in_mat, 
+                      ctrl_index_in_mat,
+                      Sol_eldofs_Mat,
                       Sol_n_el_dofs_Mat_vol,
                       sol_actflag, 
                       ctrl_lower, ctrl_upper,
@@ -1372,9 +1376,9 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
      //============= delta_ctrl-delta_mu row ===============================
  if (assembleMatrix) {
        for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
-         JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ctrl_index[kdim]],  L2G_dofmap_Mat[mu_index[kdim]], ineq_flag * 1.);
+         JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ctrl_index_in_mat[kdim]],  L2G_dofmap_Mat[mu_index_in_mat[kdim]], ineq_flag * 1.);
        }
-}   //this becomes a vector
+}
 
    }
    

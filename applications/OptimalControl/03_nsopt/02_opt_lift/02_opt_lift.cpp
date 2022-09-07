@@ -1846,11 +1846,8 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
  
  
    
-      // ********************** Gauss point loop *******************************
       for(unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 	
-	// *** get Jacobian and test function and test function derivatives ***
-       // *** get gauss point weight, test function and test function partial derivatives ***
     elem_all[ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), iqp, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
     AbsDetJxWeight_iqp = detJac_iqp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[iqp];
    
@@ -2542,24 +2539,25 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 //============ delta_control row - END ==================================================================================================
  
 //============ delta_mu row - BEGIN  ============================================================================================
-
+  //MU
 //************ Residual, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
           
   for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
       
-       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);  //MU
+       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);
       
      }
   }
 //************ Residual, END *********************
 
+  //MU
 //************ Jacobian, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
     for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
       for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; j++) {
             if (i == j) {
-               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);  //MU
+               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);
             }
          }
       }
@@ -2690,8 +2688,8 @@ JAC->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[ ctrl_index_in_mat[kd
   
   
   
-  JAC->close();
-  RES->close();
+ RES->close();
+ JAC->close();
   // ***************** END ASSEMBLY *******************
 
     
