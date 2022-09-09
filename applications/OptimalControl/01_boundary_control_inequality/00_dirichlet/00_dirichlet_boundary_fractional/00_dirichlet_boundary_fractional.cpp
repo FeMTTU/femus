@@ -13,6 +13,7 @@
 #include "MED_IO.hpp"
 //for reading additional fields from MED file (based on MED ordering)
 
+using namespace femus;
 
   /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 #define FACE_FOR_CONTROL        1
@@ -21,7 +22,7 @@
 
 
 
-#include "../../../param.hpp"
+#include  "../../../param.hpp"
 
 
 //***** Implementation-related: where are L2 and H1 norms implemented ****************** 
@@ -102,8 +103,6 @@
            
 
 
-using namespace femus;
-
 
 
  //Unknown definition  ==================
@@ -118,10 +117,10 @@ using namespace femus;
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
  
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
                         feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
  
 
   assert( feFamily.size() == feOrder.size() );
@@ -146,7 +145,6 @@ using namespace femus;
               unknowns[u]._is_pde_unknown = true;
               
      }
- 
  
    return unknowns;
      
@@ -247,15 +245,19 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob);
 void AssembleOptSys(MultiLevelProblem& ml_prob);
 
 
+
+
 int main(int argc, char** args) {
 
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+
   
   // ======= Problem  ==================
   MultiLevelProblem ml_prob;
+
   
-  // ======= Files ========================
+  // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
@@ -264,17 +266,18 @@ int main(int argc, char** args) {
 
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
+  // ======= Files - END  ========================
 
-  // ======= Problem, Quad Rule ========================
-  //right now only one quadrature rule is used in the FE type under Mesh
-  /*const*/ std::vector< std::string > fe_quad_rule_vec;
+  // ======= Problem, Quad Rule - BEGIN  ========================
+  std::vector< std::string > fe_quad_rule_vec;
   fe_quad_rule_vec.push_back("seventh");
   fe_quad_rule_vec.push_back("eighth");
 
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
 
-  // ======= Mesh  ==================
+  // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 
   
@@ -291,9 +294,7 @@ int main(int argc, char** args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
   
-// // // =================================================================  
-// // // ================= Mesh: UNPACKING ReadCoarseMesh - BEGIN ================================================  
-// // // =================================================================  
+
   
     ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
     
@@ -320,22 +321,24 @@ int main(int argc, char** args) {
 //   - Mesh and Multimesh are real and not abstract, and rightly so 
 //   - Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
   ml_mesh.PrepareNewLevelsForRefinement();       //doesn't need dofmap
-// // // =================================================================  
-// // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
-// // // =================================================================
+
   
   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
   // I should put it inside a Mesh constructor with whatever argument so I hide it from the main
   // No it must be at the very end of ReadCoarseMesh
+  
+  //right now only one quadrature rule is used in the FE type under Mesh
+  // ======= Mesh, Coarse reading - END ==================
 
 
-  // ======= Mesh: REFINING ========================
+  // ======= Mesh: Refinement - BEGIN ==================
   const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   const unsigned erased_levels = N_ERASED_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
   
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   //RefineMesh contains a similar procedure as ReadCoarseMesh. In particular, the dofmap at each level is filled there
+  // ======= Mesh: Refinement - END ==================
 
   // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
   const std::string node_based_bdry_bdry_flag_name = NODE_BASED_BDRY_BDRY;
@@ -358,12 +361,13 @@ int main(int argc, char** args) {
   // ======= Solution, auxiliary - END  ==================
 
   
-  // ======= Mesh: COARSE ERASING ========================
+  // ======= Mesh: COARSE ERASING - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(erased_levels);
   ml_mesh.PrintInfo();
+  // ======= Mesh: COARSE ERASING - END  ========================
   
   
-  // ======= Solution  ==================
+  // ======= Solution - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
   ml_sol.SetWriter(VTK);
@@ -371,6 +375,7 @@ int main(int argc, char** args) {
 
  // ======= Problem, Mesh and Solution  ==================
  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+  // ======= Solution - END ==================
 
   
   // ======= Solutions that are Unknowns - BEGIN ==================
@@ -394,12 +399,23 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   
+  // ******** active flag - BEGIN 
   //MU
-  std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
-  const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
-  //MU
+  const unsigned int  n_components_ctrl = 1;
+  
+  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
+  const bool         act_flag_is_an_unknown_of_a_pde = false;
+
+  unsigned int index_control = 0;
+    for (unsigned int u = 0; u < unknowns.size(); u++) {
+        if ( !(unknowns[u]._name.compare("control")) ) index_control = u;
+    }
+   std::vector<std::string> act_set_flag_name(n_components_ctrl);
+   act_set_flag_name[0] = "act_flag";
+
+   ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);               
+   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+  // ******** active flag - END 
   
   
  bdry_bdry_flag_copy_and_delete(ml_prob,
@@ -417,11 +433,9 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - END  ==================
   
   
-  //== Solution: CHECK SOLUTION FE TYPES ==
-  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
-  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
+  //== Solution: CHECK SOLUTION FE TYPES between Unknowns and Not Unknowns - BEGIN  ==
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name[0].c_str())) abort();
-  //== Solution: CHECK SOLUTION FE TYPES ==
+  //== Solution: CHECK SOLUTION FE TYPES between Unknowns and Not Unknowns - END ==
   
 
   
@@ -467,10 +481,12 @@ int main(int argc, char** args) {
   // ======= Problem, System  - END ========================
 
   
-  // ======= Print ========================
+  // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
+
   ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
+  // ======= Print - END  ========================
 
   return 0;
 }

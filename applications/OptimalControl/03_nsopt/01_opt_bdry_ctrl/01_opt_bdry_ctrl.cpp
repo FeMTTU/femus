@@ -126,6 +126,106 @@ NumericVector* local_theta_vec;
 //*************************************************** 
 
 
+
+ //Unknown definition  ==================
+ const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
+     
+     
+  std::vector< FEFamily > feFamily;
+  std::vector< FEOrder >   feOrder;
+
+                        feFamily.push_back(LAGRANGE);   //state
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+                        feFamily.push_back(LAGRANGE);   //adjoint
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+                        feFamily.push_back(LAGRANGE);   //control
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+  
+                        feFamily.push_back(DISCONTINUOUS_POLYNOMIAL);
+ 
+                        feFamily.push_back(LAGRANGE);   //mu
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+ 
+  
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+  
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+  
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+  
+                        feOrder.push_back(ZERO);
+ 
+                        feOrder.push_back(SECOND);   //mu
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+  
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Unknown >  unknowns(feFamily.size());
+ 
+  const int adj_pos_begin   =       dimension + 1;
+  const int ctrl_pos_begin  = 2 * (dimension + 1);
+  const int mu_pos_begin    = 3 * (dimension + 1);
+
+                                        unknowns[0]._name      = "U";
+                                        unknowns[1]._name      = "V";
+  if (dimension == 3)                   unknowns[2]._name      = "W";
+                                unknowns[dimension]._name      = "P";
+  
+                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
+                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
+                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
+  
+                       unknowns[ctrl_pos_begin + 0]._name      = "ctrl_0";
+                       unknowns[ctrl_pos_begin + 1]._name      = "ctrl_1";
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "ctrl_2";
+  
+               unknowns[ctrl_pos_begin + dimension]._name      = "THETA";
+
+                       unknowns[mu_pos_begin + 0]._name      = "mu_0";
+                       unknowns[mu_pos_begin + 1]._name      = "mu_1";
+  if (dimension == 3)  unknowns[mu_pos_begin + 2]._name      = "mu_2";
+ 
+  
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+         
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
+              unknowns[u]._is_sparse = true;
+              
+     }
+ 
+ for (unsigned int u = 0; u < dimension; u++) {
+   unknowns[ctrl_pos_begin + u]._is_sparse = IS_CTRL_FRACTIONAL_SOBOLEV ? false: true;
+     }
+ 
+ 
+ unknowns[ctrl_pos_begin + dimension]._is_sparse = false;
+ 
+ 
+   return unknowns;
+     
+}
+
+
  
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
@@ -245,106 +345,6 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 }
 
 
- //Unknown definition  ==================
- const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
-     
-     
-  std::vector< FEFamily > feFamily;
-  std::vector< FEOrder >   feOrder;
-
-                        feFamily.push_back(LAGRANGE);   //state
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
-                        feFamily.push_back(LAGRANGE);   //adjoint
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
-                        feFamily.push_back(LAGRANGE);   //control
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
-  
-                        feFamily.push_back(DISCONTINUOUS_POLYNOMIAL);
- 
-                        feFamily.push_back(LAGRANGE);   //mu
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
- 
-  
-                        feOrder.push_back(SECOND);
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-                        feOrder.push_back(FIRST);
-  
-                        feOrder.push_back(SECOND);
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-                        feOrder.push_back(FIRST);
-  
-                        feOrder.push_back(SECOND);
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-  
-                        feOrder.push_back(ZERO);
- 
-                        feOrder.push_back(SECOND);   //mu
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-  
-
-  assert( feFamily.size() == feOrder.size() );
- 
- std::vector< Unknown >  unknowns(feFamily.size());
- 
-  const int adj_pos_begin   =       dimension + 1;
-  const int ctrl_pos_begin  = 2 * (dimension + 1);
-  const int mu_pos_begin    = 3 * (dimension + 1);
-
-                                        unknowns[0]._name      = "U";
-                                        unknowns[1]._name      = "V";
-  if (dimension == 3)                   unknowns[2]._name      = "W";
-                                unknowns[dimension]._name      = "P";
-  
-                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
-                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
-  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
-                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
-  
-                       unknowns[ctrl_pos_begin + 0]._name      = "ctrl_0";
-                       unknowns[ctrl_pos_begin + 1]._name      = "ctrl_1";
-  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "ctrl_2";
-  
-               unknowns[ctrl_pos_begin + dimension]._name      = "THETA";
-
-                       unknowns[mu_pos_begin + 0]._name      = "mu_0";
-                       unknowns[mu_pos_begin + 1]._name      = "mu_1";
-  if (dimension == 3)  unknowns[mu_pos_begin + 2]._name      = "mu_2";
- 
-  
-     for (unsigned int u = 0; u < unknowns.size(); u++) {
-         
-              unknowns[u]._fe_family  = feFamily[u];
-              unknowns[u]._fe_order   = feOrder[u];
-              unknowns[u]._time_order = 0;
-              unknowns[u]._is_pde_unknown = true;
-              unknowns[u]._is_sparse = true;
-              
-     }
- 
- for (unsigned int u = 0; u < dimension; u++) {
-   unknowns[ctrl_pos_begin + u]._is_sparse = IS_CTRL_FRACTIONAL_SOBOLEV ? false: true;
-     }
- 
- 
- unknowns[ctrl_pos_begin + dimension]._is_sparse = false;
- 
- 
-   return unknowns;
-     
-}
-
-
-
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);    
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob);
@@ -406,8 +406,6 @@ int main(int argc, char** args) {
 
 
   
-  // ======= Mesh  ==================
-
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 	
@@ -443,7 +441,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
     
 
-  // ======= Mesh: Refinement  ==================
+  // ======= Convergence Rate, Preparation - BEGIN  ==================
     
   unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
@@ -506,12 +504,17 @@ int main(int argc, char** args) {
             
 #endif
 
+  // ======= Convergence Rate, Preparation - END  ==================
+
+   
+   
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
   // ======= Mesh: Refinement - BEGIN ==================
   unsigned numberOfUniformLevels = i + 1; 
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
+  
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END ==================
 
@@ -625,6 +628,12 @@ int main(int argc, char** args) {
   
    system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
 
+    
+// *****************
+    system_opt.SetDebugNonlinear(true);
+    system_opt.SetDebugFunction(ComputeIntegral);
+// *****************
+    
    
   system_opt.init();
   set_dense_pattern_for_unknowns(system_opt, unknowns);
@@ -644,10 +653,6 @@ int main(int argc, char** args) {
   //----
 
     
-    
-    system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunction(ComputeIntegral);
-    
 //   system_opt.SetMaxNumberOfNonLinearIterations(2);
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
@@ -660,6 +665,7 @@ int main(int argc, char** args) {
 
   
   
+  // ======= Convergence Rate - BEGIN  ==================
 #if compute_conv_flag == 1
     if ( i > 0 ) {
         
@@ -684,6 +690,7 @@ int main(int argc, char** args) {
                *(ml_sol_all_levels->GetLevel(i)->_Sol[j]) = *(ml_sol.GetSolutionLevel(level_index_current)->_Sol[j]);
         }
  #endif
+  // ======= Convergence Rate - END  ==================
        
  
   // ======= Print - BEGIN  ========================
@@ -695,6 +702,7 @@ int main(int argc, char** args) {
 
   }
 
+  // ======= Convergence Rate, Postprocess - BEGIN  ==================
 
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
@@ -725,6 +733,8 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "=======================================================================" << std::endl;
 #endif
+  // ======= Convergence Rate, Postprocess - END  ==================
+
   
   return 0;
 }

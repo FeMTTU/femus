@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  1
+#define N_UNIFORM_LEVELS  6
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
