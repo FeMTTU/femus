@@ -31,7 +31,7 @@
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
+#define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0

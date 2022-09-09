@@ -275,10 +275,12 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
                         feOrder.push_back(FIRST);
+  
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
                         feOrder.push_back(FIRST);
+  
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
@@ -288,6 +290,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                         feOrder.push_back(SECOND);   //mu
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
+  
 
   assert( feFamily.size() == feOrder.size() );
  
@@ -362,7 +365,7 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob; 
 
   
-    // ======= Files ========================
+  // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
@@ -371,9 +374,10 @@ int main(int argc, char** args) {
   
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
+  // ======= Files - END  ========================
   
   
-  // ======= Parameters  ==================
+  // ======= Parameters - BEGIN  ==================
    //Adimensional quantity (Lref,Uref)
   double Lref = 1.;
   double Uref = 1.;
@@ -388,24 +392,28 @@ int main(int argc, char** args) {
 
   // ======= Problem, Parameters ========================
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  // ======= Parameters - END  ==================
   
   
-  // ======= Problem, Quad Rule ========================
+  // ======= Problem, Quad Rule - BEGIN  ========================
   std::vector< std::string > fe_quad_rule_vec;
   fe_quad_rule_vec.push_back("seventh");
   fe_quad_rule_vec.push_back("eighth");
     
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
 
 
   
   // ======= Mesh  ==================
+
+  // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 	
-//   std::string input_file = "parametric_square_1x1.med";
+  std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
-  std::string input_file = "parametric_square_2x2.med";
+//   std::string input_file = "parametric_square_2x2.med";
   
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -432,7 +440,9 @@ int main(int argc, char** args) {
 
 
   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+  // ======= Mesh, Coarse reading - END ==================
     
+
   // ======= Mesh: Refinement  ==================
     
   unsigned dim = ml_mesh.GetDimension();
@@ -498,11 +508,12 @@ int main(int argc, char** args) {
 
          for (int i = /*0*/maxNumberOfMeshes - 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-  // ======= Mesh: Refinement  ==================
+  // ======= Mesh: Refinement - BEGIN ==================
   unsigned numberOfUniformLevels = i + 1; 
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  // ======= Mesh: Refinement - END ==================
 
   // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
   const std::string node_based_bdry_bdry_flag_name = NODE_BASED_BDRY_BDRY;
@@ -526,11 +537,12 @@ int main(int argc, char** args) {
   
   
   
-  // ======= Mesh: COARSE ERASING ========================
+  // ======= Mesh: COARSE ERASING - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(erased_levels);
   ml_mesh.PrintInfo();
+  // ======= Mesh: COARSE ERASING - END  ========================
 
-  // ======= Solution  ==================
+  // ======= Solution - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
   ml_sol.SetWriter(VTK);
@@ -538,6 +550,7 @@ int main(int argc, char** args) {
     
   // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+  // ======= Solution - END ==================
  
   
   // ======= Solutions that are Unknowns - BEGIN  ==================
@@ -597,7 +610,7 @@ int main(int argc, char** args) {
   // ******** active flag - END 
 
  
- // ======= Solutions that are not Unknowns - END  ==================
+  // ======= Solutions that are not Unknowns - END  ==================
 
  
   // ======= Problem, System - BEGIN ========================
@@ -617,9 +630,21 @@ int main(int argc, char** args) {
   set_dense_pattern_for_unknowns(system_opt, unknowns);
 
    
-  // initialize and solve the system
+//   initialize and solve the system
     system_opt.init();
   
+    
+      //----
+  std::ostringstream sp_out_base2; sp_out_base2 << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
+  sp_out_base2 << "after_second_init_";
+  
+  unsigned n_levels = ml_mesh.GetNumberOfLevels();
+  system_opt._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "on");
+  system_opt._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
+  //----
+
+    
+    
     system_opt.SetDebugNonlinear(true);
     system_opt.SetDebugFunction(ComputeIntegral);
     
@@ -661,11 +686,12 @@ int main(int argc, char** args) {
  #endif
        
  
-  // ======= Print ========================
+  // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
   ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted, i);
+  // ======= Print - END  ========================
 
   }
 
@@ -714,10 +740,6 @@ int main(int argc, char** args) {
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
-   ///@todo to avoid Petsc complaint about out-of-bounds allocation *******************************
-//  MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-   //************************************
-     
   // Main objects - BEGIN *******************************************
  //System
  NonLinearImplicitSystemWithPrimalDualActiveSetMethod * mlPdeSys  = & ml_prob.get_system< NonLinearImplicitSystemWithPrimalDualActiveSetMethod >("NSOpt");
@@ -1046,7 +1068,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   constexpr unsigned qrule_k = QRULE_K;
   //----------------------
   // ======= Fractional - END =======
-    
+
+  
+  
+   ///@todo to avoid Petsc complaint about out-of-bounds allocation *******************************
+//  MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+   //************************************
+     
   
   
     
@@ -1241,14 +1269,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < ndofs_unk; i++) {
 	      unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType_Mat[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
 	  Sol_eldofs_Mat[k][i] = (*sol->_Sol[SolIndex_Mat[k]])(solDof);      // global extraction and local storage for the solution
-	         L2G_dofmap_Mat[k][i] = pdeSys->GetSystemDof(SolIndex_Mat[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+	  L2G_dofmap_Mat[k][i] = pdeSys->GetSystemDof(SolIndex_Mat[k], SolPdeIndex[k], i, iel);
  
     if (k == SolPdeIndex[theta_index] && L2G_dofmap_Mat[k][i] == global_row_index_bdry_constr) {       fake_iel_flag = iel;  }
     }
   }
   //############################ fake_iel_flag - END #######################################
     
-  //************ fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable  - BEGIN *********************
+  //************ fake theta flag: - BEGIN this flag tells me what degrees of freedom of the current element are fake for the theta variable  *********************
     std::vector<int>  bdry_int_constr_pos_vec(1, global_row_index_bdry_constr); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
     std::vector<int> fake_theta_flag(nDofsThetactrl, 0);
     for (unsigned i = 0; i < nDofsThetactrl; i++) {
