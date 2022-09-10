@@ -34,7 +34,7 @@ using namespace femus;
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
 
-  #define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
+  #define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -138,19 +138,22 @@ NumericVector* local_theta_vec;
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+
                         feFamily.push_back(LAGRANGE);   //adjoint
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+  
+                        feFamily.push_back(LAGRANGE);   //mu
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+  
                         feFamily.push_back(LAGRANGE);   //control
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
   
                         feFamily.push_back(DISCONTINUOUS_POLYNOMIAL);
  
-                        feFamily.push_back(LAGRANGE);   //mu
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
  
   
                         feOrder.push_back(SECOND);
@@ -163,15 +166,16 @@ NumericVector* local_theta_vec;
   if (dimension == 3)   feOrder.push_back(SECOND);
                         feOrder.push_back(FIRST);
   
+                        feOrder.push_back(SECOND);   //mu
                         feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+  
+                        feOrder.push_back(SECOND);    //control
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
   
                         feOrder.push_back(ZERO);
  
-                        feOrder.push_back(SECOND);   //mu
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
   
 
   assert( feFamily.size() == feOrder.size() );
@@ -179,8 +183,10 @@ NumericVector* local_theta_vec;
  std::vector< Unknown >  unknowns(feFamily.size());
  
   const int adj_pos_begin   =       dimension + 1;
-  const int ctrl_pos_begin  = 2 * (dimension + 1);
-  const int mu_pos_begin    = 3 * (dimension + 1);
+//   const int ctrl_pos_begin  = 2 * (dimension + 1);
+//   const int mu_pos_begin    = 3 * (dimension + 1);
+  const int mu_pos_begin    = 2 * (dimension + 1);
+  const int ctrl_pos_begin  = mu_pos_begin + dimension;
 
                                         unknowns[0]._name      = "U";
                                         unknowns[1]._name      = "V";
@@ -361,6 +367,7 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   
+  
   // ======= Problem  ==================
   MultiLevelProblem ml_prob; 
 
@@ -375,6 +382,10 @@ int main(int argc, char** args) {
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
   // ======= Files - END  ========================
+  
+  // ======= Messages - BEGIN  ========================
+  std::cout << "************ The variable for compatibility condition only works if you put it as the LAST VARIABLE" << std::endl;
+  // ======= Messages - END    ========================
   
   
   // ======= Parameters - BEGIN  ==================
@@ -812,11 +823,16 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   const int state_pos_begin  = 0;
   const int press_type_pos   = dim;
   const int adj_pos_begin    = press_type_pos + 1;
-  const int ctrl_pos_begin   = 2 * (dim + 1);
-  const int theta_index      = ctrl_pos_begin + dim;
-  const int mu_pos_begin    = 3 * n_vars_state;
   
-  const int pos_mat_ctrl = ctrl_pos_begin;
+//   const int ctrl_pos_begin   = 2 * (dim + 1);
+//   const int mu_pos_begin    = 3 * n_vars_state;
+  
+  const int mu_pos_begin    = 2 * n_vars_state;
+  const int ctrl_pos_begin   = mu_pos_begin + dim;
+  
+  
+  const int theta_index      = ctrl_pos_begin + dim;
+  
 
 
   if (dim != 2) abort();
@@ -827,11 +843,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
                         pos_mat_adj_0,
                         pos_mat_adj_1,
                         pos_mat_adj_p, 
+                        pos_mat_mu_0,
+                        pos_mat_mu_1,
                         pos_mat_ctrl_0,
                         pos_mat_ctrl_1,
-                        pos_mat_theta, 
-                        pos_mat_mu_0,
-                        pos_mat_mu_1}; //these are known at compile-time 
+                        pos_mat_theta
+        
+    }; //these are known at compile-time 
 
   
   
@@ -842,6 +860,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
     ctrl_name[1] = "ctrl_1";
      if (dim == 3)  ctrl_name[2] = "ctrl_2";
  
+  const int pos_mat_ctrl = ctrl_pos_begin;
   const int pos_sol_ctrl = ctrl_pos_begin;
 
     const unsigned int n_components_ctrl = dim;
