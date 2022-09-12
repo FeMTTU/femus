@@ -20,7 +20,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  5
+#define N_UNIFORM_LEVELS  1
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -2268,7 +2268,7 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  .05;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  1000.;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      

@@ -20,8 +20,8 @@ using namespace femus;
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL          1        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
-#define FACE_FOR_TARGET    1
+#define FACE_FOR_CONTROL  2        /*1*/        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_TARGET   2  /*1*/
 
 
 #include   "../nsopt_params.hpp"
@@ -34,7 +34,7 @@ using namespace femus;
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
 
-  #define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
+  #define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -420,9 +420,10 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 	
-  std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "parametric_square_2x2.med";
+  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -833,32 +834,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   
   const int theta_index      = ctrl_pos_begin + dim;
   
-
-
-  if (dim != 2) abort();
-  
-    enum Pos_in_matrix {pos_mat_state_0 = 0, 
-                        pos_mat_state_1, 
-                        pos_mat_state_p,
-                        pos_mat_adj_0,
-                        pos_mat_adj_1,
-                        pos_mat_adj_p, 
-                        pos_mat_mu_0,
-                        pos_mat_mu_1,
-                        pos_mat_ctrl_0,
-                        pos_mat_ctrl_1,
-                        pos_mat_theta
-        
-    }; //these are known at compile-time 
-
-  
-  
   
     std::vector<std::string> ctrl_name;
     ctrl_name.resize(dim);
     ctrl_name[0] = "ctrl_0";
     ctrl_name[1] = "ctrl_1";
-     if (dim == 3)  ctrl_name[2] = "ctrl_2";
+    if (dim == 3)  ctrl_name[2] = "ctrl_2";
  
   const int pos_mat_ctrl = ctrl_pos_begin;
   const int pos_sol_ctrl = ctrl_pos_begin;
@@ -1914,9 +1895,9 @@ for (unsigned k = 0; k < dim; k++){
 //************ Residual, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
           
-  for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
+  for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; i++) {
       
-       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag_iel_jface[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);
+       Res[mu_pos_begin + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag_iel_jface[kdim][i]) * (Sol_eldofs_Mat[mu_pos_begin + kdim][i] - 0.);
       
      }
   }
@@ -1925,10 +1906,10 @@ for (unsigned k = 0; k < dim; k++){
   //MU
 //************ Jacobian, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
-    for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
-      for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; j++) {
+    for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; i++) {
+      for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; j++) {
             if (i == j) {
-               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag_iel_jface[kdim][i]);
+               Jac[mu_pos_begin + kdim][mu_pos_begin + kdim][i * Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag_iel_jface[kdim][i]);
             }
          }
       }
