@@ -67,7 +67,7 @@
 
 
 //*********************** Control box constraints *******************************************************
-#define  INEQ_FLAG 1.
+#define  INEQ_FLAG 0
 #define  C_COMPL 1.
 
 

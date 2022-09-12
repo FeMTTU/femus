@@ -143,11 +143,12 @@ NumericVector* local_theta_vec;
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
-  
+
+#if INEQ_FLAG != 0
                         feFamily.push_back(LAGRANGE);   //mu
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
-  
+#endif  
                         feFamily.push_back(LAGRANGE);   //control
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
@@ -166,9 +167,11 @@ NumericVector* local_theta_vec;
   if (dimension == 3)   feOrder.push_back(SECOND);
                         feOrder.push_back(FIRST);
   
+#if INEQ_FLAG != 0
                         feOrder.push_back(SECOND);   //mu
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
+#endif  
   
                         feOrder.push_back(SECOND);    //control
                         feOrder.push_back(SECOND);
@@ -185,8 +188,15 @@ NumericVector* local_theta_vec;
   const int adj_pos_begin   =       dimension + 1;
 //   const int ctrl_pos_begin  = 2 * (dimension + 1);
 //   const int mu_pos_begin    = 3 * (dimension + 1);
-  const int mu_pos_begin    = 2 * (dimension + 1);
-  const int ctrl_pos_begin  = mu_pos_begin + dimension;
+   const int mu_pos_begin = 2 * (dimension + 1);
+   
+  
+  int ctrl_pos_begin;
+#if INEQ_FLAG != 0
+  ctrl_pos_begin  = mu_pos_begin + dimension;
+#else
+  ctrl_pos_begin = 2 * (dimension + 1);
+#endif
 
                                         unknowns[0]._name      = "u_0";
                                         unknowns[1]._name      = "u_1";
@@ -204,9 +214,11 @@ NumericVector* local_theta_vec;
   
                unknowns[ctrl_pos_begin + dimension]._name      = "theta";
 
+#if INEQ_FLAG != 0
                        unknowns[mu_pos_begin + 0]._name      = "mu_0";
                        unknowns[mu_pos_begin + 1]._name      = "mu_1";
   if (dimension == 3)  unknowns[mu_pos_begin + 2]._name      = "mu_2";
+#endif  
  
   
      for (unsigned int u = 0; u < unknowns.size(); u++) {
@@ -326,10 +338,12 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 }
                 
                 
+#if INEQ_FLAG != 0
    //MU
        if (!strcmp(SolName, "mu_0"))    { dirichlet = false; }
   else if (!strcmp(SolName, "mu_1"))    { dirichlet = false; } 
   else if (!strcmp(SolName, "mu_2"))    { dirichlet = false; } 
+#endif  
      
 
                 
@@ -605,6 +619,7 @@ int main(int argc, char** args) {
 
  
  
+#if INEQ_FLAG != 0
   // ******** active flag - BEGIN   //MU
   const unsigned int  n_components_ctrl = dim;
   
@@ -623,7 +638,7 @@ int main(int argc, char** args) {
     ml_sol.Initialize(act_set_flag_name[d].c_str(), Solution_set_initial_conditions, & ml_prob);
    }
   // ******** active flag - END 
-
+#endif
  
   // ======= Solutions that are not Unknowns - END  ==================
 
@@ -631,7 +646,9 @@ int main(int argc, char** args) {
   // ======= Problem, System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system_opt    = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("NSOpt");
   
+#if INEQ_FLAG != 0
   system_opt.SetActiveSetFlagName(act_set_flag_name); //MU
+#endif
 
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
   system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
@@ -829,7 +846,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 //   const int mu_pos_begin    = 3 * n_vars_state;
   
   const int mu_pos_begin    = 2 * n_vars_state;
-  const int ctrl_pos_begin   = mu_pos_begin + dim;
+
+  int ctrl_pos_begin;
+#if INEQ_FLAG != 0
+  ctrl_pos_begin  = mu_pos_begin + dim;
+#else
+  ctrl_pos_begin = 2 * (dim + 1);
+#endif
+
+
   
   
   const int theta_index      = ctrl_pos_begin + dim;
@@ -892,6 +917,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
     }
     
     
+#if INEQ_FLAG != 0
   //MU
   //************** variables for ineq constraints: act flag ****************************   
   std::vector<unsigned int> solIndex_act_flag_sol(n_components_ctrl); 
@@ -919,6 +945,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
            ctrl_index_in_mat[kdim] =  SolPdeIndex[ctrl_pos_begin + kdim];
              mu_index_in_mat[kdim] =  SolPdeIndex[mu_pos_begin + kdim];
       }
+#endif
       
     
     
@@ -1891,6 +1918,7 @@ for (unsigned k = 0; k < dim; k++){
  
 //============ delta_mu row - BEGIN  ============================================================================================
 
+#if INEQ_FLAG != 0
   //MU
 //************ Residual, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
@@ -1915,7 +1943,7 @@ for (unsigned k = 0; k < dim; k++){
       }
   }
 //************ Jacobian, END *********************
-
+#endif
 
 //============ delta_mu row - END  ============================================================================================
  
@@ -1991,6 +2019,7 @@ for (unsigned k = 0; k < dim; k++){
   } //end list of elements loop for each subdomain
   
 
+#if INEQ_FLAG != 0
   //MU in res ctrl - BEGIN  ***********************************
 ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
@@ -2002,7 +2031,7 @@ ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                pdeSys,
                                RES);
   //MU in res ctrl - END ***********************************
-
+#endif
   
   
   
@@ -2012,6 +2041,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
 
+#if INEQ_FLAG != 0
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
     
      //MU
@@ -2092,6 +2122,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
    
    
   // ***************** INSERT PART - END *******************
+#endif
 
 
 
