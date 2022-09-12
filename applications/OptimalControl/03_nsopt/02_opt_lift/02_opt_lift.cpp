@@ -18,8 +18,8 @@
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL  1
-#define FACE_FOR_TARGET    1
+#define FACE_FOR_CONTROL  2
+#define FACE_FOR_TARGET    2
 
 
 #include   "../nsopt_params.hpp"
@@ -232,7 +232,7 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob;
 
   
-  // ======= Files ========================
+  // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
@@ -241,9 +241,10 @@ int main(int argc, char** args) {
  
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
+  // ======= Files - END  ========================
 
   
-  // ======= Parameters  ==================
+  // ======= Parameters - BEGIN  ==================
   double Lref = 1.;
   double Uref = 1.;
   // add fluid material
@@ -256,23 +257,26 @@ int main(int argc, char** args) {
   
   // ======= Problem, Parameters ========================
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  // ======= Parameters - END  ==================
 
   
-  // ======= Problem, Quad Rule ========================
+  // ======= Problem, Quad Rule - BEGIN  ========================
     std::vector< std::string > fe_quad_rule_vec;
   fe_quad_rule_vec.push_back("seventh");
   
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
   
   
-  // ======= Mesh ==================
+  // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
  
     std::string mesh_folder_file = "input/";
-  std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "cyl.med"; // "fifth"
+  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << mesh_folder_file << input_file;
   const std::string infile = mystream.str();
 
@@ -291,9 +295,11 @@ int main(int argc, char** args) {
 
 
   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+  // ======= Mesh, Coarse reading - END ==================
 
   
-  // ======= Mesh: Refinement  ==================
+  // ======= Convergence Rate, Preparation - BEGIN  ==================
+
   unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -351,21 +357,25 @@ int main(int argc, char** args) {
 
 #endif
 
-            
+  // ======= Convergence Rate, Preparation - END  ==================
+
+     
             
          for (int i = /*0*/maxNumberOfMeshes - 1; i < /*1*/maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-  // ======= Mesh: Refinement  ==================
+  // ======= Mesh: Refinement - BEGIN ==================
   unsigned numberOfUniformLevels = i + 1; 
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  // ======= Mesh: Refinement - END ==================
 
-  // ======= Mesh: COARSE ERASING ========================
+  // ======= Mesh: COARSE ERASING - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
   ml_mesh.PrintInfo();
+  // ======= Mesh: COARSE ERASING - END  ========================
 
   
-  // ======= Solution  ==================
+  // ======= Solution - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
   ml_sol.SetWriter(VTK);
@@ -373,6 +383,7 @@ int main(int argc, char** args) {
   
   // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+  // ======= Solution - END ==================
  
 
   // ======= Solutions that are Unknowns - BEGIN  ==================
@@ -480,11 +491,12 @@ int main(int argc, char** args) {
  #endif
        
    
-  // ======= Print ========================
+  // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
   ml_sol.GetWriter()->Write(files.GetOutputPath(),  "biquadratic", variablesToBePrinted, i);
+  // ======= Print - END  ========================
 
  }
 
@@ -1354,7 +1366,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 double  integral_target_alpha = 0.;
 double	integral_beta   = 0.;
 double	integral_gamma  = 0.;
-  
+double  integral_div_ctrl = 0.;
+
+
+
 //*************************************************** 
      std::vector < std::vector < double > >  JacI_iqp(space_dim);
      std::vector < std::vector < double > >  Jac_iqp(dim);
@@ -1485,15 +1500,20 @@ double	integral_gamma  = 0.;
           }
       }
           
-          
+//                 for (unsigned i = 0; i < nDofsV; i++) {
+
+      for (unsigned  k = 0; k < dim; k++) {
+          integral_div_ctrl +=  AbsDetJxWeight_iqp * gradVctrl_gss[k][k] /** phiVctrl_gss[i]*/;
+      }
+//       }
 	
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_target_alpha +=  target_flag * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*AbsDetJxWeight_iqp; 
-	 integral_beta	+=  control_el_flag * ((Vctrl_gss[k]) * (Vctrl_gss[k])*AbsDetJxWeight_iqp);
+	 integral_target_alpha +=  target_flag * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * AbsDetJxWeight_iqp; 
+	 integral_beta	+=  control_el_flag * ((Vctrl_gss[k]) * (Vctrl_gss[k]) * AbsDetJxWeight_iqp);
       }
       for (unsigned  k = 0; k < dim; k++) {
 	for (unsigned  j = 0; j < dim; j++) {	
-		integral_gamma	  +=  control_el_flag * ((gradVctrl_gss[k][j])*(gradVctrl_gss[k][j])*AbsDetJxWeight_iqp);
+		integral_gamma	  +=  control_el_flag * gradVctrl_gss[k][j] * gradVctrl_gss[k][j] * AbsDetJxWeight_iqp;
 	}
       }
    
@@ -1511,6 +1531,7 @@ double	integral_gamma  = 0.;
       intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
       intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
       intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha*0.5 + integral_gamma *beta*0.5 << std::endl;
+      intgr_fstream << "The value of the divergence of the control is " << std::setw(11) << std::setprecision(10) <<  integral_div_ctrl << std::endl;
       intgr_fstream <<  std::endl;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  
@@ -1594,20 +1615,6 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
   const int adj_pos_begin   =     n_vars_state;
   const int ctrl_pos_begin  = 2 * n_vars_state;
   const int mu_pos_begin    = 3 * n_vars_state;
-
-  if (dim != 2) abort();
-  
-    enum Pos_in_matrix {pos_mat_state_0 = 0, 
-                        pos_mat_state_1, 
-                        pos_mat_state_p,
-                        pos_mat_adj_0,
-                        pos_mat_adj_1,
-                        pos_mat_adj_p, 
-                        pos_mat_ctrl_0,
-                        pos_mat_ctrl_1,
-                        pos_mat_ctrl_p, 
-                        pos_mat_mu_0,
-                        pos_mat_mu_1}; //these are known at compile-time 
 
   
   std::vector< Unknown > unknowns = provide_list_of_unknowns( dim );
@@ -2543,9 +2550,9 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
 //************ Residual, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
           
-  for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
+  for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; i++) {
       
-       Res[pos_mat_mu_0 + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[pos_mat_mu_0 + kdim][i] - 0.);
+       Res[mu_pos_begin + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag[kdim][i]) * (Sol_eldofs_Mat[mu_pos_begin + kdim][i] - 0.);
       
      }
   }
@@ -2554,10 +2561,10 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   //MU
 //************ Jacobian, BEGIN *********************
   for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) { 
-    for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; i++) {
-      for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim]; j++) {
+    for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; i++) {
+      for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; j++) {
             if (i == j) {
-               Jac[pos_mat_mu_0 + kdim][pos_mat_mu_0 + kdim][i * Sol_n_el_dofs_Mat_vol[pos_mat_mu_0 + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);
+               Jac[mu_pos_begin + kdim][mu_pos_begin + kdim][i * Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag[kdim][i]);
             }
          }
       }

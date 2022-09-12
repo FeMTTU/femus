@@ -29,10 +29,10 @@ using namespace femus;
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
  
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
                         feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
  
 
   assert( feFamily.size() == feOrder.size() );
@@ -140,7 +140,7 @@ int main(int argc, char** args) {
   // ======= Problem ========================
   MultiLevelProblem ml_prob;
   
-  // ======= Files ========================
+  // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
@@ -149,16 +149,18 @@ int main(int argc, char** args) {
 
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
+  // ======= Files - END  ========================
 
-  // ======= Problem, Quad Rule ========================
+  // ======= Problem, Quad Rule - BEGIN  ========================
     std::vector< std::string > fe_quad_rule_vec;
   fe_quad_rule_vec.push_back("seventh");
   
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
 
   
-  // ======= Mesh  ==================
+  // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
    
   std::string input_file = "parametric_square_1x1.med";
@@ -183,18 +185,23 @@ int main(int argc, char** args) {
 
 
   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+  // ======= Mesh, Coarse reading - END ==================
 
-  // ======= Mesh: Refinement  ==================
+  
+  // ======= Mesh: Refinement - BEGIN ==================
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
   const unsigned erased_levels = N_ERASED_LEVELS;
+  
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  // ======= Mesh: Refinement - END ==================
 
-  // ======= Mesh: COARSE ERASING ========================
+  // ======= Mesh: COARSE ERASING - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
   ml_mesh.PrintInfo();
+  // ======= Mesh: COARSE ERASING - END  ========================
 
-    // ======= Solution ========================
+  // ======= Solution - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
   ml_sol.SetWriter(VTK);
@@ -202,9 +209,10 @@ int main(int argc, char** args) {
   
  // ======= Problem, Mesh and Solution  ==================
  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+  // ======= Solution - END ==================
 
 
-  // ======= Solutions that are Unknowns - BEGIN ==================
+ // ======= Solutions that are Unknowns - BEGIN ==================
   std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
  
   for (unsigned int u = 0; u < unknowns.size(); u++) { ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown); }
@@ -244,11 +252,9 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - END  ==================
 
   
-  //==== Solution: CHECK SOLUTION FE TYPES ==
-  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
-  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
+  //== Solution: CHECK SOLUTION FE TYPES between Unknowns and Not Unknowns - BEGIN  ==
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name[0].c_str())) abort();
-  //==== Solution: CHECK SOLUTION FE TYPES ==
+  //== Solution: CHECK SOLUTION FE TYPES between Unknowns and Not Unknowns - END ==
   
 
   // ======= Problem, System - BEGIN ========================
@@ -276,10 +282,11 @@ int main(int argc, char** args) {
 //   system.assemble_call_before_boundary_conditions(1);
   // ======= Problem, System  - END ========================
   
-  // ======= Print ==================
+  // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
+  // ======= Print - END  ========================
 
   return 0;
   

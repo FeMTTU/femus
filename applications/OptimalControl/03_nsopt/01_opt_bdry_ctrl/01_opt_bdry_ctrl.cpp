@@ -188,21 +188,21 @@ NumericVector* local_theta_vec;
   const int mu_pos_begin    = 2 * (dimension + 1);
   const int ctrl_pos_begin  = mu_pos_begin + dimension;
 
-                                        unknowns[0]._name      = "U";
-                                        unknowns[1]._name      = "V";
-  if (dimension == 3)                   unknowns[2]._name      = "W";
-                                unknowns[dimension]._name      = "P";
+                                        unknowns[0]._name      = "u_0";
+                                        unknowns[1]._name      = "u_1";
+  if (dimension == 3)                   unknowns[2]._name      = "u_2";
+                                unknowns[dimension]._name      = "u_p";
   
-                        unknowns[adj_pos_begin + 0]._name      = "UADJ";
-                        unknowns[adj_pos_begin + 1]._name      = "VADJ";
-  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "WADJ";
-                unknowns[adj_pos_begin + dimension]._name      = "PADJ";
+                        unknowns[adj_pos_begin + 0]._name      = "adj_0";
+                        unknowns[adj_pos_begin + 1]._name      = "adj_1";
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "adj_2";
+                unknowns[adj_pos_begin + dimension]._name      = "adj_p";
   
                        unknowns[ctrl_pos_begin + 0]._name      = "ctrl_0";
                        unknowns[ctrl_pos_begin + 1]._name      = "ctrl_1";
   if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "ctrl_2";
   
-               unknowns[ctrl_pos_begin + dimension]._name      = "THETA";
+               unknowns[ctrl_pos_begin + dimension]._name      = "theta";
 
                        unknowns[mu_pos_begin + 0]._name      = "mu_0";
                        unknowns[mu_pos_begin + 1]._name      = "mu_1";
@@ -309,11 +309,11 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
                 
                 
-                else if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
+                else if (!strcmp(SolName, "theta"))    { dirichlet = false; }
 
                 
                 
-                else if (!strcmp(SolName, "W"))       { 
+                else if (!strcmp(SolName, "u_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
    if (faceName == FACE_FOR_CONTROL) {
      if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -335,15 +335,15 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 
                 
 #if exact_sol_flag == 0
-                else if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
-                else if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
+                else if (!strcmp(SolName, "u_0"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
+                else if (!strcmp(SolName, "u_1"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
 #endif
      
 #if exact_sol_flag == 1
   //b.c. for manufactured lid driven cavity
   double pi = acos(-1.);
-                else if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
-                else if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
+                else if (!strcmp(SolName, "u_0"))       { if (faceName == FACE_FOR_CONTROL) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
+                else if (!strcmp(SolName, "u_1"))       { if (faceName == FACE_FOR_CONTROL) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
  #endif
                
   return dirichlet;
@@ -605,7 +605,7 @@ int main(int argc, char** args) {
 
  
  
-  // ******** active flag - BEGIN 
+  // ******** active flag - BEGIN   //MU
   const unsigned int  n_components_ctrl = dim;
   
   const bool      act_flag_is_an_unknown_of_a_pde = false;
@@ -614,7 +614,7 @@ int main(int argc, char** args) {
     for (unsigned int u = 0; u < unknowns.size(); u++) {
         if ( !(unknowns[u]._name.compare("ctrl_0")) ) index_control = u;
     }
-  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld  //MU
+  const unsigned int act_set_fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
    std::vector<std::string> act_set_flag_name(n_components_ctrl);
    
    for(unsigned int d = 0; d <  act_set_flag_name.size(); d++)  {
@@ -719,7 +719,7 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
    std::cout << " L2-NORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::vector< std::string > norm_names_L2 = {"U","V", "P", "UADJ","VADJ", "PADJ", "ctrl_0","ctrl_1", "THETA"};
+  std::vector< std::string > norm_names_L2 = {"u_0","u_1", "u_p", "adj_0","adj_1", "adj_p", "ctrl_0","ctrl_1", "theta"};
 
    for(int j = 0; j <  norm_names_L2.size(); j++)  {
   std::cout << std::endl;
@@ -732,7 +732,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "=======================================================================" << std::endl;
   std::cout << " H1-NORM ERROR and ORDER OF CONVERGENCE:" << std::endl;
-  std::vector< std::string > norm_names_H1 = {"U","V", "UADJ","VADJ", "ctrl_0","ctrl_1"};
+  std::vector< std::string > norm_names_H1 = {"u_0","u_1", "adj_0","adj_1", "ctrl_0","ctrl_1"};
 
    for(int j = 0; j <  norm_names_H1.size(); j++)  {
   std::cout << std::endl;
@@ -1343,7 +1343,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 	    if( bdry_index < 0) {
 	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel, jface) + 1);
 
-// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"u_0",tau,face,0.) && tau!=0.){
           if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
               
 //=================================================== 
@@ -2170,10 +2170,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 //STATE######################################################################
   //velocity *******************************
   vector < unsigned > solVIndex(dim);
-  solVIndex[0] = ml_sol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = ml_sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+  solVIndex[0] = ml_sol->GetIndex("u_0");
+  solVIndex[1] = ml_sol->GetIndex("u_1");
 
-  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("W");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("u_2");
 
   unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   
@@ -2196,9 +2196,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //CONTROL_@bdry######################################################################
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");    // get the position of "V" in the ml_sol object
-  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");      // get the position of "V" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
+  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
   
@@ -2219,7 +2219,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 //CONTROL_@bdry######################################################################
   
 //Theta value ######################################################################
-   const unsigned solThetaIndex = ml_sol->GetIndex("THETA");
+   const unsigned solThetaIndex = ml_sol->GetIndex("theta");
    const unsigned solThetaType = ml_sol->GetSolutionType(solThetaIndex);
    
 //    double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
@@ -2259,6 +2259,9 @@ double	integral_gamma  = 0.;
 
 double integral_g_dot_n = 0.;
   
+
+// double	integral_div_ctrl  = 0.;
+
 //*************************************************** 
   //--- quadrature rules -------------------
   constexpr unsigned qrule_i = QRULE_I;
@@ -2440,6 +2443,8 @@ double integral_g_dot_n = 0.;
       }  // loop over element faces //jface   
   } //end if control element flag
 
+  
+  
       // *** Gauss point loop ***
       for (unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 //STATE######## VolumeLoop #####################################################################	
@@ -2460,6 +2465,9 @@ double integral_g_dot_n = 0.;
 	    }
 	  }
 	
+//       for (unsigned  k = 0; k < dim; k++) {
+//           integral_div_ctrl +=  AbsDetJxWeight_iqp * gradVctrl_gss[k][k] /** phiVctrl_gss[i]*/;
+//       }
 
       for (unsigned  k = 0; k < dim; k++) {
 	      integral_target_alpha += (( target_flag ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k])) * AbsDetJxWeight_iqp);
@@ -2528,21 +2536,21 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
   const int ctrl_pos_begin   = 2*(dim+1);
   const int theta_index = press_type_pos + ctrl_pos_begin;
   
-  vector < std::string > Solname_Mat(n_unknowns);  // const char Solname_Mat[4][8] = {"U","V","W","P"};
-  Solname_Mat              [state_pos_begin+0] =                "U";
-  Solname_Mat              [state_pos_begin+1] =                "V";
-  if (dim == 3) Solname_Mat[state_pos_begin+2] =                "W";
-  Solname_Mat              [state_pos_begin + press_type_pos] = "P";
+  vector < std::string > Solname_Mat(n_unknowns);  // const char Solname_Mat[4][8] = {"u_0","u_1","u_2","u_p"};
+  Solname_Mat              [state_pos_begin+0] =                "u_0";
+  Solname_Mat              [state_pos_begin+1] =                "u_1";
+  if (dim == 3) Solname_Mat[state_pos_begin+2] =                "u_2";
+  Solname_Mat              [state_pos_begin + press_type_pos] = "u_p";
   
-  Solname_Mat              [adj_pos_begin + 0] =              "UADJ";
-  Solname_Mat              [adj_pos_begin + 1] =              "VADJ";
-  if (dim == 3) Solname_Mat[adj_pos_begin + 2] =              "WADJ";
-  Solname_Mat              [adj_pos_begin + press_type_pos] = "PADJ";
+  Solname_Mat              [adj_pos_begin + 0] =              "adj_0";
+  Solname_Mat              [adj_pos_begin + 1] =              "adj_1";
+  if (dim == 3) Solname_Mat[adj_pos_begin + 2] =              "adj_2";
+  Solname_Mat              [adj_pos_begin + press_type_pos] = "adj_p";
 
   Solname_Mat              [ctrl_pos_begin + 0] =              "ctrl_0";
   Solname_Mat              [ctrl_pos_begin + 1] =              "ctrl_1";
   if (dim == 3) Solname_Mat[ctrl_pos_begin + 2] =              "ctrl_2";
-  Solname_Mat              [ctrl_pos_begin + press_type_pos] = "THETA";
+  Solname_Mat              [ctrl_pos_begin + press_type_pos] = "theta";
   
   vector < unsigned > SolIndex_Mat(n_unknowns);  
   vector < unsigned > SolFEType_Mat(n_unknowns);  

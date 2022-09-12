@@ -16,8 +16,8 @@
 using namespace femus;
 
   /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
-#define FACE_FOR_CONTROL        1
-#define FACE_FOR_TARGET         1
+#define FACE_FOR_CONTROL        2
+#define FACE_FOR_TARGET         2
 
 
 
@@ -32,7 +32,7 @@ using namespace femus;
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -281,9 +281,9 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
-//   std::string input_file = "parametric_square_2x2.med";
+  std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
@@ -537,8 +537,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors();
 
-  constexpr bool print_algebra_global = true;
-  constexpr bool print_algebra_local = true;
+  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_local = false;
   
   
 
