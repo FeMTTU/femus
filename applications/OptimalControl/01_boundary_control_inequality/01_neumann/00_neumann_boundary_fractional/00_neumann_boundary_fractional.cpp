@@ -37,10 +37,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name, "TargReg")) {
-        value = ElementTargetFlag(x);
+        value = ctrl::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ControlDomainFlag_bdry(x);
+        value = ctrl::ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -107,13 +107,22 @@ int main(int argc, char** args) {
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
-  double scalingFactor = 1.;
+  double Lref = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"fifth");
-   //1: bottom  //2: right  //3: top  //4: left
+  std::string input_file = "parametric_square_2x2.med";
+//   std::string input_file = "parametric_square_4x5.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  const std::string infile = mystream.str();
+
+  const bool read_groups = true;
+  const bool read_boundary_groups = true;
   
- /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-      probably in the furure it is not going to be an argument of this function   */
+
+  mlMsh.ReadCoarseMesh(infile.c_str(), "seventh", Lref, read_groups, read_boundary_groups);
+    
+  
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
@@ -361,7 +370,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   
  //********************* DATA ************************ 
-  double u_des = DesiredTarget();
+  double u_des = ctrl::DesiredTarget();
   double alpha = ALPHA_CTRL_BDRY;
   double beta  = BETA_CTRL_BDRY;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
@@ -404,12 +413,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
+   target_flag = ctrl::ElementTargetFlag(elem_center);
  //*************************************************** 
    
  //************** set control flag *******************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(elem_center);
+        control_el_flag = ctrl::ControlDomainFlag_bdry(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //*************************************************** 
@@ -1038,7 +1047,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   
  //********** DATA *********************************** 
-  double u_des = DesiredTarget();
+  double u_des = ctrl::DesiredTarget();
  //***************************************************
   
   double integral_target = 0.;
@@ -1077,7 +1086,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  //***** set target domain flag ********************** 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
+   target_flag = ctrl::ElementTargetFlag(elem_center);
  //***************************************************
 
    
@@ -1130,7 +1139,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  // ==================================================
  //***** set control flag *************************** 
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(elem_center);
+        control_el_flag = ctrl::ControlDomainFlag_bdry(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //***************************************************

@@ -56,7 +56,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 
    if (faceName == FACE_FOR_CONTROL)  {
-        if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+        if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
        if (!strcmp(SolName, "ctrl_0"))    { dirichlet = false; }
   else if (!strcmp(SolName, "ctrl_1"))    { dirichlet = false; } 
   else if (!strcmp(SolName, "ctrl_2"))    { dirichlet = false; } 
@@ -97,10 +97,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = ElementTargetFlag(x);
+        value = ctrl::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ControlDomainFlag_internal_restriction(x);
+        value = ctrl::ControlDomainFlag_internal_restriction(x);
     }
 
     return value;
@@ -851,7 +851,7 @@ std::cout << " ********************************  AD SYSTEM *********************
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
 //***************************************   
     
     
@@ -1409,12 +1409,12 @@ double  integral_div_ctrl = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -1783,7 +1783,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
    //***************************************       
    
    //###################################################################  
@@ -1823,7 +1823,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
 
   std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
        
@@ -2635,7 +2635,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {

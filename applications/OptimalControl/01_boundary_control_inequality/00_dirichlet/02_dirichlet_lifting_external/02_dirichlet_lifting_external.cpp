@@ -113,10 +113,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name,"TargReg")) {
-        value = ElementTargetFlag(x);
+        value = ctrl::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ControlDomainFlag_external_restriction(x);
+        value = ctrl::ControlDomainFlag_external_restriction(x);
     }
     else if(!strcmp(name,"act_flag")) {
         value = 0.;
@@ -512,7 +512,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
 //********************* DATA ************************
-    const double u_des = DesiredTarget();
+    const double u_des = ctrl::DesiredTarget();
     const double alpha = ALPHA_CTRL_VOL;
     const double beta  = BETA_CTRL_VOL;
     const double penalty_strong_ctrl = 1.e30;
@@ -566,7 +566,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 //****** set target domain flag *********************
         int target_flag = 0;
-        target_flag = ElementTargetFlag(elem_center);
+        target_flag = ctrl::ElementTargetFlag(elem_center);
 //***************************************************
 
         //all vars###################################################################
@@ -1021,7 +1021,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {
@@ -1219,7 +1219,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 //***************************************************
 
 //********************* DATA ************************
-    double u_des = DesiredTarget();
+    double u_des = ctrl::DesiredTarget();
 //***************************************************
 
     double integral_target = 0.;
@@ -1263,7 +1263,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
 //************** set target domain flag *************
         int target_flag = 0;
-        target_flag = ElementTargetFlag(elem_center);
+        target_flag = ctrl::ElementTargetFlag(elem_center);
 //***************************************************
 
 

@@ -16,7 +16,7 @@ namespace femus {
      
     std::vector<double>  Vel_desired(3, 0.);
     
-   const unsigned int axis_dir = axis_direction_Gamma_control(FACE_FOR_CONTROL);
+   const unsigned int axis_dir = ctrl::axis_direction_Gamma_control(FACE_FOR_CONTROL);
    
     Vel_desired[axis_dir] = 1.;
     

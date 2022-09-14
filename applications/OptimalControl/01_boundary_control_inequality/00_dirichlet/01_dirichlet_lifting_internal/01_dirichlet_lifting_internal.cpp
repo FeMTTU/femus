@@ -86,10 +86,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     
     
     else if(!strcmp(name,"TargReg")) {
-        value = ElementTargetFlag(x);
+        value = ctrl::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ControlDomainFlag_internal_restriction(x);
+        value = ctrl::ControlDomainFlag_internal_restriction(x);
     }
     else if(!strcmp(name,"act_flag")) {
         value = 0.;
@@ -109,7 +109,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   if(!strcmp(name,"control")) {
       value = 0.;
     if (faceName == FACE_FOR_CONTROL) {
-        if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)    
+        if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)    
             dirichlet = false;
     }
   }
@@ -522,7 +522,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
     
  //********************* DATA ************************ 
-  double u_des = DesiredTarget();
+  double u_des = ctrl::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         // penalty for zero control outside
@@ -546,7 +546,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -634,7 +634,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
   std::vector<int> control_node_flag(nDof_ctrl, 0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
@@ -951,7 +951,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {
@@ -1127,7 +1127,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //*************************************************** 
 
  //********************* DATA ************************ 
-  double u_des = DesiredTarget();
+  double u_des = ctrl::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1146,12 +1146,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
    geom_element.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d());
+   target_flag = ctrl::ElementTargetFlag(geom_element.get_elem_center_3d());
  //*************************************************** 
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element.get_elem_center_3d());
  //*************************************************** 
    
  //**************** state **************************** 

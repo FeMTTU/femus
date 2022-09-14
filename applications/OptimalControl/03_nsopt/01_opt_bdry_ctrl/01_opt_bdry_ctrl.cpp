@@ -250,10 +250,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = ElementTargetFlag(x);
+        value = ctrl::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ControlDomainFlag_bdry(x);
+        value = ctrl::ControlDomainFlag_bdry(x);
     }
 
     return value;
@@ -272,7 +272,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 if (!strcmp(SolName, "ctrl_0"))       {
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -289,7 +289,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_1"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -306,7 +306,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -328,7 +328,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 else if (!strcmp(SolName, "u_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
    if (faceName == FACE_FOR_CONTROL) {
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -552,7 +552,7 @@ int main(int argc, char** args) {
   const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
   const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  MultiLevelSolution * ml_sol_bdry_bdry_flag = bdry_bdry_flag(files,
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = fractional::bdry_bdry_flag(files,
                                                               ml_mesh, 
                                                               infile,
                                                               node_mapping_from_mesh_file_to_new,
@@ -606,7 +606,7 @@ int main(int argc, char** args) {
    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
    
    
- bdry_bdry_flag_copy_and_delete(ml_prob,
+ fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
                                 ml_sol,
                                 ml_mesh, 
                                 erased_levels,
@@ -1119,7 +1119,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
     if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     control_eqn_bdry_fractional(iproc,
+     fractional::control_eqn_bdry_fractional(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -1191,7 +1191,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   
   else {
   
-   control_eqn_bdry(iproc,
+   ctrl::control_eqn_bdry(iproc,
                     ml_prob,
                     ml_sol,
                     sol,
@@ -1281,12 +1281,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-       target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+       target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
    //***************************************       
    
  //************ set control flag - BEGIN *********************
     int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
+        does_iel_contain_a_bdry_control_face = ctrl::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
  //************ initialize control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
     std::vector< std::vector<int> > control_node_flag_iel_jface(n_components_ctrl);
 	    for(unsigned idim=0; idim < control_node_flag_iel_jface.size(); idim++) {
@@ -2064,7 +2064,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -2072,7 +2072,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  face_is_a_boundary_control_face( el, iel, iface) ) {
+       if(  ctrl::face_is_a_boundary_control_face( el, iel, iface) ) {
 
        ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
@@ -2346,7 +2346,7 @@ double integral_g_dot_n = 0.;
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
     
@@ -2389,7 +2389,7 @@ double integral_g_dot_n = 0.;
  
  //************ set control flag *********************
   int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
+        does_iel_contain_a_bdry_control_face = ctrl::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
 
 //========BoundaryLoop=====================================================================

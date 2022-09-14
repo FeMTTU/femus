@@ -18,20 +18,17 @@
 #include <boost/mpi.hpp>
 
 
+// using namespace femus;
 
-//*********************** Sets Number of refinements *****************************************
+
+//*********************** Mesh, Number of refinements - BEGIN *****************************************
 #define N_UNIFORM_LEVELS  5
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
+//*********************** Mesh, Number of refinements - END *****************************************
 
 
-//*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  2
-#define NSUB_Y  2
-#define NSUB_Z  2
-
-
-//*********************** Sets the regularization parameters *******************************************************
+//*********************** Control, regularization parameters - BEGIN *******************************************************
 // for pure boundary approaches
 #define ALPHA_CTRL_BDRY 0.001 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
@@ -40,9 +37,10 @@
 #define ALPHA_CTRL_VOL 0.01 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e50;         // penalty for zero control outside
+//*********************** Control, regularization parameters - END *******************************************************
 
 
-//*********************** Control boundary extremes *******************************************************
+//*********************** Control, boundary extremes - BEGIN  *******************************************************
 
 #define GAMMA_CONTROL_LOWER 0.25
 #define GAMMA_CONTROL_UPPER 0.75
@@ -55,31 +53,180 @@
 #define DOMAIN_EX_1 0
 #define DOMAIN_EX_2 1
 //**************************************
+//*********************** Control, boundary extremes - END *******************************************************
 
 
 
-//*********************** Lifting internal extension *******************************************************
+//*********************** Control, Lifting internal extension - BEGIN *******************************************************
 #define LIFTING_INTERNAL_DEPTH  1.   //how far it goes orthogonally to the Control piece of the Boundary 
 #define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
 #define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
+//*********************** Control, Lifting internal extension - END *******************************************************
 
 
 
 
-//*********************** Control box constraints *******************************************************
+//*********************** Inequality - BEGIN *******************************************************
 #define  INEQ_FLAG 1
 #define  C_COMPL 1.
+//*********************** Inequality - END *******************************************************
 
 
 
-//*********************** Fractional stuff *******************************************************
-
+//*********************** Fractional - BEGIN  *******************************************************
 #define  NODE_BASED_BDRY_BDRY "node_based_bdry_bdry_flag"
+//*********************** Fractional - END  *******************************************************
+
+
+
 
 
 namespace femus {
 
+    
 
+ 
+void el_dofs_quantities_vol(const Solution*                sol,
+                        const Mesh * msh,
+                        const unsigned int iel,
+                        const    vector < unsigned > & SolFEType,
+                        vector < unsigned > & Sol_n_el_dofs 
+     ) {
+    
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+            Sol_n_el_dofs[k] = ndofs_unk;
+        }   
+    
+}
+
+
+ 
+void el_dofs_unknowns_vol(const Solution*                sol,
+                      const Mesh * msh,
+                      const  LinearEquationSolver* pdeSys,
+                      const unsigned int iel,
+                      const    vector < unsigned > & SolFEType,
+                      const vector < unsigned > & SolIndex,
+                      const vector < unsigned > & SolPdeIndex,
+                      vector < unsigned > & Sol_n_el_dofs, 
+                      vector < vector < double > > & sol_eldofs,  
+                      vector < vector < int > > & L2G_dofmap ) {
+    
+    assert(Sol_n_el_dofs.size() == sol_eldofs.size());
+    
+        //all vars###################################################################
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+            Sol_n_el_dofs[k] = ndofs_unk;
+            sol_eldofs[k].resize(ndofs_unk);
+            L2G_dofmap[k].resize(ndofs_unk);
+            for (unsigned i = 0; i < ndofs_unk; i++) {
+                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
+            }
+        }
+        //all vars###################################################################
+
+}
+
+
+
+
+void  print_global_residual_jacobian(const bool print_algebra_global,
+                                     const MultiLevelProblem& ml_prob,
+                                     const NonLinearImplicitSystem * mlPdeSys,
+                                       LinearEquationSolver* pdeSys,
+                                     NumericVector*           RES,
+                                     SparseMatrix*             JAC,
+                                     const unsigned iproc,
+                                     const bool assembleMatrix)  {
+
+
+  if (print_algebra_global) {
+    const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+
+     } 
+  
+  }
+
+
+  
+    
+  
+  bool check_if_same_elem(const unsigned iel, const unsigned jel) {
+      
+   return (iel == jel);
+      
+  }
+  
+  
+  
+  bool check_if_same_elem_bdry(const unsigned iel, const unsigned jel, const unsigned iface, const unsigned jface) {
+
+   return (iel == jel && iface == jface);
+      
+  }
+
+
+  
+  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystem/*WithPrimalDualActiveSetMethod*/  & system, const std::vector < Unknown > unknowns)  {
+  
+///     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
+
+  const MultiLevelProblem &  ml_prob = system.GetMLProb();
+  const MultiLevelMesh *  ml_mesh = ml_prob.GetMLMesh();
+  
+  unsigned n_levels = ml_mesh->GetNumberOfLevels();
+  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+
+  
+  const Mesh* msh = ml_mesh->GetLevel(n_levels - 1);
+  unsigned nprocs = msh->n_processors();
+  unsigned iproc = msh->processor_id();
+
+  
+    for(int ivar = 0; ivar < unknowns.size(); ivar++) {
+  
+        if (unknowns[ivar]._is_sparse == false ) { 
+        
+  unsigned variable_index = system.GetSolPdeIndex(unknowns[ivar]._name.c_str());
+  
+  
+  
+  unsigned n_dofs_var_all_procs = 0;
+  for (int ip = 0; ip < nprocs; ip++) {
+     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
+  // how does this depend on the number of levels and the number of processors? 
+  // For the processors I summed over them and it seems to work fine
+  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
+   } 
+
+  unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense... or better n_components_ctrl * dense and the rest sparse
+  //check that the dofs are picked correctly, it doesn't seem so 
+  
+  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, unknowns[ivar]._name);  ///@todo this is like AddSolution: it increases a vector
+        }
+    }
+    
+    
+    
+  return; 
+  
+  }
+  
+      
+    
+namespace ctrl {
    
 const unsigned int axis_direction_Gamma_control(const unsigned int face_index) {
     
@@ -245,54 +392,6 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 }
 
 
-
- 
-void el_dofs_quantities_vol(const Solution*                sol,
-                        const Mesh * msh,
-                        const unsigned int iel,
-                        const    vector < unsigned > & SolFEType,
-                        vector < unsigned > & Sol_n_el_dofs 
-     ) {
-    
-        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
-            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-            Sol_n_el_dofs[k] = ndofs_unk;
-        }   
-    
-}
-
-
- 
-void el_dofs_unknowns_vol(const Solution*                sol,
-                      const Mesh * msh,
-                      const  LinearEquationSolver* pdeSys,
-                      const unsigned int iel,
-                      const    vector < unsigned > & SolFEType,
-                      const vector < unsigned > & SolIndex,
-                      const vector < unsigned > & SolPdeIndex,
-                      vector < unsigned > & Sol_n_el_dofs, 
-                      vector < vector < double > > & sol_eldofs,  
-                      vector < vector < int > > & L2G_dofmap ) {
-    
-    assert(Sol_n_el_dofs.size() == sol_eldofs.size());
-    
-        //all vars###################################################################
-        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
-            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-            Sol_n_el_dofs[k] = ndofs_unk;
-            sol_eldofs[k].resize(ndofs_unk);
-            L2G_dofmap[k].resize(ndofs_unk);
-            for (unsigned i = 0; i < ndofs_unk; i++) {
-                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
-                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
-                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
-            }
-        }
-        //all vars###################################################################
-
-}
-
-
 //=============== construct control node flag field  =========================================    
   std::vector< std::vector< int > > is_dof_associated_to_boundary_control_equation(
       const Mesh * msh,
@@ -394,74 +493,293 @@ void el_dofs_unknowns_vol(const Solution*                sol,
    return ( bdry_index_j < 0 && face_in_rectangle_domain_j == FACE_FOR_CONTROL );
       
   }
+
+
   
   
-  bool check_if_same_elem(const unsigned iel, const unsigned jel) {
+   
+ 
+  void control_eqn_bdry(const unsigned iproc,
+                        MultiLevelProblem &    ml_prob,
+                        MultiLevelSolution*    ml_sol,
+                        const Solution*        sol,
+                        const Mesh * msh,
+                        const  LinearEquationSolver* pdeSys,
+                        //----- Geom Element ------
+                        CurrentElem < double > & geom_element_iel,
+                        const unsigned int solType_coords,
+                        const unsigned int space_dim,
+                        //----- Mat ------
+                        const unsigned int n_unknowns,
+                        const    vector < std::string > & Solname_Mat,
+                        const    vector < unsigned > & SolFEType_Mat,
+                        const vector < unsigned > & SolIndex_Mat,
+                        const vector < unsigned > & SolPdeIndex,
+                        vector < unsigned > & Sol_n_el_dofs_Mat, 
+                        vector < vector < double > > & sol_eldofs_Mat,  
+                        vector < vector < int > > & L2G_dofmap_Mat,
+                        //--- Equation, local --------
+                        const unsigned max_size,
+                        //----- Sol ------
+                        const unsigned int n_quantities,
+                        vector < unsigned > SolFEType_quantities,
+                        //---- Quadrature - FE Evaluations -------
+                        std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
+                        //---- Quadrature, Geometry ------
+                        std::vector < std::vector < double > >  Jac_iel_bdry_iqp_bdry,
+                        std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
+                        double detJac_iel_bdry_iqp_bdry,
+                        double weight_iqp_bdry,
+                        //---- Quadrature, Control ------
+                        vector <double> phi_ctrl_iel_bdry_iqp_bdry,
+                        vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
+                        //---- Control -------
+                        const unsigned int n_components_ctrl,
+                        const unsigned int pos_mat_ctrl,
+                        const unsigned int pos_sol_ctrl,
+                        //-----------
+                        const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
+                        //-----------
+                        SparseMatrix *  KK,
+                        NumericVector * RES,
+                        const bool assembleMatrix,
+                        //-----------
+                        const double alpha,
+                        const double beta,
+                        const double RHS_ONE,
+                        //-----------
+                        const unsigned qrule_i,
+                        //-----------
+                        const bool print_algebra_local
+                       ) {
       
-   return (iel == jel);
-      
-  }
-  
-  bool check_if_same_elem_bdry(const unsigned iel, const unsigned jel, const unsigned iface, const unsigned jface) {
+   
+   const unsigned  elem_dof_size_max = n_components_ctrl * max_size;
+   
+   std::vector < double >  Res_ctrl_only;      Res_ctrl_only.reserve( elem_dof_size_max );                         //should have Mat order
+   std::vector < double >  Jac_ctrl_only;      Jac_ctrl_only.reserve( elem_dof_size_max * elem_dof_size_max);   //should have Mat order
 
-   return (iel == jel && iface == jface);
-      
-  }
-
-
-  
-  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystem/*WithPrimalDualActiveSetMethod*/  & system, const std::vector < Unknown > unknowns)  {
-  
-///     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
-
-  const MultiLevelProblem &  ml_prob = system.GetMLProb();
-  const MultiLevelMesh *  ml_mesh = ml_prob.GetMLMesh();
-  
-  unsigned n_levels = ml_mesh->GetNumberOfLevels();
-  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
-
-  
-  const Mesh* msh = ml_mesh->GetLevel(n_levels - 1);
-  unsigned nprocs = msh->n_processors();
-  unsigned iproc = msh->processor_id();
-
-  
-    for(int ivar = 0; ivar < unknowns.size(); ivar++) {
-  
-        if (unknowns[ivar]._is_sparse == false ) { 
+ 
+    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
         
-  unsigned variable_index = system.GetSolPdeIndex(unknowns[ivar]._name.c_str());
-  
-  
-  
-  unsigned n_dofs_var_all_procs = 0;
-  for (int ip = 0; ip < nprocs; ip++) {
-     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
-  // how does this depend on the number of levels and the number of processors? 
-  // For the processors I summed over them and it seems to work fine
-  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
-   } 
+// --- geometry        
+            geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
 
-  unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense... or better n_components_ctrl * dense and the rest sparse
-  //check that the dofs are picked correctly, it doesn't seem so 
+            const short unsigned ielGeom = geom_element_iel.geom_type();
+
+           geom_element_iel.set_elem_center_3d(iel, solType_coords);
+// --- geometry        
+
+           
+ //***************************************************
+   el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
+                        SolFEType_Mat,
+                        SolIndex_Mat,
+                        SolPdeIndex,
+                        Sol_n_el_dofs_Mat, 
+                        sol_eldofs_Mat,  
+                        L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
+  //***************************************************
+      
+ //***************************************************
+ //***************************************************
+   //extract a subvector containing only the control components, starting from zero      
+      
+   std::vector< unsigned >::const_iterator first  = Sol_n_el_dofs_Mat.begin() + pos_mat_ctrl;
+   std::vector< unsigned >::const_iterator last   = Sol_n_el_dofs_Mat.begin() + pos_mat_ctrl + n_components_ctrl;
+   std::vector< unsigned > Sol_n_el_dofs_Mat_ctrl_only(first, last);
+   
+   unsigned int sum_Sol_n_el_dofs_ctrl_only = ElementJacRes< double >::compute_sum_n_dofs(Sol_n_el_dofs_Mat_ctrl_only);
+ //***************************************************
+ //***************************************************
+   //create a subvector containing only the control components, starting from zero  
+   std::vector< unsigned > L2G_dofmap_Mat_ctrl_only; 
+   L2G_dofmap_Mat_ctrl_only.resize(0);
+      for (unsigned  k = 0; k < n_components_ctrl; k++)     L2G_dofmap_Mat_ctrl_only.insert(L2G_dofmap_Mat_ctrl_only.end(), L2G_dofmap_Mat[pos_mat_ctrl + k].begin(), L2G_dofmap_Mat[pos_mat_ctrl + k].end());
+ //***************************************************
+ //***************************************************
+
+   
+ //***************************************************
+    const unsigned int res_length =  n_components_ctrl * Sol_n_el_dofs_Mat[pos_mat_ctrl];
+
+    Res_ctrl_only.resize(res_length);                 std::fill(Res_ctrl_only.begin(), Res_ctrl_only.end(), 0.);
+
+    Jac_ctrl_only.resize(res_length * res_length);    std::fill(Jac_ctrl_only.begin(), Jac_ctrl_only.end(), 0.);
+ //***************************************************
+
+
+    if ( ctrl::volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
+        
   
-  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, unknowns[ivar]._name);  ///@todo this is like AddSolution: it increases a vector
+ //************ set control flag *********************
+  std::vector< std::vector< int > > control_node_flag_iel_all_faces = 
+       ctrl::is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
+       
+       ///@todo here I have to do it "on the go", for each boundary dof!!!
+  //*************************************************** 
+      
+	  
+	  // loop on faces of the current element
+	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
+          
+// ---
+       std::vector<unsigned int> Sol_el_n_dofs_current_face(n_quantities); ///@todo the active flag is not an unknown!
+
+       for (unsigned  k = 0; k < Sol_el_n_dofs_current_face.size(); k++) {
+                 if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, iface, SolFEType_quantities[k]);  ///@todo fix this absence
+       }
+       
+// ---     
+       
+// --- geometry        
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
+       
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
+ 
+       geom_element_iel.set_elem_center_bdry_3d();
+
+// --- geometry        
+         
+	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+              
+
+//========= initialize gauss quantities on the boundary ============================================
+                std::vector< double > sol_ctrl_iqp_bdry(n_components_ctrl);
+                std::vector< std::vector< double > > sol_ctrl_x_iqp_bdry(n_components_ctrl);
+                
+           for (unsigned c = 0; c < n_components_ctrl; c++) {
+               sol_ctrl_iqp_bdry[c] = 0.;                
+               sol_ctrl_x_iqp_bdry[c].assign(space_dim, 0.); 
+            }
+//========= initialize gauss quantities on the boundary ============================================
+		
+        const unsigned n_qp_bdry = ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussPointsNumber();
+        
+    
+		for(unsigned iqp_bdry = 0; iqp_bdry < n_qp_bdry; iqp_bdry++) {
+    
+    elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iel_bdry_iqp_bdry, JacI_iel_bdry_iqp_bdry, detJac_iel_bdry_iqp_bdry, space_dim);
+// 	elem_all[qrule_i][ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
+    
+    weight_iqp_bdry = detJac_iel_bdry_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
+
+    
+   for (unsigned c = 0; c < n_components_ctrl; c++) {
+    elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl + c]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
+   }  
+   
+//========== compute gauss quantities on the boundary ===============================================
+   for (unsigned c = 0; c < n_components_ctrl; c++) {
+          sol_ctrl_iqp_bdry[c] = 0.;
+                  std::fill(sol_ctrl_x_iqp_bdry[c].begin(), sol_ctrl_x_iqp_bdry[c].end(), 0.);
+		      for (int i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl + c]*/; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+			
+			sol_ctrl_iqp_bdry[c] +=  sol_eldofs_Mat[pos_mat_ctrl + c][i_vol] * phi_ctrl_iel_bdry_iqp_bdry[i_bdry];
+                            for (int d = 0; d < space_dim; d++) {
+			      sol_ctrl_x_iqp_bdry[c][d] += sol_eldofs_Mat[pos_mat_ctrl + c][i_vol] * phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d];
+			    }
+		      }
+   }
+//========== compute gauss quantities on the boundary ================================================
+
+//equation ************
+   for (unsigned c = 0; c < n_components_ctrl; c++) {
+
+		  // *** phi_i loop ***
+		  for(unsigned i_bdry = 0; i_bdry < Sol_el_n_dofs_current_face[pos_sol_ctrl + c] ; i_bdry++) {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+
+                 double lap_rhs_dctrl_ctrl_bdry_gss_i_c = 0.;
+                 for (unsigned d = 0; d < space_dim; d++) {
+                       /*if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )*/  lap_rhs_dctrl_ctrl_bdry_gss_i_c +=  phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[c][d];
+                 }
+                 
+		 
+//============ Bdry Residuals - BEGIN ==================	
+           const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_ctrl_only, /*pos_mat_ctrl +*/ c, i_vol);
+           
+                Res_ctrl_only[ res_pos ]  +=  - control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry *
+                                         (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
+							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
+							                         );  //boundary optimality condition
+                Res_ctrl_only[ res_pos ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+                          
+//============ Bdry Residuals - END ==================    
+		    
+//============ Bdry Jacobians - BEGIN ==================	
+   for (unsigned e = 0; e < n_components_ctrl; e++) {
+        if (e == c) {
+		    for(unsigned j_bdry = 0; j_bdry < Sol_el_n_dofs_current_face[pos_sol_ctrl + e]; j_bdry++) {
+		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
+
+//========block delta_control / control ========
+              double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
+		      for (unsigned d = 0; d < space_dim; d++) {  
+                  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * phi_ctrl_x_iel_bdry_iqp_bdry[j_bdry * space_dim + d];    
+               }
+
+          
+           const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(Sol_n_el_dofs_Mat_ctrl_only, sum_Sol_n_el_dofs_ctrl_only, /*pos_mat_ctrl +*/ c, /*pos_mat_ctrl +*/ e, i_vol, j_vol);
+              Jac_ctrl_only[ jac_pos ]   +=  control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry * (
+                                    ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
+			                      + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_mat_dctrl_ctrl_bdry_gss);   
+				
+	        }   //end j loop
+	      }
+   }
+//============ Bdry Jacobians - END ==================	
+	      
+		  }  //end i loop
+		  
+   }  //end components ctrl	  
+		  
+		}  //end iqp_bdry loop
+	  }    //end if control face
+	      
+	  }    //end loop over faces
+	  
+	} //end if control element flag
+
+	
+  /*is_res_control_only*/
+                     RES->add_vector_blocked(Res_ctrl_only, L2G_dofmap_Mat_ctrl_only);
+              
+                  if (assembleMatrix) {
+                     KK->add_matrix_blocked(Jac_ctrl_only, L2G_dofmap_Mat_ctrl_only, L2G_dofmap_Mat_ctrl_only);
+                  }   
+         
+         
+         
+        if (print_algebra_local) {
+  
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
         }
-    }
+     
+    }  //iel
+
     
-    
-    
-  return; 
-  
-  }
+}
+
+
   
   
   
   
   
   
+
+  } //end namespace ctrl
+
+
+
+  
+  
+  
+ namespace fractional {
+ 
   
   void mixed_integral(const unsigned UNBOUNDED,
                       const unsigned dim,
@@ -1073,7 +1391,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, USE_Cns);
 	// Perform face loop over elements that contain some control face
         
         
-	if ( volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center_3d()) ) {
+	if ( ctrl::volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center_3d()) ) {
 
       
 // ***************************************
@@ -1211,7 +1529,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, USE_Cns);
 
      /*bool*/int jface_is_a_boundary_control;
        if(kproc == iproc) {
-           jface_is_a_boundary_control = face_is_a_boundary_control_face(msh->el, jel, jface);
+           jface_is_a_boundary_control = ctrl::face_is_a_boundary_control_face(msh->el, jel, jface);
        }
       MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
 
@@ -1353,7 +1671,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, USE_Cns);
 
       
 	// Perform face loop over elements that contain some control face
-	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
         
 // ***************************************
 // ******* iel-related stuff - BEGIN *************
@@ -1442,7 +1760,7 @@ unsigned nDof_iel_vec = 0;
 // --- geom          
 
    
-	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
 //------------ iface opening ---------        
 		
 //                 count_visits_of_boundary_faces++;
@@ -1957,298 +2275,14 @@ unsigned nDof_iel_vec = 0;
     
   //**********FRAC CONTROL - END *****************************************
   
-  
-    
-  void control_eqn_bdry(const unsigned iproc,
-                        MultiLevelProblem &    ml_prob,
-                        MultiLevelSolution*    ml_sol,
-                        const Solution*        sol,
-                        const Mesh * msh,
-                        const  LinearEquationSolver* pdeSys,
-                        //----- Geom Element ------
-                        CurrentElem < double > & geom_element_iel,
-                        const unsigned int solType_coords,
-                        const unsigned int space_dim,
-                        //----- Mat ------
-                        const unsigned int n_unknowns,
-                        const    vector < std::string > & Solname_Mat,
-                        const    vector < unsigned > & SolFEType_Mat,
-                        const vector < unsigned > & SolIndex_Mat,
-                        const vector < unsigned > & SolPdeIndex,
-                        vector < unsigned > & Sol_n_el_dofs_Mat, 
-                        vector < vector < double > > & sol_eldofs_Mat,  
-                        vector < vector < int > > & L2G_dofmap_Mat,
-                        //--- Equation, local --------
-                        const unsigned max_size,
-                        //----- Sol ------
-                        const unsigned int n_quantities,
-                        vector < unsigned > SolFEType_quantities,
-                        //---- Quadrature - FE Evaluations -------
-                        std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
-                        //---- Quadrature, Geometry ------
-                        std::vector < std::vector < double > >  Jac_iel_bdry_iqp_bdry,
-                        std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
-                        double detJac_iel_bdry_iqp_bdry,
-                        double weight_iqp_bdry,
-                        //---- Quadrature, Control ------
-                        vector <double> phi_ctrl_iel_bdry_iqp_bdry,
-                        vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
-                        //---- Control -------
-                        const unsigned int n_components_ctrl,
-                        const unsigned int pos_mat_ctrl,
-                        const unsigned int pos_sol_ctrl,
-                        //-----------
-                        const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
-                        //-----------
-                        SparseMatrix *  KK,
-                        NumericVector * RES,
-                        const bool assembleMatrix,
-                        //-----------
-                        const double alpha,
-                        const double beta,
-                        const double RHS_ONE,
-                        //-----------
-                        const unsigned qrule_i,
-                        //-----------
-                        const bool print_algebra_local
-                       ) {
-      
-   
-   const unsigned  elem_dof_size_max = n_components_ctrl * max_size;
-   
-   std::vector < double >  Res_ctrl_only;      Res_ctrl_only.reserve( elem_dof_size_max );                         //should have Mat order
-   std::vector < double >  Jac_ctrl_only;      Jac_ctrl_only.reserve( elem_dof_size_max * elem_dof_size_max);   //should have Mat order
+ } //end namespace fractional  
 
  
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-        
-// --- geometry        
-            geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
-
-            const short unsigned ielGeom = geom_element_iel.geom_type();
-
-           geom_element_iel.set_elem_center_3d(iel, solType_coords);
-// --- geometry        
-
-           
- //***************************************************
-   el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
-                        SolFEType_Mat,
-                        SolIndex_Mat,
-                        SolPdeIndex,
-                        Sol_n_el_dofs_Mat, 
-                        sol_eldofs_Mat,  
-                        L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
-  //***************************************************
-      
- //***************************************************
- //***************************************************
-   //extract a subvector containing only the control components, starting from zero      
-      
-   std::vector< unsigned >::const_iterator first  = Sol_n_el_dofs_Mat.begin() + pos_mat_ctrl;
-   std::vector< unsigned >::const_iterator last   = Sol_n_el_dofs_Mat.begin() + pos_mat_ctrl + n_components_ctrl;
-   std::vector< unsigned > Sol_n_el_dofs_Mat_ctrl_only(first, last);
-   
-   unsigned int sum_Sol_n_el_dofs_ctrl_only = ElementJacRes< double >::compute_sum_n_dofs(Sol_n_el_dofs_Mat_ctrl_only);
- //***************************************************
- //***************************************************
-   //create a subvector containing only the control components, starting from zero  
-   std::vector< unsigned > L2G_dofmap_Mat_ctrl_only; 
-   L2G_dofmap_Mat_ctrl_only.resize(0);
-      for (unsigned  k = 0; k < n_components_ctrl; k++)     L2G_dofmap_Mat_ctrl_only.insert(L2G_dofmap_Mat_ctrl_only.end(), L2G_dofmap_Mat[pos_mat_ctrl + k].begin(), L2G_dofmap_Mat[pos_mat_ctrl + k].end());
- //***************************************************
- //***************************************************
-
-   
- //***************************************************
-    const unsigned int res_length =  n_components_ctrl * Sol_n_el_dofs_Mat[pos_mat_ctrl];
-
-    Res_ctrl_only.resize(res_length);                 std::fill(Res_ctrl_only.begin(), Res_ctrl_only.end(), 0.);
-
-    Jac_ctrl_only.resize(res_length * res_length);    std::fill(Jac_ctrl_only.begin(), Jac_ctrl_only.end(), 0.);
- //***************************************************
 
 
-    if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
-        
   
- //************ set control flag *********************
-  std::vector< std::vector< int > > control_node_flag_iel_all_faces = 
-       is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
-       
-       ///@todo here I have to do it "on the go", for each boundary dof!!!
-  //*************************************************** 
-      
-	  
-	  // loop on faces of the current element
-	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
-          
-// ---
-       std::vector<unsigned int> Sol_el_n_dofs_current_face(n_quantities); ///@todo the active flag is not an unknown!
-
-       for (unsigned  k = 0; k < Sol_el_n_dofs_current_face.size(); k++) {
-                 if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, iface, SolFEType_quantities[k]);  ///@todo fix this absence
-       }
-       
-// ---     
-       
-// --- geometry        
-       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
-       
-       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
- 
-       geom_element_iel.set_elem_center_bdry_3d();
-
-// --- geometry        
-         
-	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
-              
-
-//========= initialize gauss quantities on the boundary ============================================
-                std::vector< double > sol_ctrl_iqp_bdry(n_components_ctrl);
-                std::vector< std::vector< double > > sol_ctrl_x_iqp_bdry(n_components_ctrl);
-                
-           for (unsigned c = 0; c < n_components_ctrl; c++) {
-               sol_ctrl_iqp_bdry[c] = 0.;                
-               sol_ctrl_x_iqp_bdry[c].assign(space_dim, 0.); 
-            }
-//========= initialize gauss quantities on the boundary ============================================
-		
-        const unsigned n_qp_bdry = ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussPointsNumber();
-        
-    
-		for(unsigned iqp_bdry = 0; iqp_bdry < n_qp_bdry; iqp_bdry++) {
-    
-    elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iel_bdry_iqp_bdry, JacI_iel_bdry_iqp_bdry, detJac_iel_bdry_iqp_bdry, space_dim);
-// 	elem_all[qrule_i][ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
-    
-    weight_iqp_bdry = detJac_iel_bdry_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
-
-    
-   for (unsigned c = 0; c < n_components_ctrl; c++) {
-    elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl + c]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
-   }  
-   
-//========== compute gauss quantities on the boundary ===============================================
-   for (unsigned c = 0; c < n_components_ctrl; c++) {
-          sol_ctrl_iqp_bdry[c] = 0.;
-                  std::fill(sol_ctrl_x_iqp_bdry[c].begin(), sol_ctrl_x_iqp_bdry[c].end(), 0.);
-		      for (int i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl + c]*/; i_bdry++)  {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-			
-			sol_ctrl_iqp_bdry[c] +=  sol_eldofs_Mat[pos_mat_ctrl + c][i_vol] * phi_ctrl_iel_bdry_iqp_bdry[i_bdry];
-                            for (int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_iqp_bdry[c][d] += sol_eldofs_Mat[pos_mat_ctrl + c][i_vol] * phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d];
-			    }
-		      }
-   }
-//========== compute gauss quantities on the boundary ================================================
-
-//equation ************
-   for (unsigned c = 0; c < n_components_ctrl; c++) {
-
-		  // *** phi_i loop ***
-		  for(unsigned i_bdry = 0; i_bdry < Sol_el_n_dofs_current_face[pos_sol_ctrl + c] ; i_bdry++) {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-
-                 double lap_rhs_dctrl_ctrl_bdry_gss_i_c = 0.;
-                 for (unsigned d = 0; d < space_dim; d++) {
-                       /*if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )*/  lap_rhs_dctrl_ctrl_bdry_gss_i_c +=  phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[c][d];
-                 }
-                 
-		 
-//============ Bdry Residuals - BEGIN ==================	
-           const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_ctrl_only, /*pos_mat_ctrl +*/ c, i_vol);
-           
-                Res_ctrl_only[ res_pos ]  +=  - control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry *
-                                         (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
-							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
-							                         );  //boundary optimality condition
-                Res_ctrl_only[ res_pos ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
-                          
-//============ Bdry Residuals - END ==================    
-		    
-//============ Bdry Jacobians - BEGIN ==================	
-   for (unsigned e = 0; e < n_components_ctrl; e++) {
-        if (e == c) {
-		    for(unsigned j_bdry = 0; j_bdry < Sol_el_n_dofs_current_face[pos_sol_ctrl + e]; j_bdry++) {
-		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-
-//========block delta_control / control ========
-              double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
-		      for (unsigned d = 0; d < space_dim; d++) {  
-                  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * phi_ctrl_x_iel_bdry_iqp_bdry[j_bdry * space_dim + d];    
-               }
-
-          
-           const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(Sol_n_el_dofs_Mat_ctrl_only, sum_Sol_n_el_dofs_ctrl_only, /*pos_mat_ctrl +*/ c, /*pos_mat_ctrl +*/ e, i_vol, j_vol);
-              Jac_ctrl_only[ jac_pos ]   +=  control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry * (
-                                    ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
-			                      + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_mat_dctrl_ctrl_bdry_gss);   
-				
-	        }   //end j loop
-	      }
-   }
-//============ Bdry Jacobians - END ==================	
-	      
-		  }  //end i loop
-		  
-   }  //end components ctrl	  
-		  
-		}  //end iqp_bdry loop
-	  }    //end if control face
-	      
-	  }    //end loop over faces
-	  
-	} //end if control element flag
-
-	
-  /*is_res_control_only*/
-                     RES->add_vector_blocked(Res_ctrl_only, L2G_dofmap_Mat_ctrl_only);
-              
-                  if (assembleMatrix) {
-                     KK->add_matrix_blocked(Jac_ctrl_only, L2G_dofmap_Mat_ctrl_only, L2G_dofmap_Mat_ctrl_only);
-                  }   
-         
-         
-         
-        if (print_algebra_local) {
   
-//          assemble_jacobian<double,double>::print_element_residual(iel, Res_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
-//          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
-        }
-     
-    }  //iel
-
-    
-}
-
-
-
-void  print_global_residual_jacobian(const bool print_algebra_global,
-                                     const MultiLevelProblem& ml_prob,
-                                     const NonLinearImplicitSystem * mlPdeSys,
-                                       LinearEquationSolver* pdeSys,
-                                     NumericVector*           RES,
-                                     SparseMatrix*             JAC,
-                                     const unsigned iproc,
-                                     const bool assembleMatrix)  {
-
-
-  if (print_algebra_global) {
-    const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
-
-    RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
-    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
-
-     } 
   
-  }
-
-
 
 namespace ctrl_inequality {
 

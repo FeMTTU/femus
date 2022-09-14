@@ -106,11 +106,20 @@ int main(int argc, char** args) {
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
 
+    std::string mesh_folder_file = "input/";
+  std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x2.med";
+//   std::string input_file = "cyl.med"; // "fifth"
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  std::ostringstream mystream; mystream << "./" << mesh_folder_file << input_file;
+  const std::string infile = mystream.str();
+
   
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
-  mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
-//   mlMsh.ReadCoarseMesh("./input/cube_hex.neu", fe_quad_rule.c_str(), scalingFactor);
-//   //mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
+  const bool read_groups = true;
+  const bool read_boundary_groups = true;
+  
+  mlMsh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
+
   
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;

@@ -168,11 +168,12 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     else if(!strcmp(name, "mu")) {
         value = 0.;
     }
+    
     else if(!strcmp(name, "TargReg")) {
-        value = ElementTargetFlag(x);
+        value = ctrl::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ControlDomainFlag_bdry(x);
+        value = ctrl::ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -193,7 +194,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   if(!strcmp(name,"control")) {
       
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -210,7 +211,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
       
   if (faceName == FACE_FOR_CONTROL) {
       
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5) { 
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5) { 
          dirichlet = false; 
     }
      else { 
@@ -348,7 +349,7 @@ int main(int argc, char** args) {
   const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
   const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  MultiLevelSolution * ml_sol_bdry_bdry_flag = bdry_bdry_flag(files,
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = fractional::bdry_bdry_flag(files,
                                                               ml_mesh, 
                                                               infile,
                                                               node_mapping_from_mesh_file_to_new,
@@ -418,7 +419,7 @@ int main(int argc, char** args) {
   // ******** active flag - END 
   
   
- bdry_bdry_flag_copy_and_delete(ml_prob,
+ fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
                                 ml_sol,
                                 ml_mesh, 
                                 erased_levels,
@@ -731,7 +732,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  
  //********************* DATA ************************ 
-  const double u_des = DesiredTarget();
+  const double u_des = ctrl::DesiredTarget();
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
@@ -790,7 +791,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     control_eqn_bdry_fractional(iproc,
+     fractional::control_eqn_bdry_fractional(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -860,7 +861,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   else {
   
-   control_eqn_bdry(iproc,
+   ctrl::control_eqn_bdry(iproc,
                     ml_prob,
                     ml_sol,
                     sol,
@@ -974,17 +975,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 
  //************ set control flag *********************
    std::vector< std::vector< int > > control_node_flag = 
-       is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
+       ctrl::is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 
-	if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
+	if ( ctrl::volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
 	  
 	  std::vector<double> normal(space_dim, 0.);
 	       
@@ -1011,7 +1012,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // -------
        
 		
-	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
               
  
 //========= initialize gauss quantities on the boundary ============================================
@@ -1342,7 +1343,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1350,7 +1351,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  face_is_a_boundary_control_face( el, iel, iface) ) {
+       if(  ctrl::face_is_a_boundary_control_face( el, iel, iface) ) {
 
        ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
@@ -1509,7 +1510,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
  //***************************************************
 
  //********** DATA *********************************** 
-  double u_des = DesiredTarget();
+  double u_des = ctrl::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1555,7 +1556,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //***************************************************
 
    
@@ -1606,7 +1607,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
  //***************************************************
 
   
-	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 	  
 	       
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1621,7 +1622,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
 // ----------
 
 		
-	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
 
 	
 		//============ initialize gauss quantities on the boundary ==========================================
