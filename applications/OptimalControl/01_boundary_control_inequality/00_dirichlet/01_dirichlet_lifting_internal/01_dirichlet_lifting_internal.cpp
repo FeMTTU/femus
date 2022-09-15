@@ -159,10 +159,10 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
    
-  std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "square_parametric.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
-//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -314,8 +314,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id();
 
-  constexpr bool print_algebra_global = true;
-  constexpr bool print_algebra_local = true;
+  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_local = false;
   
   //=============== Geometry ========================================
   unsigned solType_coords = FE_DOMAIN;

@@ -1,5 +1,5 @@
-#ifndef ELLIPTIC_PARAMETERS
-#define ELLIPTIC_PARAMETERS
+#ifndef OPT_CONTROL_PARAMETERS
+#define OPT_CONTROL_PARAMETERS
 
 
 
@@ -22,13 +22,13 @@
 
 
 //*********************** 
-  const bool use_output_time_folder = true;
-  const bool redirect_cout_to_file = true;
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
 //*********************** 
 
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS  5
+#define N_UNIFORM_LEVELS  4
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -38,13 +38,13 @@
 
 //*********************** Control, regularization parameters - BEGIN *******************************************************
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 0.001 
+#define ALPHA_CTRL_BDRY 0.00001 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
-#define ALPHA_CTRL_VOL 0.001 
+#define ALPHA_CTRL_VOL 0.000001 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
-#define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e50;         // penalty for zero control outside
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e20;         // penalty for zero control outside
 //*********************** Control, regularization parameters - END *******************************************************
 
 
@@ -95,7 +95,7 @@
 
 #define KEEP_ADJOINT_PUSH   1
 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
+#define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -2370,12 +2370,12 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  0.1; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  .1; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      
-     double constr_value_upper_1 =  0.1;
-     double constr_value_lower_1 = -1000.;
+     double constr_value_upper_1 =  1000.;
+     double constr_value_lower_1 = -0.1;
      assert(constr_value_lower_1 < constr_value_upper_1); 
      
      double constr_value_upper_2 =  1000.;
@@ -2457,13 +2457,13 @@ namespace ctrl_inequality {
             const double upper_test_value = sol_eldofs[ pos_mu[kdim] ][i] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i] - ctrl_upper_dofs[kdim][i] );
 
             if      ( lower_test_value < 0. )  {
-                std::cout << "Found active node below" << std::endl;
-                std::cout << "The current value of mu is " <<  sol_eldofs[ pos_mu[kdim] ][i] << std::endl;
+//                 std::cout << "Found active node below" << std::endl;
+//                 std::cout << "The current value of mu is " <<  sol_eldofs[ pos_mu[kdim] ][i] << std::endl;
                    sol_actflag_dofs[kdim][i] = 1;
             }
             else if ( upper_test_value > 0. )  {
-                std::cout << "Found active node above" << std::endl;
-                std::cout << "The current value of mu is " <<  sol_eldofs[ pos_mu[kdim] ][i] << std::endl;
+//                 std::cout << "Found active node above" << std::endl;
+//                 std::cout << "The current value of mu is " <<  sol_eldofs[ pos_mu[kdim] ][i] << std::endl;
                 sol_actflag_dofs[kdim][i] = 2;
             }
         }
