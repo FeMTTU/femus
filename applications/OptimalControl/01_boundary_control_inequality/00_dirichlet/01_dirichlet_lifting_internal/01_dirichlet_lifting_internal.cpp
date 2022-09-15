@@ -6,12 +6,10 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL   1
-#define FACE_FOR_TARGET    1
+
 
 #include "../../../param.hpp"
 
-#define FE_DOMAIN  2
 
 using namespace femus;
 
@@ -141,8 +139,6 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob;
   
   // ======= Files - BEGIN  ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -1045,7 +1041,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   const unsigned   iproc = msh->processor_id(); 
 
  //********** Geometry ***************************************** 
- unsigned solType_coords = FE_DOMAIN; //we do linear FE this time
+ unsigned solType_coords = FE_DOMAIN;
  
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     

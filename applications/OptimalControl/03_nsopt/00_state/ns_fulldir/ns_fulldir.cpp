@@ -14,8 +14,6 @@
 
 #include   "../../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL  1
-#define FACE_FOR_TARGET    1
 
 #include   "../../nsopt_params.hpp"
 

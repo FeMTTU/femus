@@ -11,6 +11,16 @@ namespace femus {
 
  double force[3] = {0., 0., 0.};
 
+//******************************** switch between stokes and navier stokes *********************************************
+ 
+ const int advection_flag = 0;
+ const int advection_Picard = 0;
+ 
+//  Stokes: advection_flag = 0; advection_Picard = 0;
+//  Newton: advection_flag = 1; advection_Picard = 0;
+//  Picard: advection_flag = 1; advection_Picard = 1;
+
+ namespace ctrl { 
  //******************************************* Desired Target*******************************************************
  std::vector<double> DesiredTargetVel() {
      
@@ -21,17 +31,11 @@ namespace femus {
     Vel_desired[axis_dir] = 1.;
     
    return Vel_desired;
-}
+    }
 
+ }
  
-//******************************** switch between stokes and navier stokes *********************************************
  
- const int advection_flag = 0;
- const int advection_Picard = 0;
- 
-//  Stokes: advection_flag = 0; advection_Picard = 0;
-//  Newton: advection_flag = 1; advection_Picard = 0;
-//  Picard: advection_flag = 1; advection_Picard = 1;
  
  
 } //end namespace

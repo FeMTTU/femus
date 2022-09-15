@@ -21,9 +21,17 @@
 // using namespace femus;
 
 
+//*********************** 
+  const bool use_output_time_folder = true;
+  const bool redirect_cout_to_file = true;
+//*********************** 
+
+
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
 #define N_UNIFORM_LEVELS  5
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
+
+#define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
 //*********************** Mesh, Number of refinements - END *****************************************
 
 
@@ -34,13 +42,18 @@
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
-#define ALPHA_CTRL_VOL 0.01 
+#define ALPHA_CTRL_VOL 0.001 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e50;         // penalty for zero control outside
 //*********************** Control, regularization parameters - END *******************************************************
 
 
 //*********************** Control, boundary extremes - BEGIN  *******************************************************
+  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        2
+#define FACE_FOR_TARGET         1
+
+
 
 #define GAMMA_CONTROL_LOWER 0.25
 #define GAMMA_CONTROL_UPPER 0.75
@@ -74,7 +87,62 @@
 
 
 //*********************** Fractional - BEGIN  *******************************************************
-#define  NODE_BASED_BDRY_BDRY "node_based_bdry_bdry_flag"
+#define  NODE_BASED_BDRY_BDRY   "node_based_bdry_bdry_flag"
+
+
+//***** Operator-related ****************** 
+#define RHS_ONE             0.
+
+#define KEEP_ADJOINT_PUSH   1
+
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
+#define S_FRAC 0.5
+
+#define NORM_GIR_RAV  0
+
+#if NORM_GIR_RAV == 0
+
+  #define OP_L2       0
+  #define OP_H1       0
+  #define OP_Hhalf    1
+
+  #define UNBOUNDED   1
+
+  #define USE_Cns     1
+
+#elif NORM_GIR_RAV == 1 
+
+  #define OP_L2       1
+  #define OP_H1       0
+  #define OP_Hhalf    1
+
+  #define UNBOUNDED   0
+
+  #define USE_Cns     0
+#endif
+//**************************************
+
+  
+//***** Quadrature-related ****************** 
+// for integrations in the same element
+#define Nsplit 0
+#define Quadrature_split_index  0
+
+//for semi-analytical integration in the unbounded domain
+#define N_DIV_UNBOUNDED  10
+
+#define QRULE_I   0
+#define QRULE_J   1
+#define QRULE_K   QRULE_I
+//**************************************
+
+  
+//***** Implementation-related: where are L2 and H1 norms implemented ****************** 
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
+//**************************************
+
+
+
 //*********************** Fractional - END  *******************************************************
 
 
@@ -546,7 +614,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                         //-----------
                         const double alpha,
                         const double beta,
-                        const double RHS_ONE,
+                        const double rhs_one,
                         //-----------
                         const unsigned qrule_i,
                         //-----------
@@ -704,7 +772,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                                          (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
 							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
 							                         );  //boundary optimality condition
-                Res_ctrl_only[ res_pos ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+                Res_ctrl_only[ res_pos ] += - rhs_one * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
                           
 //============ Bdry Residuals - END ==================    
 		    
@@ -781,7 +849,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  namespace fractional {
  
   
-  void mixed_integral(const unsigned UNBOUNDED,
+  void mixed_integral(const unsigned unbounded,
                       const unsigned dim,
                       const unsigned dim_bdry,
                       const std::vector < std::vector < double > > & ex_control,
@@ -793,7 +861,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                       const double s_frac,
                       const double check_limits,
                       const double C_ns,
-                      const unsigned int OP_Hhalf,
+                      const unsigned int operator_Hhalf,
                       const double beta,
                       const std::vector<unsigned int> nDof_vol_iel,  //////////
                       std::vector < double > & KK_local_iel,
@@ -823,7 +891,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
   
       
-  if(UNBOUNDED == 1) {
+  if(unbounded == 1) {
       
       //============ Mixed Integral 1D - Analytical ==================      
       if (dim_bdry == 1) {
@@ -873,7 +941,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                 
                 const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, i_vol_iel);
 
-                Res_local_iel[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * OP_Hhalf  * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator * (1. / s_frac);
+                Res_local_iel[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -881,7 +949,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
                   const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, i_vol_iel, j_vol_iel);         
 
-                  KK_local_iel[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * weight_iqp_bdry * mixed_denominator * (1. / s_frac);
+                  KK_local_iel[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * weight_iqp_bdry * mixed_denominator * (1. / s_frac);
                      }
                 
                   }
@@ -999,11 +1067,11 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 //              for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
 //                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 //                 
-//                 Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_denominator_numerical  * (1. / s_frac);
+//                 Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_denominator_numerical  * (1. / s_frac);
 //                 
 //                 for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
 //                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-//                   KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry]  * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
+//                   KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry]  * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
 //                 }
 //                 
 //               }
@@ -1017,7 +1085,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                 
                 const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, i_vol_iel);
 
-                Res_local_iel_mixed_num[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * OP_Hhalf  * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
+                Res_local_iel_mixed_num[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -1025,7 +1093,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
                   const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, i_vol_iel, j_vol_iel);         
 
-                  KK_local_iel_mixed_num[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
+                  KK_local_iel_mixed_num[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
                      }
                 
                   }
@@ -1111,9 +1179,9 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
   
   double  compute_C_ns(const unsigned dim_bdry,
                        const double s_frac,
-                       const unsigned USE_Cns) {
+                       const unsigned use_Cns) {
       
-  const double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
+  const double C_ns = 2 * (1 - use_Cns) + use_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
   
   return C_ns;
 }
@@ -1170,24 +1238,24 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                         //-----------
                         const double s_frac,
                         const double check_limits,
-                        const unsigned USE_Cns,
-                        const unsigned int OP_Hhalf,
-                        const unsigned int OP_L2,
-                        const double RHS_ONE,
-                        const unsigned int UNBOUNDED,
+                        const unsigned use_Cns,
+                        const unsigned int operator_Hhalf,
+                        const unsigned int operator_L2,
+                        const double rhs_one,
+                        const unsigned int unbounded,
                         //--- Quadrature --------
                         const unsigned qrule_i,
                         const unsigned qrule_j,
                         const unsigned qrule_k,
-                        const unsigned int Nsplit,
-                        const unsigned int Quadrature_split_index,
+                        const unsigned int integration_num_split,
+                        const unsigned int integration_split_index,
                         const unsigned int N_div_unbounded,
                         //-----------
                         const bool print_algebra_local
                        ) {
 
 // --- Fractional
-const double C_ns =    compute_C_ns(dim_bdry, s_frac, USE_Cns);  
+const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);  
 // --- Fractional
       
       
@@ -1719,7 +1787,7 @@ unsigned nDof_iel_vec = 0;
         if( check_if_same_elem(iel, jel) ) {
           Res_local_iel.assign(nDof_iel_vec, 0.);    //resize
           KK_local_iel.assign(nDof_iel_vec * nDof_iel_vec, 0.);
-          if(Nsplit != 0) {
+          if(integration_num_split != 0) {
 //             Vectors and matrices for adaptive quadrature
             Res_local_iel_refined.assign(nDof_iel_vec, 0.);    //resize
             KK_local_iel_refined.assign(nDof_iel_vec * nDof_iel_vec, 0.);
@@ -1790,7 +1858,7 @@ unsigned nDof_iel_vec = 0;
 
 //        Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
        std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][DIM==3][N_DOFS]
-        if(Nsplit != 0) {
+        if(integration_num_split != 0) {
           for(unsigned fe_type = 0; fe_type < /*solType*/solType_coords + 1; fe_type++) { //loop up to the FE type + 1 of the unknown
             ProjectNodalToPolynomialCoefficients(aP[fe_type], geom_element_iel.get_coords_at_dofs_bdry_3d(), ielGeom_bdry, fe_type) ;         ///@todo check this!!!!!!!!!!!!
           }
@@ -1857,15 +1925,15 @@ unsigned nDof_iel_vec = 0;
 
               double mass_res_i = phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * sol_ctrl_iqp_bdry[c];
               const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol);
-              Res_local_iel[ res_pos/*l_vol*/ ] += OP_L2 * alpha * weight_iqp_bdry * mass_res_i ;
-              Res_local_iel[ res_pos/*l_vol*/ ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+              Res_local_iel[ res_pos/*l_vol*/ ] += operator_L2 * alpha * weight_iqp_bdry * mass_res_i ;
+              Res_local_iel[ res_pos/*l_vol*/ ] += - rhs_one * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
               
               for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
             for(unsigned m_bdry = 0; m_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); m_bdry++) {
                		    unsigned int m_vol = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                 const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol, m_vol);         
-                KK_local_iel[ jac_pos/*l_vol * nDof_iel + m_vol*/ ] += OP_L2 * alpha * phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * phi_ctrl_iel_bdry_iqp_bdry[m_bdry] * weight_iqp_bdry;
+                KK_local_iel[ jac_pos/*l_vol * nDof_iel + m_vol*/ ] += operator_L2 * alpha * phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * phi_ctrl_iel_bdry_iqp_bdry[m_bdry] * weight_iqp_bdry;
                  }
                }
              }
@@ -1882,10 +1950,10 @@ unsigned nDof_iel_vec = 0;
              
              
       //============  Fractional assembly - BEGIN ==================
-        if(OP_Hhalf != 0) {
+        if(operator_Hhalf != 0) {
                  
       //============ Same elem, && Adaptive quadrature - BEGIN ==================
-        if( check_if_same_elem_bdry(iel, jel, iface, jface) && Nsplit != 0) {
+        if( check_if_same_elem_bdry(iel, jel, iface, jface) && integration_num_split != 0) {
                 
           /*const*/ short unsigned kelGeom_bdry = ielGeom_bdry;
            
@@ -1895,14 +1963,14 @@ unsigned nDof_iel_vec = 0;
           std::cout.precision(14);
           std::vector< std::vector< std::vector<double> > > x3;
 
-          for(unsigned split = 0; split <= Nsplit; split++) {
+          for(unsigned split = 0; split <= integration_num_split; split++) {
 
             
-            if (dim_bdry/*dim*/ == 1) GetElementPartition1D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3, space_dim); //TODO space_dim or dim?
+            if (dim_bdry/*dim*/ == 1) GetElementPartition1D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, integration_num_split, x3, space_dim); //TODO space_dim or dim?
             else if (dim_bdry/*dim*/ == 2) {
               //TODO need to be checked !!!
-              //GetElementPartition2D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
-              GetElementPartitionQuad(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
+              //GetElementPartition2D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, integration_num_split, x3);
+              GetElementPartitionQuad(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, integration_num_split, x3);
             }
 
             //for(unsigned r = 0; r < size_part; r++) {
@@ -1983,7 +2051,7 @@ unsigned nDof_iel_vec = 0;
 
                 const double denom_ik = pow(dist_xyz3, (double)( 0.5 * dim_bdry + s_frac));
                 
-                const double common_weight =  0.5 * C_ns * OP_Hhalf * beta * check_limits * weight_iqp_bdry * weight_kqp_bdry  / denom_ik;
+                const double common_weight =  0.5 * C_ns * operator_Hhalf * beta * check_limits * weight_iqp_bdry * weight_kqp_bdry  / denom_ik;
 
      for (unsigned c = 0; c < n_components_ctrl; c++) {
                for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
@@ -2009,9 +2077,9 @@ unsigned nDof_iel_vec = 0;
      }
 // ********* BOUNDED PART - END ***************
 // ********* UNBOUNDED PART - BEGIN ***************
-                if( iqp_bdry == Quadrature_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
+                if( iqp_bdry == integration_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
                     
-              mixed_integral(UNBOUNDED,
+              mixed_integral(unbounded,
                               dim,
                               dim_bdry,
                               ex_control,
@@ -2023,7 +2091,7 @@ unsigned nDof_iel_vec = 0;
                               s_frac,
                               check_limits,
                               C_ns,
-                              OP_Hhalf,
+                              operator_Hhalf,
                               beta,
                               nDof_jel, ///@todo
 //                               KK_local_iel_refined,
@@ -2056,17 +2124,17 @@ unsigned nDof_iel_vec = 0;
                 
                 
                 
-            }  //end iel == jel && Nsplit != 0
+            }  //end iel == jel && integration_num_split != 0
       //============ Same elem, && Adaptive quadrature - END ==================
               
              
       //============ Either different elements, or lack of adaptivity (so all elements) - BEGIN ==================
-        else {  //  if(iel != jel || Nsplit == 0) 
+        else {  //  if(iel != jel || integration_num_split == 0) 
             
 // ********* UNBOUNDED PART - BEGIN ***************
 //           if(check_if_same_elem_bdry(iel, jel, iface, jface)) { //TODO I removed this since we don't want iel==jel here
               
-               mixed_integral(UNBOUNDED,
+               mixed_integral(unbounded,
                               dim,
                               dim_bdry,
                               ex_control,
@@ -2078,7 +2146,7 @@ unsigned nDof_iel_vec = 0;
                               s_frac,
                               check_limits,
                               C_ns,
-                              OP_Hhalf,
+                              operator_Hhalf,
                               beta,
                               nDof_iel,
                               KK_local_iel,
@@ -2111,7 +2179,7 @@ unsigned nDof_iel_vec = 0;
 
               const double denom = pow(dist_xyz, (double)(  0.5 * /*dim*/dim_bdry + s_frac));
               
-              const double common_weight = (0.5 * C_ns) * OP_Hhalf * beta * check_limits * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+              const double common_weight = (0.5 * C_ns) * operator_Hhalf * beta * check_limits * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
 
               for (unsigned c = 0; c < n_components_ctrl; c++) {
                  for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
@@ -2157,11 +2225,11 @@ unsigned nDof_iel_vec = 0;
 // ********* BOUNDED PART - END ***************
             
             
-         } //end if(iel != jel || Nsplit == 0)
+         } //end if(iel != jel || integration_num_split == 0)
       //============ Either different elements, or lack of adaptivity (so all elements) - END ==================
 
         
-         } //OP_Hhalf != 0              
+         } //operator_Hhalf != 0              
       //============  Fractional assembly - END ==================
             
       }   //end iqp_bdry
@@ -2210,7 +2278,7 @@ unsigned nDof_iel_vec = 0;
           KK->add_matrix_blocked(KK_local_iel, l2gMap_iel_vec, l2gMap_iel_vec);
         
         
-          if(Nsplit != 0) {
+          if(integration_num_split != 0) {
             RES->add_vector_blocked(Res_local_iel_refined, l2gMap_iel_vec);
             KK->add_matrix_blocked(KK_local_iel_refined, l2gMap_iel_vec, l2gMap_iel_vec);
           }
@@ -2302,7 +2370,7 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  1000.;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  0.1; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      

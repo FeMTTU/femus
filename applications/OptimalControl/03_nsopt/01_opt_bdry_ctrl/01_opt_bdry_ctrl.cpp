@@ -20,9 +20,6 @@ using namespace femus;
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL  2        /*1*/        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
-#define FACE_FOR_TARGET   2  /*1*/
-
 
 #include   "../nsopt_params.hpp"
 
@@ -31,54 +28,6 @@ using namespace femus;
   const double beta  = BETA_CTRL_BDRY;
 
   
-//***** Operator-related ****************** 
-  #define RHS_ONE             0.
-
-  #define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
-#define S_FRAC 0.5
-
-#define NORM_GIR_RAV  0
-
-#if NORM_GIR_RAV == 0
-
-  #define OP_L2       0
-  #define OP_H1       0
-  #define OP_Hhalf    1
-
-  #define UNBOUNDED   1
-
-  #define USE_Cns     1
-
-#elif NORM_GIR_RAV == 1 
-
-  #define OP_L2       1
-  #define OP_H1       0
-  #define OP_Hhalf    1
-
-  #define UNBOUNDED   0
-
-  #define USE_Cns     0
-#endif
-//**************************************
-
-  
-//***** Quadrature-related ****************** 
-// for integrations in the same element
-#define Nsplit 0
-#define Quadrature_split_index  0
-
-//for semi-analytical integration in the unbounded domain
-#define N_DIV_UNBOUNDED  10
-
-#define QRULE_I   0
-#define QRULE_J   1
-#define QRULE_K   QRULE_I
-//**************************************
-
-  
-//***** Implementation-related: where are L2 and H1 norms implemented ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
-//**************************************
 
 //****** Mesh ********************************
 #define no_of_ref N_UNIFORM_LEVELS     //mesh refinements
@@ -86,7 +35,7 @@ using namespace femus;
 
 
 
-//**************************************
+//****** Control ********************************
  double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
  double penalty_ctrl = 1.e10;         //penalty for u = q
  double theta_value_outside_fake_element = 0.;
@@ -387,8 +336,6 @@ int main(int argc, char** args) {
 
   
   // ======= Files - BEGIN  ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -1817,7 +1764,7 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * ctrl::DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
@@ -2381,7 +2328,7 @@ double integral_g_dot_n = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = ctrl::DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
      }
 //     }
  //DESIRED VEL###################################################################

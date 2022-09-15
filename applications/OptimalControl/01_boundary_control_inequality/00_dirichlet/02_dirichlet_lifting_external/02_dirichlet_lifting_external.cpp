@@ -7,8 +7,6 @@
 #include "Assemble_unknown_jacres.hpp"
 
 
-#define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
-#define FACE_FOR_TARGET  2
 
 #include "../../../param.hpp"
 
@@ -185,8 +183,6 @@ int main(int argc, char** args) {
     MultiLevelProblem ml_prob;
 
     // ======= Files ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);

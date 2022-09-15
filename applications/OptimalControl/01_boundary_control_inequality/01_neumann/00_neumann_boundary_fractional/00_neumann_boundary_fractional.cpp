@@ -6,10 +6,7 @@
 
 #include "ElemType.hpp"
 
-#define FACE_FOR_CONTROL 3  //we do control on the right (=2) face
-#define AXIS_DIRECTION_CONTROL_SIDE  0  //change this accordingly to the other variable above
 
-#define FACE_FOR_TARGET    1
 
 
 

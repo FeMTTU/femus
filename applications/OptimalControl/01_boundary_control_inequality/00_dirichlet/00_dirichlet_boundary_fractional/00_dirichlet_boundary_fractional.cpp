@@ -15,67 +15,11 @@
 
 using namespace femus;
 
-  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
-#define FACE_FOR_CONTROL        2
-#define FACE_FOR_TARGET         2
-
 
 
 
 #include  "../../../param.hpp"
 
-
-//***** Implementation-related: where are L2 and H1 norms implemented ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
-//***********************************************************************
-
-//***** Operator-related ****************** 
-  #define RHS_ONE             0.
-  #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/ 
-#define S_FRAC 0.5
-
-#define NORM_GIR_RAV  0
-
-#if NORM_GIR_RAV == 0
-
-  #define OP_L2       0
-  #define OP_H1       0
-  #define OP_Hhalf    1
-
-  #define UNBOUNDED   1
-
-  #define USE_Cns     1
-
-#elif NORM_GIR_RAV == 1 
-
-  #define OP_L2       1
-  #define OP_H1       0
-  #define OP_Hhalf    1
-
-  #define UNBOUNDED   0
-
-  #define USE_Cns     0
-#endif
-//**************************************
-
-
-
-#define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
-
-
-//***** Quadrature-related ****************** 
-// for integrations in the same element
-#define Nsplit 0
-#define Quadrature_split_index  0
-
-//for semi-analytical integration in the unbounded domain
-#define N_DIV_UNBOUNDED  10
-
-#define QRULE_I   0
-#define QRULE_J   1
-#define QRULE_K   QRULE_I
-//**************************************
 
 
 
@@ -259,8 +203,6 @@ int main(int argc, char** args) {
 
   
   // ======= Files - BEGIN  ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -282,9 +224,9 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-//   std::string input_file = "parametric_square_1x1.med";
+  std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
-  std::string input_file = "parametric_square_2x2.med";
+//   std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";

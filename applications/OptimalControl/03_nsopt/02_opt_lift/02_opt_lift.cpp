@@ -18,9 +18,6 @@
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL  2
-#define FACE_FOR_TARGET    2
-
 
 #include   "../nsopt_params.hpp"
 
@@ -233,8 +230,6 @@ int main(int argc, char** args) {
 
   
   // ======= Files - BEGIN  ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
 	    files.RedirectCout(redirect_cout_to_file);
@@ -1158,8 +1153,8 @@ for (unsigned k = 0; k < dim; k++){
 	  
  #if exact_sol_flag == 0
               NSV_gss[kdim]     += - force[kdim] * phiV_gss[i];
-	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * DesiredTargetVel()[kdim] * phiVadj_gss[i];
-  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * DesiredTargetVel()[kdim] * phiVctrl_gss[i];
+	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * ctrl::DesiredTargetVel()[kdim] * phiVadj_gss[i];
+  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * ctrl::DesiredTargetVel()[kdim] * phiVctrl_gss[i];
 #endif
  #if exact_sol_flag == 1
               NSV_gss[kdim]     += - exactForce[kdim] * phiV_gss[i];
@@ -1279,7 +1274,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
   //geometry *******************************
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
-  unsigned solType_coords = coordXType;  //FE_DOMAIN = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  unsigned solType_coords = coordXType;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -1449,7 +1444,7 @@ double  integral_div_ctrl = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = ctrl::DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED VEL###################################################################
@@ -2190,7 +2185,7 @@ for (unsigned k = 0; k < dim; k++){
 	   
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * ctrl::DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
@@ -2361,7 +2356,7 @@ for (unsigned k = 0; k < dim; k++){
       
       Res[kdim + ctrl_pos_begin][i] +=  AbsDetJxWeight_iqp * (
 #if exact_sol_flag == 0
-                     + cost_functional_coeff * target_flag * DesiredTargetVel()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+                     + cost_functional_coeff * target_flag * ctrl::DesiredTargetVel()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                      + cost_functional_coeff * target_flag * exactVel_d[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
