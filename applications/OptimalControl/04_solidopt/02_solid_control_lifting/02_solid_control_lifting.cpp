@@ -980,7 +980,8 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.AddVariableToBeSolved("All");
 
   system.SetDebugNonlinear(true);
-  system.SetDebugFunction( ComputeIntegral< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
+//   system.SetDebugFunction( ComputeIntegral< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
+  ///@todo!!!!!!!!!!!!!!!
 
 //   system.SetMaxNumberOfNonLinearIterations(2);
 //   system.SetNonLinearConvergenceTolerance(1.e-2);

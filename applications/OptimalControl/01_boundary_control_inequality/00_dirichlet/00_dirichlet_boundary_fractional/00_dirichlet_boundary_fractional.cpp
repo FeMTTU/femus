@@ -185,7 +185,10 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 }
 
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob, 
+                     const unsigned level, 
+                     const std::vector<std::string> state_vars,  
+                     const std::vector<std::string> ctrl_vars  );
 
 void AssembleOptSys(MultiLevelProblem& ml_prob);
 
@@ -397,7 +400,9 @@ int main(int argc, char** args) {
 
 // *****************
   system.SetDebugNonlinear(true);
-  system.SetDebugFunction(ComputeIntegral);  ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
+//   system.SetDebugFunction(ComputeIntegral);
+//   ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
+  system.SetDebugFunctionLevel(ComputeIntegral);
 // *****************
   
 
@@ -449,7 +454,7 @@ int main(int argc, char** args) {
 // We're going to split the two parts and add a close() at the end of each
 
 
-void AssembleOptSys(MultiLevelProblem& ml_prob) {
+void AssembleOptSys(MultiLevelProblem & ml_prob) {
     
   //  ml_prob is the global object from/to where get/set all the data
 
@@ -1363,12 +1368,18 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
  
+  /** This function computes a functional with a volume part and a boundary part
+     We pass a 2 Solution objects: the first for the cost functional, the second for the regularization
+    */
+void ComputeIntegral(const MultiLevelProblem & ml_prob, 
+                     const unsigned level, 
+                     const std::vector<std::string> state_vars,  
+                     const std::vector<std::string> ctrl_vars  
+                    )  {
   
-void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
   
-  
-  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("BoundaryControl");
-  const unsigned level = mlPdeSys->GetLevelToAssemble();
+//   const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("BoundaryControl");
+//   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
   elem*                     el = msh->el;
@@ -1399,12 +1410,14 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
   double beta  = BETA_CTRL_BDRY;
   
  //*************** state ***************************** 
- //*************************************************** 
+ //***************************************************
+  const unsigned n_components_state = 1;
+  
   vector <double> phi_u;     phi_u.reserve(max_size);
   vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
 
  
-  unsigned solIndex_u = ml_sol->GetIndex("state");
+  unsigned solIndex_u = ml_sol->GetIndex(/* state_vars[ n_components_state - 1]*/ "state");
   unsigned solType_u  = ml_sol->GetSolutionType(solIndex_u);
 
   vector < double >  sol_u;
@@ -1417,13 +1430,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
   
  //************** cont *******************************
  //***************************************************
+  const unsigned n_components_ctrl = 1;
+  
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
 
-  unsigned solIndex_ctrl = ml_sol->GetIndex("control");
+  unsigned solIndex_ctrl = ml_sol->GetIndex( /* ctrl_vars[ n_components_ctrl - 1]*/ "control");
   unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
 
    vector < double >  sol_ctrl;   sol_ctrl.reserve(max_size);
@@ -1439,10 +1454,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
     phi_udes.reserve(max_size);
     phi_udes_x.reserve(max_size * space_dim);
  
-  
-//  unsigned solIndexTdes;
-//   solIndexTdes = ml_sol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
-//   unsigned solTypeTdes = ml_sol->GetSolutionType(solIndexTdes);    // get the finite element type for "state"
 
   vector < double >  sol_udes;
   sol_udes.reserve(max_size);
@@ -1485,6 +1496,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
   std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all;
   ml_prob.get_all_abstract_fe_multiple(elem_all);
  //*************************************************** 
+  
+  
+  
+  
+  
+  
   
   
   // element loop: each process loops only on the elements that owns

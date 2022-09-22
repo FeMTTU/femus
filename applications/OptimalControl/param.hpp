@@ -28,7 +28,7 @@
 
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS  4
+#define N_UNIFORM_LEVELS  5
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -38,7 +38,7 @@
 
 //*********************** Control, regularization parameters - BEGIN *******************************************************
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 0.00001 
+#define ALPHA_CTRL_BDRY 0.01 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -2370,7 +2370,7 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  .1; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  .5; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      

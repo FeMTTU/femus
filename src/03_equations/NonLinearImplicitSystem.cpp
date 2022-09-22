@@ -34,10 +34,7 @@ namespace femus {
     _n_max_nonlinear_iterations(15),
     _max_nonlinear_convergence_tolerance(1.e-6),
     _maxNumberOfResidualUpdateIterations(1),
-    _debug_nonlinear(false),
-    _debug_function(NULL),
-    _debug_function_is_initialized(false)
-  {
+    _debug_nonlinear(false)  {
 
   }
 
@@ -325,7 +322,8 @@ restart:
 
                   
         // ***************** 
-        print_iteration_and_do_additional_computations_with_given_function(nonLinearIterator);
+        if (_debug_nonlinear)  {     print_iteration_to_file(nonLinearIterator);  }
+        // ***************** 
               
     
         if(nonLinearIsConverged || _bitFlipOccurred) break;
@@ -359,12 +357,11 @@ restart:
     _totalSolverTime += totalSolverTime - totalAssembyTime;
   }
 
-
   
-  void NonLinearImplicitSystem::print_iteration_and_do_additional_computations_with_given_function(const unsigned nonLinearIterator) const {
   
-          if (_debug_nonlinear)  {
-            
+  void NonLinearImplicitSystem::print_iteration_to_file(const unsigned nonLinearIterator) const {
+      
+             
           const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
  
           std::vector < std::string > variablesToBePrinted;
@@ -379,13 +376,9 @@ restart:
           //print all variables to file
           this->GetMLProb()._ml_sol->GetWriter()->Write (_gridn, "sol", out_path, output_file_name_stream.str().c_str(), print_order.c_str(), variablesToBePrinted );
 
-          //do desired additional computations at the end of each nonlinear iteration
-          if (_debug_function_is_initialized) _debug_function (this->GetMLProb());
+     
+  }  
 
-        }
-
-  } 
-  
   
   void NonLinearImplicitSystem::compute_convergence_rate() const {
       

@@ -34,10 +34,6 @@ namespace femus {
 
 class NonLinearImplicitSystem : public LinearImplicitSystem {
 
-protected:
-    /** Debug function typedef */
-    typedef void (*DebugFunc) (const MultiLevelProblem& ml_prob);
-    
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
@@ -67,11 +63,6 @@ public:
 
     /** Returns the final residual for the nonlinear system solve. */
     const unsigned GetNonlinearIt() const { return _nonliniteration; }
-    
-    /** Set the max number of non-linear iterations for the nonlinear system solve. */
-    void SetDebugFunction(DebugFunc debug_func_in) { _debug_function = debug_func_in; 
-                                                     _debug_function_is_initialized = true; 
-    }
     
     /** Flag to print fields to file after each nonlinear iteration */
     void SetDebugNonlinear(const bool my_value);
@@ -105,7 +96,7 @@ public:
     /** Only call assemble function */
     virtual void assemble_call_before_boundary_conditions(const unsigned int n_times);
     
-    void print_iteration_and_do_additional_computations_with_given_function(const unsigned nonLinearIterator) const;
+    void print_iteration_to_file(const unsigned nonLinearIterator) const;
     
 protected:
 
@@ -136,12 +127,6 @@ protected:
     /** Flag for printing fields at each nonlinear iteration */
     bool _debug_nonlinear;
     
-    /** Debug function pointer */
-    DebugFunc _debug_function;
-    
-    /**  */
-    bool _debug_function_is_initialized;
-
     /** Current nonlinear iteration index */
     unsigned _last_nonliniteration;
     
