@@ -572,6 +572,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                         MultiLevelSolution*    ml_sol,
                         const Solution*        sol,
                         const Mesh * msh,
+                        //----- Eqn ------
                         const  LinearEquationSolver* pdeSys,
                         //----- Geom Element ------
                         CurrentElem < double > & geom_element_iel,

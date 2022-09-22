@@ -399,14 +399,21 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleOptSys);
 
 // *****************
+  const unsigned n_components_state = n_components_ctrl;
+  std::vector<std::string> state_vars(n_components_state);  state_vars[0] = "state";
+  std::vector<std::string> ctrl_vars(n_components_ctrl);     ctrl_vars[0] = "control";
+  
+  system.set_state_vars(state_vars);
+  system.set_ctrl_vars(ctrl_vars);
+  
   system.SetDebugNonlinear(true);
 //   system.SetDebugFunction(ComputeIntegral);
 //   ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
   system.SetDebugFunctionLevel(ComputeIntegral);
 // *****************
   
-
  
+
   system.init();  /// I need to put this init before, later I will remove it   /// @todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
  
   set_dense_pattern_for_unknowns(system, unknowns);
@@ -428,7 +435,8 @@ int main(int argc, char** args) {
 //   system.assemble_call_before_boundary_conditions(1);
   // ======= Problem, System  - END ========================
 
-  
+  ComputeIntegral(ml_prob, 0, state_vars, ctrl_vars);
+
   // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
@@ -1378,9 +1386,6 @@ void ComputeIntegral(const MultiLevelProblem & ml_prob,
                     )  {
   
   
-//   const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("BoundaryControl");
-//   const unsigned level = mlPdeSys->GetLevelToAssemble();
-
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
   elem*                     el = msh->el;
 
@@ -1417,7 +1422,7 @@ void ComputeIntegral(const MultiLevelProblem & ml_prob,
   vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
 
  
-  unsigned solIndex_u = ml_sol->GetIndex(/* state_vars[ n_components_state - 1]*/ "state");
+  unsigned solIndex_u = ml_sol->GetIndex( state_vars[ n_components_state - 1].c_str() );
   unsigned solType_u  = ml_sol->GetSolutionType(solIndex_u);
 
   vector < double >  sol_u;
@@ -1438,7 +1443,7 @@ void ComputeIntegral(const MultiLevelProblem & ml_prob,
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
 
-  unsigned solIndex_ctrl = ml_sol->GetIndex( /* ctrl_vars[ n_components_ctrl - 1]*/ "control");
+  unsigned solIndex_ctrl = ml_sol->GetIndex(  ctrl_vars[ n_components_ctrl - 1].c_str() );
   unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
 
    vector < double >  sol_ctrl;   sol_ctrl.reserve(max_size);
