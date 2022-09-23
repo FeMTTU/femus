@@ -186,7 +186,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
 
 
-void AssembleOptSys(MultiLevelProblem& ml_prob);
+void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem& ml_prob);
 
 
 
@@ -392,7 +392,7 @@ int main(int argc, char** args) {
   for (unsigned int u = 0; u < unknowns.size(); u++) { system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  }
        // ======= System Unknowns ========================
 
-  system_opt.SetAssembleFunction(AssembleOptSys);
+  system_opt.SetAssembleFunction(assemble_elliptic_dirichlet_control_pure_boundary);
 
 // *****************
   const unsigned n_components_state = n_components_ctrl;
@@ -431,6 +431,7 @@ int main(int argc, char** args) {
   // ======= Problem, System  - END ========================
 
   ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars);
+  system_opt.assemble_call_before_boundary_conditions(1);
 
   // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
@@ -457,7 +458,7 @@ int main(int argc, char** args) {
 // We're going to split the two parts and add a close() at the end of each
 
 
-void AssembleOptSys(MultiLevelProblem & ml_prob) {
+void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_prob) {
     
   //  ml_prob is the global object from/to where get/set all the data
 

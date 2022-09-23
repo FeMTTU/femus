@@ -234,8 +234,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
  
 
 
-void AssembleNavierStokesOpt_nonAD(MultiLevelProblem &ml_prob);
-void AssembleNavierStokesOpt_AD   (MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+void assemble_ns_dirichlet_control_lifting_internal_nonAD(MultiLevelProblem &ml_prob);
+void assemble_ns_dirichlet_control_lifting_internal_AD   (MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
 double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated);
@@ -462,8 +462,8 @@ int main(int argc, char** args) {
   system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
   }
   
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);  //AD doesn't seem to work now
-  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
+//   system_opt.SetAssembleFunction(assemble_ns_dirichlet_control_lifting_internal_AD);  //AD doesn't seem to work now
+  system_opt.SetAssembleFunction(assemble_ns_dirichlet_control_lifting_internal_nonAD);
     
 
  
@@ -589,7 +589,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
 
 
-void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
+void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem& ml_prob) {
 
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -1313,7 +1313,7 @@ for (unsigned k = 0; k < dim; k++){
 
 
 
-void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob) {
+void assemble_ns_dirichlet_control_lifting_internal_nonAD(MultiLevelProblem& ml_prob) {
      
  std::cout << " ********************************  NON-AD SYSTEM ******************************************** " << std::endl;
 

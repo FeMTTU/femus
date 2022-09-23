@@ -29,7 +29,7 @@
 
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS  2
+#define N_UNIFORM_LEVELS  5
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -47,6 +47,8 @@
 // for lifting approaches (both internal and external)
 #define ALPHA_CTRL_VOL 0.000001 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
+  
+  
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e20         // penalty for zero control outside
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY  1.e50      
 #define PENALTY_DIRICHLET_BC_U_EQUAL_Q  1.e10         // penalty for u = q
@@ -100,7 +102,7 @@
 
 #define KEEP_ADJOINT_PUSH   1
 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1 
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1 */
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -633,6 +635,12 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
    std::vector < double >  Res_ctrl_only;      Res_ctrl_only.reserve( elem_dof_size_max );                         //should have Mat order
    std::vector < double >  Jac_ctrl_only;      Jac_ctrl_only.reserve( elem_dof_size_max * elem_dof_size_max);   //should have Mat order
 
+   
+// integral - BEGIN ************
+  double integral_alpha  = 0.;
+  double integral_beta   = 0.;
+// integral - END ************
+
  
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
         
@@ -758,6 +766,16 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
    }
 //========== compute gauss quantities on the boundary ================================================
 
+// integral - BEGIN ************
+   for (unsigned c = 0; c < n_components_ctrl; c++) {
+                  integral_alpha +=  weight_iqp_bdry * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c]; 
+                 for (unsigned d = 0; d < space_dim; d++) {
+                  integral_beta  +=  weight_iqp_bdry * sol_ctrl_x_iqp_bdry[c][d] * sol_ctrl_x_iqp_bdry[c][d];
+      }
+   }
+  // integral - END ************
+
+
 //equation ************
    for (unsigned c = 0; c < n_components_ctrl; c++) {
 
@@ -828,12 +846,25 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
          
         if (print_algebra_local) {
   
-//          assemble_jacobian<double,double>::print_element_residual(iel, Res_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
-//          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
+         assemble_jacobian<double,double>::print_element_residual(iel, Res_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac_ctrl_only, Sol_n_el_dofs_Mat_ctrl_only, 10, 5);
         }
      
     }  //iel
 
+    
+// integral - BEGIN ************
+  std::cout << std::endl;
+  std::cout <<  "&&&&&& Integrals from previous iteration &&&&&&&&&&" << std::endl;
+  double integral_alpha_parallel = 0.; MPI_Allreduce( &integral_alpha, &integral_alpha_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_alpha_parallel << std::endl;
+  double integral_beta_parallel = 0.;  MPI_Allreduce( &integral_beta, &integral_beta_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_beta_parallel << std::endl;
+  std::cout <<  "&&&&&& Integrals from previous iteration &&&&&&&&&&" << std::endl;
+  std::cout << std::endl;
+// integral - END ************
+   
+    
     
 }
 
@@ -1194,7 +1225,7 @@ double integral_g_dot_n = 0.;
       }
       for (unsigned  k = 0; k < dim; k++) {
 	for (unsigned  j = 0; j < dim; j++) {	
-		integral_gamma	  += ((gradVctrl_bd_qp[k][j])*(gradVctrl_bd_qp[k][j]) * AbsDetJxWeight_iqp_bdry);
+		integral_gamma	  += (gradVctrl_bd_qp[k][j])*(gradVctrl_bd_qp[k][j]) * AbsDetJxWeight_iqp_bdry;
 	}
       }
 
@@ -1547,17 +1578,17 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
   std::cout << "total integral on processor " << iproc << ": " << total_integral << std::endl;
 
   double integral_target_parallel = 0.; MPI_Allreduce( &integral_target, &integral_target_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-  double integral_alpha_parallel = 0.; MPI_Allreduce( &integral_alpha, &integral_alpha_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-  double integral_beta_parallel = 0.;  MPI_Allreduce( &integral_beta, &integral_beta_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-  double total_integral_parallel = 0.; MPI_Allreduce( &total_integral, &total_integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-
-
-    std::cout << "@@@@@@@@@@@@@@@@ functional value: " << total_integral_parallel << std::endl;
-  
   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target_parallel << std::endl;
+  double integral_alpha_parallel = 0.; MPI_Allreduce( &integral_alpha, &integral_alpha_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_alpha_parallel << std::endl;
+  double integral_beta_parallel = 0.;  MPI_Allreduce( &integral_beta, &integral_beta_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_beta_parallel << std::endl;
+
+  double total_integral_parallel = 0.; MPI_Allreduce( &total_integral, &total_integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral_parallel << std::endl;
+
+
+  
  
 return;
   
@@ -3619,7 +3650,7 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  .5; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  .1; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      

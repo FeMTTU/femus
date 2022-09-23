@@ -125,7 +125,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
 
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
+void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_prob);
 
 
 
@@ -262,7 +262,7 @@ int main(int argc, char** args) {
   }
   
   
-  system_opt.SetAssembleFunction(AssembleLiftRestrProblem);
+  system_opt.SetAssembleFunction(assemble_elliptic_dirichlet_control_lifting_internal);
   
 // *****************
   const unsigned n_components_state = n_components_ctrl;
@@ -295,7 +295,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
+void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_prob) {
 
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();

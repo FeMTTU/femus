@@ -311,7 +311,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 }
 
 
-void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);    
+void assemble_ns_dirichlet_control_pure_boundary(MultiLevelProblem& ml_prob);    
 
 
 double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated);
@@ -598,7 +598,7 @@ int main(int argc, char** args) {
   }
    
   
-   system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
+   system_opt.SetAssembleFunction(assemble_ns_dirichlet_control_pure_boundary);
 
     
 // *****************
@@ -744,7 +744,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
         
 
-void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
+void assemble_ns_dirichlet_control_pure_boundary(MultiLevelProblem& ml_prob) {
 
   // Main objects - BEGIN *******************************************
  //System
