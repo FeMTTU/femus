@@ -186,8 +186,9 @@ int main(int argc, char** args) {
   ml_sol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
   ml_sol.GetWriter()->SetDebugOutput(true);
   
-  system.SetDebugNonlinear(true);
-  system.SetDebugFunction(ComputeIntegral);
+//   system.SetDebugNonlinear(true);
+//   system.SetDebugFunction(ComputeIntegral);   
+  ///@todo
   //   system.SetMaxNumberOfNonLinearIterations(2);
 
     // ======= Solve ========================

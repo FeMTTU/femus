@@ -71,19 +71,13 @@ protected:
 // debug function sub-class - BEGIN ======   
 protected:
     /** Debug function typedef */
-    typedef void (*DebugFunc) (const MultiLevelProblem& ml_prob);  ///@deprecated
-    
-    /** Debug function typedef */
-    typedef void (*DebugFuncLevel) (const MultiLevelProblem& ml_prob, 
+    typedef void (*DebugFunc) (const MultiLevelProblem& ml_prob, 
                                     const unsigned level,
                                     const unsigned iteration,
                                     const std::vector<std::string> state_vars,  
                                     const std::vector<std::string> ctrl_vars  
     );
     
-    /** @deprecated Debug function pointer */
-    DebugFunc _debug_function; 
-
 public:
     
     void set_state_vars(std::vector<std::string> state_vars_in ) {  _state_vars = state_vars_in;  } 
@@ -96,7 +90,7 @@ public:
     
 protected:
     /** Debug function pointer */
-    DebugFuncLevel _debug_function_level;
+    DebugFunc _debug_function;
     
     /**  */
     bool _debug_function_is_initialized;
@@ -107,24 +101,16 @@ protected:
     std::vector<std::string> _ctrl_vars;  
     
 public:
-
-    /** @deprecated Set the max number of non-linear iterations for the nonlinear system solve. */
+    
+    /** Set the max number of non-linear iterations for the nonlinear system solve. */
     void SetDebugFunction(DebugFunc debug_func_in) { _debug_function = debug_func_in; 
                                                      _debug_function_is_initialized = true; 
     }
-    
-    /** Set the max number of non-linear iterations for the nonlinear system solve. */
-    void SetDebugFunctionLevel(DebugFuncLevel debug_func_in) { _debug_function_level = debug_func_in; 
-                                                     _debug_function_is_initialized = true; 
-    }
-    
-    void print_iteration_and_do_additional_computations_with_given_function(const unsigned nonLinearIterator) const;
-    
+        
     void print_iteration_and_do_additional_computations_with_given_function_level(const unsigned nonLinearIterator, const unsigned level, 
                      const std::vector<std::string> state_vars,  
                      const std::vector<std::string> ctrl_vars  ) const;
     
-    void do_additional_computations_with_given_function() const;
    
     void do_additional_computations_with_given_function_level(const unsigned level,  const unsigned nonLinearIterator, 
                      const std::vector<std::string> state_vars,  

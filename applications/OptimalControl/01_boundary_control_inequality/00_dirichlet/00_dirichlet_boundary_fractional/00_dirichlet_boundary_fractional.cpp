@@ -403,7 +403,7 @@ int main(int argc, char** args) {
   system_opt.set_ctrl_vars(ctrl_vars);
   
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunctionLevel(ctrl::compute_cost_functional_bdry_regularization);
+  system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_bdry);
 //   ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
 // *****************
   
@@ -430,7 +430,7 @@ int main(int argc, char** args) {
 //   system_opt.assemble_call_before_boundary_conditions(1);
   // ======= Problem, System  - END ========================
 
-  ctrl::compute_cost_functional_bdry_regularization(ml_prob, 0, 0, state_vars, ctrl_vars);
+  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars);
 
   // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;

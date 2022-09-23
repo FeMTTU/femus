@@ -168,8 +168,13 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
 
 
+void compute_cost_functional_regularization_lifting_external(const MultiLevelProblem& ml_prob, 
+                     const unsigned level, 
+                     const unsigned iteration,
+                     const std::vector<std::string> state_vars,  
+                     const std::vector<std::string> ctrl_vars  
+);
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob);
 
@@ -294,7 +299,7 @@ int main(int argc, char** args) {
     system.SetAssembleFunction(AssembleLiftExternalProblem);
 
     system.SetDebugNonlinear(true);
-    system.SetDebugFunction(ComputeIntegral);
+    system.SetDebugFunction(compute_cost_functional_regularization_lifting_external);
     // system.SetMaxNumberOfNonLinearIterations(4);
 
     // initialize and solve the system
@@ -1120,11 +1125,14 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
+void compute_cost_functional_regularization_lifting_external(const MultiLevelProblem& ml_prob, 
+                     const unsigned level, 
+                     const unsigned iteration,
+                     const std::vector<std::string> state_vars,  
+                     const std::vector<std::string> ctrl_vars  
+)    {
 
 
-    const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
-    const unsigned level         = mlPdeSys->GetLevelToAssemble();
 
     Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);            // pointer to the mesh (level) object
 

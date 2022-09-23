@@ -334,22 +334,7 @@ namespace femus {
       
   }
   
-  
-    /**   @deprecated  */
-  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::print_iteration_and_do_additional_computations_with_given_function(const unsigned nonLinearIterator) const {
-  
-          if (_debug_nonlinear)  {
-              
-          print_iteration_to_file(nonLinearIterator);    
-          
-           if (_debug_function_is_initialized) {
-          do_additional_computations_with_given_function();
-           }
-           
-        }
-
-  }
-  
+    
   
   void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::print_iteration_and_do_additional_computations_with_given_function_level(const unsigned nonLinearIterator, const unsigned level, 
                      const std::vector<std::string> state_vars,  
@@ -368,17 +353,12 @@ namespace femus {
   }
   
   
-         /**   @deprecated  do desired additional computations at the end of each nonlinear iteration  */
-   void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::do_additional_computations_with_given_function() const {
-           _debug_function (this->GetMLProb());
-   }  
-   
   
          /**  do desired additional computations at the end of each nonlinear iteration  */
    void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::do_additional_computations_with_given_function_level(const unsigned level, const unsigned nonLinearIterator,  
                      const std::vector<std::string> state_vars,  
                      const std::vector<std::string> ctrl_vars  ) const {
-           _debug_function_level (this->GetMLProb(), level, nonLinearIterator, state_vars, ctrl_vars);
+           _debug_function (this->GetMLProb(), level, nonLinearIterator, state_vars, ctrl_vars);
    }  
     
 

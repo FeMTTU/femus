@@ -876,7 +876,7 @@ NumericVector* local_theta_vec;
   
   
 
-void compute_cost_functional_bdry_regularization_vec(const MultiLevelProblem& ml_prob, 
+void compute_cost_functional_regularization_bdry_vec(const MultiLevelProblem& ml_prob, 
                      const unsigned level,
                      const unsigned iteration,
                      const std::vector<std::string> state_vars,  
@@ -1268,7 +1268,7 @@ double integral_g_dot_n = 0.;
   /** This function computes a functional with a volume part and a boundary part
      We pass a 2 Solution objects: the first for the cost functional, the second for the regularization
     */
-void compute_cost_functional_bdry_regularization(const MultiLevelProblem & ml_prob, 
+void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_prob, 
                      const unsigned level, 
                      const unsigned iteration,
                      const std::vector<std::string> state_vars,  

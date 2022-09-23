@@ -273,7 +273,7 @@ int main(int argc, char** args) {
   system_opt.set_ctrl_vars(ctrl_vars);
   
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunctionLevel(ctrl::compute_cost_functional_regularization_lifting_internal);
+  system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_lifting_internal);
 // *****************
 //   system_opt.SetMaxNumberOfNonLinearIterations(2);
 

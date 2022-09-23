@@ -627,7 +627,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   system_opt.set_ctrl_vars(ctrl_vars);
   
     system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunctionLevel(ctrl::compute_cost_functional_bdry_regularization_vec);
+    system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_bdry_vec);
 // *****************
     
    

@@ -495,7 +495,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   // *****************
   system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunctionLevel(ctrl::compute_cost_functional_regularization_lifting_internal_vec);
+    system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_lifting_internal_vec);
 // *****************
   
   
