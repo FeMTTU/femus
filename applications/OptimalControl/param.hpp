@@ -29,7 +29,7 @@
 
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS  5
+#define N_UNIFORM_LEVELS  2
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -41,7 +41,7 @@
 #define COST_FUNCTIONAL_COEFF 1 
   
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 0.01 
+#define ALPHA_CTRL_BDRY 1./*0.01*/ 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -102,7 +102,7 @@
 
 #define KEEP_ADJOINT_PUSH   1
 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1 */
+#define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -776,7 +776,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
   // integral - END ************
 
 
-//equation ************
+//equation - BEGIN ************
    for (unsigned c = 0; c < n_components_ctrl; c++) {
 
 		  // *** phi_i loop ***
@@ -826,6 +826,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 		  }  //end i loop
 		  
    }  //end components ctrl	  
+//equation - END ************
 		  
 		}  //end iqp_bdry loop
 	  }    //end if control face
@@ -2157,7 +2158,8 @@ double  integral_div_ctrl = 0.;
                       std::vector <int> bdry_bdry,
                       CurrentElem < double > & geom_element_jel,
                       const unsigned jelGeom_bdry,
-                      unsigned solType_coords
+                      unsigned solType_coords,
+                      double & integral
                      ) {
       
      
@@ -2212,6 +2214,11 @@ double  integral_div_ctrl = 0.;
               
               double mixed_denominator = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
 
+              
+              for (unsigned c = 0; c < n_components_ctrl; c++) {
+                  integral +=  0.5 * C_ns * check_limits * operator_Hhalf  * beta * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator * (1. / s_frac);
+              }   
+              
               
               
               for (unsigned c = 0; c < n_components_ctrl; c++) {
@@ -2358,6 +2365,12 @@ double  integral_div_ctrl = 0.;
             
             /// @todo ONLY DIFFERENCES: the mixed_denominator is numerical, and so also the corresponding Res and Jac. It could be done with a single function
             
+              for (unsigned c = 0; c < n_components_ctrl; c++) {
+                 integral +=  0.5 * C_ns * check_limits * operator_Hhalf  * beta  * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
+              }
+              
+              
+              
               for (unsigned c = 0; c < n_components_ctrl; c++) {
 
               for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
@@ -2534,26 +2547,26 @@ double  integral_div_ctrl = 0.;
                         const bool print_algebra_local
                        ) {
 
-// --- Fractional
+// --- Fractional - BEGIN
 const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);  
-// --- Fractional
+// --- Fractional - END
       
       
-// --- Geometry
+// --- Geometry - BEGIN
   CurrentElem < double > geom_element_jel(dim, msh);            // must be adept if the domain is moving, otherwise double
-// --- Geometry
+// --- Geometry - END
       
-// --- Quadrature
+// --- Quadrature - BEGIN
      std::vector < std::vector < double > >  JacI_jel_bdry_jqp_bdry(space_dim);
      std::vector < std::vector < double > >  Jac_jel_bdry_jqp_bdry(dim-1);
     for (unsigned d = 0; d < Jac_jel_bdry_jqp_bdry.size(); d++) {   Jac_jel_bdry_jqp_bdry[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_jel_bdry_jqp_bdry.size(); d++) { JacI_jel_bdry_jqp_bdry[d].resize(dim-1); }
     
     double detJac_jel_bdry_jqp_bdry;
-// --- Quadrature
+// --- Quadrature - END
 
 
-//--- Control domain -------
+//--- Control domain - BEGIN -------
 //*************************************************** 
   unsigned n_max = pow(2,dim_bdry);
   std::vector < double > extremes(n_max);
@@ -2579,7 +2592,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 //*************************************************** 
 
 
-//--- Control domain -------
+//--- Control domain - END -------
   
 
 
@@ -2616,7 +2629,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
    const unsigned  elem_dof_size_max = n_components_ctrl * max_size;
  
  
-  //-------- local to global mappings --------------
+  //-------- local to global mappings - BEGIN --------------
   vector< vector< int > > l2gMap_iel(n_components_ctrl); 
   vector< vector< int > > l2gMap_jel(n_components_ctrl);
 
@@ -2627,9 +2640,10 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
   
   vector< int > l2gMap_iel_vec;  l2gMap_iel_vec.reserve(elem_dof_size_max);
   vector< int > l2gMap_jel_vec;  l2gMap_jel_vec.reserve(elem_dof_size_max);
+  //-------- local to global mappings - END --------------
 
 
-  //-------- Local matrices and rhs --------------
+  //-------- Local matrices and rhs - BEGIN --------------
   vector < double > Res_local_iel; Res_local_iel.reserve(elem_dof_size_max);
   vector < double > KK_local_iel;  KK_local_iel.reserve(elem_dof_size_max * elem_dof_size_max);
 
@@ -2649,12 +2663,15 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
   vector < double > KK_nonlocal_iel_jel;  KK_nonlocal_iel_jel.reserve(elem_dof_size_max * elem_dof_size_max);
   vector < double > KK_nonlocal_jel_iel;  KK_nonlocal_jel_iel.reserve(elem_dof_size_max * elem_dof_size_max);
   vector < double > KK_nonlocal_jel_jel;  KK_nonlocal_jel_jel.reserve(elem_dof_size_max * elem_dof_size_max); 
- 
- //----------------------
+  //-------- Local matrices and rhs - END --------------
+
+  
+  //-------- Global matrices and rhs - BEGIN --------------
   KK->zero();
   RES->zero(); 
- //----------------------
+  //-------- Global matrices and rhs - END --------------
 
+  
 //   phi_x_placeholder_unused as unused input of certain functions
   vector < double > phi_x_placeholder_unused;
   phi_x_placeholder_unused.reserve(max_size * dim);
@@ -2664,12 +2681,18 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
 
   unsigned count_visits_of_boundary_faces = 0;
+
+
+ // integral - BEGIN ************
+  double integral  = 0.;
+// integral - END ************
+      
+
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
        
   const int proc_to_bcast_from = kproc;
   
-       
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
 // --- geometry
@@ -3164,7 +3187,7 @@ unsigned nDof_iel_vec = 0;
 
     elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
             
-//========== compute gauss quantities on the boundary ===============================================
+//========== compute gauss quantities on the boundary - BEGIN ===============================================
 //--- geom
           std::vector < double > x_iqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
 
@@ -3188,7 +3211,7 @@ unsigned nDof_iel_vec = 0;
 		      }
        }
 //--- solution
-//========== compute gauss quantities on the boundary ================================================
+//========== compute gauss quantities on the boundary - END ================================================
 
 
   
@@ -3198,7 +3221,13 @@ unsigned nDof_iel_vec = 0;
               
                 
        //============  Mass assembly - BEGIN ==================
-                
+    for (unsigned c = 0; c < n_components_ctrl; c++) {
+        
+        integral += operator_L2 * alpha * weight_iqp_bdry * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c];
+    }
+  
+    
+    
     for (unsigned c = 0; c < n_components_ctrl; c++) {
           for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) {
                		    unsigned int l_vol = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
@@ -3333,7 +3362,12 @@ unsigned nDof_iel_vec = 0;
                 
                 const double common_weight =  0.5 * C_ns * operator_Hhalf * beta * check_limits * weight_iqp_bdry * weight_kqp_bdry  / denom_ik;
 
+
      for (unsigned c = 0; c < n_components_ctrl; c++) {
+         integral    +=       common_weight * (sol_ctrl_iqp_bdry[c] - solY3[c]) * (sol_ctrl_iqp_bdry[c] - solY3[c]);
+     }
+     
+                for (unsigned c = 0; c < n_components_ctrl; c++) {
                for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
                   unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
 
@@ -3389,7 +3423,8 @@ unsigned nDof_iel_vec = 0;
                               bdry_bdry,
                               geom_element_jel,
                               jelGeom_bdry,
-                              solType_coords
+                              solType_coords,
+                              integral
                              ); 
                 }
 
@@ -3442,7 +3477,8 @@ unsigned nDof_iel_vec = 0;
                               bdry_bdry,
                               geom_element_jel,
                               jelGeom_bdry,
-                              solType_coords
+                              solType_coords,
+                              integral
                              );
                
 //           }
@@ -3461,6 +3497,14 @@ unsigned nDof_iel_vec = 0;
               
               const double common_weight = (0.5 * C_ns) * operator_Hhalf * beta * check_limits * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
 
+              for (unsigned c = 0; c < n_components_ctrl; c++) {
+                  
+                  integral +=  common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_jqp_bdry[c][jqp_bdry]) * sol_ctrl_iqp_bdry[c];
+                  integral +=  common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_jqp_bdry[c][jqp_bdry]) * (- sol_ctrl_jqp_bdry[c][jqp_bdry]);
+                  
+              }              
+              
+              
               for (unsigned c = 0; c < n_components_ctrl; c++) {
                  for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
                		    unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
@@ -3615,6 +3659,22 @@ unsigned nDof_iel_vec = 0;
 //----- jel ---        
    
  } //end kproc
+    
+    
+    // integral - BEGIN ************
+  std::cout << std::endl;
+  std::cout <<  "&&&&&& Integrals from previous iteration &&&&&&&&&&" << std::endl;
+  double integral_parallel = 0.; MPI_Allreduce( &integral, &integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  std::cout << "The value of the integral  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_parallel << std::endl;
+  std::cout <<  "&&&&&& Integrals from previous iteration &&&&&&&&&&" << std::endl;
+  std::cout << std::endl;
+                  
+       std::cout << "SQUARE ROOOOOOOOTTTTTTTTTTTTTTTTTTTT AFTER" << std::endl;
+       
+// integral - END ************
+
+    
+    
     
     
     
