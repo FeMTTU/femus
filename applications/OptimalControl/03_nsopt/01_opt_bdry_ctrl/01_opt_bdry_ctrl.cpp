@@ -23,11 +23,6 @@ using namespace femus;
 
 #include   "../nsopt_params.hpp"
 
-  const double cost_functional_coeff = 1.;
-  const double alpha = ALPHA_CTRL_BDRY;
-  const double beta  = BETA_CTRL_BDRY;
-
-  
 
 //****** Mesh ********************************
 #define no_of_ref N_UNIFORM_LEVELS     //mesh refinements
@@ -52,105 +47,52 @@ using namespace femus;
 
 
  
- 
- 
-//************** how to retrieve theta from proc0 ************************************* 
-const double get_theta_value(const unsigned int nprocs, const Solution * sol, const unsigned int sol_theta_index) {
-    
-NumericVector* local_theta_vec;
-
-          local_theta_vec = NumericVector::build().release();
-        local_theta_vec->init(*sol->_Sol[sol_theta_index]);
-        sol->_Sol[sol_theta_index]->localize(*local_theta_vec);
-        
-        PetscScalar* values;
-        VecGetArray(static_cast<PetscVector*>(local_theta_vec)->vec(), &values);
-        double theta_value = values[0];
-        if (nprocs == 1) {
-            if ( (*sol->_Sol[sol_theta_index])(0) != theta_value) abort();
-        }
-        
-        return theta_value;
-}
-//*************************************************** 
-
 
 
  //Unknown definition  ==================
- const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
+   enum pos_vector_quantities {pos_index_state = 0, pos_index_adj, pos_index_ctrl, pos_index_mu};
+ 
+ const std::vector< unsigned >  provide_state_adj_ctrl_mu_offsets(const unsigned int dimension) {
      
+     std::vector<unsigned>  opt_control_offsets(4);  
      
-  std::vector< FEFamily > feFamily;
-  std::vector< FEOrder >   feOrder;
-
-                        feFamily.push_back(LAGRANGE);   //state
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
-
-                        feFamily.push_back(LAGRANGE);   //adjoint
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
-
+     opt_control_offsets[pos_index_state] = 0; 
+     opt_control_offsets[pos_index_adj]   = dimension + 1; 
+     
+     opt_control_offsets[pos_index_mu]    = 2 * (dimension + 1); 
+     
 #if INEQ_FLAG != 0
-                        feFamily.push_back(LAGRANGE);   //mu
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
-#endif  
-                        feFamily.push_back(LAGRANGE);   //control
-                        feFamily.push_back(LAGRANGE);
-  if (dimension == 3)   feFamily.push_back(LAGRANGE);
-  
-                        feFamily.push_back(DISCONTINUOUS_POLYNOMIAL);
- 
- 
-  
-                        feOrder.push_back(SECOND);
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-                        feOrder.push_back(FIRST);
-  
-                        feOrder.push_back(SECOND);
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-                        feOrder.push_back(FIRST);
-  
-#if INEQ_FLAG != 0
-                        feOrder.push_back(SECOND);   //mu
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-#endif  
-  
-                        feOrder.push_back(SECOND);    //control
-                        feOrder.push_back(SECOND);
-  if (dimension == 3)   feOrder.push_back(SECOND);
-  
-                        feOrder.push_back(ZERO);
- 
-  
-
-  assert( feFamily.size() == feOrder.size() );
- 
- std::vector< Unknown >  unknowns(feFamily.size());
- 
-  const int adj_pos_begin   =       dimension + 1;
-//   const int ctrl_pos_begin  = 2 * (dimension + 1);
-//   const int mu_pos_begin    = 3 * (dimension + 1);
-   const int mu_pos_begin = 2 * (dimension + 1);
-   
-  
-  int ctrl_pos_begin;
-#if INEQ_FLAG != 0
-  ctrl_pos_begin  = mu_pos_begin + dimension;
+  opt_control_offsets[pos_index_ctrl]  = opt_control_offsets[pos_index_mu] + dimension;
 #else
-  ctrl_pos_begin = 2 * (dimension + 1);
+  opt_control_offsets[pos_index_ctrl]  =  2 * (dimension + 1);
 #endif
+     
+     
+     return opt_control_offsets;
+     
+ } 
+ 
+ 
+ const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
 
-                                        unknowns[0]._name      = "u_0";
-                                        unknowns[1]._name      = "u_1";
-  if (dimension == 3)                   unknowns[2]._name      = "u_2";
-                                unknowns[dimension]._name      = "u_p";
+
+ std::vector< Unknown >  unknowns( 3*(dimension+1) + dimension);
+ 
+ 
+  std::vector< unsigned >  vector_offsets = provide_state_adj_ctrl_mu_offsets(dimension);
+
+
+const int state_pos_begin   =  vector_offsets[pos_index_state];
+  const int adj_pos_begin   =  vector_offsets[pos_index_adj];
+ const int ctrl_pos_begin   =  vector_offsets[pos_index_ctrl];
+   const int mu_pos_begin   =  vector_offsets[pos_index_mu];
+   
+
+  //--- names - BEGIN
+                                        unknowns[state_pos_begin + 0]._name      = "u_0";
+                                        unknowns[state_pos_begin + 1]._name      = "u_1";
+  if (dimension == 3)                   unknowns[state_pos_begin + 2]._name      = "u_2";
+                                unknowns[state_pos_begin + dimension]._name      = "u_p";
   
                         unknowns[adj_pos_begin + 0]._name      = "adj_0";
                         unknowns[adj_pos_begin + 1]._name      = "adj_1";
@@ -169,23 +111,82 @@ NumericVector* local_theta_vec;
   if (dimension == 3)  unknowns[mu_pos_begin + 2]._name      = "mu_2";
 #endif  
  
+   //--- names - END
+ 
+
+  //--- fe family - BEGIN
+                                        unknowns[state_pos_begin + 0]._fe_family      = LAGRANGE;
+                                        unknowns[state_pos_begin + 1]._fe_family      = LAGRANGE;
+  if (dimension == 3)                   unknowns[state_pos_begin + 2]._fe_family      = LAGRANGE;
+                                unknowns[state_pos_begin + dimension]._fe_family      = LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/;
+  
+                        unknowns[adj_pos_begin + 0]._fe_family      =  LAGRANGE;
+                        unknowns[adj_pos_begin + 1]._fe_family      =  LAGRANGE;
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._fe_family      =  LAGRANGE;
+                unknowns[adj_pos_begin + dimension]._fe_family      =  LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/;
+  
+                       unknowns[ctrl_pos_begin + 0]._fe_family      =   LAGRANGE;
+                       unknowns[ctrl_pos_begin + 1]._fe_family      =   LAGRANGE;
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._fe_family      =   LAGRANGE;
+                                                                        
+               unknowns[ctrl_pos_begin + dimension]._fe_family      =   DISCONTINUOUS_POLYNOMIAL;     //theta
+
+#if INEQ_FLAG != 0
+                       unknowns[mu_pos_begin + 0]._fe_family       =   LAGRANGE;
+                       unknowns[mu_pos_begin + 1]._fe_family       =   LAGRANGE;
+  if (dimension == 3)  unknowns[mu_pos_begin + 2]._fe_family       =   LAGRANGE;
+#endif  
+ 
+  //--- fe family - END
+
+
+   //--- fe order - BEGIN
+                                        unknowns[state_pos_begin + 0]._fe_order      = SECOND;
+                                        unknowns[state_pos_begin + 1]._fe_order      = SECOND;
+  if (dimension == 3)                   unknowns[state_pos_begin + 2]._fe_order      = SECOND;
+                                unknowns[state_pos_begin + dimension]._fe_order      = FIRST;
+  
+                        unknowns[adj_pos_begin + 0]._fe_order          = SECOND;
+                        unknowns[adj_pos_begin + 1]._fe_order          = SECOND;
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._fe_order          = SECOND;
+                unknowns[adj_pos_begin + dimension]._fe_order          = FIRST;
+  
+                       unknowns[ctrl_pos_begin + 0]._fe_order        = SECOND;
+                       unknowns[ctrl_pos_begin + 1]._fe_order        = SECOND;
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._fe_order        = SECOND;
+                                                                        
+               unknowns[ctrl_pos_begin + dimension]._fe_order      =   ZERO;     //theta
+
+#if INEQ_FLAG != 0
+                       unknowns[mu_pos_begin + 0]._fe_order          = SECOND;
+                       unknowns[mu_pos_begin + 1]._fe_order          = SECOND;
+  if (dimension == 3)  unknowns[mu_pos_begin + 2]._fe_order          = SECOND;
+#endif  
+ 
+  
+  
+  
+  
+   //--- fe order - END
+     
+
+  
   
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
-              unknowns[u]._fe_family  = feFamily[u];
-              unknowns[u]._fe_order   = feOrder[u];
               unknowns[u]._time_order = 0;
               unknowns[u]._is_pde_unknown = true;
               unknowns[u]._is_sparse = true;
               
      }
+     
  
  for (unsigned int u = 0; u < dimension; u++) {
    unknowns[ctrl_pos_begin + u]._is_sparse = IS_CTRL_FRACTIONAL_SOBOLEV ? false: true;
      }
  
  
- unknowns[ctrl_pos_begin + dimension]._is_sparse = false;
+ unknowns[ctrl_pos_begin + dimension]._is_sparse = false;    //theta
  
  
    return unknowns;
@@ -316,7 +317,6 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);    
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated);
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
@@ -381,10 +381,10 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 	
-//   std::string input_file = "parametric_square_1x1.med";
+  std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "parametric_square_2x2.med";
-  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -606,8 +606,15 @@ int main(int argc, char** args) {
 
     
 // *****************
+  const unsigned n_components_state = n_components_ctrl;
+  std::vector<std::string> state_vars(n_components_state);  state_vars[0] = "state";
+  std::vector<std::string> ctrl_vars(n_components_ctrl);     ctrl_vars[0] = "control";
+  
+  system_opt.set_state_vars(state_vars);
+  system_opt.set_ctrl_vars(ctrl_vars);
+  
     system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunction(ComputeIntegral);
+    system_opt.SetDebugFunctionLevel(ctrl::compute_cost_functional_bdry_regularization_vec);
 // *****************
     
    
@@ -783,27 +790,20 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
 
  // ======= Solutions, Unknowns - BEGIN =======
-  const int n_vars_state = dim + 1;
-  
-  const int state_pos_begin  = 0;
-  const int press_type_pos   = dim;
-  const int adj_pos_begin    = press_type_pos + 1;
-  
-//   const int ctrl_pos_begin   = 2 * (dim + 1);
-//   const int mu_pos_begin    = 3 * n_vars_state;
-  
-  const int mu_pos_begin    = 2 * n_vars_state;
 
-  int ctrl_pos_begin;
-#if INEQ_FLAG != 0
-  ctrl_pos_begin  = mu_pos_begin + dim;
-#else
-  ctrl_pos_begin = 2 * (dim + 1);
-#endif
+  std::vector< unsigned >  vector_offsets = provide_state_adj_ctrl_mu_offsets(dim);
+
+
+const int state_pos_begin   =  vector_offsets[pos_index_state];
+  const int adj_pos_begin   =  vector_offsets[pos_index_adj];
+ const int ctrl_pos_begin   =  vector_offsets[pos_index_ctrl];
+   const int mu_pos_begin   =  vector_offsets[pos_index_mu];
+   
 
 
   
-  
+    const int press_type_pos   = dim;
+
   const int theta_index      = ctrl_pos_begin + dim;
   
   
@@ -838,7 +838,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
 
   vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
   
-  double penalty_outside_control_domain = 1.e20;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
+
+  const double cost_functional_coeff = COST_FUNCTIONAL_COEFF;
+  const double alpha = ALPHA_CTRL_BDRY;
+  const double beta  = BETA_CTRL_BDRY;
+  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
  // ======= Solutions, Unknowns - END =======
   
      
@@ -911,7 +915,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob) {
   
   
 // ****** Solutions, Unknowns at dofs, theta value from proc0 - BEGIN 
-  double solTheta = get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
+  double solTheta = ctrl::get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
 // ****** Solutions, Unknowns at dofs, theta value from proc0  - END
 
   // ======= Solutions, Unknowns at dofs - END =======
@@ -2100,383 +2104,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob) {
-
-   const NonLinearImplicitSystemWithPrimalDualActiveSetMethod & mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("NSOpt");   
-   const unsigned level = mlPdeSys.GetLevelToAssemble();
- 
-
-  const Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
-
-  MultiLevelSolution*  ml_sol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-  
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-  
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-
-  // reserve memory for the local standar vectors
-  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-
-  //geometry *******************************
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
-  unsigned solType_coords = coordXType;  //FE_DOMAIN = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
- 
-  CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
-    
-  constexpr unsigned int space_dim = 3;
-  const unsigned int dim_offset_grad = /*dim*/  3  /*2*/    ;
- 
-  std::vector<double> normal_iqp(dim_offset_grad /*space_dim*/, 0.);
-
-  vector < vector < double > > coordX(dim);    // local coordinates
-  vector< vector < double> > coordX_bd(dim);
-
-  for (unsigned  k = 0; k < dim; k++) { 
-        coordX[k].reserve(max_size);
-        coordX_bd[k].reserve(max_size); 
-  }
-  
-  double AbsDetJxWeight_iqp = 0.;
-  double AbsDetJxWeight_iqp_bdry = 0.;
-  
-  
-  //geometry *******************************
-
-//STATE######################################################################
-  //velocity *******************************
-  vector < unsigned > solVIndex(dim);
-  solVIndex[0] = ml_sol->GetIndex("u_0");
-  solVIndex[1] = ml_sol->GetIndex("u_1");
-
-  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("u_2");
-
-  unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-  
-  vector < vector < double > >  solV(dim);    // local solution
-  vector <double >  V_gss(dim, 0.);    //  solution
-   
- for (unsigned  k = 0; k < dim; k++) {
-    solV[k].reserve(max_size);
-  }
-
-  
-  vector <double> phiV_gss;  // local test function
-  vector <double> phiV_x_gss; // local test function first order partial derivatives
-
-  phiV_gss.reserve(max_size);
-  phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
-   
-//STATE######################################################################
-  
-
-//CONTROL_@bdry######################################################################
-  vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
-  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
-  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");
-
-  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
-  
-  vector < vector < double > >  solVctrl(dim);    // local solution
-  vector < double >   Vctrl_gss(dim, 0.);    //  solution
-   
- for (unsigned  k = 0; k < dim; k++) {
-    solVctrl[k].reserve(max_size);
-  }
-
-  
-  vector <double> phiVctrl_gss_bd;  // local test function
-  vector <double> phiVctrl_x_gss_bd; // local test function first order partial derivatives
-
-  phiVctrl_gss_bd.reserve(max_size);
-  phiVctrl_x_gss_bd.reserve(max_size * dim_offset_grad );
-  
-//CONTROL_@bdry######################################################################
-  
-//Theta value ######################################################################
-   const unsigned solThetaIndex = ml_sol->GetIndex("theta");
-   const unsigned solThetaType = ml_sol->GetSolutionType(solThetaIndex);
-   
-//    double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
-   //************** how to retrieve theta from proc0 ************************************* 
- double solTheta = get_theta_value(msh->n_processors(), sol, solThetaIndex);
-//*************************************************** 
-// 		     solTheta = (*sol->_Sol[solThetaIndex])(0);
-//Theta value ######################################################################
-
-
-// Vel_desired##################################################################
-  vector <double> phiVdes_gss;  // local test function
-  vector <double> phiVdes_x_gss; // local test function first order partial derivatives
-
-  phiVdes_gss.reserve(max_size);
-  phiVdes_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
-
-//   vector< vector < double > >  solVdes(dim);    // local solution
-  vector <double>  solVdes(dim,0.);
-  vector<double> Vdes_gss(dim, 0.);  
-  
-//  for (unsigned  k = 0; k < dim; k++) {
-//     solVdes[k].reserve(max_size);
-//   }
-//   
-
-
-// Vel_desired##################################################################
-
-  
-vector<double> integral(dim);
-
-double  integral_target_alpha = 0.;
-
-double	integral_beta   = 0.;
-double	integral_gamma  = 0.;
-
-double integral_g_dot_n = 0.;
-  
-
-// double	integral_div_ctrl  = 0.;
-
-//*************************************************** 
-  //--- quadrature rules -------------------
-  constexpr unsigned qrule_i = QRULE_I;
-  
-     std::vector < std::vector < double > >  JacI_iqp(space_dim);
-     std::vector < std::vector < double > >  Jac_iqp(dim);
-    for (unsigned d = 0; d < Jac_iqp.size(); d++) {   Jac_iqp[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_iqp.size(); d++) { JacI_iqp[d].resize(dim); }
-    
-    double detJac_iqp;
-
-     std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
-     std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
-    for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {   Jac_iqp_bdry[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_iqp_bdry.size(); d++) { JacI_iqp_bdry[d].resize(dim-1); }
-    
-    double detJac_iqp_bdry;
-    
-      //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all;
-  ml_prob.get_all_abstract_fe_multiple(elem_all);
-//*************************************************** 
-
-  
-  
-
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-   // geometry *****************************
-      geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
-        
-      const short unsigned ielGeom = geom_element_iel.geom_type();
-  // geometry end *****************************
-
-// equation
-    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-//     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);    // number of solution element dofs
-    
-    unsigned nDofsThetactrl = msh->GetElementDofNumber(iel,solThetaType);
-    
-     
-    for (unsigned  k = 0; k < dim; k++)  {
-      solV[k].resize(nDofsV);
-      solVctrl[k].resize(nDofsVctrl);
-//       solVdes[k].resize(nDofsVdes);
-    }
-  //*************************************** 
-  
-  //***** set target domain flag ********************************** 
-  geom_element_iel.set_elem_center_3d(iel, solType_coords);
-
-   int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
-//***************************************       
-    
-    
- //STATE###################################################################  
-    // velocity ************
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-
-      for (unsigned  k = 0; k < dim; k++) {
-        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-      }
-    }
-//STATE###################################################################
-
-//CONTROL###################################################################  
-    // velocity ************
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVctrlDof = msh->GetSolutionDof(i, iel, solVctrlType);    // global to global mapping between solution node and solution dof
-
-      for (unsigned  k = 0; k < dim; k++) {
-        solVctrl[k][i] = (*sol->_Sol[solVctrlIndex[k]])(solVctrlDof);      // global extraction and local storage for the solution
-      }
-    }
-//CONTROL###################################################################
-
-
-
-
-  //DESIRED VEL###################################################################  
-    // velocity ************
-//     for (unsigned i = 0; i < nDofsV; i++) {
-//       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-
-      for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = ctrl::DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
-     }
-//     }
- //DESIRED VEL###################################################################
-
- 
- //************ set control flag *********************
-  int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ctrl::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
- //*************************************************** 
-
-//========BoundaryLoop=====================================================================
-
-  // Perform face loop over elements that contain some control face
-  if (does_iel_contain_a_bdry_control_face == 1) {
-	  
-    double tau = 0.;
-    vector<double> normal_iqp(dim_offset_grad /*space_dim*/,0);
-	  
-    for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-
-       const unsigned ielGeom_bd = msh->GetElementFaceType(iel, jface);    
-       
-       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
- 
-       geom_element_iel.set_elem_center_bdry_3d();
-
-	    // look for boundary faces
-            const int bdry_index = el->GetFaceElementIndex(iel,jface);
-            
-	    if( bdry_index < 0) {
-	   unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-
-	   if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
-	  
-//=================================================== 
-		
-//========= initialize gauss quantities on the boundary ============================================
-    vector < double >   Vctrl_bd_qp(dim, 0.);    //  solution@bdry
-    vector < vector < double > > gradVctrl_bd_qp(dim);
-      for (unsigned  k = 0; k < dim; k++) {
-          gradVctrl_bd_qp[k].resize(dim_offset_grad /*space_dim*/);
-          std::fill(gradVctrl_bd_qp[k].begin(), gradVctrl_bd_qp[k].end(), 0);
-        }
-
-//========= gauss_loop boundary===============================================================
-	    for(unsigned iqp_bdry=0; iqp_bdry < ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussPointsNumber(); iqp_bdry++) {
-    elem_all[qrule_i][ielGeom_bd][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
-	elem_all[qrule_i][ielGeom_bd][solType_coords]->compute_normal(Jac_iqp_bdry, normal_iqp);
-    
-    AbsDetJxWeight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussWeightsPointer()[iqp_bdry];
-
-    elem_all[qrule_i][ielGeom_bd][solVctrlType] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry,phiVctrl_gss_bd,phiVctrl_x_gss_bd , boost::none , space_dim);
-
-     
-//========== compute gauss quantities on the boundary ===============================================
-    for (unsigned  k = 0; k < dim; k++) {
-	  Vctrl_bd_qp[k] = 0.;
-	  for(unsigned ivar2 = 0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) { gradVctrl_bd_qp[k][ivar2] = 0.; }
-	  
-	  for (unsigned i = 0; i < nDofsVctrl; i++) {
-                 const unsigned ndof_bdry = msh->GetElementFaceDofNumber(iel, jface, solVctrlType);
-
-		   for(int i_bd = 0; i_bd < ndof_bdry; i_bd++) {
-		       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
-		       Vctrl_bd_qp[k] += phiVctrl_gss_bd[i_bd] * solVctrl[k][i_vol];
-		       for(unsigned ivar2 = 0; ivar2 < dim_offset_grad; ivar2++) {
-			   gradVctrl_bd_qp[k][ivar2] += phiVctrl_x_gss_bd[i_bd * dim_offset_grad + ivar2 ] * solVctrl[k][i_vol]; 
-		         }
-		   }
-      }
-    }
- //end unknowns eval at gauss points ********************************
-		  
-//========== compute gauss quantities on the boundary ================================================
-      for (unsigned  k = 0; k < dim; k++) {
-	 integral_beta	+= ((Vctrl_bd_qp[k])*(Vctrl_bd_qp[k]) * AbsDetJxWeight_iqp_bdry);
-	 integral_g_dot_n += Vctrl_bd_qp[k]*normal_iqp[k] * AbsDetJxWeight_iqp_bdry;
-      }
-      for (unsigned  k = 0; k < dim; k++) {
-	for (unsigned  j = 0; j < dim; j++) {	
-		integral_gamma	  += ((gradVctrl_bd_qp[k][j])*(gradVctrl_bd_qp[k][j]) * AbsDetJxWeight_iqp_bdry);
-	}
-      }
-
-
-                }  //end iqp_bdryry loop
-	  
-             }    //end if control face
-	 }  //end if boundary faces
-      }  // loop over element faces //jface   
-  } //end if control element flag
-
-  
-  
-      // *** Gauss point loop ***
-      for (unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
-//STATE######## VolumeLoop #####################################################################	
-        // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), iqp, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
-    AbsDetJxWeight_iqp = detJac_iqp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[iqp];
-   
-    elem_all[qrule_i][ielGeom][solVType]->shape_funcs_current_elem(iqp, JacI_iqp, phiV_gss, phiV_x_gss, boost::none , space_dim);
-    elem_all[qrule_i][ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(iqp, JacI_iqp, phiVdes_gss, phiVdes_x_gss, boost::none , space_dim);
-
-    
-      for (unsigned  k = 0; k < dim; k++) {
-	           V_gss[k] = 0.;
-	           Vdes_gss[k] = 0.;
-	    for (unsigned i = 0; i < nDofsV; i++) {
-	   	   V_gss[k] += solV[k][i] * phiV_gss[i];
-		   Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
-	    }
-	  }
-	
-//       for (unsigned  k = 0; k < dim; k++) {
-//           integral_div_ctrl +=  AbsDetJxWeight_iqp * gradVctrl_gss[k][k] /** phiVctrl_gss[i]*/;
-//       }
-
-      for (unsigned  k = 0; k < dim; k++) {
-	      integral_target_alpha += (( target_flag ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k])) * AbsDetJxWeight_iqp);
-      }
-      
-      }// end gauss point loop
-    } //end element loop  
-
-       std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
-
-       std::ofstream intgr_fstream;
-  if (paral::get_rank() == 0 ) {
-      intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
-      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
-      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
-      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
-      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
-      intgr_fstream << "The value of the integral of g.n "<<    integral_g_dot_n << std::endl;
-      intgr_fstream << "The value of the theta is                             " <<    std::setw(11) << std::setprecision(10) <<  solTheta << std::endl;
-      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff * 0.5  + integral_beta * alpha * 0.5 + integral_gamma * beta * 0.5 << std::endl;
-      intgr_fstream <<  std::endl;
-      intgr_fstream.close();  //you have to close to disassociate the file from the stream
-}  
-     
-    return; 
-	  
-  
-}
-
-
-double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated) {
+double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated) {
   
     static double ErrorNormArray[NO_OF_L2_NORMS+NO_OF_H1_NORMS];
     

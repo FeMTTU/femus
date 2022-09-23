@@ -185,10 +185,6 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 }
 
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob, 
-                     const unsigned level, 
-                     const std::vector<std::string> state_vars,  
-                     const std::vector<std::string> ctrl_vars  );
 
 void AssembleOptSys(MultiLevelProblem& ml_prob);
 
@@ -386,56 +382,55 @@ int main(int argc, char** args) {
 
   
   // ======= Problem, System - BEGIN ========================
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system_opt = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
        // ======= Not an Unknown, but needed in the System with PDAS ========================
-  system.SetActiveSetFlagName(act_set_flag_name);    //MU
+  system_opt.SetActiveSetFlagName(act_set_flag_name);    //MU
        // ======= Not an Unknown, but needed in the System with PDAS ========================
   
        // ======= System Unknowns ========================
-  for (unsigned int u = 0; u < unknowns.size(); u++) { system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  }
+  for (unsigned int u = 0; u < unknowns.size(); u++) { system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  }
        // ======= System Unknowns ========================
 
-  system.SetAssembleFunction(AssembleOptSys);
+  system_opt.SetAssembleFunction(AssembleOptSys);
 
 // *****************
   const unsigned n_components_state = n_components_ctrl;
   std::vector<std::string> state_vars(n_components_state);  state_vars[0] = "state";
   std::vector<std::string> ctrl_vars(n_components_ctrl);     ctrl_vars[0] = "control";
   
-  system.set_state_vars(state_vars);
-  system.set_ctrl_vars(ctrl_vars);
+  system_opt.set_state_vars(state_vars);
+  system_opt.set_ctrl_vars(ctrl_vars);
   
-  system.SetDebugNonlinear(true);
-//   system.SetDebugFunction(ComputeIntegral);
+  system_opt.SetDebugNonlinear(true);
+  system_opt.SetDebugFunctionLevel(ctrl::compute_cost_functional_bdry_regularization);
 //   ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
-  system.SetDebugFunctionLevel(ComputeIntegral);
 // *****************
   
  
 
-  system.init();  /// I need to put this init before, later I will remove it   /// @todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
+  system_opt.init();  /// I need to put this init before, later I will remove it   /// @todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
  
-  set_dense_pattern_for_unknowns(system, unknowns);
+  set_dense_pattern_for_unknowns(system_opt, unknowns);
 
-  system.init();
+  system_opt.init();
 
   //----
   std::ostringstream sp_out_base2; sp_out_base2 << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
   sp_out_base2 << "after_second_init_";
   
   unsigned n_levels = ml_mesh.GetNumberOfLevels();
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "on");
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
+  system_opt._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "on");
+  system_opt._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
   //----
 
-  system.MGsolve();
+  system_opt.MGsolve();
 //   double totalAssemblyTime = 0.;
-//   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
-//   system.assemble_call_before_boundary_conditions(1);
+//   system_opt.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
+//   system_opt.assemble_call_before_boundary_conditions(1);
   // ======= Problem, System  - END ========================
 
-  ComputeIntegral(ml_prob, 0, state_vars, ctrl_vars);
+  ctrl::compute_cost_functional_bdry_regularization(ml_prob, 0, 0, state_vars, ctrl_vars);
 
   // ======= Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
@@ -1375,301 +1370,3 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 }
 
 
- 
-  /** This function computes a functional with a volume part and a boundary part
-     We pass a 2 Solution objects: the first for the cost functional, the second for the regularization
-    */
-void ComputeIntegral(const MultiLevelProblem & ml_prob, 
-                     const unsigned level, 
-                     const std::vector<std::string> state_vars,  
-                     const std::vector<std::string> ctrl_vars  
-                    )  {
-  
-  
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
-  elem*                     el = msh->el;
-
-  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
-
-  const unsigned  dim = msh->GetDimension();
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-
-  //=============== Geometry ========================================
-   unsigned solType_coords = FE_DOMAIN;
- 
-  CurrentElem < double > geom_element_iel(dim, msh);
-    
-  constexpr unsigned int space_dim = 3;
-  
-  std::vector<double> normal(space_dim, 0.);
- //***************************************************
-
-  //=============== Integration ========================================
-
- //***************************************************
-  double alpha = ALPHA_CTRL_BDRY;
-  double beta  = BETA_CTRL_BDRY;
-  
- //*************** state ***************************** 
- //***************************************************
-  const unsigned n_components_state = 1;
-  
-  vector <double> phi_u;     phi_u.reserve(max_size);
-  vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
-
- 
-  unsigned solIndex_u = ml_sol->GetIndex( state_vars[ n_components_state - 1].c_str() );
-  unsigned solType_u  = ml_sol->GetSolutionType(solIndex_u);
-
-  vector < double >  sol_u;
-  sol_u.reserve(max_size);
-  
-  double u_gss = 0.;
- //*************************************************** 
- //***************************************************
-
-  
- //************** cont *******************************
- //***************************************************
-  const unsigned n_components_ctrl = 1;
-  
-  vector <double> phi_ctrl_bdry;  
-  vector <double> phi_ctrl_x_bdry; 
-
-  phi_ctrl_bdry.reserve(max_size);
-  phi_ctrl_x_bdry.reserve(max_size * space_dim);
-
-  unsigned solIndex_ctrl = ml_sol->GetIndex(  ctrl_vars[ n_components_ctrl - 1].c_str() );
-  unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
-
-   vector < double >  sol_ctrl;   sol_ctrl.reserve(max_size);
- //***************************************************
- //*************************************************** 
-  
-  
- //************** desired ****************************
- //***************************************************
-  vector <double> phi_udes;
-  vector <double> phi_udes_x;
-
-    phi_udes.reserve(max_size);
-    phi_udes_x.reserve(max_size * space_dim);
- 
-
-  vector < double >  sol_udes;
-  sol_udes.reserve(max_size);
-
-  double udes_gss = 0.;
- //***************************************************
- //***************************************************
-
- //********** DATA *********************************** 
-  double u_des = ctrl::DesiredTarget();
- //*************************************************** 
-  
-  double integral_target = 0.;
-  double integral_alpha  = 0.;
-  double integral_beta   = 0.;
-
-  
-
- //*************************************************** 
-  constexpr unsigned qrule_i = QRULE_I;
-  
-     std::vector < std::vector < double > >  JacI_qp(space_dim);
-     std::vector < std::vector < double > >  Jac_qp(dim);
-    for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
-    
-    double detJac_iqp;
-
-     std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
-     std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
-    for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
-    
-    double detJac_iqp_bdry;
-  
-  double weight_iqp = 0.;
-  double weight_iqp_bdry = 0.;
-    
-      //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all;
-  ml_prob.get_all_abstract_fe_multiple(elem_all);
- //*************************************************** 
-  
-  
-  
-  
-  
-  
-  
-  
-  // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
-        
-    const short unsigned ielGeom = geom_element_iel.geom_type();
-
-  //************* set target domain flag **************
-   geom_element_iel.set_elem_center_3d(iel, solType_coords);
-
-   int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
- //***************************************************
-
-   
- //*********** state ********************************* 
-    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);
-    sol_u    .resize(nDof_u);
-   // local storage of global mapping and solution
-    for (unsigned i = 0; i < sol_u.size(); i++) {
-      unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
-      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
-    }
- //*********** state ********************************* 
-
-
- //*********** cont ********************************** 
-    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
-    sol_ctrl    .resize(nDof_ctrl);
-    for (unsigned i = 0; i < sol_ctrl.size(); i++) {
-      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
-      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
-    } 
-
- //*********** cont ********************************** 
- 
- 
- //*********** udes ********************************** 
-    unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);
-    sol_udes    .resize(nDof_udes);
-    for (unsigned i = 0; i < sol_udes.size(); i++) {
-            sol_udes[i] = u_des;  //dof value
-    } 
- //*********** udes ********************************** 
-
- 
- //********** ALL VARS ******************************* 
-    int nDof_max    =  nDof_u;   //  TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
-    
-    if(nDof_udes > nDof_max) 
-    {
-      nDof_max = nDof_udes;
-      }
-    
-    if(nDof_ctrl > nDof_max)
-    {
-      nDof_max = nDof_ctrl;
-    }
-    
- //***************************************************
-
-  
-	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
-	  
-	       
-	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
-          
-       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
-       const unsigned nve_bdry_ctrl = msh->GetElementFaceDofNumber(iel,iface,solType_ctrl);
-       
-// ----------
-       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
- 
-       geom_element_iel.set_elem_center_bdry_3d();
-// ----------
-
-		
-	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
-
-	
-		//============ initialize gauss quantities on the boundary ==========================================
-                double sol_ctrl_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss(space_dim);
-		//============ initialize gauss quantities on the boundary ==========================================
-		
-		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
-		  
-    elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_iqp_bdry, space_dim);
-    weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
-    elem_all[qrule_i][ielGeom_bdry][solType_ctrl] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
-
-		  
-		 //========== compute gauss quantities on the boundary ===============================================
-		  sol_ctrl_bdry_gss = 0.;
-                  std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
-		      for (int i_bdry = 0; i_bdry < nve_bdry_ctrl; i_bdry++)  {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-			
-			sol_ctrl_bdry_gss +=  sol_ctrl[i_vol] * phi_ctrl_bdry[i_bdry];
-                            for (int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_bdry_gss[d] += sol_ctrl[i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
-			    }
-		      }
-		      
-		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_ctrl_x_bdry_gss[d] * sol_ctrl_x_bdry_gss[d]; }
-
-                 //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha +=  weight_iqp_bdry * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  +=  weight_iqp_bdry * laplace_ctrl_surface;
-                 
-             }
-	      } //end face
-	      
-	  }  // loop over element faces   
-	  
-	} //end if control element flag
-
-//=====================================================================================================================  
-//=====================================================================================================================  
-//=====================================================================================================================  
-  
-  
-   
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussPointsNumber(); ig++) {
-	
-        // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_iqp, space_dim);
-    weight_iqp = detJac_iqp * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussWeightsPointer()[ig];
-
-    elem_all[qrule_i][ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, boost::none, space_dim);
-    elem_all[qrule_i][ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, boost::none, space_dim);
-    
-	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
-	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  
-
-               integral_target += target_flag * weight_iqp * (u_gss  - udes_gss) * (u_gss - udes_gss);
-	  
-      } // end gauss point loop
-      
-  } //end element loop
-
-  ////////////////////////////////////////
-  double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
-  
-  std::cout << "total integral on processor " << iproc << ": " << total_integral << std::endl;
-
-  double integral_target_parallel = 0.; MPI_Allreduce( &integral_target, &integral_target_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-  double integral_alpha_parallel = 0.; MPI_Allreduce( &integral_alpha, &integral_alpha_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-  double integral_beta_parallel = 0.;  MPI_Allreduce( &integral_beta, &integral_beta_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-  double total_integral_parallel = 0.; MPI_Allreduce( &total_integral, &total_integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-
-
-    std::cout << "@@@@@@@@@@@@@@@@ functional value: " << total_integral_parallel << std::endl;
-  
-  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target_parallel << std::endl;
-  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_alpha_parallel << std::endl;
-  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_beta_parallel << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral_parallel << std::endl;
- 
-return;
-  
-}
-  

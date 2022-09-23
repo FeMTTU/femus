@@ -20,23 +20,7 @@ namespace femus {
 //  Newton: advection_flag = 1; advection_Picard = 0;
 //  Picard: advection_flag = 1; advection_Picard = 1;
 
- namespace ctrl { 
- //******************************************* Desired Target*******************************************************
- std::vector<double> DesiredTargetVel() {
-     
-    std::vector<double>  Vel_desired(3, 0.);
-    
-   const unsigned int axis_dir = ctrl::axis_direction_Gamma_control(FACE_FOR_CONTROL);
-   
-    Vel_desired[axis_dir] = 1.;
-    
-   return Vel_desired;
-    }
 
- }
- 
- 
- 
  
 } //end namespace
 

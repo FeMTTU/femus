@@ -75,7 +75,8 @@ protected:
     
     /** Debug function typedef */
     typedef void (*DebugFuncLevel) (const MultiLevelProblem& ml_prob, 
-                                    const unsigned level, 
+                                    const unsigned level,
+                                    const unsigned iteration,
                                     const std::vector<std::string> state_vars,  
                                     const std::vector<std::string> ctrl_vars  
     );
@@ -125,7 +126,7 @@ public:
     
     void do_additional_computations_with_given_function() const;
    
-    void do_additional_computations_with_given_function_level(const unsigned level, 
+    void do_additional_computations_with_given_function_level(const unsigned level,  const unsigned nonLinearIterator, 
                      const std::vector<std::string> state_vars,  
                      const std::vector<std::string> ctrl_vars  ) const;
    
