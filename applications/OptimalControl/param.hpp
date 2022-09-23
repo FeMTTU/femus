@@ -47,8 +47,10 @@
 // for lifting approaches (both internal and external)
 #define ALPHA_CTRL_VOL 0.000001 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
-#define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e20;         // penalty for zero control outside
-//*********************** Control, cost functional - END *******************************************************
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e20         // penalty for zero control outside
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY  1.e50      
+#define PENALTY_DIRICHLET_BC_U_EQUAL_Q  1.e10         // penalty for u = q
+  //*********************** Control, cost functional - END *******************************************************
 
 
 //*********************** Control, boundary extremes - BEGIN  *******************************************************
@@ -1252,6 +1254,7 @@ double integral_g_dot_n = 0.;
       intgr_fstream << "The value of the theta is                             " <<    std::setw(11) << std::setprecision(10) <<  solTheta << std::endl;
       intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff * 0.5  + integral_beta * alpha * 0.5 + integral_gamma * beta * 0.5 << std::endl;
       intgr_fstream <<  std::endl;
+      
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  
      
@@ -1560,7 +1563,530 @@ return;
   
 }
   
+
+  
+  
+
+void compute_cost_functional_regularization_lifting_internal(const MultiLevelProblem & ml_prob, 
+                     const unsigned level, 
+                     const unsigned iteration,
+                     const std::vector<std::string> state_vars,  
+                     const std::vector<std::string> ctrl_vars  
+                    )   {
+  
+  
+  Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
+
+  MultiLevelSolution*          ml_sol = ml_prob._ml_sol;
+  Solution*                      sol = ml_prob._ml_sol->GetSolutionLevel(level);
+
+  const unsigned     dim = msh->GetDimension();                                 // get the domain dimension of the problem
+  const unsigned    dim2 = (3 * (dim - 1) + !(dim - 1));                        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  const unsigned   iproc = msh->processor_id(); 
+
+ //********** Geometry ***************************************** 
+ unsigned solType_coords = FE_DOMAIN;
  
+  CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
+    
+  constexpr unsigned int space_dim = 3;
+ //*************************************************** 
+
+ //*************************************************** 
+  double weight; // gauss point weight
+  
+ //***************************************************  
+  double alpha = ALPHA_CTRL_VOL;
+  double beta  = BETA_CTRL_VOL;
+
+ //******************** state ************************ 
+ //*************************************************** 
+  vector <double> phi_u;
+  vector <double> phi_u_x;
+  vector <double> phi_u_xx;
+
+  phi_u.reserve(max_size);
+  phi_u_x.reserve(max_size * dim);
+  phi_u_xx.reserve(max_size * dim2);
+  
+ 
+  unsigned solIndex_u;
+  solIndex_u = ml_sol->GetIndex("state");
+  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);
+
+  vector < double >  sol_u; // local solution
+  sol_u.reserve(max_size);
+  
+  double u_gss = 0.;
+ //*************************************************** 
+ //*************************************************** 
+
+ //******************** control ********************** 
+ //*************************************************** 
+  vector <double> phi_ctrl;
+  vector <double> phi_ctrl_x;
+  vector <double> phi_ctrl_xx;
+
+  phi_ctrl.reserve(max_size);
+  phi_ctrl_x.reserve(max_size * dim);
+  phi_ctrl_xx.reserve(max_size * dim2);
+  
+  unsigned solIndex_ctrl;
+  solIndex_ctrl = ml_sol->GetIndex("control");
+  unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
+
+  vector < double >  sol_ctrl; // local solution
+  sol_ctrl.reserve(max_size);
+  
+  double ctrl_gss = 0.;
+  double ctrl_x_gss = 0.;
+ //*************************************************** 
+ //***************************************************  
+
+  
+ //********************* desired ********************* 
+ //*************************************************** 
+  vector <double> phi_udes;
+  vector <double> phi_udes_x;
+  vector <double> phi_udes_xx;
+
+  phi_udes.reserve(max_size);
+  phi_udes_x.reserve(max_size * dim);
+  phi_udes_xx.reserve(max_size * dim2);
+ 
+  
+//  unsigned solIndex_udes;
+//   solIndex_udes = ml_sol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
+//   unsigned solType_udes = ml_sol->GetSolutionType(solIndex_udes);    // get the finite element type for "state"
+
+  vector < double >  sol_udes; // local solution
+  sol_udes.reserve(max_size);
+
+  double udes_gss = 0.;
+ //*************************************************** 
+ //*************************************************** 
+
+ //********************* DATA ************************ 
+  double u_des = ctrl::DesiredTarget();
+ //*************************************************** 
+  
+  double integral_target = 0.;
+  double integral_alpha  = 0.;
+  double integral_beta   = 0.;
+
+    
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+ 
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    const short unsigned ielGeom = geom_element.geom_type();
+
+  //************* set target domain flag **************
+   geom_element.set_elem_center_3d(iel, solType_coords);
+
+   int target_flag = 0;
+   target_flag = ctrl::ElementTargetFlag(geom_element.get_elem_center_3d());
+ //*************************************************** 
+
+ //***** set control flag ****************************
+  int control_el_flag = 0;
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element.get_elem_center_3d());
+ //*************************************************** 
+   
+ //**************** state **************************** 
+    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);
+        sol_u    .resize(nDof_u);
+   // local storage of global mapping and solution
+    for (unsigned i = 0; i < sol_u.size(); i++) {
+     unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
+            sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
+    }
+ //*************************************************** 
+
+
+ //************** control **************************** 
+    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
+    sol_ctrl    .resize(nDof_ctrl);
+    for (unsigned i = 0; i < sol_ctrl.size(); i++) {
+      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
+      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
+    } 
+ //***************************************************  
+ 
+ 
+ //**************** u_des **************************** 
+    unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);
+    sol_udes    .resize(nDof_udes);
+    for (unsigned i = 0; i < sol_udes.size(); i++) {
+      sol_udes[i] = u_des;  //dof value
+    } 
+ //*************************************************** 
+
+ 
+ //******************* ALL VARS ********************** 
+    int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    
+    if(nDof_udes > nDof_max) 
+    {
+      nDof_max = nDof_udes;
+      }
+    
+    if(nDof_ctrl > nDof_max)
+    {
+      nDof_max = nDof_ctrl;
+    }
+    
+ //*************************************************** 
+   
+      // *** Gauss point loop ***
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+	
+        // *** get gauss point weight, test function and test function partial derivatives ***
+	    msh->_finiteElement[ielGeom][solType_u]               ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_u, phi_u_x, phi_u_xx);
+        msh->_finiteElement[ielGeom][solType_u/*solTypeudes*/]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
+        msh->_finiteElement[ielGeom][solType_ctrl]            ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+
+	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
+	ctrl_gss = 0.; for (unsigned i = 0; i < nDof_ctrl; i++) ctrl_gss += sol_ctrl[i] * phi_ctrl[i];  
+	udes_gss  = 0.; for (unsigned i = 0; i < nDof_udes; i++)  udes_gss  += sol_udes[i]  * phi_udes[i]; 
+        ctrl_x_gss  = 0.; for (unsigned i = 0; i < nDof_ctrl; i++)  
+        {
+          for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i + idim * nDof_ctrl];
+        }
+
+               integral_target += target_flag * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
+               integral_alpha  += control_el_flag * weight * ctrl_gss * ctrl_gss;
+               integral_beta   += control_el_flag * weight * ctrl_x_gss * ctrl_x_gss;
+	  
+      } // end gauss point loop
+  } //end element loop
+
+  ////////////////////////////////////////
+  double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
+  
+  std::cout << "total integral on processor " << iproc << ": " << total_integral << std::endl;
+
+  double integral_target_parallel = 0.; MPI_Allreduce( &integral_target, &integral_target_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double integral_alpha_parallel = 0.; MPI_Allreduce( &integral_alpha, &integral_alpha_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double integral_beta_parallel = 0.;  MPI_Allreduce( &integral_beta, &integral_beta_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  double total_integral_parallel = 0.; MPI_Allreduce( &total_integral, &total_integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target_parallel << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_alpha_parallel << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_beta_parallel << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral_parallel << std::endl;
+
+return;
+  
+}
+  
+  
+
+void compute_cost_functional_regularization_lifting_internal_vec(
+                     const MultiLevelProblem & ml_prob, 
+                     const unsigned level,
+                     const unsigned iteration,
+                     const std::vector<std::string> state_vars,  
+                     const std::vector<std::string> ctrl_vars) {
+
+    
+    
+  const double cost_functional_coeff = COST_FUNCTIONAL_COEFF;
+  const double alpha = ALPHA_CTRL_VOL;
+  const double beta  = BETA_CTRL_VOL;
+
+  
+  Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
+
+  MultiLevelSolution*  ml_sol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+
+  // reserve memory for the local standar vectors
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  //geometry *******************************
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  unsigned solType_coords = coordXType;
+ 
+  CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
+    
+  constexpr unsigned int space_dim = 3;
+  const unsigned int dim_offset_grad = /*dim*/  3  /*2*/    ;
+ 
+  vector < vector < double > > coordX(dim);    // local coordinates
+
+  for (unsigned  k = 0; k < dim; k++) { 
+    coordX[k].reserve(max_size);
+  }
+  
+  double AbsDetJxWeight_iqp;
+  
+  
+  //geometry *******************************
+
+//STATE######################################################################
+  vector < unsigned > solVIndex(dim);
+  solVIndex[0] = ml_sol->GetIndex("u_0");
+  solVIndex[1] = ml_sol->GetIndex("u_1");
+
+  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("u_2");
+
+  unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  
+  vector < vector < double > >  solV(dim);    // local solution
+  vector <double >  V_gss(dim, 0.);    //  solution
+   
+ for (unsigned  k = 0; k < dim; k++) {
+    solV[k].reserve(max_size);
+  }
+
+  
+  vector <double> phiV_gss;  // local test function
+  vector <double> phiV_x_gss; // local test function first order partial derivatives
+
+  phiV_gss.reserve(max_size);
+  phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
+  
+//STATE######################################################################
+  
+
+//CONTROL######################################################################
+  vector < unsigned > solVctrlIndex(dim);
+  solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
+  solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
+
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");
+
+  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);
+  
+  vector < vector < double > >  solVctrl(dim);    // local solution
+  vector < double >   Vctrl_gss(dim, 0.);    //  solution
+   
+ for (unsigned  k = 0; k < dim; k++) {
+    solVctrl[k].reserve(max_size);
+  }
+
+  
+  vector <double> phiVctrl_gss;  // local test function
+  vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
+
+  phiVctrl_gss.reserve(max_size);
+  phiVctrl_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
+  
+//CONTROL######################################################################
+
+// Vel_desired##################################################################
+  vector <double> phiVdes_gss;  // local test function
+  vector <double> phiVdes_x_gss; // local test function first order partial derivatives
+
+  phiVdes_gss.reserve(max_size);
+  phiVdes_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
+
+  vector <double>  solVdes(dim,0.);
+  vector<double> Vdes_gss(dim, 0.);  
+  
+// Vel_desired##################################################################
+
+
+
+
+double  integral_target_alpha = 0.;
+double	integral_beta   = 0.;
+double	integral_gamma  = 0.;
+double  integral_div_ctrl = 0.;
+
+
+
+//*************************************************** 
+     std::vector < std::vector < double > >  JacI_iqp(space_dim);
+     std::vector < std::vector < double > >  Jac_iqp(dim);
+    for (unsigned d = 0; d < Jac_iqp.size(); d++) {   Jac_iqp[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_iqp.size(); d++) { JacI_iqp[d].resize(dim); }
+    
+    double detJac_iqp;
+
+    //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+//*************************************************** 
+
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+   // geometry *****************************
+      geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+      const short unsigned ielGeom = geom_element_iel.geom_type();
+  // geometry end *****************************
+   
+// equation
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);
+//     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType); 
+    unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);
+    
+     
+    for (unsigned  k = 0; k < dim; k++)  {
+      solV[k].resize(nDofsV);
+      solVctrl[k].resize(nDofsVctrl);
+//       solVdes[k].resize(nDofsVdes);
+    }
+  //*************************************** 
+  
+  //***** set target domain flag ********************************** 
+   geom_element_iel.set_elem_center_3d(iel, solType_coords);
+
+   int target_flag = 0;
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+//***************************************       
+    
+ //***** set control flag ****************************
+  int control_el_flag = 0;
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+ //*************************************************** 
+   
+    
+ //STATE###################################################################  
+    // velocity ************
+    for (unsigned i = 0; i < nDofsV; i++) {
+      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+
+      for (unsigned  k = 0; k < dim; k++) {
+        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+      }
+    }
+//STATE###################################################################
+
+//CONTROL###################################################################  
+    // velocity ************
+    for (unsigned i = 0; i < nDofsV; i++) {
+      unsigned solVctrlDof = msh->GetSolutionDof(i, iel, solVctrlType);    // global to global mapping between solution node and solution dof
+
+      for (unsigned  k = 0; k < dim; k++) {
+        solVctrl[k][i] = (*sol->_Sol[solVctrlIndex[k]])(solVctrlDof);      // global extraction and local storage for the solution
+      }
+    }
+//CONTROL###################################################################
+
+
+
+
+  //DESIRED VEL###################################################################  
+    // velocity ************
+//     for (unsigned i = 0; i < nDofsV; i++) {
+//       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+
+      for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
+        solVdes[k]/*[i]*/ = ctrl::DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+      }
+//     }
+ //DESIRED VEL###################################################################
+
+ 
+ 
+ 
+      // *** Gauss point loop ***
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+
+//STATE#############################################################################	
+        // *** get gauss point weight, test function and test function partial derivatives ***
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
+    AbsDetJxWeight_iqp = detJac_iqp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
+   
+    elem_all[ielGeom][solVType]->shape_funcs_current_elem(ig, JacI_iqp, phiV_gss, phiV_x_gss, boost::none , space_dim);
+    elem_all[ielGeom][solVctrlType]->shape_funcs_current_elem(ig, JacI_iqp, phiVctrl_gss, phiVctrl_x_gss,  boost::none, space_dim);
+    elem_all[ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(ig, JacI_iqp, phiVdes_gss, phiVdes_x_gss,  boost::none, space_dim);
+
+	
+	  vector < vector < double > > gradVctrl_gss(dim);
+      for (unsigned  k = 0; k < dim; k++) {
+          gradVctrl_gss[k].resize(dim_offset_grad /*space_dim*/);
+          std::fill(gradVctrl_gss[k].begin(), gradVctrl_gss[k].end(), 0);
+        }
+	
+    for (unsigned  k = 0; k < dim; k++) {
+      V_gss[k]       = 0.;
+      Vdes_gss[k]    = 0.;
+       Vctrl_gss[k]  = 0.;
+    }
+    
+      for (unsigned i = 0; i < nDofsV; i++) {
+        for (unsigned  k = 0; k < dim; k++) {
+            V_gss[k] += solV[k][i] * phiV_gss[i];
+            Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
+		}
+      }
+	
+      for (unsigned i = 0; i < nDofsVctrl; i++) {
+        for (unsigned  k = 0; k < dim; k++) {
+            Vctrl_gss[k] += solVctrl[k][i] * phiVctrl_gss[i];
+	 }
+     for (unsigned j = 0; j < dim_offset_grad /*space_dim*/; j++) {
+            for (unsigned  k = 0; k < dim; k++) {
+              gradVctrl_gss[k][j] += phiVctrl_x_gss[i * dim_offset_grad /*space_dim*/ + j] * solVctrl[k][i];
+            }
+          }
+      }
+          
+//                 for (unsigned i = 0; i < nDofsV; i++) {
+
+      for (unsigned  k = 0; k < dim; k++) {
+          integral_div_ctrl +=  AbsDetJxWeight_iqp * gradVctrl_gss[k][k] /** phiVctrl_gss[i]*/;
+      }
+//       }
+	
+      for (unsigned  k = 0; k < dim; k++) {
+	 integral_target_alpha +=  target_flag * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * AbsDetJxWeight_iqp; 
+	 integral_beta	+=  control_el_flag * ((Vctrl_gss[k]) * (Vctrl_gss[k]) * AbsDetJxWeight_iqp);
+      }
+      for (unsigned  k = 0; k < dim; k++) {
+	for (unsigned  j = 0; j < dim; j++) {	
+		integral_gamma	  +=  control_el_flag * gradVctrl_gss[k][j] * gradVctrl_gss[k][j] * AbsDetJxWeight_iqp;
+	}
+      }
+   
+  
+      }// end gauss point loop
+    } //end element loop  
+
+       std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
+
+       std::ofstream intgr_fstream;
+  if (paral::get_rank() == 0 ) {
+      intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
+      intgr_fstream << " ***************************** Iteration " << iteration << " *********************************** " <<  std::endl << std::endl;
+      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha*0.5 + integral_gamma *beta*0.5 << std::endl;
+      intgr_fstream << "The value of the divergence of the control is " << std::setw(11) << std::setprecision(10) <<  integral_div_ctrl << std::endl;
+      intgr_fstream <<  std::endl;
+      intgr_fstream.close();  //you have to close to disassociate the file from the stream
+}  
+
+    
+//     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  cost_functional_coeff<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
+//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<alpha << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
+//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<beta<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
+//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(cost_functional_coeff*0.5)+ integral_beta *(alpha*0.5) + integral_gamma*(beta*0.5) << std::endl; 
+   
+    
+    return; 
+	  
+  
+}
+
+  
+  
+  
 
   } //end namespace ctrl
 

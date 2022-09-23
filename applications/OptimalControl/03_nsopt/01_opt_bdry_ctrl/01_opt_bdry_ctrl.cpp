@@ -30,11 +30,6 @@ using namespace femus;
 
 
 
-//****** Control ********************************
- double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
- double penalty_ctrl = 1.e10;         //penalty for u = q
- double theta_value_outside_fake_element = 0.;
- //**************************************
  
  
 //****** Convergence ********************************
@@ -49,7 +44,7 @@ using namespace femus;
  
 
 
- //Unknown definition  ==================
+ //Unknown definition  - BEGIN ==================
    enum pos_vector_quantities {pos_index_state = 0, pos_index_adj, pos_index_ctrl, pos_index_mu};
  
  const std::vector< unsigned >  provide_state_adj_ctrl_mu_offsets(const unsigned int dimension) {
@@ -193,6 +188,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
      
 }
 
+ //Unknown definition  - END ==================
 
  
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -606,10 +602,27 @@ int main(int argc, char** args) {
 
     
 // *****************
-  const unsigned n_components_state = n_components_ctrl;
-  std::vector<std::string> state_vars(n_components_state);  state_vars[0] = "state";
-  std::vector<std::string> ctrl_vars(n_components_ctrl);     ctrl_vars[0] = "control";
+ 
+  std::vector< unsigned >  vector_offsets = provide_state_adj_ctrl_mu_offsets(dim);
+
+
+const int state_pos_begin   =  vector_offsets[pos_index_state];
+ const int ctrl_pos_begin   =  vector_offsets[pos_index_ctrl];
+   
+   
+   const unsigned n_components_state = n_components_ctrl;
+  std::vector<std::string> state_vars(n_components_state);
   
+   for (unsigned int u = 0; u < state_vars.size(); u++)  { 
+   state_vars[u] = unknowns[state_pos_begin + u]._name;
+    }
+    
+   std::vector<std::string> ctrl_vars(n_components_ctrl);     
+   for (unsigned int u = 0; u < ctrl_vars.size(); u++)  { 
+   ctrl_vars[u] = unknowns[ctrl_pos_begin + u]._name;
+    }
+  
+
   system_opt.set_state_vars(state_vars);
   system_opt.set_ctrl_vars(ctrl_vars);
   
@@ -639,7 +652,7 @@ int main(int argc, char** args) {
 //   system_opt.SetMaxNumberOfNonLinearIterations(2);
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
-    system_opt.SetOuterSolver(PREONLY);
+//     system_opt.SetOuterSolver(PREONLY);
     
    
     system_opt.MGsolve();
@@ -842,7 +855,6 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   const double cost_functional_coeff = COST_FUNCTIONAL_COEFF;
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
-  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
  // ======= Solutions, Unknowns - END =======
   
      
@@ -1041,7 +1053,15 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
  
   // ======= Parameters - BEGIN ======= 
   const double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
-  // ======= Parameters - END =======
+
+  //****** Control ********************************
+ double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c
+ double penalty_dirichlet_bc_u_equal_q = PENALTY_DIRICHLET_BC_U_EQUAL_Q;         //penalty for u = q
+
+ double theta_value_outside_fake_element = 0.;
+ //**************************************
+
+ // ======= Parameters - END =======
   
     
    
@@ -1456,7 +1476,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 			      }//jdim
                  }
 			
-/*delta_state row */	   if (i_vol < nDofsV)      Res[kdim]                 [i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * penalty_ctrl * (Sol_eldofs_Mat[SolPdeIndex[kdim + state_pos_begin]][i_vol] - Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
+/*delta_state row */	   if (i_vol < nDofsV)      Res[kdim]                 [i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * penalty_dirichlet_bc_u_equal_q * (Sol_eldofs_Mat[SolPdeIndex[kdim + state_pos_begin]][i_vol] - Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if (i_vol < nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
 /*delta_control row */     if (i_vol < nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * AbsDetJxWeight_iqp_bdry * (
                                                                                           IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry]
@@ -1489,10 +1509,10 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 			  for (unsigned  kdim = 0; kdim < dim; kdim++) {
                   
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
-			    if(i_vol < nDofsV && j_vol < nDofsV && i_vol == j_vol)       		          Jac[kdim][kdim][i_vol * nDofsV + j_vol]	    += penalty_ctrl * control_node_flag_iel_jface[kdim][i_vol];  //u
+			    if(i_vol < nDofsV && j_vol < nDofsV && i_vol == j_vol)       		          Jac[kdim][kdim][i_vol * nDofsV + j_vol]	    += penalty_dirichlet_bc_u_equal_q * control_node_flag_iel_jface[kdim][i_vol];  //u
 			 
 //BLOCK delta_state - control------------------------------------------------------------------------------------
-			    if(i_vol < nDofsV && j_vol < nDofsGctrl && i_vol == j_vol) 	Jac[kdim][kdim + ctrl_pos_begin][i_vol * nDofsGctrl + j_vol]  += (-1.) * penalty_ctrl * control_node_flag_iel_jface[kdim][i_vol];  //-g
+			    if(i_vol < nDofsV && j_vol < nDofsGctrl && i_vol == j_vol) 	Jac[kdim][kdim + ctrl_pos_begin][i_vol * nDofsGctrl + j_vol]  += (-1.) * penalty_dirichlet_bc_u_equal_q * control_node_flag_iel_jface[kdim][i_vol];  //-g
 
 //DIAG BLOCK delta_control - control  --------------------------------------------------------------------------------------
 			  if(i_vol < nDofsGctrl && j_vol < nDofsGctrl) {
@@ -1850,13 +1870,13 @@ for (unsigned k = 0; k < dim; k++){
     for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) {
         
          for (unsigned i = 0; i < nDofsGctrl; i++) {
-       Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag_iel_jface[kdim][i]) * (  Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i] - 0.)  );              //enforce control zero outside the control boundary
+       Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag_iel_jface[kdim][i]) * (  Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i] - 0.)  );              //enforce control zero outside the control boundary
 
 
 // //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsGctrl; j++) {
 	    if (i == j) {
-		Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] += penalty_outside_control_boundary * (1 - control_node_flag_iel_jface[kdim][i]);              //enforce control zero outside the control boundary
+		Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] += penalty_outside_control_domain_boundary * (1 - control_node_flag_iel_jface[kdim][i]);              //enforce control zero outside the control boundary
                   } //end i==j
         }//j_dctrl_ctrl loop
      }//i_ctrl loop
@@ -1876,7 +1896,7 @@ for (unsigned k = 0; k < dim; k++){
           
   for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; i++) {
       
-       Res[mu_pos_begin + kdim][i]  +=  (- penalty_outside_control_domain) *  (1 - control_node_flag_iel_jface[kdim][i]) * (Sol_eldofs_Mat[mu_pos_begin + kdim][i] - 0.);
+       Res[mu_pos_begin + kdim][i]  +=  (- penalty_outside_control_domain_boundary) *  (1 - control_node_flag_iel_jface[kdim][i]) * (Sol_eldofs_Mat[mu_pos_begin + kdim][i] - 0.);
       
      }
   }
@@ -1888,7 +1908,7 @@ for (unsigned k = 0; k < dim; k++){
     for (unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; i++) {
       for (unsigned j = 0; j < Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim]; j++) {
             if (i == j) {
-               Jac[mu_pos_begin + kdim][mu_pos_begin + kdim][i * Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim] + j]  +=  penalty_outside_control_domain * (1 - control_node_flag_iel_jface[kdim][i]);
+               Jac[mu_pos_begin + kdim][mu_pos_begin + kdim][i * Sol_n_el_dofs_Mat_vol[mu_pos_begin + kdim] + j]  +=  penalty_outside_control_domain_boundary * (1 - control_node_flag_iel_jface[kdim][i]);
             }
          }
       }
