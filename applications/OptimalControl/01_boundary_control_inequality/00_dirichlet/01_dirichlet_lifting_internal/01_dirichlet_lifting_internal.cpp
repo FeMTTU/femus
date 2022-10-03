@@ -158,10 +158,10 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
    
-//   std::string input_file = "parametric_square_1x1.med";
+  std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "square_parametric.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
-  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -244,6 +244,17 @@ int main(int argc, char** args) {
    ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   // ******** active flag - END 
 
+  // ******** state plus cont - BEGIN 
+   std::vector<std::string> state_plus_ctrl(n_components_ctrl);
+   state_plus_ctrl[0] = "state_plus_ctrl";
+  
+  const unsigned int state_plus_ctrl_fake_time_dep_flag = 0;
+  const bool         state_plus_ctrl_is_an_unknown_of_a_pde = false;
+   ml_sol.AddSolution(state_plus_ctrl[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, state_plus_ctrl_fake_time_dep_flag, state_plus_ctrl_is_an_unknown_of_a_pde);               
+   ml_sol.Initialize(state_plus_ctrl[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+  // ******** state plus cont - END 
+   
+   
   // ======= Solutions that are not Unknowns - END  ==================
 
   
@@ -282,6 +293,16 @@ int main(int argc, char** args) {
   
   system_opt.MGsolve();
 //   system.assemble_call_before_boundary_conditions(1);
+
+
+  
+  ml_sol.add_solution( ml_sol.GetIndex(state_vars[0].c_str()),   ml_sol.GetIndex(state_plus_ctrl[0].c_str()) );
+  ml_sol.add_solution( ml_sol.GetIndex(ctrl_vars[0].c_str()),   ml_sol.GetIndex(state_plus_ctrl[0].c_str()) );
+  
+
+
+  
+  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl/*state_vars*/, ctrl_vars);
   // ======= Problem, System  - END ========================
   
   // ======= Print - BEGIN  ========================

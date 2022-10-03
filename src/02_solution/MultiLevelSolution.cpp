@@ -1113,6 +1113,12 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   }
 
 
+  void MultiLevelSolution::add_solution(const unsigned index_read, const unsigned index_write) {
+
+    for(unsigned short i = 0; i < _gridn; i++) {
+      _solution[i]->add_solution(index_read, index_write);
+    }
+  }
 
 
   void MultiLevelSolution::CopySolutionToOldSolution() {

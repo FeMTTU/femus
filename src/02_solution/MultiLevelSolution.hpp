@@ -311,7 +311,9 @@ public:
     void fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in);
         
     void CopySolutionToOldSolution();
-    
+
+    void add_solution(const unsigned index_read, const unsigned index_write);
+ 
     void SetIfFSI(const bool &FSI = true){
 	_FSI = FSI; 
 	for(unsigned i=0;i<_gridn;i++){

@@ -88,6 +88,9 @@ namespace femus {
       /** Update the solution */
       void CopySolutionToOldSolution();
       
+      /** Add another solution */
+      void add_solution(const unsigned index_read, const unsigned index_write);
+      
       void ResetSolutionToOldSolution();
 
       /** Get a const solution (Numeric Vector) by name @todo make the _Sol object private */

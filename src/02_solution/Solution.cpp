@@ -1289,7 +1289,18 @@ _removeNullSpace[old_size + s] = false;
     }
   }
 
+  
 
+  
+// ------------------------------------------------------------------
+  void Solution::add_solution(const unsigned index_read, const unsigned index_write) {
+      
+        (*(_Sol[index_write])).add( *(_Sol[index_read]) );
+          
+  }
+  
+
+  
 // ------------------------------------------------------------------
   void Solution::CopySolutionToOldSolution() {
     for(unsigned i = 0; i < _Sol.size(); i++) {
