@@ -29,7 +29,7 @@
 
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS  2
+#define N_UNIFORM_LEVELS  7
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -41,11 +41,11 @@
 #define COST_FUNCTIONAL_COEFF 1 
   
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1./*0.01*/ 
+#define ALPHA_CTRL_BDRY 1.e-8/*0.01*/ 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
-#define ALPHA_CTRL_VOL 0.000001 
+#define ALPHA_CTRL_VOL ALPHA_CTRL_BDRY 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
   
   
@@ -3710,12 +3710,12 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  .1; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper_0 =  1000.; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower_0 = -1000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      
-     double constr_value_upper_1 =  1000.;
-     double constr_value_lower_1 = -0.1;
+     double constr_value_upper_1 =   1000.;
+     double constr_value_lower_1 =  -1000.;
      assert(constr_value_lower_1 < constr_value_upper_1); 
      
      double constr_value_upper_2 =  1000.;
