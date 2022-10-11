@@ -36,12 +36,21 @@
 //*********************** Mesh, Number of refinements - END *****************************************
 
 
+//*********************** Mesh, offset for point inclusion - BEGIN *******************************************************
+#define OFFSET_TO_INCLUDE_LINE  1.e-5  
+//*********************** Mesh, offset for point inclusion - END *******************************************************
+  
+
+//*********************** Control, target region - BEGIN *******************************************************
+#define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
+//*********************** Control, target region - END *******************************************************
+
 
 //*********************** Control, cost functional - BEGIN *******************************************************
 #define COST_FUNCTIONAL_COEFF 1 
   
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1.e-8/*0.01*/ 
+#define ALPHA_CTRL_BDRY 2.e-5 /*0.01*/ 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -52,11 +61,12 @@
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e20         // penalty for zero control outside
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY  1.e50      
 #define PENALTY_DIRICHLET_BC_U_EQUAL_Q  1.e10         // penalty for u = q
-  //*********************** Control, cost functional - END *******************************************************
+//*********************** Control, cost functional - END *******************************************************
 
 
 //*********************** Control, boundary extremes - BEGIN  *******************************************************
-  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+  /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
+  /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
 #define FACE_FOR_CONTROL        2
 #define FACE_FOR_TARGET         1
 
@@ -78,7 +88,7 @@
 
 
 //*********************** Control, Lifting internal extension - BEGIN *******************************************************
-#define LIFTING_INTERNAL_DEPTH  1.   //how far it goes orthogonally to the Control piece of the Boundary 
+#define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
 #define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
 #define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
 //*********************** Control, Lifting internal extension - END *******************************************************
@@ -302,14 +312,16 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
       
     
 namespace ctrl {
-   
+
+    
+//direction of the line that contains \Gamma_c    
 const unsigned int axis_direction_Gamma_control(const unsigned int face_index) {
     
-    int axis_dir;
+    unsigned int axis_dir;
     
         if (face_index == 1 || face_index == 2) { axis_dir = 1; }
    else if (face_index == 3 || face_index == 4) { axis_dir = 0; }
-   else if (face_index == 5 || face_index == 6) { axis_dir = 0; }
+   else if (face_index == 5 || face_index == 6) { abort(); /*axis_dir = 0;*/ }
 
     return axis_dir;
     
@@ -318,7 +330,7 @@ const unsigned int axis_direction_Gamma_control(const unsigned int face_index) {
 
 const unsigned int axis_direction_target_reg(const unsigned int face_index) {
     
-    int axis_dir;
+    unsigned int axis_dir;
     
         if (face_index == 1 || face_index == 2) { axis_dir = 0; }
    else if (face_index == 3 || face_index == 4) { axis_dir = 1; }
@@ -356,19 +368,43 @@ const double extreme_position(const unsigned int face_index) {
 }
 
 
+
+  
+//******************************************* Desired Target *******************************************************
+
+double DesiredTarget() {
+   return 1.;
+}
+
+
+ std::vector<double> DesiredTargetVel() {
+     
+    std::vector<double>  Vel_desired(3, 0.);
+    
+   const unsigned int axis_dir = ctrl::axis_direction_Gamma_control(FACE_FOR_CONTROL);
+   
+    Vel_desired[axis_dir] = 1.;
+    
+   return Vel_desired;
+    }
+
+   
+
+
+
 //*********************** Find volume elements that contain a  Target domain element **************************************
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
-    const double target_line_position_along_coordinate = 0.5;
+    const double target_line_position_along_coordinate = TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG;
  //***** set target domain flag ******
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
-  const double offset_to_include_line = 1.e-5;
+  const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
    
-  const int  target_line_sign = target_line_sign_func(/*FACE_FOR_CONTROL*/FACE_FOR_TARGET);
+  const int  target_line_sign = target_line_sign_func(FACE_FOR_TARGET);
   
-  const unsigned int axis_dir = axis_direction_target_reg(/*FACE_FOR_CONTROL*/FACE_FOR_TARGET);
+  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
    
    const double target_line = target_line_position_along_coordinate + target_line_sign * offset_to_include_line; 
    
@@ -383,13 +419,6 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 }
 
 
-//******************************************* Desired Target *******************************************************
-
-double DesiredTarget()
-{
-   return 1.;
-}
-
 
 
 
@@ -401,7 +430,7 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
    
   int control_el_flag = 0;
   
-  const double offset_to_include_line = 1.e-5;
+  const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
 
      
    const int  target_line_sign = target_line_sign_func(FACE_FOR_CONTROL);
@@ -429,9 +458,9 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
  // flag = 1: we are in the lifting nonzero domain
   int control_el_flag = 0.;
   
-  const double offset_to_include_line = 1.e-5;
+  const double offset_to_include_line =  OFFSET_TO_INCLUDE_LINE;
   
-  const double control_domain_depth = LIFTING_INTERNAL_DEPTH;
+  const double control_domain_depth = LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C;
   
   const double control_domain_width_lower = LIFTING_INTERNAL_WIDTH_LOWER;
   const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
@@ -870,19 +899,6 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 }
 
 
-  
- std::vector<double> DesiredTargetVel() {
-     
-    std::vector<double>  Vel_desired(3, 0.);
-    
-   const unsigned int axis_dir = ctrl::axis_direction_Gamma_control(FACE_FOR_CONTROL);
-   
-    Vel_desired[axis_dir] = 1.;
-    
-   return Vel_desired;
-    }
-
-   
  
 //************** how to retrieve theta from proc0 ************************************* 
 const double get_theta_value(const unsigned int nprocs, const Solution * sol, const unsigned int sol_theta_index) {
