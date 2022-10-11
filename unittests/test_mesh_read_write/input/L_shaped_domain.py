@@ -182,6 +182,16 @@ Group_6_0 = Mesh_1.GroupOnGeom(Edge_13,'Group_6_0',SMESH.EDGE)
 [ Group_1_0, Group_2_0, Group_3_0, Group_4_0, Group_5_0, Group_6_0 ] = Mesh_1.GetGroups()
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
 [ Group_1_0, Group_2_0, Group_3_0, Group_4_0, Group_5_0, Group_6_0 ] = Mesh_1.GetGroups()
+aCriteria = []
+aCriterion = smesh.GetCriterion(SMESH.EDGE,SMESH.FT_FreeBorders,SMESH.FT_Undefined,0,SMESH.FT_LogicalNOT)
+aCriteria.append(aCriterion)
+isDone = Mesh_1.RemoveElements( [ 3, 5 ] )
+smesh.SetName(Mesh_1, 'Mesh_1')
+try:
+  Mesh_1.ExportMED( r'/home/gbornia/software/femus/unittests/test_mesh_read_write/input/L_shaped_domain.med', 0, 41, 1, Mesh_1, 0, [], '',-1, 1 )
+  pass
+except:
+  print('ExportPartToMED() failed. Invalid file name?')
 Sub_mesh_1 = Regular_1D.GetSubMesh()
 Sub_mesh_2 = Regular_1D_1.GetSubMesh()
 Sub_mesh_3 = Regular_1D_2.GetSubMesh()
