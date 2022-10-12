@@ -36,7 +36,7 @@ using namespace femus;
 
 
 template < class type = double >
-class My_exact_solution : public Math::Function< type > {
+class Square_exact_solution : public Math::Function< type > {
 
 public:
 
@@ -181,26 +181,30 @@ int main(int argc, char** args) {
     // ======= Init ==========================
     FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-    // ======= Files =========================
+    // ======= Problem ========================
+    MultiLevelProblem ml_prob;
+
+    // ======= Files - BEGIN  =========================
     Files files;
     const bool use_output_time_folder = true;
     const bool redirect_cout_to_file = true;
     files.CheckIODirectories(use_output_time_folder);
     files.RedirectCout(redirect_cout_to_file);
 
-    // ======= Quad Rule ========================
-    std::string quad_rule_order("seventh");
+    ml_prob.SetFilesHandler(&files);
+    // ======= Files - END  =========================
+
+    // ======= Quad Rule - BEGIN ========================
+    std::string fe_quad_rule("seventh");
     /* this is the order of accuracy that is used in the gauss integration scheme
        In the future it is not going to be an argument of the mesh function   */
     
-    // ======= Problem ========================
-    MultiLevelProblem ml_prob;
-    ml_prob.SetFilesHandler(&files);
-    ml_prob.SetQuadratureRuleAllGeomElems(quad_rule_order);
+    ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
     ml_prob.set_all_abstract_fe_multiple();
+    // ======= Quad Rule - END ========================
 
 
-    // ======= Mesh ========================
+    // ======= Mesh - BEGIN ========================
     const ElemType geom_elem_type = QUAD9;
     const std::vector< unsigned int > nsub = {2, 2, 0};
     const std::vector< double >      xyz_min = {0., 0., 0.};
@@ -208,14 +212,34 @@ int main(int argc, char** args) {
 
 
     MultiLevelMesh ml_mesh;
-    ml_mesh.GenerateCoarseBoxMesh(nsub[0], nsub[1], nsub[2], xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, quad_rule_order.c_str());
-//    std::string input_file = "Lshape_4.med";
-//    std::string input_file = "Lshape.med";
-//     std::string input_file = "interval.med";
-//     std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
-//     const std::string infile = mystream.str();
-//   ml_mesh.ReadCoarseMesh(infile.c_str(),quad_rule_order.c_str(),1.);
+//     ml_mesh.GenerateCoarseBoxMesh(nsub[0], nsub[1], nsub[2], xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, fe_quad_rule.c_str());
 
+//     std::string input_file = "square_2x2.med";
+//     std::string input_file = "L_shaped_domain.med";
+//     std::string input_file = "interval.med";
+    std::string input_file = "cylinder_hexahedral.med";
+    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+    const std::string infile = mystream.str();
+
+    const double Lref = 1.;
+  const bool read_groups = true;
+  const bool read_boundary_groups = true;
+    
+  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
+
+//   ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
+//     
+//   ml_mesh.GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
+//  
+// 
+//   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+//   
+//   ml_mesh.PrepareNewLevelsForRefinement();
+// 
+// 
+//   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule.c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+    // ======= Mesh - END ========================
+  
 
     // ======= Unknowns ========================
     std::vector< Unknown > unknowns = provide_list_of_unknowns();
@@ -227,21 +251,21 @@ int main(int argc, char** args) {
 //     const unsigned int n_levels = 3;
 //     my_main.run_on_single_level(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels);
 
-    // ======= Convergence study ========================
+    // ======= Convergence study - BEGIN ========================
 
     // set total number of levels ================
     unsigned max_number_of_meshes = 6;
 
-    if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 4;
+    if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
     ///set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
     MultiLevelMesh ml_mesh_all_levels;
-    ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,quad_rule_order.c_str());
-//    ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),quad_rule_order.c_str(),1.);
+//     ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type, fe_quad_rule.c_str());
+    ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
 
 
     // convergence choices ================
-    My_exact_solution<> exact_sol;         //provide exact solution, if available ==============
+    Square_exact_solution<> exact_sol;         //provide exact solution, if available ==============
     const unsigned conv_order_flag = 0;    //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
     const unsigned norm_flag = 1;          //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
 
@@ -249,8 +273,16 @@ int main(int argc, char** args) {
     // object ================
     FE_convergence<>  fe_convergence;
 
-    fe_convergence.convergence_study(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main/*, & exact_sol*/);
+    fe_convergence.convergence_study(files, ml_prob, unknowns,
+                                     Solution_set_boundary_conditions, 
+                                     Solution_set_initial_conditions, ml_mesh, 
+                                     ml_mesh_all_levels, 
+                                     max_number_of_meshes, 
+                                     norm_flag,
+                                     conv_order_flag, 
+                                     my_main/*, & exact_sol*/);
 
+    // ======= Convergence study - END ========================
 
     return 0;
 
@@ -308,7 +340,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
         ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
 
 // If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part        
-        // ======= System ========================
+        // ======= System - BEGIN ========================
         std::ostringstream sys_name;
         sys_name << unknowns[u]._name;  //give to each system the name of the unknown it solves for!
 
@@ -333,6 +365,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
         system.SetOuterSolver(GMRES);
         system.MGsolve();  //everything is stored into the Solution after this
+        // ======= System - END ========================
 
         // ======= Print ========================
         std::vector < std::string > variablesToBePrinted;
@@ -357,7 +390,7 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
 
 
-    My_exact_solution< double > exact_sol;  //this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+    Square_exact_solution< double > exact_sol;  //this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
 
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
@@ -510,7 +543,6 @@ void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_t
 
 
 
-        if (dim != 2) abort(); //only implemented in 2D now
 
         // *** Gauss point loop ***
         for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
@@ -571,20 +603,25 @@ void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_t
 //                 double mass_exact = exact_sol.value(x_gss);
 //                 unk_element_jac_res.res()[i] += ( ( mass_exact - solu_gss ) * unknowns_phi_dof_qp[0].phi(i) ) * weight_qp;
 
-// Helmholtz(u) = source - strong
+// Helmholtz(u) = source : strong
 //               double source_term = exact_sol.value(x_gss);
 //         unk_element_jac_res.res()[i] += ( source_term * phi()[i] - solu_gss * phi()[i] - laplace ) * weight_qp;
 
-// Helmholtz(u) = Helmholtz(u_0) - strong
-                double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-                unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;
+// Helmholtz(u) = Helmholtz(u_0) : strong
+//                 double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
+//                 unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;
 
-// Laplace(u) = Laplace(u_0) - strong
+// Laplace(u) = Laplace(u_0) : strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
-//         unk_element_jac_res.res()[i] += (- laplace_strong_exact * phi()[i] - phi[i] * solu_gss - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
+//         unk_element_jac_res.res()[i] += (- laplace_strong_exact * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
-// grad(u) grad(v) = grad(u_0) grad(v) - weak
-//            unk_element_jac_res.res()[i] += (laplace_weak_exact - phi()[i] * solu_gss - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
+// Laplace(u) = source 
+              double source_term = 1.;
+        unk_element_jac_res.res()[i] += (  source_term * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
+
+
+// grad(u) grad(v) = grad(u_0) grad(v) : weak
+//            unk_element_jac_res.res()[i] += (laplace_weak_exact  - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
 
 
 

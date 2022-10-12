@@ -1,0 +1,8 @@
+Boundary Groups
+
+1: left
+2: right
+3: bottom
+4: top
+5: surface between 1 and 2
+6: surface between 3 and 4
