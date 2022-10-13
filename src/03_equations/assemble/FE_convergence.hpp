@@ -279,13 +279,13 @@ template < class type>
     
     assert( unknowns.size() == norms.size() );
     
-    const std::vector< std::string > norm_names = {"L2-NORM","H1-SEMINORM"};
+    const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
   
      for (unsigned int u = 0; u < unknowns.size(); u++) {
-       for (int n = 0; n < norm_flag + 1; n++) {
+       for (int n = norm_flag; n >= 0; n--) {
             std::cout << unknowns[u]._name << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
          for (int i = 0; i < max_number_of_meshes; i++) {
-                output_convergence_order(norms,u,i,n);
+                output_convergence_order(norms, u, i, n);
             }
             std::cout << std::endl;
          }
