@@ -20,6 +20,29 @@
 
 using namespace femus;
 
+
+
+double GetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return cos(pi * x[0]) * cos(pi * x[1]);
+}
+
+
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+}
+
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+}
+
+
+
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
@@ -33,6 +56,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
 
+
+
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -43,6 +69,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+//   mlMsh.ReadCoarseMesh("./input/square_2x2.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in furure it is not going to be an argument of this function   */
@@ -106,7 +133,7 @@ int main(int argc, char** args) {
 
       // attach the assembling function to system
       system.SetAssembleFunction(AssemblePoissonProblem_AD);
-//       system.SetAssembleFunction(AssemblePoissonProblem);
+//       system.SetAssembleFunction(AssemblePoissonProblem);  //@todo there is a very weird error here when you run 
 
       // initilaize and solve the system
       system.init();
@@ -123,7 +150,7 @@ int main(int argc, char** args) {
             
       VTKWriter vtkIO(&mlSol);
       
-      vtkIO.SetGraphVariable ("u");
+//       vtkIO.SetGraphVariable ("u");
       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
     }
@@ -195,21 +222,9 @@ int main(int argc, char** args) {
   return 0;
 }
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
-};
 
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
 
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-};
+
 
 /**
  * This function assemble the stiffnes matrix Jac and the residual vector Res
@@ -218,9 +233,6 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
  * and consequently
  *        u = u0 + w satisfies Jac u = F
  **/
-
-
-
 
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -271,7 +283,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
   
-  double weight; // gauss point weight
+  double weight = 0.; // gauss point weight
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
@@ -290,25 +302,17 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual Vector
 
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     
     // resize local arrays
     solu.resize(nDofu);
     l2GMap.resize(nDofu);
-    
-
-    for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofu);
-    }
-
-    Res.assign(nDofu,0.);    //resize and set to zero
-
-    Jac.resize(nDofu * nDofu, 0);    //resize and set to zero
-    
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
@@ -316,9 +320,15 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // local storage of solution
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);   // local to global system solution mapping
     }
+    
+    
+
+    for (int i = 0; i < dim; i++) {
+      x[i].resize(nDofx);
+    }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofu; i++) {
+    for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
@@ -327,6 +337,10 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     }
 
 
+
+    Res.assign(nDofu, 0.);    //resize and set to zero
+    Jac.resize(nDofu * nDofu, 0.);    //resize and set to zero
+    
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
@@ -358,7 +372,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           weakLaplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
         
-        Res[i] +=  (  -GetExactSolutionLaplace(x_gss) * phi[i] - weakLaplace) * weight;
+        Res[i] +=  (  - GetExactSolutionLaplace(x_gss) * phi[i] - weakLaplace) * weight;
 
         // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {
@@ -368,10 +382,11 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
             weakLaplacej += phi_x[i * dim + kdim] * phi_x[j * dim + kdim];
           }
 
-          Jac[i * nDofu + j] += weakLaplacej * weight;
+          Jac[i * nDofu + j] +=  weakLaplacej * weight;
         } // end phi_j loop
 
       } // end phi_i loop
+      
     } // end gauss point loop
 
 
@@ -392,6 +407,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
+
 
 /**
  * This function assemble the stiffnes matrix KK and the residual vector Res
@@ -456,12 +472,11 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
-  double weight; // gauss point weight
+
+  double weight = 0.; // gauss point weight
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
-  phi_xx.reserve(maxSize * dim2);
 
   vector< adept::adouble > aRes; // local redidual vector
   aRes.reserve(maxSize);
@@ -473,6 +488,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve(maxSize * maxSize);
 
+  RES->zero(); // Set to zero all the entries of the Global Residual Vector
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
@@ -486,18 +502,15 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofx);
-    }
-
-    aRes.resize(nDofu);    //resize
-    std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
-
-    // local storage of global mapping and solution
+     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+    }
+
+    for (int i = 0; i < dim; i++) {
+      x[i].resize(nDofx);
     }
 
     // local storage of coordinates
@@ -510,27 +523,32 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     }
 
 
+   aRes.resize(nDofu);    //resize
+    std::fill(aRes.begin(), aRes.end(), 0.);    //set aRes to zero
+
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+        
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble solu_gss = 0.;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
+      
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * solu[i]; // We dont use this one for this problem.
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
+      
+      
 
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
@@ -541,8 +559,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        double srcTerm = - GetExactSolutionLaplace(x_gss);
-        aRes[i] += (srcTerm * phi[i] - laplace) * weight;
+        aRes[i] += ( - GetExactSolutionLaplace(x_gss) * phi[i] - laplace) * weight;
 
       } // end phi_i loop
       

@@ -308,7 +308,7 @@ int main(int argc, char** args) {
 
 
     // convergence choices ================
-    Square_exact_solution_1<> exact_sol;         //provide exact solution, if available ==============
+    Square_exact_solution_1<> exact_sol;         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available ==============
 //     Square_exact_solution_2<> exact_sol;         //provide exact solution, if available ==============
     const unsigned conv_order_flag = 0;    //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
     const unsigned norm_flag = 1;          //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
