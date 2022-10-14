@@ -120,9 +120,6 @@ int main(int argc, char** args) {
       VTKWriter vtkIO(&mlSol);
       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
-//       GMVWriter gmvIO(&mlSol);
-//       gmvIO.SetDebugOutput(true);
-//       gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted,i);
     }
   }
 

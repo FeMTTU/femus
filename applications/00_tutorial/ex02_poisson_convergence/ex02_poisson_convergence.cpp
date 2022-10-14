@@ -299,7 +299,6 @@ int main(int argc, char** args) {
 
     // set total number of levels ================
     unsigned max_number_of_meshes = 6;
-
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
     ///set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
@@ -309,8 +308,8 @@ int main(int argc, char** args) {
 
 
     // convergence choices ================
-//     Square_exact_solution_1<> exact_sol;         //provide exact solution, if available ==============
-    Square_exact_solution_2<> exact_sol;         //provide exact solution, if available ==============
+    Square_exact_solution_1<> exact_sol;         //provide exact solution, if available ==============
+//     Square_exact_solution_2<> exact_sol;         //provide exact solution, if available ==============
     const unsigned conv_order_flag = 0;    //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
     const unsigned norm_flag = 1;          //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
 
@@ -436,7 +435,8 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
 
 
-    Square_exact_solution_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+    Square_exact_solution_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+//     Square_exact_solution_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
 
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
@@ -752,7 +752,10 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
     const double weight_qp,
     std::vector< double > & Jac )  const {
 
+        
+  const unsigned int dim_offset_grad = 3;
 
+  
     constexpr unsigned int pos_unk = 0/*unk_vec[0].SolPdeIndex*/;
 
 // *** phi_j loop ***
@@ -760,10 +763,10 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
         /*real_num*/double laplace_jac = 0.;
 
         for (unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace_jac += (phi[ pos_unk].phi_grad(i * dim + kdim) * phi[ pos_unk ].phi_grad(j * dim + kdim));
+            laplace_jac += (phi[ pos_unk].phi_grad(i * dim_offset_grad + kdim) * phi[ pos_unk ].phi_grad(j * dim_offset_grad + kdim));
         }
 
-        Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_unk, pos_unk, i, j) ] += (laplace_jac + phi[ pos_unk ].phi(i) * phi[ pos_unk ].phi(j)) * weight_qp;
+        Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_unk, pos_unk, i, j) ] += (laplace_jac /*+   phi[ pos_unk ].phi(i) * phi[ pos_unk ].phi(j) */ ) * weight_qp;
     } // end phi_j loop
 
 

@@ -22,7 +22,7 @@ using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
 
   return dirichlet;
 }
@@ -50,7 +50,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 7;
+    maxNumberOfMeshes = 4;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -61,6 +61,13 @@ int main(int argc, char** args) {
   vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
 
+  
+    std::vector<FEOrder> feOrder(3);
+    feOrder[0] = FIRST;
+    feOrder[1] = SERENDIPITY;
+    feOrder[2] = SECOND;
+
+    
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     unsigned numberOfUniformLevels = i + 1;
@@ -73,11 +80,10 @@ int main(int argc, char** args) {
     // print mesh info
     mlMsh.PrintInfo();
 
-    FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
-    l2Norm[i].resize(3);
-    semiNorm[i].resize(3);
+    l2Norm[i].resize(feOrder.size());
+    semiNorm[i].resize(feOrder.size());
 
-    for (unsigned j = 0; j < 3; j++) {   // loop on the FE Order
+    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
 
@@ -99,7 +105,8 @@ int main(int argc, char** args) {
       system.AddSolutionToSystemPDE("u");
 
       // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoissonProblem);
+      system.SetAssembleFunction(AssemblePoissonProblem_AD);
+//       system.SetAssembleFunction(AssemblePoissonProblem);
 
       // initilaize and solve the system
       system.init();
@@ -122,6 +129,40 @@ int main(int argc, char** args) {
     }
   }
 
+
+  std::cout << std::endl;
+  std::cout << std::endl;
+
+  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
+    std::cout << i + 1 << "\t";
+    std::cout.precision(14);
+
+    for (unsigned j = 0; j < feOrder.size(); j++) {
+      std::cout << semiNorm[i][j] << "\t";
+    }
+
+    std::cout << std::endl;
+
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
+
+      for (unsigned j = 0; j < feOrder.size(); j++) {
+        std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
+      }
+
+      std::cout << std::endl;
+    }
+
+  }
+  
+  
+  std::cout << std::endl;
+  std::cout << std::endl;
+
   // print the seminorm of the error and the order of convergence between different levels
   std::cout << std::endl;
   std::cout << std::endl;
@@ -132,7 +173,7 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < feOrder.size(); j++) {
       std::cout << l2Norm[i][j] << "\t";
     }
 
@@ -142,36 +183,8 @@ int main(int argc, char** args) {
       std::cout.precision(3);
       std::cout << "\t\t";
 
-      for (unsigned j = 0; j < 3; j++) {
+      for (unsigned j = 0; j < feOrder.size(); j++) {
         std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
-      }
-
-      std::cout << std::endl;
-    }
-
-  }
-
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-
-  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
-    std::cout << i + 1 << "\t";
-    std::cout.precision(14);
-
-    for (unsigned j = 0; j < 3; j++) {
-      std::cout << semiNorm[i][j] << "\t";
-    }
-
-    std::cout << std::endl;
-
-    if (i < maxNumberOfMeshes - 1) {
-      std::cout.precision(3);
-      std::cout << "\t\t";
-
-      for (unsigned j = 0; j < 3; j++) {
-        std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
       }
 
       std::cout << std::endl;
@@ -205,6 +218,10 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
  * and consequently
  *        u = u0 + w satisfies Jac u = F
  **/
+
+
+
+
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
 
@@ -313,8 +330,9 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+        
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
 
       //double* gradPhi[][2] = &phi_x[0];
       
@@ -337,20 +355,20 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
         double weakLaplace = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          weakLaplace   -=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          weakLaplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
         
-        Res[i] += ( - GetExactSolutionLaplace(x_gss) * phi[i] + weakLaplace) * weight;
+        Res[i] +=  (  -GetExactSolutionLaplace(x_gss) * phi[i] - weakLaplace) * weight;
 
         // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {
           double weakLaplacej = 0.;
 
           for (unsigned kdim = 0; kdim < dim; kdim++) {
-            weakLaplacej -= phi_x[i * dim + kdim] * phi_x[j * dim + kdim];
+            weakLaplacej += phi_x[i * dim + kdim] * phi_x[j * dim + kdim];
           }
 
-          Jac[i * nDofu + j] -= weakLaplacej * weight;
+          Jac[i * nDofu + j] += weakLaplacej * weight;
         } // end phi_j loop
 
       } // end phi_i loop
@@ -498,10 +516,10 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble solu_gss = 0;
+      adept::adouble solu_gss = 0.;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
@@ -569,7 +587,11 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
+
+
+
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
+    
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
@@ -591,7 +613,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+
   double weight; // gauss point weight
 
   // reserve memory for the local standar vectors
@@ -604,7 +626,6 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  phi_xx.reserve(maxSize * dim2);
 
   double seminorm = 0.;
   double l2norm = 0.;
@@ -642,7 +663,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double solu_gss = 0;

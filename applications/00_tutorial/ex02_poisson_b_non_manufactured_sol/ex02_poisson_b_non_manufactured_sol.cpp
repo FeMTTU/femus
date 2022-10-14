@@ -77,7 +77,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 5;
+    maxNumberOfMeshes = 6;
   } else {
     maxNumberOfMeshes = 4;
   }
