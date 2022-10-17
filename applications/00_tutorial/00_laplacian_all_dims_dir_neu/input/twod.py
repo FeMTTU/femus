@@ -59,6 +59,9 @@ Rotation_1 = model.addRotation(Part_1_doc, [model.selection("FACE", "Face_1_1")]
 Export_10 = model.exportToXAO(Part_1_doc, '/tmp/shaper_6t42384k.xao', model.selection("FACE", "Rotation_1_1"), 'XAO')
 model.do()
 model.end()
+
+
+
 ###
 ### GEOM component
 ###
@@ -112,11 +115,7 @@ isDone = Mesh_1.Compute()
 Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_1_0' )
 nbAdd = Group_1_0.AddFrom( Mesh_1.GetMesh() )
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/gbornia/software/femus/applications/OptimalControl/pddm/input/Mesh_2_xy.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
+
 Mesh_1.ConvertToQuadratic(0, Sub_mesh_1)
 Mesh_1.ConvertToQuadratic(0, Sub_mesh_2)
 isDone = Mesh_1.Compute()
