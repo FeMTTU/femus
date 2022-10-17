@@ -54,7 +54,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
+std::pair < double, double > GetErrorNorm(MultiLevelSolution* ml_sol);
 
 
 
@@ -69,7 +69,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-//   mlMsh.ReadCoarseMesh("./input/square_2x2.med", "seventh", scalingFactor);
+//   mlMsh.ReadCoarseMesh("./input/square_2x2_centered_at_origin.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in furure it is not going to be an argument of this function   */
@@ -111,19 +111,21 @@ int main(int argc, char** args) {
     semiNorm[i].resize(feOrder.size());
 
     for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
-      // define the multilevel solution and attach the mlMsh object to it
-      MultiLevelSolution mlSol(&mlMsh);
 
-      // add variables to mlSol
-      mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
-      mlSol.Initialize("All");
+        // define the multilevel solution and attach the mlMsh object to it
+      MultiLevelSolution ml_sol(&mlMsh);
+
+      ml_sol.SetWriter(VTK);
+      // add variables to ml_sol
+      ml_sol.AddSolution("u", LAGRANGE, feOrder[j]);
+      ml_sol.Initialize("All");
 
       // attach the boundary condition function and generate boundary data
-      mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-      mlSol.GenerateBdc("u");
+      ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+      ml_sol.GenerateBdc("u");
 
-      // define the multilevel problem attach the mlSol object to it
-      MultiLevelProblem mlProb(&mlSol);
+      // define the multilevel problem attach the ml_sol object to it
+      MultiLevelProblem mlProb(&ml_sol);
 
       // add system Poisson in mlProb as a Linear Implicit System
       LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
@@ -141,17 +143,18 @@ int main(int argc, char** args) {
       system.SetOuterSolver(PREONLY);
       system.MGsolve();
 
-      std::pair< double , double > norm = GetErrorNorm(&mlSol);
+      std::pair< double , double > norm = GetErrorNorm(&ml_sol);
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
       // print solutions
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
             
-      VTKWriter vtkIO(&mlSol);
       
-//       vtkIO.SetGraphVariable ("u");
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+  // ======= Print - BEGIN  ========================
+//       ml_sol.GetWriter()->SetGraphVariable ("u");
+      ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+  // ======= Print - END  ========================
 
     }
   }
@@ -249,7 +252,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
@@ -264,8 +267,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   //solution variable
   unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  soluIndex = ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
@@ -439,7 +442,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
@@ -454,8 +457,8 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   //solution variable
   unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  soluIndex = ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
@@ -523,7 +526,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     }
 
 
-   aRes.resize(nDofu);    //resize
+   aRes.resize(nDofu);
     std::fill(aRes.begin(), aRes.end(), 0.);    //set aRes to zero
 
     // start a new recording of all the operations involving adept::adouble variables
@@ -607,21 +610,21 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
 
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
+std::pair < double, double > GetErrorNorm(MultiLevelSolution* ml_sol) {
     
-  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
-  Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)
-  Solution* sol = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
   unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  soluIndex = ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   vector < double >  solu; // local solution
 

@@ -55,19 +55,11 @@ Number_of_Segments_1 = Regular_1D.NumberOfSegments(1)
 isDone = Mesh_1.Compute()
 Mesh_1.ConvertToQuadratic(0)
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/applications/tutorial/ex_time/input/interval.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
+
 Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.NODE, 'Group_1_0' )
 nbAdd = Group_1_0.Add( [ 1, 2 ] )
+
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/applications/tutorial/ex_time/input/interval.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
 
 
 ## Set names of Mesh objects

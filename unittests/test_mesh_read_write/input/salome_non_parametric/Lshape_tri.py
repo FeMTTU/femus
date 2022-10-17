@@ -94,11 +94,6 @@ Mesh_1.ConvertToQuadratic(0)
 Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_1_0' )
 nbAdd = Group_1_0.AddFrom( Mesh_1.GetMesh() )
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/applications/tutorial/ex_time/input/Lshape.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
 
 
 ## Set names of Mesh objects
@@ -112,5 +107,3 @@ smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
 smesh.SetName(Group_1_0, 'Group_1_0')
 
 
-if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)

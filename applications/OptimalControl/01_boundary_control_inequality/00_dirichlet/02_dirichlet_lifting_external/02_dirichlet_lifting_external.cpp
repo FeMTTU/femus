@@ -206,9 +206,9 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-    std::string mesh_file = "./input/ext_box_coarse.med";
-//     std::string mesh_file = "./input/ext_box_coarse.med";
-//     std::string mesh_file = "./input/ext_box.med";
+    std::string mesh_file = "./input/extended_box_coarse.med";
+//     std::string mesh_file = "./input/extended_box_coarse.med";
+//     std::string mesh_file = "./input/extended_box.med";
 
     const double Lref = 1.;
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), Lref);

@@ -30,16 +30,14 @@ O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
 OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
 OZ = geompy.MakeVectorDXDYDZ(0, 0, 1)
-Vertex_1 = geompy.MakeVertex(0, 0, 0)
-Vertex_2 = geompy.MakeVertex(1, 0, 0)
-Line_1 = geompy.MakeLineTwoPnt(Vertex_1, Vertex_2)
+Ellipse_1 = geompy.MakeEllipse(None, None, 2, 1)
+Face_1 = geompy.MakeFaceWires([Ellipse_1], 1)
 geompy.addToStudy( O, 'O' )
 geompy.addToStudy( OX, 'OX' )
 geompy.addToStudy( OY, 'OY' )
 geompy.addToStudy( OZ, 'OZ' )
-geompy.addToStudy( Vertex_1, 'Vertex_1' )
-geompy.addToStudy( Vertex_2, 'Vertex_2' )
-geompy.addToStudy( Line_1, 'Line_1' )
+geompy.addToStudy( Ellipse_1, 'Ellipse_1' )
+geompy.addToStudy( Face_1, 'Face_1' )
 
 ###
 ### SMESH component
@@ -49,30 +47,28 @@ import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
 smesh = smeshBuilder.New(theStudy)
-Mesh_1 = smesh.Mesh(Line_1)
+Mesh_1 = smesh.Mesh(Face_1)
+NETGEN_2D = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_2D)
+Length_From_Edges_1 = smesh.CreateHypothesis('LengthFromEdges')
+status = Mesh_1.RemoveHypothesis(NETGEN_2D)
 Regular_1D = Mesh_1.Segment()
-Number_of_Segments_1 = Regular_1D.NumberOfSegments(1)
+Max_Size_1 = Regular_1D.MaxSize(0.447214)
+MEFISTO_2D = Mesh_1.Triangle(algo=smeshBuilder.MEFISTO)
 isDone = Mesh_1.Compute()
 Mesh_1.ConvertToQuadratic(0)
+Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
+nbAdd = Group_1_0.AddFrom( Mesh_1.GetMesh() )
+Group_1_0.SetName( 'Group_1_0' )
 smesh.SetName(Mesh_1, 'Mesh_1')
 try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/applications/tutorial/ex_time/input/interval.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
-Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.NODE, 'Group_1_0' )
-nbAdd = Group_1_0.Add( [ 1, 2 ] )
-smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/applications/tutorial/ex_time/input/interval.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
 
 
 ## Set names of Mesh objects
+smesh.SetName(NETGEN_2D.GetAlgorithm(), 'NETGEN 2D')
 smesh.SetName(Regular_1D.GetAlgorithm(), 'Regular_1D')
-smesh.SetName(Number_of_Segments_1, 'Number of Segments_1')
+smesh.SetName(MEFISTO_2D.GetAlgorithm(), 'MEFISTO_2D')
+smesh.SetName(Max_Size_1, 'Max Size_1')
+smesh.SetName(Length_From_Edges_1, 'Length From Edges_1')
 smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
 smesh.SetName(Group_1_0, 'Group_1_0')
 

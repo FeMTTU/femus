@@ -60,11 +60,6 @@ Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
 nbAdd = Group_1_0.AddFrom( Mesh_1.GetMesh() )
 Group_1_0.SetName( 'Group_1_0' )
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/circle_tri6.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
 
 
 ## Set names of Mesh objects

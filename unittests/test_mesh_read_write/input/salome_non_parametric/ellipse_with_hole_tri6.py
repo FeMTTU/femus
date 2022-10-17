@@ -59,10 +59,7 @@ Max_Size_1 = smesh.CreateHypothesis('MaxLength')
 Max_Size_1.SetLength( 0.447214 )
 MEFISTO_2D = smesh.CreateHypothesis('MEFISTO_2D')
 Regular_1D = smesh.CreateHypothesis('Regular_1D')
-try:
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
+
 RadialQuadrangle_1D2D = smesh.CreateHypothesis('RadialQuadrangle_1D2D')
 Max_Size_2 = smesh.CreateHypothesis('MaxLength')
 Max_Size_2.SetLength( 1 )
@@ -83,11 +80,6 @@ Group_2_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_2_0' )
 nbAdd = Group_2_0.Add( [ 23, 24, 25, 26, 27, 28 ] )
 [ Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/applications/tutorial/ex_time/input/ellipse_with_hole_tri6.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
 
 
 ## Set names of Mesh objects
