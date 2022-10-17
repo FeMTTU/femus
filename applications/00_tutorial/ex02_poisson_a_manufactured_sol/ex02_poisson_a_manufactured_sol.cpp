@@ -135,8 +135,8 @@ int main(int argc, char** args) {
       system.AddSolutionToSystemPDE("u");
 
       // attach the assembling function to system
-//       system.SetAssembleFunction(AssemblePoissonProblem_AD);
-      system.SetAssembleFunction(AssemblePoissonProblem);  //@todo there is a very weird error here when you run 
+      system.SetAssembleFunction(AssemblePoissonProblem_AD);
+//       system.SetAssembleFunction(AssemblePoissonProblem);
 
       // initilaize and solve the system
       system.init();
@@ -161,6 +161,7 @@ int main(int argc, char** args) {
   }
 
 
+  // ======= H1 - BEGIN  ========================
   std::cout << std::endl;
   std::cout << std::endl;
 
@@ -189,8 +190,10 @@ int main(int argc, char** args) {
     }
 
   }
+  // ======= H1 - END  ========================
   
   
+  // ======= L2 - BEGIN  ========================
   std::cout << std::endl;
   std::cout << std::endl;
 
@@ -222,7 +225,10 @@ int main(int argc, char** args) {
     }
 
   }
+  // ======= L2 - END  ========================
 
+  
+  
   return 0;
 }
 
@@ -346,7 +352,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
 
     Res.assign(nDofu, 0.);    //resize and set to zero
-    Jac.resize(nDofu * nDofu, 0.);    //resize and set to zero
+    Jac.assign(nDofu * nDofu, 0.);    //resize and set to zero
     
 
     // *** Gauss point loop ***
@@ -405,9 +411,11 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
 
     
+     constexpr bool print_algebra_local = false;
+     if (print_algebra_local) {
          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs_Mat_vol, 10, 5);
-  
+     }  
     
   } //end element loop for each process
 
@@ -609,9 +617,13 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     s.clear_dependents();
 
     
+  constexpr bool print_algebra_local = false;
+     if (print_algebra_local) {
          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs_Mat_vol, 10, 5);
-  
+     }
+     
+     
   } //end element loop for each process
 
   RES->close();
