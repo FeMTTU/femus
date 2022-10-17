@@ -19,7 +19,6 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   FILE(COPY ${OPT_APPLICATION}/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
 
   
-  ADD_SUBDIRECTORY(./00_laplacian_all_dims_dir_neu/)
   ADD_SUBDIRECTORY(./01_boundary_control_inequality/)
   ADD_SUBDIRECTORY(./01_distributed_control_elliptic_nonlin/)
   ADD_SUBDIRECTORY(./03_nsopt/)

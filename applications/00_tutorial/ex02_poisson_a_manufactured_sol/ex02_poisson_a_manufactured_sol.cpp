@@ -147,12 +147,12 @@ int main(int argc, char** args) {
       std::pair< double , double > norm = GetErrorNorm(&ml_sol);
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
-      // print solutions
+
+  // ======= Print - BEGIN  ========================
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
             
       
-  // ======= Print - BEGIN  ========================
 //       ml_sol.GetWriter()->SetGraphVariable ("u");
       ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
   // ======= Print - END  ========================

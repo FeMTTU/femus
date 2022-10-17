@@ -24,12 +24,33 @@
 
 using namespace femus;
 
+
+
+
+double GetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return cos(pi * x[0]) * cos(pi * x[1]);
+}
+
+
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+}
+
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+};
+
+
+
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
-
-//   if (faceName == 2)
-//     dirichlet = false;
 
   return dirichlet;
 }
@@ -40,6 +61,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_from_restriction); 
 // ||u_i - u_h||/||u_i-u_(h/2)|| = 2^alpha, alpha is order of conv 
+
 
 int main(int argc, char** args) {
 
@@ -82,7 +104,7 @@ int main(int argc, char** args) {
     maxNumberOfMeshes = 4;
   }
 
-  const unsigned gap = 2;
+  const unsigned gap = 1;
 
   vector < vector < double > > l2Norm;
   l2Norm.resize(maxNumberOfMeshes + 1 - gap);
@@ -143,7 +165,8 @@ int main(int argc, char** args) {
       system.AddSolutionToSystemPDE("u");
 
       // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoissonProblem_AD);
+//       system.SetAssembleFunction(AssemblePoissonProblem_AD);
+      system.SetAssembleFunction(AssemblePoissonProblem);
 
       // initilaize and solve the system
       system.init();
@@ -221,37 +244,11 @@ int main(int argc, char** args) {
     }
   }
   
-  delete mlSol_finest; 
-
-//   print the seminorm of the error and the order of convergence between different levels
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
-
-  for (int i = l2Norm.size() - 1; i >= 0; i--) {   // loop on the mesh level
-    std::cout << i + 1 << "\t";
-    std::cout.precision(14);
-
-    for (unsigned j = 0; j < feOrder.size(); j++) {
-      std::cout << l2Norm[i][j] << "\t";
-    }
-
-    std::cout << std::endl;
-
-    if (i < l2Norm.size() - 2) {
-      std::cout.precision(3);
-      std::cout << "\t";
-
-      for (unsigned j = 0; j < feOrder.size(); j++) {
-        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "  \t\t";
-      }
-
-      std::cout << std::endl;
-    }
-
-  }
-
+  delete mlSol_finest;
+  
+  
+  
+  // ======= H1 - BEGIN  ========================
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
@@ -279,25 +276,44 @@ int main(int argc, char** args) {
     }
 
   }
+  // ======= H1 - END  ========================
+
+
+
+  // ======= L2 - BEGIN  ========================
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
+
+  for (int i = l2Norm.size() - 1; i >= 0; i--) {   // loop on the mesh level
+    std::cout << i + 1 << "\t";
+    std::cout.precision(14);
+
+    for (unsigned j = 0; j < feOrder.size(); j++) {
+      std::cout << l2Norm[i][j] << "\t";
+    }
+
+    std::cout << std::endl;
+
+    if (i < l2Norm.size() - 2) {
+      std::cout.precision(3);
+      std::cout << "\t";
+
+      for (unsigned j = 0; j < feOrder.size(); j++) {
+        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "  \t\t";
+      }
+
+      std::cout << std::endl;
+    }
+
+  }
+  // ======= L2 - END  ========================
 
   return 0;
 }
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
-};
 
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
-
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-};
 
 /**
  * This function assemble the stiffnes matrix Jac and the residual vector Res

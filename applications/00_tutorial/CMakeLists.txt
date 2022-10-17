@@ -2,6 +2,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
+ADD_SUBDIRECTORY(00_laplacian_all_dims_dir_neu/)
+ADD_SUBDIRECTORY(00_laplacian_all_dims_dir_neu_class_2021_2022/)
+
+
 ADD_SUBDIRECTORY(ex01_function_approximation_no_eqn/)
 ADD_SUBDIRECTORY(ex02_poisson_a_manufactured_sol/)
 ADD_SUBDIRECTORY(ex02_poisson_b_non_manufactured_sol/)
@@ -23,6 +27,7 @@ ADD_SUBDIRECTORY(ex08_boussinesq/)
 
 ADD_SUBDIRECTORY(ex11/)
 
-ADD_SUBDIRECTORY(ex_time/)
 
-ADD_SUBDIRECTORY(class_2021_2022/)
+ADD_SUBDIRECTORY(ex20_time_dependent/)
+
+
