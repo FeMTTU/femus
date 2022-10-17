@@ -12,9 +12,10 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
+
+#include "Assemble_jacobian.hpp"
+
 #include "adept.h"
 
 
@@ -68,8 +69,8 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-//   mlMsh.ReadCoarseMesh("./input/square_2x2_centered_at_origin.med", "seventh", scalingFactor);
+//   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_2x2_centered_at_origin.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in furure it is not going to be an argument of this function   */
@@ -134,8 +135,8 @@ int main(int argc, char** args) {
       system.AddSolutionToSystemPDE("u");
 
       // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoissonProblem_AD);
-//       system.SetAssembleFunction(AssemblePoissonProblem);  //@todo there is a very weird error here when you run 
+//       system.SetAssembleFunction(AssemblePoissonProblem_AD);
+      system.SetAssembleFunction(AssemblePoissonProblem);  //@todo there is a very weird error here when you run 
 
       // initilaize and solve the system
       system.init();
@@ -313,6 +314,9 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     
+
+    std::vector<unsigned> Sol_n_el_dofs_Mat_vol(1, nDofu);
+  
     // resize local arrays
     solu.resize(nDofu);
     l2GMap.resize(nDofu);
@@ -350,8 +354,6 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
         
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
-
-      //double* gradPhi[][2] = &phi_x[0];
       
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
     
@@ -375,7 +377,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           weakLaplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
         
-        Res[i] +=  (  - GetExactSolutionLaplace(x_gss) * phi[i] - weakLaplace) * weight;
+        Res[i] += - (   GetExactSolutionLaplace(x_gss) * phi[i] + weakLaplace) * weight;
 
         // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {
@@ -402,6 +404,11 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     //store K in the global matrix KK
     KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
 
+    
+         assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs_Mat_vol, 10, 5);
+  
+    
   } //end element loop for each process
 
   RES->close();
@@ -501,6 +508,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
+    std::vector<unsigned> Sol_n_el_dofs_Mat_vol(1, nDofu);
+
+
     // resize local arrays
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
@@ -562,7 +572,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        aRes[i] += ( - GetExactSolutionLaplace(x_gss) * phi[i] - laplace) * weight;
+        aRes[i] +=  ( GetExactSolutionLaplace(x_gss) * phi[i] + laplace) * weight;
 
       } // end phi_i loop
       
@@ -598,6 +608,10 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     s.clear_independents();
     s.clear_dependents();
 
+    
+         assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs_Mat_vol, 10, 5);
+  
   } //end element loop for each process
 
   RES->close();
