@@ -8,7 +8,7 @@ ADD_SUBDIRECTORY(00_laplacian_all_dims_dir_neu_class_2021_2022/)
 
 ADD_SUBDIRECTORY(ex01_function_approximation_no_eqn/)
 ADD_SUBDIRECTORY(ex02_poisson_a_manufactured_sol/)
-ADD_SUBDIRECTORY(ex02_poisson_b_non_manufactured_sol/)
+ADD_SUBDIRECTORY(ex02_poisson_b_manufactured_sol_incremental_conv_rate/)
 ADD_SUBDIRECTORY(ex02_poisson_convergence/)
 
 ADD_SUBDIRECTORY(ex03_poisson_plus_nonlin_advection/)
