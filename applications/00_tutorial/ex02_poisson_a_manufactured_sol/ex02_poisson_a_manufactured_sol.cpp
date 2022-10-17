@@ -23,6 +23,7 @@ using namespace femus;
 
 
 
+
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
   return cos(pi * x[0]) * cos(pi * x[1]);
@@ -51,9 +52,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   return dirichlet;
 }
 
-void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
-
-void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
+void AssemblePoissonProblem(MultiLevelProblem & ml_prob);
+void AssemblePoissonProblem_AD(MultiLevelProblem & ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* ml_sol);
 
@@ -62,23 +62,48 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* ml_sol);
 
 int main(int argc, char** args) {
 
+  // ======= Init ========================
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  // ======= Problem  ==================
+  MultiLevelProblem ml_prob;
+
+  // ======= Quad Rule ========================
+  std::string fe_quad_rule("seventh");
+
+  // ======= Mesh ========================
   // define multilevel mesh
-  MultiLevelMesh mlMsh;
+  MultiLevelMesh ml_mesh;
+
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-//   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_2x2_centered_at_origin.med", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in furure it is not going to be an argument of this function   */
-  unsigned dim = mlMsh.GetDimension();
+
+  // ======= Mesh, coarse gen, I: from function - BEGIN  ========================
+  const unsigned int nsub_x = 2;
+  const unsigned int nsub_y = 2;
+  const unsigned int nsub_z = 0;
+  const std::vector<double> xyz_min = {-0.5,-0.5,0.};
+  const std::vector<double> xyz_max = { 0.5, 0.5,0.};
+  const ElemType geom_elem_type = /*TRI6*/QUAD9;
+  ml_mesh.GenerateCoarseBoxMesh(nsub_x, nsub_y, nsub_z, xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, fe_quad_rule.c_str() );
+  // ======= Mesh, coarse gen, I: from function - END ========================
+
+//   // ======= Mesh, coarse gen, III: from Salome - BEGIN  ========================
+//    ml_mesh.ReadCoarseMesh("./input/square_2x2_centered_at_origin.med", fe_quad_rule.c_str(), scalingFactor);
+//   // ======= Mesh, coarse gen, III: from Salome - END ========================
+
+//   // ======= Mesh, coarse gen, II: from Gambit - BEGIN  ========================
+//     ml_mesh.ReadCoarseMesh("./input/square_tri.neu", fe_quad_rule.c_str(), scalingFactor);
+//     ml_mesh.ReadCoarseMesh("./input/square_quad.neu", fe_quad_rule.c_str(), scalingFactor);
+//   //   ml_mesh.ReadCoarseMesh("./input/cube_tet.neu", fe_quad_rule.c_str(), scalingFactor);
+  // ======= Mesh, coarse gen, II: from Gambit - END ========================
+
+  unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = 6;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -96,53 +121,85 @@ int main(int argc, char** args) {
     feOrder[2] = SECOND;
 
     
+    std::vector < std::pair <femus::System::AssembleFunctionType, std::string> >  assemble_pointer_vec(2);
+    
+    assemble_pointer_vec[0].first = AssemblePoissonProblem;
+    assemble_pointer_vec[0].second = "NON-AUTOMATIC DIFFERENTIATION";
+    
+    assemble_pointer_vec[1].first = AssemblePoissonProblem_AD;
+    assemble_pointer_vec[1].second = "AUTOMATIC DIFFERENTIATION";
+
+   for (unsigned func = 0; func < assemble_pointer_vec.size(); func++) {   // loop on the mesh level
+
+  std::cout << std::endl;
+  std::cout << std::endl;
+     std::cout << "===================================" << std::endl;
+     std::cout << "===================================" << std::endl;
+     std::cout << assemble_pointer_vec[func].second << std::endl;
+     std::cout << "===================================" << std::endl;
+     std::cout << "===================================" << std::endl;
+  std::cout << std::endl;
+  std::cout << std::endl;
+
+    //     	printf("*****************************Called function is: %s\n",__func__);
+
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
-    mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+    ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
     // erase all the coarse mesh levels
-    mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+    ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
     // print mesh info
-    mlMsh.PrintInfo();
+    ml_mesh.PrintInfo();
 
     l2Norm[i].resize(feOrder.size());
     semiNorm[i].resize(feOrder.size());
 
+    
     for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
 
-        // define the multilevel solution and attach the mlMsh object to it
-      MultiLevelSolution ml_sol(&mlMsh);
+        // define the multilevel solution and attach the ml_mesh object to it
+      MultiLevelSolution ml_sol(&ml_mesh);
 
       ml_sol.SetWriter(VTK);
+
+        std::string sol_name = "u";  ///@todo this is the same for the Assemble, fix this
+//         std::string sol_name = "u_" + std::to_string(j);
+        
       // add variables to ml_sol
-      ml_sol.AddSolution("u", LAGRANGE, feOrder[j]);
+      ml_sol.AddSolution(sol_name.c_str(), LAGRANGE, feOrder[j]);
       ml_sol.Initialize("All");
 
       // attach the boundary condition function and generate boundary data
       ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-      ml_sol.GenerateBdc("u");
+      ml_sol.GenerateBdc( sol_name.c_str() );
 
-      // define the multilevel problem attach the ml_sol object to it
-      MultiLevelProblem mlProb(&ml_sol);
+      // ======= Problem, Mesh and Solution  ==================
+      // attach the ml_sol object
+       ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+       
+      ml_prob.get_systems_map().clear(); 
 
-      // add system Poisson in mlProb as a Linear Implicit System
-      LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
+      
+    // ======= System - BEGIN ========================
+      // add system Poisson in ml_prob as a Linear Implicit System
+      LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("Poisson");
 
       // add solution "u" to system
-      system.AddSolutionToSystemPDE("u");
+      system.AddSolutionToSystemPDE( sol_name.c_str() );
 
       // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoissonProblem_AD);
-//       system.SetAssembleFunction(AssemblePoissonProblem);
+      system.SetAssembleFunction( assemble_pointer_vec[func].first );
 
-      // initilaize and solve the system
+      // initialize and solve the system
       system.init();
       
       system.SetOuterSolver(PREONLY);
       system.MGsolve();
+    // ======= System - END ========================
 
       std::pair< double , double > norm = GetErrorNorm(&ml_sol);
       l2Norm[i][j]  = norm.first;
@@ -154,7 +211,7 @@ int main(int argc, char** args) {
             
       
 //       ml_sol.GetWriter()->SetGraphVariable ("u");
-      ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      ml_sol.GetWriter()->Write(sol_name.c_str(), DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
   // ======= Print - END  ========================
 
     }
@@ -227,7 +284,7 @@ int main(int argc, char** args) {
   }
   // ======= L2 - END  ========================
 
-  
+    } //end assemble func loop
   
   return 0;
 }

@@ -43,10 +43,10 @@ class System {
 
 protected:
 
+public:
+
     /** Function pointer type, easiest way to declare function pointer instantiations */
     typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob);//, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-
-public:
 
     /** Constructor.  Optionally initializes required data structures. */
     System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type);

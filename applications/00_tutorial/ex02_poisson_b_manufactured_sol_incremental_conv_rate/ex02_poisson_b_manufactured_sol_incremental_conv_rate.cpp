@@ -79,7 +79,7 @@ int main(int argc, char** args) {
     In the future it is not going to be an argument of the mesh function   */
 
  // define multilevel mesh
-  MultiLevelMesh mlMsh;
+  MultiLevelMesh ml_mesh;
  // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   const unsigned int nsub_x = 2;
@@ -88,14 +88,14 @@ int main(int argc, char** args) {
   const std::vector<double> xyz_min = {-0.5,-0.5,0.};
   const std::vector<double> xyz_max = { 0.5, 0.5,0.};
   const ElemType geom_elem_type = QUAD9;
-  mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  ml_mesh.GenerateCoarseBoxMesh(nsub_x, nsub_y, nsub_z, xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, fe_quad_rule.c_str());
+//   ml_mesh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
-  MultiLevelMesh mlMsh_finest;
-  mlMsh_finest.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   mlMsh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  MultiLevelMesh ml_mesh_finest;
+  ml_mesh_finest.GenerateCoarseBoxMesh(nsub_x, nsub_y, nsub_z, xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, fe_quad_rule.c_str());
+//   ml_mesh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
-  unsigned dim = mlMsh.GetDimension();
+  unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
@@ -122,19 +122,19 @@ int main(int argc, char** args) {
 
    unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
-    mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+    ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     // erase all the coarse mesh levels
-    mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+    ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
     
     if (i == maxNumberOfMeshes - 1) {
         unsigned numberOfUniformLevels_finest = numberOfUniformLevels;
-        mlMsh_finest.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest + numberOfSelectiveLevels, NULL);
-//         mlMsh_finest.EraseCoarseLevels(numberOfUniformLevels_finest - 1 - 1); //I need to keep the structures at all levels here so I can restrict every time
+        ml_mesh_finest.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest + numberOfSelectiveLevels, NULL);
+//         ml_mesh_finest.EraseCoarseLevels(numberOfUniformLevels_finest - 1 - 1); //I need to keep the structures at all levels here so I can restrict every time
     }
     
     // print mesh info
-    mlMsh.PrintInfo();
+    ml_mesh.PrintInfo();
     
     if (i < l2Norm.size()) {
     l2Norm[i].resize(feOrder.size());
@@ -142,8 +142,8 @@ int main(int argc, char** args) {
     }
     
     for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
-      // define the multilevel solution and attach the mlMsh object to it
-      MultiLevelSolution mlSol(&mlMsh);
+      // define the multilevel solution and attach the ml_mesh object to it
+      MultiLevelSolution mlSol(&ml_mesh);
       
       // add variables to mlSol
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
@@ -206,7 +206,7 @@ int main(int argc, char** args) {
     }
     else if (i == maxNumberOfMeshes - 1) {
         //store the fine solution  ==================
-              mlSol_finest = new MultiLevelSolution (&mlMsh_finest);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+              mlSol_finest = new MultiLevelSolution (&ml_mesh_finest);  //with the declaration outside and a "new" inside it persists outside the loop scopes
               mlSol_finest->AddSolution("u", LAGRANGE, feOrder[j]);
               mlSol_finest->Initialize("All");
               mlSol_finest->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
