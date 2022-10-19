@@ -258,7 +258,8 @@ int main(int argc, char** args) {
     // ======= Mesh - BEGIN ========================
     MultiLevelMesh ml_mesh;
 
-    std::string input_file = "square_0-1x0-1_divisions_2x2.med";
+//     std::string input_file = "square_0-1x0-1_divisions_2x2.med";  
+     std::string input_file = "assignment_square_regular_triangular.med";
 //     std::string input_file = "L_shaped_domain.med";
 //     std::string input_file = "interval.med";
 //     std::string input_file = "cylinder_hexahedral.med";
@@ -310,8 +311,8 @@ int main(int argc, char** args) {
     // convergence choices ================
     // 1) Which exact solution ================
 //     Square_exact_solution_Zero_on_boundary_1<> exact_sol;         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
-//     Square_exact_solution_Zero_on_boundary_2<> exact_sol;         //provide exact solution, if available ==============
-    Square_exact_solution_Zero_on_boundary_3<> exact_sol;         //provide exact solution, if available ==============
+    Square_exact_solution_Zero_on_boundary_2<> exact_sol;         //provide exact solution, if available ==============
+//     Square_exact_solution_Zero_on_boundary_3<> exact_sol;         //provide exact solution, if available ==============
 
     // 2) Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...    
      const unsigned   conv_order_flag = 0;
@@ -439,8 +440,8 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
 
 
-    Square_exact_solution_Zero_on_boundary_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
-//     Square_exact_solution_Zero_on_boundary_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+//     Square_exact_solution_Zero_on_boundary_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+    Square_exact_solution_Zero_on_boundary_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
 //        Square_exact_solution_Zero_on_boundary_3< double > exact_sol;
  
     const unsigned current_system_number = ml_prob.get_current_system_number();
