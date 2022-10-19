@@ -33,36 +33,12 @@ using namespace femus;
 
 
 
-// constant =============
-template < class type = double >
-class Exact_solution_one : public Math::Function< type > {
-
-  double value(const std::vector < double >& x) const {  return 1.; }
-
-
- vector < double >  gradient(const std::vector < double >& x) const {
-
-    vector < double > solGrad(x.size());
-
-   for (int d = 0; d < x.size(); d++)   solGrad[d]  = 0.;
-
-  return solGrad;
-}
-
-
- double laplacian(const std::vector < double >& x) const {  return 0.; }
-
-    
-};
-
-
 
 template < class type = double >
-class Square_exact_solution_1 : public Math::Function< type > {
+class Square_exact_solution_Zero_on_boundary_1 : public Math::Function< type > {
 
 public:
 
-// manufactured Laplacian =============
     type value(const std::vector < type >& x) const {
         
         return sin( pi * (x[0]) ) * sin( pi * (x[1]) );
@@ -94,13 +70,12 @@ public:
 };
 
 
-
+//this solution shows SUPERCONVERGENCE for SERENDIPITY FE, and it is like SUPER PERFECT for BIQUADRATIC FE
 template < class type = double >
-class Square_exact_solution_2 : public Math::Function< type > {
+class Square_exact_solution_Zero_on_boundary_2 : public Math::Function< type > {
 
 public:
 
-// manufactured Laplacian =============
     type value(const std::vector < type >& x) const {
         
         return   x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
@@ -128,6 +103,38 @@ public:
 };
 
 
+//this solution does not have SUPERCONVERGENCE
+template < class type = double >
+class Square_exact_solution_Zero_on_boundary_3 : public Math::Function< type > {
+
+public:
+
+// manufactured Laplacian =============
+    type value(const std::vector < type >& x) const {
+        
+        return    x[0] *  x[0] * (1. - x[0]) * x[1] * (1. - x[1]) ;
+    }
+
+
+    vector < type >  gradient(const std::vector < type >& x) const {
+
+        vector < type > solGrad(x.size());
+
+        solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+        solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return     x[0] *  (  -2. *  x[1] * (1. - x[1])   ) + 2. *  (1. - 2. * x[0]) *  x[1] * (1. - x[1])   +  x[0] * ( -2. *  x[0] * (1. - x[0])) ;
+    }
+
+
+
+};
 
 
 
@@ -230,7 +237,7 @@ int main(int argc, char** args) {
 
     // ======= Files - BEGIN  =========================
     Files files;
-    const bool use_output_time_folder = true;
+    const bool use_output_time_folder = false;
     const bool redirect_cout_to_file = true;
     files.CheckIODirectories(use_output_time_folder);
     files.RedirectCout(redirect_cout_to_file);
@@ -249,16 +256,9 @@ int main(int argc, char** args) {
 
 
     // ======= Mesh - BEGIN ========================
-    const ElemType geom_elem_type = QUAD9;
-    const std::vector< unsigned int > nsub = {2, 2, 0};
-    const std::vector< double >      xyz_min = {0., 0., 0.};
-    const std::vector< double >      xyz_max = {1., 1., 0.};
-
-
     MultiLevelMesh ml_mesh;
-//     ml_mesh.GenerateCoarseBoxMesh(nsub[0], nsub[1], nsub[2], xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, fe_quad_rule.c_str());
 
-    std::string input_file = "square_2x2.med";
+    std::string input_file = "square_0-1x0-1_divisions_2x2.med";
 //     std::string input_file = "L_shaped_domain.med";
 //     std::string input_file = "interval.med";
 //     std::string input_file = "cylinder_hexahedral.med";
@@ -308,11 +308,15 @@ int main(int argc, char** args) {
 
 
     // convergence choices ================
-    Square_exact_solution_1<> exact_sol;         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available ==============
-//     Square_exact_solution_2<> exact_sol;         //provide exact solution, if available ==============
-    const unsigned conv_order_flag = 0;    //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
-    const unsigned norm_flag = 1;          //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+    // 1) Which exact solution ================
+//     Square_exact_solution_Zero_on_boundary_1<> exact_sol;         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
+//     Square_exact_solution_Zero_on_boundary_2<> exact_sol;         //provide exact solution, if available ==============
+    Square_exact_solution_Zero_on_boundary_3<> exact_sol;         //provide exact solution, if available ==============
 
+    // 2) Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...    
+     const unsigned   conv_order_flag = 0;
+    // 3) Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+     const unsigned norm_flag = 1;
 
     // object ================
     FE_convergence<>  fe_convergence;
@@ -408,7 +412,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 //             system.SetMaxNumberOfLinearIterations(6);
 //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
 
-        system.SetOuterSolver(GMRES);
+        system.SetOuterSolver(PREONLY/*GMRES*/);
         system.MGsolve();  //everything is stored into the Solution after this
         // ======= System - END ========================
 
@@ -435,9 +439,10 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
 
 
-    Square_exact_solution_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
-//     Square_exact_solution_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
-
+    Square_exact_solution_Zero_on_boundary_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+//     Square_exact_solution_Zero_on_boundary_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+//        Square_exact_solution_Zero_on_boundary_3< double > exact_sol;
+ 
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
    //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
