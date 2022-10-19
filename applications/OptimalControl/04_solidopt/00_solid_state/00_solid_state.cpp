@@ -3,15 +3,14 @@
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
 #include "LinearImplicitSystem.hpp"
 #include "Parameter.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 #include "Assemble_jacobian.hpp"
+#include "adept.h"
 
 
 #define MODEL "Linear_elastic"
@@ -233,7 +232,8 @@ int main(int argc, char** args) {
    // object ================  
     FE_convergence<>  fe_convergence;
     
-    fe_convergence.convergence_study(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+    const unsigned volume_or_boundary = 0;
+    fe_convergence.convergence_study(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, volume_or_boundary, my_main);
   
   return 0;
 }

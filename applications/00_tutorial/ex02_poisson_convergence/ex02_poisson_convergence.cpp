@@ -322,6 +322,8 @@ int main(int argc, char** args) {
     // object ================
     FE_convergence<>  fe_convergence;
 
+    const unsigned volume_or_boundary = 0;  //0: volume, 1: boundary, ...
+    
     fe_convergence.convergence_study(files, ml_prob, unknowns,
                                      Solution_set_boundary_conditions, 
                                      Solution_set_initial_conditions,
@@ -330,6 +332,7 @@ int main(int argc, char** args) {
                                      max_number_of_meshes, 
                                      norm_flag,
                                      conv_order_flag,
+                                     volume_or_boundary,
                                      my_main, & exact_sol);
 
     // ======= Convergence study - END ========================

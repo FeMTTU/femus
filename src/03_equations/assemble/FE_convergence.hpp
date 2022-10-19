@@ -7,6 +7,8 @@
 #include "Assemble_unknown.hpp"
 
 
+#define FE_DOMAIN  2
+
 
 namespace femus {
 
@@ -50,10 +52,12 @@ public:
                           const unsigned max_number_of_meshes,
                           const unsigned norm_flag,
                           const unsigned conv_order_flag,
+                          const unsigned volume_or_boundary,
                           const Main_single_level & main_in,
                           const Math::Function< double > * exact_sol = NULL);
 
     
+private: 
     
 static   std::vector < std::vector < std::vector < type > > >  initialize_vector_of_norms(const unsigned unknowns_size, 
                                                                                              const unsigned max_number_of_meshes, 
@@ -87,7 +91,7 @@ static  void output_convergence_order_all(const std::vector< Unknown > &  unknow
 static  void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i); 
 
 
-static  std::vector< type > compute_error_norms(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
+static  std::vector< type > compute_error_norms_volume(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
                                                 const std::vector<Gauss> & quad_rules,
                                                 const MultiLevelSolution* ml_sol, 
                                                 const MultiLevelSolution* ml_sol_all_levels,
@@ -95,10 +99,19 @@ static  std::vector< type > compute_error_norms(const std::vector < std::vector 
                                                 const unsigned current_level,
                                                 const unsigned norm_flag,
                                                 const unsigned conv_order_flag,
+                                                                            const unsigned volume_or_boundary,
                                                 const Math::Function< type > * ex_sol_in = NULL
                                              );
- 
- 
+ ///@deprecated
+static  std::vector< type > compute_error_norms_boundary(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
+                                                                            const std::vector<Gauss> & quad_rules,
+                                                                            const MultiLevelSolution* ml_sol,
+                                                                            const MultiLevelSolution* ml_sol_all_levels,
+                                                                            const std::string & unknown,
+                                                                            const unsigned current_level,
+                                                                            const unsigned norm_flag,
+                                                                            const unsigned conv_order_flag,
+                                                                            const Math::Function< type > * ex_sol_in); 
 
      
 static  void compute_error_norms_per_unknown_per_level(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
@@ -110,6 +123,7 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        const unsigned norm_flag,
                                                        std::vector < std::vector < std::vector < type > > > &  norms,
                                                        const unsigned conv_order_flag,
+                                                       const unsigned volume_or_boundary,
                                                        const Math::Function< type > * ex_sol_in = NULL
                                          );
 
@@ -136,6 +150,7 @@ template < class type>
                                                   const unsigned max_number_of_meshes,
                                                   const unsigned norm_flag,
                                                   const unsigned conv_order_flag,
+                                                  const unsigned volume_or_boundary,
                                                   const Main_single_level & main_in,
                                                   const Math::Function< double > * exact_sol) {
 
@@ -177,6 +192,7 @@ template < class type>
                                                                         norm_flag,
                                                                         norms,
                                                                         conv_order_flag,
+                                                                        volume_or_boundary,
                                                                         exact_sol);
         
       }
@@ -306,11 +322,10 @@ template < class type>
   
 } 
  
- 
- 
 
+ 
 template < class type>
-/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
+/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms_boundary(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
                                                                             const std::vector<Gauss> & quad_rules,
                                                                             const MultiLevelSolution* ml_sol,
                                                                             const MultiLevelSolution* ml_sol_all_levels,
@@ -318,6 +333,24 @@ template < class type>
                                                                             const unsigned current_level,
                                                                             const unsigned norm_flag,
                                                                             const unsigned conv_order_flag,
+                                                                            const Math::Function< type > * ex_sol_in
+                                             ) {
+    
+    abort();
+} 
+ 
+ 
+
+template < class type>
+/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms_volume(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
+                                                                            const std::vector<Gauss> & quad_rules,
+                                                                            const MultiLevelSolution* ml_sol,
+                                                                            const MultiLevelSolution* ml_sol_all_levels,
+                                                                            const std::string & unknown,
+                                                                            const unsigned current_level,
+                                                                            const unsigned norm_flag,
+                                                                            const unsigned conv_order_flag,
+                                                                            const unsigned volume_or_boundary,
                                                                             const Math::Function< type > * ex_sol_in
                                              ) {
      
@@ -348,8 +381,8 @@ template < class type>
  unsigned iproc = msh->processor_id();
 
   //solution variable
-  unsigned soluIndex = ml_sol->GetIndex(unknown.c_str()); // ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  unsigned sol_uIndex = ml_sol->GetIndex(unknown.c_str()); // ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned sol_uType = ml_sol->GetSolutionType(sol_uIndex);    // get the finite element type for "u"
 
   
  //***************************************************  
@@ -369,21 +402,21 @@ template < class type>
 
   // ======================================
   // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
   
   
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  unsigned solType_coords = FE_DOMAIN; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   vector < vector < type > > x(dim_offset_grad);    // local coordinates
-  for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(maxSize);
+  for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
 
 //-----------------  
   vector < type > phi_coords;
   vector < type > phi_coords_x;
   vector < type > phi_coords_xx;
 
-  phi_coords.reserve(maxSize);
-  phi_coords_x.reserve(maxSize * dim_offset_grad);
-  phi_coords_xx.reserve(maxSize * dim2);
+  phi_coords.reserve(max_size);
+  phi_coords_x.reserve(max_size * dim_offset_grad);
+  phi_coords_xx.reserve(max_size * dim2);
 
   vector < type > phi;
   vector < type > phi_x;
@@ -392,28 +425,58 @@ template < class type>
   type weight; // gauss point weight
 
 
-  vector < type >  solu;                               solu.reserve(maxSize);
-  vector < type >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
-  vector < type >  solu_coarser_prol;     solu_coarser_prol.reserve(maxSize);
+  vector < type >  sol_u;                               sol_u.reserve(max_size);
+  vector < type >  sol_u_exact_at_dofs;   sol_u_exact_at_dofs.reserve(max_size);
+  vector < type >  sol_u_coarser_prol;     sol_u_coarser_prol.reserve(max_size);
 
 
-  phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim_offset_grad);
-  phi_xx.reserve(maxSize * dim2);
+  phi.reserve(max_size);
+  phi_x.reserve(max_size * dim_offset_grad);
+  phi_xx.reserve(max_size * dim2);
 
   
-  // element loop: each process loops only on the elements that owns
+  
+  
+  
+  
+  
+    CurrentElem < double > geom_element_iel(dim, msh);
+    
+     std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
+    
+    double detJac_iqp_bdry;
+  double weight_iqp_bdry = 0.;
+    
+  vector <double> phi_ctrl_bdry;  
+  vector <double> phi_ctrl_x_bdry; 
+
+  phi_ctrl_bdry.reserve(max_size);
+  phi_ctrl_x_bdry.reserve(max_size * space_dim);
+
+
+   double integral_alpha  = 0.;
+  double integral_beta   = 0.;
+
+  
+  
+  
+  
+  
+  
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);
+    unsigned nDofu  = msh->GetElementDofNumber(iel, sol_uType);
+    unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);
 
     // resize local arrays
-    solu.resize(nDofu);
-    solu_exact_at_dofs.resize(nDofu);
-    solu_coarser_prol.resize(nDofu);
+    sol_u.resize(nDofu);
+    sol_u_exact_at_dofs.resize(nDofu);
+    sol_u_coarser_prol.resize(nDofu);
 
     for (int i = 0; i < x.size(); i++) {
       x[i].resize(nDofx);
@@ -421,7 +484,7 @@ template < class type>
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim_offset_grad/*dim*/; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);  // global extraction and local storage for the element coordinates
@@ -434,40 +497,106 @@ template < class type>
     for (unsigned i = 0; i < nDofu; i++) {
         std::vector< type > x_at_node(dim_offset_grad,0.);
         for (unsigned jdim = 0; jdim < x_at_node.size(); jdim++) x_at_node[jdim] = x[jdim][i];
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
-                   solu[i]  =                                        (*sol->_Sol[soluIndex])(solDof);
-      solu_coarser_prol[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[soluIndex])(solDof);
-      if (ex_sol_in != NULL) solu_exact_at_dofs[i] = ex_sol_in->value(x_at_node);
+      unsigned solDof = msh->GetSolutionDof(i, iel, sol_uType);
+                   sol_u[i]  =                                        (*sol->_Sol[sol_uIndex])(solDof);
+      sol_u_coarser_prol[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[sol_uIndex])(solDof);
+      if (ex_sol_in != NULL) sol_u_exact_at_dofs[i] = ex_sol_in->value(x_at_node);
     }
 
 
-    // *** Gauss point loop ***
+    // *** BOUNDARY - BEGIN ***
+if (volume_or_boundary == 1 )	{  
+	       
+	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
+          
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
+       const unsigned nve_bdry_ctrl = msh->GetElementFaceDofNumber(iel,iface, sol_uType);
+       
+// ----------
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
+ 
+// ----------
+
+		            const int bdry_index_j = msh->el->GetFaceElementIndex(iel, iface);
+
+	    if(  bdry_index_j < 0 ) {
+
+	
+		//============ initialize gauss quantities on the boundary ==========================================
+                double sol_u_bdry_gss = 0.;
+                std::vector<double> sol_u_x_bdry_gss(space_dim);
+		//============ initialize gauss quantities on the boundary ==========================================
+		
+		for(unsigned ig_bdry = 0; ig_bdry < quad_rules[ielGeom_bdry].GetGaussPointsNumber(); ig_bdry++) {
+		  
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_iqp_bdry, space_dim);
+    weight_iqp_bdry = detJac_iqp_bdry * quad_rules[ielGeom_bdry].GetGaussWeightsPointer()[ig_bdry];
+    elem_all[ielGeom_bdry][sol_uType] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
+
+		  
+		 //========== compute gauss quantities on the boundary ===============================================
+		  sol_u_bdry_gss = 0.;
+                  std::fill(sol_u_x_bdry_gss.begin(), sol_u_x_bdry_gss.end(), 0.);
+		      for (int i_bdry = 0; i_bdry < nve_bdry_ctrl; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+			
+			sol_u_bdry_gss +=  sol_u[i_vol] * phi_ctrl_bdry[i_bdry];
+                            for (int d = 0; d < space_dim; d++) {
+			      sol_u_x_bdry_gss[d] += sol_u[i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
+			    }
+		      }
+		      
+		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
+
+                 //========= compute gauss quantities on the boundary ================================================
+                  integral_alpha +=  weight_iqp_bdry * sol_u_bdry_gss * sol_u_bdry_gss; 
+                  integral_beta  +=  weight_iqp_bdry * laplace_ctrl_surface;
+                 
+        }
+            
+        
+	      } //end face
+	      
+	  }  // loop over element faces   
+	  
+
+//=====================================================================================================================  
+//=====================================================================================================================  
+//=====================================================================================================================  
+     
+    
+    // *** BOUNDARY - END ***
+}   
+    
+  else if (volume_or_boundary == 0) {  
+    
+    // *** VOLUME - BEGIN ***
     for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
 
       // *** get gauss point weight, test function and test function partial derivatives ***
-	elem_all[ielGeom][xType]->JacJacInv(x, ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    elem_all[ielGeom][soluType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x, phi_xx, space_dim);
+	elem_all[ielGeom][solType_coords]->JacJacInv(x, ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    elem_all[ielGeom][sol_uType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x, phi_xx, space_dim);
     weight = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
 
     
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      type solu_gss = 0.;
+      type sol_u_gss = 0.;
       type exactSol_from_dofs_gss = 0.;
-      type solu_coarser_prol_gss = 0.;
+      type sol_u_coarser_prol_gss = 0.;
       vector < type > gradSolu_gss(dim_offset_grad, 0.);
       vector < type > gradSolu_exact_at_dofs_gss(dim_offset_grad, 0.);
       vector < type > gradSolu_coarser_prol_gss(dim_offset_grad, 0.);
       vector < type > x_gss(dim_offset_grad, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss                += phi[i] * solu[i];
-        exactSol_from_dofs_gss  += phi[i] * solu_exact_at_dofs[i];
-        solu_coarser_prol_gss   += phi[i] * solu_coarser_prol[i];
+        sol_u_gss                += phi[i] * sol_u[i];
+        exactSol_from_dofs_gss  += phi[i] * sol_u_exact_at_dofs[i];
+        sol_u_coarser_prol_gss   += phi[i] * sol_u_coarser_prol[i];
 
         for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
-          gradSolu_gss[jdim]                += phi_x[i * dim_offset_grad + jdim] * solu[i];
-          gradSolu_exact_at_dofs_gss[jdim]  += phi_x[i * dim_offset_grad + jdim] * solu_exact_at_dofs[i];
-          gradSolu_coarser_prol_gss[jdim]   += phi_x[i * dim_offset_grad + jdim] * solu_coarser_prol[i];
+          gradSolu_gss[jdim]                += phi_x[i * dim_offset_grad + jdim] * sol_u[i];
+          gradSolu_exact_at_dofs_gss[jdim]  += phi_x[i * dim_offset_grad + jdim] * sol_u_exact_at_dofs[i];
+          gradSolu_coarser_prol_gss[jdim]   += phi_x[i * dim_offset_grad + jdim] * sol_u_coarser_prol[i];
         }
         
          for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
@@ -479,9 +608,9 @@ template < class type>
 // H^0 ==============      
 //     if (norm_flag == 0) {
       type exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
-      norms[0]               += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
-      norms_exact_dofs[0]    += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
-      norms_inexact_dofs[0]  += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
+      norms[0]               += (sol_u_gss - exactSol)                * (sol_u_gss - exactSol)       * weight;
+      norms_exact_dofs[0]    += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
+      norms_inexact_dofs[0]  += (sol_u_gss - sol_u_coarser_prol_gss)   * (sol_u_gss - sol_u_coarser_prol_gss)  * weight;
 //     }
     
 // H^1 ==============      
@@ -496,9 +625,14 @@ template < class type>
    }
       
    } // end gauss point loop
-   
+    // *** VOLUME - END ***
+  }
+  
+  
+  
   } //end element loop for each process
 
+  
   // add the norms of all processes
   NumericVector* norm_vec;
                  norm_vec = NumericVector::build().release();
@@ -558,10 +692,16 @@ template < class type>
                                                                                    const unsigned norm_flag,
                                                                                    std::vector < std::vector < std::vector < type > > > &  norms,
                                                                                    const unsigned conv_order_flag,
+                                                                                   const unsigned volume_or_boundary,
                                                                                    const Math::Function< type > * ex_sol_in
                                          ) {
      
-     
+              if (volume_or_boundary == 0) {
+            }
+            else if (volume_or_boundary == 1) {
+            }
+            else { std::cout << "Boundary of boundary not implemented in function " << __func__; abort(); }
+   
         if ( i > 0 ) {
 
             // ======= prolongate to the current level (i) from the coarser level (i-1) (so that you can compare the two) ========================
@@ -570,8 +710,11 @@ template < class type>
             // =======  compute the error norm at the current level (i) ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
-            const std::vector< type > norm_out = FE_convergence::compute_error_norms (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
-
+            std::vector< type > norm_out;
+            
+            norm_out = FE_convergence::compute_error_norms_volume (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, volume_or_boundary, ex_sol_in);
+            
+            
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        
                    }

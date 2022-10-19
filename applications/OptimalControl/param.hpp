@@ -1424,6 +1424,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
     for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
     
     double detJac_iqp;
+  double weight_iqp = 0.;
 
      std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
      std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
@@ -1431,8 +1432,6 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
     for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
     
     double detJac_iqp_bdry;
-  
-  double weight_iqp = 0.;
   double weight_iqp_bdry = 0.;
     
       //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
