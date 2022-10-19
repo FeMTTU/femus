@@ -42,7 +42,7 @@ class Domain;
 class MultiLevelMesh {
 
 //====================
-//==== Constr/Destr ======== 
+//==== Constr/Destr - BEGIN ======== 
 //====================
 public:
 
@@ -60,8 +60,10 @@ public:
     /** Destructor */
     ~MultiLevelMesh();
 
+//==== Constr/Destr - END ======== 
+    
 //====================
-//==== Basic ======== 
+//==== Basic - BEGIN  ======== 
 //====================
 public:
     /** Get the dimension of the problem (1D, 2D, 3D) */
@@ -70,9 +72,10 @@ public:
     /** Print the mesh info for each level */
     void PrintInfo();
     
+//==== Basic - END  ======== 
 
 //====================
-//==== Coarse level ======== 
+//==== Coarse level - BEGIN  ======== 
 //====================
 public:
 
@@ -108,10 +111,11 @@ private:
     /** Flag to denote what Geometric Elements are in the given Mesh */
     std::vector <bool> _finiteElementGeometryFlag;
     
+//==== Coarse level - END  ======== 
     
     
 //====================
-//==== Multilevel ======== 
+//==== Multilevel -BEGIN ======== 
 //====================
 public:
     
@@ -179,9 +183,10 @@ private:
     /** Array of meshes, only the ones that survive after EraseCoarseLevels. This is only a copy of pointers */
     std::vector <Mesh*> _level;
 
+//==== Multilevel - END ======== 
     
 //============
-//==== FE ======== 
+//==== FE - BEGIN ======== 
 //============
 public:
 
@@ -203,8 +208,10 @@ private:
     
   void DeleteFETypesForExistingGeomElements();
   
+//==== FE - END ======== 
+  
 //====================
-//==== File output ======== 
+//==== File output - BEGIN  ======== 
 //====================
 public:
 
@@ -223,8 +230,10 @@ private:
     /** MultilevelMesh  writer */
     Writer* _writer;
     
+//==== File output - END  ======== 
+    
 //============================
-//==== Domain (optional) ======== 
+//==== Domain (optional) - BEGIN ======== 
 //============================
 public:
 
@@ -239,6 +248,7 @@ private:
     /** Domain (optional) */
     Domain* _domain;
 
+//==== Domain (optional) - END ======== 
     
 };
 

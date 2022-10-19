@@ -165,7 +165,7 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
 
 
 //Unknown definition  ==================
-const std::vector< Unknown >  provide_list_of_unknowns() {
+const std::vector< Unknown >  systems__provide_list_of_unknowns() {
 
 
     std::vector< FEFamily >     feFamily = {LAGRANGE, LAGRANGE, LAGRANGE, DISCONTINUOUS_POLYNOMIAL, DISCONTINUOUS_POLYNOMIAL};
@@ -286,7 +286,7 @@ int main(int argc, char** args) {
   
 
     // ======= Unknowns ========================
-    std::vector< Unknown > unknowns = provide_list_of_unknowns();
+    std::vector< Unknown > unknowns = systems__provide_list_of_unknowns();
 
 
 

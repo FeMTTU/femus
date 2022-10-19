@@ -85,7 +85,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
  
  
  //====== NEUMANN LOOP 1D =============================================   
-void neumann_loop_1d(const MultiLevelProblem *    ml_prob, 
+void boundary_loop_1d(const MultiLevelProblem *    ml_prob, 
                      const Mesh *                    msh,
                      const MultiLevelSolution *    ml_sol, 
                      const unsigned iel,
@@ -146,7 +146,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
 
 
 template < class real_num, class real_num_mov >
-void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob, 
+void boundary_loop_2d3d(const MultiLevelProblem *    ml_prob, 
                        const Mesh *                    msh,
                        const MultiLevelSolution *    ml_sol, 
                        const unsigned iel,
@@ -514,13 +514,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     
 
  //========= BOUNDARY ==================   
-    if (dim == 1)   neumann_loop_1d(& ml_prob, msh, ml_sol,
+    if (dim == 1)   boundary_loop_1d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res
                      );
 
-    if (dim == 2 || dim == 3)   neumann_loop_2d3d(& ml_prob, msh, ml_sol,
+    if (dim == 2 || dim == 3)   boundary_loop_2d3d(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res,

@@ -46,7 +46,7 @@ class elem;
 class Mesh : public ParallelObject {
 
 // =========================
-// === CONSTR-DESTR =================
+// === CONSTR-DESTR - BEGIN =================
 // =========================
 public:
 
@@ -58,9 +58,10 @@ public:
     ~Mesh();
 
     
+// === CONSTR-DESTR - END =================
     
 // =========================
-// === BASIC =================
+// === BASIC - BEGIN =================
 // =========================
 public:
     
@@ -111,9 +112,12 @@ private:
     std::vector < std::vector < double > > _coords;
 
     void PrintInfoElements() const;
+    
+    
+// === BASIC - END =================
 
 // =========================
-// === BASIC, ELEM =================
+// === BASIC, ELEM - BEGIN =================
 // =========================
 public:
     
@@ -155,10 +159,11 @@ public:
     /** MESH: Number of elements per processor (incremental count)  @todo should be private */
     std::vector < unsigned > _elementOffset;
  
+// === BASIC, ELEM - END =================
   
     
 // =========================
-// === BASIC, CharacteristicLength =================
+// === BASIC, CharacteristicLength - BEGIN =================
 // =========================
 public:
     
@@ -181,11 +186,12 @@ private:
     double _cLength;
 
     
+// === BASIC, CharacteristicLength - END =================
     
 
     
 // =========================
-// === COARSE MESH GENERATION =================
+// === COARSE MESH GENERATION - BEGIN =================
 // =========================
 public:
 
@@ -224,10 +230,11 @@ private:
     
     static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
     
+// === COARSE MESH GENERATION - END =================
     
     
 // =========================
-// === PARTITIONING =================
+// === PARTITIONING - BEGIN =================
 // =========================
 public:
 
@@ -235,9 +242,10 @@ public:
     
     std::vector < unsigned > PartitionForElements();
     
+// === PARTITIONING - END =================
 
 // =========================
-// === MESH REFINEMENT =================
+// === MESH REFINEMENT- BEGIN  =================
 // =========================
 public:
 
@@ -291,10 +299,11 @@ private:
     /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
     static unsigned _face_index;
 
+// === MESH REFINEMENT- END  =================
 
 
 /// =========================
-/// === FE for single elem =================
+/// === FE for single elem - BEGIN =================
 /// =========================
 public:
 
@@ -314,11 +323,12 @@ public:
 
 
     
+/// === FE for single elem - END =================
     
 
 
 // =========================
-// === FE DOFMAP =================
+// === FE DOFMAP - BEGIN =================
 // =========================
 public:
     
@@ -401,9 +411,10 @@ private:
     /** print node-based dofOffset counts */
     void PrintInfoNodes() const;
 
+// === FE DOFMAP - END =================
     
 // =========================
-// === FE DOFMAP & REFINEMENT =================
+// === FE DOFMAP & REFINEMENT - BEGIN =================
 // =========================
 public:
     
@@ -421,9 +432,10 @@ private:
     SparseMatrix* _ProjCoarseToFine[5];
 
     
+// === FE DOFMAP & REFINEMENT - END =================
     
 // =========================
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) =================
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - BEGIN =================
 // =========================
 public:
     
@@ -440,9 +452,10 @@ private:
     SparseMatrix* _ProjQitoQj[3][3];
 
    
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - END =================
     
 // =========================
-// === TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap =================
+// === TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================
 // =========================
 public:
     /** MESH: Coordinates and other stuff */
@@ -486,10 +499,11 @@ private:
     static const unsigned _amrIndex = 3;
     static const unsigned _solidMarkIndex = 4;
 
+// === TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - END =================
 
 
 // =========================
-// === AMR =================
+// === AMR - BEGIN =================
 // =========================
 public:
     
@@ -527,6 +541,7 @@ private:
     /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
+// === AMR - END =================
 
     
 };
