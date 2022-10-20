@@ -16,6 +16,8 @@
 
 #include "Assemble_jacobian.hpp"
 
+#include "../tutorial_common.hpp"
+
 #include "adept.h"
 
 
@@ -24,36 +26,6 @@ using namespace femus;
 
 
 
-const std::vector< Unknown >  systems__provide_list_of_unknowns_lagrangian() {
-
-
-    std::vector< FEFamily >     feFamily = {LAGRANGE, LAGRANGE, LAGRANGE};
-    std::vector< FEOrder >       feOrder = {FIRST, SERENDIPITY, SECOND};
-    std::vector< int >        time_order = {0, 0, 0};  //0 = steady, 2 = time-dependent
-    std::vector< bool >   is_pde_unknown = {true, true, true};
-
-    assert( feFamily.size() == feOrder.size());
-    assert( feFamily.size() == is_pde_unknown.size());
-    assert( feFamily.size() == time_order.size());
-
-    std::vector< Unknown >  unknowns(feFamily.size());
-
-    for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
-
-        std::ostringstream unk;
-        unk << "u" << "_" << feFamily[fe] << "_" << feOrder[fe];
-        unknowns[fe]._name           = unk.str();
-        unknowns[fe]._fe_family      = feFamily[fe];
-        unknowns[fe]._fe_order       = feOrder[fe];
-        unknowns[fe]._time_order     = time_order[fe];
-        unknowns[fe]._is_pde_unknown = is_pde_unknown[fe];
-
-    }
-
-
-    return unknowns;
-
-}
 
 
 

@@ -22,8 +22,11 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 #include "CurrentElem.hpp"
+#include "../tutorial_common.hpp"
+
 
 #include "adept.h"
+
 
 // command to view matrices
 // ./tutorial_ex2_c -mat_view ::ascii_info_detail
@@ -142,7 +145,7 @@ public:
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
 
             double pi = acos(-1.);
-   double value = 0.; /*sin( pi * (x[0]) ) * sin( pi * (x[1]) );*/ /*(x[0]) * (1. - x[0]) * (x[1]) * (1. - x[1]);*//*observe the interpolation convergence of this last one...*/
+   double value = 0.;
 
    return value;   
 
@@ -171,37 +174,6 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
                               const Math::Function< double > & exact_sol);
 
 
-//Unknown definition  ==================
-const std::vector< Unknown >  systems__provide_list_of_unknowns() {
-
-
-    std::vector< FEFamily >     feFamily = {LAGRANGE, LAGRANGE, LAGRANGE, DISCONTINUOUS_POLYNOMIAL, DISCONTINUOUS_POLYNOMIAL};
-    std::vector< FEOrder >       feOrder = {FIRST, SERENDIPITY, SECOND, ZERO, FIRST};
-    std::vector< int >        time_order = {0, 0, 0, 0, 0};  //0 = steady, 2 = time-dependent
-    std::vector< bool >   is_pde_unknown = {true, true, true, true, true};
-
-    assert( feFamily.size() == feOrder.size());
-    assert( feFamily.size() == is_pde_unknown.size());
-    assert( feFamily.size() == time_order.size());
-
-    std::vector< Unknown >  unknowns(feFamily.size());
-
-    for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
-
-        std::ostringstream unk;
-        unk << "u" << "_" << feFamily[fe] << "_" << feOrder[fe];
-        unknowns[fe]._name           = unk.str();
-        unknowns[fe]._fe_family      = feFamily[fe];
-        unknowns[fe]._fe_order       = feOrder[fe];
-        unknowns[fe]._time_order     = time_order[fe];
-        unknowns[fe]._is_pde_unknown = is_pde_unknown[fe];
-
-    }
-
-
-    return unknowns;
-
-}
 
 
 
@@ -258,8 +230,12 @@ int main(int argc, char** args) {
     // ======= Mesh - BEGIN ========================
     MultiLevelMesh ml_mesh;
 
-//     std::string input_file = "square_0-1x0-1_divisions_2x2.med";  
-     std::string input_file = "assignment_square_regular_triangular.med";
+//     std::string input_file = "square_0-1x0-1_divisions_2x2.med"; // @todo does not work with biquadratic exact solution
+//     std::string input_file = "square_0-1x0-1_divisions_5x4.med"; // @todo does not work with biquadratic exact solution 
+//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_5x3.med";  // @todo does not work with biquadratic exact solution 
+    std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
+//      std::string input_file = "assignment_square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
+
 //     std::string input_file = "L_shaped_domain.med";
 //     std::string input_file = "interval.med";
 //     std::string input_file = "cylinder_hexahedral.med";
@@ -287,7 +263,7 @@ int main(int argc, char** args) {
   
 
     // ======= Unknowns ========================
-    std::vector< Unknown > unknowns = systems__provide_list_of_unknowns();
+    std::vector< Unknown > unknowns = systems__provide_list_of_unknowns_lagrangian();
 
 
 
@@ -299,7 +275,7 @@ int main(int argc, char** args) {
     // ======= Convergence study - BEGIN ========================
 
     // set total number of levels ================
-    unsigned max_number_of_meshes = 6;
+    unsigned max_number_of_meshes = 7;
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
     ///set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
@@ -321,9 +297,9 @@ int main(int argc, char** args) {
 
     // object ================
     FE_convergence<>  fe_convergence;
-
-    const unsigned volume_or_boundary = 0;  //0: volume, 1: boundary, ...
     
+    for (unsigned int vb = 0; vb < 1; vb++) { //0: volume, 1: boundary, ...
+        
     fe_convergence.convergence_study(files, ml_prob, unknowns,
                                      Solution_set_boundary_conditions, 
                                      Solution_set_initial_conditions,
@@ -332,9 +308,10 @@ int main(int argc, char** args) {
                                      max_number_of_meshes, 
                                      norm_flag,
                                      conv_order_flag,
-                                     volume_or_boundary,
+                                     vb,
                                      my_main, & exact_sol);
 
+    }
     // ======= Convergence study - END ========================
 
     return 0;
