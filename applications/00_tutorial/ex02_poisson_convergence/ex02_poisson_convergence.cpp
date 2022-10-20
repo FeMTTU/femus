@@ -227,7 +227,7 @@ int main(int argc, char** args) {
     // ======= Quad Rule - END ========================
 
 
-    // ======= Mesh - BEGIN ========================
+    // ======= Mesh, Coarse - BEGIN ========================
     MultiLevelMesh ml_mesh;
 
 //     std::string input_file = "square_0-1x0-1_divisions_2x2.med"; // @todo does not work with biquadratic exact solution
@@ -259,7 +259,7 @@ int main(int argc, char** args) {
 // 
 // 
 //   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule.c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
-    // ======= Mesh - END ========================
+    // ======= Mesh, Coarse - END ========================
   
 
     // ======= Unknowns ========================
@@ -286,9 +286,9 @@ int main(int argc, char** args) {
 
     // convergence choices ================
     // 1) Which exact solution ================
-//     Square_exact_solution_Zero_on_boundary_1<> exact_sol;         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
-    Square_exact_solution_Zero_on_boundary_2<> exact_sol;         //provide exact solution, if available ==============
-//     Square_exact_solution_Zero_on_boundary_3<> exact_sol;         //provide exact solution, if available ==============
+    std::vector< Square_exact_solution_Zero_on_boundary_1<> > exact_sol(1);         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
+//     std::vector< Square_exact_solution_Zero_on_boundary_2<> > exact_sol(1);         //provide exact solution, if available ==============
+//     std::vector< Square_exact_solution_Zero_on_boundary_3<> > exact_sol(1);         //provide exact solution, if available ==============
 
     // 2) Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...    
      const unsigned   conv_order_flag = 0;
@@ -297,10 +297,13 @@ int main(int argc, char** args) {
 
     // object ================
     FE_convergence<>  fe_convergence;
-    
+
+// we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
+//     for (unsigned int u = 0; u < unknowns.size(); u++) {
+
     for (unsigned int vb = 0; vb < 1; vb++) { //0: volume, 1: boundary, ...
         
-    fe_convergence.convergence_study(files, ml_prob, unknowns,
+    fe_convergence.convergence_study(files, ml_prob, unknowns/*[u]*/,
                                      Solution_set_boundary_conditions, 
                                      Solution_set_initial_conditions,
                                      ml_mesh, 
@@ -309,11 +312,13 @@ int main(int argc, char** args) {
                                      norm_flag,
                                      conv_order_flag,
                                      vb,
-                                     my_main, & exact_sol);
+                                     my_main, & exact_sol[0]);
 
     }
     // ======= Convergence study - END ========================
-
+//     }
+    
+    
     return 0;
 
 }
@@ -376,13 +381,20 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
         LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
 
+        // ======= System, Unknowns ========================
         system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
         std::vector< Unknown > unknowns_vec(1);
         unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
         system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
-        ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
 
+         // ======= System, Assemble Function ========================
         system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num, double >);
+
+        // ======= System, Exact Solution ========================
+//         system.set_exact_solution();
+        
+       // ======= System, Current number ========================
+        ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
 
         // initialize and solve the system
         system.init();
@@ -420,8 +432,8 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
 
 
-//     Square_exact_solution_Zero_on_boundary_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
-    Square_exact_solution_Zero_on_boundary_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+    Square_exact_solution_Zero_on_boundary_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
+//     Square_exact_solution_Zero_on_boundary_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
 //        Square_exact_solution_Zero_on_boundary_3< double > exact_sol;
  
     const unsigned current_system_number = ml_prob.get_current_system_number();
