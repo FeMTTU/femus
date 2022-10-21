@@ -723,6 +723,36 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
 
   \chapter{Init: Example}
 
+  
+  \chapter{Problem}
+
+  
+    \section{MultilevelProblem}
+
+  Everything in the Assemble function (and in other parts too) is accessed through this class
+  
+Il problema deve essere dotato dei dati CONDIVISIBILI tra tutte le EQUAZIONI:
+   - parametri fisici / di visualizzazione
+   - puntatori alle equazioni
+   - puntatori ai punti di gauss per l'integrazione
+   - puntatore al MESH
+   - NUMERO DI LIVELLI del multigriglia
+
+Io ci aggiungerei anche 
+   - MGpar, parametri del MG disponibili per tutte le equazioni.
+   
+\section{ Quadrature }
+
+You put it here so that many systems can share it
+
+Clearly, if you have terms with different polynomial degrees,
+you pick for the quadrature the ones that guarantees exactness for the highest-degree polynomial
+  
+\section{FE Abstract Families (with precomputed Quadrature evaluations)}
+  
+  
+ \chapter{Problem: Example}
+  
  
  \chapter{ Mesh}
 
@@ -929,9 +959,24 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
    
    
    
-  \chapter{Solution (Quantities, Equations, Operators)}
+  \chapter{Solution (Quantities, Equations, Operators) on a Mesh}
 
+  
+  
+  \section{Approximation Theory VS Solution of a PDE System}
+  
+  If you want, you can just interpolate a given function 
+  
+  Otherwise, if you want to solve a PDE system, you first have to define all the Unknowns as Solution objects.
+  
+  Then, you may also define OTHER Solutions, as auxiliary fields, and so on
+  
+  So, the Solutions are the ``WARM-UP'' to ADD A SYSTEM to the PROBLEM
+  
+  Solution is like an INTERMEDIATE STEP between MESH and SYSTEM
+  
   \section{Solution}
+  
   
   Every Solution object contains ALL variables
   
@@ -1002,36 +1047,7 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
   
  \chapter{Solution: Example}
   
-  
-  \chapter{Problem}
 
-  
-    \section{MultilevelProblem}
-
-  Everything in the Assemble function (and in other parts too) is accessed through this class
-  
-Il problema deve essere dotato dei dati CONDIVISIBILI tra tutte le EQUAZIONI:
-   - parametri fisici / di visualizzazione
-   - puntatori alle equazioni
-   - puntatori ai punti di gauss per l'integrazione
-   - puntatore al MESH
-   - NUMERO DI LIVELLI del multigriglia
-
-Io ci aggiungerei anche 
-   - MGpar, parametri del MG disponibili per tutte le equazioni.
-   
-\section{ Quadrature }
-
-You put it here so that many systems can share it
-
-Clearly, if you have terms with different polynomial degrees,
-you pick for the quadrature the ones that guarantees exactness for the highest-degree polynomial
-  
-\section{FE Abstract Families (with precomputed Quadrature evaluations)}
-  
-  
- \chapter{Problem: Example}
-  
   \chapter{System(s) (of a Problem)}
 
 

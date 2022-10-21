@@ -347,16 +347,17 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
                                                                                 const unsigned lev) const {
 
 
-    //Mesh  ==================
+    //Mesh - BEGIN   ==================
     unsigned numberOfUniformLevels = lev + 1;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
     ml_mesh.PrintInfo();
+    //Mesh - END   ==================
 
 
-    //Solution  ==================
+    //Solution - BEGIN  ==================
     MultiLevelSolution ml_sol_single_level(&ml_mesh);
 
     ml_sol_single_level.SetWriter(VTK);
@@ -364,6 +365,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
     // ======= Problem ========================
     ml_prob.SetMultiLevelMeshAndSolution(& ml_sol_single_level);
+    //Solution - END  ==================
     
     ml_prob.get_systems_map().clear();  //at every lev we'll have a different map of systems
 
@@ -378,15 +380,15 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
         ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
         ml_sol_single_level.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob);
 
+// If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part  - BEGIN      
         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
         ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
 
-// If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part        
-        // ======= System - BEGIN ========================
+        // ======= Problem, System - BEGIN ========================
         std::ostringstream sys_name;
         sys_name << unknowns[u]._name;  //give to each system the name of the unknown it solves for!
 
-        LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
+        LinearImplicitSystem & system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
 
         // ======= System, Unknowns ========================
         system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
@@ -414,7 +416,8 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
         system.SetOuterSolver(PREONLY/*GMRES*/);
         system.MGsolve();  //everything is stored into the Solution after this
-        // ======= System - END ========================
+        // ======= Problem, System - END ========================
+// If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part  - END      
 
         // ======= Print - BEGIN  ========================
         std::vector < std::string > variablesToBePrinted;

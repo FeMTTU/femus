@@ -677,7 +677,7 @@ int main(int argc, char** args) {
   // ======= Problem ========================
   MultiLevelProblem ml_prob;
   
-  // ======= Files ========================
+  // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
@@ -686,14 +686,16 @@ int main(int argc, char** args) {
 
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
+  // ======= Files - END  ========================
   
-  // ======= Problem, Quad Rule ========================
+  // ======= Problem, Quad Rule - BEGIN ========================
   std::string fe_quad_rule("seventh");
   
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
   
-    // ======= App Specifics  ==================
+    // ======= App Specifics - BEGIN  ==================
   std::string system_common_name = "Laplace";
   std::vector< app_specifics >   my_specifics;
   
@@ -870,26 +872,30 @@ int main(int argc, char** args) {
   my_specifics.push_back(app_quarter_cylinder);
   my_specifics.push_back(app_prism_annular_base);
   my_specifics.push_back(app_semicircle);
+    // ======= App Specifics - END  ==================
   
   
-  
-  for (unsigned int app = 0; app < my_specifics.size(); app++)  { //begin app loop
+ //begin app loop  
+  for (unsigned int app = 0; app < my_specifics.size(); app++)  {
         
   // ======= Problem, App (every Problem has 1 App for now) ========================
   ml_prob.set_app_specs_pointer(&my_specifics[app]);
   
   
-  // ======= Mesh  ==================
+  // ======= Mesh - BEGIN  ==================
   MultiLevelMesh ml_mesh;
-  double Lref = 1.;
+  // ======= Mesh - END  ==================
  
+
+ for (unsigned int m = 0; m < my_specifics[app]._mesh_files.size(); m++)  {
+   
+  // ======= Mesh, Coarse reading - BEGIN ==================
+  double Lref = 1.;
+  
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
 
-
- for (unsigned int m = 0; m < my_specifics[app]._mesh_files.size(); m++)  {
-   
   std::string mesh_file_tot = "./input/" + my_specifics[app]._mesh_files[m];
   
   ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(mesh_file_tot.c_str(), Lref, read_groups, read_boundary_groups);
@@ -903,19 +909,24 @@ int main(int argc, char** args) {
 
 
   ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule.c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
+  // ======= Mesh, Coarse reading - END ==================
 
 
 
  for (unsigned int r = 1; r < 2; r++)  {
 
-  // ======= Mesh: Refinement  ==================
+  // ======= Mesh: Refinement - BEGIN  ==================
   unsigned numberOfUniformLevels = r;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  // ======= Mesh: Refinement - END  ==================
+  
+  // ======= Mesh: COARSE ERASING - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
   ml_mesh.PrintInfo();
+  // ======= Mesh: COARSE ERASING - END  ========================
   
-  // ======= Solution  ==================
+  // ======= Solution - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
   ml_sol.SetWriter(VTK);
@@ -923,6 +934,7 @@ int main(int argc, char** args) {
   
   // ======= Problem, Mesh and Solution  ==================
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+  // ======= Solution - END ==================
   
   // ======= Solutions that are Unknowns - BEGIN ==================
 
@@ -976,12 +988,13 @@ int main(int argc, char** args) {
     // ======= Problem, System - END ========================
   
   
-    // ======= Print ========================
+    // ======= Print - BEGIN ========================
   const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
   ml_sol.GetWriter()->Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+    // ======= Print - END ========================
   
     }  //end refinement loop
   
