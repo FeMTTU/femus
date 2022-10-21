@@ -19,7 +19,7 @@ class Files;
 
 
 
-class Main_single_level {
+class Solution_generation_single_level {
     
 public: 
 
@@ -34,6 +34,9 @@ virtual const MultiLevelSolution  run_on_single_level(const Files & files,
                                                      
 };
 
+
+/// The idea of this class is to generate a certain amount of MultilevelSolutions and to compute the convergence rate.
+/// It may be used either to study Approximation Theory or to study Convergence of FE Solution of PDEs
 template < class type = double >
 class FE_convergence {
  
@@ -44,17 +47,17 @@ public:
 
   void  convergence_study(const Files & files,
                           MultiLevelProblem & ml_prob,
-                          const std::vector< Unknown > & unknowns,
-                          const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
-                          const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
+                          const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,  //needed only if I have a System inside
+                          const MultiLevelSolution::InitFuncMLProb SetInitialCondition,  //needed in all cases
                           MultiLevelMesh & ml_mesh,
                           MultiLevelMesh & ml_mesh_all_levels,
                           const unsigned max_number_of_meshes,
                           const unsigned norm_flag,
                           const unsigned conv_order_flag,
                           const unsigned volume_or_boundary,
-                          const Main_single_level & main_in,
-                          const Math::Function< double > * exact_sol = NULL);
+                          const Solution_generation_single_level & main_in,
+                          const std::vector< Unknown > & unknowns,               //vector of Solutions
+                          const Math::Function< double > * exact_sol = NULL);    //vector of Exact Solutions, if available
 
     
 private: 
@@ -142,7 +145,6 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
 template < class type>
   void  FE_convergence< type >::convergence_study(const Files & files,
                                                   MultiLevelProblem & ml_prob,
-                                                  const std::vector< Unknown > & unknowns,
                                                   const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
                                                   const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                   MultiLevelMesh & ml_mesh,
@@ -151,7 +153,8 @@ template < class type>
                                                   const unsigned norm_flag,
                                                   const unsigned conv_order_flag,
                                                   const unsigned volume_or_boundary,
-                                                  const Main_single_level & main_in,
+                                                  const Solution_generation_single_level & main_in,
+                                                  const std::vector< Unknown > & unknowns,
                                                   const Math::Function< double > * exact_sol) {
 
 

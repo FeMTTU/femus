@@ -191,7 +191,7 @@ void ComputeIntegral(  const MultiLevelProblem& ml_prob,
 
 
 template < class real_num > 
-class My_main_single_level : public Main_single_level {
+class Solution_generation_1 : public Solution_generation_single_level {
     
 public:
     
@@ -269,7 +269,7 @@ int main(int argc, char** args) {
   std::vector< Unknown > unknowns = provide_list_of_unknowns(dimension);
   
   // ======= Normal run ========================   //if you don't want the convergence study
-  My_main_single_level< adept::adouble > my_main;
+  Solution_generation_1< adept::adouble > my_main;
   const unsigned int n_levels = 1;
   my_main.run_on_single_level(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); 
  
@@ -296,7 +296,7 @@ int main(int argc, char** args) {
 //    // object ================  
 //     FE_convergence<>  fe_convergence;
 //     
-//     fe_convergence.convergence_study(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+//     fe_convergence.convergence_study(files, ml_prob, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main, unknowns);
   
     
   return 0;
@@ -1181,7 +1181,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
 template < class real_num > 
-const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
+const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(const Files & files,
                                                                                 MultiLevelProblem & ml_prob,
                                                                                 const std::vector< Unknown > &  unknowns,
                                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,

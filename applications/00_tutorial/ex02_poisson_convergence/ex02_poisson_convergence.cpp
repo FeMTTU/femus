@@ -180,7 +180,7 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
 // this is the class that I pass to the FE_convergence functions. Basically I pass a class, instead of passing a function pointer.
 // notice that this is a class template, not a class with a function template
 template < class real_num >
-class My_main_single_level : public Main_single_level {
+class Solution_generation_1 : public Solution_generation_single_level {
 
 public:
 
@@ -268,9 +268,9 @@ int main(int argc, char** args) {
 
 
     // ======= Normal run (without convergence study) ========================
-    My_main_single_level< /*adept::a*/double > my_main;
+    Solution_generation_1< /*adept::a*/double > my_solution_generation;
 //     const unsigned int n_levels = 3;
-//     my_main.run_on_single_level(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels);
+//     my_solution_generation.run_on_single_level(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels);
 
     // ======= Convergence study - BEGIN ========================
 
@@ -303,7 +303,8 @@ int main(int argc, char** args) {
 
     for (unsigned int vb = 0; vb < 1; vb++) { //0: volume, 1: boundary, ...
         
-    fe_convergence.convergence_study(files, ml_prob, unknowns/*[u]*/,
+    fe_convergence.convergence_study(files, 
+                                     ml_prob, 
                                      Solution_set_boundary_conditions, 
                                      Solution_set_initial_conditions,
                                      ml_mesh, 
@@ -312,7 +313,9 @@ int main(int argc, char** args) {
                                      norm_flag,
                                      conv_order_flag,
                                      vb,
-                                     my_main, & exact_sol[0]);
+                                     my_solution_generation, 
+                                     unknowns/*[u]*/,
+                                     & exact_sol[0]);
 
     }
     // ======= Convergence study - END ========================
@@ -332,7 +335,7 @@ int main(int argc, char** args) {
 
 
 template < class real_num >
-const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
+const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(const Files & files,
                                                                                 MultiLevelProblem & ml_prob,
                                                                                 const std::vector< Unknown > &  unknowns,
                                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
