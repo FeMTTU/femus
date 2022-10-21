@@ -144,8 +144,11 @@ public:
 
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
 
-            double pi = acos(-1.);
-   double value = 0.;
+    
+//     ml_prob.ml_sol.get_exact_function
+    Square_exact_solution_Zero_on_boundary_1<>  exact_sol;
+
+double value = 0.; //exact_sol.value(x);
 
    return value;   
 
@@ -374,6 +377,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
         // ======= Solution, II ==================
         ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
         ml_sol_single_level.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob);
+
         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
         ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
 
@@ -412,10 +416,11 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
         system.MGsolve();  //everything is stored into the Solution after this
         // ======= System - END ========================
 
-        // ======= Print ========================
+        // ======= Print - BEGIN  ========================
         std::vector < std::string > variablesToBePrinted;
         variablesToBePrinted.push_back(unknowns[u]._name);
         ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, lev);
+        // ======= Print - END  ========================
 
     }
 

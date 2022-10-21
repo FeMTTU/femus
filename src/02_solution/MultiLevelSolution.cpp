@@ -198,7 +198,7 @@ namespace femus {
 //     Time discretization---
     _solTimeOrder.resize(n + 1u);
     
-// These are the things that should change for different FE...------    
+// These are the things that should change for different FE... - BEGIN ------    
 //   FE related---  
     _family.resize(n + 1u);
     _order.resize(n + 1u);
@@ -206,7 +206,7 @@ namespace femus {
     
 //     FE related and Time related: Boundary Conditions--- 
     _bdcType.resize(n + 1u);
-// These are the things that should change for different FE... - end------    
+// These are the things that should change for different FE... - END ------    
     
 
 // ---------------------

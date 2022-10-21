@@ -39,6 +39,8 @@ class Solution;
 
 class elem;
 
+class elem_type;
+
 /**
  * The mesh class
 */
