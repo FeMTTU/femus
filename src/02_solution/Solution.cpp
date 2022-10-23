@@ -63,9 +63,10 @@ namespace femus {
                              const unsigned& tmorder, const bool &Pde_type) {
 
     unsigned n = _Sol.size();
+   const unsigned      new_size = n + 1;
 
-    _SolType.resize(n + 1u);
     _SolName.resize(n + 1u);
+    _SolType.resize(n + 1u);
     _SolTmOrder.resize(n + 1u);
     _family.resize(n + 1u);
     _order.resize(n + 1u);
@@ -104,6 +105,9 @@ namespace femus {
 
     strcpy(_SolName[n], name);
 
+    
+_analytical_function.resize(new_size);
+
   }
   
   
@@ -115,9 +119,10 @@ namespace femus {
                              const unsigned& tmorder, const bool &Pde_type) {
 
     unsigned n = _Sol.size();
+   const unsigned      new_size = n + 1;
 
 // ---------------------
-//------ first resize -----------
+//------ resize - BEGIN -----------
 // ---------------------
   
 // ID related---
@@ -159,8 +164,10 @@ namespace femus {
     
 //   FE related - Global vectors - end ---  
 
+//------ resize - END -----------
+    
 // ---------------------
-//------ then fill -----------
+//------ fill - BEGIN -----------
 // ---------------------
     
 // ID related---
@@ -178,12 +185,16 @@ namespace femus {
 //   For pressure variables, if solution is fixed at one point (then null space must be removed) ---
     _removeNullSpace.resize(n + 1u);
     _removeNullSpace[n] = false;
+//------ fill - END -----------
 
+_analytical_function.resize(new_size);
 
   }
   
 
-  
+  /**
+   * Parametric
+   */
   void Solution::AddSolution_par(const int n_sols, const char name[], const FEFamily fefamily, const FEOrder order,
                              const unsigned& tmorder, const bool &Pde_type) {
 
@@ -224,18 +235,23 @@ _removeNullSpace[old_size + s] = false;
   
 
 
+  /**
+   * Parametric
+   */
   void Solution::ResizeSolution_par(const int new_size) {
       
 // it seems that the destructors of the NumericVectors are not called after a shrink...      
       
-         _SolType.resize(new_size);
          _SolName.resize(new_size);
+         _SolType.resize(new_size);
       _SolTmOrder.resize(new_size);
           _family.resize(new_size);
            _order.resize(new_size);
    _ResEpsBdcFlag.resize(new_size);        
  _removeNullSpace.resize(new_size);
            
+_analytical_function.resize(new_size);
+
 // NumericVector objects
              _Sol.resize(new_size); 
           _SolOld.resize(new_size); 
@@ -244,10 +260,27 @@ _removeNullSpace[old_size + s] = false;
              _Eps.resize(new_size); 
              _Bdc.resize(new_size);
 
-      
   }
   
 
+
+    void Solution::set_analytical_function(const char * name,  Math::Function< double > func_in) {
+        
+    if (_analytical_function.size() != _SolName.size()) abort();
+        
+        const unsigned index = GetIndex(name);
+        
+        _analytical_function[index] = func_in; 
+        
+    }
+
+  
+    Math::Function< double >  Solution::get_analytical_function(const char * name) const {
+
+        const unsigned index = GetIndex(name);
+        
+        return _analytical_function[index];
+    }
   
   /**
    * Get the solution index for the variable called name

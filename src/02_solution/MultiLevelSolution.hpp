@@ -259,6 +259,10 @@ public:
     
 // === INITIALIZATION (Initial Conditions) - END =================
     
+// === INITIALIZATION FUNCTION - BEGIN =================
+public:
+// === INITIALIZATION FUNCTION - END =================
+    
 // === Writer - BEGIN =============
 public:
 

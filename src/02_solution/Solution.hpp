@@ -25,9 +25,10 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include "ParallelObject.hpp"
 #include "Mesh.hpp"
 #include "FElemTypeEnum.hpp"
-#include "ParallelObject.hpp"
+#include "Math.hpp"
 
 #include "petscmat.h"
 
@@ -170,6 +171,19 @@ namespace femus {
       std::vector <unsigned> _SolTmOrder;
 // === TIME EVOLUTION (NOT DISCRETIZATION)  - END =================
 
+// === INITIALIZATION FUNCTION - BEGIN =================
+public:
+    
+  void set_analytical_function(const char * name,  Math::Function< double > func_in);
+
+   Math::Function< double >  get_analytical_function(const char * name) const;
+  
+protected:
+    
+   std::vector< Math::Function< double > >  _analytical_function;
+// === INITIALIZATION FUNCTION - END =================
+    
+      
 //=========== 
 ///==== @todo from now on, it is more stuff that shouldn't be in a basic Solution object      
 //=========== 

@@ -1,15 +1,17 @@
 #ifndef __femus_utils_Assemble_unknown_hpp__
 #define __femus_utils_Assemble_unknown_hpp__
 
-#include <vector>
-#include <cmath>
-#include <string>
+
 #include "FElemTypeEnum.hpp"
 #include "Math.hpp"
 
 #include "MultiLevelSolution.hpp"
 #include "System.hpp"
 #include "CurrentElem.hpp"
+
+#include <vector>
+#include <cmath>
+#include <string>
 
 
 namespace femus {
