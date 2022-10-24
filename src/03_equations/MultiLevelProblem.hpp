@@ -186,7 +186,9 @@ public:
 
   inline const  MultiLevelMesh * GetMLMesh() const { return  _ml_msh; }
 
-    /** Quantity Map */
+  inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
+
+  /** Quantity Map */
   inline void SetQtyMap(const QuantityMap * qtymap_in) { _qtymap = qtymap_in; return; }
 
   inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }

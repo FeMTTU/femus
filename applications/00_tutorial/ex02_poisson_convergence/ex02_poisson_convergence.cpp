@@ -38,7 +38,7 @@ using namespace femus;
 
 
 template < class type = double >
-class Square_exact_solution_Zero_on_boundary_1 : public Math::Function< type > {
+class Square_Function_Zero_on_boundary_1 : public Math::Function< type > {
 
 public:
 
@@ -73,9 +73,9 @@ public:
 };
 
 
-//this solution shows SUPERCONVERGENCE for SERENDIPITY FE, and it is like SUPER PERFECT for BIQUADRATIC FE
+//this solution shows SUPERCONVERGENCE for SERENDIPITY FE, and it is like SUPER PERFECT for BIQUADRATIC FE... it is because of the MESH!
 template < class type = double >
-class Square_exact_solution_Zero_on_boundary_2 : public Math::Function< type > {
+class Square_Function_Zero_on_boundary_2 : public Math::Function< type > {
 
 public:
 
@@ -108,7 +108,7 @@ public:
 
 //this solution does not have SUPERCONVERGENCE
 template < class type = double >
-class Square_exact_solution_Zero_on_boundary_3 : public Math::Function< type > {
+class Square_Function_Zero_on_boundary_3 : public Math::Function< type > {
 
 public:
 
@@ -153,10 +153,13 @@ double value = exact_sol->value(x);
 }
 
 
-bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name, double& value, const int faceName, const double time) {
 
     bool dirichlet = true; //dirichlet
-    value = 0.;
+
+    Math::Function< double > *  exact_sol =  ml_prob->get_ml_solution()->get_analytical_function(name);
+    value = exact_sol->value(x);
+//     value = 0.;
 
     return dirichlet;
 }
@@ -165,14 +168,16 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 template < class system_type, class real_num, class real_num_mov >
 void System_assemble_interface(MultiLevelProblem & ml_prob);
 
+
+
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_flexible(const std::vector < std::vector < const elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
+void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
                               const std::vector<Gauss> & quad_rules,
                               MultiLevelMesh * ml_mesh,
                               MultiLevelSolution * ml_sol,
                               system_type * mlPdeSys,
                               const std::vector< Unknown > &  unknowns,
-                              const Math::Function< double > & exact_sol);
+                              const std::vector< Math::Function< double > * > & exact_sol);
 
 
 
@@ -282,7 +287,7 @@ int main(int argc, char** args) {
     // Auxiliary Problem - END  ================
     
     // Auxiliary mesh, all levels - BEGIN  ================
-    unsigned max_number_of_meshes = 5;
+    unsigned max_number_of_meshes = 7;
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
     ///set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
@@ -292,15 +297,15 @@ int main(int argc, char** args) {
     // Auxiliary mesh, all levels - END  ================
 
 
-    // convergence choices ================
     // 1) Which exact solution - BEGIN ================
     std::vector< Math::Function< double > * > exact_sol( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
-    Square_exact_solution_Zero_on_boundary_1< double >  exact_sol_1;
+//     Square_Function_Zero_on_boundary_1< double >  exact_sol_1;
+    Square_Function_Zero_on_boundary_2< double >  exact_sol_1;
+
     exact_sol[0] =   exact_sol[1] =   exact_sol[2] = & exact_sol_1;
-    //     std::vector< Square_exact_solution_Zero_on_boundary_2<> > exact_sol(1);         //provide exact solution, if available ==============
-//     std::vector< Square_exact_solution_Zero_on_boundary_3<> > exact_sol(1);         //provide exact solution, if available ==============
     // 1) Which exact solution - END ================
+
     // 2) Choose how to compute the convergence order - BEGIN ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...    
      const unsigned   conv_order_flag = 0;
     // 2) Choose how to compute the convergence order - END ============== 
@@ -396,43 +401,43 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
 // If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part  - BEGIN      
 
-//         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
-//         ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
-// 
-//         // ======= Problem, System - BEGIN ========================
-//         std::ostringstream sys_name;
-//         sys_name << unknowns[u]._name;  //give to each system the name of the unknown it solves for!
-// 
-//         LinearImplicitSystem & system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
-// 
-//         // ======= System, Unknowns ========================
-//         system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
-//         std::vector< Unknown > unknowns_vec(1);
-//         unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
-//         system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
-// 
-//          // ======= System, Assemble Function ========================
-//         system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num, double >);
-// 
-//         // ======= System, Exact Solution ========================
-// //         system.set_exact_solution();
-//         
-//        // ======= System, Current number ========================
-//         ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
-// 
-//         // initialize and solve the system
-//         system.init();
-//         system.ClearVariablesToBeSolved();
-//         system.AddVariableToBeSolved("All");
-// 
-// //             system.SetDebugLinear(true);
-// //             system.SetMaxNumberOfLinearIterations(6);
-// //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
-// 
-//         system.SetOuterSolver(PREONLY/*GMRES*/);
-//         system.MGsolve();  //everything is stored into the Solution after this
-//         // ======= Problem, System - END ========================
-// 
+        ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
+        ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+
+        // ======= Problem, System - BEGIN ========================
+        std::ostringstream sys_name;
+        sys_name << unknowns[u]._name;  //give to each system the name of the unknown it solves for!
+
+        LinearImplicitSystem & system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
+
+        // ======= System, Unknowns ========================
+        system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
+        std::vector< Unknown > unknowns_vec(1);
+        unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
+        system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
+
+         // ======= System, Assemble Function ========================
+        system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num, double >);
+
+        // ======= System, Exact Solution ========================
+//         system.set_exact_solution();
+        
+       // ======= System, Current number ========================
+        ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
+
+        // initialize and solve the system
+        system.init();
+        system.ClearVariablesToBeSolved();
+        system.AddVariableToBeSolved("All");
+
+//             system.SetDebugLinear(true);
+//             system.SetMaxNumberOfLinearIterations(6);
+//             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
+
+        system.SetOuterSolver(PREONLY/*GMRES*/);
+        system.MGsolve();  //everything is stored into the Solution after this
+        // ======= Problem, System - END ========================
+
 // If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part  - END      
 
         // ======= Print - BEGIN  ========================
@@ -453,31 +458,44 @@ template < class system_type, class real_num, class real_num_mov >
 void System_assemble_interface(MultiLevelProblem& ml_prob) {
     //  ml_prob is the global object from/to where get/set all the data
 
-    // this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
+// this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
 //what is funny is that this function is attached to a system, but I cannot retrieve the system to which it is attached unless I know the name or the number of it!
 //all I have at hand is the MultiLevelProblem, which contains a Vector of Systems
 // all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
 
-
-    Square_exact_solution_Zero_on_boundary_1< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
-//     Square_exact_solution_Zero_on_boundary_2< double > exact_sol;  ///@todo this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
-//        Square_exact_solution_Zero_on_boundary_3< double > exact_sol;
  
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
+        // ======= Unknowns - BEGIN  ========================
+std::vector< Unknown >  unknowns = ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly();
+        // ======= Unknowns - END  ========================
+
+
+        // ======= Exact sol - BEGIN  ========================
+std::vector< Math::Function< double > * > exact_sol( unknowns.size() );
+
+    for(int u = 0; u < exact_sol.size(); u++) {
+        exact_sol[u] = ml_prob.get_ml_solution()->get_analytical_function( unknowns[u]._name.c_str() );
+    }
+        // ======= Exact sol - END  ========================
+
+
+        // ======= FE Quadrature - BEGIN  ========================
    //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
+        // ======= FE Quadrature - END  ========================
 
     System_assemble_flexible< system_type, real_num, real_num_mov > (elem_all,
                                                                      ml_prob.GetQuadratureRuleAllGeomElems(),
-                                                                     ml_prob._ml_msh,
-                                                                     ml_prob._ml_sol,
+                                                                     ml_prob.GetMLMesh(),
+                                                                     ml_prob.get_ml_solution(),
                                                                      & ml_prob.get_system< system_type >(current_system_number),
-                                                                     ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly(),
+                                                                     unknowns,
                                                                      exact_sol);
 
 }
+
 
 
 /**
@@ -488,6 +506,7 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
  *                  J = \grad_u F
  **/
 
+
 template < class system_type, class real_num, class real_num_mov >
 void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
                               const std::vector<Gauss> & quad_rules,
@@ -495,7 +514,7 @@ void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_t
                               MultiLevelSolution * ml_sol_in,
                               system_type * mlPdeSys,
                               const std::vector< Unknown > &  unknowns,
-                              const Math::Function< double > & exact_sol) {
+                              const std::vector< Math::Function< double > * > & exact_sol) {
 
     //  level is the level of the PDE system to be assembled
     //  levelMax is the Maximum level of the MultiLevelProblem
@@ -594,7 +613,7 @@ void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_t
         }
 
         //must be called AFTER the unknowns 
-        sol_exact.set_elem_dofs(unknowns_local[0].num_elem_dofs(), geom_element, exact_sol);
+        sol_exact.set_elem_dofs(unknowns_local[0].num_elem_dofs(), geom_element, * exact_sol[0] );
 
         
 
@@ -683,7 +702,7 @@ void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_t
 //                 unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;
 
 // Laplace(u) = Laplace(u_0) : strong
-               double laplace_strong_exact = exact_sol.laplacian(x_gss);
+               double laplace_strong_exact = exact_sol[0]->laplacian(x_gss);
         unk_element_jac_res.res()[i] += (- laplace_strong_exact * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
 // Laplace(u) = source 

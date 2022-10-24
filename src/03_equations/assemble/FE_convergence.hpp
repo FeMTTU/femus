@@ -108,18 +108,8 @@ static  std::vector< type > compute_error_norms_volume(const std::vector < std::
                                                                             const unsigned volume_or_boundary,
                                                 const Math::Function< type > * ex_sol_in = NULL
                                              );
- ///@deprecated
-static  std::vector< type > compute_error_norms_boundary(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
-                                                                            const std::vector<Gauss> & quad_rules,
-                                                                            const MultiLevelSolution* ml_sol,
-                                                                            const MultiLevelSolution* ml_sol_all_levels,
-                                                                            const std::string & unknown,
-                                                                            const unsigned current_level,
-                                                                            const unsigned norm_flag,
-                                                                            const unsigned conv_order_flag,
-                                                                            const Math::Function< type > * ex_sol_in); 
 
-     
+
 static  void compute_error_norms_per_unknown_per_level(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
                                                        const std::vector<Gauss> & quad_rules,
                                                        const MultiLevelSolution* ml_sol_single_level,
@@ -339,23 +329,7 @@ template < class type>
     }
   
 } 
- 
 
- 
-template < class type>
-/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms_boundary(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
-                                                                            const std::vector<Gauss> & quad_rules,
-                                                                            const MultiLevelSolution* ml_sol,
-                                                                            const MultiLevelSolution* ml_sol_all_levels,
-                                                                            const std::string & unknown,
-                                                                            const unsigned current_level,
-                                                                            const unsigned norm_flag,
-                                                                            const unsigned conv_order_flag,
-                                                                            const Math::Function< type > * ex_sol_in
-                                             ) {
-    
-    abort();
-} 
  
  
 
