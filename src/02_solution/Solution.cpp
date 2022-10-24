@@ -264,7 +264,7 @@ _analytical_function.resize(new_size);
   
 
 
-    void Solution::set_analytical_function(const char * name,  Math::Function< double > func_in) {
+    void Solution::set_analytical_function(const char * name,  Math::Function< double > * func_in) {
         
     if (_analytical_function.size() != _SolName.size()) abort();
         
@@ -275,7 +275,7 @@ _analytical_function.resize(new_size);
     }
 
   
-    Math::Function< double >  Solution::get_analytical_function(const char * name) const {
+    Math::Function< double > * Solution::get_analytical_function(const char * name) const {
 
         const unsigned index = GetIndex(name);
         

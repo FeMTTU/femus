@@ -171,17 +171,17 @@ namespace femus {
       std::vector <unsigned> _SolTmOrder;
 // === TIME EVOLUTION (NOT DISCRETIZATION)  - END =================
 
-// === INITIALIZATION FUNCTION - BEGIN =================
+// === INITIALIZATION ANALYTICAL FUNCTION - BEGIN =================
 public:
     
-  void set_analytical_function(const char * name,  Math::Function< double > func_in);
+  void set_analytical_function(const char * name,  Math::Function< double > * func_in);
 
-   Math::Function< double >  get_analytical_function(const char * name) const;
+   Math::Function< double > * get_analytical_function(const char * name) const;
   
 protected:
     
-   std::vector< Math::Function< double > >  _analytical_function;
-// === INITIALIZATION FUNCTION - END =================
+   std::vector< Math::Function< double > * >  _analytical_function;
+// === INITIALIZATION ANALYTICAL FUNCTION - END =================
     
       
 //=========== 

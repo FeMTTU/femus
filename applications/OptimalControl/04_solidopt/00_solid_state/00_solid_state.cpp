@@ -160,6 +160,7 @@ public:
     const MultiLevelSolution  run_on_single_level(const Files & files,
                                                   MultiLevelProblem & ml_prob,
                                                   const std::vector< Unknown > & unknowns,
+                                                  const std::vector< Math::Function< double > * > &  exact_sol,
                                                   const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                   const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                   MultiLevelMesh & ml_mesh,
@@ -229,11 +230,27 @@ int main(int argc, char** args) {
    const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
 
 
+    // Auxiliary Problem - BEGIN  ================
+    MultiLevelProblem ml_prob_aux(ml_prob);
+    // Auxiliary Problem - END  ================
+    
    // object ================  
     FE_convergence<>  fe_convergence;
     
     const unsigned volume_or_boundary = 0;
-    fe_convergence.convergence_study(files, ml_prob, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, volume_or_boundary, my_main, unknowns);
+    fe_convergence.convergence_study(files,
+                                     ml_prob,
+                                     Solution_set_boundary_conditions,
+                                     Solution_set_initial_conditions, 
+                                     ml_mesh, 
+                                     ml_mesh_all_levels,
+                                     max_number_of_meshes,
+                                     ml_prob_aux,
+                                     norm_flag,
+                                     conv_order_flag,
+                                     volume_or_boundary,
+                                     my_main,
+                                     unknowns);
   
   return 0;
 }
@@ -579,6 +596,7 @@ template < class real_num >
 const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(const Files & files,
                                                                                 MultiLevelProblem & ml_prob,
                                                                                 const std::vector< Unknown > &  unknowns,  
+                                                                                const std::vector< Math::Function< double > * > &  exact_sol,
                                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                 MultiLevelMesh & ml_mesh,

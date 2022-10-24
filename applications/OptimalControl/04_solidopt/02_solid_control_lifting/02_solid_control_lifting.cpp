@@ -261,6 +261,7 @@ public:
 const MultiLevelSolution  run_on_single_level(const Files & files,
                                               MultiLevelProblem & ml_prob,
                                               const std::vector< Unknown > & unknowns,
+                                              const std::vector< Math::Function< double > * > &  exact_sol,
                                               const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                               const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                               MultiLevelMesh & ml_mesh,
@@ -310,7 +311,7 @@ int main(int argc, char** args) {
   // ======= Normal run ========================   //if you don't want the convergence study
   Solution_generation_1< adept::adouble > my_main;
   const unsigned int n_levels = 1;
-  my_main.run_on_single_level(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); 
+  my_main.run_on_single_level(files, ml_prob, unknowns, std::vector< Math::Function <double> * > (), Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); 
  
   
   
@@ -902,6 +903,7 @@ template < class real_num >
 const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(const Files & files,
                                                                                 MultiLevelProblem & ml_prob,
                                                                                 const std::vector< Unknown > &  unknowns,
+                                                                                const std::vector< Math::Function< double > * > &  exact_sol,
                                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                 MultiLevelMesh & ml_mesh,

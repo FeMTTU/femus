@@ -67,6 +67,10 @@ public:
     /** Multilevel solution pointer */
     MultiLevelSolution *_ml_sol;
 
+    MultiLevelSolution * get_ml_solution() { return _ml_sol; }
+    
+    MultiLevelSolution * get_ml_solution() const { return _ml_sol; }
+    
     /** Multilevel mesh pointer */
     MultiLevelMesh *_ml_msh;
 

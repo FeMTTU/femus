@@ -70,9 +70,12 @@ template < class real_num_mov >
      std::string _name;
      FEFamily _fe_family;     
      FEOrder  _fe_order;
-     int _time_order;
-     bool _is_pde_unknown;
-     bool _is_sparse;
+     
+     int _time_order;   //Evolution-related
+     
+     bool _is_pde_unknown;   //PDE-related
+     
+     bool _is_sparse;        //PDE-related
      
  };
  
@@ -128,8 +131,9 @@ class UnknownLocal {
 //these do not change with the element
   std::string  Solname;
   unsigned int SolFEType; 
+  unsigned int SolIndex;
+  
   unsigned int SolPdeIndex;
-  unsigned int SolIndex;  
 //   _is_pde_unknown
 // time order
 

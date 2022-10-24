@@ -261,6 +261,18 @@ public:
     
 // === INITIALIZATION FUNCTION - BEGIN =================
 public:
+    
+  void set_analytical_function(const char * name,  Math::Function< double > * func_in) {    
+      const unsigned level_to_pick_from = 0; ///@todo
+    GetSolutionLevel(level_to_pick_from)->set_analytical_function(name, func_in);
+  }
+
+   Math::Function< double > * get_analytical_function(const char * name) const {
+             const unsigned level_to_pick_from = 0; ///@todo
+    return GetSolutionLevel(level_to_pick_from)->get_analytical_function(name);
+
+  }
+  
 // === INITIALIZATION FUNCTION - END =================
     
 // === Writer - BEGIN =============
