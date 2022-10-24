@@ -157,14 +157,14 @@ class Solution_generation_1 : public Solution_generation_single_level {
     
 public:
     
-    const MultiLevelSolution  run_on_single_level(const Files & files,
-                                                  MultiLevelProblem & ml_prob,
+    const MultiLevelSolution  run_on_single_level(MultiLevelProblem & ml_prob,
+                                                  MultiLevelMesh & ml_mesh,
+                                                  const unsigned i,
                                                   const std::vector< Unknown > & unknowns,
                                                   const std::vector< Math::Function< double > * > &  exact_sol,
-                                                  const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                   const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
-                                                  MultiLevelMesh & ml_mesh,
-                                                  const unsigned i) const;
+                                                  const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in
+                                                 ) const;
   
 };
  
@@ -208,7 +208,7 @@ int main(int argc, char** args) {
   // ======= Normal run ========================   //if you don't want the convergence study
   Solution_generation_1< /*adept::a*/double > my_main;
 //     const unsigned int n_levels = 1;
-//      my_main.run_on_single_level(files, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); //if you don't want the convergence study
+//      my_main.run_on_single_level(...); //if you don't want the convergence study
  
   
   
@@ -229,10 +229,6 @@ int main(int argc, char** args) {
    const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
    const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
 
-
-    // Auxiliary Problem - BEGIN  ================
-    MultiLevelProblem ml_prob_aux(ml_prob);
-    // Auxiliary Problem - END  ================
     
    // object ================  
     FE_convergence<>  fe_convergence;
@@ -240,16 +236,15 @@ int main(int argc, char** args) {
     const unsigned volume_or_boundary = 0;
     fe_convergence.convergence_study(files,
                                      ml_prob,
-                                     Solution_set_boundary_conditions,
-                                     Solution_set_initial_conditions, 
                                      ml_mesh, 
                                      ml_mesh_all_levels,
                                      max_number_of_meshes,
-                                     ml_prob_aux,
                                      norm_flag,
                                      conv_order_flag,
                                      volume_or_boundary,
-                                     my_main,
+                                       Solution_set_boundary_conditions,
+                                     Solution_set_initial_conditions, 
+                                   my_main,
                                      unknowns);
   
   return 0;
@@ -593,14 +588,14 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
 template < class real_num > 
-const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(const Files & files,
-                                                                                MultiLevelProblem & ml_prob,
-                                                                                const std::vector< Unknown > &  unknowns,  
-                                                                                const std::vector< Math::Function< double > * > &  exact_sol,
-                                                                                const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
-                                                                                const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
+const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(MultiLevelProblem & ml_prob,
                                                                                 MultiLevelMesh & ml_mesh,
-                                                                                const unsigned lev) const {
+                                                                                const unsigned lev,
+                                                                               const std::vector< Unknown > &  unknowns,  
+                                                                                const std::vector< Math::Function< double > * > &  exact_sol,
+                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
+                                                                               const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in
+                                                                                 ) const {
                                                                                     
   // ======= Mesh  ==================
             unsigned numberOfUniformLevels = lev + 1;  //this has to have a + 1 for the convergence study
@@ -691,7 +686,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;  variablesToBePrinted.push_back("All");
-  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted, lev);
+  ml_sol.GetWriter()->Write(ml_prob.GetFilesHandler()->GetOutputPath(),"biquadratic", variablesToBePrinted, lev);
  
  return ml_sol;
 

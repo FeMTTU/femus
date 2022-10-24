@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __femus_equations_MultiLevelProblem_hpp__
-#define __femus_equations_MultiLevelProblem_hpp__
+#ifndef __femus_problem_MultiLevelProblem_hpp__
+#define __femus_problem_MultiLevelProblem_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

@@ -130,16 +130,7 @@ const unsigned System::GetSolPdeIndex(const char solname[]) const {
    }
    
  }
-    
- void System::set_exact_solution(const std::vector<  Math::Function< double > > unknown_in ) {
-    _exact_solution = unknown_in; 
- }
- 
- const std::vector< Math::Function< double > > System::get_exact_solution() const {
-        return  _exact_solution; 
-    }
- 
- 
+
  
 } //end namespace femus
 

@@ -126,9 +126,6 @@ public:
     /** Only call assemble function */
     virtual void assemble_call_before_boundary_conditions(const unsigned int n_times);
 
-  void set_exact_solution(const std::vector<  Math::Function< double > > unknown_in );
-
-  const std::vector< Math::Function< double > > get_exact_solution() const;
 
 protected:
 
@@ -171,8 +168,6 @@ protected:
     /** List of unknowns for the assembly routine */
     std::vector< Unknown > _unknown_list_for_assembly;
 
-    /** List of unknowns for the assembly routine */
-    std::vector< Math::Function< double > >  _exact_solution;
 };
 
 // System inline methods

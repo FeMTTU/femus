@@ -258,14 +258,14 @@ class Solution_generation_1 : public Solution_generation_single_level {
     
 public:
     
-const MultiLevelSolution  run_on_single_level(const Files & files,
-                                              MultiLevelProblem & ml_prob,
+const MultiLevelSolution  run_on_single_level(MultiLevelProblem & ml_prob,
+                                              MultiLevelMesh & ml_mesh,
+                                              const unsigned i,
                                               const std::vector< Unknown > & unknowns,
                                               const std::vector< Math::Function< double > * > &  exact_sol,
-                                              const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                               const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
-                                              MultiLevelMesh & ml_mesh,
-                                              const unsigned i) const;
+                                              const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in
+                                             ) const;
   
 };
  
@@ -311,7 +311,7 @@ int main(int argc, char** args) {
   // ======= Normal run ========================   //if you don't want the convergence study
   Solution_generation_1< adept::adouble > my_main;
   const unsigned int n_levels = 1;
-  my_main.run_on_single_level(files, ml_prob, unknowns, std::vector< Math::Function <double> * > (), Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); 
+  my_main.run_on_single_level(ml_prob, ml_mesh, n_levels, unknowns, std::vector< Math::Function <double> * > (), Solution_set_initial_conditions, Solution_set_boundary_conditions); 
  
   
   
@@ -900,14 +900,14 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
 template < class real_num > 
-const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(const Files & files,
-                                                                                MultiLevelProblem & ml_prob,
+const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level(MultiLevelProblem & ml_prob,
+                                                                                MultiLevelMesh & ml_mesh,
+                                                                                const unsigned lev,
                                                                                 const std::vector< Unknown > &  unknowns,
                                                                                 const std::vector< Math::Function< double > * > &  exact_sol,
-                                                                                const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
-                                                                                MultiLevelMesh & ml_mesh,
-                                                                                const unsigned lev) const {
+                                                                                const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in
+                                                                                ) const {
                                                                                     
                                                                                     
   // ======= Mesh  ==================
@@ -1030,7 +1030,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;  variablesToBePrinted.push_back("All");
-  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted, lev);
+  ml_sol.GetWriter()->Write(ml_prob.GetFilesHandler()->GetOutputPath(),"biquadratic", variablesToBePrinted, lev);
  
  return ml_sol;
 

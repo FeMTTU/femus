@@ -13,57 +13,57 @@ SET(femus_src
 00_utils/input_parser/JsonInputParser.cpp
 00_utils/parallel/MyMatrix.cpp
 00_utils/parallel/MyVector.cpp
-01_mesh/gencase/Box.cpp
-01_mesh/gencase/Domain.cpp
-01_mesh/gencase/ElemSto.cpp
-01_mesh/gencase/MultiLevelMeshTwo.cpp
-01_mesh/gencase/GenCase.cpp
-01_mesh/00_geom_elements/GeomElemBase.cpp
-01_mesh/00_geom_elements/GeomElemHex8.cpp
-01_mesh/00_geom_elements/GeomElemHex27.cpp
-01_mesh/00_geom_elements/GeomElemQuad4.cpp
-01_mesh/00_geom_elements/GeomElemQuad9.cpp
-01_mesh/00_geom_elements/GeomElemTet4.cpp
-01_mesh/00_geom_elements/GeomElemTet10.cpp
-01_mesh/00_geom_elements/GeomElemTri3.cpp
-01_mesh/00_geom_elements/GeomElemTri6.cpp
-01_mesh/00_geom_elements/GeomElemTri7.cpp
-01_mesh/00_geom_elements/GeomElemEdge2.cpp
-01_mesh/00_geom_elements/GeomElemEdge3.cpp
-01_mesh/01_input/MeshGeneration.cpp
-01_mesh/01_input/GambitIO.cpp
-01_mesh/01_input/MED_IO.cpp
-01_mesh/02_partitioning/MeshPartitioning.cpp
-01_mesh/02_partitioning/MeshMetisPartitioning.cpp
-01_mesh/02_partitioning/MeshASMPartitioning.cpp
-01_mesh/03_refinement/MeshRefinement.cpp
-01_mesh/Elem.cpp
-01_mesh/Mesh.cpp
-01_mesh/MultiLevelMesh.cpp
-02_solution/MultiLevelSolution.cpp
-02_solution/Solution.cpp
-02_solution/01_output/Writer.cpp
-02_solution/01_output/VTKWriter.cpp
-02_solution/01_output/GMVWriter.cpp
-02_solution/01_output/XDMFWriter.cpp
-03_equations/assemble/Quantity.cpp
-03_equations/assemble/DofMap.cpp
-03_equations/assemble/Assemble_jacobian.cpp
-03_equations/assemble/Assemble_unknown.cpp
-03_equations/assemble/BoundaryConditions.cpp
-03_equations/assemble/CurrentElem.cpp
-03_equations/assemble/CurrentQuantity.cpp
-03_equations/assemble/SystemTwo.cpp
-03_equations/ExplicitSystem.cpp
-03_equations/ImplicitSystem.cpp
-03_equations/LinearImplicitSystem.cpp
-03_equations/MonolithicFSINonLinearImplicitSystem.cpp
-03_equations/NonLinearImplicitSystem.cpp
-03_equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
-03_equations/MultiLevelProblem.cpp
-03_equations/System.cpp
-03_equations/TimeLoop.cpp
-03_equations/TransientSystem.cpp
+01_problem/MultiLevelProblem.cpp
+02_mesh/gencase/Box.cpp
+02_mesh/gencase/Domain.cpp
+02_mesh/gencase/ElemSto.cpp
+02_mesh/gencase/MultiLevelMeshTwo.cpp
+02_mesh/gencase/GenCase.cpp
+02_mesh/00_geom_elements/GeomElemBase.cpp
+02_mesh/00_geom_elements/GeomElemHex8.cpp
+02_mesh/00_geom_elements/GeomElemHex27.cpp
+02_mesh/00_geom_elements/GeomElemQuad4.cpp
+02_mesh/00_geom_elements/GeomElemQuad9.cpp
+02_mesh/00_geom_elements/GeomElemTet4.cpp
+02_mesh/00_geom_elements/GeomElemTet10.cpp
+02_mesh/00_geom_elements/GeomElemTri3.cpp
+02_mesh/00_geom_elements/GeomElemTri6.cpp
+02_mesh/00_geom_elements/GeomElemTri7.cpp
+02_mesh/00_geom_elements/GeomElemEdge2.cpp
+02_mesh/00_geom_elements/GeomElemEdge3.cpp
+02_mesh/01_input/MeshGeneration.cpp
+02_mesh/01_input/GambitIO.cpp
+02_mesh/01_input/MED_IO.cpp
+02_mesh/02_partitioning/MeshPartitioning.cpp
+02_mesh/02_partitioning/MeshMetisPartitioning.cpp
+02_mesh/02_partitioning/MeshASMPartitioning.cpp
+02_mesh/03_refinement/MeshRefinement.cpp
+02_mesh/Elem.cpp
+02_mesh/Mesh.cpp
+02_mesh/MultiLevelMesh.cpp
+03_solution/MultiLevelSolution.cpp
+03_solution/Solution.cpp
+03_solution/01_output/Writer.cpp
+03_solution/01_output/VTKWriter.cpp
+03_solution/01_output/GMVWriter.cpp
+03_solution/01_output/XDMFWriter.cpp
+04_equations/assemble/Quantity.cpp
+04_equations/assemble/DofMap.cpp
+04_equations/assemble/Assemble_jacobian.cpp
+04_equations/assemble/Assemble_unknown.cpp
+04_equations/assemble/BoundaryConditions.cpp
+04_equations/assemble/CurrentElem.cpp
+04_equations/assemble/CurrentQuantity.cpp
+04_equations/assemble/SystemTwo.cpp
+04_equations/ExplicitSystem.cpp
+04_equations/ImplicitSystem.cpp
+04_equations/LinearImplicitSystem.cpp
+04_equations/MonolithicFSINonLinearImplicitSystem.cpp
+04_equations/NonLinearImplicitSystem.cpp
+04_equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
+04_equations/System.cpp
+04_equations/TimeLoop.cpp
+04_equations/TransientSystem.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
@@ -107,10 +107,10 @@ uq/sparseGrid.cpp
 
 # IF(HAVE_HDF5)
 #   SET(femus_src ${femus_src} 
-#   01_mesh/input/MED_IO.cpp
-#   02_solution/01_output/XDMFWriter.cpp
-#   01_mesh/gencase/GenCase.cpp
-#   03_equations/TimeLoop.cpp
+#   02_mesh/input/MED_IO.cpp
+#   03_solution/01_output/XDMFWriter.cpp
+#   02_mesh/gencase/GenCase.cpp
+#   04_equations/TimeLoop.cpp
 #   )
 # ENDIF(HAVE_HDF5) 
 
