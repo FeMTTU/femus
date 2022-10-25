@@ -55,6 +55,8 @@ SET(femus_src
 04_equations/assemble/CurrentElem.cpp
 04_equations/assemble/CurrentQuantity.cpp
 04_equations/assemble/SystemTwo.cpp
+04_equations/assemble/TimeLoop.cpp
+04_equations/time_dependent/TransientSystem.cpp
 04_equations/ExplicitSystem.cpp
 04_equations/ImplicitSystem.cpp
 04_equations/LinearImplicitSystem.cpp
@@ -62,8 +64,6 @@ SET(femus_src
 04_equations/NonLinearImplicitSystem.cpp
 04_equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
 04_equations/System.cpp
-04_equations/TimeLoop.cpp
-04_equations/TransientSystem.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp

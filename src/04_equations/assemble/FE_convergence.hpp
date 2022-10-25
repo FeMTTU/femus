@@ -15,7 +15,6 @@ namespace femus {
 class MultiLevelProblem;
 class MultiLevelSolution;
 class MultiLevelMesh;
-class Files;
 
 
 
@@ -30,7 +29,8 @@ virtual const MultiLevelSolution  run_on_single_level(MultiLevelProblem & ml_pro
                                                       const std::vector< Unknown > & unknowns,
                                                       const std::vector< Math::Function< double > * > &  exact_sol,
                                                       const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
-                                                      const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition
+                                                      const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition,
+                                                  const bool equation_sol
                                                      ) const = 0;
                                                      
 };
@@ -46,14 +46,14 @@ class FE_convergence {
 public: 
  
 
-  void  convergence_study(const Files & files,
-                          MultiLevelProblem & ml_prob,
+  void  convergence_study(MultiLevelProblem & ml_prob,
                           MultiLevelMesh & ml_mesh,
                           MultiLevelMesh & ml_mesh_all_levels,   //auxiliary
                           const unsigned max_number_of_meshes,   //auxiliary
                           const unsigned norm_flag,
                           const unsigned conv_order_flag,
                           const unsigned volume_or_boundary,
+                          const bool equation_sol,
                           const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,  //needed only if I have a System inside
                           const MultiLevelSolution::InitFuncMLProb SetInitialCondition,       //needed in all cases
                           const Solution_generation_single_level & main_in,
@@ -74,8 +74,9 @@ static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProble
                                                                 const std::vector< Math::Function< double > * >  & exact_sol,
                                                                 MultiLevelMesh & ml_mesh_all_levels, 
                                                                 const unsigned max_number_of_meshes, 
+                                                                const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
-                                                                const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in
+                                                                const bool equation_sol
                                                                );  
 
 
@@ -135,14 +136,14 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
     
 
 template < class type>
-  void  FE_convergence< type >::convergence_study(const Files & files,
-                                                  MultiLevelProblem & ml_prob,
+  void  FE_convergence< type >::convergence_study(MultiLevelProblem & ml_prob,
                                                   MultiLevelMesh & ml_mesh,
                                                   MultiLevelMesh & ml_mesh_all_levels,
                                                   const unsigned max_number_of_meshes,
                                                   const unsigned norm_flag,
                                                   const unsigned conv_order_flag,
                                                   const unsigned volume_or_boundary,
+                                                  const bool equation_sol,
                                                   const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
                                                   const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                   const Solution_generation_single_level & main_in,
@@ -161,8 +162,9 @@ template < class type>
                                                                                                  exact_sol,
                                                                                                  ml_mesh_all_levels, 
                                                                                                  max_number_of_meshes, 
-                                                                                                 SetBoundaryCondition, 
-                                                                                                 SetInitialCondition);
+                                                                                                 SetInitialCondition, 
+                                                                                                 SetBoundaryCondition,
+                                                                                                 equation_sol);
     
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > elem_all;
@@ -176,7 +178,8 @@ template < class type>
                                                                                        unknowns,
                                                                                        exact_sol,
                                                                                        SetInitialCondition, 
-                                                                                       SetBoundaryCondition
+                                                                                       SetBoundaryCondition,
+                                                                                       equation_sol
                                                                                       );
             
 
@@ -228,7 +231,10 @@ template < class type>
                                                                                             const std::vector< Math::Function< double > * > &  exact_sol,
                                                                                             MultiLevelMesh & ml_mesh_all_levels,
                                                                                             const unsigned max_number_of_meshes,
-                                                                                            const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,                                                                const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in)  {
+                                                                                            const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
+                                                                                            const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
+                                                                                            const bool equation_sol
+                                                                                           )  {
 
  //Mesh: construct all levels - BEGIN  ==================
         unsigned numberOfUniformLevels_finest = max_number_of_meshes;
@@ -256,11 +262,16 @@ template < class type>
                }
                
                
-               ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
+ // Only for an EQUATION - BEGIN  ==================
+         if (equation_sol) {
+             
+         ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
                for (unsigned int u = 0; u < unknowns.size(); u++) {
                ml_sol_all_levels.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob_aux);
                }
- //Solution  ==================
+               
+         }
+ // Only for an EQUATION - END  ==================
 
  return ml_sol_all_levels;
 } 

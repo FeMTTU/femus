@@ -44,7 +44,7 @@ public:
 
     type value(const std::vector < type >& x) const {
         
-        return 5. + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+        return /*5. +*/ sin( pi * (x[0]) ) * sin( pi * (x[1]) );
     }
 
 
@@ -196,7 +196,8 @@ public:
                                                   const std::vector< Unknown > & unknowns,
                                                   const std::vector< Math::Function< double > * > &  exact_sol,
                                                   const MultiLevelSolution::InitFuncMLProb      SetInitialCondition_in,
-                                                  const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition_in
+                                                  const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition_in,
+                                                  const bool equation_sol
                                                   ) const;
 
 };
@@ -299,7 +300,9 @@ int main(int argc, char** args) {
     Domain_square_Function_Zero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_Function_Zero_on_boundary_2< double >  analytical_function_1;
 
-    analytical_function[0] =   analytical_function[1] =   analytical_function[2] = & analytical_function_1;
+    for (unsigned int u = 0; u < analytical_function.size(); u++) {
+    analytical_function[u] =  & analytical_function_1;
+    }
     // 1) Which exact solution - END ================
 
     // 2) Choose how to compute the convergence order - BEGIN ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...    
@@ -310,7 +313,11 @@ int main(int argc, char** args) {
      const unsigned norm_flag = 1;
      // 3) Choose what norms to compute - END  ==============
 
-    // object ================
+     // 4) Solve Equation or only Approximation Theory - BEGIN   ==============
+       const bool equation_sol = true; 
+     // 4) Solve Equation or only Approximation Theory  - END   ==============
+
+     // object ================
     FE_convergence<>  fe_convergence;
 
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
@@ -318,17 +325,17 @@ int main(int argc, char** args) {
 
     for (unsigned int vb = 0; vb < 1; vb++) { //0: volume, 1: boundary, ...
         
-    fe_convergence.convergence_study(files, 
-                                     ml_prob, 
+    fe_convergence.convergence_study(ml_prob, 
                                      ml_mesh, 
                                      ml_mesh_all_levels, 
                                      max_number_of_meshes, 
                                      norm_flag,
                                      conv_order_flag,
                                      vb,
-                                      Solution_set_boundary_conditions, 
+                                     equation_sol,
+                                     Solution_set_boundary_conditions, 
                                      Solution_set_initial_conditions,
-                                    my_solution_generation, 
+                                     my_solution_generation, 
                                      unknowns/*[u]*/,
                                      analytical_function);
 
@@ -355,7 +362,9 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
                                                                                 const unsigned lev,                                                                                const std::vector< Unknown > &  unknowns,
                                                                                 const std::vector< Math::Function< double > * > &  exact_sol,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
-                                                                                const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in
+                                                                                const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
+                                                                                const bool equation_sol
+
 ) const {
 
 
@@ -393,46 +402,51 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
         ml_sol_single_level.set_analytical_function(unknowns[u]._name.c_str(), exact_sol[u]);   
         ml_sol_single_level.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob);
 
-// // If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part  - BEGIN      
-// 
-//         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
-//         ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
-// 
-//         // ======= Problem, System - BEGIN ========================
-//         std::ostringstream sys_name;
-//         sys_name << unknowns[u]._name;  //give to each system the name of the unknown it solves for!
-// 
-//         LinearImplicitSystem & system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
-// 
-//         // ======= System, Unknowns ========================
-//         system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
-//         std::vector< Unknown > unknowns_vec(1);
-//         unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
-//         system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
-// 
-//          // ======= System, Assemble Function ========================
-//         system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num, double >);
-// 
-//         // ======= System, Exact Solution ========================
-// //         system.set_exact_solution();
-//         
-//        // ======= System, Current number ========================
-//         ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
-// 
-//         // initialize and solve the system
-//         system.init();
-//         system.ClearVariablesToBeSolved();
-//         system.AddVariableToBeSolved("All");
-// 
-// //             system.SetDebugLinear(true);
-// //             system.SetMaxNumberOfLinearIterations(6);
-// //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
-// 
-//         system.SetOuterSolver(PREONLY/*GMRES*/);
-//         system.MGsolve();  //everything is stored into the Solution after this
-//         // ======= Problem, System - END ========================
-// 
-// // If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part  - END      
+        
+// // If you just want an interpolation study, without equation, just initialize every Solution with some function - BEGIN      
+       if (equation_sol)  {
+       
+
+        ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
+        ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+
+        // ======= Problem, System - BEGIN ========================
+        std::ostringstream sys_name;
+        sys_name << unknowns[u]._name;  //give to each system the name of the unknown it solves for!
+
+        LinearImplicitSystem & system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
+
+        // ======= System, Unknowns ========================
+        system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
+        std::vector< Unknown > unknowns_vec(1);
+        unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
+        system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
+
+         // ======= System, Assemble Function ========================
+        system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num, double >);
+
+        // ======= System, Exact Solution ========================
+//         system.set_exact_solution();
+        
+       // ======= System, Current number ========================
+        ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
+
+        // initialize and solve the system
+        system.init();
+        system.ClearVariablesToBeSolved();
+        system.AddVariableToBeSolved("All");
+
+//             system.SetDebugLinear(true);
+//             system.SetMaxNumberOfLinearIterations(6);
+//             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
+
+        system.SetOuterSolver(PREONLY/*GMRES*/);
+        system.MGsolve();  //everything is stored into the Solution after this
+        // ======= Problem, System - END ========================
+
+       }
+       
+// // If you just want an interpolation study, without equation, just initialize every Solution with some function  - END      
 
         // ======= Print - BEGIN  ========================
         std::vector < std::string > variablesToBePrinted;
