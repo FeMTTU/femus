@@ -58,7 +58,7 @@ public:
                           const MultiLevelSolution::InitFuncMLProb SetInitialCondition,       //needed in all cases
                           const Solution_generation_single_level & main_in,
                           const std::vector< Unknown > & unknowns,                                                                           //vector of Solutions
-                          const std::vector< Math::Function< double > * >  & exact_sol =  std::vector< Math::Function< double > * > () );    //vector of Exact Solutions, if available
+                          const std::vector< Math::Function< double > * >  & exact_sol);    //vector of Exact Solutions, if available
 
     
 private: 
