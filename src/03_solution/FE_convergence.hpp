@@ -30,7 +30,7 @@ virtual const MultiLevelSolution  run_on_single_level(MultiLevelProblem & ml_pro
                                                       const std::vector< Math::Function< double > * > &  exact_sol,
                                                       const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                       const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition,
-                                                  const bool equation_sol
+                                                  const bool equation_solveve
                                                      ) const = 0;
                                                      
 };
@@ -53,12 +53,13 @@ public:
                           const unsigned norm_flag,
                           const unsigned conv_order_flag,
                           const unsigned volume_or_boundary,
-                          const bool equation_sol,
-                          const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,  //needed only if I have a System inside
-                          const MultiLevelSolution::InitFuncMLProb SetInitialCondition,       //needed in all cases
+                          const bool equation_solveve,                                          // true only if I have a System inside
                           const Solution_generation_single_level & main_in,
-                          const std::vector< Unknown > & unknowns,                                                                           //vector of Solutions
-                          const std::vector< Math::Function< double > * >  & exact_sol);    //vector of Exact Solutions, if available
+                          const std::vector< Unknown > & unknowns,                            //vector of Solutions
+                          const std::vector< Math::Function< double > * >  & exact_sol,       // analytical function to Approximate
+                          const MultiLevelSolution::InitFuncMLProb SetInitialCondition,       // routine that does the Approximation - needed in all cases
+                          const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition  // routine for the BC - needed only if I have a System inside
+                         );    //vector of Exact Solutions, if available
 
     
 private: 
@@ -76,7 +77,7 @@ static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProble
                                                                 const unsigned max_number_of_meshes, 
                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
-                                                                const bool equation_sol
+                                                                const bool equation_solveve
                                                                );  
 
 
@@ -90,14 +91,13 @@ static  void output_convergence_order(const std::vector < std::vector < std::vec
 
 static  void output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
-                                        const unsigned norm_flag, 
-                                        const unsigned max_number_of_meshes);
+                                        const unsigned norm_flag);
 
 
 static  void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i); 
 
 
-static  std::vector< type > compute_error_norms_volume(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
+static  std::vector< type > compute_error_norms_volume_or_boundary(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
                                                 const std::vector<Gauss> & quad_rules,
                                                 const MultiLevelSolution* ml_sol, 
                                                 const MultiLevelSolution* ml_sol_all_levels,
@@ -106,7 +106,7 @@ static  std::vector< type > compute_error_norms_volume(const std::vector < std::
                                                 const unsigned norm_flag,
                                                 const unsigned conv_order_flag,
                                                                             const unsigned volume_or_boundary,
-                                                const Math::Function< type > * ex_sol_in = NULL
+                                                const Math::Function< type > * ex_sol_in
                                              );
 
 
@@ -120,8 +120,7 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        std::vector < std::vector < std::vector < type > > > &  norms,
                                                        const unsigned conv_order_flag,
                                                        const unsigned volume_or_boundary,
-                                                       const  std::vector< Math::Function< type > * > & ex_sol_in = std::vector< Math::Function< type > *  > ()
-                                         );
+                                                       const  std::vector< Math::Function< type > * > & ex_sol_in);
 
 
  
@@ -143,12 +142,19 @@ template < class type>
                                                   const unsigned norm_flag,
                                                   const unsigned conv_order_flag,
                                                   const unsigned volume_or_boundary,
-                                                  const bool equation_sol,
-                                                  const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
-                                                  const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
+                                                  const bool equation_solveve,
                                                   const Solution_generation_single_level & main_in,
                                                   const std::vector< Unknown > & unknowns,
-                                                  const std::vector< Math::Function< double > * >  & exact_sol) {
+                                                  const std::vector< Math::Function< double > * >  & exact_sol,
+                                                  const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
+                                                  const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition
+                                                 ) {
+   
+      // Controls - BEGIN 
+      if ( equation_solveve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
+      
+       if (conv_order_flag == 1 && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
+       // Controls - END
 
 
   
@@ -164,7 +170,7 @@ template < class type>
                                                                                                  max_number_of_meshes, 
                                                                                                  SetInitialCondition, 
                                                                                                  SetBoundaryCondition,
-                                                                                                 equation_sol);
+                                                                                                 equation_solveve);
     
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > elem_all;
@@ -179,7 +185,7 @@ template < class type>
                                                                                        exact_sol,
                                                                                        SetInitialCondition, 
                                                                                        SetBoundaryCondition,
-                                                                                       equation_sol
+                                                                                       equation_solveve
                                                                                       );
             
 
@@ -197,7 +203,7 @@ template < class type>
         
       }
    
-       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag, max_number_of_meshes);
+       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag);
    
 }
 
@@ -216,6 +222,7 @@ template < class type>
               norms[u].resize( max_number_of_meshes );
        for (int i = 0; i < norms[u].size(); i++) {   // loop on the mesh level
                norms[u][i].resize(norm_flag + 1);
+               std::fill(norms[u][i].begin(), norms[u][i].end(), 0.);
            }   
        }
     
@@ -233,7 +240,7 @@ template < class type>
                                                                                             const unsigned max_number_of_meshes,
                                                                                             const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                             const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
-                                                                                            const bool equation_sol
+                                                                                            const bool equation_solveve
                                                                                            )  {
 
  //Mesh: construct all levels - BEGIN  ==================
@@ -263,7 +270,7 @@ template < class type>
                
                
  // Only for an EQUATION - BEGIN  ==================
-         if (equation_sol) {
+         if (equation_solveve) {
              
          ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
                for (unsigned int u = 0; u < unknowns.size(); u++) {
@@ -311,8 +318,7 @@ template < class type>
 template < class type>
 /*static */ void FE_convergence< type >::output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
-                                        const unsigned norm_flag, 
-                                        const unsigned max_number_of_meshes) {
+                                        const unsigned norm_flag) {
     
     assert( unknowns.size() == norms.size() );
     
@@ -321,7 +327,7 @@ template < class type>
      for (unsigned int u = 0; u < unknowns.size(); u++) {
        for (int n = norm_flag; n >= 0; n--) {
             std::cout << unknowns[u]._name << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
-         for (int i = 0; i < max_number_of_meshes; i++) {
+         for (int i = 0; i < norms[u].size(); i++) {
                 output_convergence_order(norms, u, i, n);
             }
             std::cout << std::endl;
@@ -347,7 +353,7 @@ template < class type>
  
 
 template < class type>
-/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms_volume(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
+/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms_volume_or_boundary(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
                                                                             const std::vector<Gauss> & quad_rules,
                                                                             const MultiLevelSolution* ml_sol,
                                                                             const MultiLevelSolution* ml_sol_all_levels,
@@ -364,7 +370,7 @@ template < class type>
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-   if (conv_order_flag == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
+//    if (conv_order_flag == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
    
     
   const unsigned num_norms = norm_flag + 1;
@@ -417,15 +423,12 @@ template < class type>
 //-----------------  
   vector < type > phi_coords;
   vector < type > phi_coords_x;
-  vector < type > phi_coords_xx;
 
   phi_coords.reserve(max_size);
   phi_coords_x.reserve(max_size * dim_offset_grad);
-  phi_coords_xx.reserve(max_size * dim2);
 
   vector < type > phi;
   vector < type > phi_x;
-  vector < type > phi_xx;
   
   type weight; // gauss point weight
 
@@ -437,7 +440,6 @@ template < class type>
 
   phi.reserve(max_size);
   phi_x.reserve(max_size * dim_offset_grad);
-  phi_xx.reserve(max_size * dim2);
 
   
   
@@ -580,7 +582,10 @@ if (volume_or_boundary == 1 )	{
 
       // *** get gauss point weight, test function and test function partial derivatives ***
 	elem_all[ielGeom][solType_coords]->JacJacInv(x, ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    elem_all[ielGeom][sol_uType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x, phi_xx, space_dim);
+    elem_all[ielGeom][sol_uType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x, boost::none, space_dim);
+    
+    elem_all[ielGeom][solType_coords]->shape_funcs_current_elem(ig, JacI_qp, phi_coords, phi_coords_x,  boost::none, space_dim);
+    
     weight = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
 
     
@@ -593,7 +598,7 @@ if (volume_or_boundary == 1 )	{
       vector < type > gradSolu_coarser_prol_gss(dim_offset_grad, 0.);
       vector < type > x_gss(dim_offset_grad, 0.);
 
-      for (unsigned i = 0; i < nDofu; i++) {
+      for (unsigned i = 0; i < phi.size(); i++) {
         sol_u_gss                += phi[i] * sol_u[i];
         exactSol_from_dofs_gss  += phi[i] * sol_u_exact_at_dofs[i];
         sol_u_coarser_prol_gss   += phi[i] * sol_u_coarser_prol[i];
@@ -604,11 +609,20 @@ if (volume_or_boundary == 1 )	{
           gradSolu_coarser_prol_gss[jdim]   += phi_x[i * dim_offset_grad + jdim] * sol_u_coarser_prol[i];
         }
         
-         for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
+ 
+      }
+      
+      
+      
+       for (unsigned i = 0; i < phi_coords.size(); i++) {
+          for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
            x_gss[jdim] += x[jdim][i] * phi_coords[i];
           }
-
-      }
+       }
+      
+      
+      
+      
 
 // H^0 ==============      
 //     if (norm_flag == 0) {
@@ -717,7 +731,7 @@ template < class type>
                 
             std::vector< type > norm_out;
             
-            norm_out = FE_convergence::compute_error_norms_volume (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, volume_or_boundary,  ex_sol_in[u]);
+            norm_out = FE_convergence::compute_error_norms_volume_or_boundary (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, volume_or_boundary,  ex_sol_in[u]);
             
             
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];

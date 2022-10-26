@@ -36,112 +36,6 @@ using namespace femus;
 
 
 
-
-template < class type = double >
-class Domain_square_Function_Zero_on_boundary_1 : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-        
-        return /*5. +*/ sin( pi * (x[0]) ) * sin( pi * (x[1]) );
-    }
-
-
-    vector < type >  gradient(const std::vector < type >& x) const {
-
-        vector < type > solGrad(x.size());
-
-        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
-        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-        
-        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
-    }
-
-
-
-  private: 
-    
-   static constexpr double pi = acos(-1.);
-      
-};
-
-
-//this solution shows SUPERCONVERGENCE for SERENDIPITY FE, and it is like SUPER PERFECT for BIQUADRATIC FE... it is because of the MESH!
-template < class type = double >
-class Domain_square_Function_Zero_on_boundary_2 : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-        
-        return  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    }
-
-
-    vector < type >  gradient(const std::vector < type >& x) const {
-
-        vector < type > solGrad(x.size());
-
-        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
-        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-        
-        return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-    }
-
-
-
-};
-
-
-//this solution does not have SUPERCONVERGENCE even with the straight mesh
-template < class type = double >
-class Domain_square_Function_Zero_on_boundary_3 : public Math::Function< type > {
-
-public:
-
-// manufactured Laplacian =============
-    type value(const std::vector < type >& x) const {
-        
-        return    x[0] *  x[0] * (1. - x[0]) * x[1] * (1. - x[1]) ;
-    }
-
-
-    vector < type >  gradient(const std::vector < type >& x) const {
-
-        vector < type > solGrad(x.size());
-
-        solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-        solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-        
-        return     x[0] *  (  -2. *  x[1] * (1. - x[1])   ) + 2. *  (1. - 2. * x[0]) *  x[1] * (1. - x[1])   +  x[0] * ( -2. *  x[0] * (1. - x[0])) ;
-    }
-
-
-
-};
-
-
-
-
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
 
 Math::Function< double > *  exact_sol =  ml_prob->get_ml_solution()->get_analytical_function(name);
@@ -173,9 +67,9 @@ void System_assemble_interface(MultiLevelProblem & ml_prob);
 template < class system_type, class real_num, class real_num_mov >
 void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
                               const std::vector<Gauss> & quad_rules,
+                              system_type * mlPdeSys,
                               MultiLevelMesh * ml_mesh,
                               MultiLevelSolution * ml_sol,
-                              system_type * mlPdeSys,
                               const std::vector< Unknown > &  unknowns,
                               const std::vector< Math::Function< double > * > & exact_sol);
 
@@ -197,7 +91,7 @@ public:
                                                   const std::vector< Math::Function< double > * > &  exact_sol,
                                                   const MultiLevelSolution::InitFuncMLProb      SetInitialCondition_in,
                                                   const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition_in,
-                                                  const bool equation_sol
+                                                  const bool equation_solve
                                                   ) const;
 
 };
@@ -256,6 +150,13 @@ int main(int argc, char** args) {
     
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
 
+  const unsigned mesh_file_type = 0;
+  
+// // //    std::string mesh_name = Domain_square_m05p05::quad9_all_mesh_generation_methods(mesh_file_type, ml_mesh);
+
+  
+  
+  
 //   ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     
 //   ml_mesh.GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
@@ -291,14 +192,16 @@ int main(int argc, char** args) {
     MultiLevelMesh ml_mesh_all_levels;
 
     ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
+// // //     Domain_square_m05p05::quad9_all_mesh_generation_methods(mesh_file_type, ml_mesh_all_levels);
     // Auxiliary mesh, all levels - END  ================
 
 
     // 1) Which exact solution - BEGIN ================
     std::vector< Math::Function< double > * > analytical_function( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
-    Domain_square_Function_Zero_on_boundary_1< double >  analytical_function_1;
-//     Domain_square_Function_Zero_on_boundary_2< double >  analytical_function_1;
+    Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
+//     Domain_square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
+//     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
 
     for (unsigned int u = 0; u < analytical_function.size(); u++) {
     analytical_function[u] =  & analytical_function_1;
@@ -314,7 +217,7 @@ int main(int argc, char** args) {
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool equation_sol = true; 
+       const bool equation_solve = false; 
      // 4) Solve Equation or only Approximation Theory  - END   ==============
 
      // object ================
@@ -332,12 +235,13 @@ int main(int argc, char** args) {
                                      norm_flag,
                                      conv_order_flag,
                                      vb,
-                                     equation_sol,
-                                     Solution_set_boundary_conditions, 
-                                     Solution_set_initial_conditions,
+                                     equation_solve,
                                      my_solution_generation, 
                                      unknowns/*[u]*/,
-                                     analytical_function);
+                                     analytical_function,
+                                     Solution_set_initial_conditions,
+                                     Solution_set_boundary_conditions
+                                    );
 
     }
     // ======= Convergence study - END ========================
@@ -363,7 +267,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
                                                                                 const std::vector< Math::Function< double > * > &  exact_sol,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
-                                                                                const bool equation_sol
+                                                                                const bool equation_solve
 
 ) const {
 
@@ -404,7 +308,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
         
 // // If you just want an interpolation study, without equation, just initialize every Solution with some function - BEGIN      
-       if (equation_sol)  {
+       if (equation_solve)  {
        
 
         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
@@ -496,9 +400,9 @@ std::vector< Math::Function< double > * > exact_sol( unknowns.size() );
 
     System_assemble_flexible< system_type, real_num, real_num_mov > (elem_all,
                                                                      ml_prob.GetQuadratureRuleAllGeomElems(),
+                                                                     & ml_prob.get_system< system_type >(current_system_number),
                                                                      ml_prob.GetMLMesh(),
                                                                      ml_prob.get_ml_solution(),
-                                                                     & ml_prob.get_system< system_type >(current_system_number),
                                                                      unknowns,
                                                                      exact_sol);
 
@@ -518,9 +422,9 @@ std::vector< Math::Function< double > * > exact_sol( unknowns.size() );
 template < class system_type, class real_num, class real_num_mov >
 void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
                               const std::vector<Gauss> & quad_rules,
+                              system_type * mlPdeSys,
                               MultiLevelMesh * ml_mesh_in,
                               MultiLevelSolution * ml_sol_in,
-                              system_type * mlPdeSys,
                               const std::vector< Unknown > &  unknowns,
                               const std::vector< Math::Function< double > * > & exact_sol) {
 

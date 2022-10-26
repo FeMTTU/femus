@@ -243,11 +243,11 @@ int main(int argc, char** args) {
                                      conv_order_flag,
                                      volume_or_boundary,
                                      true,
-                                       Solution_set_boundary_conditions,
-                                     Solution_set_initial_conditions, 
                                      my_main,
                                      unknowns,
-                                     std::vector< Math::Function< double > * > ()
+                                     std::vector< Math::Function< double > * > (),
+                                     Solution_set_initial_conditions, 
+                                     Solution_set_boundary_conditions
                                     );
   
   return 0;
