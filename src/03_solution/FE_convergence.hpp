@@ -375,7 +375,7 @@ template < class type>
     
   const unsigned num_norms = norm_flag + 1;
   //norms that we are computing here //first L2, then H1 ============
-  std::vector< type > norms(num_norms);                  std::fill(norms.begin(), norms.end(), 0.);   
+  std::vector< type > norms_exact_function(num_norms);                  std::fill(norms_exact_function.begin(), norms_exact_function.end(), 0.);   
   std::vector< type > norms_exact_dofs(num_norms);       std::fill(norms_exact_dofs.begin(), norms_exact_dofs.end(), 0.);
   std::vector< type > norms_inexact_dofs(num_norms);     std::fill(norms_inexact_dofs.begin(), norms_inexact_dofs.end(), 0.);
   //norms that we are computing here //first L2, then H1 ============
@@ -556,8 +556,8 @@ if (volume_or_boundary == 1 )	{
 		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha +=  weight_iqp_bdry * sol_u_bdry_gss * sol_u_bdry_gss; 
-                  integral_beta  +=  weight_iqp_bdry * laplace_ctrl_surface;
+                  norms_exact_function[0] +=  weight_iqp_bdry * sol_u_bdry_gss * sol_u_bdry_gss; 
+                  norms_exact_function[1] +=  weight_iqp_bdry * laplace_ctrl_surface;
                  
         }
             
@@ -627,9 +627,9 @@ if (volume_or_boundary == 1 )	{
 // H^0 ==============      
 //     if (norm_flag == 0) {
       type exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
-      norms[0]               += (sol_u_gss - exactSol)                * (sol_u_gss - exactSol)       * weight;
-      norms_exact_dofs[0]    += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
-      norms_inexact_dofs[0]  += (sol_u_gss - sol_u_coarser_prol_gss)   * (sol_u_gss - sol_u_coarser_prol_gss)  * weight;
+      norms_exact_function[0] += (sol_u_gss - exactSol)                * (sol_u_gss - exactSol)       * weight;
+      norms_exact_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
+      norms_inexact_dofs[0]   += (sol_u_gss - sol_u_coarser_prol_gss)   * (sol_u_gss - sol_u_coarser_prol_gss)  * weight;
 //     }
     
 // H^1 ==============      
@@ -637,9 +637,9 @@ if (volume_or_boundary == 1 )	{
       vector < type > exactGradSol(dim_offset_grad,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
 
       for (unsigned j = 0; j < dim_offset_grad ; j++) {
-        norms[1]               += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
-        norms_exact_dofs[1]    += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
-        norms_inexact_dofs[1]  += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
+        norms_exact_function[1] += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
+        norms_exact_dofs[1]     += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
+        norms_inexact_dofs[1]   += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
       }
    }
       
@@ -657,8 +657,8 @@ if (volume_or_boundary == 1 )	{
                  norm_vec = NumericVector::build().release();
                  norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec->set(iproc, norms[0]);  norm_vec->close();  norms[0] = norm_vec->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec->set(iproc, norms[1]);  norm_vec->close();  norms[1] = norm_vec->l1_norm(); }
+         /*if (norm_flag == 0) {*/ norm_vec->set(iproc, norms_exact_function[0]);  norm_vec->close();  norms_exact_function[0] = norm_vec->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec->set(iproc, norms_exact_function[1]);  norm_vec->close();  norms_exact_function[1] = norm_vec->l1_norm(); }
 
           delete norm_vec;
 
@@ -683,15 +683,15 @@ if (volume_or_boundary == 1 )	{
           delete norm_vec_inexact;
 
           
-    for (int n = 0; n < norms.size(); n++) { 
-                  norms[n] = sqrt(norms[n]);                                            
+    for (int n = 0; n < norms_exact_function.size(); n++) { 
+   norms_exact_function[n] = sqrt(norms_exact_function[n]);                                            
        norms_exact_dofs[n] = sqrt(norms_exact_dofs[n]);                                            
      norms_inexact_dofs[n] = sqrt(norms_inexact_dofs[n]);
     }
     
     
 if (conv_rate_computation_method == 0)  return norms_inexact_dofs;
-if (conv_rate_computation_method == 1)  return norms;
+if (conv_rate_computation_method == 1)  return norms_exact_function;
  //   return norms_exact_dofs;
 
  
@@ -715,6 +715,7 @@ template < class type>
                                                                                    const  std::vector< Math::Function< type > * > &  ex_sol_in
                                          ) {
      
+    
               if (volume_or_boundary == 0) {
             }
             else if (volume_or_boundary == 1) {

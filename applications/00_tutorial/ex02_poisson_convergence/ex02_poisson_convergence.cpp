@@ -217,7 +217,7 @@ int main(int argc, char** args) {
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool equation_solve = true; 
+       const bool equation_solve = false; 
      // 4) Solve Equation or only Approximation Theory  - END   ==============
 
      // object ================
@@ -226,7 +226,7 @@ int main(int argc, char** args) {
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
 //     for (unsigned int u = 0; u < unknowns.size(); u++) {
 
-    for (unsigned int vb = 0; vb < 1; vb++) { //0: volume, 1: boundary, ...
+    for (unsigned int vb = 1; vb < 2; vb++) { //0: volume, 1: boundary, ...
         
     fe_convergence.convergence_study(ml_prob, 
                                      ml_mesh, 

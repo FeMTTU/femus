@@ -88,7 +88,7 @@ public:
 
     type value(const std::vector < type >& x) const {
         
-        return sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+        return 5. + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
     }
 
 
