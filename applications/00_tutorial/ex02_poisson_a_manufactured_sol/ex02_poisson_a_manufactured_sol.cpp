@@ -58,8 +58,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   return dirichlet;
 }
 
-void AssemblePoissonProblem(MultiLevelProblem & ml_prob);
-void AssemblePoissonProblem_AD(MultiLevelProblem & ml_prob);
+void AssemblePoissonProblem_old_fe_quadrature(MultiLevelProblem & ml_prob);
+void AssemblePoissonProblem_old_fe_quadrature_AD(MultiLevelProblem & ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* ml_sol, std::vector< Unknown > & unknowns_vec);
 
@@ -77,7 +77,11 @@ int main(int argc, char** args) {
   // ======= Problem  ==================
   MultiLevelProblem ml_prob;
 
-  
+    // ======= Quad Rule - BEGIN ========================
+   std::string fe_quad_rule("seventh");
+    // ======= Quad Rule - END ========================
+ 
+   
   // ======= Mesh file types (function, salome, gambit) ========================
     for (unsigned  mesh_file_type = 0; mesh_file_type < 3; mesh_file_type++) {  
   
@@ -85,7 +89,7 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   // read coarse level mesh
-   std::string mesh_name = Domain_square_m05p05::quad9_all_mesh_generation_methods(mesh_file_type, ml_mesh);
+   std::string mesh_name = Domain_square_m05p05::quad9_all_mesh_generation_methods_Structured(mesh_file_type, ml_mesh, fe_quad_rule);
 
 
    
@@ -108,10 +112,10 @@ int main(int argc, char** args) {
   // ======= Assemble methods (AD or NON-AD) ========================
     std::vector < std::pair <femus::System::AssembleFunctionType, std::string> >  assemble_pointer_vec(2);
     
-    assemble_pointer_vec[0].first = AssemblePoissonProblem;
+    assemble_pointer_vec[0].first = AssemblePoissonProblem_old_fe_quadrature;
     assemble_pointer_vec[0].second = "non-automatic_diff";
     
-    assemble_pointer_vec[1].first = AssemblePoissonProblem_AD;
+    assemble_pointer_vec[1].first = AssemblePoissonProblem_old_fe_quadrature_AD;
     assemble_pointer_vec[1].second = "automatic_diff";
 
     
@@ -308,7 +312,7 @@ int main(int argc, char** args) {
  *        u = u0 + w satisfies Jac u = F
  **/
 
-void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
+void AssemblePoissonProblem_old_fe_quadrature(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -513,7 +517,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
  * thus
  *                  J w = f(x) - J u0
  **/
-void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
+void AssemblePoissonProblem_old_fe_quadrature_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -794,6 +798,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* ml_sol, std::vecto
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+        
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
 

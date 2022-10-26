@@ -51,7 +51,7 @@ public:
                           MultiLevelMesh & ml_mesh_all_levels,   //auxiliary
                           const unsigned max_number_of_meshes,   //auxiliary
                           const unsigned norm_flag,
-                          const unsigned conv_order_flag,
+                          const unsigned conv_rate_computation_method,
                           const unsigned volume_or_boundary,
                           const bool equation_solveve,                                          // true only if I have a System inside
                           const Solution_generation_single_level & main_in,
@@ -104,7 +104,7 @@ static  std::vector< type > compute_error_norms_volume_or_boundary(const std::ve
                                                 const std::string & unknown,
                                                 const unsigned current_level,
                                                 const unsigned norm_flag,
-                                                const unsigned conv_order_flag,
+                                                const unsigned conv_rate_computation_method,
                                                                             const unsigned volume_or_boundary,
                                                 const Math::Function< type > * ex_sol_in
                                              );
@@ -118,7 +118,7 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        const unsigned i,
                                                        const unsigned norm_flag,
                                                        std::vector < std::vector < std::vector < type > > > &  norms,
-                                                       const unsigned conv_order_flag,
+                                                       const unsigned conv_rate_computation_method,
                                                        const unsigned volume_or_boundary,
                                                        const  std::vector< Math::Function< type > * > & ex_sol_in);
 
@@ -140,7 +140,7 @@ template < class type>
                                                   MultiLevelMesh & ml_mesh_all_levels,
                                                   const unsigned max_number_of_meshes,
                                                   const unsigned norm_flag,
-                                                  const unsigned conv_order_flag,
+                                                  const unsigned conv_rate_computation_method,
                                                   const unsigned volume_or_boundary,
                                                   const bool equation_solveve,
                                                   const Solution_generation_single_level & main_in,
@@ -153,13 +153,13 @@ template < class type>
       // Controls - BEGIN 
       if ( equation_solveve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
       
-       if (conv_order_flag == 1 && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
+       if (conv_rate_computation_method == 1 && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
        // Controls - END
 
 
   
     
-    vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms ( unknowns.size(), 
+    std::vector < std::vector < std::vector < double > > > norms = FE_convergence::initialize_vector_of_norms ( unknowns.size(), 
                                                                                                  max_number_of_meshes, 
                                                                                                  norm_flag);
     
@@ -197,7 +197,7 @@ template < class type>
                                                                         lev,
                                                                         norm_flag,
                                                                         norms,
-                                                                        conv_order_flag,
+                                                                        conv_rate_computation_method,
                                                                         volume_or_boundary,
                                                                         exact_sol);
         
@@ -360,7 +360,7 @@ template < class type>
                                                                             const std::string & unknown,
                                                                             const unsigned current_level,
                                                                             const unsigned norm_flag,
-                                                                            const unsigned conv_order_flag,
+                                                                            const unsigned conv_rate_computation_method,
                                                                             const unsigned volume_or_boundary,
                                                                             const Math::Function< type > * ex_sol_in
                                              ) {
@@ -370,7 +370,7 @@ template < class type>
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-//    if (conv_order_flag == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
+   if (conv_rate_computation_method == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
    
     
   const unsigned num_norms = norm_flag + 1;
@@ -690,8 +690,8 @@ if (volume_or_boundary == 1 )	{
     }
     
     
-if (conv_order_flag == 0)  return norms_inexact_dofs;
-if (conv_order_flag == 1)  return norms;
+if (conv_rate_computation_method == 0)  return norms_inexact_dofs;
+if (conv_rate_computation_method == 1)  return norms;
  //   return norms_exact_dofs;
 
  
@@ -710,7 +710,7 @@ template < class type>
                                                                                    const unsigned i,
                                                                                    const unsigned norm_flag,
                                                                                    std::vector < std::vector < std::vector < type > > > &  norms,
-                                                                                   const unsigned conv_order_flag,
+                                                                                   const unsigned conv_rate_computation_method,
                                                                                    const unsigned volume_or_boundary,
                                                                                    const  std::vector< Math::Function< type > * > &  ex_sol_in
                                          ) {
@@ -731,7 +731,7 @@ template < class type>
                 
             std::vector< type > norm_out;
             
-            norm_out = FE_convergence::compute_error_norms_volume_or_boundary (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, volume_or_boundary,  ex_sol_in[u]);
+            norm_out = FE_convergence::compute_error_norms_volume_or_boundary (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_rate_computation_method, volume_or_boundary,  ex_sol_in[u]);
             
             
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];

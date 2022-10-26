@@ -41,6 +41,14 @@ class assemble_jacobian/* : public assemble_jacobian_base*/ {
                                                 const double weight,
                                                 std::vector< double > & Jac) const;
   
+//  void  compute_jacobian_inside_integration_loop(const unsigned i,
+//                                                 const unsigned dim,
+//                                                 const std::vector < unsigned int > Sol_n_el_dofs,
+//                                                 const unsigned int sum_Sol_n_el_dofs,
+//                                                 const std::vector< UnknownLocal < adept::adouble > > & unk_vec,
+//                                                 const std::vector< Phi < adept::adouble > > &  phi,
+//                                                 const double weight,
+//                                                 std::vector< double > & Jac) const;
                                                
  void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
                                                const std::vector< std::vector< real_num > > & solu,

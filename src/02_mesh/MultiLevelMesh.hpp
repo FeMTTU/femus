@@ -18,6 +18,7 @@ PURPOSE.  See the above copyright notice for more information.
 
 
 #include "ElemTypeEnum.hpp"
+#include "FETypeEnum.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "WriterEnum.hpp"
 #include "Writer.hpp"
@@ -198,7 +199,7 @@ public:
     
     void InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(const char * GaussOrder);
   
-    elem_type *_finiteElement[N_GEOM_ELS][5];
+    elem_type *_finiteElement[N_GEOM_ELS][NFE_FAMS];
     
 private:
     

@@ -34,7 +34,9 @@ namespace femus {
 
 
 
-MultiLevelMesh::~MultiLevelMesh() {
+MultiLevelMesh::~MultiLevelMesh() {  
+    ///@todo these delete's should not be in the Destructor, because the new's are not in the constructor, 
+    // so you create problems when you try to use the default copy constructor and copy pointers!
 
     
     DeleteLevelsZero();
@@ -65,7 +67,7 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
  void MultiLevelMesh::InitializeFETypes() {
      
    for(int i = 0; i < N_GEOM_ELS; i++) {
-     for(int j = 0; j < 5; j++) {
+     for(int j = 0; j < NFE_FAMS; j++) {
       _finiteElement[i][j] = NULL;
      }
    }
@@ -85,8 +87,8 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
         for(unsigned i = 0; i < N_GEOM_ELS; i++){
         
       if( _finiteElementGeometryFlag[i]) {
-      for(unsigned j = 0; j < 5; j++){
-        delete _finiteElement[i][j];
+      for(unsigned j = 0; j < NFE_FAMS; j++){
+        if (_finiteElement[i][j] != NULL)  { delete _finiteElement[i][j]; }
         }
       }
       
@@ -344,7 +346,7 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
    void MultiLevelMesh::DeleteLevelsZero() {
        
     for (unsigned i = 0; i < _level0.size(); i++) {
-        delete _level0[i];
+        if(_level0[i] != NULL)  delete _level0[i];
     }
     
    }

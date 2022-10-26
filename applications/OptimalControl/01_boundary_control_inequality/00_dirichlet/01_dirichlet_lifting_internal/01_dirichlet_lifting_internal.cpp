@@ -179,7 +179,6 @@ int main(int argc, char** args) {
   ml_mesh.PrepareNewLevelsForRefinement();
 
 
-  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
   // ======= Mesh, Coarse reading - END ==================
 
   

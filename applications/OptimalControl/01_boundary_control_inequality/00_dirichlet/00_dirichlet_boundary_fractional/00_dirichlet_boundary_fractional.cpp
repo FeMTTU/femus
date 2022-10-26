@@ -264,13 +264,7 @@ int main(int argc, char** args) {
 //   - Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
   ml_mesh.PrepareNewLevelsForRefinement();       //doesn't need dofmap
 
-  
-  ml_mesh.InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); ///@todo keep it only for compatibility with old ElemType, because of its destructor 
-  // I should put it inside a Mesh constructor with whatever argument so I hide it from the main
-  // No it must be at the very end of ReadCoarseMesh
-  
-  //right now only one quadrature rule is used in the FE type under Mesh
-  // ======= Mesh, Coarse reading - END ==================
+    // ======= Mesh, Coarse reading - END ==================
 
 
   // ======= Mesh: Refinement - BEGIN ==================

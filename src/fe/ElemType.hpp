@@ -47,7 +47,7 @@ namespace femus
   {
 
 // =========================================
-// ===  Constr/Destr =================
+// ===  Constr/Destr - BEGIN =================
 // =========================================
     public:
 
@@ -59,9 +59,12 @@ namespace femus
   
       /** destructor */
       virtual ~elem_type();
+// =========================================
+// ===  Constr/Destr - END =================
+// =========================================
 
 // =========================================
-// ===  Geometry - related =================
+// ===  Geometry - related - BEGIN =================
 // =========================================
     public:
         
@@ -77,10 +80,13 @@ namespace femus
       unsigned _dim; /* Spatial dimension of the geometric element */
       
       GeomElType _GeomElemType;  /* Geometric Element flag */
+// =========================================
+// ===  Geometry - related - END =================
+// =========================================
 
       
 // =========================================
-// ===   FE (without evaluations) =================
+// ===   FE (without evaluations) - BEGIN =================
 // =========================================
     public:
         
@@ -109,11 +115,14 @@ namespace femus
       
       /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
       const int** _IND;
+// =========================================
+// ===   FE (without evaluations) - END =================
+// =========================================
 
 
       
 // =========================================
-// ===  FE with MG =================
+// ===  FE with MG - BEGIN =================
 // =========================================
     public:
         
@@ -169,10 +178,14 @@ namespace femus
       /** Prolongator index, array for contiguous memory */
       int* _mem_prol_ind;
 
+// =========================================
+// ===  FE with MG - END =================
+// =========================================
+
 
 
 // =========================================
-// ===  Quadrature, only on GEOM ELEM, without FE evaluations =================
+// ===  Quadrature, only on GEOM ELEM, without FE evaluations - BEGIN =================
 // =========================================
   public:
       
@@ -210,13 +223,16 @@ namespace femus
       
       void deallocate_quadrature_boundary();
       
-      Gauss* _gauss;
+      Gauss * _gauss;
       ///@todo this must become a vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
-      Gauss* _gauss_bdry; 
+      Gauss * _gauss_bdry; 
+// =========================================
+// ===  Quadrature, only on GEOM ELEM, without FE evaluations - END =================
+// =========================================
 
       
 // =========================================
-// ===  Quadrature, with FE evaluations =================
+// ===  Quadrature, with FE evaluations - BEGIN =================
 // =========================================
   public:
         
@@ -311,6 +327,12 @@ namespace femus
        
       void initialize_fe_quadrature_evaluations(const char* order_gauss);
       
+      void initialize_to_null_fe_quadrature_evaluations_all();
+      
+      virtual void initialize_to_null_fe_quadrature_evaluations_vol_at_vol() = 0;
+      
+      virtual void initialize_to_null_fe_quadrature_evaluations_vol_at_bdry() = 0;
+      
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
       virtual void deallocate_shape_at_quadrature_points() = 0; /* you shouldn't call virtual function from constr/destr, so I am not using them in there*/
@@ -337,9 +359,12 @@ namespace femus
                                                                                 ///@todo unfortunately I cannot put this only once in the templated father, because it is not found...
                                                                                 /// But, if I put it in this templated father, it works... Why?
       std::vector < std::vector <  std::vector < double > > > _dphidxi_templ;     
+// =========================================
+// ===  Quadrature, with FE evaluations - END =================
+// =========================================
       
 // =========================================
-// ===  Equation, Sparsity pattern and Multigrid =================
+// ===  Equation, Sparsity pattern and Multigrid - BEGIN =================
 // =========================================
     public:
 
@@ -401,7 +426,11 @@ namespace femus
                              NumericVector* NNZ_o,
                              const unsigned& itype) const;
 
-        
+// =========================================
+// ===  Equation, Sparsity pattern and Multigrid - END =================
+// =========================================
+
+
   };
   
   
@@ -412,6 +441,7 @@ namespace femus
 
     public:
         
+// ===  Constr/Destr - BEGIN =================
       /** constructor */
       elem_type_1D(const char* geom_elem, const char* fe_order, const char* gauss_order);
 
@@ -420,17 +450,19 @@ namespace femus
 
       /** destructor */
       ~elem_type_1D();      
+// ===  Constr/Destr - END =================
 
 // =========================================
-// ===   FE (without evaluations) =================
+// ===   FE (without evaluations) - BEGIN =================
 // =========================================
   protected:
       
       const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+// ===   FE (without evaluations) - END =================
       
                             
 // =========================================
-// ===  Quadrature =================
+// ===  Quadrature, with FE evaluations - BEGIN =================
 // =========================================
     public:
         
@@ -557,6 +589,10 @@ namespace femus
        
       void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
       
+      void initialize_to_null_fe_quadrature_evaluations_vol_at_vol();
+      
+      void initialize_to_null_fe_quadrature_evaluations_vol_at_bdry();
+      
       void allocate_and_fill_shape_at_quadrature_points();
       
       void deallocate_shape_at_quadrature_points();
@@ -589,6 +625,7 @@ namespace femus
       double *  _phi_vol_at_bdry_memory;
       double ** _dphidxi_vol_at_bdry;
       double *  _dphidxi_vol_at_bdry_memory;
+// ===  Quadrature, with FE evaluations - END =================
       
   };
 
@@ -596,6 +633,7 @@ namespace femus
   class elem_type_2D : public elem_type
   {
       
+// ===  Constr/Destr - BEGIN =================
     public:
         
       /** constructor */
@@ -606,17 +644,19 @@ namespace femus
 
       /** destructor */
       ~elem_type_2D();
+// ===  Constr/Destr - END =================
 
       
 // =========================================
-// ===   FE (without evaluations) =================
+// ===   FE (without evaluations) - BEGIN =================
 // =========================================
     protected:
       
     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+// ===   FE (without evaluations) - END =================
 
 // =========================================
-// ===   Quadrature =================
+// ===  Quadrature, with FE evaluations - BEGIN =================
 // =========================================
     public:
         
@@ -713,6 +753,10 @@ namespace femus
 
      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const;
                                            
+      void initialize_to_null_fe_quadrature_evaluations_vol_at_vol();
+      
+      void initialize_to_null_fe_quadrature_evaluations_vol_at_bdry();
+      
      void allocate_and_fill_shape_at_quadrature_points();
       
      void deallocate_shape_at_quadrature_points();
@@ -749,6 +793,8 @@ namespace femus
       double *  _dphidxi_vol_at_bdry_memory;
       double ** _dphideta_vol_at_bdry;
       double *  _dphideta_vol_at_bdry_memory;
+// ===  Quadrature, with FE evaluations - END =================
+      
 
   };
   
@@ -758,6 +804,7 @@ namespace femus
   class elem_type_3D : public elem_type
   {
       
+// ===  Constr/Destr - BEGIN =================
     public:
         
       /** constructor */
@@ -768,17 +815,19 @@ namespace femus
 
       /** destructor */
       ~elem_type_3D();
+// ===  Constr/Destr - END =================
       
 // =========================================
-// ===   FE (without evaluations) =================
+// ===   FE (without evaluations) - BEGIN =================
 // =========================================
     protected:
      
      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+// ===   FE (without evaluations) - END =================
      
       
 // =========================================
-// ===   Quadrature =================
+// ===  Quadrature, with FE evaluations - BEGIN =================
 // =========================================
     public:
      
@@ -873,6 +922,10 @@ namespace femus
 
      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
      
+      void initialize_to_null_fe_quadrature_evaluations_vol_at_vol();
+      
+      void initialize_to_null_fe_quadrature_evaluations_vol_at_bdry();
+      
      void allocate_and_fill_shape_at_quadrature_points();
 
      void deallocate_shape_at_quadrature_points();
@@ -918,6 +971,7 @@ namespace femus
       double *  _dphideta_vol_at_bdry_memory;
       double ** _dphidzeta_vol_at_bdry;
       double *  _dphidzeta_vol_at_bdry_memory;
+// ===  Quadrature, with FE evaluations - END =================
  
   };
 
@@ -925,7 +979,7 @@ namespace femus
   
   
   
-  //---------------------------------------------------------------------------------------------------------
+  //-----------elem_type_1D - BEGIN ----------------------------------------------------------------------------------------------
 
   template <class type>
   void elem_type_1D::GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
@@ -1093,7 +1147,12 @@ namespace femus
 
 }
 
-//---------------------------------------------------------------------------------------------------------
+
+
+  //-----------elem_type_1D - END  ----------------------------------------------------------------------------------------------
+
+
+  //-----------elem_type_2D - BEGIN  ----------------------------------------------------------------------------------------------
 
   template <class type>
   void elem_type_2D::GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
@@ -1324,11 +1383,12 @@ namespace femus
   }
   
 
+  //-----------elem_type_2D - END  ----------------------------------------------------------------------------------------------
   
   
+  //-----------elem_type_3D - BEGIN  ----------------------------------------------------------------------------------------------
    
  
- //---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
                                       vector< vector < type > >& jacobianMatrix) const
@@ -1598,12 +1658,8 @@ namespace femus
     }
   }
 
-  
-//---------------------------------------------------------------------------------------------------------
- 
-  
-  
-  
+  //-----------elem_type_3D - END  ----------------------------------------------------------------------------------------------
+   
   
   
   

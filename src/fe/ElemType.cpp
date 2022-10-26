@@ -33,9 +33,12 @@ using std::endl;
 
 namespace femus {
 
+  //-----------elem_type - BEGIN ----------------------------------------------------------------------------------------------
 
 //   Constructor with FE quadrature evaluations
-  elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) 
+  elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+  _gauss(NULL),
+  _gauss_bdry(NULL)
   {
       
      initialize_geom_elem(geom_elem);
@@ -49,7 +52,9 @@ namespace femus {
   
 
 //   Constructor without FE quadrature evaluations
-  elem_type::elem_type(const char* geom_elem, const char* fe_order)
+  elem_type::elem_type(const char* geom_elem, const char* fe_order) :
+  _gauss(NULL),
+  _gauss_bdry(NULL)
   {
       
      initialize_geom_elem(geom_elem);
@@ -72,20 +77,20 @@ namespace femus {
     
   }
   
-
+///@todo maybe initialize all these pointers to NULL in case they may not be allocated
   void elem_type::deallocate_fe_and_multigrid_parts() {
       
-    delete _pt_basis;
+    delete    _pt_basis       ;
     
-    delete [] _IND;
+    delete [] _IND            ;
     
-    delete [] _X;
-    delete [] _KVERT_IND;
+    delete [] _X              ;
+    delete [] _KVERT_IND      ;
 
-    delete [] _prol_val;
-    delete [] _prol_ind;
-    delete [] _mem_prol_val;
-    delete [] _mem_prol_ind;
+    delete [] _prol_val       ;
+    delete [] _prol_ind       ;
+    delete [] _mem_prol_val   ;
+    delete [] _mem_prol_ind   ;
     
   }
   
@@ -176,14 +181,14 @@ namespace femus {
 
   void elem_type::deallocate_quadrature() {
       
-    delete _gauss;
+    if (_gauss != NULL) delete _gauss;
       
   }
    
    
   void elem_type::deallocate_quadrature_boundary() {
       
-    delete _gauss_bdry;
+    if (_gauss_bdry != NULL) delete _gauss_bdry;
       
   }
   
@@ -214,6 +219,8 @@ namespace femus {
     //************ FE and MG SETUP ******************
     initialize_fe_and_multigrid_parts(geom_elem);
 
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_to_null_fe_quadrature_evaluations_all();
   }
   
 
@@ -243,6 +250,8 @@ namespace femus {
     //************ FE and MG SETUP ******************
     initialize_fe_and_multigrid_parts(geom_elem);
 
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_to_null_fe_quadrature_evaluations_all();
   }
   
 
@@ -269,6 +278,8 @@ namespace femus {
     //************ FE and MG SETUP ******************
     initialize_fe_and_multigrid_parts(geom_elem);
     
+    //************ FE and QUADRATURE EVALUATIONS ******************
+    initialize_to_null_fe_quadrature_evaluations_all();
   }
   
   
@@ -1131,10 +1142,10 @@ namespace femus {
 
       basis* faceBasis = linearLine;
 
-// --------- quadrature
+// --------- quadrature - BEGIN
       Gauss faceGaussPoint = Gauss("line", order_gauss);
       const double* xi_ptr = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
-// --------- quadrature
+// --------- quadrature - END
 
       unsigned nFaces = /*_pt_basis*/underlying_volume_basis->faceNumber[2];
       
@@ -1226,7 +1237,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
       faceBasis[0] = linearQuad;
       faceBasis[1] = linearTri;
 
-// --------- quadrature
+// --------- quadrature - BEGIN
       Gauss quadGaussPoint = Gauss("quad", order_gauss);
       Gauss triGaussPoint = Gauss("tri", order_gauss);
 
@@ -1241,7 +1252,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
       const double* yi[2] = { faceGauss[0]->GetGaussWeightsPointer() + 2 * (faceGauss[0]->GetGaussPointsNumber()),
                               faceGauss[1]->GetGaussWeightsPointer() + 2 * (faceGauss[1]->GetGaussPointsNumber())
                             };
-// --------- quadrature
+// --------- quadrature - END
 
       unsigned nFaces = _pt_basis->faceNumber[2];
       _phiFace.resize(nFaces);
@@ -1347,71 +1358,189 @@ if( _SolType >= 3 && _SolType < 5 ) {
   }
   
   
+  void elem_type_1D::initialize_to_null_fe_quadrature_evaluations_vol_at_bdry() {
+      
+      _phi_vol_at_bdry             = NULL  ;
+      _phi_vol_at_bdry_memory      = NULL  ; 
+      
+      _dphidxi_vol_at_bdry         = NULL  ; 
+      _dphidxi_vol_at_bdry_memory  = NULL  ;
+  
+      
+}
+  
+  
+  void elem_type_2D::initialize_to_null_fe_quadrature_evaluations_vol_at_bdry() {
+  
+      
+             _phi_vol_at_bdry              = NULL  ;
+             _phi_vol_at_bdry_memory       = NULL  ;
+             
+             _dphidxi_vol_at_bdry          = NULL  ;
+             _dphidxi_vol_at_bdry_memory   = NULL  ;
+             _dphideta_vol_at_bdry         = NULL  ;
+             _dphideta_vol_at_bdry_memory  = NULL  ; 
+      
+    
+}
+
+
+  void elem_type_3D::initialize_to_null_fe_quadrature_evaluations_vol_at_bdry() {
+ 
+      
+           _phi_vol_at_bdry               = NULL;
+           _phi_vol_at_bdry_memory        = NULL;
+           
+           _dphidxi_vol_at_bdry           = NULL ; 
+           _dphidxi_vol_at_bdry_memory    = NULL ;
+           _dphideta_vol_at_bdry          = NULL ;
+           _dphideta_vol_at_bdry_memory   = NULL ; 
+           _dphidzeta_vol_at_bdry         = NULL ;
+           _dphidzeta_vol_at_bdry_memory  = NULL ;
+      
+      
+      
+      
+      
+      
+}
+  
+  
+  
+  
+  void elem_type_1D::initialize_to_null_fe_quadrature_evaluations_vol_at_vol() {
+      
+     _phi              = NULL   ;
+     _phi_memory       = NULL   ;
+     _dphidxi          = NULL   ;
+     _dphidxi_memory   = NULL   ;
+      
+     _d2phidxi2        = NULL   ;
+     _d2phidxi2_memory = NULL   ;
+      
+  }  
+  
+  void elem_type_2D::initialize_to_null_fe_quadrature_evaluations_vol_at_vol() {
+      
+     
+       _phi                 = NULL        ;
+       _phi_memory          = NULL        ;
+       _dphidxi             = NULL        ;
+       _dphidxi_memory      = NULL        ;
+       _dphideta            = NULL        ;
+       _dphideta_memory     = NULL        ;
+      
+       _d2phidxi2           = NULL        ;
+       _d2phidxi2_memory    = NULL        ;
+       _d2phideta2          = NULL        ;
+       _d2phideta2_memory   = NULL        ;
+      
+       _d2phidxideta        = NULL        ;
+       _d2phidxideta_memory = NULL        ;
+      
+      
+      
+  }
+  
+  
+  void elem_type_3D::initialize_to_null_fe_quadrature_evaluations_vol_at_vol() {
+      
+      
+       _phi                      = NULL     ;
+       _phi_memory               = NULL     ; 
+       _dphidxi                  = NULL     ;
+       _dphidxi_memory           = NULL     ;
+       _dphideta                 = NULL     ;
+       _dphideta_memory          = NULL     ;
+       _dphidzeta                = NULL     ;
+       _dphidzeta_memory         = NULL     ;
+      
+      
+       _d2phidxi2                = NULL     ;
+       _d2phidxi2_memory         = NULL     ;
+       _d2phideta2               = NULL     ;
+       _d2phideta2_memory        = NULL     ;
+       _d2phidzeta2              = NULL     ;
+       _d2phidzeta2_memory       = NULL     ;
+      
+       _d2phidxideta             = NULL     ;
+       _d2phidxideta_memory      = NULL     ;
+       _d2phidetadzeta           = NULL     ;
+       _d2phidetadzeta_memory    = NULL     ;
+       _d2phidzetadxi             = NULL     ;
+       _d2phidzetadxi_memory     = NULL     ;
+      
+      
+      
+  }
   
   
   void elem_type_1D::deallocate_shape_at_quadrature_points() {
       
-        delete [] _phi;
-        delete [] _phi_memory;
-        delete [] _dphidxi;
-        delete [] _dphidxi_memory;
+     if ( _phi              != NULL)  delete [] _phi               ;
+     if ( _phi_memory       != NULL)  delete [] _phi_memory        ;
+     if ( _dphidxi          != NULL)  delete [] _dphidxi           ;
+     if ( _dphidxi_memory   != NULL)  delete [] _dphidxi_memory    ;
 
-        delete [] _d2phidxi2;
-        delete [] _d2phidxi2_memory; 
+     if ( _d2phidxi2        != NULL)  delete [] _d2phidxi2         ;
+     if ( _d2phidxi2_memory != NULL)  delete [] _d2phidxi2_memory  ; 
         
   }
   
   
   void elem_type_2D::deallocate_shape_at_quadrature_points() {
 
-        delete [] _phi;
-        delete [] _phi_memory;
-        delete [] _dphidxi;
-        delete [] _dphidxi_memory;
-        delete [] _dphideta;
-        delete [] _dphideta_memory;
+    if ( _phi                 != NULL)    delete [] _phi                    ;
+    if ( _phi_memory          != NULL)    delete [] _phi_memory             ;
+    if ( _dphidxi             != NULL)    delete [] _dphidxi                ;
+    if ( _dphidxi_memory      != NULL)    delete [] _dphidxi_memory         ;
+    if ( _dphideta            != NULL)    delete [] _dphideta               ;
+    if ( _dphideta_memory     != NULL)    delete [] _dphideta_memory        ;
 
-        delete [] _d2phidxi2;
-        delete [] _d2phidxi2_memory;
-        delete [] _d2phideta2;
-        delete [] _d2phideta2_memory;
-
-        delete [] _d2phidxideta;
-        delete [] _d2phidxideta_memory;
+    if ( _d2phidxi2           != NULL)    delete [] _d2phidxi2              ;
+    if ( _d2phidxi2_memory    != NULL)    delete [] _d2phidxi2_memory       ;
+    if ( _d2phideta2          != NULL)    delete [] _d2phideta2             ;
+    if ( _d2phideta2_memory   != NULL)    delete [] _d2phideta2_memory      ;
+    
+    if ( _d2phidxideta        != NULL)    delete [] _d2phidxideta           ;
+    if ( _d2phidxideta_memory != NULL)    delete [] _d2phidxideta_memory    ;
       
-  }
+  } 
   
   
   void elem_type_3D::deallocate_shape_at_quadrature_points() {
       
-        delete [] _phi;
-        delete [] _phi_memory;
-        delete [] _dphidxi;
-        delete [] _dphidxi_memory;
-        delete [] _dphideta;
-        delete [] _dphideta_memory;
-        delete [] _dphidzeta;
-        delete [] _dphidzeta_memory;
+    if (  _phi                      != NULL)  delete [] _phi                        ;
+    if (  _phi_memory               != NULL)  delete [] _phi_memory                 ; 
+    if (  _dphidxi                  != NULL)  delete [] _dphidxi                    ;
+    if (  _dphidxi_memory           != NULL)  delete [] _dphidxi_memory             ;
+    if (  _dphideta                 != NULL)  delete [] _dphideta                   ;
+    if (  _dphideta_memory          != NULL)  delete [] _dphideta_memory            ;
+    if (  _dphidzeta                != NULL)  delete [] _dphidzeta                  ;
+    if (  _dphidzeta_memory         != NULL)  delete [] _dphidzeta_memory           ;
 
-        delete [] _d2phidxi2;
-        delete [] _d2phidxi2_memory;
-        delete [] _d2phideta2;
-        delete [] _d2phideta2_memory;
-        delete [] _d2phidzeta2;
-        delete [] _d2phidzeta2_memory;
+        
+    if (  _d2phidxi2                != NULL)  delete [] _d2phidxi2                  ;
+    if (  _d2phidxi2_memory         != NULL)  delete [] _d2phidxi2_memory           ;
+    if (  _d2phideta2               != NULL)  delete [] _d2phideta2                 ;
+    if (  _d2phideta2_memory        != NULL)  delete [] _d2phideta2_memory          ;
+    if (  _d2phidzeta2              != NULL)  delete [] _d2phidzeta2                ;
+    if (  _d2phidzeta2_memory       != NULL)  delete [] _d2phidzeta2_memory         ;
 
-        delete [] _d2phidxideta;
-        delete [] _d2phidxideta_memory;
-        delete [] _d2phidetadzeta;
-        delete [] _d2phidetadzeta_memory;
-        delete [] _d2phidzetadxi;
-        delete [] _d2phidzetadxi_memory;
-
-  }
+    if (  _d2phidxideta             != NULL)  delete [] _d2phidxideta               ;
+    if (  _d2phidxideta_memory      != NULL)  delete [] _d2phidxideta_memory        ;
+    if (  _d2phidetadzeta           != NULL)  delete [] _d2phidetadzeta             ;
+    if (  _d2phidetadzeta_memory    != NULL)  delete [] _d2phidetadzeta_memory      ;
+    if ( _d2phidzetadxi             != NULL)  delete [] _d2phidzetadxi              ;
+    if (  _d2phidzetadxi_memory     != NULL)  delete [] _d2phidzetadxi_memory       ;
+     
+  }  
+     
   
+
   
   void elem_type_1D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
-      
+       
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
@@ -1428,11 +1557,11 @@ if( _SolType >= 3 && _SolType < 5 ) {
 
   void elem_type_1D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
       
-        delete [] _phi_vol_at_bdry;
-        delete [] _phi_vol_at_bdry_memory;
+     if ( _phi_vol_at_bdry             != NULL)     delete [] _phi_vol_at_bdry               ;
+     if ( _phi_vol_at_bdry_memory      != NULL)     delete [] _phi_vol_at_bdry_memory        ;
         
-        delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_vol_at_bdry_memory;
+     if ( _dphidxi_vol_at_bdry         != NULL)     delete [] _dphidxi_vol_at_bdry           ;
+     if ( _dphidxi_vol_at_bdry_memory  != NULL)     delete [] _dphidxi_vol_at_bdry_memory    ;
 
 }
 
@@ -1459,13 +1588,13 @@ if( _SolType >= 3 && _SolType < 5 ) {
 
   void elem_type_2D::deallocate_volume_shape_at_reference_boundary_quadrature_points() {
       
-        delete [] _phi_vol_at_bdry;
-        delete [] _phi_vol_at_bdry_memory;
+      if ( _phi_vol_at_bdry              != NULL)   delete [] _phi_vol_at_bdry               ;
+      if ( _phi_vol_at_bdry_memory       != NULL)   delete [] _phi_vol_at_bdry_memory        ;
         
-        delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_vol_at_bdry_memory;
-        delete [] _dphideta_vol_at_bdry;
-        delete [] _dphideta_vol_at_bdry_memory;
+      if ( _dphidxi_vol_at_bdry          != NULL)   delete [] _dphidxi_vol_at_bdry           ;
+      if ( _dphidxi_vol_at_bdry_memory   != NULL)   delete [] _dphidxi_vol_at_bdry_memory    ;
+      if ( _dphideta_vol_at_bdry         != NULL)   delete [] _dphideta_vol_at_bdry          ;
+      if ( _dphideta_vol_at_bdry_memory  != NULL)   delete [] _dphideta_vol_at_bdry_memory   ; 
       
   }
   
@@ -1495,15 +1624,15 @@ if( _SolType >= 3 && _SolType < 5 ) {
 
   void elem_type_3D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
       
-        delete [] _phi_vol_at_bdry;
-        delete [] _phi_vol_at_bdry_memory;
+     if ( _phi_vol_at_bdry               != NULL)   delete [] _phi_vol_at_bdry               ;
+     if ( _phi_vol_at_bdry_memory        != NULL)   delete [] _phi_vol_at_bdry_memory        ;
         
-        delete [] _dphidxi_vol_at_bdry;
-        delete [] _dphidxi_vol_at_bdry_memory;
-        delete [] _dphideta_vol_at_bdry;
-        delete [] _dphideta_vol_at_bdry_memory;
-        delete [] _dphidzeta_vol_at_bdry;
-        delete [] _dphidzeta_vol_at_bdry_memory;
+     if ( _dphidxi_vol_at_bdry           != NULL)    delete [] _dphidxi_vol_at_bdry           ; 
+     if ( _dphidxi_vol_at_bdry_memory    != NULL)    delete [] _dphidxi_vol_at_bdry_memory    ;
+     if ( _dphideta_vol_at_bdry          != NULL)    delete [] _dphideta_vol_at_bdry          ;
+     if ( _dphideta_vol_at_bdry_memory   != NULL)    delete [] _dphideta_vol_at_bdry_memory   ; 
+     if ( _dphidzeta_vol_at_bdry         != NULL)    delete [] _dphidzeta_vol_at_bdry         ;
+     if ( _dphidzeta_vol_at_bdry_memory  != NULL)    delete [] _dphidzeta_vol_at_bdry_memory  ;
       
 }
   
@@ -1511,6 +1640,16 @@ if( _SolType >= 3 && _SolType < 5 ) {
 
   
 
+ void elem_type::initialize_to_null_fe_quadrature_evaluations_all() {
+     
+     initialize_to_null_fe_quadrature_evaluations_vol_at_vol();
+     
+     initialize_to_null_fe_quadrature_evaluations_vol_at_bdry();
+     
+ }
+ 
+ 
+ 
  void elem_type::initialize_fe_quadrature_evaluations(const char* order_gauss) {
      
     allocate_and_fill_shape_at_quadrature_points();
