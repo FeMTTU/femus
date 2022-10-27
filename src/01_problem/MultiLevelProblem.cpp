@@ -32,7 +32,8 @@
 namespace femus {
 
 
-bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) = NULL;
+bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) = NULL; 
+///@todo without this there is no linking!!! But does it have to be here?!? No, I'd rather put it in Mesh.cpp, there seems to be no reason why it should be in the MultiLevelProblem file
 
 
 MultiLevelProblem::MultiLevelProblem():
@@ -137,8 +138,6 @@ System & MultiLevelProblem::add_system (const std::string& sys_type,
 
 void MultiLevelProblem::clear ()
 {
-  // Clear any additional parameters
-  parameters.clear();
 
   // clear the systems.  We must delete them since we newed them!
   clear_systems();

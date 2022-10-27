@@ -53,8 +53,9 @@ class QuantityMap;
 
 class MultiLevelProblem {
 
-public:
 
+// ===  Constr/Destr - BEGIN =================
+public:
     /** Constructor */
     MultiLevelProblem();
 
@@ -63,7 +64,17 @@ public:
     /** Destructor */
 
     ~MultiLevelProblem();
+    
+    /** Clear parameters and systems */
+    void clear();
 
+//   /** init the system pde structures */
+//   void init();
+
+// ===  Constr/Destr - END =================
+
+// ===  Solution - BEGIN =================
+public:
     /** Multilevel solution pointer */
     MultiLevelSolution *_ml_sol;
 
@@ -71,11 +82,76 @@ public:
     
     MultiLevelSolution * get_ml_solution() const { return _ml_sol; }
     
+    void SetMultiLevelMeshAndSolution(MultiLevelSolution * ml_sol);
+
+    
+    
+protected:
+    
+    
+    
+// ===  Solution - END =================
+    
+// ===  Solution, QuantityMap - BEGIN =================
+public:
+    
+  /** Quantity Map */
+  inline void SetQtyMap(const QuantityMap * qtymap_in) { _qtymap = qtymap_in; return; }
+
+  inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }
+  
+  
+protected:
+    
+
+    const QuantityMap                     * _qtymap;
+
+    
+// ===  Solution, QuantityMap - END =================
+
+// ===  Mesh - BEGIN =================
+public:
+    
     /** Multilevel mesh pointer */
     MultiLevelMesh *_ml_msh;
 
-    /** Data structure holding arbitrary parameters. @todo not used anywhere */
-    Parameters parameters;
+    /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
+    const unsigned GetNumberOfLevels() const {
+        return _gridn;
+    };
+
+    /** Increase of one the number of levels */
+    void AddLevel(){
+        _gridn++;
+    };
+
+    /**  New get/set for new data */
+  inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
+
+  inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
+
+  inline const  MultiLevelMesh * GetMLMesh() const { return  _ml_msh; }
+
+  inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
+
+
+protected:
+
+    unsigned short _gridn;
+    
+    const MultiLevelMeshTwo               * _mesh;
+    
+// ===  Mesh - END =================
+
+// ===  Systems - BEGIN =================
+public:
+
+    //   Returns a non-const reference to the map of Systems
+  std::map<std::string, System*> & get_systems_map() { return _systems; }
+  
+  const int get_current_system_number() const { return _current_system_number; }
+
+  void set_current_system_number(const unsigned current_system_number_in) { _current_system_number = current_system_number_in; }
 
     /** Typedef for system iterators */
     typedef std::map<std::string, System*>::iterator       system_iterator;
@@ -148,25 +224,10 @@ public:
     /** @returns the number of equation systems. */
     unsigned int n_systems() const;
 
-    /** Clear parameters and systems */
-    void clear();
-
     /** Clear systems */
     void clear_systems();
 
-//   /** init the system pde structures */
-//   void init();
-
-    /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
-    const unsigned GetNumberOfLevels() const {
-        return _gridn;
-    };
-
-    /** Increase of one the number of levels */
-    void AddLevel(){
-        _gridn++;
-    };
-
+    
     /** returns the beginning of the systems map */
   inline system_iterator       begin()       { return _systems.begin(); }
 
@@ -178,25 +239,43 @@ public:
 
     /**  */
   inline const_system_iterator   end() const { return _systems.end(); }
+  
+  
+  
+  
+protected:
+    
+    /** Data structure holding the systems. */
+    std::map<std::string, System*> _systems;
 
-    /**  New get/set for new data */
-  inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
+    unsigned int _current_system_number;
 
-  inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
+    
+    
+    
+// ===  Systems - END =================
 
-  inline const  MultiLevelMesh * GetMLMesh() const { return  _ml_msh; }
 
-  inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
+// ===  App Specifics - BEGIN =================
+public:
 
-  /** Quantity Map */
-  inline void SetQtyMap(const QuantityMap * qtymap_in) { _qtymap = qtymap_in; return; }
+    /** App Specifics Pointer */
+  void set_app_specs_pointer(const app_specifics * ptr_in) { _app_specs_ptr = ptr_in; return; }
+  
+  inline const app_specifics * get_app_specs_pointer() const { return  _app_specs_ptr; }
+ 
+ 
+protected:
 
-  inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }
+    const app_specifics *  _app_specs_ptr;
 
-    /** ElemType and Quadrature rule */
-  inline const std::vector<const elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
 
-  inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
+    
+// ===  App Specifics - END =================
+
+
+// ===  Quadrature - BEGIN =================
+public:
 
   inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule[0]; }  ///@todo obsolete
   
@@ -208,27 +287,14 @@ public:
   
   void SetQuadratureRuleAllGeomElemsMultiple(const std::vector<std::string> quadr_order_in_vec);
 
-     /** Input Parser */
-  inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
-
-  void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
-
-    /** Files Handler */
-  void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
+protected:
+    
+  std::vector< std::vector< Gauss > >    _qrule;            //[QRULES][Geom Elems][FE]
+// ===  Quadrature - END =================
   
-  inline const Files * GetFilesHandler() const { return  _files; }
-
-    /** Input Parser */
-  const int get_current_system_number() const { return _current_system_number; }
-
-  void set_current_system_number(const unsigned current_system_number_in) { _current_system_number = current_system_number_in; }
-
-  void SetMultiLevelMeshAndSolution(MultiLevelSolution * ml_sol);
-  
-  //   Returns a non-const reference to the map of Systems
-  std::map<std::string, System*> & get_systems_map() { return _systems; }
-  
-  
+// ===  FE - BEGIN =================
+public:
+    
   void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd[0]; }
   
   void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad[0]; }
@@ -295,43 +361,81 @@ public:
 
    
    }
-   
-
-    /** App Specifics Pointer */
-  void set_app_specs_pointer(const app_specifics * ptr_in) { _app_specs_ptr = ptr_in; return; }
-  
-  inline const app_specifics * get_app_specs_pointer() const { return  _app_specs_ptr; }
-
 
    
-   
-private:
-
-
-    /** Data structure holding the systems. */
-    std::map<std::string, System*> _systems;
-
-
-    unsigned short _gridn;
-
-    std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
-    std::vector< std::vector< Gauss > >    _qrule;            //[QRULES][Geom Elems][FE]
-    const FemusInputParser<double>        * _phys;
-    const QuantityMap                     * _qtymap;
-    const MultiLevelMeshTwo               * _mesh;
-
-    const Files                           * _files;
-    unsigned int _current_system_number;
-
+protected:
+    
+    
     /**  attempt to handle templated classes from non-templated class */
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > > >                    _elem_all_dd;  //[QRULES][Geom Elems][FE]
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > > >            _elem_all_ad;  //[QRULES][Geom Elems][FE]
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > > >    _elem_all_aa;  //[QRULES][Geom Elems][FE]
+
+// ===  FE - END =================
+
+
+// ===  ElemType - BEGIN =================
+public:
+    
+    /** ElemType and Quadrature rule */
+  inline const std::vector<const elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
+
+  inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
+
+  
+protected:
+
+    std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
+
+// ===  ElemType - END =================
+
+
+// ===  Parameters - BEGIN =================
+public:
+
+    /** Data structure holding arbitrary parameters. */
+    Parameters parameters;
     
     
-    const app_specifics *  _app_specs_ptr;
+protected:
+    
+    
+// ===  Parameters - END =================
+
+// ===  Input Parser - BEGIN =================
+public:
+
+    /** Input Parser */
+  inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
+
+  void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
+
+protected:
+    
+    const FemusInputParser<double>        * _phys;
+    
+// ===  Input Parser - END =================
+
+// ===  Files Handler - BEGIN =================
+public:
+
+    /** Files Handler */
+  void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
+  
+  inline const Files * GetFilesHandler() const { return  _files; }
+  
+protected:
+    
+    const Files                           * _files;
+    
+// ===  Files Handler - END =================
+    
     
 };
+
+
+
+
 
 
 template <typename T_sys>
