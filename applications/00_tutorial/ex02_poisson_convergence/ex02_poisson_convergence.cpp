@@ -217,7 +217,7 @@ int main(int argc, char** args) {
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool equation_solve = false; 
+       const bool equation_solve = true; 
      // 4) Solve Equation or only Approximation Theory  - END   ==============
 
      // object ================

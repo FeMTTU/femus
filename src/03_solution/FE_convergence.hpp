@@ -540,6 +540,8 @@ if (volume_or_boundary == 1 )	{
     weight_iqp_bdry = detJac_iqp_bdry * quad_rules[ielGeom_bdry].GetGaussWeightsPointer()[ig_bdry];
     elem_all[ielGeom_bdry][sol_uType] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
 
+    elem_all[ielGeom_bdry][solType_coords]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_coords, phi_coords_x,  boost::none, space_dim);
+
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
 		  sol_u_bdry_gss = 0.;
@@ -556,9 +558,29 @@ if (volume_or_boundary == 1 )	{
 		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
 
                  //========= compute gauss quantities on the boundary ================================================
-                  norms_exact_function[0] +=  weight_iqp_bdry * sol_u_bdry_gss * sol_u_bdry_gss; 
-                  norms_exact_function[1] +=  weight_iqp_bdry * laplace_ctrl_surface;
-                 
+
+       vector < type > x_gss(dim_offset_grad, 0.);
+       
+    for (unsigned i = 0; i < phi_coords.size(); i++) {
+          for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
+           x_gss[jdim] += geom_element_iel.get_coords_at_dofs_bdry_3d()[jdim][i] * phi_coords[i];
+          }
+       }
+
+// H^0 ==============      
+      type exactSol_bdry = 0.; if (ex_sol_in != NULL) exactSol_bdry = ex_sol_in->value(x_gss);
+                 norms_exact_function[0] += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry; 
+//                  norms_exact_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
+
+                 norms_inexact_dofs[0]   += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry; 
+                  
+                  
+                  
+// H^1 ==============      
+//                   norms_exact_function[1] +=  weight_iqp_bdry * laplace_ctrl_surface;
+//                   norms_exact_dofs[1]     += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
+//                   norms_inexact_dofs[1]   += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
+                  
         }
             
         
