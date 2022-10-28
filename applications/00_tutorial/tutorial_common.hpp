@@ -82,13 +82,49 @@ namespace  Domain_square_01by01  {
 
 
 template < class type = double >
-class Function_Zero_on_boundary_1 : public Math::Function< type > {
+class Function_NonZero_on_boundary_1 : public Math::Function< type > {
 
 public:
 
     type value(const std::vector < type >& x) const {
         
         return x[0] * x[0] * (1. - x[0]) + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+    vector < type >  gradient(const std::vector < type >& x) const {
+
+        vector < type > solGrad(x.size());
+
+        solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return   - 2. * x[0] +  2. * (1. - x[0])  -  2. * x[0]  - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
+};
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
     }
 
 

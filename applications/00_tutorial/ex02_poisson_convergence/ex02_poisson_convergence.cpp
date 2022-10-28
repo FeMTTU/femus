@@ -199,7 +199,8 @@ int main(int argc, char** args) {
     // 1) Which exact solution - BEGIN ================
     std::vector< Math::Function< double > * > analytical_function( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
-    Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
+    Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
+//     Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
 

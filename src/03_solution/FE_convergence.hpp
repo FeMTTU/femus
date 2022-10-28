@@ -391,36 +391,38 @@ template < class type>
 
  unsigned iproc = msh->processor_id();
 
-  //solution variable
-  unsigned sol_uIndex = ml_sol->GetIndex(unknown.c_str()); // ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned sol_uType = ml_sol->GetSolutionType(sol_uIndex);    // get the finite element type for "u"
-
   
  //***************************************************  
   constexpr unsigned int space_dim = 3;
   const unsigned int dim_offset_grad = 3;
 
+  // ======================================
+  // reserve memory for the local standar vectors
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  
+   
+  //solution variable
+  unsigned sol_uIndex = ml_sol->GetIndex(unknown.c_str()); // ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned sol_uType = ml_sol->GetSolutionType(sol_uIndex);    // get the finite element type for "u"
+
+  
+
+  
+
+  CurrentElem < double > geom_element_iel(dim, msh);
+
+  
+  //-----------------  V - BEGIN
  //***************************************************  
    std::vector < std::vector < double > >  JacI_qp(space_dim);
    std::vector < std::vector < double > >  Jac_qp(dim);
     for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
     for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
     
-    double detJac_qp;
+    type detJac_qp = 0.;
+  type weight = 0.; // gauss point weight
  //***************************************************  
-   
-  
 
-  // ======================================
-  // reserve memory for the local standar vectors
-  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-  
-  
-  unsigned solType_coords = FE_DOMAIN; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  vector < vector < type > > x(dim_offset_grad);    // local coordinates
-  for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
-
-//-----------------  
   vector < type > phi_coords;
   vector < type > phi_coords_x;
 
@@ -430,60 +432,62 @@ template < class type>
   vector < type > phi;
   vector < type > phi_x;
   
-  type weight; // gauss point weight
+  phi.reserve(max_size);
+  phi_x.reserve(max_size * dim_offset_grad);
+  
 
 
   vector < type >  sol_u;                               sol_u.reserve(max_size);
   vector < type >  sol_u_exact_at_dofs;   sol_u_exact_at_dofs.reserve(max_size);
-  vector < type >  sol_u_coarser_prol;     sol_u_coarser_prol.reserve(max_size);
+  vector < type >  sol_u_inexact_prolongated_from_coarser_level;     sol_u_inexact_prolongated_from_coarser_level.reserve(max_size);
 
+  unsigned solType_coords = FE_DOMAIN; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  vector < vector < type > > x(dim_offset_grad);    // local coordinates
+  for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
 
-  phi.reserve(max_size);
-  phi_x.reserve(max_size * dim_offset_grad);
+//-----------------  V - END
 
   
   
   
-  
-  
-  
-    CurrentElem < double > geom_element_iel(dim, msh);
+//-----------------  B - BEGIN
     
+ //***************************************************  
      std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
      std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
     for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
     
-    double detJac_iqp_bdry;
-  double weight_iqp_bdry = 0.;
+    type detJac_iqp_bdry = 0.;
+  type weight_iqp_bdry = 0.;
+ //***************************************************  
     
-  vector <double> phi_ctrl_bdry;  
-  vector <double> phi_ctrl_x_bdry; 
+  std::vector <double> phi_u_bdry;  
+  std::vector <double> phi_u_x_bdry; 
 
-  phi_ctrl_bdry.reserve(max_size);
-  phi_ctrl_x_bdry.reserve(max_size * space_dim);
+  phi_u_bdry.reserve(max_size);
+  phi_u_x_bdry.reserve(max_size * space_dim);
 
+//-----------------  B - END
 
-   double integral_alpha  = 0.;
-  double integral_beta   = 0.;
-
-  
-  
-  
   
   
   
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
+//----------------
+      geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+//----------------
     
-    short unsigned ielGeom = msh->GetElementType(iel);
+    
     unsigned nDofu  = msh->GetElementDofNumber(iel, sol_uType);
     unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);
 
     // resize local arrays
     sol_u.resize(nDofu);
     sol_u_exact_at_dofs.resize(nDofu);
-    sol_u_coarser_prol.resize(nDofu);
+    sol_u_inexact_prolongated_from_coarser_level.resize(nDofu);
 
     for (int i = 0; i < x.size(); i++) {
       x[i].resize(nDofx);
@@ -500,14 +504,17 @@ template < class type>
     
     
 
+    
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector< type > x_at_node(dim_offset_grad,0.);
-        for (unsigned jdim = 0; jdim < x_at_node.size(); jdim++) x_at_node[jdim] = x[jdim][i];
+        
+        std::vector< type > x_at_dof(dim_offset_grad, 0.);
+        for (unsigned jdim = 0; jdim < x_at_dof.size(); jdim++) x_at_dof[jdim] = x[jdim][i];
+        
       unsigned solDof = msh->GetSolutionDof(i, iel, sol_uType);
                    sol_u[i]  =                                        (*sol->_Sol[sol_uIndex])(solDof);
-      sol_u_coarser_prol[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[sol_uIndex])(solDof);
-      if (ex_sol_in != NULL) sol_u_exact_at_dofs[i] = ex_sol_in->value(x_at_node);
+      sol_u_inexact_prolongated_from_coarser_level[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[sol_uIndex])(solDof);
+      if (ex_sol_in != NULL) sol_u_exact_at_dofs[i] = ex_sol_in->value(x_at_dof);
     }
 
 
@@ -517,7 +524,6 @@ if (volume_or_boundary == 1 )	{
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
           
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
-       const unsigned nve_bdry_ctrl = msh->GetElementFaceDofNumber(iel,iface, sol_uType);
        
 // ----------
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
@@ -529,57 +535,75 @@ if (volume_or_boundary == 1 )	{
 	    if(  bdry_index_j < 0 ) {
 
 	
-		//============ initialize gauss quantities on the boundary ==========================================
-                double sol_u_bdry_gss = 0.;
-                std::vector<double> sol_u_x_bdry_gss(space_dim);
-		//============ initialize gauss quantities on the boundary ==========================================
 		
 		for(unsigned ig_bdry = 0; ig_bdry < quad_rules[ielGeom_bdry].GetGaussPointsNumber(); ig_bdry++) {
 		  
     elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_iqp_bdry, space_dim);
     weight_iqp_bdry = detJac_iqp_bdry * quad_rules[ielGeom_bdry].GetGaussWeightsPointer()[ig_bdry];
-    elem_all[ielGeom_bdry][sol_uType] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][sol_uType] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
 
     elem_all[ielGeom_bdry][solType_coords]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_coords, phi_coords_x,  boost::none, space_dim);
 
 		  
-		 //========== compute gauss quantities on the boundary ===============================================
-		  sol_u_bdry_gss = 0.;
-                  std::fill(sol_u_x_bdry_gss.begin(), sol_u_x_bdry_gss.end(), 0.);
-		      for (int i_bdry = 0; i_bdry < nve_bdry_ctrl; i_bdry++)  {
+		 //========== QP eval - BEGIN ===============================================
+      type		  sol_u_bdry_gss = 0.;
+      type exactSol_from_dofs_gss = 0.;
+      type sol_u_inexact_prolongated_from_coarser_level_gss = 0.;
+          
+      std::vector< type > sol_u_x_bdry_gss(space_dim, 0.);
+      std::vector < type > gradSolu_exact_at_dofs_bdry_gss(dim_offset_grad, 0.);
+      std::vector < type > gradSolu_inexact_prolongated_from_coarser_level_bdry_gss(dim_offset_grad, 0.);
+
+                  
+		      for (int i_bdry = 0; i_bdry < phi_u_bdry.size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-			sol_u_bdry_gss +=  sol_u[i_vol] * phi_ctrl_bdry[i_bdry];
-                            for (int d = 0; d < space_dim; d++) {
-			      sol_u_x_bdry_gss[d] += sol_u[i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
+			sol_u_bdry_gss                                    +=  sol_u[i_vol]              * phi_u_bdry[i_bdry];
+            exactSol_from_dofs_gss                            += sol_u_exact_at_dofs[i_vol] * phi_u_bdry[i_bdry];
+            
+            sol_u_inexact_prolongated_from_coarser_level_gss  += sol_u_inexact_prolongated_from_coarser_level[i_vol]              * phi_u_bdry[i_bdry];
+        
+            for (int d = 0; d < space_dim; d++) {
+			      sol_u_x_bdry_gss[d] += sol_u[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
+			      gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d] += sol_u_inexact_prolongated_from_coarser_level[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
 			    }
-		      }
+		    }
 		      
-		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
+		      double laplace_u_bdry = 0.;  for (int d = 0; d < space_dim; d++) { laplace_u_bdry += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
 
-                 //========= compute gauss quantities on the boundary ================================================
 
-       vector < type > x_gss(dim_offset_grad, 0.);
+       std::vector < type > x_gss_bdry(dim_offset_grad, 0.);
        
     for (unsigned i = 0; i < phi_coords.size(); i++) {
           for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
-           x_gss[jdim] += geom_element_iel.get_coords_at_dofs_bdry_3d()[jdim][i] * phi_coords[i];
+           x_gss_bdry[jdim] += geom_element_iel.get_coords_at_dofs_bdry_3d()[jdim][i] * phi_coords[i];
           }
        }
+		 //========== QP eval - END ===============================================
 
 // H^0 ==============      
-      type exactSol_bdry = 0.; if (ex_sol_in != NULL) exactSol_bdry = ex_sol_in->value(x_gss);
+      type exactSol_bdry = 0.; if (ex_sol_in != NULL) exactSol_bdry = ex_sol_in->value(x_gss_bdry);
                  norms_exact_function[0] += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry; 
 //                  norms_exact_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
 
+      norms_inexact_dofs[0]   += (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)   * (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)  * weight_iqp_bdry;
                  norms_inexact_dofs[0]   += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry; 
                   
                   
                   
 // H^1 ==============      
-//                   norms_exact_function[1] +=  weight_iqp_bdry * laplace_ctrl_surface;
-//                   norms_exact_dofs[1]     += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
-//                   norms_inexact_dofs[1]   += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
+    /*else*/ if (norm_flag == 1) {
+      std::vector < type > exactGradSol_bdry(dim_offset_grad, 0.);    if (ex_sol_in != NULL) exactGradSol_bdry = ex_sol_in->gradient(x_gss_bdry);  
+      ///@todo THIS IS WRONG! It is NOT the SURFACE GRADIENTTTT, so we have to be careful when we have more than one boundary face!!!
+
+      for (unsigned d = 0; d < dim_offset_grad ; d++) {
+        norms_exact_function[1] += ( (sol_u_x_bdry_gss[d] - exactGradSol_bdry[d])               * (sol_u_x_bdry_gss[d]  - exactGradSol_bdry[d]) ) * weight_iqp_bdry;
+        
+//         norms_exact_dofs[1]     += ((gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d]) * (gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d])) * weight_iqp_bdry;
+        norms_inexact_dofs[1]   += ((sol_u_x_bdry_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d])  * (sol_u_x_bdry_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d])) * weight_iqp_bdry;
+      }
+   }
+   
                   
         }
             
@@ -594,12 +618,16 @@ if (volume_or_boundary == 1 )	{
 //=====================================================================================================================  
      
     
-    // *** BOUNDARY - END ***
 }   
-    
-  else if (volume_or_boundary == 0) {  
-    
+    // *** BOUNDARY - END ***
+  
     // *** VOLUME - BEGIN ***
+  else if (volume_or_boundary == 0) {  
+      
+      
+    const short unsigned ielGeom = geom_element_iel.geom_type();
+    
+   
     for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
 
       // *** get gauss point weight, test function and test function partial derivatives ***
@@ -611,36 +639,39 @@ if (volume_or_boundary == 1 )	{
     weight = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
 
     
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+		 //========== QP eval - BEGIN ===============================================
       type sol_u_gss = 0.;
       type exactSol_from_dofs_gss = 0.;
-      type sol_u_coarser_prol_gss = 0.;
-      vector < type > gradSolu_gss(dim_offset_grad, 0.);
-      vector < type > gradSolu_exact_at_dofs_gss(dim_offset_grad, 0.);
-      vector < type > gradSolu_coarser_prol_gss(dim_offset_grad, 0.);
-      vector < type > x_gss(dim_offset_grad, 0.);
+      type sol_u_inexact_prolongated_from_coarser_level_gss = 0.;
+      
+      std::vector < type > gradSolu_gss(dim_offset_grad, 0.);
+      std::vector < type > gradSolu_exact_at_dofs_gss(dim_offset_grad, 0.);
+      std::vector < type > gradSolu_inexact_prolongated_from_coarser_level_gss(dim_offset_grad, 0.);
+
 
       for (unsigned i = 0; i < phi.size(); i++) {
         sol_u_gss                += phi[i] * sol_u[i];
         exactSol_from_dofs_gss  += phi[i] * sol_u_exact_at_dofs[i];
-        sol_u_coarser_prol_gss   += phi[i] * sol_u_coarser_prol[i];
+        sol_u_inexact_prolongated_from_coarser_level_gss   += phi[i] * sol_u_inexact_prolongated_from_coarser_level[i];
 
         for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
           gradSolu_gss[jdim]                += phi_x[i * dim_offset_grad + jdim] * sol_u[i];
           gradSolu_exact_at_dofs_gss[jdim]  += phi_x[i * dim_offset_grad + jdim] * sol_u_exact_at_dofs[i];
-          gradSolu_coarser_prol_gss[jdim]   += phi_x[i * dim_offset_grad + jdim] * sol_u_coarser_prol[i];
+          gradSolu_inexact_prolongated_from_coarser_level_gss[jdim]   += phi_x[i * dim_offset_grad + jdim] * sol_u_inexact_prolongated_from_coarser_level[i];
         }
         
  
       }
       
       
+      std::vector < type > x_gss(dim_offset_grad, 0.);
       
        for (unsigned i = 0; i < phi_coords.size(); i++) {
           for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
            x_gss[jdim] += x[jdim][i] * phi_coords[i];
           }
        }
+		 //========== QP eval - END ===============================================
       
       
       
@@ -649,25 +680,26 @@ if (volume_or_boundary == 1 )	{
 // H^0 ==============      
 //     if (norm_flag == 0) {
       type exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
+
       norms_exact_function[0] += (sol_u_gss - exactSol)                * (sol_u_gss - exactSol)       * weight;
       norms_exact_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
-      norms_inexact_dofs[0]   += (sol_u_gss - sol_u_coarser_prol_gss)   * (sol_u_gss - sol_u_coarser_prol_gss)  * weight;
+      norms_inexact_dofs[0]   += (sol_u_gss - sol_u_inexact_prolongated_from_coarser_level_gss)   * (sol_u_gss - sol_u_inexact_prolongated_from_coarser_level_gss)  * weight;
 //     }
     
 // H^1 ==============      
     /*else*/ if (norm_flag == 1) {
-      vector < type > exactGradSol(dim_offset_grad,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
+      std::vector < type > exactGradSol(dim_offset_grad,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
 
-      for (unsigned j = 0; j < dim_offset_grad ; j++) {
-        norms_exact_function[1] += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
-        norms_exact_dofs[1]     += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
-        norms_inexact_dofs[1]   += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
+      for (unsigned d = 0; d < dim_offset_grad ; d++) {
+        norms_exact_function[1] += ((gradSolu_gss[d] - exactGradSol[d])               * (gradSolu_gss[d]  - exactGradSol[d])) * weight;
+        norms_exact_dofs[1]     += ((gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d]) * (gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d])) * weight;
+        norms_inexact_dofs[1]   += ((gradSolu_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_gss[d])  * (gradSolu_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_gss[d]))  * weight;
       }
    }
       
    } // end gauss point loop
-    // *** VOLUME - END ***
   }
+    // *** VOLUME - END ***
   
   
   
@@ -675,14 +707,14 @@ if (volume_or_boundary == 1 )	{
 
   
   // add the norms of all processes
-  NumericVector* norm_vec;
-                 norm_vec = NumericVector::build().release();
-                 norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
+  NumericVector* norm_vec_exact_using_qp;
+                 norm_vec_exact_using_qp = NumericVector::build().release();
+                 norm_vec_exact_using_qp->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec->set(iproc, norms_exact_function[0]);  norm_vec->close();  norms_exact_function[0] = norm_vec->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec->set(iproc, norms_exact_function[1]);  norm_vec->close();  norms_exact_function[1] = norm_vec->l1_norm(); }
+         /*if (norm_flag == 0) {*/ norm_vec_exact_using_qp->set(iproc, norms_exact_function[0]);  norm_vec_exact_using_qp->close();  norms_exact_function[0] = norm_vec_exact_using_qp->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec_exact_using_qp->set(iproc, norms_exact_function[1]);  norm_vec_exact_using_qp->close();  norms_exact_function[1] = norm_vec_exact_using_qp->l1_norm(); }
 
-          delete norm_vec;
+          delete norm_vec_exact_using_qp;
 
    // add the norms of all processes
   NumericVector* norm_vec_exact_dofs;
