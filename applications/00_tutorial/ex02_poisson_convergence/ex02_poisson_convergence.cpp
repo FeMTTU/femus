@@ -57,19 +57,54 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 }
 
 
+
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_interface(MultiLevelProblem & ml_prob);
+void System_assemble_interface(MultiLevelProblem& ml_prob) {
+    //  ml_prob is the global object from/to where get/set all the data
+
+// this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
+//what is funny is that this function is attached to a system, but I cannot retrieve the system to which it is attached unless I know the name or the number of it!
+//all I have at hand is the MultiLevelProblem, which contains a Vector of Systems
+// all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
+
+    
+    
+    // all the arguments here are retrieved through the Multilevel Problem
+    
+    
+ 
+    const unsigned current_system_number = ml_prob.get_current_system_number();
+
+        // ======= Unknowns - BEGIN  ========================
+std::vector< Unknown >  unknowns = ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly();
+        // ======= Unknowns - END  ========================
 
 
+        // ======= Exact sol - BEGIN  ========================
+std::vector< Math::Function< double > * > exact_sol( unknowns.size() );
 
-// template < class system_type, class real_num, class real_num_mov >
-// void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
-//                               const std::vector<Gauss> & quad_rules,
-//                               system_type * mlPdeSys,
-//                               MultiLevelMesh * ml_mesh,
-//                               MultiLevelSolution * ml_sol,
-//                               const std::vector< Unknown > &  unknowns,
-//                               const std::vector< Math::Function< double > * > & exact_sol);
+    for(int u = 0; u < exact_sol.size(); u++) {
+        exact_sol[u] = ml_prob.get_ml_solution()->get_analytical_function( unknowns[u]._name.c_str() );
+    }
+        // ======= Exact sol - END  ========================
+
+
+        // ======= FE Quadrature - BEGIN  ========================
+   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+        // ======= FE Quadrature - END  ========================
+
+    System_assemble_flexible_Laplacian_With_Manufactured_Sol< system_type, real_num, real_num_mov > (elem_all,
+                                                                     ml_prob.GetQuadratureRuleAllGeomElems(),
+                                                                     & ml_prob.get_system< system_type >(current_system_number),
+                                                                     ml_prob.GetMLMesh(),
+                                                                     ml_prob.get_ml_solution(),
+                                                                     unknowns,
+                                                                     exact_sol);
+
+}
+
 
 
 
@@ -133,8 +168,8 @@ int main(int argc, char** args) {
 //     std::string input_file = "square_0-1x0-1_divisions_2x2.med"; // @todo does not work with biquadratic exact solution
 //     std::string input_file = "square_0-1x0-1_divisions_5x4.med"; // @todo does not work with biquadratic exact solution 
 //     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_5x3.med";  // @todo does not work with biquadratic exact solution 
-    std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
-//      std::string input_file = "assignment_square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
+//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
+    std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact //      std::string input_file = "assignment_square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
 
 //     std::string input_file = "L_shaped_domain.med";
 //     std::string input_file = "interval.med";
@@ -180,10 +215,10 @@ int main(int argc, char** args) {
     // ======= Convergence study - BEGIN ========================
     
     // Auxiliary mesh, all levels - BEGIN  ================
-    unsigned max_number_of_meshes = 6;
+    unsigned max_number_of_meshes = 7;
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
-    ///set coarse storage mesh (
+    ///set coarse storage mesh
     ///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
     // If you try to use the default copy constructor it doesn't work.
     // In fact, the copy constructor will copy ALL THE POINTERS, and if there are pointers that were dynamically allocated with new, and destroyed with delete,
@@ -199,7 +234,9 @@ int main(int argc, char** args) {
     // 1) Which exact solution - BEGIN ================
     std::vector< Math::Function< double > * > analytical_function( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
-    Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
+//     Zero< double >  analytical_function_1;
+    Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
+//     Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
@@ -210,11 +247,11 @@ int main(int argc, char** args) {
     // 1) Which exact solution - END ================
 
     // 2) Choose how to compute the convergence order - BEGIN ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...    
-     const unsigned   conv_order_flag = 0;
+     const unsigned   convergence_rate_computation_method = 0;
     // 2) Choose how to compute the convergence order - END ============== 
 
      // 3) Choose what norms to compute - BEGIN  (//0 = only L2: //1 = L2 + H1) ==============
-     const unsigned norm_flag = 1;
+     const unsigned norms_to_be_computed = 1;
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Solve Equation or only Approximation Theory - BEGIN   ==============
@@ -227,14 +264,14 @@ int main(int argc, char** args) {
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
 //     for (unsigned int u = 0; u < unknowns.size(); u++) {
 
-    for (unsigned int vb = 1; vb < 2; vb++) { //0: volume, 1: boundary, ...
+    for (unsigned int vb = 0; vb < 2; vb++) { //0: volume, 1: boundary
         
     fe_convergence.convergence_study(ml_prob, 
                                      ml_mesh, 
                                      ml_mesh_all_levels, 
                                      max_number_of_meshes, 
-                                     norm_flag,
-                                     conv_order_flag,
+                                     norms_to_be_computed,
+                                     convergence_rate_computation_method,
                                      vb,
                                      equation_solve,
                                      my_solution_generation, 
@@ -276,7 +313,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
     //Mesh - BEGIN   ==================
     unsigned numberOfUniformLevels = lev + 1;
     unsigned numberOfSelectiveLevels = 0;
-    ml_mesh_single_level.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+    ml_mesh_single_level.RefineMesh(numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh_single_level.EraseCoarseLevels(numberOfUniformLevels - 1);
 
     ml_mesh_single_level.PrintInfo();
@@ -367,52 +404,6 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
 
 
-template < class system_type, class real_num, class real_num_mov >
-void System_assemble_interface(MultiLevelProblem& ml_prob) {
-    //  ml_prob is the global object from/to where get/set all the data
-
-// this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
-//what is funny is that this function is attached to a system, but I cannot retrieve the system to which it is attached unless I know the name or the number of it!
-//all I have at hand is the MultiLevelProblem, which contains a Vector of Systems
-// all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
-
-    
-    
-    // all the arguments here are retrieved through the Multilevel Problem
-    
-    
- 
-    const unsigned current_system_number = ml_prob.get_current_system_number();
-
-        // ======= Unknowns - BEGIN  ========================
-std::vector< Unknown >  unknowns = ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly();
-        // ======= Unknowns - END  ========================
-
-
-        // ======= Exact sol - BEGIN  ========================
-std::vector< Math::Function< double > * > exact_sol( unknowns.size() );
-
-    for(int u = 0; u < exact_sol.size(); u++) {
-        exact_sol[u] = ml_prob.get_ml_solution()->get_analytical_function( unknowns[u]._name.c_str() );
-    }
-        // ======= Exact sol - END  ========================
-
-
-        // ======= FE Quadrature - BEGIN  ========================
-   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
-  ml_prob.get_all_abstract_fe(elem_all);
-        // ======= FE Quadrature - END  ========================
-
-    System_assemble_flexible_Laplacian_With_Manufactured_Sol< system_type, real_num, real_num_mov > (elem_all,
-                                                                     ml_prob.GetQuadratureRuleAllGeomElems(),
-                                                                     & ml_prob.get_system< system_type >(current_system_number),
-                                                                     ml_prob.GetMLMesh(),
-                                                                     ml_prob.get_ml_solution(),
-                                                                     unknowns,
-                                                                     exact_sol);
-
-}
 
 
 

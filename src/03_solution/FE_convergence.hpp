@@ -30,7 +30,7 @@ virtual const MultiLevelSolution  run_on_single_level(MultiLevelProblem & ml_pro
                                                       const std::vector< Math::Function< double > * > &  exact_sol,
                                                       const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                       const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition,
-                                                  const bool equation_solveve
+                                                  const bool equation_solve
                                                      ) const = 0;
                                                      
 };
@@ -53,7 +53,7 @@ public:
                           const unsigned norm_flag,
                           const unsigned conv_rate_computation_method,
                           const unsigned volume_or_boundary,
-                          const bool equation_solveve,                                          // true only if I have a System inside
+                          const bool equation_solve,                                          // true only if I have a System inside
                           const Solution_generation_single_level & main_in,
                           const std::vector< Unknown > & unknowns,                            //vector of Solutions
                           const std::vector< Math::Function< double > * >  & exact_sol,       // analytical function to Approximate
@@ -77,7 +77,7 @@ static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProble
                                                                 const unsigned max_number_of_meshes, 
                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
-                                                                const bool equation_solveve
+                                                                const bool equation_solve
                                                                );  
 
 
@@ -91,7 +91,8 @@ static  void output_convergence_order(const std::vector < std::vector < std::vec
 
 static  void output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
-                                        const unsigned norm_flag);
+                                        const unsigned norm_flag, 
+                                        const unsigned volume_or_boundary);
 
 
 static  void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i); 
@@ -105,7 +106,7 @@ static  std::vector< type > compute_error_norms_volume_or_boundary(const std::ve
                                                 const unsigned current_level,
                                                 const unsigned norm_flag,
                                                 const unsigned conv_rate_computation_method,
-                                                                            const unsigned volume_or_boundary,
+                                                const unsigned volume_or_boundary,
                                                 const Math::Function< type > * ex_sol_in
                                              );
 
@@ -142,7 +143,7 @@ template < class type>
                                                   const unsigned norm_flag,
                                                   const unsigned conv_rate_computation_method,
                                                   const unsigned volume_or_boundary,
-                                                  const bool equation_solveve,
+                                                  const bool equation_solve,
                                                   const Solution_generation_single_level & main_in,
                                                   const std::vector< Unknown > & unknowns,
                                                   const std::vector< Math::Function< double > * >  & exact_sol,
@@ -151,7 +152,7 @@ template < class type>
                                                  ) {
    
       // Controls - BEGIN 
-      if ( equation_solveve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
+      if ( equation_solve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
       
        if (conv_rate_computation_method == 1 && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
        // Controls - END
@@ -170,7 +171,7 @@ template < class type>
                                                                                                  max_number_of_meshes, 
                                                                                                  SetInitialCondition, 
                                                                                                  SetBoundaryCondition,
-                                                                                                 equation_solveve);
+                                                                                                 equation_solve);
     
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > elem_all;
@@ -185,7 +186,7 @@ template < class type>
                                                                                        exact_sol,
                                                                                        SetInitialCondition, 
                                                                                        SetBoundaryCondition,
-                                                                                       equation_solveve
+                                                                                       equation_solve
                                                                                       );
             
 
@@ -203,7 +204,7 @@ template < class type>
         
       }
    
-       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag);
+       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag, volume_or_boundary);
    
 }
 
@@ -240,7 +241,7 @@ template < class type>
                                                                                             const unsigned max_number_of_meshes,
                                                                                             const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                             const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
-                                                                                            const bool equation_solveve
+                                                                                            const bool equation_solve
                                                                                            )  {
 
  //Mesh: construct all levels - BEGIN  ==================
@@ -270,7 +271,7 @@ template < class type>
                
                
  // Only for an EQUATION - BEGIN  ==================
-         if (equation_solveve) {
+         if (equation_solve) {
              
          ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
                for (unsigned int u = 0; u < unknowns.size(); u++) {
@@ -318,9 +319,14 @@ template < class type>
 template < class type>
 /*static */ void FE_convergence< type >::output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
-                                        const unsigned norm_flag) {
+                                        const unsigned norm_flag,
+                                        const unsigned volume_or_boundary) {
     
     assert( unknowns.size() == norms.size() );
+    
+     std::cout << std::endl;
+     
+     std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary << std::endl;
     
     const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
   

@@ -76,6 +76,39 @@ const std::vector< Unknown >  systems__provide_list_of_unknowns_all_fe() {
 
 
 
+template < class type = double >
+class Zero : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return 0.;
+    }
+
+
+    vector < type >  gradient(const std::vector < type >& x) const {
+
+        vector < type > solGrad(x.size());
+
+        solGrad[0]  =  0.;
+        solGrad[1]  =  0.;
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return  0.; 
+    }
+
+      
+};
+
+
+
+
 
 namespace  Domain_square_01by01  {
     
@@ -318,7 +351,45 @@ std::string quad9_all_mesh_generation_methods_Structured(const unsigned method_f
 
 
 
+namespace  Domain_L_shaped  {
+    
+  template < class type = double >
+class Function_NonZero_on_boundary_2 : public Math::Function< type > {
 
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return x[0] * x[0] * (1. - x[0]) + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+    vector < type >  gradient(const std::vector < type >& x) const {
+
+        vector < type > solGrad(x.size());
+
+        solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return   - 2. * x[0] +  2. * (1. - x[0])  -  2. * x[0]  - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
+};
+  
+    
+}
 
 
 
@@ -541,12 +612,12 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
 //                 unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;
 
 // Laplace(u) = Laplace(u_0) : strong
-               double laplace_strong_exact = exact_sol[0]->laplacian(x_gss);
-        unk_element_jac_res.res()[i] += (- laplace_strong_exact * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
+//                double laplace_strong_exact = exact_sol[0]->laplacian(x_gss);
+//         unk_element_jac_res.res()[i] += (- laplace_strong_exact * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
 // Laplace(u) = source 
-//               double source_term = 1.;
-//         unk_element_jac_res.res()[i] += (  source_term * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
+              double source_term = 1.;
+        unk_element_jac_res.res()[i] += (  source_term * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
 
 // grad(u) grad(v) = grad(u_0) grad(v) : weak
