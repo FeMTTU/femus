@@ -215,7 +215,7 @@ int main(int argc, char** args) {
     // ======= Convergence study - BEGIN ========================
     
     // Auxiliary mesh, all levels - BEGIN  ================
-    unsigned max_number_of_meshes = 9;
+    unsigned max_number_of_meshes = 8;
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
     ///set coarse storage mesh
@@ -235,6 +235,7 @@ int main(int argc, char** args) {
     std::vector< Math::Function< double > * > analytical_function( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
 //     Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
+
     Domain_square_01by01_Mesh_Distorted::Function_Zero_on_boundary_Continuous0_NotC1_1< double >  analytical_function_1;
 //     Domain_square_01by01_Mesh_Straight::Function_Zero_on_boundary_Continuous1_1< double >  analytical_function_1;
 //     Domain_square_01by01_Mesh_Straight::Function_NonZero_on_boundary_Continuous0_1< double >  analytical_function_1;
@@ -257,25 +258,26 @@ int main(int argc, char** args) {
      const unsigned norms_to_be_computed = 1;
      // 3) Choose what norms to compute - END  ==============
 
-     // 4) Solve Equation or only Approximation Theory - BEGIN   ==============
+     // 4) Choose what norms to compute - BEGIN  (//0 = only V: //1 = V and B) ==============
+     const unsigned volume_or_both_volume_and_boundary = 1;
+     // 4) Choose what norms to compute - END  ==============
+     
+     // 5) Solve Equation or only Approximation Theory - BEGIN   ==============
        const bool equation_solve = false; 
-     // 4) Solve Equation or only Approximation Theory  - END   ==============
+     // 5) Solve Equation or only Approximation Theory  - END   ==============
 
      // object ================
     FE_convergence<>  fe_convergence;
 
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
-//     for (unsigned int u = 0; u < unknowns.size(); u++) {
 
-    for (unsigned int vb = 0; vb < 1; vb++) { //0: volume, 1: boundary
-        
     fe_convergence.convergence_study(ml_prob, 
                                      ml_mesh, 
                                      ml_mesh_all_levels, 
                                      max_number_of_meshes, 
                                      norms_to_be_computed,
                                      convergence_rate_computation_method,
-                                     vb,
+                                     volume_or_both_volume_and_boundary,
                                      equation_solve,
                                      my_solution_generation, 
                                      unknowns/*[u]*/,
@@ -284,9 +286,9 @@ int main(int argc, char** args) {
                                      Solution_set_boundary_conditions
                                     );
 
-    }
+
     // ======= Convergence study - END ========================
-//     }
+
     
     
     return 0;

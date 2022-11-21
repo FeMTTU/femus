@@ -64,9 +64,9 @@ public:
     
 private: 
     
-static   std::vector < std::vector < std::vector < type > > >  initialize_vector_of_norms(const unsigned unknowns_size, 
-                                                                                             const unsigned max_number_of_meshes, 
-                                                                                             const unsigned norm_flag);
+static   std::vector < std::vector < std::vector < std::vector < type > > > >  initialize_vector_of_norms(const unsigned volume_or_boundary,
+                                                                                                          const unsigned unknowns_size, 
+                                                                                                          const unsigned max_number_of_meshes,                                                                                              const unsigned norm_flag);
 
     
    
@@ -90,7 +90,7 @@ static  void output_convergence_order(const std::vector < std::vector < std::vec
 
 
 static  void output_convergence_order_all(const std::vector< Unknown > &  unknowns,
-                                        const std::vector < std::vector < std::vector < type > > > &  norms, 
+                                        const std::vector < std::vector < std::vector < std::vector < type > > > > &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned volume_or_boundary);
 
@@ -118,7 +118,7 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        const std::vector< Unknown > &  unknowns,
                                                        const unsigned i,
                                                        const unsigned norm_flag,
-                                                       std::vector < std::vector < std::vector < type > > > &  norms,
+                                                       std::vector < std::vector < std::vector < std::vector < type > > > > &  norms,
                                                        const unsigned conv_rate_computation_method,
                                                        const unsigned volume_or_boundary,
                                                        const  std::vector< Math::Function< type > * > & ex_sol_in);
@@ -160,9 +160,9 @@ template < class type>
 
   
     
-    std::vector < std::vector < std::vector < double > > > norms = FE_convergence::initialize_vector_of_norms ( unknowns.size(), 
-                                                                                                 max_number_of_meshes, 
-                                                                                                 norm_flag);
+    std::vector < std::vector < std::vector < std::vector < double > > > > norms = FE_convergence::initialize_vector_of_norms (  volume_or_boundary,
+                                                                                                                                 unknowns.size(), 
+                                                                                                                                 max_number_of_meshes,                                                                                                  norm_flag);
     
      MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(ml_prob,
                                                                                                  unknowns,
@@ -211,21 +211,24 @@ template < class type>
     
     
 template < class type>
-/*static*/   std::vector < std::vector < std::vector < type > > >  FE_convergence< type >::initialize_vector_of_norms(const unsigned unknowns_size, 
-                                                                                             const unsigned max_number_of_meshes, 
-                                                                                             const unsigned norm_flag) {
+/*static*/   std::vector < std::vector < std::vector < std::vector < type > > > >  FE_convergence< type >::initialize_vector_of_norms(const unsigned volume_or_boundary,
+                                                                                                                                      const unsigned unknowns_size, 
+                                                                                                                                      const unsigned max_number_of_meshes,                                                                                              const unsigned norm_flag) {
    
-       //how many Unknowns, how many mesh levels, how many norms
+       // VB, how many Unknowns, how many mesh levels, how many norms
        
-   std::vector < std::vector < std::vector < type > > > norms( unknowns_size );
+   std::vector < std::vector < std::vector < std::vector < type > > > > norms( volume_or_boundary + 1 );
   
-     for (unsigned int u = 0; u < unknowns_size; u++) {
-              norms[u].resize( max_number_of_meshes );
-       for (int i = 0; i < norms[u].size(); i++) {   // loop on the mesh level
-               norms[u][i].resize(norm_flag + 1);
-               std::fill(norms[u][i].begin(), norms[u][i].end(), 0.);
+    for (unsigned int vb = 0; vb < norms.size(); vb++) { //0: volume, 1: boundary
+          norms[vb].resize( unknowns_size );     
+      for (unsigned int u = 0; u < norms[vb].size(); u++) {
+              norms[vb][u].resize( max_number_of_meshes );
+       for (int i = 0; i < norms[vb][u].size(); i++) {   // loop on the mesh level
+               norms[vb][u][i].resize(norm_flag + 1);
+               std::fill(norms[vb][u][i].begin(), norms[vb][u][i].end(), 0.);
            }   
        }
+    }
     
     return norms; 
        
@@ -318,26 +321,29 @@ template < class type>
 
 template < class type>
 /*static */ void FE_convergence< type >::output_convergence_order_all(const std::vector< Unknown > &  unknowns,
-                                        const std::vector < std::vector < std::vector < type > > > &  norms, 
+                                        const std::vector < std::vector < std::vector < std::vector < type > > > > &  norms, 
                                         const unsigned norm_flag,
                                         const unsigned volume_or_boundary) {
     
-    assert( unknowns.size() == norms.size() );
     
      std::cout << std::endl;
-     
-     std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary << std::endl;
     
     const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
   
+    for (unsigned int vb = 0; vb < volume_or_boundary + 1; vb++) {
+        
+     std::cout << "==== Volume = 0, boundary = 1: here we have " << vb << std::endl;
+     
+    assert( unknowns.size() == norms[vb].size() );
      for (unsigned int u = 0; u < unknowns.size(); u++) {
        for (int n = norm_flag; n >= 0; n--) {
             std::cout << unknowns[u]._name << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
-         for (int i = 0; i < norms[u].size(); i++) {
-                output_convergence_order(norms, u, i, n);
+         for (int i = 0; i < norms[vb][u].size(); i++) {
+                output_convergence_order(norms[vb], u, i, n);
             }
             std::cout << std::endl;
          }
+       }
       }
       
  }
@@ -418,7 +424,7 @@ template < class type>
   CurrentElem < double > geom_element_iel(dim, msh);
 
   
-  //-----------------  V - BEGIN
+  //-----------------  V initialization - BEGIN
  //***************************************************  
    std::vector < std::vector < double > >  JacI_qp(space_dim);
    std::vector < std::vector < double > >  Jac_qp(dim);
@@ -451,12 +457,12 @@ template < class type>
   vector < vector < type > > x(dim_offset_grad);    // local coordinates
   for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
 
-//-----------------  V - END
+//-----------------  V initialization - END
 
   
   
   
-//-----------------  B - BEGIN
+//-----------------  B initialization - BEGIN
     
  //***************************************************  
      std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
@@ -474,7 +480,7 @@ template < class type>
   phi_u_bdry.reserve(max_size);
   phi_u_x_bdry.reserve(max_size * space_dim);
 
-//-----------------  B - END
+//-----------------  B initialization - END
 
   
   
@@ -769,7 +775,7 @@ template < class type>
                                                                                    const std::vector< Unknown > &  unknowns,
                                                                                    const unsigned i,
                                                                                    const unsigned norm_flag,
-                                                                                   std::vector < std::vector < std::vector < type > > > &  norms,
+                                                                                   std::vector < std::vector < std::vector < std::vector < type > > > > &  norms,
                                                                                    const unsigned conv_rate_computation_method,
                                                                                    const unsigned volume_or_boundary,
                                                                                    const  std::vector< Math::Function< type > * > &  ex_sol_in
@@ -788,19 +794,20 @@ template < class type>
             ml_sol_all_levels->RefineSolution(i);
             
             // =======  compute the error norm at the current level (i) ========================
+    for (unsigned int vb = 0; vb < volume_or_boundary + 1; vb++) { //0: volume, 1: boundary
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
             std::vector< type > norm_out;
             
-            norm_out = FE_convergence::compute_error_norms_volume_or_boundary (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_rate_computation_method, volume_or_boundary,  ex_sol_in[u]);
+            norm_out = FE_convergence::compute_error_norms_volume_or_boundary (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_rate_computation_method, vb,  ex_sol_in[u]);
             
             
-              for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
+              for (int n = 0; n < norms[vb][u][i-1].size(); n++)      norms[vb][u][i-1][n] = norm_out[n];
                                        
                    }
                    
-        }
-                
+          }
+        }         
                  
               // ======= store the last computed solution to prepare the next iteration (the current level i is now overwritten) ========================
             ml_sol_all_levels->fill_at_level_from_level(i, ml_sol_single_level->_mlMesh->GetNumberOfLevels() - 1, *ml_sol_single_level);
@@ -817,7 +824,7 @@ template < class type>
 
 
 
-}
+}  //end namespace
 
 
 
