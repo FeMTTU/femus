@@ -109,7 +109,6 @@ public:
 
 
 
-
 namespace  Domain_square_01by01  {
     
 
@@ -254,7 +253,165 @@ public:
 
 
 
+
+
+
+
+
 } //end namespace
+
+
+
+
+namespace  Domain_square_01by01_Mesh_Distorted  {
+
+
+template < class type = double >
+class Function_Zero_on_boundary_Continuous0_NotC1_1 : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+       type eps = 1.e-5;
+        type val;
+        type discontinuing_factor = 1.;//fabs(x[1] - 10. * x[0] + 4.);
+        
+        if (x[1] - 10. * x[0] + 4. > - eps) val = discontinuing_factor * ( x[1] - 10. * x[0] + 4. ) *  (1. - x[1]) * x[1] * x[0];
+         else                               val = -1. * discontinuing_factor * ( x[1] - 10. * x[0] + 4. ) *  (1. - x[1]) * x[1] * (1. - x[0]) ;
+//         if (x[0] < 0.5 + eps) val = x[0]        *  x[1] * (1. - x[1]);
+//          else                 val = ( 1. - x[0] ) *  x[1] * (1. - x[1]);
+       
+        return val;
+    }
+
+
+    vector < type >  gradient(const std::vector < type >& x) const {
+//   std::cout << "Redo calc"; @todo
+
+        vector < type > solGrad(x.size());
+
+        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+//   std::cout << "Redo calc"; @todo
+        
+        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
+};
+
+
+
+} //end namespace
+
+
+
+
+
+namespace  Domain_square_01by01_Mesh_Straight  {
+  
+    
+//this solution does not have SUPERCONVERGENCE even with the straight mesh
+template < class type = double >
+class Function_NonZero_on_boundary_Continuous0_1 : public Math::Function< type > {
+
+public:
+
+// manufactured Laplacian =============
+    type value(const std::vector < type >& x) const {
+        
+        type eps = 1.e-5;
+        type val;
+        if (x[0] < 0.5 + eps) val = x[0] * (1. - x[0]);
+         else                 val = - 0.25 + x[0];
+       
+        return  val;
+    }
+
+
+    vector < type >  gradient(const std::vector < type >& x) const {
+
+  std::cout << "Redo calc";
+  
+        vector < type > solGrad(x.size());
+        solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+        solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
+   
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+  std::cout << "Redo calc";
+        
+        return     x[0] *  (  -2. *  x[1] * (1. - x[1])   ) + 2. *  (1. - 2. * x[0]) *  x[1] * (1. - x[1])   +  x[0] * ( -2. *  x[0] * (1. - x[0])) ;
+    }
+
+
+
+};
+
+    
+template < class type = double >
+class Function_Zero_on_boundary_Continuous1_1 : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+       type eps = 1.e-5;
+        type val;
+        if (x[0] < 0.5 + eps) val = (0.5 * x[0]  *  x[0]  + 0.25  )  *  x[1] * (1. - x[1]);
+         else                 val = ( x[0] - 0.5 * x[0] * x[0]  ) *  x[1] * (1. - x[1]);
+       
+        return val;
+    }
+
+
+    vector < type >  gradient(const std::vector < type >& x) const {
+//   std::cout << "Redo calc";  @todo
+
+        vector < type > solGrad(x.size());
+
+        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+//   std::cout << "Redo calc";  @todo
+        
+        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
+};
+    
+    
+} //end namespace
+
+
+
 
 
 namespace  Domain_square_m05p05  {
@@ -508,6 +665,8 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
     //=============== Geometry - BEGIN ========================================
         geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
         
+        geom_element.set_elem_center_3d(iel, xType);
+        
         const short unsigned ielGeom = geom_element.geom_type();
     //=============== Geometry - END ========================================
 
@@ -617,6 +776,9 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
 
 // Laplace(u) = source 
               double source_term = 1.;
+//               double source_term;
+//               if (geom_element.get_elem_center_3d()[0] < 0.5 + 1.e-5) source_term = 1.;
+//               else source_term = 2.;
         unk_element_jac_res.res()[i] += (  source_term * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
 

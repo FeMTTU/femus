@@ -167,9 +167,9 @@ int main(int argc, char** args) {
 
 //     std::string input_file = "square_0-1x0-1_divisions_2x2.med"; // @todo does not work with biquadratic exact solution
 //     std::string input_file = "square_0-1x0-1_divisions_5x4.med"; // @todo does not work with biquadratic exact solution 
-//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_5x3.med";  // @todo does not work with biquadratic exact solution 
-//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
-    std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact //      std::string input_file = "assignment_square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
+//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2.med";  // @todo does not work with biquadratic exact solution 
+    std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
+//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact //      std::string input_file = "assignment_square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
 
 //     std::string input_file = "L_shaped_domain.med";
 //     std::string input_file = "interval.med";
@@ -215,7 +215,7 @@ int main(int argc, char** args) {
     // ======= Convergence study - BEGIN ========================
     
     // Auxiliary mesh, all levels - BEGIN  ================
-    unsigned max_number_of_meshes = 7;
+    unsigned max_number_of_meshes = 9;
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
     ///set coarse storage mesh
@@ -234,12 +234,15 @@ int main(int argc, char** args) {
     // 1) Which exact solution - BEGIN ================
     std::vector< Math::Function< double > * > analytical_function( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
-//     Zero< double >  analytical_function_1;
-    Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
+//     Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
+    Domain_square_01by01_Mesh_Distorted::Function_Zero_on_boundary_Continuous0_NotC1_1< double >  analytical_function_1;
+//     Domain_square_01by01_Mesh_Straight::Function_Zero_on_boundary_Continuous1_1< double >  analytical_function_1;
+//     Domain_square_01by01_Mesh_Straight::Function_NonZero_on_boundary_Continuous0_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
+//     Zero< double >  analytical_function_1;
 
     for (unsigned int u = 0; u < analytical_function.size(); u++) {
     analytical_function[u] =  & analytical_function_1;
@@ -255,7 +258,7 @@ int main(int argc, char** args) {
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool equation_solve = true; 
+       const bool equation_solve = false; 
      // 4) Solve Equation or only Approximation Theory  - END   ==============
 
      // object ================
@@ -264,7 +267,7 @@ int main(int argc, char** args) {
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
 //     for (unsigned int u = 0; u < unknowns.size(); u++) {
 
-    for (unsigned int vb = 0; vb < 2; vb++) { //0: volume, 1: boundary
+    for (unsigned int vb = 0; vb < 1; vb++) { //0: volume, 1: boundary
         
     fe_convergence.convergence_study(ml_prob, 
                                      ml_mesh, 
