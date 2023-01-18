@@ -1636,13 +1636,11 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
  //********** Geometry ***************************************** 
  unsigned solType_coords = FE_DOMAIN;
  
-  CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
+  CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
   constexpr unsigned int space_dim = 3;
  //*************************************************** 
 
- //*************************************************** 
-  double weight; // gauss point weight
   
  //***************************************************  
   double alpha = ALPHA_CTRL_VOL;
@@ -1723,24 +1721,46 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
   double integral_alpha  = 0.;
   double integral_beta   = 0.;
 
+
+ //***************************************************  
+       //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all;
+  ml_prob.get_all_abstract_fe_multiple(elem_all);
+  
+   constexpr unsigned qrule_i = QRULE_I;
+ //***************************************************  
+
+
+   // ====== Geometry at Quadrature points - BEGIN ==============================================================================
+     std::vector < std::vector < double > >  JacI_iqp(space_dim);
+     std::vector < std::vector < double > >  Jac_iqp(dim);
+    for (unsigned d = 0; d < Jac_iqp.size(); d++) {   Jac_iqp[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_iqp.size(); d++) { JacI_iqp[d].resize(dim); }
+    
+    double detJac_iqp;
+    double AbsDetJxWeight_iqp = 0.;
+   // ====== Geometry at Quadrature points - END ==============================================================================
+
+    
+  
     
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
  
-    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
-    const short unsigned ielGeom = geom_element.geom_type();
+    const short unsigned ielGeom = geom_element_iel.geom_type();
 
   //************* set target domain flag **************
-   geom_element.set_elem_center_3d(iel, solType_coords);
+   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element.get_elem_center_3d());
+   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element.get_elem_center_3d());
+  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
  //**************** state **************************** 
@@ -1789,24 +1809,34 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
  //*************************************************** 
    
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+      for (unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	    msh->_finiteElement[ielGeom][solType_u]               ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[ielGeom][solType_u/*solTypeudes*/]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
-        msh->_finiteElement[ielGeom][solType_ctrl]            ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+    elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), iqp, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
+
+    AbsDetJxWeight_iqp = detJac_iqp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[iqp];
+
+    
+    elem_all[qrule_i][ielGeom][solType_u]  ->shape_funcs_current_elem(iqp, JacI_iqp, phi_u, phi_u_x, boost::none, space_dim);
+    elem_all[qrule_i][ielGeom][solType_ctrl]  ->shape_funcs_current_elem(iqp, JacI_iqp, phi_ctrl, phi_ctrl_x, boost::none, space_dim);
+    elem_all[qrule_i][ielGeom][solType_u]  ->shape_funcs_current_elem(iqp, JacI_iqp, phi_udes, phi_udes_x, boost::none, space_dim);
+    
+//         // *** get gauss point weight, test function and test function partial derivatives ***
+// 	    msh->_finiteElement[ielGeom][solType_u]               ->Jacobian(geom_element.get_coords_at_dofs(), iqp, weight, phi_u, phi_u_x, phi_u_xx);
+//         msh->_finiteElement[ielGeom][solType_ctrl]            ->Jacobian(geom_element.get_coords_at_dofs(), iqp, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+//         msh->_finiteElement[ielGeom][solType_u/*solTypeudes*/]->Jacobian(geom_element.get_coords_at_dofs(), iqp, weight, phi_udes, phi_udes_x, phi_udes_xx);
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	ctrl_gss = 0.; for (unsigned i = 0; i < nDof_ctrl; i++) ctrl_gss += sol_ctrl[i] * phi_ctrl[i];  
 	udes_gss  = 0.; for (unsigned i = 0; i < nDof_udes; i++)  udes_gss  += sol_udes[i]  * phi_udes[i]; 
-        ctrl_x_gss  = 0.; for (unsigned i = 0; i < nDof_ctrl; i++)  
-        {
-          for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i + idim * nDof_ctrl];
+        ctrl_x_gss  = 0.; 
+        for (unsigned i = 0; i < nDof_ctrl; i++)  {
+          for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i * space_dim + idim];
         }
 
-               integral_target += target_flag * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
-               integral_alpha  += control_el_flag * weight * ctrl_gss * ctrl_gss;
-               integral_beta   += control_el_flag * weight * ctrl_x_gss * ctrl_x_gss;
+               integral_target += target_flag * AbsDetJxWeight_iqp * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
+               integral_alpha  += control_el_flag * AbsDetJxWeight_iqp * ctrl_gss * ctrl_gss;
+               integral_beta   += control_el_flag * AbsDetJxWeight_iqp * ctrl_x_gss * ctrl_x_gss;
 	  
       } // end gauss point loop
   } //end element loop
