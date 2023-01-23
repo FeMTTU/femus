@@ -68,7 +68,7 @@
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
 #define FACE_FOR_CONTROL        2
-#define FACE_FOR_TARGET         1
+#define FACE_FOR_TARGET         4
 
 
 
@@ -108,14 +108,16 @@
 
 
 //***** Operator-related ****************** 
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/       /* 0: integer norm, 1: fractional norm */
+
+
 #define RHS_ONE             0.
 
 #define KEEP_ADJOINT_PUSH   1
 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  /*0*/ 1
-#define S_FRAC 0.5
+#define S_FRAC 0.5       /* Order of fractional derivative */
 
-#define NORM_GIR_RAV  0
+#define NORM_GIR_RAV  0  /* Leave it at 0 */
 
 #if NORM_GIR_RAV == 0
 
@@ -1322,6 +1324,9 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
                      const std::vector<std::string> state_vars,  
                      const std::vector<std::string> ctrl_vars  
                     )  {
+    
+  std::cout << "=== Compute cost functional parts with boundary regularization =============" << std::endl;  
+  
   
   
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
@@ -1507,6 +1512,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
     
  //***************************************************
 
+//=================== BOUNDARY PART - BEGIN ==================================================================================================  
   
 	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 	  
@@ -1563,14 +1569,14 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
 	  
 	} //end if control element flag
 
-//=====================================================================================================================  
-//=====================================================================================================================  
-//=====================================================================================================================  
+//=================== BOUNDARY PART - END ==================================================================================================  
+
   
   
    
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussPointsNumber(); ig++) {
+//=================== VOLUME PART - BEGIN ==================================================================================================  
+
+   for (unsigned ig = 0; ig < ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
     elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_iqp, space_dim);
@@ -1585,6 +1591,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
                integral_target += target_flag * weight_iqp * (u_gss  - udes_gss) * (u_gss - udes_gss);
 	  
       } // end gauss point loop
+//=================== VOLUME PART - END ==================================================================================================  
       
   } //end element loop
 
@@ -1621,6 +1628,7 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
                      const std::vector<std::string> ctrl_vars  
                     )   {
   
+  std::cout << "=== Compute cost functional parts with internal lifting regularization =============" << std::endl;  
   
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
 

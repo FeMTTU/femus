@@ -301,7 +301,10 @@ int main(int argc, char** args) {
 
 
   
-  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl/*state_vars*/, ctrl_vars);
+  ctrl::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars);
+  
+  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars);
+  
   // ======= Problem, System  - END ========================
   
   // ======= Print - BEGIN  ========================
