@@ -34,7 +34,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::ElementTargetFlag(x);
+        value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = ctrl::ControlDomainFlag_bdry(x);
@@ -367,7 +367,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::DesiredTarget();
+  double u_des = cost_functional::DesiredTarget();
   double alpha = ALPHA_CTRL_BDRY;
   double beta  = BETA_CTRL_BDRY;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
@@ -410,7 +410,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(elem_center);
+   target_flag = cost_functional::ElementTargetFlag(elem_center);
  //*************************************************** 
    
  //************** set control flag *******************

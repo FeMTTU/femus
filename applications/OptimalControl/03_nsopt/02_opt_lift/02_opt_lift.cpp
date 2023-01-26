@@ -92,7 +92,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = ctrl::ElementTargetFlag(x);
+        value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::ControlDomainFlag_internal_restriction(x);
@@ -905,7 +905,7 @@ void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem& ml_pro
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
 //***************************************   
     
     
@@ -1212,8 +1212,8 @@ for (unsigned k = 0; k < dim; k++){
 	  
  #if exact_sol_flag == 0
               NSV_gss[kdim]     += - force[kdim] * phiV_gss[i];
-	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * ctrl::DesiredTargetVel()[kdim] * phiVadj_gss[i];
-  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * ctrl::DesiredTargetVel()[kdim] * phiVctrl_gss[i];
+	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * cost_functional::DesiredTargetVec()[kdim] * phiVadj_gss[i];
+  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * cost_functional::DesiredTargetVec()[kdim] * phiVctrl_gss[i];
 #endif
  #if exact_sol_flag == 1
               NSV_gss[kdim]     += - exactForce[kdim] * phiV_gss[i];
@@ -1401,7 +1401,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   
       const unsigned int n_components_ctrl = dim;
-  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
+  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
   // ======= Solutions, Unknowns - END =======
 
       
@@ -1551,7 +1551,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
    //***************************************       
    
    //###################################################################  
@@ -1958,7 +1958,7 @@ for (unsigned k = 0; k < dim; k++){
 	   
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * ctrl::DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * cost_functional::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
@@ -2129,7 +2129,7 @@ for (unsigned k = 0; k < dim; k++){
       
       Res[kdim + ctrl_pos_begin][i] +=  AbsDetJxWeight_iqp * (
 #if exact_sol_flag == 0
-                     + cost_functional_coeff * target_flag * ctrl::DesiredTargetVel()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+                     + cost_functional_coeff * target_flag * cost_functional::DesiredTargetVec()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                      + cost_functional_coeff * target_flag * exactVel_d[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]

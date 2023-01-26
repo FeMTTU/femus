@@ -114,7 +114,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
     
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::ElementTargetFlag(x);
+        value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = ctrl::ControlDomainFlag_bdry(x);
@@ -677,11 +677,11 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 
  
  //********************* DATA ************************ 
-  const double u_des = ctrl::DesiredTarget();
+  const double u_des = cost_functional::DesiredTarget();
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
-  const double penalty_dirichlet_bc_u_equal_q = PENALTY_DIRICHLET_BC_U_EQUAL_Q;         //penalty for u=q
+  const double penalty_dirichlet_bc_u_equal_q = PENALTY_DIRICHLET_BC_U_EQUAL_Q_BOUNDARY;         //penalty for u=q
  //*************************************************** 
   
   RES->zero();  
@@ -920,7 +920,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 

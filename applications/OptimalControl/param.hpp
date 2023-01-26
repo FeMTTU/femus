@@ -27,6 +27,8 @@
   const bool redirect_cout_to_file = false;
 //*********************** 
 
+  
+//*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
 #define N_UNIFORM_LEVELS  7
@@ -39,36 +41,16 @@
 //*********************** Mesh, offset for point inclusion - BEGIN *******************************************************
 #define OFFSET_TO_INCLUDE_LINE  1.e-5  
 //*********************** Mesh, offset for point inclusion - END *******************************************************
+
+//*********************** Mesh - END *****************************************
+
+
   
-
-//*********************** Control, target region - BEGIN *******************************************************
-#define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
-//*********************** Control, target region - END *******************************************************
-
-
-//*********************** Control, cost functional - BEGIN *******************************************************
-#define COST_FUNCTIONAL_COEFF 1 
-  
-// for pure boundary approaches
-#define ALPHA_CTRL_BDRY 2.e-5 /*0.01*/ 
-#define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
-
-// for lifting approaches (both internal and external)
-#define ALPHA_CTRL_VOL ALPHA_CTRL_BDRY 
-#define BETA_CTRL_VOL ALPHA_CTRL_VOL
-  
-  
-#define PENALTY_OUTSIDE_CONTROL_DOMAIN  1.e20         // penalty for zero control outside
-#define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY  1.e50      
-#define PENALTY_DIRICHLET_BC_U_EQUAL_Q  1.e10         // penalty for u = q
-//*********************** Control, cost functional - END *******************************************************
-
-
 //*********************** Control, boundary extremes - BEGIN  *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
 #define FACE_FOR_CONTROL        2
-#define FACE_FOR_TARGET         4
+#define FACE_FOR_TARGET         1
 
 
 
@@ -86,28 +68,47 @@
 //*********************** Control, boundary extremes - END *******************************************************
 
 
+//*********************** Control, cost functional, target region - BEGIN *******************************************************
+#define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
+//*********************** Control, cost functional, target region - END *******************************************************
 
-//*********************** Control, Lifting internal extension - BEGIN *******************************************************
+
+//*********************** Control, cost functional - BEGIN *******************************************************
+#define COST_FUNCTIONAL_TYPE   1   /* 0: target; 1: gradient */ 
+
+#define COST_FUNCTIONAL_COEFF 1 
+  
+// for pure boundary approaches
+#define ALPHA_CTRL_BDRY 2.e-4 /*0.01*/ 
+#define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
+
+// for lifting approaches (both internal and external)
+#define ALPHA_CTRL_VOL ALPHA_CTRL_BDRY 
+#define BETA_CTRL_VOL ALPHA_CTRL_VOL
+//*********************** Control, cost functional - END *******************************************************
+
+
+
+
+//*********************** Control, Lifting internal - BEGIN *******************************************************
 #define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
 #define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
 #define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
-//*********************** Control, Lifting internal extension - END *******************************************************
+
+//******** Penalties for equations - BEGIN ******************************
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL   1.e20         // penalty for zero control outside
+//******** Penalties for equations - END ******************************
+
+//*********************** Control, Lifting internal - END *******************************************************
 
 
 
 
-//*********************** Inequality - BEGIN *******************************************************
-#define  INEQ_FLAG 1
-#define  C_COMPL 1.
-//*********************** Inequality - END *******************************************************
+
+//*********************** Control, Boundary, Fractional or Integer - BEGIN  *******************************************************
 
 
-
-//*********************** Fractional - BEGIN  *******************************************************
-#define  NODE_BASED_BDRY_BDRY   "node_based_bdry_bdry_flag"
-
-
-//***** Operator-related ****************** 
+//***** Operator-related - BEGIN ****************** 
 #define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/       /* 0: integer norm, 1: fractional norm */
 
 
@@ -139,10 +140,10 @@
 
   #define USE_Cns     0
 #endif
-//**************************************
+//***** Operator-related - END ****************** 
 
   
-//***** Quadrature-related ****************** 
+//***** Quadrature-related - BEGIN ****************** 
 // for integrations in the same element
 #define Nsplit 0
 #define Quadrature_split_index  0
@@ -153,17 +154,32 @@
 #define QRULE_I   0
 #define QRULE_J   1
 #define QRULE_K   QRULE_I
-//**************************************
+//***** Quadrature-related - END ****************** 
 
   
-//***** Implementation-related: where are L2 and H1 norms implemented ****************** 
+//***** Implementation-related: where are L2 and H1 norms implemented - BEGIN ****************** 
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
-//**************************************
+//***** Implementation-related: where are L2 and H1 norms implemented - END ****************** 
+
+
+//***** How to identify boundary of boundary in the 3D case - BEGIN ****************** 
+#define  NODE_BASED_BDRY_BDRY   "node_based_bdry_bdry_flag"
+//***** How to identify boundary of boundary in the 3D case - END ****************** 
+
+
+//******** Penalties for equations - BEGIN ******************************
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY           1.e50      
+#define PENALTY_DIRICHLET_BC_U_EQUAL_Q_BOUNDARY           1.e10         // penalty for u = q
+//******** Penalties for equations - END ******************************
+
+//*********************** Control, Boundary, Fractional or Integer - END  *******************************************************
 
 
 
-//*********************** Fractional - END  *******************************************************
-
+//*********************** Inequality - BEGIN *******************************************************
+#define  INEQ_FLAG 1
+#define  C_COMPL 1.
+//*********************** Inequality - END *******************************************************
 
 
 
@@ -312,8 +328,25 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
   }
   
       
-    
+
+
+
+
+
+      
 namespace ctrl {
+
+    
+const  int sign_function_for_delimiting_region(const unsigned int face_index) {
+    
+   int  target_line_sign;
+  
+        if (face_index == 1 || face_index == 3 || face_index == 5) { target_line_sign = 1;  }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { target_line_sign = -1; }
+   
+   return target_line_sign;
+   
+}
 
     
 //direction of the line that contains \Gamma_c    
@@ -330,6 +363,13 @@ const unsigned int axis_direction_Gamma_control(const unsigned int face_index) {
 }
 
 
+}
+
+
+
+namespace cost_functional {
+ 
+    
 const unsigned int axis_direction_target_reg(const unsigned int face_index) {
     
     unsigned int axis_dir;
@@ -343,56 +383,7 @@ const unsigned int axis_direction_target_reg(const unsigned int face_index) {
 }
 
 
-
-   
-const  int target_line_sign_func(const unsigned int face_index) {
     
-   int  target_line_sign;
-  
-        if (face_index == 1 || face_index == 3 || face_index == 5) { target_line_sign = 1;  }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) { target_line_sign = -1; }
-   
-   return target_line_sign;
-   
-}
-
-
-
-const double extreme_position(const unsigned int face_index) {
-    
-  double extreme_pos;
-  
-        if (face_index == 1 || face_index == 3 || face_index == 5) {  extreme_pos = 0.; }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) {  extreme_pos = 1.; }
-   
-   return extreme_pos;
-   
-}
-
-
-
-  
-//******************************************* Desired Target *******************************************************
-
-double DesiredTarget() {
-   return 1.;
-}
-
-
- std::vector<double> DesiredTargetVel() {
-     
-    std::vector<double>  Vel_desired(3, 0.);
-    
-   const unsigned int axis_dir = ctrl::axis_direction_Gamma_control(FACE_FOR_CONTROL);
-   
-    Vel_desired[axis_dir] = 1.;
-    
-   return Vel_desired;
-    }
-
-   
-
-
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
 
@@ -404,7 +395,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
   
   const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
    
-  const int  target_line_sign = target_line_sign_func(FACE_FOR_TARGET);
+  const int  target_line_sign = ctrl::sign_function_for_delimiting_region(FACE_FOR_TARGET);
   
   const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
    
@@ -422,6 +413,54 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 
 
+//******************************************* Desired Target *******************************************************
+
+double DesiredTarget() {
+   return 1.;
+}
+
+
+ std::vector<double> DesiredTargetVec() {
+     
+    std::vector<double>  Vel_desired(3, 0.);
+    
+   const unsigned int axis_dir = ctrl::axis_direction_Gamma_control(FACE_FOR_CONTROL);
+   
+    Vel_desired[axis_dir] = 1.;
+    
+   return Vel_desired;
+    }
+
+     
+    
+    
+    
+}  
+
+
+
+
+   
+namespace ctrl {
+
+const double face_coordinate_extreme(const unsigned int face_index) {
+    
+  double extreme_pos;
+  
+        if (face_index == 1 || face_index == 3 || face_index == 5) {  extreme_pos = 0.; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) {  extreme_pos = 1.; }
+   
+   return extreme_pos;
+   
+}
+
+
+
+  
+  
+
+
+
 
 
 //*********************** Find volume elements that contain a Control Face element *********************************
@@ -435,9 +474,9 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
 
      
-   const int  target_line_sign = target_line_sign_func(FACE_FOR_CONTROL);
+   const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
 
-   const double extreme_pos = extreme_position(FACE_FOR_CONTROL);
+   const double extreme_pos = face_coordinate_extreme(FACE_FOR_CONTROL);
    
    const unsigned int axis_dir = axis_direction_Gamma_control(FACE_FOR_CONTROL);
 
@@ -467,9 +506,9 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
   const double control_domain_width_lower = LIFTING_INTERNAL_WIDTH_LOWER;
   const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
    
-   const int  target_line_sign = target_line_sign_func(FACE_FOR_CONTROL);
+   const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
 
-   const double extreme_pos = extreme_position(FACE_FOR_CONTROL);
+   const double extreme_pos = face_coordinate_extreme(FACE_FOR_CONTROL);
 
    const unsigned int axis_dir = axis_direction_Gamma_control(FACE_FOR_CONTROL);
 
@@ -1128,7 +1167,7 @@ double integral_g_dot_n = 0.;
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
     
@@ -1163,7 +1202,7 @@ double integral_g_dot_n = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = ctrl::DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
      }
 //     }
  //DESIRED VEL###################################################################
@@ -1411,7 +1450,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
  //***************************************************
 
  //********** DATA *********************************** 
-  double u_des = ctrl::DesiredTarget();
+  double u_des = cost_functional::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1462,7 +1501,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //***************************************************
 
    
@@ -1673,7 +1712,7 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
- //*************************************************** 
+double u_x_gss = 0.; //*************************************************** 
  //*************************************************** 
 
  //******************** control ********************** 
@@ -1722,7 +1761,7 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
  //*************************************************** 
 
  //********************* DATA ************************ 
-  double u_des = ctrl::DesiredTarget();
+  double u_des = cost_functional::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1763,7 +1802,7 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
 
  //***** set control flag ****************************
@@ -1842,9 +1881,19 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
           for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i * space_dim + idim];
         }
 
-               integral_target += target_flag * AbsDetJxWeight_iqp * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
-               integral_alpha  += control_el_flag * AbsDetJxWeight_iqp * ctrl_gss * ctrl_gss;
-               integral_beta   += control_el_flag * AbsDetJxWeight_iqp * ctrl_x_gss * ctrl_x_gss;
+        u_x_gss  = 0.; 
+        for (unsigned i = 0; i < nDof_u; i++)  {
+          for (unsigned idim = 0; idim < dim; idim ++) u_x_gss  += sol_u[i] * phi_u_x[i * space_dim + idim];
+        }
+               integral_target += AbsDetJxWeight_iqp * target_flag * 
+#if COST_FUNCTIONAL_TYPE == 0               
+               (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss)
+#elif COST_FUNCTIONAL_TYPE == 1
+               (u_x_gss + ctrl_x_gss) * (u_x_gss + ctrl_x_gss) 
+#endif
+               ;
+               integral_alpha  += AbsDetJxWeight_iqp * control_el_flag * ctrl_gss * ctrl_gss;
+               integral_beta   += AbsDetJxWeight_iqp * control_el_flag * ctrl_x_gss * ctrl_x_gss;
 	  
       } // end gauss point loop
   } //end element loop
@@ -2030,7 +2079,7 @@ double  integral_div_ctrl = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
  //***** set control flag ****************************
@@ -2070,7 +2119,7 @@ double  integral_div_ctrl = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = ctrl::DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED VEL###################################################################
@@ -2177,7 +2226,6 @@ double  integral_div_ctrl = 0.;
 
 
 
-  
   
   
  namespace fractional {

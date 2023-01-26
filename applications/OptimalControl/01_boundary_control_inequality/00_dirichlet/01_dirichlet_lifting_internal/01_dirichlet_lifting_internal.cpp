@@ -84,7 +84,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     
     
     else if(!strcmp(name,"TargReg")) {
-        value = ctrl::ElementTargetFlag(x);
+        value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::ControlDomainFlag_internal_restriction(x);
@@ -540,10 +540,10 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
     
     
  //********************* DATA ************************ 
-  double u_des = ctrl::DesiredTarget();
+  double u_des = cost_functional::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
-  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN;         // penalty for zero control outside
+  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
  //***************************************************  
 
  
@@ -584,7 +584,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -767,16 +767,49 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               if ( i < nDof_adj )         laplace_rhs_dadj_ctrl_i        +=  (phi_adj_x   [i * space_dim + kdim] * sol_ctrl_x_gss[kdim]);
 	      }
+	      
+              double laplace_rhs_du_u_i = 0.;
+              for (unsigned kdim = 0; kdim < dim; kdim++) {
+              if ( i < nDof_u )         laplace_rhs_dctrl_ctrl_i      +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
+	      }
+	      
+              double laplace_rhs_du_ctrl_i = 0.;
+              for (unsigned kdim = 0; kdim < dim; kdim++) {
+              if ( i < nDof_u )         laplace_rhs_dctrl_ctrl_i      +=  (phi_u_x   [i * space_dim + kdim] * sol_ctrl_x_gss[kdim]);
+	      }
+	      
+              double laplace_rhs_dctrl_u_i = 0.;
+              for (unsigned kdim = 0; kdim < dim; kdim++) {
+              if ( i < nDof_ctrl )         laplace_rhs_dctrl_ctrl_i      +=  (phi_ctrl_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
+	      }
+	      
 //======================Residuals - BEGIN =======================
           // FIRST ROW
-	  if (i < nDof_u)                      Res[0      + i] += - AbsDetJxWeight_iqp * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i );
+	  if (i < nDof_u)                      Res[0      + i] += - AbsDetJxWeight_iqp * (
+          - laplace_rhs_du_adj_i 
+     + target_flag * 
+#if COST_FUNCTIONAL_TYPE == 0
+   phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
+#elif COST_FUNCTIONAL_TYPE == 1
+    laplace_rhs_du_u_i + laplace_rhs_du_ctrl_i
+#endif
+          );
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
-	     if ( control_el_flag == 1)    {    Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - AbsDetJxWeight_iqp * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
+	     if ( control_el_flag == 1)    {    Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - AbsDetJxWeight_iqp * ( 
 													                                                  + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
 		                                                                                              - laplace_rhs_dctrl_adj_i /// @todo this is here because variations of restricted functions are also restricted
-													      /*+ ineq_flag * sol_mu_gss*/ ); }
+													                                                  /*+ ineq_flag * sol_mu_gss*/ 
+                                                                                                      + target_flag *
+                                                                                 #if COST_FUNCTIONAL_TYPE == 0
+                                                                                                      phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des)
+                                                                                  #elif COST_FUNCTIONAL_TYPE == 1
+                                                                                                      laplace_rhs_dctrl_u_i + laplace_rhs_dctrl_ctrl_i
+                                                                                  #endif
+                                                                                                                    ); 
+             
+        }
 	      else if ( control_el_flag == 0) { Res[nDof_u + i] +=   (- penalty_outside_control_domain)  *  (1 - control_node_flag[i]) * (sol_ctrl[i] - 0.); }
 	  }
           // THIRD ROW
@@ -801,6 +834,9 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
               double laplace_mat_dctrl_adj = 0.;
               double laplace_mat_dadj_ctrl = 0.;
               double laplace_mat_dctrl_ctrl = 0.;
+              double laplace_mat_du_u = 0.;
+              double laplace_mat_du_ctrl = 0.;
+              double laplace_mat_dctrl_u = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               //if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
@@ -809,19 +845,35 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
               if ( i < nDof_ctrl && j < nDof_adj )      laplace_mat_dctrl_adj      += (phi_ctrl_x[i * space_dim + kdim] * phi_adj_x [j * space_dim + kdim]);
               if ( i < nDof_adj && j < nDof_ctrl )      laplace_mat_dadj_ctrl      += (phi_adj_x [i * space_dim + kdim] * phi_ctrl_x[j * space_dim + kdim]);  //equal to the previous
               if ( i < nDof_ctrl && j < nDof_ctrl )     laplace_mat_dctrl_ctrl     += (phi_ctrl_x  [i * space_dim + kdim] * phi_ctrl_x  [j * space_dim + kdim]);
+              
+              if ( i < nDof_u && j < nDof_u )     laplace_mat_du_u           += (phi_u_x  [i * space_dim + kdim] * phi_u_x  [j * space_dim + kdim]);
+              if ( i < nDof_u && j < nDof_ctrl )     laplace_mat_du_ctrl     += (phi_u_x  [i * space_dim + kdim] * phi_ctrl_x  [j * space_dim + kdim]);
+              if ( i < nDof_ctrl && j < nDof_u )     laplace_mat_dctrl_u     += (phi_ctrl_x  [i * space_dim + kdim] * phi_u_x  [j * space_dim + kdim]);
 	      }
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
 	      if ( i < nDof_u && j < nDof_u )       
 		Jac[ (0 + i) * nDof_AllVars   +
-		     (0 + j)                            ]  += AbsDetJxWeight_iqp * target_flag * phi_u[j] *  phi_u[i];
+		     (0 + j)                            ]  += AbsDetJxWeight_iqp * target_flag *
+#if COST_FUNCTIONAL_TYPE == 0
+		     phi_u[j] *  phi_u[i]
+#elif COST_FUNCTIONAL_TYPE == 1
+             laplace_mat_du_u 
+#endif
+              ;
               
 	      // BLOCK  delta_state - control
               if ( i < nDof_u && j < nDof_ctrl )   
 		Jac[ (0 + i) * nDof_AllVars   +
-                     (nDof_u + j)                       ]  += AbsDetJxWeight_iqp * target_flag  * phi_ctrl[j] *  phi_u[i];
-	      
+                     (nDof_u + j)                       ]  += AbsDetJxWeight_iqp * target_flag  * 
+#if COST_FUNCTIONAL_TYPE == 0
+                     phi_ctrl[j] *  phi_u[i]
+#elif COST_FUNCTIONAL_TYPE == 1
+                     laplace_mat_du_ctrl
+#endif
+	      ;
+          
               // BLOCK  delta_state - adjoint
               if ( i < nDof_u && j < nDof_adj )  
 		Jac[  (0 + i) * nDof_AllVars  +
@@ -833,14 +885,27 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
 	      //BLOCK delta_control - state
               if ( i < nDof_ctrl   && j < nDof_u   ) 
 		Jac[ (nDof_u + i) * nDof_AllVars  +
-		     (0 + j)                            ]  += ( control_node_flag[i]) * AbsDetJxWeight_iqp * target_flag * phi_u[j] * phi_ctrl[i];
-		
+		     (0 + j)                            ]  += 
+		     ( control_node_flag[i]) * AbsDetJxWeight_iqp * target_flag * 
+#if COST_FUNCTIONAL_TYPE == 0
+		     phi_u[j] * phi_ctrl[i]
+#elif COST_FUNCTIONAL_TYPE == 1
+             laplace_mat_dctrl_u
+#endif
+             ;
+             
 	      //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl   )
 		Jac[ (nDof_u + i) * nDof_AllVars +
 		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * AbsDetJxWeight_iqp * ( beta * /*control_el_flag  **/ laplace_mat_dctrl_ctrl 
 		                                                                                + alpha * /*control_el_flag **/ phi_ctrl[i] * phi_ctrl[j] 
-		                                                                                            + target_flag * phi_ctrl[i] * phi_ctrl[j] );
+		                                                                                            + target_flag *
+                                                                            #if COST_FUNCTIONAL_TYPE == 0
+		                                                                                            phi_ctrl[i] * phi_ctrl[j] 
+                                                                            #elif COST_FUNCTIONAL_TYPE == 1
+                                                                                               laplace_mat_dctrl_ctrl
+                                                                            #endif
+                                                                                                     );
               
 	      //BLOCK delta_control - adjoint
               if ( i < nDof_ctrl   && j < nDof_adj  ) 

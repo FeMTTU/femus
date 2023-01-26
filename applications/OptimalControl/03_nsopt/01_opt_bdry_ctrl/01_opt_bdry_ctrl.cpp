@@ -196,7 +196,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = ctrl::ElementTargetFlag(x);
+        value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::ControlDomainFlag_bdry(x);
@@ -1054,7 +1054,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
   //****** Control ********************************
  double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c
- double penalty_dirichlet_bc_u_equal_q = PENALTY_DIRICHLET_BC_U_EQUAL_Q;         //penalty for u = q
+ double penalty_dirichlet_bc_u_equal_q = PENALTY_DIRICHLET_BC_U_EQUAL_Q_BOUNDARY;         //penalty for u = q
 
  double theta_value_outside_fake_element = 0.;
  //**************************************
@@ -1250,7 +1250,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-       target_flag = ctrl::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+       target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
    //***************************************       
    
  //************ set control flag - BEGIN *********************
@@ -1786,7 +1786,7 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * ctrl::DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * cost_functional::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]

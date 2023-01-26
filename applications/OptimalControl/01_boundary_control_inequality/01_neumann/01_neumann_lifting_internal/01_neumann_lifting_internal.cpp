@@ -19,7 +19,7 @@ double InitialValueContReg(const std::vector < double >& x) {
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
-  return ctrl::ElementTargetFlag(x);
+  return cost_functional::ElementTargetFlag(x);
 }
 
 double InitialValueState(const std::vector < double >& x) {
@@ -313,7 +313,7 @@ vector < double >  sol_adj; // local solution
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::DesiredTarget();
+  double u_des = cost_functional::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_strong = 10e+14;
@@ -355,7 +355,7 @@ vector < double >  sol_adj; // local solution
   
  //****** set target domain flag ********************* 
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(elem_center);
+   target_flag = cost_functional::ElementTargetFlag(elem_center);
  //*************************************************** 
    
     
@@ -1028,7 +1028,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::DesiredTarget();
+  double u_des = cost_functional::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1067,7 +1067,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
  //************** set target domain flag *************
    int target_flag = 0;
-   target_flag = ctrl::ElementTargetFlag(elem_center);
+   target_flag = cost_functional::ElementTargetFlag(elem_center);
  //*************************************************** 
 
    
