@@ -31,7 +31,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS  7
+#define N_UNIFORM_LEVELS  6
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -74,12 +74,12 @@
 
 
 //*********************** Control, cost functional - BEGIN *******************************************************
-#define COST_FUNCTIONAL_TYPE   1   /* 0: target; 1: gradient */ 
+#define COST_FUNCTIONAL_TYPE   0   /* 0: target; 1: gradient */ 
 
 #define COST_FUNCTIONAL_COEFF 1 
   
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 2.e-4 /*0.01*/ 
+#define ALPHA_CTRL_BDRY 1.e-6 /*0.01*/ 
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -92,8 +92,8 @@
 
 //*********************** Control, Lifting internal - BEGIN *******************************************************
 #define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
-#define LIFTING_INTERNAL_WIDTH_LOWER  GAMMA_CONTROL_LOWER
-#define LIFTING_INTERNAL_WIDTH_UPPER  GAMMA_CONTROL_UPPER
+#define LIFTING_INTERNAL_WIDTH_LOWER  0. /*GAMMA_CONTROL_LOWER*/
+#define LIFTING_INTERNAL_WIDTH_UPPER  1. /*GAMMA_CONTROL_UPPER*/
 
 //******** Penalties for equations - BEGIN ******************************
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL   1.e20         // penalty for zero control outside
@@ -3811,8 +3811,8 @@ namespace ctrl_inequality {
      std::vector<double> constr_value(n_components_ctrl, 0.);
      
      
-     double constr_value_upper_0 =  1000.; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
-     double constr_value_lower_0 = -1000.; //-3.e-13;
+     double constr_value_upper_0 =  1000000.; // dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_lower_0 = -1000000.; //-3.e-13;
      assert(constr_value_lower_0 < constr_value_upper_0); 
      
      double constr_value_upper_1 =   1000.;

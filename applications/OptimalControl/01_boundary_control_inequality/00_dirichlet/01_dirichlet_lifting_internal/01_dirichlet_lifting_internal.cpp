@@ -104,7 +104,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   bool dirichlet = true; //dirichlet
   value = 0.;
   
-  if(!strcmp(name,"control")) {
+  if(!strcmp(name, "control")) {
       value = 0.;
     if (faceName == FACE_FOR_CONTROL) {
         if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)    
