@@ -362,7 +362,7 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
-          nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
+          nonLinearTerm += 2 * soluGauss * soluGauss_x[jdim] * phi[i];
         }
 
         double exactSolValue = GetExactSolutionValue(xGauss);
@@ -572,7 +572,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
-          //nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
+          nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
         }
 
         double exactSolValue = GetExactSolutionValue(xGauss);
