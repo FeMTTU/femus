@@ -135,7 +135,11 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   bool dirichlet; // = true; //dirichlet
   value = 0.;
 
+  //************************control****************************************************
+
   if(!strcmp(name,"control")) {
+
+
       
   if (faceName == FACE_FOR_CONTROL) {
      if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
@@ -151,8 +155,10 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   
   }
 
+  //************************state****************************************************
+
   else if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
-      
+
   if (faceName == FACE_FOR_CONTROL) {
       
      if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5) { 
@@ -163,10 +169,14 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
       }
   }
   else { 
-      dirichlet = true;  
+      dirichlet = true;
    }
-      
+
+   boundary_conditions:: ctrl_set_dirichlet_fixed_values(faceName, x, value);  //function that return value
+
   }
+
+  //************************mu****************************************************
 
   else if(!strcmp(name,"mu")) {
       
@@ -1160,16 +1170,27 @@ if ( i_vol == j_vol )  {
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
-	  
+
               double laplace_rhs_du_adj_i = 0.;
               double laplace_rhs_dadj_u_i = 0.;
+              double laplace_rhs_du_u_i = 0.;
+
               for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-              if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_state] )  laplace_rhs_du_adj_i +=  phi_u_x   [i * space_dim + kdim] * sol_adj_x_gss[kdim];
-              if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_adj] )    laplace_rhs_dadj_u_i +=  phi_adj_x [i * space_dim + kdim] * sol_u_x_gss[kdim];
+              if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_state] )  laplace_rhs_du_adj_i  +=  phi_u_x   [i * space_dim + kdim] * sol_adj_x_gss[kdim];
+              if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_adj] )    laplace_rhs_dadj_u_i  +=  phi_adj_x [i * space_dim + kdim] * sol_u_x_gss[kdim];
+              if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_state] )  laplace_rhs_du_u_i    +=  phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim];
 	      }
-	      
+
 //============ Volume residuals - BEGIN  ==================	    
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_state, i) ] += - weight_iqp * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_state, i) ] += - weight_iqp * (
+          - laplace_rhs_du_adj_i
+          + target_flag *
+          #if COST_FUNCTIONAL_TYPE == 0
+                phi_u[i] * ( sol_u_gss - u_des)
+          #elif COST_FUNCTIONAL_TYPE == 1
+                laplace_rhs_du_u_i
+          #endif
+          );
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, i) ]  += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  Sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_adj, i) ]   += - weight_iqp * (-1.) * (laplace_rhs_dadj_u_i);
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_mu, i) ]    += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  Sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
@@ -1184,16 +1205,25 @@ if ( i_vol == j_vol )  {
                 
               double laplace_mat_dadj_u = 0.;
               double laplace_mat_du_adj = 0.;
+              double laplace_mat_du_u = 0.;
 
               for (unsigned kdim = 0; kdim < space_dim; kdim++) {
               if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_adj]     && j < Sol_n_el_dofs_Mat_vol[pos_mat_state] )     laplace_mat_dadj_u        +=  (phi_adj_x [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
               if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_state]   && j < Sol_n_el_dofs_Mat_vol[pos_mat_adj] )   laplace_mat_du_adj        +=  (phi_u_x   [i * space_dim + kdim] * phi_adj_x [j * space_dim + kdim]);
+              if ( i < Sol_n_el_dofs_Mat_vol[pos_mat_state]   && j < Sol_n_el_dofs_Mat_vol[pos_mat_state] )     laplace_mat_du_u          += (phi_u_x  [i * space_dim + kdim] * phi_u_x  [j * space_dim + kdim]);
 		
 	      }
 
               //============ delta_state row ============================
               // BLOCK delta_state / state
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i, j) ]  += weight_iqp  * target_flag *  phi_u[i] * phi_u[j];   
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i, j) ]  += weight_iqp  * target_flag *
+		#if COST_FUNCTIONAL_TYPE == 0
+             phi_u[i] * phi_u[j]
+        #elif COST_FUNCTIONAL_TYPE == 1
+             laplace_mat_du_u
+        #endif
+        ;
+
               //BLOCK delta_state / adjoint
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i, j) ]  += weight_iqp * (-1.) * laplace_mat_du_adj;
 	      
@@ -1363,5 +1393,10 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
   return;
 }
+
+
+
+
+
 
 

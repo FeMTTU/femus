@@ -31,7 +31,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS  6
+#define N_UNIFORM_LEVELS 5
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -49,8 +49,8 @@
 //*********************** Control, boundary extremes - BEGIN  *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        2
-#define FACE_FOR_TARGET         1
+#define FACE_FOR_CONTROL        3
+#define FACE_FOR_TARGET         4
 
 
 
@@ -74,12 +74,12 @@
 
 
 //*********************** Control, cost functional - BEGIN *******************************************************
-#define COST_FUNCTIONAL_TYPE   0   /* 0: target; 1: gradient */ 
+#define COST_FUNCTIONAL_TYPE  /*0 */1  /*------[0: target ; 1: gradient]---------*/
 
 #define COST_FUNCTIONAL_COEFF 1 
-  
+
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1.e-6 /*0.01*/ 
+#define ALPHA_CTRL_BDRY 1.e-5
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -109,7 +109,7 @@
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0 /*1*/       /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV 0      /* 0: integer norm, 1: fractional norm */
 
 
 #define RHS_ONE             0.
@@ -327,10 +327,6 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
   
   }
   
-      
-
-
-
 
 
       
@@ -361,6 +357,29 @@ const unsigned int axis_direction_Gamma_control(const unsigned int face_index) {
     return axis_dir;
     
 }
+
+
+}
+
+
+
+
+namespace boundary_conditions {
+
+
+
+ double ctrl_set_dirichlet_fixed_values(
+     const int faceName,
+     const std::vector < double > & x,
+     double &  value)  {
+
+   if( (faceName != FACE_FOR_TARGET) && (faceName != FACE_FOR_CONTROL) ) value = x[ ctrl::axis_direction_Gamma_control(faceName) ] ;
+
+   if (faceName == FACE_FOR_TARGET) value = 1. ;
+
+     return value;
+}
+
 
 
 }
@@ -416,7 +435,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 //******************************************* Desired Target *******************************************************
 
 double DesiredTarget() {
-   return 1.;
+   return 0.9;
 }
 
 
@@ -1402,7 +1421,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
   
   vector <double> phi_u;     phi_u.reserve(max_size);
   vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
-
+//   vector <double> phi_u_xx;  phi_u_xx.reserve(max_size * dim2);
  
   unsigned solIndex_u = ml_sol->GetIndex( state_vars[ n_components_state - 1].c_str() );
   unsigned solType_u  = ml_sol->GetSolutionType(solIndex_u);
@@ -1411,6 +1430,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
+  double u_x_gss = 0.;
  //*************************************************** 
  //***************************************************
 
@@ -1625,9 +1645,20 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
     elem_all[qrule_i][ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, boost::none, space_dim);
     
 	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
-	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  
+	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];
 
-               integral_target += target_flag * weight_iqp * (u_gss  - udes_gss) * (u_gss - udes_gss);
+    u_x_gss  = 0.;
+        for (unsigned i = 0; i < nDof_u; i++)  {
+          for (unsigned idim = 0; idim < dim; idim ++) u_x_gss  += sol_u[i] * phi_u_x[i * space_dim + idim];
+        }
+
+               integral_target +=  weight_iqp * target_flag*
+#if COST_FUNCTIONAL_TYPE == 0
+               (u_gss  - udes_gss) * (u_gss - udes_gss)
+#elif COST_FUNCTIONAL_TYPE == 1
+               u_x_gss * u_x_gss
+#endif
+               ;
 	  
       } // end gauss point loop
 //=================== VOLUME PART - END ==================================================================================================  
@@ -1712,7 +1743,7 @@ void compute_cost_functional_regularization_lifting_internal(const MultiLevelPro
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
-double u_x_gss = 0.; //*************************************************** 
+double u_x_gss = 0.;
  //*************************************************** 
 
  //******************** control ********************** 

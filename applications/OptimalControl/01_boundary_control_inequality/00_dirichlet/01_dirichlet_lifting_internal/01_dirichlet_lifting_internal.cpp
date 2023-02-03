@@ -106,12 +106,15 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   
   if(!strcmp(name, "control")) {
       value = 0.;
+
+     boundary_conditions:: ctrl_set_dirichlet_fixed_values(faceName, x, value);
+
+
     if (faceName == FACE_FOR_CONTROL) {
-        if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)    
+        if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)
             dirichlet = false;
     }
   }
-  
   
   //MU
   if(!strcmp(name,"mu")) {
@@ -770,17 +773,17 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
 	      
               double laplace_rhs_du_u_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u )         laplace_rhs_dctrl_ctrl_i      +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
+                 if ( i < nDof_u )       laplace_rhs_du_u_i            +=  (phi_u_x  [i * space_dim + kdim] *sol_u_x_gss[kdim]);
 	      }
 	      
               double laplace_rhs_du_ctrl_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u )         laplace_rhs_dctrl_ctrl_i      +=  (phi_u_x   [i * space_dim + kdim] * sol_ctrl_x_gss[kdim]);
+              if ( i < nDof_u )          laplace_rhs_du_ctrl_i      +=  (phi_u_x   [i * space_dim + kdim] * sol_ctrl_x_gss[kdim]);
 	      }
 	      
               double laplace_rhs_dctrl_u_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_ctrl )         laplace_rhs_dctrl_ctrl_i      +=  (phi_ctrl_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
+              if ( i < nDof_ctrl )         laplace_rhs_dctrl_u_i      +=  (phi_ctrl_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
 	      }
 	      
 //======================Residuals - BEGIN =======================
@@ -791,7 +794,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
 #if COST_FUNCTIONAL_TYPE == 0
    phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
 #elif COST_FUNCTIONAL_TYPE == 1
-    laplace_rhs_du_u_i + laplace_rhs_du_ctrl_i
+    ( laplace_rhs_du_u_i + laplace_rhs_du_ctrl_i )
 #endif
           );
           // SECOND ROW
@@ -805,7 +808,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
                                                                                  #if COST_FUNCTIONAL_TYPE == 0
                                                                                                       phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des)
                                                                                   #elif COST_FUNCTIONAL_TYPE == 1
-                                                                                                      laplace_rhs_dctrl_u_i + laplace_rhs_dctrl_ctrl_i
+                                                                                                      ( laplace_rhs_dctrl_u_i + laplace_rhs_dctrl_ctrl_i )
                                                                                   #endif
                                                                                                                     ); 
              
