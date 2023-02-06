@@ -109,7 +109,7 @@
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV 0      /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV 1      /* 0: integer norm, 1: fractional norm */
 
 
 #define RHS_ONE             0.
@@ -373,10 +373,10 @@ namespace boundary_conditions {
      const std::vector < double > & x,
      double &  value)  {
 
-   if( (faceName != FACE_FOR_TARGET) && (faceName != FACE_FOR_CONTROL) ) value = x[ ctrl::axis_direction_Gamma_control(faceName) ] ;
-
-   if (faceName == FACE_FOR_TARGET) value = 1. ;
-
+   if( (faceName != FACE_FOR_TARGET) && (faceName != FACE_FOR_CONTROL) ) { value = x[ ctrl::axis_direction_Gamma_control(faceName) ]; }
+   else if (faceName == FACE_FOR_TARGET) { value = 1.; }
+   else { value = 0.; }
+   
      return value;
 }
 

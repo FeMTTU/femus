@@ -101,26 +101,47 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
-  bool dirichlet = true; //dirichlet
+  bool dirichlet = false; //dirichlet
   value = 0.;
   
-  if(!strcmp(name, "control")) {
-      value = 0.;
-
-     boundary_conditions:: ctrl_set_dirichlet_fixed_values(faceName, x, value);
-
-
-    if (faceName == FACE_FOR_CONTROL) {
-        if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)
-            dirichlet = false;
+ 
+   if(!strcmp(name,"state")) {
+        dirichlet = true;
+         value = 0.;
+       
     }
-  }
   
-  //MU
-  if(!strcmp(name,"mu")) {
-//       value = 0.;
-//   if (faceName == FACE_FOR_CONTROL)
+   else if(!strcmp(name, "control")) {
+
+
+
+                if (faceName == FACE_FOR_CONTROL) {
+                        if ( !(x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 && 
+                               x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
+                            dirichlet = true;
+                          }
+                }
+                else {
+                            dirichlet = true;
+                }
+                    
+                  boundary_conditions::ctrl_set_dirichlet_fixed_values(faceName, x, value);
+                  
+                    
+                    
+                    
+   }
+  
+    else if(!strcmp(name,"adjoint")) {
+        dirichlet = true;
+        value = 0.;
+    }
+
+  
+    //MU
+    else if(!strcmp(name,"mu")) {
     dirichlet = false;
+//       value = 0.;
   }
   
   return dirichlet;
@@ -222,10 +243,12 @@ int main(int argc, char** args) {
 
  
   // ======= Solutions that are not Unknowns - BEGIN  ==================
-  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  const unsigned  steady_flag = 0;
+  const bool      is_an_unknown_of_a_pde = false;
+  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde); //this variable is not solution of any eqn, it's just a given field
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
 
-  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde); //this variable is not solution of any eqn, it's just a given field
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
   // ******** active flag - BEGIN 
@@ -254,7 +277,8 @@ int main(int argc, char** args) {
   const bool         state_plus_ctrl_is_an_unknown_of_a_pde = false;
    ml_sol.AddSolution(state_plus_ctrl[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, state_plus_ctrl_fake_time_dep_flag, state_plus_ctrl_is_an_unknown_of_a_pde);               
    ml_sol.Initialize(state_plus_ctrl[0].c_str(), Solution_set_initial_conditions, & ml_prob);
-  // ******** state plus cont - END 
+
+   // ******** state plus cont - END 
    
    
   // ======= Solutions that are not Unknowns - END  ==================
