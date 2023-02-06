@@ -169,6 +169,7 @@
 
 //******** Penalties for equations - BEGIN ******************************
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY           1.e50      
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY           4.      
 #define PENALTY_DIRICHLET_BC_U_EQUAL_Q_BOUNDARY           1.e10         // penalty for u = q
 //******** Penalties for equations - END ******************************
 
@@ -368,7 +369,7 @@ namespace boundary_conditions {
 
 
 
- double ctrl_set_dirichlet_fixed_values(
+ double ctrl_or_state_set_dirichlet_fixed_values(
      const int faceName,
      const std::vector < double > & x,
      double &  value)  {
@@ -376,8 +377,10 @@ namespace boundary_conditions {
    if( (faceName != FACE_FOR_TARGET) && (faceName != FACE_FOR_CONTROL) ) { value = x[ ctrl::axis_direction_Gamma_control(faceName) ]; }
    else if (faceName == FACE_FOR_TARGET) { value = 1.; }
    else { value = 0.; }
+
+   value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
    
-     return value;
+   return value;
 }
 
 

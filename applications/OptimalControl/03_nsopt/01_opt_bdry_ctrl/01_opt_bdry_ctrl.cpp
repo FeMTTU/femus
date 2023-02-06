@@ -1507,7 +1507,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 			  for (unsigned  kdim = 0; kdim < dim; kdim++) {
                   
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
-			    if(i_vol < nDofsV && j_vol < nDofsV && i_vol == j_vol)       		          Jac[kdim][kdim][i_vol * nDofsV + j_vol]	    += penalty_dirichlet_bc_u_equal_q * control_node_flag_iel_jface[kdim][i_vol];  //u
+			    if(i_vol < nDofsV && j_vol < nDofsV && i_vol == j_vol)       		          Jac[kdim][kdim][i_vol * nDofsV + j_vol]	  +=  (1.) * penalty_dirichlet_bc_u_equal_q * control_node_flag_iel_jface[kdim][i_vol];  //u
 			 
 //BLOCK delta_state - control------------------------------------------------------------------------------------
 			    if(i_vol < nDofsV && j_vol < nDofsGctrl && i_vol == j_vol) 	Jac[kdim][kdim + ctrl_pos_begin][i_vol * nDofsGctrl + j_vol]  += (-1.) * penalty_dirichlet_bc_u_equal_q * control_node_flag_iel_jface[kdim][i_vol];  //-g
@@ -1868,7 +1868,8 @@ for (unsigned k = 0; k < dim; k++){
     for (unsigned kdim = 0; kdim < n_components_ctrl; kdim++) {
         
          for (unsigned i = 0; i < nDofsGctrl; i++) {
-       Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag_iel_jface[kdim][i]) * (  Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i] - 0.)  );              //enforce control zero outside the control boundary
+       Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag_iel_jface[kdim][i]) *
+                             (  Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i] -  PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY)  );              //enforce control zero outside the control boundary
 
 
 // //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------

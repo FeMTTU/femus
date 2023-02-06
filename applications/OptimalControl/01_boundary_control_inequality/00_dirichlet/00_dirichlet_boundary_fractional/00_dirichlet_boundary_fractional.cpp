@@ -132,36 +132,17 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 ///@todo notice that even if you set Dirichlet from the mesh file, here you can override it
 bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
-  bool dirichlet; // = true; //dirichlet
+  bool dirichlet = false; // = true; //dirichlet
   value = 0.;
-
-  //************************control****************************************************
-
-  if(!strcmp(name,"control")) {
-
-
-      
-  if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
-         dirichlet = false;
-    }
-     else { 
-         dirichlet = true;  
-    }
-  }
-  else { 
-      dirichlet = true;
-   }
-  
-  }
 
   //************************state****************************************************
 
-  else if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
+  if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
 
   if (faceName == FACE_FOR_CONTROL) {
       
-     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5) { 
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
+         x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) { 
          dirichlet = false; 
     }
      else { 
@@ -172,8 +153,40 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
       dirichlet = true;
    }
 
-   boundary_conditions:: ctrl_set_dirichlet_fixed_values(faceName, x, value);  //function that return value
+   boundary_conditions:: ctrl_or_state_set_dirichlet_fixed_values(faceName, x, value);  //function that return value
 
+  }
+  
+  
+  //************************control****************************************************
+
+  else if(!strcmp(name,"control")) {
+
+
+      
+  if (faceName == FACE_FOR_CONTROL) {
+     if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
+         x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5)  { 
+         dirichlet = false;
+    }
+     else { 
+         dirichlet = true;  
+    }
+  }
+  else { 
+      dirichlet = true;
+   }
+  
+    value = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
+
+  
+  }
+
+  //************************ adjoint ****************************************************
+  
+  else if(!strcmp(name,"adjoint")) {
+        dirichlet = true;
+        value = 0.;
   }
 
   //************************mu****************************************************
@@ -183,12 +196,6 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
     dirichlet = false;
 
   }
-  
-  else { dirichlet = true; }
-  
-//     if(!strcmp(name,"adjoint")) { 
-//     dirichlet = false;
-//   }
 
   
   return dirichlet;
@@ -1071,15 +1078,15 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 
 
 // FIRST BLOCK ROW
-//============ u = q ===========================	    
+//============ u = q - BEGIN ===========================	    
                  
 if ( i_vol == j_vol )  {
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i_vol, j_vol) ] += 
-		     penalty_dirichlet_bc_u_equal_q * KEEP_ADJOINT_PUSH * ( control_node_flag[first_loc_comp_ctrl][i_vol]);
+		     penalty_dirichlet_bc_u_equal_q * KEEP_ADJOINT_PUSH * ( control_node_flag[first_loc_comp_ctrl][i_vol]) * ( 1.);
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_ctrl, i_vol, j_vol) ]  += 
 		     penalty_dirichlet_bc_u_equal_q * KEEP_ADJOINT_PUSH * ( control_node_flag[first_loc_comp_ctrl][i_vol]) * (-1.);
 		}
-//============ u = q ===========================
+//============ u = q - END ===========================
 
 		    
 
@@ -1191,7 +1198,7 @@ if ( i_vol == j_vol )  {
                 laplace_rhs_du_u_i
           #endif
           );
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, i) ]  += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  Sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, i) ]  += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  Sol_eldofs_Mat[pos_mat_ctrl][i] - PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY)  );
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_adj, i) ]   += - weight_iqp * (-1.) * (laplace_rhs_dadj_u_i);
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_mu, i) ]    += - penalty_outside_control_domain_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  Sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
 //============  Volume Residuals - END ==================	    

@@ -106,7 +106,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   
  
    if(!strcmp(name,"state")) {
+       
         dirichlet = true;
+        
          value = 0.;
        
     }
@@ -125,7 +127,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                             dirichlet = true;
                 }
                     
-                  boundary_conditions::ctrl_set_dirichlet_fixed_values(faceName, x, value);
+                  boundary_conditions::ctrl_or_state_set_dirichlet_fixed_values(faceName, x, value);
                   
                     
                     
@@ -177,6 +179,7 @@ int main(int argc, char** args) {
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
   // ======= Problem, Quad Rule - END  ========================
+  
 
   
   // ======= Mesh, Coarse reading - BEGIN ==================
