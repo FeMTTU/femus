@@ -49,8 +49,8 @@
 //*********************** Control, boundary extremes - BEGIN  *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        3
-#define FACE_FOR_TARGET         4
+#define FACE_FOR_CONTROL        4
+#define FACE_FOR_TARGET         3
 
 
 
@@ -360,6 +360,29 @@ const unsigned int axis_direction_Gamma_control(const unsigned int face_index) {
 }
 
 
+const unsigned int opposite_face(const unsigned int face_index) {
+
+   unsigned int face_opposite = 0;
+
+        if (face_index == 1 || face_index == 3 || face_index == 5) { face_opposite = face_index + 1; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { face_opposite = face_index - 1; }
+
+    return face_opposite;
+
+}
+
+
+ double opposite_face_ctrl_or_state_value(const unsigned int face_index, const double domain_length) {
+
+   double opposite_value = 0.;
+
+        if (face_index == 1 || face_index == 3 || face_index == 5) { opposite_value = 0.; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { opposite_value = domain_length; }
+
+    return opposite_value;
+
+}
+
 }
 
 
@@ -374,9 +397,15 @@ namespace boundary_conditions {
      const std::vector < double > & x,
      double &  value)  {
 
-   if( (faceName != FACE_FOR_TARGET) && (faceName != FACE_FOR_CONTROL) ) { value = x[ ctrl::axis_direction_Gamma_control(faceName) ]; }
-   else if (faceName == FACE_FOR_TARGET) { value = 1.; }
-   else { value = 0.; }
+
+
+    const double domain_length = 1.;
+
+      const double gamma = 5.;
+
+        if (faceName == FACE_FOR_CONTROL)     {  value = 0.; }
+   else if (faceName == ctrl::opposite_face(FACE_FOR_CONTROL)) { value =  gamma * domain_length; }
+   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(FACE_FOR_CONTROL, domain_length) + ctrl::sign_function_for_delimiting_region(FACE_FOR_CONTROL) *  x[ ctrl::axis_direction_Gamma_control(faceName) ] ); }
 
    value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
    
@@ -438,10 +467,10 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
   
   const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
    
+  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
+
   const int  target_line_sign = ctrl::sign_function_for_delimiting_region(FACE_FOR_TARGET);
   
-  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
-   
    const double target_line = target_line_position_along_coordinate + target_line_sign * offset_to_include_line; 
    
    
