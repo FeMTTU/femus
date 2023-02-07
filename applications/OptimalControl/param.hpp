@@ -31,7 +31,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 7
+#define N_UNIFORM_LEVELS 5
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -49,8 +49,8 @@
 //*********************** Control, boundary extremes - BEGIN  *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        4
-#define FACE_FOR_TARGET         3
+#define FACE_FOR_CONTROL        2
+#define FACE_FOR_TARGET         1
 
 
 
@@ -329,7 +329,20 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
   }
   
 
+namespace mesh {
 
+
+  const std::string input = "parametric_square_1x1.med";
+//      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+//   std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x2.med";
+//   std::string input_file = "parametric_square_2x2.med";
+//   std::string input_file = "parametric_square_4x5.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+
+
+}
       
 namespace ctrl {
 

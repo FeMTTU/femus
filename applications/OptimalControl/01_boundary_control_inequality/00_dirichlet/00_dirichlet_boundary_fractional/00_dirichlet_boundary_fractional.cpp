@@ -216,12 +216,7 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  std::string input_file = "parametric_square_1x1.med";
-//   std::string input_file = "parametric_square_1x2.med";
-//   std::string input_file = "parametric_square_2x2.med";
-//   std::string input_file = "parametric_square_4x5.med";
-//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
-//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  const std::string input_file = mesh::input;
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
