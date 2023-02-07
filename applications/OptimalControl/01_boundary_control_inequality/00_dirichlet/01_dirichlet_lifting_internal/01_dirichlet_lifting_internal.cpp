@@ -116,18 +116,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
    else if(!strcmp(name, "control")) {
 
 
+     boundary_conditions:: ctrl_or_state_set_dirichlet_flags(faceName, x, dirichlet);
 
-                if (faceName == FACE_FOR_CONTROL) {
-                        if ( !(x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 && 
-                               x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
-                            dirichlet = true;
-                          }
-                }
-                else {
-                            dirichlet = true;
-                }
-                    
-                  boundary_conditions::ctrl_or_state_set_dirichlet_fixed_values(faceName, x, value);
+     boundary_conditions::ctrl_or_state_set_dirichlet_fixed_values(faceName, x, value);
                   
                     
                     

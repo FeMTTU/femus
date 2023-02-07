@@ -31,7 +31,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 5
+#define N_UNIFORM_LEVELS 7
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -79,7 +79,7 @@
 #define COST_FUNCTIONAL_COEFF 1 
 
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1.e-5
+#define ALPHA_CTRL_BDRY 1.e-6
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -382,6 +382,27 @@ namespace boundary_conditions {
    
    return value;
 }
+
+
+ bool ctrl_or_state_set_dirichlet_flags(
+     const int faceName,
+     const std::vector < double > & x,
+     bool &  dirichlet)  {
+
+
+     if (faceName == FACE_FOR_CONTROL) {
+        if ( !(x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
+               x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
+                dirichlet = true;
+           }
+    }
+    else {
+          dirichlet = true;
+    }
+
+    return dirichlet;
+}
+
 
 
 
