@@ -31,7 +31,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 5
+#define N_UNIFORM_LEVELS 3
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -74,7 +74,7 @@
 
 
 //*********************** Control, cost functional - BEGIN *******************************************************
-#define COST_FUNCTIONAL_TYPE  /*0 */1  /*------[0: target ; 1: gradient]---------*/
+#define COST_FUNCTIONAL_TYPE  /*0*/ 1  /*------[0: target ; 1: gradient]---------*/
 
 #define COST_FUNCTIONAL_COEFF 1 
 
@@ -109,7 +109,7 @@
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV 1      /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV  1      /* 0: integer norm, 1: fractional norm */
 
 
 #define RHS_ONE             0.
@@ -169,7 +169,7 @@
 
 //******** Penalties for equations - BEGIN ******************************
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY           1.e50      
-#define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY           4.      
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY           0.      
 #define PENALTY_DIRICHLET_BC_U_EQUAL_Q_BOUNDARY           1.e10         // penalty for u = q
 //******** Penalties for equations - END ******************************
 
@@ -328,18 +328,23 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
   
   }
   
+} //end namespace
+
+
+
+  
+namespace femus {
 
 namespace mesh {
 
 
-  const std::string input = "parametric_square_1x1.med";
-//      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+//   const std::string input = "parametric_square_1x1.med";
+     const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 //   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
-//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 
 
 }
@@ -360,13 +365,26 @@ const  int sign_function_for_delimiting_region(const unsigned int face_index) {
 
     
 //direction of the line that contains \Gamma_c    
-const unsigned int axis_direction_Gamma_control(const unsigned int face_index) {
+const unsigned int normal_direction_to_Gamma_control(const unsigned int face_index) {
+    
+    unsigned int axis_dir;
+    
+        if (face_index == 1 || face_index == 2) { axis_dir = 0; }
+   else if (face_index == 3 || face_index == 4) { axis_dir = 1; }
+   else if (face_index == 5 || face_index == 6) { axis_dir = 2; }
+
+    return axis_dir;
+    
+}
+
+
+const unsigned int tangential_direction_to_Gamma_control(const unsigned int face_index) {
     
     unsigned int axis_dir;
     
         if (face_index == 1 || face_index == 2) { axis_dir = 1; }
    else if (face_index == 3 || face_index == 4) { axis_dir = 0; }
-   else if (face_index == 5 || face_index == 6) { abort(); /*axis_dir = 0;*/ }
+   else if (face_index == 5 || face_index == 6) { /*abort();*/ axis_dir = 1; }  ///@todo mesh file dependenttttttttttttttttttttttttttttttttt
 
     return axis_dir;
     
@@ -418,7 +436,7 @@ namespace boundary_conditions {
 
         if (faceName == FACE_FOR_CONTROL)     {  value = 0.; }
    else if (faceName == ctrl::opposite_face(FACE_FOR_CONTROL)) { value =  gamma * domain_length; }
-   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(FACE_FOR_CONTROL, domain_length) + ctrl::sign_function_for_delimiting_region(FACE_FOR_CONTROL) *  x[ ctrl::axis_direction_Gamma_control(faceName) ] ); }
+   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(FACE_FOR_CONTROL, domain_length) + ctrl::sign_function_for_delimiting_region(FACE_FOR_CONTROL) *  x[ ctrl::normal_direction_to_Gamma_control(FACE_FOR_CONTROL) ] ); }
 
    value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
    
@@ -433,8 +451,8 @@ namespace boundary_conditions {
 
 
      if (faceName == FACE_FOR_CONTROL) {
-        if ( !(x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
-               x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
+        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
+               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
                 dirichlet = true;
            }
     }
@@ -509,7 +527,7 @@ double DesiredTarget() {
      
     std::vector<double>  Vel_desired(3, 0.);
     
-   const unsigned int axis_dir = ctrl::axis_direction_Gamma_control(FACE_FOR_CONTROL);
+   const unsigned int axis_dir = ctrl::tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
    
     Vel_desired[axis_dir] = 1.;
     
@@ -528,7 +546,7 @@ double DesiredTarget() {
    
 namespace ctrl {
 
-const double face_coordinate_extreme(const unsigned int face_index) {
+const double face_coordinate_extreme_position_normal_to_Gamma_control(const unsigned int face_index) {
     
   double extreme_pos;
   
@@ -561,9 +579,9 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
      
    const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
 
-   const double extreme_pos = face_coordinate_extreme(FACE_FOR_CONTROL);
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(FACE_FOR_CONTROL);
    
-   const unsigned int axis_dir = axis_direction_Gamma_control(FACE_FOR_CONTROL);
+   const unsigned int axis_dir = tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
 
   
    if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * (  extreme_pos  + target_line_sign * mesh_size) )
@@ -593,9 +611,9 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
    
    const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
 
-   const double extreme_pos = face_coordinate_extreme(FACE_FOR_CONTROL);
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(FACE_FOR_CONTROL);
 
-   const unsigned int axis_dir = axis_direction_Gamma_control(FACE_FOR_CONTROL);
+   const unsigned int axis_dir = tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
 
    
    if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * ( extreme_pos + target_line_sign * control_domain_depth ) )

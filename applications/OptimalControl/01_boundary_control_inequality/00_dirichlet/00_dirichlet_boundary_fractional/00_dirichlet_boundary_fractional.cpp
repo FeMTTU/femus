@@ -141,7 +141,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
      boundary_conditions::ctrl_or_state_set_dirichlet_flags(faceName, x, dirichlet);
 
-     boundary_conditions:: ctrl_or_state_set_dirichlet_fixed_values(faceName, x, value);  //function that return value
+     boundary_conditions::ctrl_or_state_set_dirichlet_fixed_values(faceName, x, value);  //function that return value
 
    }
   

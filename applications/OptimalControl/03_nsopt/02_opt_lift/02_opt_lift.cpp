@@ -51,7 +51,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 
    if (faceName == FACE_FOR_CONTROL)  {
-        if (x[ ctrl::axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+        if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && 
+            x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
        if (!strcmp(SolName, "ctrl_0"))    { dirichlet = false; }
   else if (!strcmp(SolName, "ctrl_1"))    { dirichlet = false; } 
   else if (!strcmp(SolName, "ctrl_2"))    { dirichlet = false; } 

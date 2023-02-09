@@ -116,7 +116,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
    else if(!strcmp(name, "control")) {
 
 
-     boundary_conditions:: ctrl_or_state_set_dirichlet_flags(faceName, x, dirichlet);
+     boundary_conditions::ctrl_or_state_set_dirichlet_flags(faceName, x, dirichlet);
 
      boundary_conditions::ctrl_or_state_set_dirichlet_fixed_values(faceName, x, value);
                   
