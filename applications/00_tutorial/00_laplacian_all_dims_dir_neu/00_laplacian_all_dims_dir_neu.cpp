@@ -261,24 +261,36 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
-  // init Petsc-MPI communicator
+  // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  // ======= Files ========================
+  // ======= Problem ========================
+  MultiLevelProblem ml_prob;
+
+  // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
-  // ======= Quad Rule ========================
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+  // ======= Files - END  ========================
+
+  // ======= Problem, Quad Rule - BEGIN ========================
   std::string fe_quad_rule("seventh");
 
-    // ======= Mesh  ==================
-   std::vector<std::string> mesh_files;
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
+
+  // ======= Mesh, files - BEGIN  ==================
+   std::vector< std::string > mesh_files;
    
    mesh_files.push_back("Mesh_1_x_dir_neu.med");
-//    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+//    mesh_files.push_back("Mesh_2_xy_all_dir.med");
+   mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
 //    mesh_files.push_back("Mesh_1_z_all_dir.med");
@@ -293,14 +305,17 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("disk_tri.med");
 //    mesh_files.push_back("disk_tri_45x.med");
 //    mesh_files.push_back("disk_tri_90x.med");
-   
+  // ======= Mesh, files - END ==================
+
 
 
  for (unsigned int m = 0; m < mesh_files.size(); m++)  {
    
-  // ======= Mesh  ==================
-  // define multilevel mesh
+  // ======= Mesh - BEGIN  ==================
   MultiLevelMesh ml_mesh;
+  // ======= Mesh - END  ==================
+
+  // ======= Mesh, Coarse reading - BEGIN ==================
   double scalingFactor = 1.;
  
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
@@ -311,28 +326,34 @@ int main(int argc, char** args) {
   ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
- 
+  // ======= Mesh, Coarse reading - END ==================
+
+  // ======= Mesh: Refinement - BEGIN  ==================
   unsigned numberOfUniformLevels = /*1*/4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  // ======= Mesh: Refinement - END  ==================
+
+  // ======= Mesh: Coarse erasing - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
   ml_mesh.PrintInfo();
+  // ======= Mesh: Coarse erasing - END  ========================
 
   
-  
-  // ======= Solution  ==================
+  // ======= Solution - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);
-  
-  // ======= Problem ========================
-  // define the multilevel problem attach the ml_sol object to it
-  MultiLevelProblem ml_prob(&ml_sol);
-  
+
+  // ======= Problem, Mesh and Solution  ==================
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
+  // ======= Solution - END ==================
+
+  // ======= Solutions that are Unknowns - BEGIN ==================
   // add variables to ml_sol
   ml_sol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
-  
+
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all variables to zero
   ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
@@ -341,17 +362,14 @@ int main(int argc, char** args) {
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
 
-  
+  // ======= Solutions that are Unknowns - END ==================
 
-  // ======= Problem, II ========================
-  ml_prob.SetFilesHandler(&files);
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  ml_prob.set_all_abstract_fe_multiple();
   
 //   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all = ml_prob.evaluate_all_fe<double, double>();
   
-    // ======= System ========================
- // add system  in ml_prob as a Linear Implicit System
+    // ======= Problem, System - BEGIN ========================
+  ml_prob.clear_systems();
+
   NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("Laplace");
   
   system.SetDebugNonlinear(true);
@@ -371,16 +389,17 @@ int main(int argc, char** args) {
   system.init();
   
   system.MGsolve();
-  
-    // ======= Print ========================
-  // print solutions
+    // ======= Problem, System - END ========================
+
+    // ======= Print - BEGIN ========================
   const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
   ml_sol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
-  
-  }
+    // ======= Print - END ========================
+
+  }  //end mesh file loop
  
  
   return 0;
@@ -547,8 +566,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(i_qp, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
-    elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
-    elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+//     elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
+//     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
