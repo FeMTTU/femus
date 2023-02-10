@@ -151,28 +151,21 @@ int main(int argc, char** args) {
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
-  // ======= Problem ========================
+  // ======= Problem - BEGIN ========================
   MultiLevelProblem ml_prob;
   
-  // ======= Files - BEGIN  ========================
+  // ======= Problem, Files - BEGIN  ========================
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
-  // ======= Files - END  ========================
-
-  // ======= Problem, Quad Rule - BEGIN  ========================
-    std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  
-  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
-  // ======= Problem, Quad Rule - END  ========================
-  
+  // ======= Problem, Files - END  ========================
 
   
+  // ======= Problem, Mesh - BEGIN ==================
+
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
    
@@ -206,12 +199,17 @@ int main(int argc, char** args) {
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END ==================
 
-  // ======= Mesh: COARSE ERASING - BEGIN  ========================
+  // ======= Mesh: Coarse erasing - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
   ml_mesh.PrintInfo();
-  // ======= Mesh: COARSE ERASING - END  ========================
+  // ======= Mesh: Coarse erasing - END  ========================
 
-  // ======= Solution - BEGIN ==================
+  // ======= Problem, Mesh - END ==================
+
+  
+  // ======= Problem, Solution - BEGIN ==================
+
+  // ======= Solution, Construction - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
   ml_sol.SetWriter(VTK);
@@ -219,10 +217,10 @@ int main(int argc, char** args) {
   
  // ======= Problem, Mesh and Solution  ==================
  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
-  // ======= Solution - END ==================
+  // ======= Solution, Construction - END ==================
 
 
- // ======= Solutions that are Unknowns - BEGIN ==================
+  // ======= Solutions that are Unknowns - BEGIN ==================
   std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
  
   for (unsigned int u = 0; u < unknowns.size(); u++) { ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown); }
@@ -231,7 +229,7 @@ int main(int argc, char** args) {
   
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
    for (unsigned int u = 0; u < unknowns.size(); u++)  {  ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);  }
- // ======= Solutions that are Unknowns - END ==================
+  // ======= Solutions that are Unknowns - END ==================
 
  
   // ======= Solutions that are not Unknowns - BEGIN  ==================
@@ -279,7 +277,19 @@ int main(int argc, char** args) {
   //== Solution: CHECK SOLUTION FE TYPES between Unknowns and Not Unknowns - BEGIN  ==
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name[0].c_str())) abort();
   //== Solution: CHECK SOLUTION FE TYPES between Unknowns and Not Unknowns - END ==
+ 
+  // ======= Problem, Solution - END ==================
   
+  
+  // ======= Problem, Quad Rule - BEGIN  ========================
+    std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
+  
+
 
   // ======= Problem, System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system_opt = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr"); //MU
@@ -311,8 +321,12 @@ int main(int argc, char** args) {
   
   system_opt.MGsolve();
 //   system.assemble_call_before_boundary_conditions(1);
+  
+  // ======= Problem, System  - END ========================
 
+  // ======= Post-processing - BEGIN ========================
 
+  // ======= Post-processing, Computations - BEGIN ========================
   
   ml_sol.add_solution( ml_sol.GetIndex(state_vars[0].c_str()),   ml_sol.GetIndex(state_plus_ctrl[0].c_str()) );
   ml_sol.add_solution( ml_sol.GetIndex(ctrl_vars[0].c_str()),   ml_sol.GetIndex(state_plus_ctrl[0].c_str()) );
@@ -323,14 +337,18 @@ int main(int argc, char** args) {
   ctrl::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars);
   
   ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars);
+  // ======= Post-processing, Computations - END ========================
   
-  // ======= Problem, System  - END ========================
   
-  // ======= Print - BEGIN  ========================
+  // ======= Post-processing, Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
-  // ======= Print - END  ========================
+  // ======= Post-processing, Print - END  ========================
+
+  // ======= Post-processing - END ========================
+
+  // ======= Problem - END  ==================
 
   return 0;
   

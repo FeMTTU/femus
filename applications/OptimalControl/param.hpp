@@ -363,6 +363,20 @@ const  int sign_function_for_delimiting_region(const unsigned int face_index) {
    
 }
 
+
+
+const unsigned int opposite_face(const unsigned int face_index) {
+
+   unsigned int face_opposite = 0;
+
+        if (face_index == 1 || face_index == 3 || face_index == 5) { face_opposite = face_index + 1; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { face_opposite = face_index - 1; }
+
+    return face_opposite;
+
+}
+
+
     
 //direction of the line that contains \Gamma_c    
 const unsigned int normal_direction_to_Gamma_control(const unsigned int face_index) {
@@ -391,17 +405,16 @@ const unsigned int tangential_direction_to_Gamma_control(const unsigned int face
 }
 
 
-const unsigned int opposite_face(const unsigned int face_index) {
-
-   unsigned int face_opposite = 0;
-
-        if (face_index == 1 || face_index == 3 || face_index == 5) { face_opposite = face_index + 1; }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) { face_opposite = face_index - 1; }
-
-    return face_opposite;
-
+const double face_coordinate_extreme_position_normal_to_Gamma_control(const unsigned int face_index) {
+    
+  double extreme_pos;
+  
+        if (face_index == 1 || face_index == 3 || face_index == 5) {  extreme_pos = 0.; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) {  extreme_pos = 1.; }
+   
+   return extreme_pos;
+   
 }
-
 
  double opposite_face_ctrl_or_state_value(const unsigned int face_index, const double domain_length) {
 
@@ -546,16 +559,6 @@ double DesiredTarget() {
    
 namespace ctrl {
 
-const double face_coordinate_extreme_position_normal_to_Gamma_control(const unsigned int face_index) {
-    
-  double extreme_pos;
-  
-        if (face_index == 1 || face_index == 3 || face_index == 5) {  extreme_pos = 0.; }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) {  extreme_pos = 1.; }
-   
-   return extreme_pos;
-   
-}
 
 
 
@@ -640,8 +643,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 }
 
 
-//=============== construct control node flag field  =========================================    
-  std::vector< std::vector< int > > is_dof_associated_to_boundary_control_equation(
+  std::vector< std::vector< int > > is_dof_associated_to_Gamma_control_equation(
       const Mesh * msh,
       /*const*/ MultiLevelSolution * ml_sol,
          const MultiLevelProblem *    ml_prob,
@@ -653,8 +655,8 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
       std::vector < unsigned > Sol_n_el_dofs_Mat,    
       const unsigned pos_mat_ctrl,
       const unsigned n_components_ctrl
-
 ) {
+//=============== construct control node flag field  =========================    
 	      /* For every component:
            * (control_node_flag[c][i])       picks nodes on \Gamma_c
            * (1 - control_node_flag[c][i])   picks nodes on \Omega \setminus \Gamma_c
@@ -709,15 +711,13 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     return   control_node_flag_iel_all_faces;
     
   }
-  
-  //=============== construct control node flag field  =========================================    
-  
+
   
   
   
 
   
-  bool volume_elem_contains_a_boundary_control_face( const std::vector<double> & elem_center ) {
+  bool volume_elem_contains_a_Gamma_control_face( const std::vector<double> & elem_center ) {
 
       int control_flag_jel = 0;
         control_flag_jel = ControlDomainFlag_bdry(elem_center);
@@ -729,7 +729,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
   
   
   
-  bool face_is_a_boundary_control_face(/*const*/ elem * el, const unsigned jel, const unsigned jface) {
+  bool face_is_a_Gamma_control_face(/*const*/ elem * el, const unsigned jel, const unsigned jface) {
       
   	    // look for boundary faces
             const int bdry_index_j = el->GetFaceElementIndex(jel, jface);
@@ -864,12 +864,12 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  //***************************************************
 
 
-    if ( ctrl::volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
+    if ( ctrl::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
         
   
  //************ set control flag *********************
   std::vector< std::vector< int > > control_node_flag_iel_all_faces = 
-       ctrl::is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
+       ctrl::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
        
        ///@todo here I have to do it "on the go", for each boundary dof!!!
   //*************************************************** 
@@ -896,7 +896,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
 // --- geometry        
          
-	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
               
 
 //========= initialize gauss quantities on the boundary ============================================
@@ -1657,7 +1657,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
 
 //=================== BOUNDARY PART - BEGIN ==================================================================================================  
   
-	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 	  
 	       
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1672,7 +1672,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
 // ----------
 
 		
-	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
 
 	
 		//============ initialize gauss quantities on the boundary ==========================================
@@ -2978,7 +2978,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 	// Perform face loop over elements that contain some control face
         
         
-	if ( ctrl::volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center_3d()) ) {
+	if ( ctrl::volume_elem_contains_a_Gamma_control_face(geom_element_jel.get_elem_center_3d()) ) {
 
       
 // ***************************************
@@ -3116,7 +3116,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
      /*bool*/int jface_is_a_boundary_control;
        if(kproc == iproc) {
-           jface_is_a_boundary_control = ctrl::face_is_a_boundary_control_face(msh->el, jel, jface);
+           jface_is_a_boundary_control = ctrl::face_is_a_Gamma_control_face(msh->el, jel, jface);
        }
       MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
 
@@ -3258,7 +3258,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
       
 	// Perform face loop over elements that contain some control face
-	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
         
 // ***************************************
 // ******* iel-related stuff - BEGIN *************
@@ -3347,7 +3347,7 @@ unsigned nDof_iel_vec = 0;
 // --- geom          
 
    
-	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
 //------------ iface opening ---------        
 		
 //                 count_visits_of_boundary_faces++;

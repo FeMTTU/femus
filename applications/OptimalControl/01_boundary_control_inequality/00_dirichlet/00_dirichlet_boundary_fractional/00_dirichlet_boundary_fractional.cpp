@@ -13,13 +13,13 @@
 #include "MED_IO.hpp"
 //for reading additional fields from MED file (based on MED ordering)
 
-using namespace femus;
-
 
 
 
 #include  "../../../param.hpp"
 
+
+using namespace femus;
 
 
 
@@ -189,28 +189,20 @@ int main(int argc, char** args) {
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  
-  // ======= Problem  ==================
+  // ======= Problem - BEGIN  ==================
   MultiLevelProblem ml_prob;
 
-  
-  // ======= Files - BEGIN  ========================
+  // ======= Problem, Files - BEGIN  ========================
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
-  // ======= Files - END  ========================
+  // ======= Problem, Files - END  ========================
 
-  // ======= Problem, Quad Rule - BEGIN  ========================
-  std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  fe_quad_rule_vec.push_back("eighth");
-
-  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
-  // ======= Problem, Quad Rule - END  ========================
+  
+  // ======= Problem, Mesh - BEGIN ==================
 
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
@@ -252,7 +244,7 @@ int main(int argc, char** args) {
 //   - Elem is real and rightly so, and only Geometric. However it contains some abstract Geom Element, but there seems to be no overlap with FE families
   ml_mesh.PrepareNewLevelsForRefinement();       //doesn't need dofmap
 
-    // ======= Mesh, Coarse reading - END ==================
+  // ======= Mesh, Coarse reading - END ==================
 
 
   // ======= Mesh: Refinement - BEGIN ==================
@@ -285,13 +277,17 @@ int main(int argc, char** args) {
   // ======= Solution, auxiliary - END  ==================
 
   
-  // ======= Mesh: COARSE ERASING - BEGIN  ========================
+  // ======= Mesh: Coarse erasing - BEGIN  ========================
   ml_mesh.EraseCoarseLevels(erased_levels);
   ml_mesh.PrintInfo();
-  // ======= Mesh: COARSE ERASING - END  ========================
+  // ======= Mesh: Coarse erasing - END  ========================
   
+  // ======= Problem, Mesh - END ==================
+
   
-  // ======= Solution - BEGIN ==================
+  // ======= Problem, Solution - BEGIN ==================
+  
+  // ======= Solution, Construction - BEGIN ==================
   MultiLevelSolution ml_sol(&ml_mesh);
   
   ml_sol.SetWriter(VTK);
@@ -299,9 +295,8 @@ int main(int argc, char** args) {
 
  // ======= Problem, Mesh and Solution  ==================
  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
-  // ======= Solution - END ==================
-
-  
+  // ======= Solution, Construction - END ==================
+ 
   // ======= Solutions that are Unknowns - BEGIN ==================
   std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
 
@@ -361,8 +356,19 @@ int main(int argc, char** args) {
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name[0].c_str())) abort();
   //== Solution: CHECK SOLUTION FE TYPES between Unknowns and Not Unknowns - END ==
   
+  // ======= Problem, Solution - END ==================
 
   
+
+  // ======= Problem, Quad Rule - BEGIN  ========================
+  std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  fe_quad_rule_vec.push_back("eighth");
+
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
+  // ======= Problem, Quad Rule - END  ========================
+
   // ======= Problem, System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod & system_opt = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
@@ -412,16 +418,28 @@ int main(int argc, char** args) {
 //   system_opt.assemble_call_before_boundary_conditions(1);
   // ======= Problem, System  - END ========================
 
-  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars);
-//   system_opt.assemble_call_before_boundary_conditions(1);
+  
+  // ======= Post-processing - BEGIN ========================
 
-  // ======= Print - BEGIN  ========================
+
+  // ======= Post-processing, Computations - BEGIN ========================
+  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars);
+  // ======= Post-processing, Computations - END ========================
+
+  
+  // ======= Post-processing, Print - BEGIN  ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
 
   ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
-  // ======= Print - END  ========================
+  // ======= Post-processing, Print - END  ========================
 
+  // ======= Post-processing - END ========================
+
+  // ======= Problem - END  ==================
+  
+  
+  
   return 0;
 }
 
@@ -914,11 +932,11 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 
  //************ set control flag *********************
    std::vector< std::vector< int > > control_node_flag = 
-       ctrl::is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
+       ctrl::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 
-	if ( ctrl::volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
+	if ( ctrl::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
 	  
 	  std::vector<double> normal(space_dim, 0.);
 	       
@@ -945,7 +963,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 // -------
        
 		
-	    if( ctrl::face_is_a_boundary_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
               
  
 //========= initialize gauss quantities on the boundary ============================================
@@ -1296,7 +1314,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl::volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1304,7 +1322,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  ctrl::face_is_a_boundary_control_face( el, iel, iface) ) {
+       if(  ctrl::face_is_a_Gamma_control_face( el, iel, iface) ) {
 
        ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
