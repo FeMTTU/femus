@@ -22,6 +22,11 @@
 // using namespace femus;
 
 
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Independent - BEGIN *****************************************
+//*******************************************************************************************
+
 //*********************** 
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
@@ -31,7 +36,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 3
+#define N_UNIFORM_LEVELS 6
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -44,35 +49,7 @@
 
 //*********************** Mesh - END *****************************************
 
-
   
-//*********************** Control, boundary extremes - BEGIN  *******************************************************
-  /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
-  /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        2
-#define FACE_FOR_TARGET         1
-
-
-
-#define GAMMA_CONTROL_LOWER 0.25
-#define GAMMA_CONTROL_UPPER 0.75
-//***** Domain-related ****************** 
-#define EX_1        GAMMA_CONTROL_LOWER
-#define EX_2        GAMMA_CONTROL_UPPER
-#define EY_1        0.
-#define EY_2        1.   ///@todo  see here
-
-#define DOMAIN_EX_1 0
-#define DOMAIN_EX_2 1
-//**************************************
-//*********************** Control, boundary extremes - END *******************************************************
-
-
-//*********************** Control, cost functional, target region - BEGIN *******************************************************
-#define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
-//*********************** Control, cost functional, target region - END *******************************************************
-
-
 //*********************** Control, cost functional - BEGIN *******************************************************
 #define COST_FUNCTIONAL_TYPE  /*0*/ 1  /*------[0: target ; 1: gradient]---------*/
 
@@ -88,22 +65,12 @@
 //*********************** Control, cost functional - END *******************************************************
 
 
+//*********************** Inequality - BEGIN *******************************************************
+#define  INEQ_FLAG 1
+#define  C_COMPL 1.
+//*********************** Inequality - END *******************************************************
 
-
-//*********************** Control, Lifting internal - BEGIN *******************************************************
-#define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
-#define LIFTING_INTERNAL_WIDTH_LOWER  0. /*GAMMA_CONTROL_LOWER*/
-#define LIFTING_INTERNAL_WIDTH_UPPER  1. /*GAMMA_CONTROL_UPPER*/
-
-//******** Penalties for equations - BEGIN ******************************
-#define PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL   1.e20         // penalty for zero control outside
-//******** Penalties for equations - END ******************************
-
-//*********************** Control, Lifting internal - END *******************************************************
-
-
-
-
+  
 
 //*********************** Control, Boundary, Fractional or Integer - BEGIN  *******************************************************
 
@@ -162,25 +129,87 @@
 //***** Implementation-related: where are L2 and H1 norms implemented - END ****************** 
 
 
-//***** How to identify boundary of boundary in the 3D case - BEGIN ****************** 
-#define  NODE_BASED_BDRY_BDRY   "node_based_bdry_bdry_flag"
-//***** How to identify boundary of boundary in the 3D case - END ****************** 
-
-
 //******** Penalties for equations - BEGIN ******************************
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY           1.e50      
 #define PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY           0.      
 #define PENALTY_DIRICHLET_BC_U_EQUAL_Q_BOUNDARY           1.e10         // penalty for u = q
 //******** Penalties for equations - END ******************************
 
+
+//*********************** Domain Dependent - BEGIN *****************************************
+
+//***** How to identify boundary of boundary in the 3D case - BEGIN ****************** 
+#define  NODE_BASED_BDRY_BDRY   "node_based_bdry_bdry_flag"
+//***** How to identify boundary of boundary in the 3D case - END ****************** 
+
+//*********************** Domain Dependent - END *****************************************
+
+
+
 //*********************** Control, Boundary, Fractional or Integer - END  *******************************************************
 
+  
+//*******************************************************************************************
+//*********************** Domain and Mesh Independent - END *****************************************
+//*******************************************************************************************
 
 
-//*********************** Inequality - BEGIN *******************************************************
-#define  INEQ_FLAG 1
-#define  C_COMPL 1.
-//*********************** Inequality - END *******************************************************
+
+
+  
+//*******************************************************************************************
+//*********************** Domain and Mesh Dependent - BEGIN *****************************************
+//*******************************************************************************************
+
+//*********************** Control, Gamma_c specification - BEGIN  *******************************************************
+  /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
+  /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
+#define FACE_FOR_CONTROL        2
+
+
+
+#define GAMMA_CONTROL_LOWER 0.25
+#define GAMMA_CONTROL_UPPER 0.75
+//***** Domain-related ****************** 
+#define EX_1        GAMMA_CONTROL_LOWER
+#define EX_2        GAMMA_CONTROL_UPPER
+#define EY_1        0.
+#define EY_2        1.   ///@todo  see here
+
+#define DOMAIN_EX_1 0
+#define DOMAIN_EX_2 1
+//**************************************
+//*********************** Control, Gamma_c specification - END *******************************************************
+
+
+//*********************** Control, cost functional, target region - BEGIN *******************************************************
+  /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
+  /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
+#define FACE_FOR_TARGET         1
+
+#define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
+//*********************** Control, cost functional, target region - END *******************************************************
+
+
+
+
+//*********************** Control, Lifting internal - BEGIN *******************************************************
+#define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
+#define LIFTING_INTERNAL_WIDTH_LOWER  0. /*GAMMA_CONTROL_LOWER*/
+#define LIFTING_INTERNAL_WIDTH_UPPER  1. /*GAMMA_CONTROL_UPPER*/
+
+//******** Penalties for equations - BEGIN ******************************
+#define PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL   1.e20         // penalty for zero control outside
+//******** Penalties for equations - END ******************************
+
+//*********************** Control, Lifting internal - END *******************************************************
+
+
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Dependent - END *****************************************
+//*******************************************************************************************
+
 
 
 
@@ -188,6 +217,15 @@
 namespace femus {
 
     
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Independent - BEGIN *****************************************
+//*******************************************************************************************
+
+
+
+
+
 
  
 void el_dofs_quantities_vol(const Solution*                sol,
@@ -327,19 +365,24 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
   return; 
   
   }
-  
-} //end namespace
+
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Independent - END *****************************************
+//*******************************************************************************************
 
 
 
-  
-namespace femus {
+//*******************************************************************************************
+//*********************** Domain and Mesh Dependent - BEGIN *****************************************
+//*******************************************************************************************
+
 
 namespace mesh {
 
 
-//   const std::string input = "parametric_square_1x1.med";
-     const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  const std::string input = "parametric_square_1x1.med";
+//      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 //   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "parametric_square_2x2.med";
@@ -349,6 +392,7 @@ namespace mesh {
 
 }
       
+
 namespace ctrl {
 
     
@@ -431,58 +475,6 @@ const double face_coordinate_extreme_position_normal_to_Gamma_control(const unsi
 
 
 
-
-namespace boundary_conditions {
-
-
-
- double ctrl_or_state_set_dirichlet_fixed_values(
-     const int faceName,
-     const std::vector < double > & x,
-     double &  value)  {
-
-
-
-    const double domain_length = 1.;
-
-      const double gamma = 5.;
-
-        if (faceName == FACE_FOR_CONTROL)     {  value = 0.; }
-   else if (faceName == ctrl::opposite_face(FACE_FOR_CONTROL)) { value =  gamma * domain_length; }
-   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(FACE_FOR_CONTROL, domain_length) + ctrl::sign_function_for_delimiting_region(FACE_FOR_CONTROL) *  x[ ctrl::normal_direction_to_Gamma_control(FACE_FOR_CONTROL) ] ); }
-
-   value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
-   
-   return value;
-}
-
-
- bool ctrl_or_state_set_dirichlet_flags(
-     const int faceName,
-     const std::vector < double > & x,
-     bool &  dirichlet)  {
-
-
-     if (faceName == FACE_FOR_CONTROL) {
-        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
-               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
-                dirichlet = true;
-           }
-    }
-    else {
-          dirichlet = true;
-    }
-
-    return dirichlet;
-}
-
-
-
-
-}
-
-
-
 namespace cost_functional {
  
     
@@ -556,43 +548,87 @@ double DesiredTarget() {
 
 
 
+namespace boundary_conditions {
+
+
+
+ double ctrl_or_state_set_dirichlet_fixed_values(
+     const int faceName,
+     const std::vector < double > & x,
+     double &  value)  {
+
+
+
+    const double domain_length = 1.;
+
+      const double gamma = 5.;
+
+        if (faceName == FACE_FOR_CONTROL)     {  value = 0.; }
+   else if (faceName == ctrl::opposite_face(FACE_FOR_CONTROL)) { value =  gamma * domain_length; }
+   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(FACE_FOR_CONTROL, domain_length) + ctrl::sign_function_for_delimiting_region(FACE_FOR_CONTROL) *  x[ ctrl::normal_direction_to_Gamma_control(FACE_FOR_CONTROL) ] ); }
+
+   value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
+   
+   return value;
+}
+
+
+ bool ctrl_or_state_set_dirichlet_flags(
+     const int faceName,
+     const std::vector < double > & x,
+     bool &  dirichlet)  {
+
+
+     if (faceName == FACE_FOR_CONTROL) {
+        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
+               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
+                dirichlet = true;
+           }
+    }
+    else {
+          dirichlet = true;
+    }
+
+    return dirichlet;
+}
+
+
+
+
+}
+
+
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Dependent - END *****************************************
+//*******************************************************************************************
+
+
+
    
 namespace ctrl {
 
 
 
-
-  
-  
-
+namespace Gamma_control {
+    
 
 
+//*********************** Mesh dependent - BEGIN *****************************************
 
 
-//*********************** Find volume elements that contain a Control Face element *********************************
 
-int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
+//*********************** Find volume elements that contain a Control domain element *********************************
 
-  const double mesh_size = 1./*/NSUB_X*/;  //this picks a lot more elements, but then the if on the faces only gets the control boundary
-   
-  int control_el_flag = 0;
-  
-  const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
+int ControlDomainFlag_external_restriction(const std::vector<double> & elem_center) {
 
-     
-   const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
+ //***** set target domain flag ******
+ // flag = 1: we are in the lifting nonzero domain
+  int exterior_el_flag = 0.;
+   if ( elem_center[0] >  1. -  1.e-5) { exterior_el_flag = 1; }
 
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(FACE_FOR_CONTROL);
-   
-   const unsigned int axis_dir = tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
+     return exterior_el_flag;
 
-  
-   if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * (  extreme_pos  + target_line_sign * mesh_size) )
-       && ( elem_center[axis_dir] > GAMMA_CONTROL_LOWER - offset_to_include_line ) 
-       && ( elem_center[axis_dir] < GAMMA_CONTROL_UPPER + offset_to_include_line ) )
-      { control_el_flag = 1; }
-
-     return control_el_flag;
 }
 
 
@@ -629,21 +665,50 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
 }
 
 
-//*********************** Find volume elements that contain a Control domain element *********************************
 
-int ControlDomainFlag_external_restriction(const std::vector<double> & elem_center) {
 
- //***** set target domain flag ******
- // flag = 1: we are in the lifting nonzero domain
-  int exterior_el_flag = 0.;
-   if ( elem_center[0] >  1. -  1.e-5) { exterior_el_flag = 1; }
+  
+  
 
-     return exterior_el_flag;
 
+//*********************** Find volume elements that contain a Control Face element *********************************
+
+int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
+
+  const double mesh_size = 1./*/NSUB_X*/;  //this picks a lot more elements, but then the if on the faces only gets the control boundary
+   
+  int control_el_flag = 0;
+  
+  const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
+
+     
+   const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
+
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(FACE_FOR_CONTROL);
+   
+   const unsigned int axis_dir = tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
+
+  
+   if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * (  extreme_pos  + target_line_sign * mesh_size) )
+       && ( elem_center[axis_dir] > GAMMA_CONTROL_LOWER - offset_to_include_line ) 
+       && ( elem_center[axis_dir] < GAMMA_CONTROL_UPPER + offset_to_include_line ) )
+      { control_el_flag = 1; }
+
+     return control_el_flag;
 }
 
+  
+    
+    
+    
+//*********************** Mesh dependent - END *****************************************
 
-  std::vector< std::vector< int > > is_dof_associated_to_Gamma_control_equation(
+//*********************** Mesh independent - BEGIN *****************************************
+
+    
+    
+    
+      std::vector< std::vector< int > > is_dof_associated_to_Gamma_control_equation(
       const Mesh * msh,
       /*const*/ MultiLevelSolution * ml_sol,
          const MultiLevelProblem *    ml_prob,
@@ -713,6 +778,24 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
   }
 
   
+    
+  bool face_is_a_Gamma_control_face(/*const*/ elem * el, const unsigned jel, const unsigned jface) {
+      
+  	    // look for boundary faces
+            const int bdry_index_j = el->GetFaceElementIndex(jel, jface);
+	    // look for face number equal to control face
+	      const unsigned int face_in_rectangle_domain_j = - ( el->GetFaceElementIndex(jel,jface) + 1);
+
+	    // look for boundary faces && look for control faces
+		
+   return ( bdry_index_j < 0 && face_in_rectangle_domain_j == FACE_FOR_CONTROL );
+      
+  }
+
+  
+   
+
+  
   
   
 
@@ -727,27 +810,22 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
       
   }
   
-  
-  
-  bool face_is_a_Gamma_control_face(/*const*/ elem * el, const unsigned jel, const unsigned jface) {
-      
-  	    // look for boundary faces
-            const int bdry_index_j = el->GetFaceElementIndex(jel, jface);
-	    // look for face number equal to control face
-	      const unsigned int face_in_rectangle_domain_j = - ( el->GetFaceElementIndex(jel,jface) + 1);
+    
+//*********************** Mesh independent - END *****************************************
 
-	    // look for boundary faces && look for control faces
-		
-   return ( bdry_index_j < 0 && face_in_rectangle_domain_j == FACE_FOR_CONTROL );
-      
-  }
 
 
   
+}
+  
+ 
+
+  
+namespace Gamma_control_equation {
   
    
  
-  void control_eqn_bdry(const unsigned iproc,
+  void control_eqn_bdry_integer_sobolev_differentiability_index(const unsigned iproc,
                         MultiLevelProblem &    ml_prob,
                         MultiLevelSolution*    ml_sol,
                         const Solution*        sol,
@@ -864,12 +942,12 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  //***************************************************
 
 
-    if ( ctrl::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
+    if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
         
   
  //************ set control flag *********************
   std::vector< std::vector< int > > control_node_flag_iel_all_faces = 
-       ctrl::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
+       ctrl::Gamma_control::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
        
        ///@todo here I have to do it "on the go", for each boundary dof!!!
   //*************************************************** 
@@ -896,7 +974,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
 // --- geometry        
          
-	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
               
 
 //========= initialize gauss quantities on the boundary ============================================
@@ -1043,6 +1121,13 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 }
 
 
+
+
+}
+ 
+ 
+ namespace cost_functional {
+
  
 //************** how to retrieve theta from proc0 ************************************* 
 const double get_theta_value(const unsigned int nprocs, const Solution * sol, const unsigned int sol_theta_index) {
@@ -1179,7 +1264,7 @@ void compute_cost_functional_regularization_bdry_vec(const MultiLevelProblem& ml
    
 //    double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
    //************** how to retrieve theta from proc0 ************************************* 
- double solTheta = get_theta_value(msh->n_processors(), sol, solThetaIndex);
+ double solTheta = cost_functional::get_theta_value(msh->n_processors(), sol, solThetaIndex);
 //*************************************************** 
 // 		     solTheta = (*sol->_Sol[solThetaIndex])(0);
 //Theta value ######################################################################
@@ -1270,7 +1355,7 @@ double integral_g_dot_n = 0.;
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
     
@@ -1305,7 +1390,7 @@ double integral_g_dot_n = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = femus::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
      }
 //     }
  //DESIRED VEL###################################################################
@@ -1313,7 +1398,7 @@ double integral_g_dot_n = 0.;
  
  //************ set control flag *********************
   int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ctrl::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
+        does_iel_contain_a_bdry_control_face = ctrl::Gamma_control::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
 
 //========BoundaryLoop=====================================================================
@@ -1554,7 +1639,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
  //***************************************************
 
  //********** DATA *********************************** 
-  double u_des = cost_functional::DesiredTarget();
+  double u_des = femus::cost_functional::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1605,7 +1690,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //***************************************************
 
    
@@ -1657,7 +1742,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
 
 //=================== BOUNDARY PART - BEGIN ==================================================================================================  
   
-	if ( ctrl::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 	  
 	       
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1672,7 +1757,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
 // ----------
 
 		
-	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
 
 	
 		//============ initialize gauss quantities on the boundary ==========================================
@@ -1876,7 +1961,7 @@ double u_x_gss = 0.;
  //*************************************************** 
 
  //********************* DATA ************************ 
-  double u_des = cost_functional::DesiredTarget();
+  double u_des = femus::cost_functional::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1917,12 +2002,12 @@ double u_x_gss = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
  //**************** state **************************** 
@@ -2194,12 +2279,12 @@ double  integral_div_ctrl = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -2234,7 +2319,7 @@ double  integral_div_ctrl = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = femus::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED VEL###################################################################
@@ -2334,11 +2419,10 @@ double  integral_div_ctrl = 0.;
 }
 
   
+ }
+ 
+ 
   
-  
-
-  } //end namespace ctrl
-
 
 
   
@@ -2697,7 +2781,7 @@ double  integral_div_ctrl = 0.;
   
     //********** FRAC CONTROL - BEGIN *****************************************
 
-  void control_eqn_bdry_fractional(const unsigned iproc,
+  void control_eqn_bdry_fractional_sobolev_differentiability_index(const unsigned iproc,
                                    const unsigned nprocs,
                         MultiLevelProblem &    ml_prob,
                         MultiLevelSolution*    ml_sol,
@@ -2978,7 +3062,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 	// Perform face loop over elements that contain some control face
         
         
-	if ( ctrl::volume_elem_contains_a_Gamma_control_face(geom_element_jel.get_elem_center_3d()) ) {
+	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face(geom_element_jel.get_elem_center_3d()) ) {
 
       
 // ***************************************
@@ -3116,7 +3200,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
      /*bool*/int jface_is_a_boundary_control;
        if(kproc == iproc) {
-           jface_is_a_boundary_control = ctrl::face_is_a_Gamma_control_face(msh->el, jel, jface);
+           jface_is_a_boundary_control = ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, jel, jface);
        }
       MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
 
@@ -3258,7 +3342,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
       
 	// Perform face loop over elements that contain some control face
-	if ( ctrl::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
         
 // ***************************************
 // ******* iel-related stuff - BEGIN *************
@@ -3347,7 +3431,7 @@ unsigned nDof_iel_vec = 0;
 // --- geom          
 
    
-	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
 //------------ iface opening ---------        
 		
 //                 count_visits_of_boundary_faces++;
@@ -3902,6 +3986,9 @@ unsigned nDof_iel_vec = 0;
  } //end namespace fractional  
 
  
+
+  } //end namespace ctrl
+
 
 
   

@@ -199,7 +199,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::ControlDomainFlag_bdry(x);
+        value = ctrl::Gamma_control::ControlDomainFlag_bdry(x);
     }
 
     return value;
@@ -493,7 +493,7 @@ int main(int argc, char** args) {
   const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
   const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  MultiLevelSolution * ml_sol_bdry_bdry_flag = fractional::bdry_bdry_flag(files,
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::fractional::bdry_bdry_flag(files,
                                                               ml_mesh, 
                                                               infile,
                                                               node_mapping_from_mesh_file_to_new,
@@ -547,7 +547,7 @@ int main(int argc, char** args) {
    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
    
    
- fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
+ ctrl::fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
                                 ml_sol,
                                 ml_mesh, 
                                 erased_levels,
@@ -625,7 +625,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   system_opt.set_ctrl_vars(ctrl_vars);
   
     system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_bdry_vec);
+    system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry_vec);
 // *****************
     
    
@@ -925,7 +925,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   
 // ****** Solutions, Unknowns at dofs, theta value from proc0 - BEGIN 
-  double solTheta = ctrl::get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
+  double solTheta = ctrl::cost_functional::get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
 // ****** Solutions, Unknowns at dofs, theta value from proc0  - END
 
   // ======= Solutions, Unknowns at dofs - END =======
@@ -1088,7 +1088,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
     if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     fractional::control_eqn_bdry_fractional(iproc,
+     ctrl::fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -1160,7 +1160,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   else {
   
-   ctrl::control_eqn_bdry(iproc,
+   ctrl::Gamma_control_equation::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
                     ml_prob,
                     ml_sol,
                     sol,
@@ -1255,7 +1255,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
    
  //************ set control flag - BEGIN *********************
     int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ctrl::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
+        does_iel_contain_a_bdry_control_face = ctrl::Gamma_control::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
  //************ initialize control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
     std::vector< std::vector<int> > control_node_flag_iel_jface(n_components_ctrl);
 	    for(unsigned idim=0; idim < control_node_flag_iel_jface.size(); idim++) {
@@ -2034,7 +2034,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -2042,7 +2042,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  ctrl::face_is_a_Gamma_control_face( el, iel, iface) ) {
+       if(  ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
 
        ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,

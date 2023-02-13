@@ -117,7 +117,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ctrl::ControlDomainFlag_bdry(x);
+        value = ctrl::Gamma_control::ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -264,7 +264,7 @@ int main(int argc, char** args) {
   const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
   const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  MultiLevelSolution * ml_sol_bdry_bdry_flag = fractional::bdry_bdry_flag(files,
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::fractional::bdry_bdry_flag(files,
                                                               ml_mesh, 
                                                               infile,
                                                               node_mapping_from_mesh_file_to_new,
@@ -337,7 +337,7 @@ int main(int argc, char** args) {
   // ******** active flag - END 
   
   
- fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
+ ctrl::fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
                                 ml_sol,
                                 ml_mesh, 
                                 erased_levels,
@@ -391,7 +391,7 @@ int main(int argc, char** args) {
   system_opt.set_ctrl_vars(ctrl_vars);
   
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_bdry);
+  system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry);
 //   ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
 // *****************
   
@@ -423,7 +423,7 @@ int main(int argc, char** args) {
 
 
   // ======= Post-processing, Computations - BEGIN ========================
-  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars);
+  ctrl::cost_functional::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars);
   // ======= Post-processing, Computations - END ========================
 
   
@@ -742,7 +742,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     fractional::control_eqn_bdry_fractional(iproc,
+     ctrl::fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -812,7 +812,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
   
   else {
   
-   ctrl::control_eqn_bdry(iproc,
+   ctrl::Gamma_control_equation::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
                     ml_prob,
                     ml_sol,
                     sol,
@@ -932,11 +932,11 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 
  //************ set control flag *********************
    std::vector< std::vector< int > > control_node_flag = 
-       ctrl::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
+       ctrl::Gamma_control::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 
-	if ( ctrl::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
+	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
 	  
 	  std::vector<double> normal(space_dim, 0.);
 	       
@@ -963,7 +963,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 // -------
        
 		
-	    if( ctrl::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
+	    if( ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
               
  
 //========= initialize gauss quantities on the boundary ============================================
@@ -1314,7 +1314,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1322,7 +1322,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  ctrl::face_is_a_Gamma_control_face( el, iel, iface) ) {
+       if(  ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
 
        ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,

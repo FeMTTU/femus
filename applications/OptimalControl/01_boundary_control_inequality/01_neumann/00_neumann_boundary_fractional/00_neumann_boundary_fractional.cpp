@@ -37,7 +37,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ctrl::ControlDomainFlag_bdry(x);
+        value = ctrl::Gamma_control::ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -187,7 +187,7 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_bdry);
+  system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry);
    
   // initialize and solve the system
   system_opt.init();
@@ -415,7 +415,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    
  //************** set control flag *******************
   int control_el_flag = 0;
-        control_el_flag = ctrl::ControlDomainFlag_bdry(elem_center);
+        control_el_flag = ctrl::Gamma_control::ControlDomainFlag_bdry(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //*************************************************** 

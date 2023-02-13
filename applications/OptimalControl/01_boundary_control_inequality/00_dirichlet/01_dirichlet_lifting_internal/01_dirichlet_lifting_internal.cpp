@@ -87,7 +87,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::ControlDomainFlag_internal_restriction(x);
+        value = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(x);
     }
     else if(!strcmp(name,"act_flag")) {
         value = 0.;
@@ -312,7 +312,7 @@ int main(int argc, char** args) {
   system_opt.set_ctrl_vars(ctrl_vars);
   
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_lifting_internal);
+  system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal);
 // *****************
 //   system_opt.SetMaxNumberOfNonLinearIterations(2);
 
@@ -334,9 +334,9 @@ int main(int argc, char** args) {
 
 
   
-  ctrl::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars);
+  ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars);
   
-  ctrl::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars);
+  ctrl::cost_functional::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars);
   // ======= Post-processing, Computations - END ========================
   
   
@@ -709,7 +709,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
   std::vector<int> control_node_flag(nDof_ctrl, 0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
@@ -1102,7 +1102,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {

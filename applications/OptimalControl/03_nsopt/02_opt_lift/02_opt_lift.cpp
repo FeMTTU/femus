@@ -96,7 +96,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::ControlDomainFlag_internal_restriction(x);
+        value = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(x);
     }
 
     return value;
@@ -494,7 +494,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   // *****************
   system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunction(ctrl::compute_cost_functional_regularization_lifting_internal_vec);
+    system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal_vec);
 // *****************
   
   
@@ -1592,7 +1592,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
 
   std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
        
@@ -2404,7 +2404,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {
