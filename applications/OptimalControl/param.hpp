@@ -36,7 +36,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 3
+#define N_UNIFORM_LEVELS 7
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -229,13 +229,13 @@ namespace femus {
 //         
 //     public:
         
-#define face_with_extremes_index_size   1
+#define face_with_extremes_index_size   2
     
-     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = { FACE_FOR_CONTROL };
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = { FACE_FOR_CONTROL, FACE_FOR_CONTROL + 2 };
      
-     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = { true };
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = { true, true };
         
-     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = { { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER } };
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = { { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }, { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER } };
         
      
 //     };
@@ -576,21 +576,26 @@ double DesiredTarget() {
 namespace boundary_conditions {
 
 
+namespace Gamma_c_single {
+    
+    
 
- double ctrl_or_state_set_dirichlet_fixed_values(
-     const int faceName,
-     const std::vector < double > & x,
-     double &  value)  {
+ double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem * ml_prob, 
+                                                 const int faceName,
+                                                 const std::vector < double > & x,
+                                                 double &  value)  {
+     
+     assert( face_with_extremes_index_size == 1 );
 
-
+    const unsigned face_for_control = face_with_extremes_index[0];
 
     const double domain_length = 1.;
 
       const double gamma = 5.;
 
-        if (faceName == FACE_FOR_CONTROL)     {  value = 0.; }
-   else if (faceName == ctrl::opposite_face(FACE_FOR_CONTROL)) { value =  gamma * domain_length; }
-   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(FACE_FOR_CONTROL, domain_length) + ctrl::sign_function_for_delimiting_region(FACE_FOR_CONTROL) *  x[ ctrl::normal_direction_to_Gamma_control(FACE_FOR_CONTROL) ] ); }
+        if (faceName == face_for_control)     {  value = 0.; }
+   else if (faceName == ctrl::opposite_face(face_for_control)) { value =  gamma * domain_length; }
+   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(face_for_control, domain_length) + ctrl::sign_function_for_delimiting_region(face_for_control) *  x[ ctrl::normal_direction_to_Gamma_control(face_for_control) ] ); }
 
    value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
    
@@ -598,15 +603,19 @@ namespace boundary_conditions {
 }
 
 
- bool ctrl_or_state_set_dirichlet_flags(
-     const int faceName,
-     const std::vector < double > & x,
-     bool &  dirichlet)  {
+ bool ctrl_or_state_set_dirichlet_flags(const MultiLevelProblem * ml_prob, 
+                                        const int faceName,
+                                        const std::vector < double > & x,
+                                        bool &  dirichlet)  {
+     
 
+     assert( face_with_extremes_index_size == 1 );
+    const unsigned face_for_control = face_with_extremes_index[0];
 
-     if (faceName == FACE_FOR_CONTROL) {
-        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER + 1.e-5 &&
-               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER - 1.e-5) ) {
+     
+     if (faceName == face_for_control) {
+        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[0][0] + 1.e-5 &&
+               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[0][1] - 1.e-5) ) {
                 dirichlet = true;
            }
     }
@@ -617,6 +626,86 @@ namespace boundary_conditions {
     return dirichlet;
 }
 
+
+
+} //single Gamma_c
+
+
+
+
+namespace Gamma_c_double_adjacent {
+    
+    
+
+    
+ double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem * ml_prob, 
+                                                 const int faceName,
+                                                 const std::vector < double > & x,
+                                                 double &  value)  {
+
+     if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+
+     assert( face_with_extremes_index_size == 2 );
+
+    const double domain_length = 1.;
+
+      const double gamma = 5.;
+      
+      
+	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+
+        if (faceName == face_with_extremes_index[f])     {  value = 0.; }
+   else if (faceName == ctrl::opposite_face(face_with_extremes_index[f])) { value = gamma * 
+       ( ctrl::opposite_face_ctrl_or_state_value(face_with_extremes_index[f], domain_length) + ctrl::sign_function_for_delimiting_region(face_with_extremes_index[f]) *  x[ ctrl::tangential_direction_to_Gamma_control(face_with_extremes_index[f]) ] );  }
+
+      }
+   
+   value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
+   
+   return value;
+}
+
+
+ bool ctrl_or_state_set_dirichlet_flags(const MultiLevelProblem * ml_prob, 
+                                        const int faceName,
+                                        const std::vector < double > & x,
+                                        bool &  dirichlet)  {
+
+     if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+     
+     assert( face_with_extremes_index_size == 2 );
+     
+     
+  	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+          
+     if (faceName != face_with_extremes_index[f]) {
+          dirichlet = true;
+     }
+          
+      }
+      
+	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+
+     if (faceName == face_with_extremes_index[f]) {
+         
+        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[f][0] + 1.e-5 &&
+               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[f][1] - 1.e-5) ) {
+                dirichlet = true;
+           }
+      }
+//     else {
+//           dirichlet = true;
+//     }
+    
+      }    
+    
+
+    return dirichlet;
+}
+
+
+
+} //single Gamma_c_double_adjacent
 
 
 
