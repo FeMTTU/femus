@@ -229,19 +229,29 @@ namespace femus {
 //         
 //     public:
         
-#define face_with_extremes_index_size   2
+#define face_with_extremes_index_size   1
     
-     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = { FACE_FOR_CONTROL, FACE_FOR_CONTROL + 2 };
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
+         FACE_FOR_CONTROL
+//          , FACE_FOR_CONTROL + 2
+    };
      
-     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = { true, true };
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
+         true
+//          , true
+    };
         
-     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = { { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }, { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER } };
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
+       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+//      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+    };
         
      
 //     };
 
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent
+ #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single
 
-    
 
 //*******************************************************************************************
 //*********************** Domain and Mesh Independent - BEGIN *****************************************
@@ -678,21 +688,16 @@ namespace Gamma_c_double_adjacent {
      
      bool  is_facename_a_control_face = false;
      
-  	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+
+     if (faceName == face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
           
-     if (faceName != face_with_extremes_index[f]) {
-         is_facename_a_control_face = false;
      }
-     else { is_facename_a_control_face = true; break; }
-          
-      }
 
-       if  (is_facename_a_control_face == false) { dirichlet = true; }
+     if  (is_facename_a_control_face == false) { dirichlet = true; }
 
       
-      
-      
-	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
 
      if (faceName == face_with_extremes_index[f]) {
          
@@ -700,11 +705,7 @@ namespace Gamma_c_double_adjacent {
                x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[f][1] - 1.e-5) ) {
                 dirichlet = true;
            }
-      }
-//     else {
-//           dirichlet = true;
-//     }
-    
+        }
       }    
     
 

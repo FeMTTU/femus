@@ -139,9 +139,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
   if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
 
-     boundary_conditions::Gamma_c_double_adjacent::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+     boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
-     boundary_conditions::Gamma_c_double_adjacent::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);  //function that return value
+     boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
 
    }
   
@@ -150,7 +150,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
   else if(!strcmp(name,"control")) {
 
-    boundary_conditions::Gamma_c_double_adjacent::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+    boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
 
     value = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
