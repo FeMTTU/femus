@@ -218,7 +218,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 if (!strcmp(SolName, "ctrl_0"))       {
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -235,7 +236,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_1"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -252,7 +254,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -274,7 +277,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 else if (!strcmp(SolName, "u_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
    if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -377,10 +381,8 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 	
-  std::string input_file = "parametric_square_1x1.med";
-//   std::string input_file = "parametric_square_1x2.med";
-//   std::string input_file = "parametric_square_2x2.med";
-//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  const std::string input_file = mesh::input;
+
   
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -493,7 +495,7 @@ int main(int argc, char** args) {
   const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
   const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::fractional::bdry_bdry_flag(files,
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::Gamma_control_equation_fractional::bdry_bdry_flag(files,
                                                               ml_mesh, 
                                                               infile,
                                                               node_mapping_from_mesh_file_to_new,
@@ -547,7 +549,7 @@ int main(int argc, char** args) {
    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
    
    
- ctrl::fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
+ ctrl::Gamma_control_equation_fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
                                 ml_sol,
                                 ml_mesh, 
                                 erased_levels,
@@ -883,7 +885,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   //************** variables for ineq constraints: act flag ****************************   
   std::vector<unsigned int> solIndex_act_flag_sol(n_components_ctrl); 
   
-  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   //************** variables for ineq constraints: act flag ****************************   
     
 
@@ -1088,7 +1090,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
     if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     ctrl::fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
+     ctrl::Gamma_control_equation_fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -1991,7 +1993,7 @@ for (unsigned k = 0; k < dim; k++){
 
 #if INEQ_FLAG != 0
   //MU in res ctrl - BEGIN  ***********************************
-ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -2044,7 +2046,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                 
        if(  ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
 
-       ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
+       ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
     iel, iface,
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
@@ -2059,7 +2061,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     sol_actflag);
  
 
-  ctrl_inequality::node_insertion_bdry(iel, iface, 
+  ctrl::ctrl_inequality::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
                       mu_index_in_mat, 

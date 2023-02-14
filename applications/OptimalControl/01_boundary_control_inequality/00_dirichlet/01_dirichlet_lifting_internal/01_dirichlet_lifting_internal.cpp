@@ -482,7 +482,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
   //************** variables for ineq constraints: act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
   
-  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
   
   
@@ -1061,7 +1061,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
   std::vector<unsigned int> ctrl_index(1);  ctrl_index[0] = mlPdeSys->GetSolPdeIndex("control");
   std::vector<unsigned int>   mu_index(1);    mu_index[0] = mlPdeSys->GetSolPdeIndex("mu");
     
-ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index,
                                mu_index,
@@ -1108,7 +1108,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     if (control_el_flag == 1) {
 
         
-  ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -1126,7 +1126,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
 
 
-    ctrl_inequality::node_insertion(iel,
+    ctrl::ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    pos_mu_in_mat,

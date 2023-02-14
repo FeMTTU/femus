@@ -51,11 +51,14 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 
    if (faceName == FACE_FOR_CONTROL)  {
+       
         if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && 
-            x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+            x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  {
+            
        if (!strcmp(SolName, "ctrl_0"))    { dirichlet = false; }
   else if (!strcmp(SolName, "ctrl_1"))    { dirichlet = false; } 
-  else if (!strcmp(SolName, "ctrl_2"))    { dirichlet = false; } 
+  else if (!strcmp(SolName, "ctrl_2"))    { dirichlet = false; }
+  
               }
               else {
        if (!strcmp(SolName, "ctrl_0"))    { dirichlet = true; }
@@ -295,7 +298,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
  
     std::string mesh_folder_file = "input/";
-  std::string input_file = "parametric_square_1x1.med";
+  const std::string input_file = mesh::input;
+
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "cyl.med"; // "fifth"
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
@@ -1412,7 +1416,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   //************** variables for ineq constraints: act flag ****************************   
   std::vector<unsigned int> solIndex_act_flag_sol(n_components_ctrl); 
   
-  ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   //************** variables for ineq constraints: act flag ****************************   
     
 
@@ -2364,7 +2368,7 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   
   
   //MU in res ctrl - BEGIN  ***********************************
-ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -2410,7 +2414,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     if (control_el_flag == 1) {
 
         
-  ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -2428,7 +2432,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
 
 
-    ctrl_inequality::node_insertion(iel,
+    ctrl::ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    mu_index_in_mat,

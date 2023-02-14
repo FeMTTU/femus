@@ -264,7 +264,7 @@ int main(int argc, char** args) {
   const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
   const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::fractional::bdry_bdry_flag(files,
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::Gamma_control_equation_fractional::bdry_bdry_flag(files,
                                                               ml_mesh, 
                                                               infile,
                                                               node_mapping_from_mesh_file_to_new,
@@ -337,7 +337,7 @@ int main(int argc, char** args) {
   // ******** active flag - END 
   
   
- ctrl::fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
+ ctrl::Gamma_control_equation_fractional::bdry_bdry_flag_copy_and_delete(ml_prob,
                                 ml_sol,
                                 ml_mesh, 
                                 erased_levels,
@@ -579,7 +579,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
   //************** act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
 
-    ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+    ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   
   
   //********* variables for ineq constraints *****************
@@ -742,7 +742,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     ctrl::fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
+     ctrl::Gamma_control_equation_fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -1271,7 +1271,7 @@ if ( i_vol == j_vol )  {
 
 
   //MU in res ctrl - BEGIN  ***********************************
-ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -1324,7 +1324,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                 
        if(  ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
 
-       ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
+       ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
     iel, iface,
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
@@ -1339,7 +1339,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     sol_actflag);
  
 
-  ctrl_inequality::node_insertion_bdry(iel, iface, 
+  ctrl::ctrl_inequality::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
                       mu_index_in_mat, 
