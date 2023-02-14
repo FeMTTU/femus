@@ -36,7 +36,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 7
+#define N_UNIFORM_LEVELS 3
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -190,6 +190,12 @@
 #define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
 //*********************** Control, cost functional, target region - END *******************************************************
 
+
+
+//*********************** Control, boundary - BEGIN *******************************************************
+#define BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
+
+//*********************** Control, boundary - END *******************************************************
 
 
 
@@ -461,7 +467,7 @@ const unsigned int tangential_direction_to_Gamma_control(const unsigned int face
     
         if (face_index == 1 || face_index == 2) { axis_dir = 1; }
    else if (face_index == 3 || face_index == 4) { axis_dir = 0; }
-   else if (face_index == 5 || face_index == 6) { /*abort();*/ axis_dir = 1; }  ///@todo mesh file dependenttttttttttttttttttttttttttttttttt
+   else if (face_index == 5 || face_index == 6) { /*abort();*/ axis_dir = 1; }  ///@todo this depends on the mesh file 
 
     return axis_dir;
     
@@ -551,7 +557,7 @@ double DesiredTarget() {
      
     std::vector<double>  Vel_desired(3, 0.);
     
-   const unsigned int axis_dir = ctrl::tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
+   const unsigned int axis_dir = 0;
    
     Vel_desired[axis_dir] = 1.;
     
@@ -667,17 +673,22 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
   const double control_domain_width_lower = LIFTING_INTERNAL_WIDTH_LOWER;
   const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
    
-   const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
+  
+	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+          
+   const int  line_sign = sign_function_for_delimiting_region(face_with_extremes_index[f]);
 
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(FACE_FOR_CONTROL);
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
 
-   const unsigned int axis_dir = tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
+   const unsigned int axis_dir = tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
 
    
-   if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * ( extreme_pos + target_line_sign * control_domain_depth ) )
+   if ( ( line_sign * elem_center[1 - axis_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
        && ( elem_center[axis_dir] > control_domain_width_lower - offset_to_include_line ) 
        && ( elem_center[axis_dir] < control_domain_width_upper + offset_to_include_line ) )
       { control_el_flag = 1; }
+   
+      }
    
      return control_el_flag;
 
@@ -686,33 +697,37 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
 
 
 
-  
-  
-
 
 //*********************** Find volume elements that contain a Control Face element *********************************
 
 int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
-  const double mesh_size = 1./*/NSUB_X*/;  //this picks a lot more elements, but then the if on the faces only gets the control boundary
    
   int control_el_flag = 0;
   
   const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
 
-     
-   const int  target_line_sign = sign_function_for_delimiting_region(FACE_FOR_CONTROL);
-
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(FACE_FOR_CONTROL);
-   
-   const unsigned int axis_dir = tangential_direction_to_Gamma_control(FACE_FOR_CONTROL);
+  const double control_domain_depth = BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C; //this picks a lot more elements, but then the if on the faces only gets the control boundary
 
   
-   if ( ( target_line_sign * elem_center[1 - axis_dir] <   target_line_sign * (  extreme_pos  + target_line_sign * mesh_size) )
-       && ( elem_center[axis_dir] > GAMMA_CONTROL_LOWER - offset_to_include_line ) 
-       && ( elem_center[axis_dir] < GAMMA_CONTROL_UPPER + offset_to_include_line ) )
-      { control_el_flag = 1; }
+	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+          
+   const int  line_sign = sign_function_for_delimiting_region(face_with_extremes_index[f]);
 
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
+   
+   const unsigned int Gamma_c_dir_tangential = tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
+
+  
+   if ( ( line_sign * elem_center[1 - Gamma_c_dir_tangential] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
+       && ( elem_center[Gamma_c_dir_tangential] > face_with_extremes_extremes[f][0] - offset_to_include_line ) 
+       && ( elem_center[Gamma_c_dir_tangential] < face_with_extremes_extremes[f][1] + offset_to_include_line ) )
+      { control_el_flag = 1; }
+      
+   }
+                  
+                  
+                  
      return control_el_flag;
 }
 
@@ -814,7 +829,7 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
                   }
 
           
-   return ( bdry_index_j < 0 && is_face_for_control /*face_in_rectangle_domain_j == FACE_FOR_CONTROL*/ );
+   return ( bdry_index_j < 0 && is_face_for_control );
       
   }
 
