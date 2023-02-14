@@ -676,13 +676,21 @@ namespace Gamma_c_double_adjacent {
      assert( face_with_extremes_index_size == 2 );
      
      
+     bool  is_facename_a_control_face = false;
+     
   	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
           
      if (faceName != face_with_extremes_index[f]) {
-          dirichlet = true;
+         is_facename_a_control_face = false;
      }
+     else { is_facename_a_control_face = true; break; }
           
       }
+
+       if  (is_facename_a_control_face == false) { dirichlet = true; }
+
+      
+      
       
 	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
 
