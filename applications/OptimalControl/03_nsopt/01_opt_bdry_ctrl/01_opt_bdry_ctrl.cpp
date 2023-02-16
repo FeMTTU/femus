@@ -1162,7 +1162,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   else {
   
-   ctrl::Gamma_control_equation::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
+   ctrl::Gamma_control_equation_integer::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
                     ml_prob,
                     ml_sol,
                     sol,

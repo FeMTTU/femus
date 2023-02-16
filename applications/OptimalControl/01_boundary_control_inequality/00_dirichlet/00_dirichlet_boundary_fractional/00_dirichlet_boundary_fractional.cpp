@@ -812,7 +812,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
   
   else {
   
-   ctrl::Gamma_control_equation::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
+   ctrl::Gamma_control_equation_integer::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
                     ml_prob,
                     ml_sol,
                     sol,
