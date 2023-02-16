@@ -36,7 +36,7 @@
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 7
+#define N_UNIFORM_LEVELS 2
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -224,35 +224,6 @@ namespace femus {
 
     
     
-//     class face_with_extremes {
-//         
-//         
-//     public:
-        
-#define face_with_extremes_index_size   1
-    
-     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
-         FACE_FOR_CONTROL
-//          , FACE_FOR_CONTROL + 2
-    };
-     
-     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
-         true
-//          , true
-    };
-        
-     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
-       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-//      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-    };
-        
-     
-//     };
-
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent
- #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single
-
-
 //*******************************************************************************************
 //*********************** Domain and Mesh Independent - BEGIN *****************************************
 //*******************************************************************************************
@@ -408,6 +379,44 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
 
 
 
+  
+//*********************** Mesh dependent, Gamma_c - BEGIN *****************************************
+    
+//     class face_with_extremes {
+//         
+//         
+//     public:
+        
+#define face_with_extremes_index_size   1
+    
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
+         FACE_FOR_CONTROL
+//          , FACE_FOR_CONTROL + 2
+    };
+     
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
+         true
+//          , true
+    };
+        
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
+       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+//      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+    };
+        
+     
+//     };
+
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent
+ #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single
+
+//*********************** Mesh dependent, Gamma_c - END *****************************************
+
+
+   
+namespace ctrl {
+
+
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent - BEGIN *****************************************
 //*******************************************************************************************
@@ -416,8 +425,8 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
 namespace mesh {
 
 
-  const std::string input = "parametric_square_1x1.med";
-//      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+//   const std::string input = "parametric_square_1x1.med";
+     const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 //   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "parametric_square_2x2.med";
@@ -428,7 +437,7 @@ namespace mesh {
 }
       
 
-namespace ctrl {
+namespace boundary_conditions_or_cost_functional {
 
     
 const  int sign_function_for_delimiting_region(const unsigned int face_index) {
@@ -442,69 +451,6 @@ const  int sign_function_for_delimiting_region(const unsigned int face_index) {
    
 }
 
-
-
-const unsigned int opposite_face(const unsigned int face_index) {
-
-   unsigned int face_opposite = 0;
-
-        if (face_index == 1 || face_index == 3 || face_index == 5) { face_opposite = face_index + 1; }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) { face_opposite = face_index - 1; }
-
-    return face_opposite;
-
-}
-
-
-    
-//direction of the line that contains \Gamma_c    
-const unsigned int normal_direction_to_Gamma_control(const unsigned int face_index) {
-    
-    unsigned int axis_dir;
-    
-        if (face_index == 1 || face_index == 2) { axis_dir = 0; }
-   else if (face_index == 3 || face_index == 4) { axis_dir = 1; }
-   else if (face_index == 5 || face_index == 6) { axis_dir = 2; }
-
-    return axis_dir;
-    
-}
-
-
-const unsigned int tangential_direction_to_Gamma_control(const unsigned int face_index) {
-    
-    unsigned int axis_dir;
-    
-        if (face_index == 1 || face_index == 2) { axis_dir = 1; }
-   else if (face_index == 3 || face_index == 4) { axis_dir = 0; }
-   else if (face_index == 5 || face_index == 6) { /*abort();*/ axis_dir = 1; }  ///@todo this depends on the mesh file 
-
-    return axis_dir;
-    
-}
-
-
-const double face_coordinate_extreme_position_normal_to_Gamma_control(const unsigned int face_index) {
-    
-  double extreme_pos;
-  
-        if (face_index == 1 || face_index == 3 || face_index == 5) {  extreme_pos = 0.; }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) {  extreme_pos = 1.; }
-   
-   return extreme_pos;
-   
-}
-
- double opposite_face_ctrl_or_state_value(const unsigned int face_index, const double domain_length) {
-
-   double opposite_value = 0.;
-
-        if (face_index == 1 || face_index == 3 || face_index == 5) { opposite_value = 0.; }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) { opposite_value = domain_length; }
-
-    return opposite_value;
-
-}
 
 }
 
@@ -540,7 +486,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
    
   const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
 
-  const int  target_line_sign = ctrl::sign_function_for_delimiting_region(FACE_FOR_TARGET);
+  const int  target_line_sign = boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(FACE_FOR_TARGET);
   
    const double target_line = target_line_position_along_coordinate + target_line_sign * offset_to_include_line; 
    
@@ -586,6 +532,67 @@ double DesiredTarget() {
 namespace boundary_conditions {
 
 
+    
+ //direction of the line that contains \Gamma_c    
+const unsigned int normal_direction_to_Gamma_control(const unsigned int face_index) {
+    
+    unsigned int axis_dir;
+    
+        if (face_index == 1 || face_index == 2) { axis_dir = 0; }
+   else if (face_index == 3 || face_index == 4) { axis_dir = 1; }
+   else if (face_index == 5 || face_index == 6) { axis_dir = 2; }
+
+    return axis_dir;
+    
+}
+
+
+
+
+const unsigned int tangential_direction_to_Gamma_control(const unsigned int face_index) {
+    
+    unsigned int axis_dir;
+    
+        if (face_index == 1 || face_index == 2) { axis_dir = 1; }
+   else if (face_index == 3 || face_index == 4) { axis_dir = 0; }
+   else if (face_index == 5 || face_index == 6) { /*abort();*/ axis_dir = 1; }  ///@todo this depends on the mesh file 
+
+    return axis_dir;
+    
+}
+
+
+
+
+double opposite_face_ctrl_or_state_value(const unsigned int face_index, const double domain_length) {
+
+   double opposite_value = 0.;
+
+        if (face_index == 1 || face_index == 3 || face_index == 5) { opposite_value = 0.; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { opposite_value = domain_length; }
+
+    return opposite_value;
+
+}
+
+
+
+const unsigned int opposite_face(const unsigned int face_index) {
+
+   unsigned int face_opposite = 0;
+
+        if (face_index == 1 || face_index == 3 || face_index == 5) { face_opposite = face_index + 1; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { face_opposite = face_index - 1; }
+
+    return face_opposite;
+
+}
+
+
+
+
+
+
 namespace Gamma_c_single {
     
     
@@ -604,8 +611,8 @@ namespace Gamma_c_single {
       const double gamma = 5.;
 
         if (faceName == face_for_control)     {  value = 0.; }
-   else if (faceName == ctrl::opposite_face(face_for_control)) { value =  gamma * domain_length; }
-   else                                       { value = gamma * ( ctrl::opposite_face_ctrl_or_state_value(face_for_control, domain_length) + ctrl::sign_function_for_delimiting_region(face_for_control) *  x[ ctrl::normal_direction_to_Gamma_control(face_for_control) ] ); }
+   else if (faceName == ctrl::boundary_conditions::opposite_face(face_for_control)) { value =  gamma * domain_length; }
+   else                                       { value = gamma * ( boundary_conditions::opposite_face_ctrl_or_state_value(face_for_control, domain_length) + boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_for_control) *  x[ boundary_conditions::normal_direction_to_Gamma_control(face_for_control) ] ); }
 
    value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
    
@@ -624,8 +631,8 @@ namespace Gamma_c_single {
 
      
      if (faceName == face_for_control) {
-        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[0][0] + 1.e-5 &&
-               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[0][1] - 1.e-5) ) {
+        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[0][0] + 1.e-5 &&
+               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[0][1] - 1.e-5) ) {
                 dirichlet = true;
            }
     }
@@ -665,8 +672,8 @@ namespace Gamma_c_double_adjacent {
 	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
 
         if (faceName == face_with_extremes_index[f])     {  value = 0.; }
-   else if (faceName == ctrl::opposite_face(face_with_extremes_index[f])) { value = gamma * 
-       ( ctrl::opposite_face_ctrl_or_state_value(face_with_extremes_index[f], domain_length) + ctrl::sign_function_for_delimiting_region(face_with_extremes_index[f]) *  x[ ctrl::tangential_direction_to_Gamma_control(face_with_extremes_index[f]) ] );  }
+   else if (faceName == ctrl::boundary_conditions::opposite_face(face_with_extremes_index[f])) { value = gamma * 
+       ( boundary_conditions::opposite_face_ctrl_or_state_value(face_with_extremes_index[f], domain_length) + boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_with_extremes_index[f]) *  x[ boundary_conditions::tangential_direction_to_Gamma_control(face_with_extremes_index[f]) ] );  }
 
       }
    
@@ -701,8 +708,8 @@ namespace Gamma_c_double_adjacent {
 
      if (faceName == face_with_extremes_index[f]) {
          
-        if ( !(x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[f][0] + 1.e-5 &&
-               x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[f][1] - 1.e-5) ) {
+        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[f][0] + 1.e-5 &&
+               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[f][1] - 1.e-5) ) {
                 dirichlet = true;
            }
         }
@@ -727,17 +734,24 @@ namespace Gamma_c_double_adjacent {
 //*******************************************************************************************
 
 
-
-   
-namespace ctrl {
-
-
+//*********************** Mesh dependent - BEGIN *****************************************
 
 namespace Gamma_control {
     
 
+    
+const double face_coordinate_extreme_position_normal_to_Gamma_control(const unsigned int face_index) {
+    
+  double extreme_pos;
+  
+        if (face_index == 1 || face_index == 3 || face_index == 5) {  extreme_pos = 0.; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) {  extreme_pos = 1.; }
+   
+   return extreme_pos;
+   
+}
 
-//*********************** Mesh dependent - BEGIN *****************************************
+
 
 
 
@@ -774,11 +788,11 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
   
 	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
           
-   const int  line_sign = sign_function_for_delimiting_region(face_with_extremes_index[f]);
+   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_with_extremes_index[f]);
 
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
+   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
 
-   const unsigned int axis_dir = tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
+   const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
 
    
    if ( ( line_sign * elem_center[1 - axis_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
@@ -810,11 +824,11 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   
 	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
           
-   const int  line_sign = sign_function_for_delimiting_region(face_with_extremes_index[f]);
+   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_with_extremes_index[f]);
 
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
+   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
    
-   const unsigned int Gamma_c_dir_tangential = tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
+   const unsigned int Gamma_c_dir_tangential = boundary_conditions::tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
 
   
    if ( ( line_sign * elem_center[1 - Gamma_c_dir_tangential] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
@@ -833,9 +847,16 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
     
     
     
+
+  
+}
+
 //*********************** Mesh dependent - END *****************************************
 
 //*********************** Mesh independent - BEGIN *****************************************
+
+ namespace Gamma_control {
+ 
 
     
     
@@ -950,15 +971,16 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   }
   
     
-//*********************** Mesh independent - END *****************************************
 
 
 
   
 }
   
+ //*********************** Mesh independent - END *****************************************
+
  
- 
+//*********************** Mesh independent, ALMOST - BEGIN *****************************************
   
  namespace Gamma_control_equation_fractional {
  
@@ -2518,6 +2540,7 @@ unsigned nDof_iel_vec = 0;
   
  } //end namespace fractional  
 
+//*********************** Mesh independent, ALMOST - END *****************************************
  
 
  
@@ -2973,7 +2996,7 @@ void compute_cost_functional_regularization_bdry_vec(const MultiLevelProblem& ml
    
 //    double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
    //************** how to retrieve theta from proc0 ************************************* 
- double solTheta = cost_functional::get_theta_value(msh->n_processors(), sol, solThetaIndex);
+ double solTheta = ctrl::cost_functional::get_theta_value(msh->n_processors(), sol, solThetaIndex);
 //*************************************************** 
 // 		     solTheta = (*sol->_Sol[solThetaIndex])(0);
 //Theta value ######################################################################
@@ -3064,7 +3087,7 @@ double integral_g_dot_n = 0.;
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
     
@@ -3099,7 +3122,7 @@ double integral_g_dot_n = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = femus::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = femus::ctrl::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
      }
 //     }
  //DESIRED VEL###################################################################
@@ -3340,7 +3363,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
  //***************************************************
 
  //********** DATA *********************************** 
-  double u_des = femus::cost_functional::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -3391,7 +3414,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //***************************************************
 
    
@@ -3662,7 +3685,7 @@ double u_x_gss = 0.;
  //*************************************************** 
 
  //********************* DATA ************************ 
-  double u_des = femus::cost_functional::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -3703,7 +3726,7 @@ double u_x_gss = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
 
  //***** set control flag ****************************
@@ -3980,7 +4003,7 @@ double  integral_div_ctrl = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
  //***** set control flag ****************************
@@ -4020,7 +4043,7 @@ double  integral_div_ctrl = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = femus::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = femus::ctrl::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED VEL###################################################################

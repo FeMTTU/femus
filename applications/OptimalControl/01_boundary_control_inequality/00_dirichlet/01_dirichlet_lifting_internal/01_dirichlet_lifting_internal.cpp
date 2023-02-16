@@ -84,7 +84,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     
     
     else if(!strcmp(name,"TargReg")) {
-        value = cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(x);
@@ -116,9 +116,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
    else if(!strcmp(name, "control")) {
 
 
-     boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
-     boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
+     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
                   
                     
                     
@@ -169,7 +169,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
    
-  const std::string input_file = mesh::input;
+  const std::string input_file = ctrl::mesh::input;
 
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -577,7 +577,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
     
     
  //********************* DATA ************************ 
-  double u_des = cost_functional::DesiredTarget();
+  double u_des = ctrl::cost_functional::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
@@ -621,7 +621,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     

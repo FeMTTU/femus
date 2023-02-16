@@ -111,7 +111,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name,"TargReg")) {
-        value = cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Gamma_control::ControlDomainFlag_external_restriction(x);
@@ -513,7 +513,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
 //********************* DATA ************************
-    const double u_des = cost_functional::DesiredTarget();
+    const double u_des = ctrl::cost_functional::DesiredTarget();
     const double alpha = ALPHA_CTRL_VOL;
     const double beta  = BETA_CTRL_VOL;
     const double penalty_strong_ctrl = 1.e30;
@@ -567,7 +567,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 //****** set target domain flag *********************
         int target_flag = 0;
-        target_flag = cost_functional::ElementTargetFlag(elem_center);
+        target_flag = ctrl::cost_functional::ElementTargetFlag(elem_center);
 //***************************************************
 
         //all vars###################################################################
@@ -1223,7 +1223,7 @@ void compute_cost_functional_regularization_lifting_external(const MultiLevelPro
 //***************************************************
 
 //********************* DATA ************************
-    double u_des = cost_functional::DesiredTarget();
+    double u_des = ctrl::cost_functional::DesiredTarget();
 //***************************************************
 
     double integral_target = 0.;
@@ -1267,7 +1267,7 @@ void compute_cost_functional_regularization_lifting_external(const MultiLevelPro
 
 //************** set target domain flag *************
         int target_flag = 0;
-        target_flag = cost_functional::ElementTargetFlag(elem_center);
+        target_flag = ctrl::cost_functional::ElementTargetFlag(elem_center);
 //***************************************************
 
 

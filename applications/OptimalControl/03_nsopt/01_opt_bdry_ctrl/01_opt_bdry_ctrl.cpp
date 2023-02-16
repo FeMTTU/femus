@@ -196,7 +196,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Gamma_control::ControlDomainFlag_bdry(x);
@@ -218,8 +218,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 if (!strcmp(SolName, "ctrl_0"))       {
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -236,8 +236,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_1"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -254,8 +254,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -277,8 +277,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 else if (!strcmp(SolName, "u_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
    if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -381,7 +381,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 	
-  const std::string input_file = mesh::input;
+  const std::string input_file = ctrl::mesh::input;
 
   
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
@@ -1252,7 +1252,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-       target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+       target_flag = ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
    //***************************************       
    
  //************ set control flag - BEGIN *********************
@@ -1788,7 +1788,7 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * cost_functional::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * ctrl::cost_functional::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]

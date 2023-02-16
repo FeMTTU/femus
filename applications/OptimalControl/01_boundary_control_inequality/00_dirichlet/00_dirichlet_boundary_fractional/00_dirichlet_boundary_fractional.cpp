@@ -114,7 +114,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
     
     else if(!strcmp(name, "TargReg")) {
-        value = cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = ctrl::Gamma_control::ControlDomainFlag_bdry(x);
@@ -139,9 +139,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
   if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
 
-     boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
-     boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
+     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
 
    }
   
@@ -150,7 +150,7 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
   else if(!strcmp(name,"control")) {
 
-    boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+    ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
 
     value = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
@@ -208,7 +208,7 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  const std::string input_file = mesh::input;
+  const std::string input_file = ctrl::mesh::input;
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -683,7 +683,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 
  
  //********************* DATA ************************ 
-  const double u_des = cost_functional::DesiredTarget();
+  const double u_des = ctrl::cost_functional::DesiredTarget();
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
@@ -926,7 +926,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 
