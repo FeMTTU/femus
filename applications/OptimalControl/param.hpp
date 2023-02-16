@@ -23,6 +23,172 @@
 
 
 
+namespace femus {
+
+
+
+
+    
+//*******************************************************************************************
+//*********************** Domain and Mesh Independent - BEGIN *****************************************
+//*******************************************************************************************
+
+
+
+
+
+
+ 
+void el_dofs_quantities_vol(const Solution*                sol,
+                        const Mesh * msh,
+                        const unsigned int iel,
+                        const    vector < unsigned > & SolFEType,
+                        vector < unsigned > & Sol_n_el_dofs 
+     ) {
+    
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+            Sol_n_el_dofs[k] = ndofs_unk;
+        }   
+    
+}
+
+
+ 
+void el_dofs_unknowns_vol(const Solution*                sol,
+                      const Mesh * msh,
+                      const  LinearEquationSolver* pdeSys,
+                      const unsigned int iel,
+                      const    vector < unsigned > & SolFEType,
+                      const vector < unsigned > & SolIndex,
+                      const vector < unsigned > & SolPdeIndex,
+                      vector < unsigned > & Sol_n_el_dofs, 
+                      vector < vector < double > > & sol_eldofs,  
+                      vector < vector < int > > & L2G_dofmap ) {
+    
+    assert(Sol_n_el_dofs.size() == sol_eldofs.size());
+    
+        //all vars###################################################################
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+            Sol_n_el_dofs[k] = ndofs_unk;
+            sol_eldofs[k].resize(ndofs_unk);
+            L2G_dofmap[k].resize(ndofs_unk);
+            for (unsigned i = 0; i < ndofs_unk; i++) {
+                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
+            }
+        }
+        //all vars###################################################################
+
+}
+
+
+
+
+void  print_global_residual_jacobian(const bool print_algebra_global,
+                                     const MultiLevelProblem& ml_prob,
+                                     const NonLinearImplicitSystem * mlPdeSys,
+                                       LinearEquationSolver* pdeSys,
+                                     NumericVector*           RES,
+                                     SparseMatrix*             JAC,
+                                     const unsigned iproc,
+                                     const bool assembleMatrix)  {
+
+
+  if (print_algebra_global) {
+    const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+
+     } 
+  
+  }
+
+
+  
+    
+  
+  bool check_if_same_elem(const unsigned iel, const unsigned jel) {
+      
+   return (iel == jel);
+      
+  }
+  
+  
+  
+  bool check_if_same_elem_bdry(const unsigned iel, const unsigned jel, const unsigned iface, const unsigned jface) {
+
+   return (iel == jel && iface == jface);
+      
+  }
+
+
+  
+  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystem/*WithPrimalDualActiveSetMethod*/  & system, const std::vector < Unknown > unknowns)  {
+  
+///     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
+
+  const MultiLevelProblem &  ml_prob = system.GetMLProb();
+  const MultiLevelMesh *  ml_mesh = ml_prob.GetMLMesh();
+  
+  unsigned n_levels = ml_mesh->GetNumberOfLevels();
+  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+
+  
+  const Mesh* msh = ml_mesh->GetLevel(n_levels - 1);
+  unsigned nprocs = msh->n_processors();
+  unsigned iproc = msh->processor_id();
+
+  
+    for(int ivar = 0; ivar < unknowns.size(); ivar++) {
+  
+        if (unknowns[ivar]._is_sparse == false ) { 
+        
+  unsigned variable_index = system.GetSolPdeIndex(unknowns[ivar]._name.c_str());
+  
+  
+  
+  unsigned n_dofs_var_all_procs = 0;
+  for (int ip = 0; ip < nprocs; ip++) {
+     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
+  // how does this depend on the number of levels and the number of processors? 
+  // For the processors I summed over them and it seems to work fine
+  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
+   } 
+
+  unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense... or better n_components_ctrl * dense and the rest sparse
+  //check that the dofs are picked correctly, it doesn't seem so 
+  
+  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, unknowns[ivar]._name);  ///@todo this is like AddSolution: it increases a vector
+        }
+    }
+    
+    
+    
+  return; 
+  
+  }
+
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Independent - END *****************************************
+//*******************************************************************************************
+
+
+
+
+   
+namespace ctrl {
+    
+
 //*******************************************************************************************
 //*********************** Domain and Mesh Independent - BEGIN *****************************************
 //*******************************************************************************************
@@ -220,186 +386,33 @@
 
 
 
-namespace femus {
 
-    
-    
 //*******************************************************************************************
-//*********************** Domain and Mesh Independent - BEGIN *****************************************
+//*********************** Domain and Mesh Dependent - BEGIN *****************************************
 //*******************************************************************************************
-
-
-
-
-
-
+    
+ namespace Gamma_control_list_of_faces_with_extremes {
  
-void el_dofs_quantities_vol(const Solution*                sol,
-                        const Mesh * msh,
-                        const unsigned int iel,
-                        const    vector < unsigned > & SolFEType,
-                        vector < unsigned > & Sol_n_el_dofs 
-     ) {
-    
-        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
-            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-            Sol_n_el_dofs[k] = ndofs_unk;
-        }   
-    
-}
-
-
- 
-void el_dofs_unknowns_vol(const Solution*                sol,
-                      const Mesh * msh,
-                      const  LinearEquationSolver* pdeSys,
-                      const unsigned int iel,
-                      const    vector < unsigned > & SolFEType,
-                      const vector < unsigned > & SolIndex,
-                      const vector < unsigned > & SolPdeIndex,
-                      vector < unsigned > & Sol_n_el_dofs, 
-                      vector < vector < double > > & sol_eldofs,  
-                      vector < vector < int > > & L2G_dofmap ) {
-    
-    assert(Sol_n_el_dofs.size() == sol_eldofs.size());
-    
-        //all vars###################################################################
-        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
-            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-            Sol_n_el_dofs[k] = ndofs_unk;
-            sol_eldofs[k].resize(ndofs_unk);
-            L2G_dofmap[k].resize(ndofs_unk);
-            for (unsigned i = 0; i < ndofs_unk; i++) {
-                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
-                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
-                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
-            }
-        }
-        //all vars###################################################################
-
-}
-
-
-
-
-void  print_global_residual_jacobian(const bool print_algebra_global,
-                                     const MultiLevelProblem& ml_prob,
-                                     const NonLinearImplicitSystem * mlPdeSys,
-                                       LinearEquationSolver* pdeSys,
-                                     NumericVector*           RES,
-                                     SparseMatrix*             JAC,
-                                     const unsigned iproc,
-                                     const bool assembleMatrix)  {
-
-
-  if (print_algebra_global) {
-    const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
-
-    RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
-    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
-
-     } 
-  
-  }
-
-
-  
-    
-  
-  bool check_if_same_elem(const unsigned iel, const unsigned jel) {
-      
-   return (iel == jel);
-      
-  }
-  
-  
-  
-  bool check_if_same_elem_bdry(const unsigned iel, const unsigned jel, const unsigned iface, const unsigned jface) {
-
-   return (iel == jel && iface == jface);
-      
-  }
-
-
-  
-  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystem/*WithPrimalDualActiveSetMethod*/  & system, const std::vector < Unknown > unknowns)  {
-  
-///     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
-
-  const MultiLevelProblem &  ml_prob = system.GetMLProb();
-  const MultiLevelMesh *  ml_mesh = ml_prob.GetMLMesh();
-  
-  unsigned n_levels = ml_mesh->GetNumberOfLevels();
-  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
-
-  
-  const Mesh* msh = ml_mesh->GetLevel(n_levels - 1);
-  unsigned nprocs = msh->n_processors();
-  unsigned iproc = msh->processor_id();
-
-  
-    for(int ivar = 0; ivar < unknowns.size(); ivar++) {
-  
-        if (unknowns[ivar]._is_sparse == false ) { 
-        
-  unsigned variable_index = system.GetSolPdeIndex(unknowns[ivar]._name.c_str());
-  
-  
-  
-  unsigned n_dofs_var_all_procs = 0;
-  for (int ip = 0; ip < nprocs; ip++) {
-     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
-  // how does this depend on the number of levels and the number of processors? 
-  // For the processors I summed over them and it seems to work fine
-  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
-   } 
-
-  unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense... or better n_components_ctrl * dense and the rest sparse
-  //check that the dofs are picked correctly, it doesn't seem so 
-  
-  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, unknowns[ivar]._name);  ///@todo this is like AddSolution: it increases a vector
-        }
-    }
-    
-    
-    
-  return; 
-  
-  }
-
-
-//*******************************************************************************************
-//*********************** Domain and Mesh Independent - END *****************************************
-//*******************************************************************************************
-
-
-
-  
-//*********************** Mesh dependent, Gamma_c - BEGIN *****************************************
+//*********************** Mesh dependent, Gamma_c, List of Faces - BEGIN *****************************************
     
 //     class face_with_extremes {
 //         
 //         
 //     public:
         
-#define face_with_extremes_index_size   1
+     static const unsigned face_with_extremes_index_size = 1;
     
-     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
+     static const unsigned face_with_extremes_index[ ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size ] = {
          FACE_FOR_CONTROL
 //          , FACE_FOR_CONTROL + 2
     };
      
-     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
+     static const bool     face_with_extremes_extract_subface[ ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size ] = {
          true
 //          , true
     };
         
-     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
+     static const double   face_with_extremes_extremes[ ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size ][2] = {
        { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
 //      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
     };
@@ -410,16 +423,9 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent
  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single
 
-//*********************** Mesh dependent, Gamma_c - END *****************************************
+//*********************** Mesh dependent, Gamma_c, List of Faces - END *****************************************
 
-
-   
-namespace ctrl {
-
-
-//*******************************************************************************************
-//*********************** Domain and Mesh Dependent - BEGIN *****************************************
-//*******************************************************************************************
+ }
 
 
 namespace mesh {
@@ -602,9 +608,9 @@ namespace Gamma_c_single {
                                                  const std::vector < double > & x,
                                                  double &  value)  {
      
-     assert( face_with_extremes_index_size == 1 );
+     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 1 );
 
-    const unsigned face_for_control = face_with_extremes_index[0];
+    const unsigned face_for_control = ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
 
     const double domain_length = 1.;
 
@@ -626,13 +632,13 @@ namespace Gamma_c_single {
                                         bool &  dirichlet)  {
      
 
-     assert( face_with_extremes_index_size == 1 );
-    const unsigned face_for_control = face_with_extremes_index[0];
+     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 1 );
+    const unsigned face_for_control = ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
 
      
      if (faceName == face_for_control) {
-        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[0][0] + 1.e-5 &&
-               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[0][1] - 1.e-5) ) {
+        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[0][0] + 1.e-5 &&
+               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[0][1] - 1.e-5) ) {
                 dirichlet = true;
            }
     }
@@ -662,18 +668,18 @@ namespace Gamma_c_double_adjacent {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
 
-     assert( face_with_extremes_index_size == 2 );
+     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 2 );
 
     const double domain_length = 1.;
 
       const double gamma = 5.;
       
       
-	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
 
-        if (faceName == face_with_extremes_index[f])     {  value = 0.; }
-   else if (faceName == ctrl::boundary_conditions::opposite_face(face_with_extremes_index[f])) { value = gamma * 
-       ( boundary_conditions::opposite_face_ctrl_or_state_value(face_with_extremes_index[f], domain_length) + boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_with_extremes_index[f]) *  x[ boundary_conditions::tangential_direction_to_Gamma_control(face_with_extremes_index[f]) ] );  }
+        if (faceName == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f])     {  value = 0.; }
+   else if (faceName == ctrl::boundary_conditions::opposite_face(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f])) { value = gamma * 
+       ( boundary_conditions::opposite_face_ctrl_or_state_value(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f], domain_length) + boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) *  x[ boundary_conditions::tangential_direction_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) ] );  }
 
       }
    
@@ -690,26 +696,26 @@ namespace Gamma_c_double_adjacent {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
      
-     assert( face_with_extremes_index_size == 2 );
+     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 2 );
      
      
      bool  is_facename_a_control_face = false;
      
-     for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
 
-     if (faceName == face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
+     if (faceName == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
           
      }
 
      if  (is_facename_a_control_face == false) { dirichlet = true; }
 
       
-     for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
 
-     if (faceName == face_with_extremes_index[f]) {
+     if (faceName == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
          
-        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > face_with_extremes_extremes[f][0] + 1.e-5 &&
-               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < face_with_extremes_extremes[f][1] - 1.e-5) ) {
+        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
+               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) {
                 dirichlet = true;
            }
         }
@@ -729,12 +735,6 @@ namespace Gamma_c_double_adjacent {
 
 
 
-//*******************************************************************************************
-//*********************** Domain and Mesh Dependent - END *****************************************
-//*******************************************************************************************
-
-
-//*********************** Mesh dependent - BEGIN *****************************************
 
 namespace Gamma_control {
     
@@ -786,13 +786,13 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
   const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
    
   
-	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
           
-   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_with_extremes_index[f]);
+   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
 
-   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
+   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
 
-   const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
+   const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
 
    
    if ( ( line_sign * elem_center[1 - axis_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
@@ -822,18 +822,18 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   const double control_domain_depth = BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C; //this picks a lot more elements, but then the if on the faces only gets the control boundary
 
   
-	  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
           
-   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_with_extremes_index[f]);
+   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
 
-   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(face_with_extremes_index[f]);
+   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
    
-   const unsigned int Gamma_c_dir_tangential = boundary_conditions::tangential_direction_to_Gamma_control(face_with_extremes_index[f]);
+   const unsigned int Gamma_c_dir_tangential = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
 
   
    if ( ( line_sign * elem_center[1 - Gamma_c_dir_tangential] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
-       && ( elem_center[Gamma_c_dir_tangential] > face_with_extremes_extremes[f][0] - offset_to_include_line ) 
-       && ( elem_center[Gamma_c_dir_tangential] < face_with_extremes_extremes[f][1] + offset_to_include_line ) )
+       && ( elem_center[Gamma_c_dir_tangential] > ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] - offset_to_include_line ) 
+       && ( elem_center[Gamma_c_dir_tangential] < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] + offset_to_include_line ) )
       { control_el_flag = 1; }
       
    }
@@ -851,7 +851,16 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   
 }
 
-//*********************** Mesh dependent - END *****************************************
+
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Dependent - END *****************************************
+//*******************************************************************************************
+
+
+
+
+
 
 //*********************** Mesh independent - BEGIN *****************************************
 
@@ -943,8 +952,8 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 		
           bool  is_face_for_control = false;
           
-          		  for(unsigned f = 0; f < face_with_extremes_index_size; f++) {
-                      if (face_in_rectangle_domain_j == face_with_extremes_index[f]) { is_face_for_control = true; }
+          		  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+                      if (face_in_rectangle_domain_j == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_face_for_control = true; }
                   }
 
           

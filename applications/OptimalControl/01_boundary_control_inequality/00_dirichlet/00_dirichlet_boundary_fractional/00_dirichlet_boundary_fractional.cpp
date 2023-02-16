@@ -194,8 +194,8 @@ int main(int argc, char** args) {
 
   // ======= Problem, Files - BEGIN  ========================
   Files files; 
-        files.CheckIODirectories(use_output_time_folder);
-        files.RedirectCout(redirect_cout_to_file);
+        files.CheckIODirectories(ctrl::use_output_time_folder);
+        files.RedirectCout(ctrl::redirect_cout_to_file);
 
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
