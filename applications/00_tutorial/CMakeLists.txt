@@ -24,10 +24,9 @@ ADD_SUBDIRECTORY(ex06b_navier_stokes/)
 ADD_SUBDIRECTORY(ex07_boussinesq/)
 ADD_SUBDIRECTORY(ex08_boussinesq/)
 
-
-ADD_SUBDIRECTORY(ex11/)
-
-
 ADD_SUBDIRECTORY(ex20_time_dependent/)
+
+ADD_SUBDIRECTORY(ex40_other/)
+
 
 
