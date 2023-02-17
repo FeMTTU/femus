@@ -29,3 +29,6 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   ADD_SUBDIRECTORY(./08_bonito2/)
   ADD_SUBDIRECTORY(./10_wg/)
   
+# input mesh files for control
+FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/input/)
+FILE(COPY           ${PROJECT_SOURCE_DIR}/applications/${OPTCONTROL_FOLDER}/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/input/)
