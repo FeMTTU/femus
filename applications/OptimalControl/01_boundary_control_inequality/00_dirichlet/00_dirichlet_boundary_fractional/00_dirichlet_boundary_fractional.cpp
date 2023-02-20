@@ -207,10 +207,8 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 
-  
-  const std::string input_file = ctrl::mesh::input;
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
-  const std::string infile = mystream.str();
+  const std::string infile = ctrl::mesh::file_with_prefix();
+
   const double Lref = 1.;
   
   const bool read_groups = true;

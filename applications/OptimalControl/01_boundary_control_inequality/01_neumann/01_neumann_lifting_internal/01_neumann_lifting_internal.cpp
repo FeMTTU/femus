@@ -14,6 +14,8 @@
 
 using namespace femus;
 
+
+
 double InitialValueContReg(const std::vector < double >& x) {
   return ctrl::Gamma_control::ControlDomainFlag_internal_restriction(x);
 }
@@ -92,6 +94,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("state", LAGRANGE, FIRST);
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
+
   mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 

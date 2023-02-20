@@ -202,7 +202,7 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 2
+#define N_UNIFORM_LEVELS 7
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -430,16 +430,31 @@ namespace ctrl {
 
 namespace mesh {
 
-
-//   const std::string input = "parametric_square_1x1.med";
-     const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+     
+  const std::string input = "parametric_square_1x1.med";
+//      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 //   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
 
+     
+  std::string file_with_prefix()  {
+     
 
+     const std::string input_file = ctrl::mesh::input;
+     
+     const std::string mesh_location = "../../../";
+     
+      std::ostringstream mystream; mystream << mesh_location /*"./"*/ << DEFAULT_INPUTDIR << "/" << input_file;
+      const std::string infile = mystream.str();
+      
+      return infile;
+
+   }
+     
+     
 }
       
 

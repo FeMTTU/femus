@@ -282,9 +282,8 @@ int main(int argc, char** args) {
         files.CheckIODirectories(true);
         files.RedirectCout(true);
 
-    std::string mesh_folder_file = "input/";
     std::string input_file = "cyl.med";
-  std::ostringstream mystream; mystream << "./" << /*DEFAULT_INPUTDIR*/ mesh_folder_file << input_file;
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR  << "/"  << input_file;
   const std::string infile = mystream.str();
 
   // ======= Quad Rule ========================
