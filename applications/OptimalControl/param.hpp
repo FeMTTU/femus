@@ -202,7 +202,7 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 7
+#define N_UNIFORM_LEVELS 3
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -334,8 +334,8 @@ namespace ctrl {
 
 
 
-#define GAMMA_CONTROL_LOWER 0.25
-#define GAMMA_CONTROL_UPPER 0.75
+#define GAMMA_CONTROL_LOWER /*0.25*/  0.
+#define GAMMA_CONTROL_UPPER /*0.75*/  1.
 //***** Domain-related ****************** 
 #define EX_1        GAMMA_CONTROL_LOWER
 #define EX_2        GAMMA_CONTROL_UPPER
@@ -430,8 +430,8 @@ namespace ctrl {
 
 namespace mesh {
 
-     
-  const std::string input = "parametric_square_1x1.med";
+  const std::string input = "Study7_GroupofNode_Face2.med";
+//   const std::string input = "parametric_square_1x1.med";
 //      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 //   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
