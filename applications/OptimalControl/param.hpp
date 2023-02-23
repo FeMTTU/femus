@@ -194,7 +194,7 @@ namespace ctrl {
 //*******************************************************************************************
 
 //*********************** 
-  const bool use_output_time_folder = false;
+  const bool use_output_time_folder = true;
   const bool redirect_cout_to_file = false;
 //*********************** 
 
@@ -202,7 +202,7 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 5
+#define N_UNIFORM_LEVELS 2
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -222,7 +222,7 @@ namespace ctrl {
 #define COST_FUNCTIONAL_COEFF 1 
 
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1.e-2
+#define ALPHA_CTRL_BDRY 1.e-5
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -236,7 +236,7 @@ namespace ctrl {
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0     /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0    /* 0: integer norm, 1: fractional norm */
 
 
 #define RHS_ONE             0.
@@ -334,8 +334,8 @@ namespace ctrl {
 
 
 
-#define GAMMA_CONTROL_LOWER 0.25  /*0.*/
-#define GAMMA_CONTROL_UPPER 0.75  /*1.*/
+#define GAMMA_CONTROL_LOWER /*0.25 */ 0.
+#define GAMMA_CONTROL_UPPER /*0.75  */1.
 //***** Domain-related ****************** 
 #define EX_1        GAMMA_CONTROL_LOWER
 #define EX_2        GAMMA_CONTROL_UPPER
@@ -391,11 +391,11 @@ namespace ctrl {
 //*********************** Domain and Mesh Dependent - BEGIN *****************************************
 //*******************************************************************************************
 
-// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Single_Gamma_control_list_of_faces_with_extremes
+#define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Single_Gamma_control_list_of_faces_with_extremes
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single_control_in_front_linear
 #define FACE_CONTROL_ADJACENT                        2                                                      // ***for "Gamma_c_single_control_in_front_linear"***//
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
 // #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Double_Gamma_control_list_of_faces_with_extremes
@@ -408,9 +408,9 @@ namespace ctrl {
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
-#define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Quadruple_Gamma_control_list_of_faces_with_extremes
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Quadruple_Gamma_control_list_of_faces_with_extremes
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
 namespace Single_Gamma_control_list_of_faces_with_extremes {
@@ -510,10 +510,12 @@ namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 
 namespace mesh {
 
-//   const std::string input = "Study7_GroupofNode_Face2.med";
+  const std::string input = "GroupofNode_Face1.med";
+//   const std::string input = "GroupofNode_Face2.med";
+//   const std::string input = "GroupofNode_Face3.med";
+//   const std::string input = "GroupofNode_Face4.med";
 
-  const std::string input = "parametric_square_1x1.med";
-
+//   const std::string input = "parametric_square_1x1.med";
 //      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 
 //   std::string input_file = "parametric_square_1x1.med";
