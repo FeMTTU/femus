@@ -194,7 +194,7 @@ namespace ctrl {
 //*******************************************************************************************
 
 //*********************** 
-  const bool use_output_time_folder = false;
+  const bool use_output_time_folder = true;
   const bool redirect_cout_to_file = false;
 //*********************** 
 
@@ -202,7 +202,7 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 5
+#define N_UNIFORM_LEVELS 2
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -222,7 +222,7 @@ namespace ctrl {
 #define COST_FUNCTIONAL_COEFF 1 
 
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1.e-6
+#define ALPHA_CTRL_BDRY 1.e-5
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -236,7 +236,7 @@ namespace ctrl {
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  1      /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0    /* 0: integer norm, 1: fractional norm */
 
 
 #define RHS_ONE             0.
@@ -330,12 +330,12 @@ namespace ctrl {
 //*********************** Control, Gamma_c specification - BEGIN  *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        3
+#define FACE_FOR_CONTROL        1
 
 
 
-#define GAMMA_CONTROL_LOWER 0.25  /*0.*/
-#define GAMMA_CONTROL_UPPER 0.75  /*1.*/
+#define GAMMA_CONTROL_LOWER /*0.25 */ 0.
+#define GAMMA_CONTROL_UPPER /*0.75  */1.
 //***** Domain-related ****************** 
 #define EX_1        GAMMA_CONTROL_LOWER
 #define EX_2        GAMMA_CONTROL_UPPER
@@ -351,7 +351,7 @@ namespace ctrl {
 //*********************** Control, cost functional, target region - BEGIN *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_TARGET         4
+#define FACE_FOR_TARGET         2
 
 #define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
 //*********************** Control, cost functional, target region - END *******************************************************
@@ -390,71 +390,132 @@ namespace ctrl {
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent - BEGIN *****************************************
 //*******************************************************************************************
-    
- namespace Gamma_control_list_of_faces_with_extremes {
- 
-//*********************** Mesh dependent, Gamma_c, List of Faces - BEGIN *****************************************
-    
-//     class face_with_extremes {
-//         
-//         
-//     public:
-        
-     static const unsigned face_with_extremes_index_size = /*1*/ /*2*/ 3 ;
-    
-     static const unsigned face_with_extremes_index[ ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size ] = {
+
+#define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Single_Gamma_control_list_of_faces_with_extremes
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single_control_in_front_linear
+#define FACE_CONTROL_ADJACENT                        2                                                      // ***for "Gamma_c_single_control_in_front_linear"***//
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Double_Gamma_control_list_of_faces_with_extremes
+//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent_control_in_front_linear
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Triple_Gamma_control_list_of_faces_with_extremes
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_triple_adjacent_control_in_front_linear
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Quadruple_Gamma_control_list_of_faces_with_extremes
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+
+namespace Single_Gamma_control_list_of_faces_with_extremes {
+
+
+     static const unsigned face_with_extremes_index_size = 1 ;
+
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
+         FACE_FOR_CONTROL
+    };
+
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
+         true
+    };
+
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
+       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+    };
+
+ }
+
+namespace Double_Gamma_control_list_of_faces_with_extremes {
+
+     static const unsigned face_with_extremes_index_size = 2 ;
+
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
+         FACE_FOR_CONTROL
+       , 3
+    };
+
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
+         true
+       , true
+    };
+
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
+       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+    };
+
+
+ }
+
+namespace Triple_Gamma_control_list_of_faces_with_extremes {
+
+
+     static const unsigned face_with_extremes_index_size = 3 ;
+
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
          FACE_FOR_CONTROL
        , 1
        , 2
-  //     , FACE_FOR_CONTROL + 2
     };
-     
-     static const bool     face_with_extremes_extract_subface[ ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size ] = {
+
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
          true
        , true
        , true
-  //     , true
     };
-        
-     static const double   face_with_extremes_extremes[ ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size ][2] = {
+
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
        { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-  //   , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
     };
-        
-     
-//     };
+
+ }
+
+namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 
 
-#define  FACE_CONTROL_ADJACENT   2/*3*/// ***for "Gamma_c_single_control_in_front_linear"***
+     static const unsigned face_with_extremes_index_size = 4 ;
 
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
+         FACE_FOR_CONTROL
+       , 3
+       , 4
+       , FACE_FOR_TARGET
+    };
 
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent
-//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
+         true
+       , true
+       , true
+       , true
+    };
 
-
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
-
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single_control_in_front_linear
-
-//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent_control_in_front_linear
-
- #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_triple_adjacent_control_in_front_linear
-
-//*********************** Mesh dependent, Gamma_c, List of Faces - END *****************************************
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
+       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+    };
 
  }
 
 
 namespace mesh {
 
-//   const std::string input = "Study7_GroupofNode_Face2.med";
+  const std::string input = "GroupofNode_Face1.med";
+//   const std::string input = "GroupofNode_Face2.med";
+//   const std::string input = "GroupofNode_Face3.med";
+//   const std::string input = "GroupofNode_Face4.med";
 
-  const std::string input = "parametric_square_1x1.med";
-
+//   const std::string input = "parametric_square_1x1.med";
 //      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 
 //   std::string input_file = "parametric_square_1x1.med";
@@ -634,134 +695,6 @@ const unsigned int opposite_face(const unsigned int face_index) {
 }
 
 
-namespace Gamma_c_single {
-    
-    
-
- double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem * ml_prob, 
-                                                 const int faceName,
-                                                 const std::vector < double > & x,
-                                                 double &  value)  {
-     
-     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 1 );
-
-    const unsigned face_for_control = ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
-
-    const double domain_length = 1.;
-
-      const double gamma = 5.;
-
-        if (faceName == face_for_control)     {  value = 0.; }
-   else if (faceName == ctrl::boundary_conditions::opposite_face(face_for_control)) { value =  gamma * domain_length; }
-   else                                       { value = gamma * ( boundary_conditions::opposite_face_ctrl_or_state_value(face_for_control, domain_length) + boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_for_control) *  x[ boundary_conditions::normal_direction_to_Gamma_control(face_for_control) ] ); }
-
-   value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
-   
-   return value;
-}
-
-
- bool ctrl_or_state_set_dirichlet_flags(const MultiLevelProblem * ml_prob, 
-                                        const int faceName,
-                                        const std::vector < double > & x,
-                                        bool &  dirichlet)  {
-     
-
-     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 1 );
-    const unsigned face_for_control = ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
-
-     
-     if (faceName == face_for_control) {
-        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[0][0] + 1.e-5 &&
-               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[0][1] - 1.e-5) ) {
-                dirichlet = true;
-           }
-    }
-    else {
-          dirichlet = true;
-    }
-
-    return dirichlet;
-}
-
-
-
-}
-
-namespace Gamma_c_double_adjacent {
-    
-    
-
-    
- double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem * ml_prob, 
-                                                 const int faceName,
-                                                 const std::vector < double > & x,
-                                                 double &  value)  {
-
-     if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-
-     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 2 );
-
-    const double domain_length = 1.;
-
-      const double gamma = 5.;
-      
-      
-	  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
-
-        if (faceName == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f])     {  value = 0.; }
-   else if (faceName == ctrl::boundary_conditions::opposite_face(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f])) { value = gamma * 
-       ( boundary_conditions::opposite_face_ctrl_or_state_value(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f], domain_length) + boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) *  x[ boundary_conditions::tangential_direction_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) ] );  }
-
-      }
-   
-   value += PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
-   
-   return value;
-}
-
-
- bool ctrl_or_state_set_dirichlet_flags(const MultiLevelProblem * ml_prob, 
-                                        const int faceName,
-                                        const std::vector < double > & x,
-                                        bool &  dirichlet)  {
-
-     if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-     
-     assert( ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 2 );
-     
-     
-     bool  is_facename_a_control_face = false;
-     
-     for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
-
-     if (faceName == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
-          
-     }
-
-     if  (is_facename_a_control_face == false) { dirichlet = true; }
-
-      
-     for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
-
-     if (faceName == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
-         
-        if ( !(x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-               x[ boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) {
-                dirichlet = true;
-           }
-        }
-      }    
-    
-
-    return dirichlet;
-}
-
-
-
-}
-
-
 
 namespace Multiple_controls_and_homogenous_boundary_conditions {
 
@@ -801,21 +734,21 @@ namespace Multiple_controls_and_homogenous_boundary_conditions {
 //     const unsigned face_for_control = face_with_extremes_index[0];
 
       bool  is_facename_a_control_face = false;
-      for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+      for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-           if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
+           if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
 
            }
 
            if  (is_facename_a_control_face == false) { dirichlet = true; }
 
 
-           for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+           for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-           if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
+           if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) {
 
-              if ( !(x[ femus::ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-                     x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) {
+              if ( !(x[ femus::ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+                     x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) ) {
                       dirichlet = true;
                  }
               }
@@ -842,25 +775,26 @@ namespace Multiple_controls_in_front_constant {
 
 //      assert( face_with_extremes_index_size == 2 );
 
-     const unsigned face_for_control_principal = femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
+     const unsigned face_for_control_principal = femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[0];
 
     const double domain_length = 1.;
 
       const double gamma = 5.;
 
 
-	  for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-        if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
+        if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) {
               if(faceName == face_for_control_principal) {  value = 0.; }
               else if (faceName == ctrl::boundary_conditions::opposite_face(face_for_control_principal)){
-                     if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-                            x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) )   { value =  gamma * domain_length; }
+                     if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+                            x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) )   { value =  gamma * domain_length; }
                      else {value = 0.; }
               }
               else {
-                     if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-                            x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) { value = gamma * (
+                     if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+                            x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) ) { value =
+                            gamma * (
                                       ctrl::boundary_conditions::opposite_face_ctrl_or_state_value(face_for_control_principal, domain_length) + ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_for_control_principal) *  x[      ctrl::boundary_conditions::normal_direction_to_Gamma_control(face_for_control_principal) ] ); }
                      else {value = 0.; }
               }
@@ -889,21 +823,21 @@ namespace Multiple_controls_in_front_constant {
 
      bool  is_facename_a_control_face = false;
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-     if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
+     if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
 
      }
 
      if  (is_facename_a_control_face == false) { dirichlet = true; }
 
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-     if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
+     if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) {
 
-        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) {
+        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) ) {
                 dirichlet = true;
            }
         }
@@ -927,9 +861,9 @@ namespace Gamma_c_single_control_in_front_linear {
                                                  const std::vector < double > & x,
                                                  double &  value)  {
 
-    assert( femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 1 );
+    assert( femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size == 1 );
 
-    const unsigned face_for_control = femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
+    const unsigned face_for_control = femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[0];
     const unsigned adjacent_face_for_control = FACE_CONTROL_ADJACENT; /*face_with_extremes_index[1]*/
 
 
@@ -960,13 +894,13 @@ namespace Gamma_c_single_control_in_front_linear {
                                         bool &  dirichlet)  {
 
 
-     assert( femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 1 );
-    const unsigned face_for_control = femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
+     assert( femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size == 1 );
+    const unsigned face_for_control = femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[0];
 
 
      if (faceName == face_for_control) {
-        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[0][0] + 1.e-5 &&
-               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[0][1] - 1.e-5) ) {
+        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[0][0] + 1.e-5 &&
+               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[0][1] - 1.e-5) ) {
                 dirichlet = true;
            }
     }
@@ -994,19 +928,19 @@ namespace Gamma_c_double_adjacent_control_in_front_linear {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
 
-     assert( femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 2 );
+     assert( femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size == 2 );
 
-     const unsigned face_for_control_principal = femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
-     const unsigned adjacent_face_for_control = femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[1];
+     const unsigned face_for_control_principal = femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[0];
+     const unsigned adjacent_face_for_control = femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[1];
 
      const double domain_length = 1.;
 
      const double gamma = 5.;
 
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-        if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f])     {  value = 0.; }
+        if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f])     {  value = 0.; }
         else if(faceName == ctrl::boundary_conditions::opposite_face(face_for_control_principal)){ value = gamma * (
              ctrl::boundary_conditions::opposite_face_ctrl_or_state_value(adjacent_face_for_control, domain_length) + ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(adjacent_face_for_control) *  x[
              ctrl::boundary_conditions::normal_direction_to_Gamma_control(adjacent_face_for_control) ] );  }
@@ -1028,26 +962,26 @@ namespace Gamma_c_double_adjacent_control_in_front_linear {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
 
-     assert( femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 2 );
+     assert( femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size == 2 );
 
 
      bool  is_facename_a_control_face = false;
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-     if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
+     if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
 
      }
 
      if  (is_facename_a_control_face == false) { dirichlet = true; }
 
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-     if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
+     if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) {
 
-        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) {
+        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) ) {
                 dirichlet = true;
            }
         }
@@ -1074,31 +1008,31 @@ namespace Gamma_c_triple_adjacent_control_in_front_linear {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
 
-     assert( femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 3 );
+     assert( femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size == 3 );
 
-     const unsigned face_for_control_principal = femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[0];
-     const unsigned adjacent_face_for_control = femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[1];
+     const unsigned face_for_control_principal = femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[0];
+     const unsigned adjacent_face_for_control = femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[1];
 
      const double domain_length = 1.;
 
      const double gamma = 5.;
 
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-         if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
+         if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) {
 
                 if ( (faceName == face_for_control_principal) || (faceName == adjacent_face_for_control) )     {  value = 0.; }
                 else if(faceName == ctrl::boundary_conditions::opposite_face(face_for_control_principal)){
-                        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-                               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) { value = gamma * (
+                        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+                               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) ) { value = gamma * (
                                   ctrl::boundary_conditions::opposite_face_ctrl_or_state_value(adjacent_face_for_control, domain_length) + ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(adjacent_face_for_control) *  x[
                                   ctrl::boundary_conditions::normal_direction_to_Gamma_control(adjacent_face_for_control) ] );  }
                         else {value = 0.; }
                 }
                 else if(faceName == ctrl::boundary_conditions::opposite_face(adjacent_face_for_control)){
-                        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-                               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) { value = gamma * (
+                        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+                               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) ) { value = gamma * (
                                ctrl::boundary_conditions::opposite_face_ctrl_or_state_value(face_for_control_principal, domain_length) + ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(face_for_control_principal) *  x[
                                ctrl::boundary_conditions::normal_direction_to_Gamma_control(face_for_control_principal) ] );  }
                                else {value = 0.; }
@@ -1127,26 +1061,26 @@ namespace Gamma_c_triple_adjacent_control_in_front_linear {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
 
-     assert( femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size == 3 );
+     assert( femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size == 3 );
 
 
      bool  is_facename_a_control_face = false;
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-     if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
+     if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) { is_facename_a_control_face = true; break; }
 
      }
 
      if  (is_facename_a_control_face == false) { dirichlet = true; }
 
 
-     for(unsigned f = 0; f < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+     for(unsigned f = 0; f < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
 
-     if (faceName == femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) {
+     if (faceName == femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) {
 
-        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] + 1.e-5 &&
-               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] - 1.e-5) ) {
+        if ( !(x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] > femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] + 1.e-5 &&
+               x[ ctrl::boundary_conditions::tangential_direction_to_Gamma_control(faceName) ] < femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] - 1.e-5) ) {
                 dirichlet = true;
            }
         }
@@ -1216,13 +1150,13 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
   const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
    
   
-	  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
           
-   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
+   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
 
-   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
+   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
 
-   const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
+   const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);                  // 1-2 , 5-6 = 1 || 3-4 = 0
 
    
    if ( ( line_sign * elem_center[1 - axis_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
@@ -1252,18 +1186,18 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   const double control_domain_depth = BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C; //this picks a lot more elements, but then the if on the faces only gets the control boundary
 
   
-	  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
           
-   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
+   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
 
-   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
+   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
    
-   const unsigned int Gamma_c_dir_tangential = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]);
+   const unsigned int Gamma_c_dir_tangential = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
 
   
    if ( ( line_sign * elem_center[1 - Gamma_c_dir_tangential] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
-       && ( elem_center[Gamma_c_dir_tangential] > ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][0] - offset_to_include_line ) 
-       && ( elem_center[Gamma_c_dir_tangential] < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_extremes[f][1] + offset_to_include_line ) )
+       && ( elem_center[Gamma_c_dir_tangential] > ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][0] - offset_to_include_line )
+       && ( elem_center[Gamma_c_dir_tangential] < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_extremes[f][1] + offset_to_include_line ) )
       { control_el_flag = 1; }
       
    }
@@ -1384,8 +1318,8 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 		
           bool  is_face_for_control = false;
           
-          		  for(unsigned f = 0; f < ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index_size; f++) {
-                      if (face_in_rectangle_domain_j == ctrl::Gamma_control_list_of_faces_with_extremes::face_with_extremes_index[f]) { is_face_for_control = true; }
+          		  for(unsigned f = 0; f < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
+                      if (face_in_rectangle_domain_j == ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]) { is_face_for_control = true; }
                   }
 
           
