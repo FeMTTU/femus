@@ -222,7 +222,7 @@ namespace ctrl {
 #define COST_FUNCTIONAL_COEFF 1 
 
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1.e-6
+#define ALPHA_CTRL_BDRY 1.e-2
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -236,7 +236,7 @@ namespace ctrl {
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  1      /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV  0     /* 0: integer norm, 1: fractional norm */
 
 
 #define RHS_ONE             0.
@@ -398,15 +398,19 @@ namespace ctrl {
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
-#define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Double_Gamma_control_list_of_faces_with_extremes
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Double_Gamma_control_list_of_faces_with_extremes
 //  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent_control_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 // #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Triple_Gamma_control_list_of_faces_with_extremes
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_triple_adjacent_control_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+#define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Quadruple_Gamma_control_list_of_faces_with_extremes
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
 namespace Single_Gamma_control_list_of_faces_with_extremes {
@@ -469,6 +473,34 @@ namespace Triple_Gamma_control_list_of_faces_with_extremes {
 
      static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
        { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+    };
+
+ }
+
+namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
+
+
+     static const unsigned face_with_extremes_index_size = 4 ;
+
+     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
+         FACE_FOR_CONTROL
+       , 3
+       , 4
+       , FACE_FOR_TARGET
+    };
+
+     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
+         true
+       , true
+       , true
+       , true
+    };
+
+     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
+       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
     };
@@ -1118,11 +1150,11 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
   
 	  for(unsigned f = 0; f < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index_size; f++) {
           
-   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
+   const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
 
-   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
+   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
 
-   const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
+   const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);                  // 1-2 , 5-6 = 1 || 3-4 = 0
 
    
    if ( ( line_sign * elem_center[1 - axis_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
