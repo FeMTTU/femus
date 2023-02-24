@@ -114,7 +114,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::Gamma_control::ControlDomainFlag_external_restriction(x);
+        value = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_external_restriction(x);
     }
     else if(!strcmp(name,"act_flag")) {
         value = 0.;
@@ -1022,7 +1022,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {

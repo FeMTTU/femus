@@ -199,7 +199,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::Gamma_control::ControlDomainFlag_bdry(x);
+        value = ctrl:: Domain_elements_containing_Gamma_control :: ControlDomainFlag_bdry(x);
     }
 
     return value;
@@ -381,7 +381,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 
-  const std::string infile = ctrl::mesh::file_with_prefix();
+  const std::string infile = ctrl::mesh::file_with_prefix(ctrl::mesh_input);
 
 
   const bool read_groups = true;
@@ -1254,7 +1254,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
    
  //************ set control flag - BEGIN *********************
     int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ctrl::Gamma_control::ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
+        does_iel_contain_a_bdry_control_face = ctrl :: Domain_elements_containing_Gamma_control :: ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
  //************ initialize control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
     std::vector< std::vector<int> > control_node_flag_iel_jface(n_components_ctrl);
 	    for(unsigned idim=0; idim < control_node_flag_iel_jface.size(); idim++) {

@@ -320,9 +320,12 @@ namespace ctrl {
 //*******************************************************************************************
 
 
+}
 
 
-  
+namespace ctrl {
+
+
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent, Parameters - BEGIN *****************************************
 //*******************************************************************************************
@@ -382,36 +385,78 @@ namespace ctrl {
 //*********************** Domain and Mesh Dependent, Parameters - END *****************************************
 //*******************************************************************************************
 
+}
 
 
 
-
+namespace ctrl {
 
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent - BEGIN *****************************************
 //*******************************************************************************************
 
-#define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Single_Gamma_control_list_of_faces_with_extremes
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single_control_in_front_linear
-#define FACE_CONTROL_ADJACENT                        2                                                      // ***for "Gamma_c_single_control_in_front_linear"***//
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
-// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Double_Gamma_control_list_of_faces_with_extremes
-//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent_control_in_front_linear
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+namespace boundary_conditions_or_cost_functional {
 
-// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Triple_Gamma_control_list_of_faces_with_extremes
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_triple_adjacent_control_in_front_linear
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+    
+const  int sign_function_for_delimiting_region(const unsigned int face_index) {
+    
+   int  target_line_sign;
+  
+        if (face_index == 1 || face_index == 3 || face_index == 5) { target_line_sign = 1;  }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { target_line_sign = -1; }
+   
+   return target_line_sign;
+   
+}
 
-// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Quadruple_Gamma_control_list_of_faces_with_extremes
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
+}
+
+//******************************** Mesh files oriented to Optimal Control - BEGIN *****************************************
+
+
+namespace mesh {
+
+  const std::string mesh_2d_square_1x1 = "parametric_square_1x1.med";
+  const std::string mesh_2d_square_1x2 = "parametric_square_1x2.med";
+  const std::string mesh_2d_square_2x2 = "parametric_square_2x2.med";
+  const std::string mesh_2d_square_4x5 = "parametric_square_4x5.med";
+
+  const std::string mesh_3d_cube_single_face_control_1             = "GroupofNode_Face1.med";
+  const std::string mesh_3d_cube_single_face_control_2             = "GroupofNode_Face2.med";
+  const std::string mesh_3d_cube_single_face_control_2_old         = "Mesh_3_groups_with_bdry_nodes.med";
+  const std::string mesh_3d_cube_single_face_control_2_old_coarser = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  const std::string mesh_3d_cube_single_face_control_3             = "GroupofNode_Face3.med";
+  const std::string mesh_3d_cube_single_face_control_4             = "GroupofNode_Face4.med";
+
+  
+  
+   
+   
+    
+  std::string file_with_prefix(const std::string input_file)  {
+     
+     
+     const std::string mesh_location = "../../../";
+     
+      std::ostringstream mystream; mystream << mesh_location /*"./"*/ << DEFAULT_INPUTDIR << "/" << input_file;
+      const std::string infile = mystream.str();
+      
+      return infile;
+
+   }
+     
+     
+}
+      
+
+//******************************** Mesh files oriented to Optimal Control - END *****************************************
+
+
+
+//*********************** Gamma_c, list of control faces - BEGIN *****************************************
 
 namespace Single_Gamma_control_list_of_faces_with_extremes {
 
@@ -507,130 +552,44 @@ namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 
  }
 
+//*********************** Gamma_c, list of control faces - END *****************************************
 
-namespace mesh {
 
-  const std::string input = "GroupofNode_Face1.med";
-//   const std::string input = "GroupofNode_Face2.med";
-//   const std::string input = "GroupofNode_Face3.med";
-//   const std::string input = "GroupofNode_Face4.med";
 
-//   const std::string input = "parametric_square_1x1.med";
-//      const std::string input = "Mesh_3_groups_with_bdry_nodes_coarser.med";
 
-//   std::string input_file = "parametric_square_1x1.med";
-//   std::string input_file = "parametric_square_1x2.med";
-//   std::string input_file = "parametric_square_2x2.med";
-//   std::string input_file = "parametric_square_4x5.med";
-//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+//*********************** Gamma_c, Choice of Mesh File, 
+//******************************** Choice of List of control faces and *********************** 
+//******************************** Choice of possible corresponding boundary conditions - BEGIN *****************************************
 
-     
-  std::string file_with_prefix()  {
-     
+   const std::string mesh_input = ctrl::mesh::mesh_3d_cube_single_face_control_1;
 
-     const std::string input_file = ctrl::mesh::input;
-     
-     const std::string mesh_location = "../../../";
-     
-      std::ostringstream mystream; mystream << mesh_location /*"./"*/ << DEFAULT_INPUTDIR << "/" << input_file;
-      const std::string infile = mystream.str();
-      
-      return infile;
-
-   }
-     
-     
-}
-      
-
-namespace boundary_conditions_or_cost_functional {
-
-    
-const  int sign_function_for_delimiting_region(const unsigned int face_index) {
-    
-   int  target_line_sign;
   
-        if (face_index == 1 || face_index == 3 || face_index == 5) { target_line_sign = 1;  }
-   else if (face_index == 2 || face_index == 4 || face_index == 6) { target_line_sign = -1; }
-   
-   return target_line_sign;
-   
-}
+#define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Single_Gamma_control_list_of_faces_with_extremes
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_single_control_in_front_linear
+                #define FACE_CONTROL_ADJACENT                        2                                                      // ***for "Gamma_c_single_control_in_front_linear"***//
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
-}
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Double_Gamma_control_list_of_faces_with_extremes
+//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_double_adjacent_control_in_front_linear
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Triple_Gamma_control_list_of_faces_with_extremes
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Gamma_c_triple_adjacent_control_in_front_linear
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+// #define GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME     Quadruple_Gamma_control_list_of_faces_with_extremes
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogenous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
-
-namespace cost_functional {
- 
-    
-const unsigned int axis_direction_target_reg(const unsigned int face_index) {
-    
-    unsigned int axis_dir;
-    
-        if (face_index == 1 || face_index == 2) { axis_dir = 0; }
-   else if (face_index == 3 || face_index == 4) { axis_dir = 1; }
-   else if (face_index == 5 || face_index == 6) { axis_dir = 2; }
-
-    return axis_dir;
-    
-}
+//*********************** Gamma_c, Choice of List of control faces and *********************** 
+//******************************** Choice of possible corresponding boundary conditions - END *****************************************
 
 
-    
-
-//*********************** Find volume elements that contain a  Target domain element **************************************
-
-int ElementTargetFlag(const std::vector<double> & elem_center) {
-
-    const double target_line_position_along_coordinate = TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG;
- //***** set target domain flag ******
-  int target_flag = 0; //set 0 to 1 to get the entire domain
-  
-  const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
-   
-  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
-
-  const int  target_line_sign = boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(FACE_FOR_TARGET);
-  
-   const double target_line = target_line_position_along_coordinate + target_line_sign * offset_to_include_line; 
-   
-   
-   
-      if ((  target_line_sign * elem_center[axis_dir] < target_line_sign * target_line ) && 
-          (  target_line_sign * elem_center[axis_dir] > - target_line_position_along_coordinate + target_line_sign * (target_line_position_along_coordinate - target_line_sign * offset_to_include_line)))
-          {  target_flag = 1;  }
-  
-     return target_flag;
-
-}
-
-
-
-//******************************************* Desired Target *******************************************************
-
-double DesiredTarget() {
-   return 0.9;
-}
-
-
- std::vector<double> DesiredTargetVec() {
-     
-    std::vector<double>  Vel_desired(3, 0.);
-    
-   const unsigned int axis_dir = 0;
-   
-    Vel_desired[axis_dir] = 1.;
-    
-   return Vel_desired;
-    }
-
-     
-    
-    
-    
-}  
 
 
 
@@ -1099,8 +1058,7 @@ namespace Gamma_c_triple_adjacent_control_in_front_linear {
 
 
 
-
-namespace Gamma_control {
+namespace Domain_elements_containing_Gamma_control {
     
 
     
@@ -1154,7 +1112,7 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
           
    const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
 
-   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
 
    const unsigned int axis_dir = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);                  // 1-2 , 5-6 = 1 || 3-4 = 0
 
@@ -1190,7 +1148,7 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
           
    const int  line_sign = ctrl::boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
 
-   const double extreme_pos = Gamma_control::face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
    
    const unsigned int Gamma_c_dir_tangential = boundary_conditions::tangential_direction_to_Gamma_control(ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREME::face_with_extremes_index[f]);
 
@@ -1217,13 +1175,91 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 
 
+
+
+
+namespace cost_functional {
+ 
+    
+const unsigned int axis_direction_target_reg(const unsigned int face_index) {
+    
+    unsigned int axis_dir;
+    
+        if (face_index == 1 || face_index == 2) { axis_dir = 0; }
+   else if (face_index == 3 || face_index == 4) { axis_dir = 1; }
+   else if (face_index == 5 || face_index == 6) { axis_dir = 2; }
+
+    return axis_dir;
+    
+}
+
+
+    
+
+//*********************** Find volume elements that contain a  Target domain element **************************************
+
+int ElementTargetFlag(const std::vector<double> & elem_center) {
+
+    const double target_line_position_along_coordinate = TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG;
+ //***** set target domain flag ******
+  int target_flag = 0; //set 0 to 1 to get the entire domain
+  
+  const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
+   
+  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
+
+  const int  target_line_sign = boundary_conditions_or_cost_functional::sign_function_for_delimiting_region(FACE_FOR_TARGET);
+  
+   const double target_line = target_line_position_along_coordinate + target_line_sign * offset_to_include_line; 
+   
+   
+   
+      if ((  target_line_sign * elem_center[axis_dir] < target_line_sign * target_line ) && 
+          (  target_line_sign * elem_center[axis_dir] > - target_line_position_along_coordinate + target_line_sign * (target_line_position_along_coordinate - target_line_sign * offset_to_include_line)))
+          {  target_flag = 1;  }
+  
+     return target_flag;
+
+}
+
+
+
+//******************************************* Desired Target *******************************************************
+
+double DesiredTarget() {
+   return 0.9;
+}
+
+
+ std::vector<double> DesiredTargetVec() {
+     
+    std::vector<double>  Vel_desired(3, 0.);
+    
+   const unsigned int axis_dir = 0;
+   
+    Vel_desired[axis_dir] = 1.;
+    
+   return Vel_desired;
+    }
+
+     
+    
+    
+    
+}  
+
+
+
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent - END *****************************************
 //*******************************************************************************************
 
+}
 
 
 
+
+namespace ctrl {
 
 
 //*******************************************************************************************
@@ -1338,7 +1374,7 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   bool volume_elem_contains_a_Gamma_control_face( const std::vector<double> & elem_center ) {
 
       int control_flag_jel = 0;
-        control_flag_jel = ControlDomainFlag_bdry(elem_center);
+        control_flag_jel = Domain_elements_containing_Gamma_control :: ControlDomainFlag_bdry(elem_center);
         
         return (control_flag_jel == 1);
 
@@ -4104,7 +4140,7 @@ double u_x_gss = 0.;
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
  //**************** state **************************** 
@@ -4381,7 +4417,7 @@ double  integral_div_ctrl = 0.;
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -4997,7 +5033,7 @@ namespace ctrl_inequality {
   
    
  
-  } //end namespace ctrl
+} //end namespace ctrl
 
 
 

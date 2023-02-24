@@ -99,7 +99,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(x);
+        value = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(x);
     }
 
     return value;
@@ -298,7 +298,7 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
  
     std::string mesh_folder_file = "input/";
-  const std::string input_file = ctrl::mesh::input;
+  const std::string input_file = ctrl::mesh_input;
 
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "cyl.med"; // "fifth"
@@ -1596,7 +1596,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
 
   std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
        
@@ -2408,7 +2408,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {
