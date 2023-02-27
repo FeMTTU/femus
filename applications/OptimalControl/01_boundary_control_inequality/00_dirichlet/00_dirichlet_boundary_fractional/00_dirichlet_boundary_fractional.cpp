@@ -152,8 +152,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
+     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
 
-    value = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
+//     value = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
 
   
   }
