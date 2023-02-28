@@ -531,7 +531,7 @@ namespace mesh {
 
 //*********************** Double - BEGIN *****************************************
 
-     
+
   class List_of_Gamma_control_faces_Double {
 
     public:
@@ -701,57 +701,220 @@ namespace mesh {
            const unsigned List_of_Gamma_control_faces_Four_Three::_face_with_extremes_index[ List_of_Gamma_control_faces_Double::_face_with_extremes_index_size ] = {    4  ,  3   };
 
 
+
+
 //*********************** Double - END *****************************************
 
 
 
 
+  class List_of_Gamma_control_faces_Triple {
+
+    public:
+
+       static constexpr unsigned _face_with_extremes_index_size = 3 ;
+
+       static constexpr bool     _face_with_extremes_extract_subface[ _face_with_extremes_index_size ] = {
+           true
+          ,true
+          ,true
+      };
+
+       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
 
 
-// namespace Double_Gamma_control_list_of_faces_with_extremes {
-//
-//      static const unsigned face_with_extremes_index_size = 2 ;
-//
-//      static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
-//          FACE_FOR_CONTROL
-//        , 3
-//     };
-//
-//      static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
-//          true
-//        , true
-//     };
-//
-//      static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
-//        { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-//      , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-//     };
-//  }
-
-namespace Triple_Gamma_control_list_of_faces_with_extremes {
-
-
-     static const unsigned face_with_extremes_index_size = 3 ;
-
-     static const unsigned face_with_extremes_index[ face_with_extremes_index_size ] = {
-         FACE_FOR_CONTROL
-       , 1
-       , 2
     };
 
-     static const bool     face_with_extremes_extract_subface[ face_with_extremes_index_size ] = {
-         true
-       , true
-       , true
-    };
 
-     static const double   face_with_extremes_extremes[ face_with_extremes_index_size ][2] = {
-       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-     , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-    };
+      const double   List_of_Gamma_control_faces_Triple::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
+         { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
 
- }
+      };
+
+
+      class List_of_Gamma_control_faces_One_Three_Two :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_One_Three_Two::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    1  ,  3  ,    2  };
+
+
+
+      class List_of_Gamma_control_faces_One_Four_Two :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_One_Four_Two::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    1  ,  4  ,    2  };
+
+
+
+      class List_of_Gamma_control_faces_One_Three_Four :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_One_Three_Four::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    1  ,  3  ,    4  };
+
+
+
+      class List_of_Gamma_control_faces_One_Four_Three :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_One_Four_Three::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    1  ,  4  ,    3  };
+
+
+
+
+
+      class List_of_Gamma_control_faces_Two_Three_One :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Two_Three_One::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    2  ,  3  ,    1  };
+
+
+
+      class List_of_Gamma_control_faces_Two_Four_One :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Two_Four_One::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    2  ,  4  ,    1  };
+
+
+
+      class List_of_Gamma_control_faces_Two_Three_Four :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Two_Three_Four::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    2  ,  3  ,    4  };
+
+
+      class List_of_Gamma_control_faces_Two_Four_Three :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Two_Four_Three::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    2  ,  4  ,    3  };
+
+
+
+      class List_of_Gamma_control_faces_Three_One_Four :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Three_One_Four::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    3  ,  1  ,    4  };
+
+
+
+      class List_of_Gamma_control_faces_Three_Two_Four :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Three_Two_Four::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    3  ,  2  ,    4  };
+
+
+      class List_of_Gamma_control_faces_Three_One_Two:  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Three_One_Two::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    3  ,  1  ,    2  };
+
+
+      class List_of_Gamma_control_faces_Three_Two_One:  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Three_Two_One::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    3  ,  2  ,    1  };
+
+
+      class List_of_Gamma_control_faces_Four_One_Three :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Four_One_Three::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    4  ,  1  ,    3  };
+
+
+
+      class List_of_Gamma_control_faces_Four_Two_Three :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Four_Two_Three::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    4  ,  2  ,    3  };
+
+
+
+      class List_of_Gamma_control_faces_Four_One_Two :  public  List_of_Gamma_control_faces_Triple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_Four_One_Two::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    4  ,  1  ,    2  };
+
+
+
+
+
+
 
 namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 
@@ -806,9 +969,9 @@ namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 
 
 //------------------------------------ double: BEGIN ------------------------------------
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_One
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Four
@@ -818,17 +981,40 @@ namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_One
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      Double_Gamma_control_list_of_faces_with_extremes
 
-//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Double_controls_adjacent_in_front_linear
+ #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Double_controls_adjacent_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 //------------------------------------ double: END ------------------------------------
 
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      Triple_Gamma_control_list_of_faces_with_extremes
+
+
+
+
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Three_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Four_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Three_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Four_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_One_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_Two_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_One_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_Two_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_One_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Two_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_One_Two
+
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Triple_controls_adjacent_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+
+
+
+
+
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      Quadruple_Gamma_control_list_of_faces_with_extremes
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
