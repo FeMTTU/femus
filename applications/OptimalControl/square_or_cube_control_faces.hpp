@@ -6,6 +6,26 @@
 
 namespace ctrl {
 
+
+   class Square_or_Cube {
+
+  public:
+
+
+   static  const  int sign_function_for_delimiting_region(const unsigned int face_index) {
+
+   int  target_line_sign;
+
+        if (face_index == 1 || face_index == 3 || face_index == 5) { target_line_sign = 1;  }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { target_line_sign = -1; }
+
+   return target_line_sign;
+
+   }
+
+
+ };
+
 //*********************** Gamma_c, list of control faces - BEGIN *****************************************
 
    class List_of_Gamma_control_faces {
@@ -43,6 +63,16 @@ namespace ctrl {
 }
 
 
+      static const unsigned int opposite_face(const unsigned int face_index) {
+
+   unsigned int face_opposite = 0;
+
+        if (face_index == 1 || face_index == 3 || face_index == 5) { face_opposite = face_index + 1; }
+   else if (face_index == 2 || face_index == 4 || face_index == 6) { face_opposite = face_index - 1; }
+
+    return face_opposite;
+
+}
 
    };
 
