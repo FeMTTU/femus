@@ -911,6 +911,49 @@ namespace mesh {
            const unsigned List_of_Gamma_control_faces_Four_One_Two::_face_with_extremes_index[ List_of_Gamma_control_faces_Triple::_face_with_extremes_index_size ] = {    4  ,  1  ,    2  };
 
 
+///////////////////////////////////////////////////////////////////////
+
+
+
+  class List_of_Gamma_control_faces_Quadruple {
+
+    public:
+
+       static constexpr unsigned _face_with_extremes_index_size = 4 ;
+
+       static constexpr bool     _face_with_extremes_extract_subface[ _face_with_extremes_index_size ] = {
+           true
+          ,true
+          ,true
+          ,true
+      };
+
+       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+
+
+    };
+
+
+      const double   List_of_Gamma_control_faces_Quadruple::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
+         { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+
+      };
+
+
+
+
+      class List_of_Gamma_control_faces_One_Three_Two_Four :  public  List_of_Gamma_control_faces_Quadruple {
+
+        public:
+
+           static const unsigned _face_with_extremes_index[ /*List_of_Gamma_control_faces_Quadruple::*/_face_with_extremes_index_size ];
+
+        };
+
+           const unsigned List_of_Gamma_control_faces_One_Three_Two_Four::_face_with_extremes_index[ /*List_of_Gamma_control_faces_Quadruple::*/_face_with_extremes_index_size ] = {    1  ,  3  , 4  ,   2  };
 
 
 
@@ -971,7 +1014,7 @@ namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 //------------------------------------ double: BEGIN ------------------------------------
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_One
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Four
@@ -982,7 +1025,7 @@ namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Three
 
- #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Double_controls_adjacent_in_front_linear
+//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Double_controls_adjacent_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 //------------------------------------ double: END ------------------------------------
@@ -1016,9 +1059,11 @@ namespace Quadruple_Gamma_control_list_of_faces_with_extremes {
 
 
 
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Two_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      Quadruple_Gamma_control_list_of_faces_with_extremes
+
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 
 //*********************** Gamma_c, Choice of List of control faces and *********************** 
