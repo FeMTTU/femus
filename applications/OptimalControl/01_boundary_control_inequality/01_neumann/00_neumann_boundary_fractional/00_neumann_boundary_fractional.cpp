@@ -37,7 +37,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ctrl:: Domain_elements_containing_Gamma_control ::ControlDomainFlag_bdry(x);
+        value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -415,7 +415,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    
  //************** set control flag *******************
   int control_el_flag = 0;
-        control_el_flag = ctrl:: Domain_elements_containing_Gamma_control :: ControlDomainFlag_bdry(elem_center);
+        control_el_flag = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //*************************************************** 

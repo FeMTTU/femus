@@ -17,7 +17,7 @@ using namespace femus;
 
 
 double InitialValueContReg(const std::vector < double >& x) {
-  return ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(x);
+  return ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
@@ -427,7 +427,7 @@ vector < double >  sol_adj; // local solution
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Domain_elements_containing_Gamma_control::ControlDomainFlag_internal_restriction(elem_center);
+  control_el_flag = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(elem_center);
   std::vector<int> control_node_flag(nDof_ctrl,0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 

@@ -117,7 +117,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = ctrl::cost_functional::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ctrl:: Domain_elements_containing_Gamma_control :: ControlDomainFlag_bdry(x);
+        value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;

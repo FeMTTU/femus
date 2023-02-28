@@ -8,9 +8,49 @@ namespace ctrl {
 
 //*********************** Gamma_c, list of control faces - BEGIN *****************************************
 
+   class List_of_Gamma_control_faces {
+
+  public:
+
+
+
+ //direction of the line that contains \Gamma_c
+      static const unsigned int normal_direction_to_Gamma_control(const unsigned int face_index) {
+
+    unsigned int axis_dir;
+
+        if (face_index == 1 || face_index == 2) { axis_dir = 0; }
+   else if (face_index == 3 || face_index == 4) { axis_dir = 1; }
+   else if (face_index == 5 || face_index == 6) { axis_dir = 2; }
+
+    return axis_dir;
+
+}
+
+
+
+
+      static const unsigned int tangential_direction_to_Gamma_control(const unsigned int face_index) {
+
+    unsigned int axis_dir;
+
+        if (face_index == 1 || face_index == 2) { axis_dir = 1; }
+   else if (face_index == 3 || face_index == 4) { axis_dir = 0; }
+   else if (face_index == 5 || face_index == 6) { /*abort();*/ axis_dir = 1; }  ///@todo this depends on the mesh file
+
+    return axis_dir;
+
+}
+
+
+
+   };
+
+
 //*********************** Single - BEGIN *****************************************
 
-  class List_of_Gamma_control_faces_Single {
+
+  class List_of_Gamma_control_faces_Single : public List_of_Gamma_control_faces {
 
   public:
 
@@ -82,7 +122,7 @@ namespace ctrl {
 //*********************** Double - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Double {
+  class List_of_Gamma_control_faces_Double : public List_of_Gamma_control_faces {
 
     public:
 
@@ -259,7 +299,7 @@ namespace ctrl {
 //*********************** Triple - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Triple {
+  class List_of_Gamma_control_faces_Triple : public List_of_Gamma_control_faces {
 
     public:
 
@@ -467,7 +507,7 @@ namespace ctrl {
 //*********************** Quadruple - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Quadruple {
+  class List_of_Gamma_control_faces_Quadruple : public List_of_Gamma_control_faces {
 
     public:
 
