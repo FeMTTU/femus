@@ -116,11 +116,10 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
    else if(!strcmp(name, "control")) {
 
 
-     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
-     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
+     ctrl:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+     ctrl:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
                   
-                    
                     
                     
    }

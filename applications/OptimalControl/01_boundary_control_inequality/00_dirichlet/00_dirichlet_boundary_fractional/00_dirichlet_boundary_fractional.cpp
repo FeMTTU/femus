@@ -139,10 +139,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
   if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
 
-     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+     ctrl:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
-     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
-
+     ctrl:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
    }
   
   
@@ -150,12 +149,9 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
   else if(!strcmp(name,"control")) {
 
-    ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
+    ctrl:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ctrl_or_state_set_dirichlet_flags(ml_prob, faceName, x, dirichlet);
 
-     ctrl::boundary_conditions:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS ::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
-
-//     value = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY_VALUE_CONSISTENT_WITH_BOUNDARY_OF_BOUNDARY;
-
+    ctrl:: NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ctrl_or_state_set_dirichlet_fixed_values(ml_prob, faceName, x, value);
   
   }
 
