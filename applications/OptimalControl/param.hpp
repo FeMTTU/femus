@@ -326,7 +326,7 @@ namespace ctrl {
 
 
 
-namespace ctrl_inequality {
+namespace mixed_state_or_ctrl_inequality {
 
 
  ///@@@@@@@@@@@@@@@@@@@todo I believe you need to pass other rows here.........
@@ -424,8 +424,8 @@ namespace ctrl_inequality {
             std::vector<double> node_coords_i(dim, 0.);
             for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
 
-            ctrl_lower_dofs[kdim][i] = ctrl::ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[kdim];
-            ctrl_upper_dofs[kdim][i] = ctrl::ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[kdim];
+            ctrl_lower_dofs[kdim][i] = ctrl::mixed_state_or_ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[kdim];
+            ctrl_upper_dofs[kdim][i] = ctrl::mixed_state_or_ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[kdim];
 
             const double lower_test_value = sol_eldofs[ pos_mu[kdim] ][i] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i] - ctrl_lower_dofs[kdim][i] );
             const double upper_test_value = sol_eldofs[ pos_mu[kdim] ][i] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i] - ctrl_upper_dofs[kdim][i] );
@@ -503,8 +503,8 @@ namespace ctrl_inequality {
         std::vector<double> node_coords_i(dim, 0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i_bdry];
 
-        ctrl_lower_dofs[kdim][i_bdry] = ctrl::ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[kdim];
-        ctrl_upper_dofs[kdim][i_bdry] = ctrl::ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[kdim];
+        ctrl_lower_dofs[kdim][i_bdry] = ctrl::mixed_state_or_ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[kdim];
+        ctrl_upper_dofs[kdim][i_bdry] = ctrl::mixed_state_or_ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[kdim];
 
         const double lower_test_value = sol_eldofs[ pos_mu[kdim] ][i_vol] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i_vol] - ctrl_lower_dofs[kdim][i_bdry] );
         const double upper_test_value = sol_eldofs[ pos_mu[kdim] ][i_vol] + c_compl * ( sol_eldofs[ pos_ctrl[kdim] ][i_vol] - ctrl_upper_dofs[kdim][i_bdry] );
@@ -868,28 +868,29 @@ namespace ctrl {
 
 
 //*******************************************************************************************
-//*********************** Domain and Mesh Dependent - BEGIN *****************************************
+//*********************** Domain and Mesh Dependent: Square or Cube - BEGIN *****************************************
 //*******************************************************************************************
 
 
+
+#include "square_or_cube_mesh_files_for_control.hpp"
+
 #include "square_or_cube_control_faces.hpp"
 
-
-#define  DOMAIN_CLASS    Square_or_Cube
+#include "square_or_cube_control_faces_domain_elements.hpp"
 
 #include "square_or_cube_boundary_conditions.hpp"
 
 
-#include "square_or_cube_control_faces_domain_elements.hpp"
 
 
 
 namespace ctrl {
 
 
-
 namespace cost_functional {
 
+namespace cost_functional_Square_or_Cube {
 
 const unsigned int axis_direction_target_reg(const unsigned int face_index) {
 
@@ -918,7 +919,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
   const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
 
-  const int  target_line_sign = DOMAIN_CLASS::sign_function_for_delimiting_region(FACE_FOR_TARGET);
+  const int  target_line_sign =  ctrl:: Square_or_Cube ::sign_function_for_delimiting_region(FACE_FOR_TARGET);
 
    const double target_line = target_line_position_along_coordinate + target_line_sign * offset_to_include_line;
 
@@ -954,51 +955,10 @@ double DesiredTarget() {
 
 
 
-
+}
 
 }
 
-
-
-//******************************** Mesh files oriented to Optimal Control - BEGIN *****************************************
-
-
-namespace mesh {
-
-  const std::string mesh_2d_square_1x1 = "parametric_square_1x1.med";
-  const std::string mesh_2d_square_1x2 = "parametric_square_1x2.med";
-  const std::string mesh_2d_square_2x2 = "parametric_square_2x2.med";
-  const std::string mesh_2d_square_4x5 = "parametric_square_4x5.med";
-
-  const std::string mesh_3d_cube_single_face_control_1             = "GroupofNode_Face1.med";
-  const std::string mesh_3d_cube_single_face_control_2             = "GroupofNode_Face2.med";
-  const std::string mesh_3d_cube_single_face_control_2_old         = "Mesh_3_groups_with_bdry_nodes.med";
-  const std::string mesh_3d_cube_single_face_control_2_old_coarser = "Mesh_3_groups_with_bdry_nodes_coarser.med";
-  const std::string mesh_3d_cube_single_face_control_3             = "GroupofNode_Face3.med";
-  const std::string mesh_3d_cube_single_face_control_4             = "GroupofNode_Face4.med";
-
-  
-  
-   
-   
-    
-  std::string file_with_prefix(const std::string input_file)  {
-     
-     
-     const std::string mesh_location = "../../../";
-     
-      std::ostringstream mystream; mystream << mesh_location /*"./"*/ << DEFAULT_INPUTDIR << "/" << input_file;
-      const std::string infile = mystream.str();
-      
-      return infile;
-
-   }
-     
-     
-}
-      
-
-//******************************** Mesh files oriented to Optimal Control - END *****************************************
 
 
 
@@ -1006,7 +966,8 @@ namespace mesh {
 
 //*********************** Gamma_c, Choice of Mesh File, 
 //******************************** Choice of List of control faces and *********************** 
-//******************************** Choice of possible corresponding boundary conditions - BEGIN *****************************************
+//******************************** Choice of possible corresponding boundary conditions and *****************************************
+//******************************** Choice of Cost Functional-related stuff - BEGIN *********************** 
 
    const std::string mesh_input = ctrl::mesh::mesh_2d_square_1x1;
 //    const std::string mesh_input = ctrl::mesh::mesh_3d_cube_single_face_control_1;
@@ -1081,13 +1042,19 @@ namespace mesh {
 //------------------------------------ Quadruple: END ------------------------------------
 
 
+//------------------------------------ Cost functional: BEGIN ------------------------------------
+#define  COST_FUNCTIONAL_CLASS    cost_functional_Square_or_Cube
+//------------------------------------ Cost functional: END ------------------------------------
+
+   
+
 //*********************** Gamma_c, Choice of List of control faces and *********************** 
 //******************************** Choice of possible corresponding boundary conditions - END *****************************************
 
 
 
 //*******************************************************************************************
-//*********************** Domain and Mesh Dependent - END *****************************************
+//*********************** Domain and Mesh Dependent: Square or Cube - END *****************************************
 //*******************************************************************************************
 
 
@@ -3334,7 +3301,7 @@ double integral_g_dot_n = 0.;
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
     
@@ -3369,7 +3336,7 @@ double integral_g_dot_n = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = femus::ctrl::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
      }
 //     }
  //DESIRED VEL###################################################################
@@ -3610,7 +3577,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
  //***************************************************
 
  //********** DATA *********************************** 
-  double u_des = femus::ctrl::cost_functional::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -3661,7 +3628,7 @@ void compute_cost_functional_regularization_bdry(const MultiLevelProblem & ml_pr
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //***************************************************
 
    
@@ -3932,7 +3899,7 @@ double u_x_gss = 0.;
  //*************************************************** 
 
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -3973,7 +3940,7 @@ double u_x_gss = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
 
  //***** set control flag ****************************
@@ -4250,7 +4217,7 @@ double  integral_div_ctrl = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
  //***** set control flag ****************************
@@ -4290,7 +4257,7 @@ double  integral_div_ctrl = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = femus::ctrl::cost_functional::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED VEL###################################################################

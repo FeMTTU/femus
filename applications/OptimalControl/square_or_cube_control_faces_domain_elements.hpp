@@ -64,7 +64,7 @@ static int ControlDomainFlag_internal_restriction(const std::vector<double> & el
 
 	  for(unsigned f = 0; f < /*ctrl::*/ T ::_face_with_extremes_index_size; f++) {
 
-   const int  line_sign = ctrl::DOMAIN_CLASS::sign_function_for_delimiting_region(/*ctrl::*/ T ::_face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
+   const int  line_sign =  /*ctrl::*/ T ::  sign_function_for_delimiting_region(/*ctrl::*/ T ::_face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
 
    const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ T ::_face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
 
@@ -101,7 +101,7 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 	  for(unsigned f = 0; f < /*ctrl::*/ T ::_face_with_extremes_index_size; f++) {
 
-   const int  line_sign = ctrl::DOMAIN_CLASS::sign_function_for_delimiting_region(/*ctrl::*/ T ::_face_with_extremes_index[f]);
+   const int  line_sign =  /*ctrl::*/ T ::sign_function_for_delimiting_region(/*ctrl::*/ T ::_face_with_extremes_index[f]);
 
    const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ T ::_face_with_extremes_index[f]);
 

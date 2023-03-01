@@ -84,7 +84,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     
     
     else if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
@@ -479,7 +479,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
   //************** variables for ineq constraints: act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
   
-  ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
   
   
@@ -574,7 +574,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
     
     
  //********************* DATA ************************ 
-  double u_des = ctrl::cost_functional::DesiredTarget();
+  double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
@@ -618,7 +618,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -1058,7 +1058,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
   std::vector<unsigned int> ctrl_index(1);  ctrl_index[0] = mlPdeSys->GetSolPdeIndex("control");
   std::vector<unsigned int>   mu_index(1);    mu_index[0] = mlPdeSys->GetSolPdeIndex("mu");
     
-ctrl::ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index,
                                mu_index,
@@ -1105,7 +1105,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     if (control_el_flag == 1) {
 
         
-  ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -1123,7 +1123,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
 
 
-    ctrl::ctrl_inequality::node_insertion(iel,
+    ctrl::mixed_state_or_ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    pos_mu_in_mat,

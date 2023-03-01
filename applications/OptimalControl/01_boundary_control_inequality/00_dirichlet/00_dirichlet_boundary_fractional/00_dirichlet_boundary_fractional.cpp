@@ -114,7 +114,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
     
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
@@ -574,7 +574,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
   //************** act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
 
-    ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+    ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   
   
   //********* variables for ineq constraints *****************
@@ -678,7 +678,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 
  
  //********************* DATA ************************ 
-  const double u_des = ctrl::cost_functional::DesiredTarget();
+  const double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
@@ -921,7 +921,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 
@@ -1266,7 +1266,7 @@ if ( i_vol == j_vol )  {
 
 
   //MU in res ctrl - BEGIN  ***********************************
-ctrl::ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -1319,7 +1319,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                 
        if(  ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
 
-       ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
+       ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
     iel, iface,
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
@@ -1334,7 +1334,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     sol_actflag);
  
 
-  ctrl::ctrl_inequality::node_insertion_bdry(iel, iface, 
+  ctrl::mixed_state_or_ctrl_inequality::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
                       mu_index_in_mat, 

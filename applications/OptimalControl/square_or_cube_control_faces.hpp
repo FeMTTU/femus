@@ -7,7 +7,15 @@
 namespace ctrl {
 
 
-   class Square_or_Cube {
+   class Domain_of_PDE {
+
+  public:
+
+
+ };
+
+
+   class Square_or_Cube : public Domain_of_PDE {
 
   public:
 
@@ -25,10 +33,11 @@ namespace ctrl {
 
 
  };
+ 
+ 
+ //*********************** Gamma_c, list of control faces - BEGIN *****************************************
 
-//*********************** Gamma_c, list of control faces - BEGIN *****************************************
-
-   class List_of_Gamma_control_faces {
+   class List_of_Gamma_control_faces : public Square_or_Cube  {
 
   public:
 

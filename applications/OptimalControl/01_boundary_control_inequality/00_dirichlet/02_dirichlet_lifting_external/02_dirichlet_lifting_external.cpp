@@ -111,7 +111,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_external_restriction(x);
@@ -413,7 +413,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   //************** act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
 
-  ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
 
 
@@ -513,7 +513,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
 //********************* DATA ************************
-    const double u_des = ctrl::cost_functional::DesiredTarget();
+    const double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
     const double alpha = ALPHA_CTRL_VOL;
     const double beta  = BETA_CTRL_VOL;
     const double penalty_strong_ctrl = 1.e30;
@@ -567,7 +567,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 //****** set target domain flag *********************
         int target_flag = 0;
-        target_flag = ctrl::cost_functional::ElementTargetFlag(elem_center);
+        target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
 //***************************************************
 
         //all vars###################################################################
@@ -584,7 +584,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         }
         //all vars###################################################################
 
-        ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+        ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
          (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, 
           c_compl, 
           pos_mu_in_mat,
@@ -1028,7 +1028,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     if (control_el_flag == 1) {
 
         
-  ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -1046,7 +1046,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       
 
 
-    ctrl::ctrl_inequality::node_insertion(iel,
+    ctrl::mixed_state_or_ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    pos_mu_in_mat,
@@ -1223,7 +1223,7 @@ void compute_cost_functional_regularization_lifting_external(const MultiLevelPro
 //***************************************************
 
 //********************* DATA ************************
-    double u_des = ctrl::cost_functional::DesiredTarget();
+    double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
 //***************************************************
 
     double integral_target = 0.;
@@ -1267,7 +1267,7 @@ void compute_cost_functional_regularization_lifting_external(const MultiLevelPro
 
 //************** set target domain flag *************
         int target_flag = 0;
-        target_flag = ctrl::cost_functional::ElementTargetFlag(elem_center);
+        target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
 //***************************************************
 
 

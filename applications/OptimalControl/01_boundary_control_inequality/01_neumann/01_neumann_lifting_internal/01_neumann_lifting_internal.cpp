@@ -21,7 +21,7 @@ double InitialValueContReg(const std::vector < double >& x) {
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
-  return ctrl::cost_functional::ElementTargetFlag(x);
+  return ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
 }
 
 double InitialValueState(const std::vector < double >& x) {
@@ -316,7 +316,7 @@ vector < double >  sol_adj; // local solution
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::cost_functional::DesiredTarget();
+  double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_strong = 10e+14;
@@ -358,7 +358,7 @@ vector < double >  sol_adj; // local solution
   
  //****** set target domain flag ********************* 
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::ElementTargetFlag(elem_center);
+   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
  //*************************************************** 
    
     
@@ -1031,7 +1031,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::cost_functional::DesiredTarget();
+  double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
  //*************************************************** 
   
   double integral_target = 0.;
@@ -1070,7 +1070,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
  //************** set target domain flag *************
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::ElementTargetFlag(elem_center);
+   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
  //*************************************************** 
 
    

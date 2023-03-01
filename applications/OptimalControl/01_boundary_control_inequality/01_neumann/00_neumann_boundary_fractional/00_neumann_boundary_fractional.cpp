@@ -34,7 +34,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::ControlDomainFlag_bdry(x);
@@ -367,7 +367,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::cost_functional::DesiredTarget();
+  double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   double alpha = ALPHA_CTRL_BDRY;
   double beta  = BETA_CTRL_BDRY;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
@@ -410,7 +410,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::ElementTargetFlag(elem_center);
+   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
  //*************************************************** 
    
  //************** set control flag *******************
@@ -548,8 +548,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //             for (unsigned i = 0; i < sol_actflag.size(); i++) {
         std::vector<double> node_coords_i(dim,0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x_bdry[d][i_bdry];
-        ctrl_lower[i_bdry] = ctrl::ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[0];
-        ctrl_upper[i_bdry] = ctrl::ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[0];
+        ctrl_lower[i_bdry] = ctrl::mixed_state_or_ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, false)[0];
+        ctrl_upper[i_bdry] = ctrl::mixed_state_or_ctrl_inequality::InequalityConstraint(n_components_ctrl, node_coords_i, true)[0];
 
         if      ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_lower[i_bdry] )) < 0 )  sol_actflag[i_bdry] = 1;
         else if ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_upper[i_bdry] )) > 0 )  sol_actflag[i_bdry] = 2;

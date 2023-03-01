@@ -96,7 +96,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional::ElementTargetFlag(x);
+        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
@@ -910,7 +910,7 @@ void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem& ml_pro
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
+   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
 //***************************************   
     
     
@@ -1217,8 +1217,8 @@ for (unsigned k = 0; k < dim; k++){
 	  
  #if exact_sol_flag == 0
               NSV_gss[kdim]     += - force[kdim] * phiV_gss[i];
-	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * ctrl::cost_functional::DesiredTargetVec()[kdim] * phiVadj_gss[i];
-  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * ctrl::cost_functional::DesiredTargetVec()[kdim] * phiVctrl_gss[i];
+	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] * phiVadj_gss[i];
+  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] * phiVctrl_gss[i];
 #endif
  #if exact_sol_flag == 1
               NSV_gss[kdim]     += - exactForce[kdim] * phiV_gss[i];
@@ -1416,7 +1416,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   //************** variables for ineq constraints: act flag ****************************   
   std::vector<unsigned int> solIndex_act_flag_sol(n_components_ctrl); 
   
-  ctrl::ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   //************** variables for ineq constraints: act flag ****************************   
     
 
@@ -1556,7 +1556,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
+   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
    //***************************************       
    
    //###################################################################  
@@ -1963,7 +1963,7 @@ for (unsigned k = 0; k < dim; k++){
 	   
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * ctrl::cost_functional::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
@@ -2134,7 +2134,7 @@ for (unsigned k = 0; k < dim; k++){
       
       Res[kdim + ctrl_pos_begin][i] +=  AbsDetJxWeight_iqp * (
 #if exact_sol_flag == 0
-                     + cost_functional_coeff * target_flag * ctrl::cost_functional::DesiredTargetVec()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+                     + cost_functional_coeff * target_flag * ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                      + cost_functional_coeff * target_flag * exactVel_d[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
@@ -2368,7 +2368,7 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   
   
   //MU in res ctrl - BEGIN  ***********************************
-ctrl::ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -2414,7 +2414,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     if (control_el_flag == 1) {
 
         
-  ctrl::ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -2432,7 +2432,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
 
 
-    ctrl::ctrl_inequality::node_insertion(iel,
+    ctrl::mixed_state_or_ctrl_inequality::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    mu_index_in_mat,
