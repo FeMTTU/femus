@@ -11,7 +11,9 @@
 
 using namespace femus;
 
-#include  "../../../opt_systems.hpp"
+#include  "../../../opt_systems_cost_functional.hpp"
+
+#include  "../../../opt_systems_dirichlet.hpp"
 
 
 

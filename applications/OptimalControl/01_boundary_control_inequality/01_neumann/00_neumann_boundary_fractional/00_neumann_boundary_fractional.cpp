@@ -14,6 +14,7 @@
 
 using namespace femus;
 
+#include  "../../../opt_systems_cost_functional.hpp"
 
 
 
@@ -34,10 +35,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::ControlDomainFlag_bdry(x);
+        value = femus::ctrl:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -187,7 +188,7 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry);
+  system_opt.SetDebugFunction(femus::ctrl::cost_functional::compute_cost_functional_regularization_bdry);
    
   // initialize and solve the system
   system_opt.init();
@@ -367,7 +368,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   double alpha = ALPHA_CTRL_BDRY;
   double beta  = BETA_CTRL_BDRY;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
@@ -410,7 +411,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
  //*************************************************** 
    
  //************** set control flag *******************

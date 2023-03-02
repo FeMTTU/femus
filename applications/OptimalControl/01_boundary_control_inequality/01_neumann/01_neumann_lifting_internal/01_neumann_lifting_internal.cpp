@@ -10,18 +10,23 @@
 
 #include "../../../param.hpp"
 
-#define SERVICE 1.
 
 using namespace femus;
+
+#include   "../../../opt_systems_cost_functional.hpp"
+
+
+
+#define SERVICE 1.
 
 
 
 double InitialValueContReg(const std::vector < double >& x) {
-  return ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
+  return femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
-  return ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+  return femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
 }
 
 double InitialValueState(const std::vector < double >& x) {
@@ -316,7 +321,7 @@ vector < double >  sol_adj; // local solution
 
   
  //********************* DATA ************************ 
-  double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_strong = 10e+14;
@@ -358,7 +363,7 @@ vector < double >  sol_adj; // local solution
   
  //****** set target domain flag ********************* 
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
  //*************************************************** 
    
     
@@ -427,7 +432,7 @@ vector < double >  sol_adj; // local solution
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(elem_center);
+  control_el_flag = femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(elem_center);
   std::vector<int> control_node_flag(nDof_ctrl,0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 

@@ -16,10 +16,17 @@
 #include "Assemble_jacobian.hpp"
 
 
+using namespace femus;
+
+
 #include   "../manufactured_solutions.hpp"
 
 
 #include   "../nsopt_params.hpp"
+
+
+#include   "../../opt_systems_cost_functional.hpp"
+
 
   
 //****** Mesh ********************************
@@ -52,8 +59,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
    if (faceName == FACE_FOR_CONTROL)  {
        
-        if (x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && 
-            x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  {
+        if (x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && 
+            x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  {
             
        if (!strcmp(SolName, "ctrl_0"))    { dirichlet = false; }
   else if (!strcmp(SolName, "ctrl_1"))    { dirichlet = false; } 
@@ -96,10 +103,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
+        value = femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
     }
 
     return value;
@@ -261,8 +268,8 @@ int main(int argc, char** args) {
   
   // ======= Files - BEGIN  ========================
   Files files; 
-        files.CheckIODirectories(ctrl::use_output_time_folder);
-	    files.RedirectCout(ctrl::redirect_cout_to_file);
+        files.CheckIODirectories(femus::ctrl::use_output_time_folder);
+	    files.RedirectCout(femus::ctrl::redirect_cout_to_file);
  
   // ======= Problem, Files ========================
   ml_prob.SetFilesHandler(&files);
@@ -298,7 +305,7 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
  
     std::string mesh_folder_file = "input/";
-  const std::string input_file = ctrl::mesh_input;
+  const std::string input_file = femus::ctrl::mesh_input;
 
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "cyl.med"; // "fifth"
@@ -498,7 +505,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   // *****************
   system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal_vec);
+    system_opt.SetDebugFunction(femus::ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal_vec);
 // *****************
   
   
@@ -910,7 +917,7 @@ void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem& ml_pro
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d()/*elem_center*/);
 //***************************************   
     
     
@@ -1217,8 +1224,8 @@ for (unsigned k = 0; k < dim; k++){
 	  
  #if exact_sol_flag == 0
               NSV_gss[kdim]     += - force[kdim] * phiV_gss[i];
-	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] * phiVadj_gss[i];
-  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] * phiVctrl_gss[i];
+	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] * phiVadj_gss[i];
+  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] * phiVctrl_gss[i];
 #endif
  #if exact_sol_flag == 1
               NSV_gss[kdim]     += - exactForce[kdim] * phiV_gss[i];

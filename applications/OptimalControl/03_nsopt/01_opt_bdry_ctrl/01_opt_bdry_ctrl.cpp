@@ -16,12 +16,17 @@
 
 #include "ElemType.hpp"
 
+
 using namespace femus;
 
 #include   "../manufactured_solutions.hpp"
 
 
 #include   "../nsopt_params.hpp"
+
+
+#include   "../../opt_systems_cost_functional.hpp"
+
 
 
 //****** Mesh ********************************
@@ -196,10 +201,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
+        value = femus::ctrl:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
     }
 
     return value;
@@ -218,8 +223,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 if (!strcmp(SolName, "ctrl_0"))       {
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -236,8 +241,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_1"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -254,8 +259,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
            else if (!strcmp(SolName, "ctrl_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 
@@ -277,8 +282,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
                 else if (!strcmp(SolName, "u_2"))       { 
 //                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
    if (faceName == FACE_FOR_CONTROL) {
-     if (x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
-         x[ ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+     if (x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 &&
+         x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
          dirichlet = false;
     }
      else { 

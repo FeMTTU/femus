@@ -141,7 +141,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
   //************** act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
 
-    ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+    femus::ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   
   
   //********* variables for ineq constraints *****************
@@ -245,7 +245,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 
  
  //********************* DATA ************************ 
-  const double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
+  const double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
@@ -304,7 +304,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     ctrl::Gamma_control_equation_fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
+     femus::ctrl::Gamma_control_equation_fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -374,7 +374,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
   
   else {
   
-   ctrl::Gamma_control_equation_integer::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
+   femus::ctrl::Gamma_control_equation_integer::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
                     ml_prob,
                     ml_sol,
                     sol,
@@ -488,17 +488,17 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 
  //************ set control flag *********************
    std::vector< std::vector< int > > control_node_flag = 
-       ctrl::Gamma_control::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
+       femus::ctrl::Gamma_control::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 
-	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
+	if ( femus::ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
 	  
 	  std::vector<double> normal(space_dim, 0.);
 	       
@@ -525,7 +525,7 @@ void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_pr
 // -------
        
 		
-	    if( ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
+	    if( femus::ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
               
  
 //========= initialize gauss quantities on the boundary ============================================
@@ -833,7 +833,7 @@ if ( i_vol == j_vol )  {
 
 
   //MU in res ctrl - BEGIN  ***********************************
-ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+femus::ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -876,7 +876,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( femus::ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -884,9 +884,9 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
+       if(  femus::ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
 
-       ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
+       femus::ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
     iel, iface,
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
@@ -901,7 +901,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     sol_actflag);
  
 
-  ctrl::mixed_state_or_ctrl_inequality::node_insertion_bdry(iel, iface, 
+  femus::ctrl::mixed_state_or_ctrl_inequality::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
                       mu_index_in_mat, 
@@ -1085,7 +1085,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
   //************** variables for ineq constraints: act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
   
-  ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  femus::ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
   
   
@@ -1180,7 +1180,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
     
     
  //********************* DATA ************************ 
-  double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
@@ -1224,7 +1224,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -1312,7 +1312,7 @@ void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
   std::vector<int> control_node_flag(nDof_ctrl, 0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
@@ -1858,7 +1858,7 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
 
 
 
-void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
+void assemble_elliptic_dirichlet_control_lifting_external(MultiLevelProblem& ml_prob) {
     //  ml_prob is the global object from/to where get/set all the data
 
     //  level is the level of the PDE system to be assembled
