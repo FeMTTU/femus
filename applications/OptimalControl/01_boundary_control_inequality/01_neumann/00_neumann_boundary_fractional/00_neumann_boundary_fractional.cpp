@@ -85,7 +85,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 }
 
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 void AssembleOptSys(MultiLevelProblem& ml_prob);
 
