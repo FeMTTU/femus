@@ -1,5 +1,5 @@
-#ifndef OPT_SYSTEMS_HPP
-#define OPT_SYSTEMS_HPP
+#ifndef OPT_SYSTEMS_DIRICHLET_HPP
+#define OPT_SYSTEMS_DIRICHLET_HPP
 
 
 #include "MultiLevelProblem.hpp"
