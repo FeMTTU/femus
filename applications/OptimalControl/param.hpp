@@ -156,6 +156,22 @@ namespace ctrl {
 //*********************** Control, Boundary, Fractional or Integer - END  *******************************************************
 
 
+  
+//*********************** Control, Lifting External - BEGIN  *******************************************************
+#define GROUP_INTERNAL  12
+#define GROUP_EXTERNAL  13
+
+
+//Flags for enforcement of Adjoint Neumann continuity on \Gamma_c 
+#define  NEUMANN_ADJOINT_EXPLICIT  1
+#define  NEUMANN_ADJOINT_CONTINUITY_SIGN  -1.
+#define  U_MINUS_Q_STRONG  1
+//*********************** Control, Lifting External - END *******************************************************
+
+  
+  
+  
+  
 //*********************** Inequality - BEGIN *******************************************************
 #define  INEQ_FLAG 1
 #define  C_COMPL 1.
