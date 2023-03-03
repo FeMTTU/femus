@@ -58,7 +58,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
   
 
   //=============== Geometry ========================================
-   unsigned solType_coords = FE_DOMAIN;
+   unsigned solType_coords = BIQUADR_FE;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
   CurrentElem < double > geom_element_jel(dim, msh);            // must be adept if the domain is moving, otherwise double
@@ -246,7 +246,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
 
  
  //********************* DATA ************************ 
-  const double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
+  const double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTarget();
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
@@ -489,13 +489,13 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 
  //************ set control flag *********************
    std::vector< std::vector< int > > control_node_flag = 
-       femus::ctrl::Gamma_control::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
+       femus::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 
@@ -526,7 +526,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
 // -------
        
 		
-	    if( femus::ctrl::Gamma_control::face_is_a_Gamma_control_face(msh->el, iel, iface) ) {
+	    if( femus::face_is_a_Gamma_control_face< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->el, iel, iface) ) {
               
  
 //========= initialize gauss quantities on the boundary ============================================
@@ -885,7 +885,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  femus::ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
+       if(  femus::face_is_a_Gamma_control_face< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >( el, iel, iface) ) {
 
        femus::ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
@@ -986,7 +986,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
   constexpr bool print_algebra_local = false;
   
   //=============== Geometry ========================================
-  unsigned solType_coords = FE_DOMAIN;
+  unsigned solType_coords = BIQUADR_FE;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -1183,7 +1183,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     
     
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
@@ -1227,7 +1227,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -2058,7 +2058,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 
 //********************* DATA ************************
-    const double u_des = ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTarget();
+    const double u_des = ctrl::cost_functional_Square_or_Cube::DesiredTarget();
     const double alpha = ALPHA_CTRL_VOL;
     const double beta  = BETA_CTRL_VOL;
     const double penalty_strong_ctrl = 1.e30;
@@ -2112,7 +2112,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 //****** set target domain flag *********************
         int target_flag = 0;
-        target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
+        target_flag = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
 //***************************************************
 
         //all vars###################################################################

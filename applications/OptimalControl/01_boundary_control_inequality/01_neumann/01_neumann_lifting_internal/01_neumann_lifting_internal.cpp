@@ -26,7 +26,7 @@ double InitialValueContReg(const std::vector < double >& x) {
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
-  return femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+  return femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
 }
 
 double InitialValueState(const std::vector < double >& x) {
@@ -146,7 +146,8 @@ int main(int argc, char** args) {
 
   std::vector<std::string> state_vars(n_components_state);  state_vars[0] = "state";
   std::vector<std::string> ctrl_vars(n_components_ctrl);     ctrl_vars[0] = "control";
-   ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars);
+  
+   femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  >::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
 
  
   // print solutions

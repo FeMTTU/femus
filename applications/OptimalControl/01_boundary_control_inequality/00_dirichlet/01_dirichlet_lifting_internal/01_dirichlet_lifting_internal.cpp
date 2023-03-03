@@ -86,7 +86,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     
     
     else if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
@@ -308,7 +308,7 @@ int main(int argc, char** args) {
   system_opt.set_ctrl_vars(ctrl_vars);
   
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal);
+//   system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal);
 // *****************
 //   system_opt.SetMaxNumberOfNonLinearIterations(2);
 
@@ -330,9 +330,9 @@ int main(int argc, char** args) {
 
 
   
-  ctrl::cost_functional::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars);
+  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  >::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
   
-  ctrl::cost_functional::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars);
+  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  >::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
   // ======= Post-processing, Computations - END ========================
   
   

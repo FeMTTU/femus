@@ -27,6 +27,7 @@ using namespace femus;
 
 #include   "../../opt_systems_cost_functional.hpp"
 
+#include   "opt_common.hpp"
 
 
 //****** Mesh ********************************
@@ -201,7 +202,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = femus::ctrl:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
@@ -629,7 +630,9 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   system_opt.set_ctrl_vars(ctrl_vars);
   
     system_opt.SetDebugNonlinear(true);
-    system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry_vec);
+    
+//     system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry_vec);
+    
 // *****************
     
    
@@ -787,7 +790,7 @@ void assemble_ns_dirichlet_control_pure_boundary(MultiLevelProblem& ml_prob) {
 
   // ======= Geometry at Dofs - BEGIN  =======
    unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
-   unsigned solType_coords = coordXType;  //FE_DOMAIN = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+   unsigned solType_coords = coordXType;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -929,7 +932,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   
 // ****** Solutions, Unknowns at dofs, theta value from proc0 - BEGIN 
-  double solTheta = ctrl::cost_functional::get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
+  double solTheta = femus::get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
 // ****** Solutions, Unknowns at dofs, theta value from proc0  - END
 
   // ======= Solutions, Unknowns at dofs - END =======
@@ -1254,7 +1257,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-       target_flag = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+       target_flag = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
    //***************************************       
    
  //************ set control flag - BEGIN *********************
@@ -1790,7 +1793,7 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * ctrl::cost_functional::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * ctrl::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
@@ -2046,7 +2049,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
                 
-       if(  ctrl::Gamma_control::face_is_a_Gamma_control_face( el, iel, iface) ) {
+       if(  femus::face_is_a_Gamma_control_face< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ( el, iel, iface) ) {
 
        ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,

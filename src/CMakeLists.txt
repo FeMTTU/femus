@@ -97,6 +97,7 @@ geom_quadrature/GaussPoints.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp
+optimal_control/00_cost_functional.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp

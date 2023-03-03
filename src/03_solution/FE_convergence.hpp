@@ -7,7 +7,6 @@
 #include "Assemble_unknown.hpp"
 
 
-#define FE_DOMAIN  2
 
 
 namespace femus {
@@ -453,7 +452,7 @@ template < class type>
   vector < type >  sol_u_exact_at_dofs;   sol_u_exact_at_dofs.reserve(max_size);
   vector < type >  sol_u_inexact_prolongated_from_coarser_level;     sol_u_inexact_prolongated_from_coarser_level.reserve(max_size);
 
-  unsigned solType_coords = FE_DOMAIN; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  unsigned solType_coords = BIQUADR_FE;
   vector < vector < type > > x(dim_offset_grad);    // local coordinates
   for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
 

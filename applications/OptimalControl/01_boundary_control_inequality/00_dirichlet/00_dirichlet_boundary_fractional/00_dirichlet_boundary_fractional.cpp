@@ -22,6 +22,7 @@ using namespace femus;
 #include  "../../../opt_systems_dirichlet.hpp"
 
 
+#include  "00_cost_functional.hpp"
 
 
 
@@ -116,7 +117,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
     
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
@@ -386,8 +387,10 @@ int main(int argc, char** args) {
   system_opt.set_ctrl_vars(ctrl_vars);
   
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry);
-//   ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
+  
+//   system_opt.SetDebugFunction(ctrl::cost_functional::compute_cost_functional_regularization_bdry);
+
+  //   ///@todo weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
 // *****************
   
  
@@ -418,7 +421,7 @@ int main(int argc, char** args) {
 
 
   // ======= Post-processing, Computations - BEGIN ========================
-  ctrl::cost_functional::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars);
+  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >   >::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_BDRY, BETA_CTRL_BDRY, QRULE_I);
   // ======= Post-processing, Computations - END ========================
 
   

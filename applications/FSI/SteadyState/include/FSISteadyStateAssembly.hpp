@@ -1321,7 +1321,7 @@ namespace femus {
   
   
   
- #define FE_DOMAIN  2
+
 
  #define POS_U   0
 
@@ -1502,7 +1502,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
      
    int dimension = ml_msh.GetLevel(0)->GetDimension();
   
-   unsigned solType_coords = FE_DOMAIN;
+   unsigned solType_coords = BIQUADR_FE;
    
    
 
@@ -1620,7 +1620,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
   unsigned    iproc = msh->processor_id();
 
   //=============== Geometry ========================================
-   unsigned solType_coords = FE_DOMAIN;
+   unsigned solType_coords = BIQUADR_FE;
  
   CurrentElem < double > geom_element(dim, msh);
     

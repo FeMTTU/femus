@@ -40,7 +40,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
         value = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_external_restriction(x);
@@ -217,7 +217,8 @@ int main(int argc, char** args) {
     system.SetAssembleFunction( lifting_external::assemble_elliptic_dirichlet_control );
 
     system.SetDebugNonlinear(true);
-    system.SetDebugFunction( ctrl::cost_functional::compute_cost_functional_regularization_lifting_external );
+//     system.SetDebugFunction( ctrl::cost_functional::compute_cost_functional_regularization_lifting_external );
+    
     // system.SetMaxNumberOfNonLinearIterations(4);
 
     // initialize and solve the system

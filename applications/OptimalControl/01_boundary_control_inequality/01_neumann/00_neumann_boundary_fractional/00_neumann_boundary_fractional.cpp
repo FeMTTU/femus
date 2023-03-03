@@ -36,7 +36,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name, "TargReg")) {
-        value = femus::ctrl::cost_functional::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = femus::ctrl:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::ControlDomainFlag_bdry(x);
@@ -187,7 +187,7 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetDebugFunction(femus::ctrl::cost_functional::compute_cost_functional_regularization_bdry);
+//   system_opt.SetDebugFunction(femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  >::compute_cost_functional_regularization_bdry, ALPHA_CTRL_BDRY, BETA_CTRL_BDRY, QRULE_I );
    
   // initialize and solve the system
   system_opt.init();
