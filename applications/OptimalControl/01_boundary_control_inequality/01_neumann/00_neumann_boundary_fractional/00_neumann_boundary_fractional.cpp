@@ -181,7 +181,7 @@ int main(int argc, char** args) {
   system_opt.AddSolutionToSystemPDE("mu");  
   
   // attach the assembling function to system
-  system_opt.SetAssembleFunction(assemble_elliptic_neumann_control_pure_boundary);
+  system_opt.SetAssembleFunction(pure_boundary::assemble_elliptic_neumann_control);
   
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);

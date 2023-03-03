@@ -297,7 +297,7 @@ int main(int argc, char** args) {
   }
   
   
-  system_opt.SetAssembleFunction(assemble_elliptic_dirichlet_control_lifting_internal);
+  system_opt.SetAssembleFunction(lifting_internal::assemble_elliptic_dirichlet_control);
   
 // *****************
   const unsigned n_components_state = n_components_ctrl;

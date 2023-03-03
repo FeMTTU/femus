@@ -375,7 +375,7 @@ int main(int argc, char** args) {
   for (unsigned int u = 0; u < unknowns.size(); u++) { system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  }
        // ======= System Unknowns ========================
 
-  system_opt.SetAssembleFunction(assemble_elliptic_dirichlet_control_pure_boundary);
+  system_opt.SetAssembleFunction( pure_boundary::assemble_elliptic_dirichlet_control );
 
 // *****************
   const unsigned n_components_state = n_components_ctrl;

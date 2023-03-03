@@ -135,7 +135,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("adjoint");  
   
   // attach the assembling function to system
-  system.SetAssembleFunction(assemble_elliptic_neumann_control_lifting_internal);
+  system.SetAssembleFunction( lifting_internal::assemble_elliptic_neumann_control );
 
   // initilaize and solve the system
   system.init();

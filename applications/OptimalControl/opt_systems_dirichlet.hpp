@@ -19,8 +19,9 @@
 // Insert_values (Mat or Vec) outside all loops
 // We're going to split the two parts and add a close() at the end of each
 
+namespace pure_boundary  {
 
-void assemble_elliptic_dirichlet_control_pure_boundary(MultiLevelProblem & ml_prob) {
+void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
     
   //  ml_prob is the global object from/to where get/set all the data
 
@@ -952,13 +953,15 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   return;
 }
 
+}
 
 
 
+namespace lifting_internal  {
 
 
 
-void assemble_elliptic_dirichlet_control_lifting_internal(MultiLevelProblem& ml_prob) {
+void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -1780,6 +1783,8 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 }
 
 
+}
+
 
 
 
@@ -1852,13 +1857,13 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
       
 }
 
-}
 
 
 
 
 
-void assemble_elliptic_dirichlet_control_lifting_external(MultiLevelProblem& ml_prob) {
+
+void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     //  ml_prob is the global object from/to where get/set all the data
 
     //  level is the level of the PDE system to be assembled
@@ -2664,7 +2669,7 @@ void assemble_elliptic_dirichlet_control_lifting_external(MultiLevelProblem& ml_
 }
 
 
-
+}
 
 
 

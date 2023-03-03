@@ -214,7 +214,7 @@ int main(int argc, char** args) {
     system.AddSolutionToSystemPDE("mu");
 
     // attach the assembling function to system
-    system.SetAssembleFunction(assemble_elliptic_dirichlet_control_lifting_external);
+    system.SetAssembleFunction( lifting_external::assemble_elliptic_dirichlet_control );
 
     system.SetDebugNonlinear(true);
     system.SetDebugFunction( ctrl::cost_functional::compute_cost_functional_regularization_lifting_external );
