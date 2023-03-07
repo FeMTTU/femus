@@ -7,6 +7,7 @@ namespace femus {
 
 namespace ctrl {
 
+  namespace square_or_cube {
 
 template < class B >
 class Boundary_Condition {
@@ -316,7 +317,7 @@ template < class B >
 
 
 
-
+  }
 
    }
 

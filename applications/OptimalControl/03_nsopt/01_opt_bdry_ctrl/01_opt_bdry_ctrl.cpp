@@ -387,7 +387,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 
-  const std::string infile = ctrl::mesh::file_with_prefix(ctrl::mesh_input);
+  const std::string infile = files.get_input_file_with_prefix(ctrl::mesh_input, "../../../");
 
 
   const bool read_groups = true;

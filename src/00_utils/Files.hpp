@@ -68,7 +68,17 @@ public:
   std::string  GetInputPath() const {
     return _input_path;
   }
-  
+
+  std::string get_input_file_with_prefix(const std::string input_file, const std::string relative_location_of_input_folder)  {
+
+
+      std::ostringstream mystream; mystream << relative_location_of_input_folder  /*"./"*/ << DEFAULT_INPUTDIR << "/" << input_file;
+      const std::string infile = mystream.str();
+
+      return infile;
+
+   }
+
   std::string  GetOutputTime() const {
     return _output_time;
   }

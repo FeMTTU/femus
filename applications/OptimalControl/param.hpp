@@ -760,15 +760,16 @@ namespace femus {
 namespace ctrl {
 
 
-//*********************** Gamma_c, Choice of Mesh File, 
-//******************************** Choice of List of control faces and *********************** 
-//******************************** Choice of possible corresponding boundary conditions and *****************************************
+//*********************** Gamma_c, Choice of Domain,
+//*********************** Gamma_c, Choice of Mesh File,
+//******************************** Choice of List of control faces, ***********************
+//******************************** Choice of corresponding boundary conditions and *****************************************
 //******************************** Choice of Cost Functional-related stuff - BEGIN *********************** 
-
-   const std::string mesh_input = ctrl::mesh::mesh_2d_square_1x1;
-   //    const std::string mesh_input = ctrl::mesh::mesh_3d_cube_single_face_control_1;
-
 #define  DOMAIN_NAMESPACE   square_or_cube
+
+   const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
+   //    const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_1;
+
 
 //------------------------------------ single: BEGIN ------------------------------------
 
@@ -777,9 +778,9 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four
 
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Single_control_in_front_linear
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Single_control_in_front_linear
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_in_front_constant
 
 //------------------------------------ single: END ------------------------------------
 
@@ -798,9 +799,9 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Three
 
-//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Double_controls_adjacent_in_front_linear
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS   DOMAIN_NAMESPACE :: Double_controls_adjacent_in_front_linear
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_in_front_constant
 
 //------------------------------------ double: END ------------------------------------
 
@@ -823,9 +824,9 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Two_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_One_Two
 
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Triple_controls_adjacent_in_front_linear
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Triple_controls_adjacent_in_front_linear
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_in_front_constant
 
 //------------------------------------ Triple: END ------------------------------------
 
@@ -834,8 +835,8 @@ namespace ctrl {
 
 #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Two_Four
 
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_in_front_constant
 
 //------------------------------------ Quadruple: END ------------------------------------
 
