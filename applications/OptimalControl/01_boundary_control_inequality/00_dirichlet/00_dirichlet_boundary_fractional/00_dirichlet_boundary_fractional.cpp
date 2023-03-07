@@ -17,7 +17,7 @@
 
 using namespace femus;
 
-#include  "../../../square_or_cube_03_cost_functional.hpp"
+#include  "../../../square_or_cube_03_cost_functional_without_regularization.hpp"
 
 #include  "../../../opt_systems_dirichlet.hpp"
 
@@ -117,7 +117,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
     
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(x);
+        value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = ctrl::  square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);

@@ -748,6 +748,9 @@ namespace ctrl {
 #include "square_or_cube_01_control_faces.hpp"
 #include "square_or_cube_01b_control_faces_domain_elements.hpp"
 #include "square_or_cube_02_boundary_conditions.hpp"
+#include "square_or_cube_03_cost_functional_without_regularization.hpp"
+
+#include "00_cost_functional.hpp"
 
 
 namespace femus {
@@ -763,7 +766,9 @@ namespace ctrl {
 //******************************** Choice of Cost Functional-related stuff - BEGIN *********************** 
 
    const std::string mesh_input = ctrl::mesh::mesh_2d_square_1x1;
-//    const std::string mesh_input = ctrl::mesh::mesh_3d_cube_single_face_control_1;
+   //    const std::string mesh_input = ctrl::mesh::mesh_3d_cube_single_face_control_1;
+
+#define  DOMAIN_NAMESPACE   square_or_cube
 
 //------------------------------------ single: BEGIN ------------------------------------
 
@@ -836,7 +841,7 @@ namespace ctrl {
 
 
 //------------------------------------ Cost functional: BEGIN ------------------------------------
-#define  COST_FUNCTIONAL_WITHOUT_REG    cost_functional_without_regularization_Square_or_Cube
+#define  COST_FUNCTIONAL_WITHOUT_REG    DOMAIN_NAMESPACE :: cost_functional_without_regularization
 //------------------------------------ Cost functional: END ------------------------------------
 
    
@@ -869,35 +874,7 @@ namespace ctrl {
 //*********************** Mesh independent - BEGIN *****************************************
 //*******************************************************************************************
 
- namespace Gamma_control {
- 
 
-    
-    
-    
-
-
-  
-
-  
-   
-
-  
-  
-  
-
-  
-
-    
-
-
-
-  
-}
-  
-
- 
-  
  namespace Gamma_control_equation_fractional {
 //*********************** Mesh independent, ALMOST - BEGIN *****************************************
  

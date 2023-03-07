@@ -12,8 +12,9 @@ namespace femus {
 
 namespace ctrl {
 
-    
-class cost_functional_without_regularization_Square_or_Cube : public  cost_functional_without_regularization {
+  namespace square_or_cube {
+
+class cost_functional_without_regularization : public  femus::ctrl::cost_functional_without_regularization {
 
 public:
 
@@ -79,13 +80,12 @@ static int ElementTargetFlag(const std::vector<double> & elem_center) {
   
  };
 
-}  //end namespace ctrl
 
 }
 
+}  //end namespace ctrl
 
-
-#include "00_cost_functional.hpp"
+}
 
 
 #endif

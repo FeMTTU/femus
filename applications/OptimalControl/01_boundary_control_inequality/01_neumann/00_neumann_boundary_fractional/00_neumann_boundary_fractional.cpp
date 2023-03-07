@@ -36,7 +36,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 0.;
     }
     else if(!strcmp(name, "TargReg")) {
-        value = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(x);
+        value = femus::ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
         value = femus::ctrl::  square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::ControlDomainFlag_bdry(x);

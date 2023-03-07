@@ -173,7 +173,7 @@ void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 
   
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[0];
+  double u_des = femus::ctrl::square_or_cube :: cost_functional_without_regularization::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_BDRY;
   double beta  = BETA_CTRL_BDRY;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
@@ -216,7 +216,7 @@ void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   
  //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(elem_center);
+   target_flag = femus::ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(elem_center);
  //*************************************************** 
    
  //************** set control flag *******************
@@ -919,7 +919,7 @@ vector < double >  sol_adj; // local solution
 
   
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[0];
+  double u_des = femus::ctrl::square_or_cube :: cost_functional_without_regularization::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_strong = 10e+14;
@@ -961,7 +961,7 @@ vector < double >  sol_adj; // local solution
   
  //****** set target domain flag ********************* 
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(elem_center);
+   target_flag = femus::ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(elem_center);
  //*************************************************** 
    
     

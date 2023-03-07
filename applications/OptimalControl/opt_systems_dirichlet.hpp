@@ -246,7 +246,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
 
  
  //********************* DATA ************************ 
-  const double u_des = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[0];
+  const double u_des = femus::ctrl::square_or_cube :: cost_functional_without_regularization::DesiredTargetVec()[0];
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
@@ -489,7 +489,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 
@@ -1183,7 +1183,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     
     
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[0];
+  double u_des = femus::ctrl::square_or_cube :: cost_functional_without_regularization::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
@@ -1227,7 +1227,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = femus::ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -2050,7 +2050,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 
 //********************* DATA ************************
-    const double u_des = ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[0];
+    const double u_des = ctrl::square_or_cube :: cost_functional_without_regularization::DesiredTargetVec()[0];
     const double alpha = ALPHA_CTRL_VOL;
     const double beta  = BETA_CTRL_VOL;
     const double penalty_strong_ctrl = 1.e30;
@@ -2104,7 +2104,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 //****** set target domain flag *********************
         int target_flag = 0;
-        target_flag = ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(elem_center);
+        target_flag = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(elem_center);
 //***************************************************
 
         //all vars###################################################################

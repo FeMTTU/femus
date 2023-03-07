@@ -26,7 +26,7 @@ double InitialValueContReg(const std::vector < double >& x) {
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
-  return femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(x);
+  return femus::ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
 }
 
 double InitialValueState(const std::vector < double >& x) {
