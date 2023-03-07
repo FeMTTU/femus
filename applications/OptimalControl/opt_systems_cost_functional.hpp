@@ -59,11 +59,6 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 //******************************************* Desired Target *******************************************************
 
-double DesiredTarget() {
-   return 0.9;
-}
-
-
  std::vector<double> DesiredTargetVec() {
 
     std::vector<double>  Vel_desired(3, 0.);

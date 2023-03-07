@@ -53,7 +53,6 @@ public:
     
     /*virtual*/ static std::vector< double > DesiredTargetVec() { abort(); };
     
-    /*virtual*/ static double DesiredTarget() { abort(); };
     
     /*virtual*/ static int ElementTargetFlag(const std::vector<double> & ) { abort(); };
     
@@ -174,7 +173,7 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
  //***************************************************
 
  //********** DATA *********************************** 
-  double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/ DesiredTarget();
+  double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/ DesiredTargetVec()[0];
  //*************************************************** 
   
   double integral_target = 0.;
@@ -512,7 +511,7 @@ double u_x_gss = 0.;
  //*************************************************** 
 
  //********************* DATA ************************ 
-  double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTarget();
+  double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTargetVec()[0];
  //*************************************************** 
   
   double integral_target = 0.;
@@ -772,7 +771,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 //***************************************************
 
 //********************* DATA ************************
-    double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTarget();
+    double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTargetVec()[0];
 //***************************************************
 
     double integral_target = 0.;

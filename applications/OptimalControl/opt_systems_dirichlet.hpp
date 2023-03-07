@@ -246,7 +246,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
 
  
  //********************* DATA ************************ 
-  const double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTarget();
+  const double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTargetVec()[0];
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
   const double penalty_outside_control_domain_boundary = PENALTY_OUTSIDE_CONTROL_DOMAIN_BOUNDARY;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
@@ -1183,7 +1183,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     
     
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTarget();
+  double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
@@ -2058,7 +2058,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 
 //********************* DATA ************************
-    const double u_des = ctrl::cost_functional_Square_or_Cube::DesiredTarget();
+    const double u_des = ctrl::cost_functional_Square_or_Cube::DesiredTargetVec()[0];
     const double alpha = ALPHA_CTRL_VOL;
     const double beta  = BETA_CTRL_VOL;
     const double penalty_strong_ctrl = 1.e30;
