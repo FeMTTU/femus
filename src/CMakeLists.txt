@@ -62,7 +62,6 @@ SET(femus_src
 04_equations/LinearImplicitSystem.cpp
 04_equations/MonolithicFSINonLinearImplicitSystem.cpp
 04_equations/NonLinearImplicitSystem.cpp
-04_equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
 04_equations/System.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
@@ -98,6 +97,7 @@ ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp
 optimal_control/00_cost_functional.cpp
+optimal_control/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp
