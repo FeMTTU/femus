@@ -10,7 +10,7 @@
 
 using namespace femus;
 
-#include  "../../../opt_systems_cost_functional.hpp"
+#include  "../../../square_or_cube_03_cost_functional_without_regularization.hpp"
 
 #include  "../../../opt_systems_dirichlet.hpp"
 
