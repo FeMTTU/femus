@@ -17,7 +17,7 @@
 
 using namespace femus;
 
-#include  "../../../opt_systems_cost_functional.hpp"
+#include  "../../../square_or_cube_03_cost_functional.hpp"
 
 #include  "../../../opt_systems_dirichlet.hpp"
 
@@ -117,10 +117,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
     
     else if(!strcmp(name, "TargReg")) {
-        value = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "ContReg")) {
-        value = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
+        value = ctrl::  square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -421,7 +421,7 @@ int main(int argc, char** args) {
 
 
   // ======= Post-processing, Computations - BEGIN ========================
-  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >   >::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_BDRY, BETA_CTRL_BDRY, QRULE_I);
+  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >   ,femus::ctrl::COST_FUNCTIONAL_WITHOUT_REG>::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_BDRY, BETA_CTRL_BDRY, QRULE_I);
   // ======= Post-processing, Computations - END ========================
 
   

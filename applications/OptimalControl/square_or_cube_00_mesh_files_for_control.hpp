@@ -3,6 +3,9 @@
  
 //******************************** Mesh files oriented to Optimal Control - BEGIN *****************************************
 
+namespace femus {
+
+
 namespace ctrl {
 
 namespace mesh {
@@ -41,7 +44,7 @@ namespace mesh {
       
 }
 
-
+}
 //******************************** Mesh files oriented to Optimal Control - END *****************************************
 
 

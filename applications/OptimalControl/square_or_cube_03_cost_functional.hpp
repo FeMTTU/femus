@@ -1,7 +1,9 @@
-#ifndef OPT_SYSTEMS_COST_FUNCTIONAL_HPP
-#define OPT_SYSTEMS_COST_FUNCTIONAL_HPP
+#ifndef _SQUARE_OR_CUBE_COST_FUNCTIONAL_HPP_
+#define _SQUARE_OR_CUBE_COST_FUNCTIONAL_HPP_
 
 
+
+#include "00_cost_functional_without_regularization.hpp"
 
 
 namespace femus {
@@ -11,10 +13,11 @@ namespace femus {
 namespace ctrl {
 
     
-    
-namespace cost_functional_Square_or_Cube {
+class cost_functional_without_regularization_Square_or_Cube : public  cost_functional_without_regularization {
 
-const unsigned int axis_direction_target_reg(const unsigned int face_index) {
+public:
+
+static const unsigned int axis_direction_target_reg(const unsigned int face_index) {
 
     unsigned int axis_dir;
 
@@ -31,7 +34,7 @@ const unsigned int axis_direction_target_reg(const unsigned int face_index) {
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
 
-int ElementTargetFlag(const std::vector<double> & elem_center) {
+static int ElementTargetFlag(const std::vector<double> & elem_center) {
 
     const double target_line_position_along_coordinate = TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG;
  //***** set target domain flag ******
@@ -59,7 +62,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 //******************************************* Desired Target *******************************************************
 
- std::vector<double> DesiredTargetVec() {
+ static std::vector<double> DesiredTargetVec() {
 
     std::vector<double>  Vel_desired(3, 0.);
 
@@ -74,8 +77,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 
   
- }  //end namespace 
- 
+ };
 
 }  //end namespace ctrl
 

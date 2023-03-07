@@ -1,9 +1,9 @@
 #ifndef SQUARE_OR_CUBE_BOUNDARY_CONDITIONS_HPP
 #define SQUARE_OR_CUBE_BOUNDARY_CONDITIONS_HPP
 
-#include "square_or_cube_control_faces.hpp"
+#include "square_or_cube_01_control_faces.hpp"
 
-// namespace femus {
+namespace femus {
 
 namespace ctrl {
 
@@ -320,7 +320,7 @@ template < class B >
 
    }
 
-// }
+}
 
 
 #endif

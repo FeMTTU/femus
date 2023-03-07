@@ -1,16 +1,17 @@
 #ifndef CONTROL_FACES_SQUARE_OR_CUBE_DOMAIN_ELEMENTS_HPP
 #define CONTROL_FACES_SQUARE_OR_CUBE_DOMAIN_ELEMENTS_HPP
 
-#include "square_or_cube_control_faces.hpp"
+#include "square_or_cube_01_control_faces.hpp"
 
-// namespace femus {
+namespace femus {
 
 namespace ctrl {
 
 
+namespace  square_or_cube {
  
 template < class T >
-class Domain_elements_containing_Gamma_control {
+class Domain_elements_containing_Gamma_control  {
 
   public:
 
@@ -84,6 +85,15 @@ static int ControlDomainFlag_internal_restriction(const std::vector<double> & el
 
 
 
+ static bool volume_elem_contains_a_Gamma_control_face( const std::vector<double> & elem_center ) {
+
+      int control_flag_jel = 0;
+        control_flag_jel =  ControlDomainFlag_bdry(elem_center);
+
+        return (control_flag_jel == 1);
+
+
+  }
 
 
 //*********************** Find volume elements that contain a Control Face element *********************************
@@ -130,12 +140,12 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 
 
-
+}
 
 
 }
 
-// }
+}
 
 
 #endif

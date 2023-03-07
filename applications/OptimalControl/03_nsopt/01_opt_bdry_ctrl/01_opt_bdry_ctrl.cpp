@@ -202,10 +202,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     double value = 0.;
 
      if(!strcmp(name,"TargReg")) {
-        value = femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = femus::ctrl:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
+        value = femus::ctrl::  square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
     }
 
     return value;
@@ -1257,12 +1257,12 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-       target_flag = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+       target_flag = ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
    //***************************************       
    
  //************ set control flag - BEGIN *********************
     int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ctrl :: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
+        does_iel_contain_a_bdry_control_face = ctrl ::  square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
  //************ initialize control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
     std::vector< std::vector<int> > control_node_flag_iel_jface(n_components_ctrl);
 	    for(unsigned idim=0; idim < control_node_flag_iel_jface.size(); idim++) {
@@ -1793,7 +1793,7 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - cost_functional_coeff * target_flag * ctrl::cost_functional_Square_or_Cube::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i]
@@ -2041,7 +2041,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >:: volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {

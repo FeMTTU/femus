@@ -10,6 +10,8 @@
 
 #include "opt_common.hpp"
 
+#include "00_cost_functional_without_regularization.hpp"
+
 
 
 
@@ -44,18 +46,14 @@ namespace ctrl {
 
 
     
-  template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_GAMMA_C >
-  class cost_functional {
+template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_GAMMA_C, class COST_WITHOUT_REG >
+class cost_functional {
 
-    
+
 public:
   
     
-    /*virtual*/ static std::vector< double > DesiredTargetVec() { abort(); };
-    
-    
-    /*virtual*/ static int ElementTargetFlag(const std::vector<double> & ) { abort(); };
-    
+
   
   /** This function computes a functional with a volume part and a boundary part
      We pass a 2 Solution objects: the first for the cost functional, the second for the regularization
@@ -173,7 +171,7 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
  //***************************************************
 
  //********** DATA *********************************** 
-  double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/ DesiredTargetVec()[0];
+  double u_des = COST_WITHOUT_REG:: DesiredTargetVec()[0];
  //*************************************************** 
   
   double integral_target = 0.;
@@ -224,7 +222,7 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = /*femus::ctrl::cost_functional_Square_or_Cube::*/ ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = COST_WITHOUT_REG::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //***************************************************
 
    
@@ -511,7 +509,7 @@ double u_x_gss = 0.;
  //*************************************************** 
 
  //********************* DATA ************************ 
-  double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTargetVec()[0];
+  double u_des = COST_WITHOUT_REG::DesiredTargetVec()[0];
  //*************************************************** 
   
   double integral_target = 0.;
@@ -552,7 +550,7 @@ double u_x_gss = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = /*femus::ctrl::cost_functional_Square_or_Cube::*/ElementTargetFlag( geom_element_iel.get_elem_center_3d() );
+   target_flag = COST_WITHOUT_REG::ElementTargetFlag( geom_element_iel.get_elem_center_3d() );
  //*************************************************** 
 
  //***** set control flag ****************************
@@ -771,7 +769,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 //***************************************************
 
 //********************* DATA ************************
-    double u_des = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTargetVec()[0];
+    double u_des = COST_WITHOUT_REG::DesiredTargetVec()[0];
 //***************************************************
 
     double integral_target = 0.;
@@ -815,7 +813,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 
 //************** set target domain flag *************
         int target_flag = 0;
-        target_flag = /*femus::ctrl::cost_functional_Square_or_Cube::*/ElementTargetFlag(elem_center);
+        target_flag = COST_WITHOUT_REG::ElementTargetFlag(elem_center);
 //***************************************************
 
 
@@ -1123,7 +1121,7 @@ double integral_g_dot_n = 0.;
   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = /*femus::ctrl::cost_functional_Square_or_Cube::*/ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = COST_WITHOUT_REG::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
     
@@ -1158,7 +1156,7 @@ double integral_g_dot_n = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = COST_WITHOUT_REG::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
      }
 //     }
  //DESIRED VEL###################################################################
@@ -1467,12 +1465,12 @@ double  integral_div_ctrl = 0.;
    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = /*femus::ctrl::cost_functional_Square_or_Cube::*/ElementTargetFlag(geom_element_iel.get_elem_center_3d());
+   target_flag = COST_WITHOUT_REG::ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = /*femus::ctrl::Domain_elements_containing_Gamma_control<  LIST_OF_CTRL_FACES > */ DOMAIN_CONTAINING_GAMMA_C :: ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag =  DOMAIN_CONTAINING_GAMMA_C :: ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -1507,7 +1505,7 @@ double  integral_div_ctrl = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = /*femus::ctrl::cost_functional_Square_or_Cube::*/DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ =COST_WITHOUT_REG::DesiredTargetVec()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED VEL###################################################################

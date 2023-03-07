@@ -173,7 +173,7 @@ void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 
   
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTargetVec()[0];
+  double u_des = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_BDRY;
   double beta  = BETA_CTRL_BDRY;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
@@ -216,12 +216,12 @@ void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   
  //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
+   target_flag = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(elem_center);
  //*************************************************** 
    
  //************** set control flag *******************
   int control_el_flag = 0;
-        control_el_flag = ctrl:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(elem_center);
+        control_el_flag = ctrl::  square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //*************************************************** 
@@ -919,7 +919,7 @@ vector < double >  sol_adj; // local solution
 
   
  //********************* DATA ************************ 
-  double u_des = femus::ctrl::cost_functional_Square_or_Cube::DesiredTargetVec()[0];
+  double u_des = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_strong = 10e+14;
@@ -961,7 +961,7 @@ vector < double >  sol_adj; // local solution
   
  //****** set target domain flag ********************* 
    int target_flag = 0;
-   target_flag = femus::ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(elem_center);
+   target_flag = femus::ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(elem_center);
  //*************************************************** 
    
     
@@ -1030,7 +1030,7 @@ vector < double >  sol_adj; // local solution
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(elem_center);
+  control_el_flag = femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(elem_center);
   std::vector<int> control_node_flag(nDof_ctrl,0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 

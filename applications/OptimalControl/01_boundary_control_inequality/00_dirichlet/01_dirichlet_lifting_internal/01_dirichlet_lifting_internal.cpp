@@ -11,7 +11,7 @@
 
 using namespace femus;
 
-#include  "../../../opt_systems_cost_functional.hpp"
+#include  "../../../square_or_cube_03_cost_functional.hpp"
 
 #include  "../../../opt_systems_dirichlet.hpp"
 
@@ -86,10 +86,10 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     
     
     else if(!strcmp(name,"TargReg")) {
-        value = ctrl::cost_functional_Square_or_Cube::ElementTargetFlag(x);
+        value = ctrl::cost_functional_without_regularization_Square_or_Cube::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl::Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
+        value = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
     }
     else if(!strcmp(name,"act_flag")) {
         value = 0.;
@@ -167,7 +167,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 
-  const std::string infile = ctrl::mesh::file_with_prefix(ctrl::mesh_input);
+  const std::string infile = femus::ctrl::mesh::file_with_prefix(femus::ctrl::mesh_input);
 
   const double Lref = 1.;
 
@@ -330,9 +330,12 @@ int main(int argc, char** args) {
 
 
   
-  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  >::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
+  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,
+                                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ,
+                                femus::ctrl::COST_FUNCTIONAL_WITHOUT_REG >
+                                ::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
   
-  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl::Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  >::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
+  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >, femus::ctrl::COST_FUNCTIONAL_WITHOUT_REG >::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
   // ======= Post-processing, Computations - END ========================
   
   

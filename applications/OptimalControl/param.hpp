@@ -741,17 +741,16 @@ namespace ctrl {
 //*********************** Domain and Mesh Dependent: Square or Cube - BEGIN *****************************************
 //*******************************************************************************************
 
+} //end namespace femus
 
 
-#include "square_or_cube_mesh_files_for_control.hpp"
-
-#include "square_or_cube_control_faces.hpp"
-
-#include "square_or_cube_control_faces_domain_elements.hpp"
-
-#include "square_or_cube_boundary_conditions.hpp"
+#include "square_or_cube_00_mesh_files_for_control.hpp"
+#include "square_or_cube_01_control_faces.hpp"
+#include "square_or_cube_01b_control_faces_domain_elements.hpp"
+#include "square_or_cube_02_boundary_conditions.hpp"
 
 
+namespace femus {
 
 
 
@@ -830,14 +829,14 @@ namespace ctrl {
 
 #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Two_Four
 
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    Multiple_controls_in_front_constant
 
 //------------------------------------ Quadruple: END ------------------------------------
 
 
 //------------------------------------ Cost functional: BEGIN ------------------------------------
-#define  COST_FUNCTIONAL_CLASS    cost_functional_Square_or_Cube
+#define  COST_FUNCTIONAL_WITHOUT_REG    cost_functional_without_regularization_Square_or_Cube
 //------------------------------------ Cost functional: END ------------------------------------
 
    
@@ -888,16 +887,7 @@ namespace ctrl {
   
 
   
-  bool volume_elem_contains_a_Gamma_control_face( const std::vector<double> & elem_center ) {
 
-      int control_flag_jel = 0;
-        control_flag_jel = Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(elem_center);
-        
-        return (control_flag_jel == 1);
-
-      
-  }
-  
     
 
 
@@ -1544,7 +1534,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 	// Perform face loop over elements that contain some control face
         
         
-	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face(geom_element_jel.get_elem_center_3d()) ) {
+	if ( femus:: ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus:: ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: volume_elem_contains_a_Gamma_control_face(geom_element_jel.get_elem_center_3d()) ) {
 
       
 // ***************************************
@@ -1824,7 +1814,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
       
 	// Perform face loop over elements that contain some control face
-	if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl::square_or_cube :: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
         
 // ***************************************
 // ******* iel-related stuff - BEGIN *************
@@ -2596,7 +2586,7 @@ namespace Gamma_control_equation_integer {
  //***************************************************
 
 
-    if ( ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
+    if ( ctrl::square_or_cube :: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
         
   
  //************ set control flag *********************
@@ -2797,6 +2787,6 @@ namespace Gamma_control_equation_integer {
   
   
   
-} //end namespace
+} //end namespace femus
  
 #endif

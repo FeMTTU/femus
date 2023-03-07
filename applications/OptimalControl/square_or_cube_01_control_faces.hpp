@@ -2,7 +2,7 @@
 #define CONTROL_FACES_SQUARE_OR_CUBE_HPP
 
 
-// namespace femus {
+namespace femus {
 
 namespace ctrl {
 
@@ -596,7 +596,7 @@ namespace ctrl {
 
   }
 
-// }
+}
 
 
 #endif

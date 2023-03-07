@@ -19,12 +19,12 @@
       const unsigned iel,
       femus::CurrentElem < double > & geom_element_iel,
       const unsigned solType_coords,
-      std::vector < std::string > Solname_Mat,      
-      std::vector < unsigned > SolFEType_Mat,    
-      std::vector < unsigned > Sol_n_el_dofs_Mat,    
+      std::vector < std::string > Solname_Mat,
+      std::vector < unsigned > SolFEType_Mat,
+      std::vector < unsigned > Sol_n_el_dofs_Mat,
       const unsigned pos_mat_ctrl,
       const unsigned n_components_ctrl
-) {
+            ) {
 //=============== construct control node flag field  =========================    
 	      /* For every component:
            * (control_node_flag[c][i])       picks nodes on \Gamma_c
