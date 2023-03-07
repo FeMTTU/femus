@@ -153,8 +153,16 @@ template < class B >
  public:
 
 
-            static const unsigned face_control_adjacent  =       1       ;                                                      // ***for "Single_control_in_front_linear"***//
+ static const unsigned int adjacent_face(const unsigned int face_index) {
 
+   unsigned int adjacent_face = 0;
+
+   if (face_index < 3 )    { adjacent_face = face_index + 2; }
+   else                    { adjacent_face = face_index - 2; }
+
+    return adjacent_face;
+
+}
 
  static double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem * ml_prob,
                                                  const int faceName,
@@ -164,7 +172,7 @@ template < class B >
     assert( /*ctrl::*/ B::_face_with_extremes_index_size == 1 );
 
     const unsigned face_for_control = /*ctrl::*/ B::_face_with_extremes_index[0];
-    const unsigned adjacent_face_for_control = face_control_adjacent; /*_face_with_extremes_index[1]*/
+    const unsigned adjacent_face_for_control = adjacent_face(faceName);/*_face_with_extremes_index[1]*/
 
 
     const double domain_length = 1.;
