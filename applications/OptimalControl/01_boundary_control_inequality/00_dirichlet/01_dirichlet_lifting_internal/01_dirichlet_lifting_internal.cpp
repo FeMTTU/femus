@@ -4,6 +4,7 @@
 // #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
+#include "00_cost_functional.hpp"
 
 
 #include "../../../param.hpp"

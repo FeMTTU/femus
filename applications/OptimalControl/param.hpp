@@ -64,11 +64,13 @@ namespace ctrl {
 //*********************** Mesh - END *****************************************
 
   
-//*********************** Control, cost functional - BEGIN *******************************************************
+//*********************** Control, cost functional without regularization - BEGIN *******************************************************
 #define COST_FUNCTIONAL_TYPE  0 /*1  *//*------[0: target ; 1: gradient]---------*/
 
 #define COST_FUNCTIONAL_COEFF 1 
+//*********************** Control, cost functional without regularization - END *******************************************************
 
+//*********************** Control, cost functional, regularization - BEGIN *******************************************************
 // for pure boundary approaches
 #define ALPHA_CTRL_BDRY 1.e-7
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
@@ -76,11 +78,11 @@ namespace ctrl {
 // for lifting approaches (both internal and external)
 #define ALPHA_CTRL_VOL ALPHA_CTRL_BDRY 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
-//*********************** Control, cost functional - END *******************************************************
+//*********************** Control, cost functional, regularization - END *******************************************************
 
   
 
-//*********************** Control, Boundary, Fractional or Integer - BEGIN  *******************************************************
+//*********************** Control, cost functional, regularization (almost), Boundary, Fractional or Integer - BEGIN  *******************************************************
 
 
 //***** Operator-related - BEGIN ****************** 
@@ -154,11 +156,11 @@ namespace ctrl {
 
 
 
-//*********************** Control, Boundary, Fractional or Integer - END  *******************************************************
+//*********************** Control, cost functional, regularization (almost), Boundary, Fractional or Integer - END  *******************************************************
 
 
   
-//*********************** Control, Lifting External - BEGIN  *******************************************************
+//*********************** Control, cost functional and equation, Lifting External - BEGIN  *******************************************************
 #define GROUP_INTERNAL  12
 #define GROUP_EXTERNAL  13
 
@@ -167,17 +169,11 @@ namespace ctrl {
 #define  NEUMANN_ADJOINT_EXPLICIT  1
 #define  NEUMANN_ADJOINT_CONTINUITY_SIGN  -1.
 #define  U_MINUS_Q_STRONG  1
-//*********************** Control, Lifting External - END *******************************************************
+//*********************** Control, cost functional and equation, Lifting External - END *******************************************************
 
   
   
   
-  
-//*********************** Inequality - BEGIN *******************************************************
-#define  INEQ_FLAG 1
-#define  C_COMPL 1.
-//*********************** Inequality - END *******************************************************
-
   
 //*******************************************************************************************
 //*********************** Domain and Mesh Independent, Parameters - END *****************************************
@@ -241,6 +237,12 @@ namespace mixed_state_or_ctrl_inequality {
 
 
 //*********************** Domain and Mesh Independent - BEGIN *****************************************
+  
+//*********************** Inequality - BEGIN *******************************************************
+#define  INEQ_FLAG 1
+#define  C_COMPL 1.
+//*********************** Inequality - END *******************************************************
+
 
 namespace mixed_state_or_ctrl_inequality {
 
@@ -737,11 +739,11 @@ namespace ctrl {
 
 
 
+} //end namespace femus
+
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent: Square or Cube - BEGIN *****************************************
 //*******************************************************************************************
-
-} //end namespace femus
 
 
 #include "square_or_cube_00_mesh_files_for_control.hpp"
@@ -750,7 +752,6 @@ namespace ctrl {
 #include "square_or_cube_02_boundary_conditions.hpp"
 #include "square_or_cube_03_cost_functional_without_regularization.hpp"
 
-#include "00_cost_functional.hpp"
 
 
 namespace femus {
@@ -773,10 +774,10 @@ namespace ctrl {
 
 //------------------------------------ single: BEGIN ------------------------------------
 
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Four
 
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Single_control_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
@@ -787,17 +788,17 @@ namespace ctrl {
 
 //------------------------------------ double: BEGIN ------------------------------------
 
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Four
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_Two
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_Four
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Two
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Four_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Four_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Four_Three
 
 //  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS   DOMAIN_NAMESPACE :: Double_controls_adjacent_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
@@ -808,23 +809,23 @@ namespace ctrl {
 
 //------------------------------------ Triple: BEGIN ------------------------------------
 
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Two
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four_Two
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Four
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Four_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Three_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Four_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Three_Four
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Two_Four_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_One_Four
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_Two_Four
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_One_Two
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Three_Two_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_One_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_Two_Three
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_Four_One_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One_Three_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One_Four_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One_Three_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One_Four_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two_Three_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two_Four_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two_Three_Four
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Two_Four_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three_One_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three_Two_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three_One_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Three_Two_One
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Four_One_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Four_Two_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_Four_One_Two
 
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Triple_controls_adjacent_in_front_linear
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Triple_controls_adjacent_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_in_front_constant
 
@@ -833,9 +834,9 @@ namespace ctrl {
 
 //------------------------------------ Quadruple: BEGIN ------------------------------------
 
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      List_of_Gamma_control_faces_One_Three_Two_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: List_of_Gamma_control_faces_One_Three_Two_Four
 
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: Multiple_controls_in_front_constant
 
 //------------------------------------ Quadruple: END ------------------------------------
@@ -857,23 +858,26 @@ namespace ctrl {
 
 
 
+}
+
+
+}
+
 
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent: Square or Cube - END *****************************************
 //*******************************************************************************************
 
 
+//*******************************************************************************************
+//*********************** Mesh independent - BEGIN *****************************************
+//*******************************************************************************************
 
-}
-
-
+namespace femus {
 
 namespace ctrl {
 
 
-//*******************************************************************************************
-//*********************** Mesh independent - BEGIN *****************************************
-//*******************************************************************************************
 
 
  namespace Gamma_control_equation_fractional {
@@ -2749,12 +2753,6 @@ namespace Gamma_control_equation_integer {
  
 
  
-
-//*******************************************************************************************
-//*********************** Mesh independent - END *****************************************
-//*******************************************************************************************
-
-  
    
  
 } //end namespace ctrl
@@ -2767,4 +2765,10 @@ namespace Gamma_control_equation_integer {
   
 } //end namespace femus
  
+
+//*******************************************************************************************
+//*********************** Mesh independent - END *****************************************
+//*******************************************************************************************
+
+  
 #endif

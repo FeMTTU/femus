@@ -16,6 +16,7 @@
 
 #include "ElemType.hpp"
 
+#include "00_cost_functional.hpp"
 
 using namespace femus;
 

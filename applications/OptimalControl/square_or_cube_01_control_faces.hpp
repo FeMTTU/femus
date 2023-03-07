@@ -13,9 +13,13 @@ namespace ctrl {
 
 
  };
+ 
+ 
 
+ namespace square_or_cube {
+     
 
-   class Square_or_Cube : public Domain_of_PDE {
+   class List_of_faces : public Domain_of_PDE {
 
   public:
 
@@ -34,10 +38,9 @@ namespace ctrl {
 
  };
  
- 
  //*********************** Gamma_c, list of control faces - BEGIN *****************************************
 
-   class List_of_Gamma_control_faces : public Square_or_Cube  {
+   class List_of_Gamma_control_faces : public List_of_faces {
 
   public:
 
@@ -593,7 +596,9 @@ namespace ctrl {
 
 //*********************** Gamma_c, list of control faces - END *****************************************
 
-
+ }
+ 
+ 
   }
 
 }
