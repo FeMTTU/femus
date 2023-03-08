@@ -1413,7 +1413,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
   
       const unsigned int n_components_ctrl = dim;
-  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
+  double penalty_outside_control_domain = LIFTING_INTERNAL_PENALTY_OUTSIDE_CONTROL_DOMAIN;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
   // ======= Solutions, Unknowns - END =======
 
       

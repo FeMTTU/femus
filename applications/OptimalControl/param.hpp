@@ -171,6 +171,14 @@ namespace ctrl {
 #define  U_MINUS_Q_STRONG  1
 //*********************** Control, cost functional and equation, Lifting External - END *******************************************************
 
+//*********************** Control, equation, Lifting Internal - BEGIN  *******************************************************
+  
+//******** Penalties for equations - BEGIN ******************************
+#define LIFTING_INTERNAL_PENALTY_OUTSIDE_CONTROL_DOMAIN   1.e20         // penalty for zero control outside
+//******** Penalties for equations - END ******************************
+
+  
+//*********************** Control, equation, Lifting Internal - END  *******************************************************
   
   
   
@@ -672,7 +680,14 @@ namespace mixed_state_or_ctrl_inequality {
 }
 
 
-namespace ctrl {
+
+
+
+
+
+} //end namespace femus
+
+
 
 
 //*******************************************************************************************
@@ -699,47 +714,11 @@ namespace ctrl {
 //**************************************
 //*********************** Control, Gamma_c specification - END *******************************************************
 
-
-//*********************** Control, cost functional, target region - BEGIN *******************************************************
-  /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
-  /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_TARGET         2
-
-#define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
-//*********************** Control, cost functional, target region - END *******************************************************
-
-
-
-//*********************** Control, boundary - BEGIN *******************************************************
-#define BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
-
-//*********************** Control, boundary - END *******************************************************
-
-
-
-//*********************** Control, Lifting internal - BEGIN *******************************************************
-#define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
-#define LIFTING_INTERNAL_WIDTH_LOWER  0. /*GAMMA_CONTROL_LOWER*/
-#define LIFTING_INTERNAL_WIDTH_UPPER  1. /*GAMMA_CONTROL_UPPER*/
-
-//******** Penalties for equations - BEGIN ******************************
-#define PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL   1.e20         // penalty for zero control outside
-//******** Penalties for equations - END ******************************
-
-//*********************** Control, Lifting internal - END *******************************************************
-
-
-
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent, Parameters - END *****************************************
 //*******************************************************************************************
 
-}
 
-
-
-
-} //end namespace femus
 
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent: Square or Cube - BEGIN *****************************************
@@ -751,6 +730,7 @@ namespace ctrl {
 #include "square_or_cube_01b_control_faces_domain_elements.hpp"
 #include "square_or_cube_02_boundary_conditions.hpp"
 #include "square_or_cube_03_cost_functional_without_regularization.hpp"
+#include "square_or_cube_04_cost_functional_regularization.hpp"
 
 
 
@@ -842,9 +822,9 @@ namespace ctrl {
 //------------------------------------ Quadruple: END ------------------------------------
 
 
-//------------------------------------ Cost functional: BEGIN ------------------------------------
+//------------------------------------ Cost functional without regularization: BEGIN ------------------------------------
 #define  COST_FUNCTIONAL_WITHOUT_REG    DOMAIN_NAMESPACE :: cost_functional_without_regularization
-//------------------------------------ Cost functional: END ------------------------------------
+//------------------------------------ Cost functional without regularization: END ------------------------------------
 
    
 
@@ -867,6 +847,13 @@ namespace ctrl {
 //*******************************************************************************************
 //*********************** Domain and Mesh Dependent: Square or Cube - END *****************************************
 //*******************************************************************************************
+
+
+
+
+
+
+
 
 
 //*******************************************************************************************

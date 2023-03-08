@@ -1186,7 +1186,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
   double u_des = femus::ctrl::square_or_cube :: cost_functional_without_regularization::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
-  double penalty_outside_control_domain = PENALTY_OUTSIDE_CONTROL_DOMAIN_LIFTING_INTERNAL;         // penalty for zero control outside
+  double penalty_outside_control_domain = LIFTING_INTERNAL_PENALTY_OUTSIDE_CONTROL_DOMAIN;         // penalty for zero control outside
  //***************************************************  
 
  

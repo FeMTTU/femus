@@ -3,6 +3,20 @@
 
 #include "square_or_cube_01_control_faces.hpp"
 
+
+//*********************** Control, boundary - BEGIN *******************************************************
+#define BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
+//*********************** Control, boundary - END *******************************************************
+
+
+//*********************** Control, lifting internal - BEGIN *******************************************************
+#define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
+#define LIFTING_INTERNAL_WIDTH_LOWER  0. /*GAMMA_CONTROL_LOWER*/
+#define LIFTING_INTERNAL_WIDTH_UPPER  1. /*GAMMA_CONTROL_UPPER*/
+//*********************** Control, lifting internal - END *******************************************************
+
+
+
 namespace femus {
 
 namespace ctrl {
