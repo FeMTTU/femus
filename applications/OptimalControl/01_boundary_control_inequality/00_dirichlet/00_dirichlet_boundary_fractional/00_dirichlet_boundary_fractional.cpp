@@ -10,19 +10,18 @@
 #include "MED_IO.hpp"
 //for reading additional fields from MED file (based on MED ordering)
 
+#include  "00_cost_functional.hpp"
 
 
 
 #include  "../../../param.hpp"
+#include  "../../../opt_systems_dirichlet.hpp"
 
 using namespace femus;
 
-#include  "../../../square_or_cube_03_cost_functional_without_regularization.hpp"
-
-#include  "../../../opt_systems_dirichlet.hpp"
 
 
-#include  "00_cost_functional.hpp"
+
 
 
 

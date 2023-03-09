@@ -1,5 +1,5 @@
-
-
+#ifndef  _FRACTIONAL_FUNCTIONS_HPP_
+#define  _FRACTIONAL_FUNCTIONS_HPP_
 
 
 double hypergeometric(double a, double b, double c, double x)
@@ -319,3 +319,5 @@ void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vect
 
 }
 
+
+#endif

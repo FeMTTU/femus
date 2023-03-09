@@ -8,13 +8,13 @@
 
 
 #include "../../../param.hpp"
+#include  "../../../opt_systems_dirichlet.hpp"
 
 
 using namespace femus;
 
-#include  "../../../square_or_cube_03_cost_functional_without_regularization.hpp"
 
-#include  "../../../opt_systems_dirichlet.hpp"
+
 
 
  //Unknown definition  ==================

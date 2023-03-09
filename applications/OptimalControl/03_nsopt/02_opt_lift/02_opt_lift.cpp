@@ -15,6 +15,8 @@
 
 #include "Assemble_jacobian.hpp"
 
+#include "00_cost_functional.hpp"
+#include "03_opt_system_inequalities.hpp"
 
 using namespace femus;
 
@@ -1423,7 +1425,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   //************** variables for ineq constraints: act flag ****************************   
   std::vector<unsigned int> solIndex_act_flag_sol(n_components_ctrl); 
   
-  ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   //************** variables for ineq constraints: act flag ****************************   
     
 
@@ -2375,7 +2377,7 @@ for (unsigned i = 0; i < nDofsVctrl; i++) {
   
   
   //MU in res ctrl - BEGIN  ***********************************
-ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -2421,7 +2423,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     if (control_el_flag == 1) {
 
         
-  ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -2439,7 +2441,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
 
 
-    ctrl::mixed_state_or_ctrl_inequality::node_insertion(iel,
+    ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    mu_index_in_mat,

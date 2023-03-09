@@ -8,7 +8,7 @@
 // #include "Assemble_unknown_jacres.hpp"
 // #include "Assemble_unknown.hpp"
 
- 
+#include  "03_opt_system_inequalities.hpp"
   
 
 //This Opt system is characterized by the following ways of setting matrix values:
@@ -18,6 +18,8 @@
 // Insert_values (Mat or Vec) in the volume loop
 // Insert_values (Mat or Vec) outside all loops
 // We're going to split the two parts and add a close() at the end of each
+
+namespace femus  {
 
 namespace pure_boundary  {
 
@@ -142,7 +144,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
   //************** act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
 
-    femus::ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+    femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
   
   
   //********* variables for ineq constraints *****************
@@ -834,7 +836,7 @@ if ( i_vol == j_vol )  {
 
 
   //MU in res ctrl - BEGIN  ***********************************
-femus::ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index_in_mat,
                                mu_index_in_mat,
@@ -887,7 +889,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                 
        if(  femus::face_is_a_Gamma_control_face< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >( el, iel, iface) ) {
 
-       femus::ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration_bdry
+       femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
     iel, iface,
     geom_element_iel.get_coords_at_dofs_bdry_3d(), 
@@ -902,7 +904,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     sol_actflag);
  
 
-  femus::ctrl::mixed_state_or_ctrl_inequality::node_insertion_bdry(iel, iface, 
+  femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::node_insertion_bdry(iel, iface, 
                       msh,
                       L2G_dofmap_Mat,
                       mu_index_in_mat, 
@@ -1088,7 +1090,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
   //************** variables for ineq constraints: act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
   
-  femus::ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
   
   
@@ -1667,7 +1669,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
   std::vector<unsigned int> ctrl_index(1);  ctrl_index[0] = mlPdeSys->GetSolPdeIndex("control");
   std::vector<unsigned int>   mu_index(1);    mu_index[0] = mlPdeSys->GetSolPdeIndex("mu");
     
-ctrl::mixed_state_or_ctrl_inequality::add_one_times_mu_res_ctrl(iproc,
+ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                ctrl_index,
                                mu_index,
@@ -1714,7 +1716,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     if (control_el_flag == 1) {
 
         
-  ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -1732,7 +1734,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
 
 
-    ctrl::mixed_state_or_ctrl_inequality::node_insertion(iel,
+    ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    pos_mu_in_mat,
@@ -1950,7 +1952,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
   //************** act flag ****************************   
     std::vector <unsigned int> solIndex_act_flag_sol(n_components_ctrl);
 
-  ctrl::mixed_state_or_ctrl_inequality::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
+  ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag_sol);
     
 
 
@@ -2121,7 +2123,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
         }
         //all vars###################################################################
 
-        ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+        ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::update_active_set_flag_for_current_nonlinear_iteration
          (msh, sol, iel, coords_at_dofs, sol_eldofs_Mat, Sol_n_el_dofs_Mat_vol, 
           c_compl, 
           pos_mu_in_mat,
@@ -2565,7 +2567,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     if (control_el_flag == 1) {
 
         
-  ctrl::mixed_state_or_ctrl_inequality::update_active_set_flag_for_current_nonlinear_iteration
+  ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::update_active_set_flag_for_current_nonlinear_iteration
   (msh,
    sol,
    iel,
@@ -2583,7 +2585,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
       
 
 
-    ctrl::mixed_state_or_ctrl_inequality::node_insertion(iel,
+    ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::node_insertion(iel,
                    msh,
                    L2G_dofmap_Mat,
                    pos_mu_in_mat,
@@ -2663,6 +2665,8 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 }
 
+
+}
 
 
 

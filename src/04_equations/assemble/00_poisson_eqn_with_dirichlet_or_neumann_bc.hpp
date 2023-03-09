@@ -15,7 +15,10 @@
 namespace femus   {
 
  namespace poisson_equation   {
-
+/// This only works with the App Specifics class, because only with that it can be abstract enough
+     
+     
+     
 void natural_loop_1d(const MultiLevelProblem *    ml_prob, 
                      const Mesh *                    msh,
                      const MultiLevelSolution *    ml_sol, 
