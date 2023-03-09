@@ -173,7 +173,7 @@ template < class B >
     assert( /*ctrl::*/ B::_face_with_extremes_index_size == 1 );
 
     const unsigned face_for_control = /*ctrl::*/ B::_face_with_extremes_index[0];
-    const unsigned adjacent_face_for_control = adjacent_face(faceName);/*_face_with_extremes_index[1]*/
+    const unsigned adjacent_face_for_control = adjacent_face(face_for_control);
 
 
     const double domain_length = 1.;
