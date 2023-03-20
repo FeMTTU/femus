@@ -14,12 +14,12 @@
 
 namespace femus   {
 
- namespace poisson_equation   {
+ class poisson_equation   {
 /// This only works with the App Specifics class, because only with that it can be abstract enough
      
+ public:    
      
-     
-void natural_loop_1d(const MultiLevelProblem *    ml_prob, 
+static void natural_loop_1d(const MultiLevelProblem *    ml_prob, 
                      const Mesh *                    msh,
                      const MultiLevelSolution *    ml_sol, 
                      const unsigned iel,
@@ -81,7 +81,7 @@ void natural_loop_1d(const MultiLevelProblem *    ml_prob,
 
 
 template < class real_num, class real_num_mov >
-void natural_loop_2d3d(const MultiLevelProblem *    ml_prob, 
+static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob, 
                        const Mesh *                    msh,
                        const MultiLevelSolution *    ml_sol, 
                        const unsigned iel,
@@ -186,9 +186,9 @@ void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 template < class real_num, class real_num_mov >
-void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
+static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> (ml_prob.get_app_specs_pointer()->_system_name);  
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system< NonLinearImplicitSystem > (ml_prob.get_app_specs_pointer()->_system_name);  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -319,14 +319,14 @@ void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
  //*************************************************** 
     
 
- //========= BOUNDARY ==================   
-    if (dim == 1)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_1d(& ml_prob, msh, ml_sol,
+ //========= BOUNDARY - BEGIN ==================   
+    if (dim == 1)   femus::poisson_equation::natural_loop_1d/*<real_num, real_num_mov>*/(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res
                      );
 
-    if (dim == 2 || dim == 3)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_2d3d(& ml_prob, msh, ml_sol,
+    if (dim == 2 || dim == 3)   femus::poisson_equation::natural_loop_2d3d<real_num, real_num_mov>(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res,
@@ -335,8 +335,9 @@ void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
                       space_dim,
                       maxSize
                      );
+ //========= BOUNDARY - END ==================   
  
- //========= VOLUME ==================   
+ //========= VOLUME - BEGIN ==================   
    
  //========= gauss value quantities ==================   
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
@@ -453,6 +454,9 @@ void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
       } // end gauss point loop
 
 
+ //========= VOLUME - END ==================
+ 
+ 
     RES->add_vector_blocked(Res, l2GMap_AllVars);
 
     if (assembleMatrix) {
@@ -473,14 +477,13 @@ void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
   
 
-  // ***************** END ASSEMBLY *******************
 
   return;
 }
 
 
 
-} //end namespace
+};
 
 
 } //end namespace femus

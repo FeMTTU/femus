@@ -698,12 +698,10 @@ int main(int argc, char** args) {
   
   app_segment._system_name = system_common_name;
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_segment._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_segment._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_segment._bdry_func             = segment_dir_neu_fine__laplacian__bc;
   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-  app_segment._norm_true_solution    = segment_dir_neu_fine__laplacian__true_solution;
+  app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;
   
   
   
@@ -713,12 +711,10 @@ int main(int argc, char** args) {
   
   app_prism_annular_base._system_name = system_common_name;
   app_prism_annular_base._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_prism_annular_base._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_prism_annular_base._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_prism_annular_base._bdry_func             = prism_annular_base__laplacian__bc;
   app_prism_annular_base._assemble_function_rhs = prism_annular_base__laplacian__rhs;
-  app_prism_annular_base._norm_true_solution    = prism_annular_base__laplacian__true_solution;
+  app_prism_annular_base._true_solution    = prism_annular_base__laplacian__true_solution;
   
   
   
@@ -728,12 +724,10 @@ int main(int argc, char** args) {
   
   app_quarter_circle._system_name = system_common_name;
   app_quarter_circle._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_quarter_circle._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_quarter_circle._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_quarter_circle._bdry_func             = quarter_circle__laplacian__bc;
   app_quarter_circle._assemble_function_rhs = quarter_circle__laplacian__rhs;
-  app_quarter_circle._norm_true_solution    = quarter_circle__laplacian__true_solution;
+  app_quarter_circle._true_solution    = quarter_circle__laplacian__true_solution;
   
   
   
@@ -743,12 +737,10 @@ int main(int argc, char** args) {
   
   app_cylinder._system_name = system_common_name;
   app_cylinder._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_cylinder._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_cylinder._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_cylinder._bdry_func             = cylinder__laplacian__bc;
   app_cylinder._assemble_function_rhs = cylinder__laplacian__rhs;
-  app_cylinder._norm_true_solution    = cylinder__laplacian__true_solution;
+  app_cylinder._true_solution    = cylinder__laplacian__true_solution;
  
   //assignment_semiannulus
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_triangular.med");
@@ -756,12 +748,10 @@ int main(int argc, char** args) {
   
   app_semiannulus._system_name = system_common_name;
   app_semiannulus._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_semiannulus._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_semiannulus._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_semiannulus._bdry_func             = semiannulus__laplacian__bc;
   app_semiannulus._assemble_function_rhs = semiannulus__laplacian__rhs;
-  app_semiannulus._norm_true_solution    = semiannulus__laplacian__true_solution;
+  app_semiannulus._true_solution    = semiannulus__laplacian__true_solution;
  
   
   
@@ -771,12 +761,10 @@ int main(int argc, char** args) {
   
   app_annulus._system_name = system_common_name;
   app_annulus._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_annulus._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_annulus._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_annulus._bdry_func             = annulus__laplacian__bc;
   app_annulus._assemble_function_rhs = annulus__laplacian__rhs;
-  app_annulus._norm_true_solution    = annulus__laplacian__true_solution;
+  app_annulus._true_solution    = annulus__laplacian__true_solution;
  
 
   //assignment_quarter_cylinder
@@ -787,12 +775,10 @@ int main(int argc, char** args) {
   
   app_quarter_cylinder._system_name = system_common_name;
   app_quarter_cylinder._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_quarter_cylinder._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_quarter_cylinder._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
 
   app_quarter_cylinder._bdry_func             = quarter_cylinder__laplacian__bc;
   app_quarter_cylinder._assemble_function_rhs = quarter_cylinder__laplacian__rhs;
-  app_quarter_cylinder._norm_true_solution    = quarter_cylinder__laplacian__true_solution;
+  app_quarter_cylinder._true_solution    = quarter_cylinder__laplacian__true_solution;
 
 
   
@@ -801,12 +787,10 @@ int main(int argc, char** args) {
   
   app_square._system_name = system_common_name;
   app_square._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_square._assemble_function_natural_boundary_loop_1d   = poisson_equation::natural_loop_1d;
-  app_square._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_square._bdry_func             = square__laplacian__bc;
   app_square._assemble_function_rhs = square__laplacian__rhs;
-  app_square._norm_true_solution    = square__laplacian__true_solution;
+  app_square._true_solution    = square__laplacian__true_solution;
 
 
   
@@ -816,12 +800,10 @@ int main(int argc, char** args) {
   
   app_cube._system_name = system_common_name;
   app_cube._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_cube._assemble_function_natural_boundary_loop_1d   = poisson_equation::natural_loop_1d;
-  app_cube._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_cube._bdry_func             = cube__laplacian__bc;
   app_cube._assemble_function_rhs = cube__laplacian__rhs;
-  app_cube._norm_true_solution    = cube__laplacian__true_solution;
+  app_cube._true_solution    = cube__laplacian__true_solution;
   
 
   //assignment_quarter_circle
@@ -830,12 +812,10 @@ int main(int argc, char** args) {
   
   app_semicircle._system_name = system_common_name;
   app_semicircle._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_semicircle._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_semicircle._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_semicircle._bdry_func             = semicircle__laplacian__bc;
   app_semicircle._assemble_function_rhs = semicircle__laplacian__rhs;
-  app_semicircle._norm_true_solution    = semicircle__laplacian__true_solution;
+  app_semicircle._true_solution    = semicircle__laplacian__true_solution;
   
   
 

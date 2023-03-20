@@ -138,12 +138,10 @@ int main(int argc, char** args) {
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  app_segment._assemble_function_natural_boundary_loop_1d = poisson_equation::natural_loop_1d;
-  app_segment._assemble_function_natural_boundary_loop_2d3d = poisson_equation::natural_loop_2d3d;
   
   app_segment._bdry_func             = SetBoundaryCondition;
   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-//   app_segment._norm_true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
+//   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
   ///@todo if this is not set, nothing should happen here
 
   

@@ -120,7 +120,7 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
              	for (unsigned d = 0; d < xyz_i.size(); d++) {
                    xyz_i[d] = geom_element.get_coords_at_dofs_3d()[d][i];
                 }
-               sol_u_true[i]  =   ml_prob.get_app_specs_pointer()->_norm_true_solution( xyz_i);  
+               sol_u_true[i]  =   ml_prob.get_app_specs_pointer()->_true_solution( xyz_i);  
     }
 
     //***************************************************  
@@ -130,21 +130,6 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
     
 
 // // //  //========= BOUNDARY ==================   
-// // //     if (dim == 1)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_1d(& ml_prob, msh, ml_sol,
-// // //                       iel, geom_element, xType,
-// // //                       solname_u, solFEType_u,
-// // //                       Res
-// // //                      );
-// // // 
-// // //     if (dim == 2 || dim == 3)   ml_prob.get_app_specs_pointer()->_assemble_function_natural_boundary_loop_2d3d(& ml_prob, msh, ml_sol,
-// // //                       iel, geom_element, xType,
-// // //                       solname_u, solFEType_u,
-// // //                       Res,
-// // //                       elem_all,
-// // //                       dim,
-// // //                       space_dim,
-// // //                       maxSize
-// // //                      );
  
  //========= VOLUME ==================   
    
@@ -205,7 +190,7 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
   
 	      
        norm_dof_based +=  jacXweight_qp * (  u_qp - u_true_qp) * (  u_qp - u_true_qp) ;
-       norm_qp_based  +=  jacXweight_qp * (  u_qp -  ml_prob.get_app_specs_pointer()->_norm_true_solution( x_qp )) * (  u_qp - ml_prob.get_app_specs_pointer()->_norm_true_solution( x_qp )) ;
+       norm_qp_based  +=  jacXweight_qp * (  u_qp -  ml_prob.get_app_specs_pointer()->_true_solution( x_qp )) * (  u_qp - ml_prob.get_app_specs_pointer()->_true_solution( x_qp )) ;
 //======================Residuals=======================
 	      
 // // //           if (assembleMatrix) {
