@@ -1,14 +1,8 @@
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
-#include "NumericVector.hpp"
 
-#include "ElemType.hpp"
-
-//for reading additional fields from MED file (based on MED ordering)
-#include "MED_IO.hpp"
-//for reading additional fields from MED file (based on MED ordering)
 
 #include  "00_cost_functional.hpp"
 

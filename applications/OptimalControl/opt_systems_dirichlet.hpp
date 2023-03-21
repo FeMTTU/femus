@@ -370,6 +370,7 @@ public:
                     OP_L2,
                     RHS_ONE,
                     UNBOUNDED,
+                    NODE_BASED_BDRY_BDRY,
                     //-----------
                     qrule_i,
                     qrule_j,

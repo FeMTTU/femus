@@ -3,6 +3,49 @@
 
 
 
+
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Dependent, Parameters - BEGIN *****************************************
+//*******************************************************************************************
+
+//*********************** Control, Gamma_c specification - BEGIN  *******************************************************
+  /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
+  /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
+#define FACE_FOR_CONTROL        1
+
+
+
+#define GAMMA_CONTROL_LOWER 0.25  /* 0. */
+#define GAMMA_CONTROL_UPPER 0.75  /* 1. */
+//***** Domain-related ****************** 
+#define EX_1        GAMMA_CONTROL_LOWER
+#define EX_2        GAMMA_CONTROL_UPPER
+#define EY_1        0.
+#define EY_2        1.   ///@todo  see here
+
+#define DOMAIN_EX_1 0
+#define DOMAIN_EX_2 1
+//**************************************
+//*********************** Control, Gamma_c specification - END *******************************************************
+
+//*******************************************************************************************
+//*********************** Domain and Mesh Dependent, Parameters - END *****************************************
+//*******************************************************************************************
+
+
+
+
+#include "opt_systems_boundary_control_eqn_sobolev_fractional.hpp"
+
+
+
+
+
+
+
+
+
 //*******************************************************************************************
 //*********************** Domain and Mesh Independent, Parameters - BEGIN *****************************************
 //*******************************************************************************************
@@ -176,43 +219,6 @@ namespace ctrl {
 //*******************************************************************************************
 
 
-
-
-
-
-
-//*******************************************************************************************
-//*********************** Domain and Mesh Dependent, Parameters - BEGIN *****************************************
-//*******************************************************************************************
-
-//*********************** Control, Gamma_c specification - BEGIN  *******************************************************
-  /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
-  /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        1
-
-
-
-#define GAMMA_CONTROL_LOWER 0.25  /* 0. */
-#define GAMMA_CONTROL_UPPER 0.75  /* 1. */
-//***** Domain-related ****************** 
-#define EX_1        GAMMA_CONTROL_LOWER
-#define EX_2        GAMMA_CONTROL_UPPER
-#define EY_1        0.
-#define EY_2        1.   ///@todo  see here
-
-#define DOMAIN_EX_1 0
-#define DOMAIN_EX_2 1
-//**************************************
-//*********************** Control, Gamma_c specification - END *******************************************************
-
-//*******************************************************************************************
-//*********************** Domain and Mesh Dependent, Parameters - END *****************************************
-//*******************************************************************************************
-
-
-
-
-#include "opt_systems_boundary_control_eqn_sobolev_fractional.hpp"
 
 
 
