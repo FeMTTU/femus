@@ -23,9 +23,11 @@
 
 namespace femus  {
 
-namespace pure_boundary  {
+class pure_boundary  {
 
-void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
+public: 
+    
+ static void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
     
   //  ml_prob is the global object from/to where get/set all the data
 
@@ -309,7 +311,11 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     femus::ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index::control_eqn_bdry(iproc,
+     femus::ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
+                femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
+                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                >
+                  ::control_eqn_bdry(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -961,15 +967,17 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   return;
 }
 
-}
+};
 
 
 
-namespace lifting_internal  {
+class lifting_internal  {
 
 
 
-void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
+public: 
+    
+ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -1791,14 +1799,16 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 }
 
 
-}
+};
 
 
 
 
-namespace lifting_external  {
+class lifting_external  {
 
-void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coords_at_dofs_bdry, const int solType_coords, const unsigned int iel, const int jface, const Mesh * msh)  {
+public: 
+    
+ static void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coords_at_dofs_bdry, const int solType_coords, const unsigned int iel, const int jface, const Mesh * msh)  {
     
      const unsigned int dim = coords_at_dofs_bdry.size();
      
@@ -1820,7 +1830,7 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
  
  
 // //============ find interface boundary elements (now we do with coordinates, later we can do also with flag) =======================================
- bool find_control_boundary_nodes(std::vector<unsigned int> & interface_node_flag, const std::vector<double> & elem_center_bdry, const unsigned int nDofu_bdry, const unsigned int iel, const int jface, const Mesh * msh) {
+ static bool find_control_boundary_nodes(std::vector<unsigned int> & interface_node_flag, const std::vector<double> & elem_center_bdry, const unsigned int nDofu_bdry, const unsigned int iel, const int jface, const Mesh * msh) {
    
        enum begin_end {begin = 0, end};
        
@@ -1863,7 +1873,7 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
 }
 
 
-void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
+static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     //  ml_prob is the global object from/to where get/set all the data
 
     //  level is the level of the PDE system to be assembled
@@ -2669,7 +2679,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 }
 
 
-}
+};
 
 
 }

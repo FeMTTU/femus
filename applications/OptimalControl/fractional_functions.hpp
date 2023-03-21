@@ -2,6 +2,18 @@
 #define  _FRACTIONAL_FUNCTIONS_HPP_
 
 
+
+ double  compute_C_ns(const unsigned dim_bdry,
+                       const double s_frac,
+                       const unsigned use_Cns) {
+      
+  const double C_ns = 2 * (1 - use_Cns) + use_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
+  
+  return C_ns;
+}
+
+
+
 double hypergeometric(double a, double b, double c, double x)
 {
   const double TOLERANCE = 1.0e-10;
@@ -35,7 +47,7 @@ double Antiderivative2(const double &theta, const double &s, const double &x)
 void GetElementPartition1D(const std::vector <double >  & xg1,
                            const std::vector < std::vector <double > > & x1, 
                            const unsigned &split, 
-                           const unsigned int Nsplit, 
+                           const unsigned int Nsplit_in, 
                            std::vector < std::vector < std::vector<double>>> &x,
                            const unsigned dim
                           )
@@ -63,7 +75,7 @@ void GetElementPartition1D(const std::vector <double >  & xg1,
 //       }
     }
   }
-  else if(split == Nsplit) {
+  else if(split == Nsplit_in) {
     for(unsigned k = 0; k < dim; k++) {
       x[left][k][0] = x[left][k][1];
       x[left][k][1] = xg1[k];
@@ -93,7 +105,7 @@ void GetElementPartition1D(const std::vector <double >  & xg1,
 
 
 
-void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split, const unsigned int Nsplit,  std::vector < std::vector < std::vector<double>>> &x)
+void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split, const unsigned int Nsplit_in,  std::vector < std::vector < std::vector<double>>> &x)
 {
   unsigned dim = 2;
   unsigned bl = 0; // bottom left
@@ -114,7 +126,7 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
   double ex_y_1;
   double ex_y_2;
 
-  unsigned size_part = (split != Nsplit) ? 12 : 4;
+  unsigned size_part = (split != Nsplit_in) ? 12 : 4;
 
   if(split == 0) { //init
     x.resize(size_part);
@@ -144,7 +156,7 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
   x[br][0][1] = x[br][0][2] = x[tr][0][1] = x[tr][0][2] = ex_x_2;
 
 
-  if(split == Nsplit) {
+  if(split == Nsplit_in) {
     x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = xg1[1];
     x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = xg1[0];
   }
@@ -155,7 +167,7 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
     x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = 0.5 * (ex_x_2 + xg1[0]);
   }
 
-  if(split != Nsplit) {
+  if(split != Nsplit_in) {
     x[bl1][1][0] = x[bl1][1][1] = x[br1][1][0] = x[br1][1][1] = ex_y_1;
     x[tl1][1][2] = x[tl1][1][3] = x[tr1][1][2] = x[tr1][1][3] = ex_y_2;
     x[bl1][1][2] = x[bl1][1][3] = x[br1][1][2] = x[br1][1][3] = 0.5 * (ex_y_1 + xg1[1]);

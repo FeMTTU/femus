@@ -4,6 +4,7 @@
 
 
 #include "Assemble_useful_functions.hpp"
+#include "Assemble_unknown_jacres.hpp"
 
 
 
@@ -18,7 +19,7 @@ namespace ctrl {
 
 
   
-template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_GAMMA_C >
+template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 class Gamma_control_equation_integer_sobolev_differentiability_index {
   
 public: 
@@ -140,7 +141,7 @@ public:
  //***************************************************
 
 
-    if ( DOMAIN_CONTAINING_GAMMA_C ::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
+    if ( DOMAIN_CONTAINING_CTRL_FACES ::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
         
   
  //************ set control flag *********************

@@ -46,7 +46,7 @@ namespace ctrl {
 
 
     
-template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_GAMMA_C, class COST_WITHOUT_REG >
+template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES, class COST_WITHOUT_REG >
 class cost_functional {
 
 
@@ -555,7 +555,7 @@ double u_x_gss = 0.;
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = DOMAIN_CONTAINING_GAMMA_C ::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = DOMAIN_CONTAINING_CTRL_FACES ::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
  //**************** state **************************** 
@@ -1470,7 +1470,7 @@ double  integral_div_ctrl = 0.;
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag =  DOMAIN_CONTAINING_GAMMA_C :: ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag =  DOMAIN_CONTAINING_CTRL_FACES :: ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
     

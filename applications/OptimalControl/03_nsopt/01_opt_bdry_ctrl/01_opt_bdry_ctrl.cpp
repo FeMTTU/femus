@@ -501,7 +501,11 @@ int main(int argc, char** args) {
   const FEFamily node_bdry_bdry_flag_fe_fam = LAGRANGE;
   const FEOrder node_bdry_bdry_flag_fe_ord = SECOND;
   
-  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index::bdry_bdry_flag(files,
+  MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
+                femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
+                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                >
+::bdry_bdry_flag(files,
                                                               ml_mesh, 
                                                               infile,
                                                               node_mapping_from_mesh_file_to_new,
@@ -555,7 +559,11 @@ int main(int argc, char** args) {
    ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
    
    
- ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index::bdry_bdry_flag_copy_and_delete(ml_prob,
+ ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
+                femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
+                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                >
+::bdry_bdry_flag_copy_and_delete(ml_prob,
                                 ml_sol,
                                 ml_mesh, 
                                 erased_levels,
@@ -1098,7 +1106,11 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
     if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index::control_eqn_bdry(iproc,
+     ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
+                femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
+                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                >
+::control_eqn_bdry(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,

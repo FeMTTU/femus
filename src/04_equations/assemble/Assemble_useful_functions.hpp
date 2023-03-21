@@ -7,6 +7,7 @@
 #include "MultiLevelProblem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
+#include "Assemble_jacobian.hpp"
 
  
 namespace femus {
