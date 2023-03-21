@@ -23,6 +23,8 @@
 
 namespace femus  {
 
+namespace elliptic  {
+    
 class pure_boundary  {
 
 public: 
@@ -976,7 +978,11 @@ class lifting_internal  {
 
 
 
-public: 
+public:
+    
+    
+    
+
     
  static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
@@ -2683,7 +2689,10 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 };
 
 
-}
+} //end namespace
+
+
+} //end namespace
 
 
 

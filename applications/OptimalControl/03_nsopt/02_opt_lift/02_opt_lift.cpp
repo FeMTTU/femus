@@ -6,10 +6,10 @@
 
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "Files.hpp"
 #include "Parameter.hpp"
 #include "Fluid.hpp"
-#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "paral.hpp"//to get iproc HAVE_MPI is inside here
 
@@ -30,10 +30,6 @@ using namespace femus;
 #include  "../../square_or_cube_03_cost_functional_without_regularization.hpp"
 
 
-  
-//****** Mesh ********************************
-  #define no_of_ref    N_UNIFORM_LEVELS
-//**************************************
 
   
 //****** Convergence ********************************
@@ -337,9 +333,9 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = no_of_ref;
+    maxNumberOfMeshes = N_UNIFORM_LEVELS;
   } else {
-    maxNumberOfMeshes = no_of_ref /*4*/;
+    maxNumberOfMeshes = N_UNIFORM_LEVELS;
   }
 
  

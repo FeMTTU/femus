@@ -16,7 +16,7 @@ using namespace femus;
 
 #include  "../../../square_or_cube_03_cost_functional_without_regularization.hpp"
 
-#include  "../../../opt_systems_neumann.hpp"
+#include  "../../../opt_systems_elliptic_neumann.hpp"
 
 
 
@@ -136,7 +136,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("adjoint");  
   
   // attach the assembling function to system
-  system.SetAssembleFunction( lifting_internal::assemble_elliptic_neumann_control );
+  system.SetAssembleFunction( femus::elliptic::lifting_internal::assemble_elliptic_neumann_control );
 
   // initilaize and solve the system
   system.init();

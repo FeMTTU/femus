@@ -9,6 +9,7 @@
 
 namespace femus  {
 
+namespace elliptic  {
 
 namespace pure_boundary  {
 
@@ -1504,7 +1505,7 @@ vector < double >  sol_adj; // local solution
 }
 
 
-
+}
 
 }
 

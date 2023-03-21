@@ -33,11 +33,6 @@ using namespace femus;
 
 
 
-//****** Mesh ********************************
-#define no_of_ref N_UNIFORM_LEVELS     //mesh refinements
-//**************************************
-
-
 
  
  
@@ -422,7 +417,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = no_of_ref;
+    maxNumberOfMeshes = N_UNIFORM_LEVELS;
   } else {
     maxNumberOfMeshes = 2;
   }

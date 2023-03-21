@@ -11,8 +11,8 @@
 
 //*********************** Control, lifting internal - BEGIN *******************************************************
 #define LIFTING_INTERNAL_ORTHOGONAL_DISTANCE_FROM_GAMMA_C  1.   //how far it goes orthogonally to the Control piece of the Boundary 
-#define LIFTING_INTERNAL_WIDTH_LOWER  0. /*GAMMA_CONTROL_LOWER*/
-#define LIFTING_INTERNAL_WIDTH_UPPER  1. /*GAMMA_CONTROL_UPPER*/
+#define LIFTING_INTERNAL_WIDTH_LOWER  0.
+#define LIFTING_INTERNAL_WIDTH_UPPER  1.
 //*********************** Control, lifting internal - END *******************************************************
 
 

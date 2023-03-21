@@ -16,7 +16,7 @@ using namespace femus;
 
 #include  "../../../square_or_cube_03_cost_functional_without_regularization.hpp"
 
-#include  "../../../opt_systems_neumann.hpp"
+#include  "../../../opt_systems_elliptic_neumann.hpp"
 
 
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -181,7 +181,7 @@ int main(int argc, char** args) {
   system_opt.AddSolutionToSystemPDE("mu");  
   
   // attach the assembling function to system
-  system_opt.SetAssembleFunction(pure_boundary::assemble_elliptic_neumann_control);
+  system_opt.SetAssembleFunction(elliptic::pure_boundary::assemble_elliptic_neumann_control);
   
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);

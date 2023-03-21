@@ -12,7 +12,7 @@ using namespace femus;
 
 #include  "../../../square_or_cube_03_cost_functional_without_regularization.hpp"
 
-#include  "../../../opt_systems_dirichlet.hpp"
+#include  "../../../opt_systems_elliptic_dirichlet.hpp"
 
 
 
@@ -214,7 +214,7 @@ int main(int argc, char** args) {
     system.AddSolutionToSystemPDE("mu");
 
     // attach the assembling function to system
-    system.SetAssembleFunction( lifting_external::assemble_elliptic_dirichlet_control );
+    system.SetAssembleFunction( elliptic::lifting_external::assemble_elliptic_dirichlet_control );
 
     system.SetDebugNonlinear(true);
 //     system.SetDebugFunction( ctrl::cost_functional::compute_cost_functional_regularization_lifting_external );
