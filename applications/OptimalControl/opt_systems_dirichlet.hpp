@@ -9,6 +9,8 @@
 // #include "Assemble_unknown.hpp"
 
 #include  "03_opt_system_inequalities.hpp"
+
+#include  "opt_systems_boundary_control_eqn_sobolev_integer.hpp"
   
 
 //This Opt system is characterized by the following ways of setting matrix values:
@@ -307,7 +309,7 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
-     femus::ctrl::Gamma_control_equation_fractional::control_eqn_bdry_fractional_sobolev_differentiability_index(iproc,
+     femus::ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index::control_eqn_bdry(iproc,
                    nprocs,
                     ml_prob,
                     ml_sol,
@@ -377,7 +379,11 @@ void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
   
   else {
   
-   femus::ctrl::Gamma_control_equation_integer::control_eqn_bdry_integer_sobolev_differentiability_index(iproc,
+   femus::ctrl::Gamma_control_equation_integer_sobolev_differentiability_index<
+                femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
+                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                >
+                ::control_eqn_bdry(iproc,
                     ml_prob,
                     ml_sol,
                     sol,
