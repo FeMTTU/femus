@@ -11,9 +11,11 @@ namespace femus  {
 
 namespace elliptic  {
 
-namespace pure_boundary  {
+class pure_boundary  {
 
-void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
+  public:
+    
+static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -750,14 +752,17 @@ void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   return;
 }
 
-}
+};
 
 
-namespace lifting_internal  {
+class lifting_internal  {
 
 #define SERVICE 1.
 
-void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
+
+  public:
+    
+static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -1502,7 +1507,7 @@ vector < double >  sol_adj; // local solution
 }
 
 
-}
+};
 
 
 } //end namespace elliptic

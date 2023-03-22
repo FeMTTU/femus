@@ -19,10 +19,8 @@
 
 
 
-#define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
-#define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 
-#define NO_OF_NORMS 5 // for L2 norm of U,V,P and H1 norm of U,V
+
 
 using namespace femus;
 
@@ -129,7 +127,7 @@ int main(int argc, char** args) {
   }
 
  
-    double comp_conv[maxNumberOfMeshes][NO_OF_NORMS];
+    double comp_conv[maxNumberOfMeshes][ns_state_only::no_of_norms];
 
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
         mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
@@ -229,7 +227,7 @@ int main(int argc, char** args) {
   
       double* norm = GetErrorNorm(mlProb,&mlSol,sol_coarser_prolongated);
     
-      for(int j = 0; j < NO_OF_NORMS; j++)       comp_conv[i-1][j] = norm[j];
+      for(int j = 0; j < ns_state_only::no_of_norms; j++)       comp_conv[i-1][j] = norm[j];
  
     }
 
@@ -260,7 +258,7 @@ int main(int argc, char** args) {
 #if compute_conv_flag == 1
 std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM of P" , "H1-Norm of U" , "H1-Norm of V"};
 
-   for(int j = 0; j <  NO_OF_NORMS; j++)  {
+   for(int j = 0; j <  ns_state_only::no_of_norms; j++)  {
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << norm_names[j] << " ERROR and ORDER OF CONVERGENCE:\n\n";
@@ -1132,7 +1130,7 @@ for (unsigned k = 0; k < dim; k++){
 
 double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
   
-    static double ErrorNormArray[NO_OF_NORMS];
+    static double ErrorNormArray[ns_state_only::no_of_norms];
     
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
@@ -1232,7 +1230,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
       gradSolVAR_coarser_prol_qp[k].reserve(maxSize);  
   }
       
-  vector  < double > l2norm (NO_OF_NORMS,0.);
+  vector  < double > l2norm (ns_state_only::no_of_norms,0.);
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1382,7 +1380,7 @@ gradient_Vel(coordX_gss,exact_grad_Vel);
   norm_vec_inexact = NumericVector::build().release();
   norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-	for(unsigned unk = 0; unk < NO_OF_NORMS; unk++) {
+	for(unsigned unk = 0; unk < ns_state_only::no_of_norms; unk++) {
         norm_vec_inexact->set(iproc, l2norm[unk]);
         norm_vec_inexact->close();
         l2norm[unk] = norm_vec_inexact->l1_norm();
@@ -1392,7 +1390,7 @@ gradient_Vel(coordX_gss,exact_grad_Vel);
   delete norm_vec_inexact;
   
  
-	for(unsigned unk = 0; unk < NO_OF_NORMS; unk++) {
+	for(unsigned unk = 0; unk < ns_state_only::no_of_norms; unk++) {
         ErrorNormArray[unk] = sqrt(l2norm[unk]);
     }
    
