@@ -212,7 +212,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               }
               for(unsigned n = 0; n < div; n++) {
                   
-                const unsigned dir_x_for_atan = ( ( (FACE_FOR_CONTROL - 1) / 2 ) + 1 ) % 3;  ///@todo I think needs to be changed
+                const unsigned dir_x_for_atan = ( ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2 ) + 1 ) % 3;  ///@todo I think needs to be changed
                 const unsigned dir_y_for_atan = ( dir_x_for_atan + 1 ) % 3 ;  ///@todo I think needs to be changed
 // // //                 double teta2 = atan2(delta_coordinates_bdry_bdry_refined[(n+1) + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[(n+1) + dir_x_for_atan * div]);
 // // //                 double teta1 = atan2(delta_coordinates_bdry_bdry_refined[n + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[n + dir_x_for_atan * div]);
@@ -466,8 +466,8 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 //*************************************************** 
   unsigned n_max = pow(2,dim_bdry);
   std::vector < double > extremes(n_max);
-  extremes[0] = EX_1;
-  extremes[1] = EX_2;
+  extremes[0] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][0] /*EX_1*/;
+  extremes[1] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][1] /*EX_2*/;
   if(dim_bdry == 2){
     extremes[2] = EY_1;
     extremes[3] = EY_2;
@@ -477,8 +477,8 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
   for(unsigned d = 0; d < dim; d++) {
       ex_control[d].reserve(n_max);
   }
-  int control_xyz = (FACE_FOR_CONTROL - 1) / 2;
-  bool ctrl_min_max = (FACE_FOR_CONTROL - 1) % 2;
+  int control_xyz   = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2;
+  bool ctrl_min_max = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) % 2;
   for(unsigned d = 0; d < dim; d++) {
     for(unsigned n_e = 0; n_e < n_max; n_e++){
       if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;

@@ -316,9 +316,9 @@ public:
      femus::ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
                 femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
-                >
-                  ::control_eqn_bdry(iproc,
-                   nprocs,
+                >::control_eqn_bdry(
+                    iproc,
+                    nprocs,
                     ml_prob,
                     ml_sol,
                     sol,

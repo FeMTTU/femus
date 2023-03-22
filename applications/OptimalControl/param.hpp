@@ -12,7 +12,7 @@
 //*********************** Control, Gamma_c specification - BEGIN  *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        1
+#define FACE_FOR_CONTROL        3
 
 
 
@@ -104,7 +104,7 @@ namespace ctrl {
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0    /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV  1    /* 0: integer norm, 1: fractional norm */
 
 
 #define RHS_ONE             0.
@@ -262,11 +262,11 @@ namespace ctrl {
 //------------------------------------ single: BEGIN ------------------------------------
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four
 
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Single_control_in_front_linear
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Single_control_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_in_front_constant
 
@@ -276,7 +276,7 @@ namespace ctrl {
 //------------------------------------ double: BEGIN ------------------------------------
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Three
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Four
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_One
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Four
@@ -287,7 +287,7 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four_Three
 
- #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS   DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Double_controls_adjacent_in_front_linear
+//  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS   DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Double_controls_adjacent_in_front_linear
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_in_front_constant
 

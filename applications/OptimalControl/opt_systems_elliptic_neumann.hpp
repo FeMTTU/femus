@@ -1505,9 +1505,9 @@ vector < double >  sol_adj; // local solution
 }
 
 
-}
+} //end namespace elliptic
 
-}
+} //end namespace femus
 
 
 
