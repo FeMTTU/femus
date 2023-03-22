@@ -107,7 +107,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
          bool is_face_on_maximal_coordinate = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) % 2;
          for(unsigned d = 0; d < extreme_coords_Gamma_c_xy_components.size(); d++) {
                         for(unsigned n_e = 0; n_e < extreme_coords_Gamma_c_xy_components[d].size(); n_e++) {
-                          if(control_xyz == d) extreme_coords_Gamma_c_xy_components[d][n_e] =  (is_face_on_maximal_coordinate)? SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MAX: SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MIN;
+                          if(control_xyz == d) extreme_coords_Gamma_c_xy_components[d][n_e] =  LIST_OF_CTRL_FACES :: normal_coordinate(is_face_on_maximal_coordinate);
                           else                 extreme_coords_Gamma_c_xy_components[d][n_e] = extreme_coords_Gamma_c_along_abscissa[n_e];
                         }
                       }

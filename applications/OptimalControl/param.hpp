@@ -18,10 +18,7 @@
 
 #define SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN 0.25  /* 0. */
 #define SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX 0.75  /* 1. */
-//***** Domain-related ******************
-#define SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MIN 0
-#define SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MAX 1
-//**************************************
+
 //*********************** Control, Gamma_c specification - END *******************************************************
 
 //*******************************************************************************************
