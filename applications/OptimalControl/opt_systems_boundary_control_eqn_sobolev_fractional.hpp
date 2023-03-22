@@ -34,7 +34,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   static void mixed_integral(const unsigned unbounded,
                       const unsigned dim,
                       const unsigned dim_bdry,
-                      const std::vector < std::vector < double > > & ex_control,
+//                       const std::vector < std::vector < double > > & ex_control,
                       const unsigned div, 
                       const double weight_iqp_bdry,
                       const std::vector < double > & x_iqp_bdry,
@@ -92,6 +92,70 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 // //               ex_1_vec[1] = EX_1;
 // //               ex_2_vec[0] = 1.;
 // //               ex_2_vec[1] = EX_2;
+
+
+
+ //------------ my change BEGIN ---------
+  const unsigned int i_element_face_index = - ( msh->el->GetFaceElementIndex(iel, iface) + 1);    //get the face index
+  const unsigned int number_of_face_for_controls = LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; // get the number of Gamma_c
+  unsigned int n_max = 2 /*pow(2,dim_bdry)*/;
+
+  std::vector < double > extremes(n_max);
+
+  std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
+  for(unsigned d = 0; d < dim; d++) {
+      ex_control[d].reserve(n_max);
+  }
+
+  for(int t = 0; t < number_of_face_for_controls; t++){   //loop over element of the class 'list of face for control' for found the t-index of the current Gamma_c
+     if( LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] == i_element_face_index){
+
+         for(int k = 0; k < n_max; k++){
+             extremes[k] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[t][k] /*EX_1*/;
+         }
+
+         int control_xyz = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) / 2;
+         bool ctrl_min_max = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) % 2;
+         for(unsigned d = 0; d < dim; d++) {
+                        for(unsigned n_e = 0; n_e < n_max; n_e++){
+                          if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
+                          else ex_control[d][n_e] = extremes[n_e];
+                        }
+                      }
+                }
+    }
+  //------------ my change - END---------
+
+
+//--- Control domain - BEGIN -------
+//***************************************************
+
+//   unsigned n_max = pow(2,dim_bdry);
+//   std::vector < double > extremes(n_max);
+//   extremes[0] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][0] /*EX_1*/;
+//   extremes[1] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][1] /*EX_2*/;
+// //   if(dim_bdry == 2){
+// //     extremes[2] = EY_1;
+// //     extremes[3] = EY_2;
+// //   }
+
+//   std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
+//   for(unsigned d = 0; d < dim; d++) {
+//       ex_control[d].reserve(n_max);
+//   }
+//   int control_xyz   = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2;
+//   bool ctrl_min_max = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) % 2;
+//   for(unsigned d = 0; d < dim; d++) {
+//     for(unsigned n_e = 0; n_e < n_max; n_e++){
+//       if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
+//       else ex_control[d][n_e] = extremes[n_e];
+//     }
+//   }
+//***************************************************
+
+
+//--- Control domain - END -------
+
               
               double dist2_1 = 0.;
               double dist2_2 = 0.;
@@ -462,34 +526,34 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // --- Quadrature - END
 
 
-//--- Control domain - BEGIN -------
-//*************************************************** 
-  unsigned n_max = pow(2,dim_bdry);
-  std::vector < double > extremes(n_max);
-  extremes[0] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][0] /*EX_1*/;
-  extremes[1] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][1] /*EX_2*/;
-  if(dim_bdry == 2){
-    extremes[2] = EY_1;
-    extremes[3] = EY_2;
-  }
-  
-  std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 ) 
-  for(unsigned d = 0; d < dim; d++) {
-      ex_control[d].reserve(n_max);
-  }
-  int control_xyz   = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2;
-  bool ctrl_min_max = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) % 2;
-  for(unsigned d = 0; d < dim; d++) {
-    for(unsigned n_e = 0; n_e < n_max; n_e++){
-      if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
-      else ex_control[d][n_e] = extremes[n_e];
-    }
-  }
-//*************************************************** 
-
-
+// //--- Control domain - BEGIN -------
+// //***************************************************
+//   unsigned n_max = pow(2,dim_bdry);
+//   std::vector < double > extremes(n_max);
+//   extremes[0] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][0] /*EX_1*/;
+//   extremes[1] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][1] /*EX_2*/;
+// //   if(dim_bdry == 2){
+// //     extremes[2] = EY_1;
+// //     extremes[3] = EY_2;
+// //   }
+//
+//   std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
+//   for(unsigned d = 0; d < dim; d++) {
+//       ex_control[d].reserve(n_max);
+//   }
+//   int control_xyz   = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2;
+//   bool ctrl_min_max = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) % 2;
+//   for(unsigned d = 0; d < dim; d++) {
+//     for(unsigned n_e = 0; n_e < n_max; n_e++){
+//       if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
+//       else ex_control[d][n_e] = extremes[n_e];
+//     }
+//   }
+// //***************************************************
+//
+//
 //--- Control domain - END -------
-  
+
 
 
  //********************* bdry cont *******************
@@ -1292,7 +1356,7 @@ unsigned nDof_iel_vec = 0;
               mixed_integral(unbounded,
                               dim,
                               dim_bdry,
-                              ex_control,
+//                               ex_control,
                               N_div_unbounded,
                               weight_kqp_bdry,
                               x_kqp_bdry,
@@ -1349,7 +1413,7 @@ unsigned nDof_iel_vec = 0;
                mixed_integral(unbounded,
                               dim,
                               dim_bdry,
-                              ex_control,
+//                               ex_control,
                               N_div_unbounded,
                               weight_iqp_bdry,
                               x_iqp_bdry,

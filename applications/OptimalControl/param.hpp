@@ -12,7 +12,7 @@
 //*********************** Control, Gamma_c specification - BEGIN  *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_CONTROL        3
+#define FACE_FOR_CONTROL        2
 
 
 
@@ -68,7 +68,9 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 6
+#define N_UNIFORM_LEVELS 6 // for 2D applications
+// #define N_UNIFORM_LEVELS 2 // for 3D bdry application
+
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
   //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -228,18 +230,19 @@ namespace ctrl {
 // #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
 
    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
-   //    const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_1;
+//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
 
+//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_1;
 
 //------------------------------------ single: BEGIN ------------------------------------
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four
 
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Single_control_in_front_linear
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Single_control_in_front_linear
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_in_front_constant
 
 //------------------------------------ single: END ------------------------------------
