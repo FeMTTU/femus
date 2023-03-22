@@ -165,10 +165,10 @@ namespace ctrl {
 
 
 //*********************** Domain Dependent - BEGIN *****************************************
-
+/*
 //***** How to identify boundary of boundary in the 3D case - BEGIN ****************** 
 #define  NODE_BASED_BDRY_BDRY   "node_based_bdry_bdry_flag"
-//***** How to identify boundary of boundary in the 3D case - END ****************** 
+//***** How to identify boundary of boundary in the 3D case - END ****************** */
 
 //*********************** Domain Dependent - END *****************************************
 
@@ -188,17 +188,6 @@ namespace ctrl {
 #define  NEUMANN_ADJOINT_CONTINUITY_SIGN  -1.
 #define  U_MINUS_Q_STRONG  1
 //*********************** Control, cost functional and equation, Lifting External - END *******************************************************
-
-//*********************** Control, equation, Lifting Internal - BEGIN  *******************************************************
-  
-//******** Penalties for equations - BEGIN ******************************
-#define LIFTING_INTERNAL_PENALTY_OUTSIDE_CONTROL_DOMAIN   1.e20         // penalty for zero control outside
-//******** Penalties for equations - END ******************************
-
-  
-//*********************** Control, equation, Lifting Internal - END  *******************************************************
-  
-  
 
 
 

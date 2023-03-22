@@ -18,6 +18,7 @@
 
 #include "opt_common.hpp"
 #include "00_cost_functional.hpp"
+#include "01_opt_system.hpp"
 #include "03_opt_system_inequalities.hpp"
 
 #include   "../manufactured_solutions.hpp"
@@ -329,7 +330,7 @@ int main(int argc, char** args) {
   // ======= Mesh: Refinement - END ==================
 
   // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
-  const std::string node_based_bdry_bdry_flag_name = NODE_BASED_BDRY_BDRY;
+  const std::string node_based_bdry_bdry_flag_name = femus::pure_boundary::_node_based_bdry_bdry;
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
   

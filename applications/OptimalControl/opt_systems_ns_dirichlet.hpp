@@ -1,8 +1,12 @@
 #ifndef OPT_SYSTEMS_NS_DIRICHLET_HPP
 #define OPT_SYSTEMS_NS_DIRICHLET_HPP
 
+#include "01_opt_system.hpp"
 
 #include  "opt_systems_boundary_control_eqn_sobolev_integer.hpp"
+
+
+
 
 
 namespace femus  {
@@ -11,7 +15,7 @@ namespace femus  {
 namespace navier_stokes  {
 
 
-class pure_boundary  {
+class pure_boundary : public femus::pure_boundary {
 
 public: 
    
@@ -570,7 +574,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
                     OP_L2,
                     RHS_ONE,
                     UNBOUNDED,
-                    NODE_BASED_BDRY_BDRY,
+                    _node_based_bdry_bdry,
                     //-----------
                     qrule_i,
                     qrule_j,
@@ -1830,7 +1834,7 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
 
 
 
-class lifting_internal  {
+class lifting_internal: public femus::lifting_internal  {
 
 public: 
     
@@ -2778,7 +2782,7 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
   
   
       const unsigned int n_components_ctrl = dim;
-  double penalty_outside_control_domain = LIFTING_INTERNAL_PENALTY_OUTSIDE_CONTROL_DOMAIN;         ///@todo  this number affects convergence or not! // penalty for zero control outside 
+  double penalty_outside_control_domain = _lifting_internal_penalty_outside_control_domain;         ///@todo  this number affects convergence or not! // penalty for zero control outside
   // ======= Solutions, Unknowns - END =======
 
       

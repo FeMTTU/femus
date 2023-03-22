@@ -8,6 +8,8 @@
 // #include "Assemble_unknown_jacres.hpp"
 // #include "Assemble_unknown.hpp"
 
+#include "01_opt_system.hpp"
+
 #include  "03_opt_system_inequalities.hpp"
 
 #include  "opt_systems_boundary_control_eqn_sobolev_integer.hpp"
@@ -25,7 +27,7 @@ namespace femus  {
 
 namespace elliptic  {
     
-class pure_boundary  {
+class pure_boundary : public femus::pure_boundary  {
 
 public: 
     
@@ -372,7 +374,7 @@ public:
                     OP_L2,
                     RHS_ONE,
                     UNBOUNDED,
-                    NODE_BASED_BDRY_BDRY,
+                    _node_based_bdry_bdry,
                     //-----------
                     qrule_i,
                     qrule_j,
@@ -974,7 +976,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
 
-class lifting_internal  {
+class lifting_internal : public femus::lifting_internal   {
 
 
 
@@ -1209,7 +1211,7 @@ public:
   double u_des = femus::ctrl::square_or_cube :: cost_functional_without_regularization::DesiredTargetVec()[0];
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
-  double penalty_outside_control_domain = LIFTING_INTERNAL_PENALTY_OUTSIDE_CONTROL_DOMAIN;         // penalty for zero control outside
+  double penalty_outside_control_domain = _lifting_internal_penalty_outside_control_domain;         // penalty for zero control outside
  //***************************************************  
 
  
