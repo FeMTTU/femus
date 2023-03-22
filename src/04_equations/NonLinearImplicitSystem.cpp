@@ -374,8 +374,12 @@ restart:
           if (this->GetMLProb().GetFilesHandler() != NULL)  out_path = this->GetMLProb().GetFilesHandler()->GetOutputPath();
           else                                              out_path = DEFAULT_OUTPUTDIR;
 
+          std::string file_prefix;
+          if ( GetMLProb().GetMLMesh()->_mesh_filename.empty() ) { file_prefix = "sol"; }
+          else { file_prefix = GetMLProb().GetMLMesh()->_mesh_filename; }
+          
           //print all variables to file
-          this->GetMLProb()._ml_sol->GetWriter()->Write (_gridn, "sol", out_path, output_file_name_stream.str().c_str(), print_order.c_str(), variablesToBePrinted );
+          this->GetMLProb()._ml_sol->GetWriter()->Write (_gridn, file_prefix, out_path, output_file_name_stream.str().c_str(), print_order.c_str(), variablesToBePrinted );
 
      
   }  

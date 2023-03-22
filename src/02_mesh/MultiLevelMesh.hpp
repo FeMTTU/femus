@@ -100,7 +100,6 @@ public:
                                const ElemType type,
                                const char GaussOrder[]
                              );
-
    
 //====================
 //==== Coarse level, Geom Elem ======== 
@@ -211,6 +210,19 @@ private:
   
 //==== FE - END ======== 
   
+//====================
+//==== File input - BEGIN  ======== 
+//====================
+public:
+    
+    
+    std::string  _mesh_filename; //
+
+    
+//==== File input - END  ======== 
+
+    
+    
 //====================
 //==== File output - BEGIN  ======== 
 //====================
