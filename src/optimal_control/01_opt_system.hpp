@@ -13,7 +13,7 @@ public:
 
 
     //***** How to identify boundary of boundary in the 3D case - BEGIN ******************
-  static const std::string  _node_based_bdry_bdry ;
+  static const std::string  _node_based_bdry_bdry;
     //***** How to identify boundary of boundary in the 3D case - END ******************
 
 
@@ -37,6 +37,25 @@ protected:
 
 };
 
+
+
+
+class lifting_external {
+
+public:
+
+protected:
+
+//Flags for enforcement of Adjoint Neumann continuity on \Gamma_c
+
+static constexpr int _neumann_adjoint_explicit = 1;
+static constexpr int _neumann_adjoint_continuity_sign = -1;
+static constexpr int _u_minus_q_strong = 1;
+
+
+
+
+};
 
 }
 

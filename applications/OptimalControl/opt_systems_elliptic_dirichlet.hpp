@@ -1813,7 +1813,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
 
-class lifting_external  {
+class lifting_external: public femus::lifting_external  {
 
 public: 
     
@@ -2291,11 +2291,11 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
                         const unsigned gamma_c_Neum_adj_continuity_pos = pos_adj_ext/*pos_ctrl*/;
                         
 //                         if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_adj, i_vol)   ]  +=  -  penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol] - sol_eldofs_Mat[pos_ctrl][i_vol] ) ;    // u = q
-                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  U_MINUS_Q_STRONG * penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol]);    // u 
-                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  U_MINUS_Q_STRONG * penalty_interface * ( - sol_eldofs_Mat[pos_ctrl][i_vol]);    // - q
+                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  _u_minus_q_strong * penalty_interface * ( sol_eldofs_Mat[pos_state][i_vol]);    // u
+                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_u_minus_q_pos, i_vol)  ] +=  -  _u_minus_q_strong * penalty_interface * ( - sol_eldofs_Mat[pos_ctrl][i_vol]);    // - q
                         
-                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - NEUMANN_ADJOINT_EXPLICIT * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( NEUMANN_ADJOINT_CONTINUITY_SIGN ) * grad_adj_dot_n_res ;
-                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - NEUMANN_ADJOINT_EXPLICIT * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * (  grad_adj_ext_dot_n_res ) ;
+                        if ( group_flag == GROUP_INTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - _neumann_adjoint_explicit * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( _neumann_adjoint_continuity_sign ) * grad_adj_dot_n_res ;
+                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, gamma_c_Neum_adj_continuity_pos, i_vol)   ]  +=  - _neumann_adjoint_explicit * penalty_interface *  weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * (  grad_adj_ext_dot_n_res ) ;
 //============ Bdry Residuals - END ==================
 
 //============ Bdry Jacobians on Bdry - BEGIN ==================
@@ -2304,8 +2304,8 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 //============ u = q =============================
                             if (i_vol == j_vol)  {
-                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_u_minus_q_pos, pos_state, i_vol, j_vol) ]  += U_MINUS_Q_STRONG * penalty_interface *  ( 1.);
-                                if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_u_minus_q_pos, pos_ctrl, i_vol, j_vol) ]   += U_MINUS_Q_STRONG * penalty_interface *  (-1.);
+                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_u_minus_q_pos, pos_state, i_vol, j_vol) ]  += _u_minus_q_strong * penalty_interface *  ( 1.);
+                                if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_u_minus_q_pos, pos_ctrl, i_vol, j_vol) ]   += _u_minus_q_strong * penalty_interface *  (-1.);
                             }
 //============ u = q =============================
 
@@ -2339,8 +2339,8 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
                             }
                             
 
-                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj, i_vol, j) ]  += NEUMANN_ADJOINT_EXPLICIT * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( NEUMANN_ADJOINT_CONTINUITY_SIGN ) * grad_adj_dot_n_mat;
-                                if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj_ext, i_vol, j) ]   += NEUMANN_ADJOINT_EXPLICIT * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( 1.) * grad_adj_ext_dot_n_mat;
+                                if ( group_flag == GROUP_INTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj, i_vol, j) ]  += _neumann_adjoint_explicit * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( _neumann_adjoint_continuity_sign ) * grad_adj_dot_n_mat;
+                                if ( group_flag == GROUP_EXTERNAL ) Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, gamma_c_Neum_adj_continuity_pos, pos_adj_ext, i_vol, j) ]   += _neumann_adjoint_explicit * penalty_interface * weight_qp_bdry * phi_fe_qp_bdry[SolFEType[pos_adj_ext]][i_bdry] * ( 1.) * grad_adj_ext_dot_n_mat;
 
 
                         } //end j

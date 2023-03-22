@@ -164,31 +164,14 @@ namespace ctrl {
 //******** Penalties for equations - END ******************************
 
 
-//*********************** Domain Dependent - BEGIN *****************************************
-/*
-//***** How to identify boundary of boundary in the 3D case - BEGIN ****************** 
-#define  NODE_BASED_BDRY_BDRY   "node_based_bdry_bdry_flag"
-//***** How to identify boundary of boundary in the 3D case - END ****************** */
-
-//*********************** Domain Dependent - END *****************************************
-
-
-
 //*********************** Control, cost functional, regularization (almost), Boundary, Fractional or Integer - END  *******************************************************
 
-
-  
+///********domain dependent -BEGIN
 //*********************** Control, cost functional and equation, Lifting External - BEGIN  *******************************************************
 #define GROUP_INTERNAL  12
 #define GROUP_EXTERNAL  13
-
-
-//Flags for enforcement of Adjoint Neumann continuity on \Gamma_c 
-#define  NEUMANN_ADJOINT_EXPLICIT  1
-#define  NEUMANN_ADJOINT_CONTINUITY_SIGN  -1.
-#define  U_MINUS_Q_STRONG  1
 //*********************** Control, cost functional and equation, Lifting External - END *******************************************************
-
+///********domain dependent -END
 
 
 } //end namespace 
