@@ -55,8 +55,8 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
 
    if (faceName == FACE_FOR_CONTROL)  {
        
-        if (x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && 
-            x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  {
+        if (x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] > SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN - 1.e-5 && 
+            x[ femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES ::tangential_direction_to_Gamma_control(faceName) ] < SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX + 1.e-5)  {
             
        if (!strcmp(SolName, "ctrl_0"))    { dirichlet = false; }
   else if (!strcmp(SolName, "ctrl_1"))    { dirichlet = false; } 

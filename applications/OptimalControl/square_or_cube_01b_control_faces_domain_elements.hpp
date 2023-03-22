@@ -133,8 +133,8 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 
    if ( ( line_sign * elem_center[1 - Gamma_c_dir_tangential] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
-       && ( elem_center[Gamma_c_dir_tangential] >/* ctrl::*/ T ::_face_with_extremes_extremes[f][0] - offset_to_include_line )
-       && ( elem_center[Gamma_c_dir_tangential] < /*ctrl::*/ T ::_face_with_extremes_extremes[f][1] + offset_to_include_line ) )
+       && ( elem_center[Gamma_c_dir_tangential] >/* ctrl::*/ T ::_face_with_extremes_extremes_on_tang_surface[f][0] - offset_to_include_line )
+       && ( elem_center[Gamma_c_dir_tangential] < /*ctrl::*/ T ::_face_with_extremes_extremes_on_tang_surface[f][1] + offset_to_include_line ) )
       { control_el_flag = 1; }
 
    }

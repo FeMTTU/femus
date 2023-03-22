@@ -79,79 +79,44 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
       
       //============ Mixed Integral 1D - Analytical ==================      
       if (dim_bdry == 1) {
-      
-//               double ex_1 = EX_1;
-//               double ex_2 = EX_2;
-//               std::vector < double > ex_1_vec(dim);
-//               std::vector < double > ex_2_vec(dim);
-//               ex_1_vec[0] = EX_1;
-//               ex_1_vec[1] = 0.;
-//               ex_2_vec[0] = EX_2;
-//               ex_2_vec[1] = 0.;
-// //               ex_1_vec[0] = 1.;
-// //               ex_1_vec[1] = EX_1;
-// //               ex_2_vec[0] = 1.;
-// //               ex_2_vec[1] = EX_2;
 
 
-
- //------------ my change BEGIN ---------
   const unsigned int i_element_face_index = - ( msh->el->GetFaceElementIndex(iel, iface) + 1);    //get the face index
-  const unsigned int number_of_face_for_controls = LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; // get the number of Gamma_c
-  unsigned int n_max = 2 /*pow(2,dim_bdry)*/;
 
-  std::vector < double > extremes(n_max);
 
-  std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
-  for(unsigned d = 0; d < dim; d++) {
-      ex_control[d].reserve(n_max);
+  std::vector < double > extreme_coords_Gamma_c_along_abscissa(2); //number of extremes of the 1D ctrl segment
+
+  std::vector < std::vector < double > > extreme_coords_Gamma_c_xy_components(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
+
+  for(unsigned d = 0; d < extreme_coords_Gamma_c_xy_components.size(); d++) {
+      extreme_coords_Gamma_c_xy_components[d].resize( extreme_coords_Gamma_c_along_abscissa.size() );
   }
+  
+  
+  //loop over element of the class 'list of face for control' to find the t-index of the current Gamma_c - BEGIN
+  const unsigned int number_of_face_for_controls = LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; // get the number of Gamma_c
+  
+  for(int t = 0; t < number_of_face_for_controls; t++) { 
+     if( i_element_face_index == LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] ) {
 
-  for(int t = 0; t < number_of_face_for_controls; t++){   //loop over element of the class 'list of face for control' for found the t-index of the current Gamma_c
-     if( LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] == i_element_face_index){
-
-         for(int k = 0; k < n_max; k++){
-             extremes[k] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[t][k] /*EX_1*/;
+         for(int k = 0; k < extreme_coords_Gamma_c_along_abscissa.size(); k++){
+             extreme_coords_Gamma_c_along_abscissa[k] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes_on_tang_surface[t][k];
          }
 
-         int control_xyz = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) / 2;
-         bool ctrl_min_max = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) % 2;
-         for(unsigned d = 0; d < dim; d++) {
-                        for(unsigned n_e = 0; n_e < n_max; n_e++){
-                          if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
-                          else ex_control[d][n_e] = extremes[n_e];
+         int control_xyz                    = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) / 2;
+         bool is_face_on_maximal_coordinate = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) % 2;
+         for(unsigned d = 0; d < extreme_coords_Gamma_c_xy_components.size(); d++) {
+                        for(unsigned n_e = 0; n_e < extreme_coords_Gamma_c_xy_components[d].size(); n_e++) {
+                          if(control_xyz == d) extreme_coords_Gamma_c_xy_components[d][n_e] =  (is_face_on_maximal_coordinate)? SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MAX: SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MIN;
+                          else                 extreme_coords_Gamma_c_xy_components[d][n_e] = extreme_coords_Gamma_c_along_abscissa[n_e];
                         }
                       }
-                }
+      }
     }
-  //------------ my change - END---------
+    
+  //------------ END ---------
 
 
-//--- Control domain - BEGIN -------
-//***************************************************
-
-//   unsigned n_max = pow(2,dim_bdry);
-//   std::vector < double > extremes(n_max);
-//   extremes[0] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][0] /*EX_1*/;
-//   extremes[1] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][1] /*EX_2*/;
-// //   if(dim_bdry == 2){
-// //     extremes[2] = EY_1;
-// //     extremes[3] = EY_2;
-// //   }
-
-//   std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
-//   for(unsigned d = 0; d < dim; d++) {
-//       ex_control[d].reserve(n_max);
-//   }
-//   int control_xyz   = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2;
-//   bool ctrl_min_max = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) % 2;
-//   for(unsigned d = 0; d < dim; d++) {
-//     for(unsigned n_e = 0; n_e < n_max; n_e++){
-//       if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
-//       else ex_control[d][n_e] = extremes[n_e];
-//     }
-//   }
-//***************************************************
 
 
 //--- Control domain - END -------
@@ -166,12 +131,12 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 //                 dist2_1 += (x_iqp_bdry[d] - ex_1_vec[d]) * (x_iqp_bdry[d] - ex_1_vec[d]);
 //                 dist2_2 += (x_iqp_bdry[d] - ex_2_vec[d]) * (x_iqp_bdry[d] - ex_2_vec[d]);
 //               }
-//               // ex_control Built as  ( x1 y1 ) ( x2 y2 ) 
+//               // extreme_coords_Gamma_c_xy_components Built as  ( x1 y1 ) ( x2 y2 ) 
 //               
               for(int d = 0; d < dim; d++) {
-                dist2_1 += (x_iqp_bdry[d] - ex_control[d][0]) * (x_iqp_bdry[d] - ex_control[d][0]);
-                dist2_2 += (x_iqp_bdry[d] - ex_control[d][1]) * (x_iqp_bdry[d] - ex_control[d][1]);
-//                 std::cout<< ex_control[d][0] << "  " << ex_control[d][1] << "\n";
+                dist2_1 += (x_iqp_bdry[d] - extreme_coords_Gamma_c_xy_components[d][0]) * (x_iqp_bdry[d] - extreme_coords_Gamma_c_xy_components[d][0]);
+                dist2_2 += (x_iqp_bdry[d] - extreme_coords_Gamma_c_xy_components[d][1]) * (x_iqp_bdry[d] - extreme_coords_Gamma_c_xy_components[d][1]);
+//                 std::cout<< extreme_coords_Gamma_c_xy_components[d][0] << "  " << extreme_coords_Gamma_c_xy_components[d][1] << "\n";
               }
               
               
@@ -525,34 +490,6 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
     double detJac_jel_bdry_jqp_bdry;
 // --- Quadrature - END
 
-
-// //--- Control domain - BEGIN -------
-// //***************************************************
-//   unsigned n_max = pow(2,dim_bdry);
-//   std::vector < double > extremes(n_max);
-//   extremes[0] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][0] /*EX_1*/;
-//   extremes[1] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes[0][1] /*EX_2*/;
-// //   if(dim_bdry == 2){
-// //     extremes[2] = EY_1;
-// //     extremes[3] = EY_2;
-// //   }
-//
-//   std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
-//   for(unsigned d = 0; d < dim; d++) {
-//       ex_control[d].reserve(n_max);
-//   }
-//   int control_xyz   = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2;
-//   bool ctrl_min_max = ( LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) % 2;
-//   for(unsigned d = 0; d < dim; d++) {
-//     for(unsigned n_e = 0; n_e < n_max; n_e++){
-//       if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
-//       else ex_control[d][n_e] = extremes[n_e];
-//     }
-//   }
-// //***************************************************
-//
-//
-//--- Control domain - END -------
 
 
 

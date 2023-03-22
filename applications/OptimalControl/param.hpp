@@ -16,16 +16,11 @@
 
 
 
-#define GAMMA_CONTROL_LOWER 0.25  /* 0. */
-#define GAMMA_CONTROL_UPPER 0.75  /* 1. */
-//***** Domain-related ****************** 
-#define EX_1        GAMMA_CONTROL_LOWER
-#define EX_2        GAMMA_CONTROL_UPPER
-#define EY_1        0.
-#define EY_2        1.   ///@todo  see here
-
-#define DOMAIN_EX_1 0
-#define DOMAIN_EX_2 1
+#define SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN 0.25  /* 0. */
+#define SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX 0.75  /* 1. */
+//***** Domain-related ******************
+#define SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MIN 0
+#define SQUARE_OR_CUBE__CONTROL_FACE_NORMAL_COORD_MAX 1
 //**************************************
 //*********************** Control, Gamma_c specification - END *******************************************************
 
@@ -68,8 +63,8 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-// #define N_UNIFORM_LEVELS 6 // for 2D applications
-#define N_UNIFORM_LEVELS 3 // for 3D bdry application
+#define N_UNIFORM_LEVELS 6 // for 2D applications
+// #define N_UNIFORM_LEVELS 3 // for 3D bdry application
 
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
@@ -229,8 +224,8 @@ namespace ctrl {
 #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_between_extreme
 // #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
 
-//    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
-      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
+   const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
+//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
 
 //       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_1;
 

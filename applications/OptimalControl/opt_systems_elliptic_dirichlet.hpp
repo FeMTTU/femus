@@ -1852,8 +1852,8 @@ public:
                     
                     coords_bdry_control_face[begin][0] = 1.;
                     coords_bdry_control_face[end][0] = 1.;
-                    coords_bdry_control_face[begin][1] = GAMMA_CONTROL_LOWER;
-                    coords_bdry_control_face[end][1] = GAMMA_CONTROL_UPPER;
+                    coords_bdry_control_face[begin][1] = SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN;
+                    coords_bdry_control_face[end][1] = SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX;
                     
      
   bool interface_elem_flag = false;

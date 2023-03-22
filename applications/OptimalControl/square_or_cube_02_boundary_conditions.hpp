@@ -27,10 +27,6 @@ class Boundary_Condition {
          }
 
 
-
-
-
-
 };
 
 namespace boundary_control_between_extreme {
@@ -65,9 +61,9 @@ template < class B >
            if (faceName == /*ctrl::*/B::_face_with_extremes_index[f]) {
 
               if ( !(x[ /*ctrl::*/B::tangential_direction_to_Gamma_control(faceName) ] >
-                  /*ctrl::*/B::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+                  /*ctrl::*/B::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
                      x[ /*ctrl::*/B::tangential_direction_to_Gamma_control(faceName) ] <
-                  /*ctrl::*/B::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE
+                  /*ctrl::*/B::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE
                  ) ) {
                       dirichlet = true;
                  }
@@ -128,15 +124,15 @@ static double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem *
         if (faceName == /*ctrl:: */ B ::_face_with_extremes_index[f]) {
               if(faceName == face_for_control_principal) {  value = 0.; }
               else if (faceName == /*ctrl::*/ B :: opposite_face(face_for_control_principal)){
-                     if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+                     if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
                             x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] <
-                     /*ctrl:: */ B ::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) )   { value =  gamma * domain_length; }
+                     /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) )   { value =  gamma * domain_length; }
                      else {value = 0.; }
               }
               else {
-                     if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+                     if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
                             x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] <
-                     /*ctrl:: */ B ::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) { value =
+                     /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) { value =
                             gamma * (
                                       /*ctrl::boundary_conditions::*/Boundary_Condition < B >::opposite_face_ctrl_or_state_value(face_for_control_principal, domain_length) +  /*ctrl::*/ B ::sign_function_for_delimiting_region(face_for_control_principal) *  x[      /*ctrl::*/ B ::normal_direction_to_Gamma_control(face_for_control_principal) ] ); }
                      else {value = 0.; }
@@ -282,16 +278,16 @@ template < class B >
 
                 if ( (faceName == face_for_control_principal) || (faceName == adjacent_face_for_control) )     {  value = 0.; }
                 else if(faceName == /*ctrl::*/ B:: opposite_face(face_for_control_principal)){
-                        if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
-                               x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
+                        if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+                               x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
                                   value = gamma * (
                                   /*ctrl::boundary_conditions::*/Boundary_Condition < B >::opposite_face_ctrl_or_state_value(adjacent_face_for_control, domain_length) +  /*ctrl::*/ B ::sign_function_for_delimiting_region(adjacent_face_for_control) *  x[
                                   /*ctrl::*/ B::normal_direction_to_Gamma_control(adjacent_face_for_control) ] );  }
                         else {value = 0.; }
                 }
                 else if(faceName == /*ctrl::*/ B:: opposite_face(adjacent_face_for_control)){
-                        if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
-                               x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
+                        if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+                               x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
                                value = gamma * (
                                /*ctrl::boundary_conditions::*/Boundary_Condition < B >::opposite_face_ctrl_or_state_value(face_for_control_principal, domain_length) +  /*ctrl::*/ B ::sign_function_for_delimiting_region(face_for_control_principal) *  x[
                                /*ctrl::*/ B::normal_direction_to_Gamma_control(face_for_control_principal) ] );  }
@@ -358,9 +354,9 @@ template < class B >
 //            if (faceName == /*ctrl::*/B::_face_with_extremes_index[f]) {
 //
 //               if ( !(x[ /*ctrl::*/B::tangential_direction_to_Gamma_control(faceName) ] >
-//                   /*ctrl::*/B::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+//                   /*ctrl::*/B::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
 //                      x[ /*ctrl::*/B::tangential_direction_to_Gamma_control(faceName) ] <
-//                   /*ctrl::*/B::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE
+//                   /*ctrl::*/B::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE
 //                  ) ) {
 //                       dirichlet = true;
 //                  }
@@ -422,15 +418,15 @@ static double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem *
 
 //               if(faceName == face_for_control_principal) {  value = 0.; }
 //               else if (faceName == /*ctrl::*/ B :: opposite_face(face_for_control_principal)){
-//                      if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+//                      if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
 //                             x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] <
-//                      /*ctrl:: */ B ::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) )   { value =  gamma * domain_length; }
+//                      /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) )   { value =  gamma * domain_length; }
 //                      else {value = 0.; }
 //               }
 //               else {
-//                      if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+//                      if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
 //                             x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] <
-//                      /*ctrl:: */ B ::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) { value =
+//                      /*ctrl:: */ B ::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) { value =
 //                             gamma * (
 //                                       /*ctrl::boundary_conditions::*/Boundary_Condition < B >::opposite_face_ctrl_or_state_value(face_for_control_principal, domain_length) +  /*ctrl::*/ B ::sign_function_for_delimiting_region(face_for_control_principal) *  x[      /*ctrl::*/ B ::normal_direction_to_Gamma_control(face_for_control_principal) ] ); }
 //                      else {value = 0.; }
@@ -577,16 +573,16 @@ template < class B >
 
 //                 if ( (faceName == face_for_control_principal) || (faceName == adjacent_face_for_control) )     {  value = 0.; }
 //                 else if(faceName == /*ctrl::*/ B:: opposite_face(face_for_control_principal)){
-//                         if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
-//                                x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
+//                         if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+//                                x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
 //                                   value = gamma * (
 //                                   /*ctrl::boundary_conditions::*/Boundary_Condition < B >::opposite_face_ctrl_or_state_value(adjacent_face_for_control, domain_length) +  /*ctrl::*/ B ::sign_function_for_delimiting_region(adjacent_face_for_control) *  x[
 //                                   /*ctrl::*/ B::normal_direction_to_Gamma_control(adjacent_face_for_control) ] );  }
 //                         else {value = 0.; }
 //                 }
 //                 else if(faceName == /*ctrl::*/ B:: opposite_face(adjacent_face_for_control)){
-//                         if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
-//                                x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
+//                         if ( !(x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] > /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][0] +  OFFSET_TO_INCLUDE_LINE  &&
+//                                x[ /*ctrl::*/ B::tangential_direction_to_Gamma_control(faceName) ] < /*ctrl::*/ B::_face_with_extremes_extremes_on_tang_surface[f][1] -  OFFSET_TO_INCLUDE_LINE ) ) {
 //                                value = gamma * (
 //                                /*ctrl::boundary_conditions::*/Boundary_Condition < B >::opposite_face_ctrl_or_state_value(face_for_control_principal, domain_length) +  /*ctrl::*/ B ::sign_function_for_delimiting_region(face_for_control_principal) *  x[
 //                                /*ctrl::*/ B::normal_direction_to_Gamma_control(face_for_control_principal) ] );  }

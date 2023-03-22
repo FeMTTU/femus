@@ -86,6 +86,16 @@ static constexpr double domain_length = 1.;
 
 }
 
+
+      static const double normal_coordinate(const bool is_face_on_maximal_coordinate) {
+
+   const double square_or_cube__control_face_normal_coord_min = 0.;
+   const double square_or_cube__control_face_normal_coord_max = domain_length;
+   
+       return (is_face_on_maximal_coordinate)? square_or_cube__control_face_normal_coord_max : square_or_cube__control_face_normal_coord_min;
+
+      }
+      
    };
 
 namespace boundary_control_between_extreme {
@@ -104,13 +114,13 @@ namespace boundary_control_between_extreme {
          true
     };
 
-     static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+     static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
   };
 
-      const double   List_of_Gamma_control_faces_Single::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
-       { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+      const double   List_of_Gamma_control_faces_Single::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
+       { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
     };
 
 
@@ -177,15 +187,15 @@ namespace boundary_control_between_extreme {
           ,true
       };
 
-       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+       static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
     };
 
 
-      const double   List_of_Gamma_control_faces_Double::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
-         { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+      const double   List_of_Gamma_control_faces_Double::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
+         { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
+       , { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
 
       };
 
@@ -355,16 +365,16 @@ namespace boundary_control_between_extreme {
           ,true
       };
 
-       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+       static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
     };
 
 
-      const double   List_of_Gamma_control_faces_Triple::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
-         { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+      const double   List_of_Gamma_control_faces_Triple::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
+         { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
+       , { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
+       , { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
 
       };
 
@@ -564,17 +574,17 @@ namespace boundary_control_between_extreme {
           ,true
       };
 
-       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+       static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
     };
 
 
-      const double   List_of_Gamma_control_faces_Quadruple::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
-         { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
-       , { GAMMA_CONTROL_LOWER, GAMMA_CONTROL_UPPER }
+      const double   List_of_Gamma_control_faces_Quadruple::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
+         { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
+       , { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
+       , { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
+       , { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX }
 
       };
 
@@ -617,12 +627,12 @@ namespace  boundary_control_full_face {
          true
     };
 
-     static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+     static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
   };
 
-      const double   List_of_Gamma_control_faces_Single::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
+      const double   List_of_Gamma_control_faces_Single::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
        { 0,domain_length}
     };
 
@@ -690,13 +700,13 @@ namespace  boundary_control_full_face {
           ,true
       };
 
-       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+       static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
     };
 
 
-      const double   List_of_Gamma_control_faces_Double::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
+      const double   List_of_Gamma_control_faces_Double::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
          { 0 , domain_length  }
        , { 0 , domain_length  }
 
@@ -868,13 +878,13 @@ namespace  boundary_control_full_face {
           ,true
       };
 
-       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+       static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
     };
 
 
-      const double   List_of_Gamma_control_faces_Triple::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
+      const double   List_of_Gamma_control_faces_Triple::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
          { 0, domain_length }
        , { 0, domain_length }
        , { 0, domain_length }
@@ -1077,13 +1087,13 @@ namespace  boundary_control_full_face {
           ,true
       };
 
-       static const double   _face_with_extremes_extremes[ _face_with_extremes_index_size ][2];
+       static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2];
 
 
     };
 
 
-      const double   List_of_Gamma_control_faces_Quadruple::_face_with_extremes_extremes[ _face_with_extremes_index_size ][2] = {
+      const double   List_of_Gamma_control_faces_Quadruple::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][2] = {
          { 0, domain_length }
        , { 0, domain_length }
        , { 0, domain_length }
