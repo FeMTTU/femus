@@ -64,8 +64,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                       const unsigned jelGeom_bdry,
                       std::vector < double > & KK_local_iel_mixed_num,
                       std::vector < double > & Res_local_iel_mixed_num,
-  //////////   3D only - END
                       unsigned solType_coords,
+  //////////   3D only - END
                       double & integral
                      ) {
       
@@ -82,10 +82,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
       //============ Mixed Integral 1D - Analytical ==================      
       if (dim_bdry == 1) {
 
-
-  const unsigned int i_element_face_index = - ( msh->el->GetFaceElementIndex(iel, iface) + 1);    //get the face index
-
-
+// ---------- extreme coordinates, initialize - BEGIN
   std::vector < double > extreme_coords_Gamma_c_along_abscissa(2); //number of extremes of the 1D ctrl segment
 
   std::vector < std::vector < double > > extreme_coords_Gamma_c_xy_components(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 )
@@ -93,9 +90,13 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   for(unsigned d = 0; d < extreme_coords_Gamma_c_xy_components.size(); d++) {
       extreme_coords_Gamma_c_xy_components[d].resize( extreme_coords_Gamma_c_along_abscissa.size() );
   }
+// ---------- extreme coordinates, initialize - END
   
   
   //loop over element of the class 'list of face for control' to find the t-index of the current Gamma_c - BEGIN
+  
+  const unsigned int i_element_face_index = - ( msh->el->GetFaceElementIndex(iel, iface) + 1);    //get the face index
+  
   const unsigned int number_of_face_for_controls = LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; // get the number of Gamma_c
   
   for(int t = 0; t < number_of_face_for_controls; t++) { 
@@ -148,13 +149,17 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               double mixed_denominator = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
 //--- Denominator - END -------
 
+
               
+//--- Integral - BEGIN -------
               for (unsigned c = 0; c < n_components_ctrl; c++) {
                   integral +=  0.5 * C_ns * check_limits * operator_Hhalf  * beta * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator * (1. / s_frac);
               }   
+//--- Integral - END -------
               
               
               
+//--- Equation - BEGIN -------
               for (unsigned c = 0; c < n_components_ctrl; c++) {
 
               for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
@@ -178,6 +183,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
               }
            }
+//--- Equation - END -------
            
            
       }
@@ -307,12 +313,15 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
             
             /// @todo ONLY DIFFERENCES: the mixed_denominator is numerical, and so also the corresponding Res and Jac. It could be done with a single function
             
+//--- Integral - BEGIN -------
               for (unsigned c = 0; c < n_components_ctrl; c++) {
                  integral +=  0.5 * C_ns * check_limits * operator_Hhalf  * beta  * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c] * weight_iqp_bdry * mixed_denominator_numerical * (1. / s_frac);
               }
+//--- Integral - END -------
               
               
               
+//--- Equation - BEGIN -------
               for (unsigned c = 0; c < n_components_ctrl; c++) {
 
               for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
@@ -336,6 +345,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
               }
            }
+//--- Equation - END -------
             
           
       }          
@@ -493,12 +503,12 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // --- Geometry - END
       
 // --- Quadrature - BEGIN
-     std::vector < std::vector < double > >  JacI_jel_bdry_jqp_bdry(space_dim);
-     std::vector < std::vector < double > >  Jac_jel_bdry_jqp_bdry(dim-1);
-    for (unsigned d = 0; d < Jac_jel_bdry_jqp_bdry.size(); d++) {   Jac_jel_bdry_jqp_bdry[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_jel_bdry_jqp_bdry.size(); d++) { JacI_jel_bdry_jqp_bdry[d].resize(dim-1); }
+     std::vector < std::vector < double > >  JacI_jel_bdry_qp_of_jface(space_dim);
+     std::vector < std::vector < double > >  Jac_jel_bdry_qp_of_jface(dim-1);
+    for (unsigned d = 0; d < Jac_jel_bdry_qp_of_jface.size(); d++) {   Jac_jel_bdry_qp_of_jface[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_jel_bdry_qp_of_jface.size(); d++) { JacI_jel_bdry_qp_of_jface[d].resize(dim-1); }
     
-    double detJac_jel_bdry_jqp_bdry;
+    double detJac_jel_bdry_qp_of_jface;
 // --- Quadrature - END
 
 
@@ -820,87 +830,87 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
             
 
-// // // //---- Quadrature in jqp_bdry, preparation right before iel - BEGIN ------- 
+// // // //---- Quadrature in qp_of_jface, preparation right before iel - BEGIN ------- 
 
-// Wait a second... If I want to prepare the jqp_bdry loop, I must be inside jface as well...
+// Wait a second... If I want to prepare the qp_of_jface loop, I must be inside jface as well...
 // So now it seems to me that I have to do jel jface iel iface instead...
 // Previously it was jel iel iqp jqp
-// Now, it has to be jel jface  - iel iface - iqp_bdry jqp_bdry
+// Now, it has to be jel jface  - iel iface - iqp_bdry qp_of_jface
 // The two quadrature loops must be the innermost. In this way you exclude all non-needed volume elements and all non-needed faces, so that you minimize the number of inner ifs. You keep them outside as much as possible
-// There will be a storage of jqp_bdry
+// There will be a storage of qp_of_jface
 
             
-      const unsigned n_jqp_bdry = ml_prob.GetQuadratureRuleMultiple(qrule_j, jelGeom_bdry).GetGaussPointsNumber();
+      const unsigned n_qp_of_jface = ml_prob.GetQuadratureRuleMultiple(qrule_j, jelGeom_bdry).GetGaussPointsNumber();
 
-      std::vector < std::vector < double > > x_jqp_bdry(n_jqp_bdry);
-      std::vector < double > weight_jqp_bdry(n_jqp_bdry);
-      std::vector < std::vector < double > > phi_coords_jel_bdry_jqp_bdry(n_jqp_bdry);
-      std::vector < std::vector < double > > phi_coords_x_jel_bdry_jqp_bdry(n_jqp_bdry);
+      std::vector < std::vector < double > > x_qp_of_jface(n_qp_of_jface);
+      std::vector < double > weight_qp_of_jface(n_qp_of_jface);
+      std::vector < std::vector < double > > phi_coords_jel_bdry_qp_of_jface(n_qp_of_jface);
+      std::vector < std::vector < double > > phi_coords_x_jel_bdry_qp_of_jface(n_qp_of_jface);
       
-      std::vector < std::vector < double > > phi_ctrl_jel_bdry_jqp_bdry(n_jqp_bdry);   /// @todo assume all ctrl components have the same FE family
-      std::vector < std::vector < double > > phi_ctrl_x_jel_bdry_jqp_bdry(n_jqp_bdry);   /// @todo assume all ctrl components have the same FE family
+      std::vector < std::vector < double > > phi_ctrl_jel_bdry_qp_of_jface(n_qp_of_jface);   /// @todo assume all ctrl components have the same FE family
+      std::vector < std::vector < double > > phi_ctrl_x_jel_bdry_qp_of_jface(n_qp_of_jface);   /// @todo assume all ctrl components have the same FE family
 
-      std::vector< std::vector< double > > sol_ctrl_jqp_bdry(n_components_ctrl);
+      std::vector< std::vector< double > > sol_ctrl_qp_of_jface(n_components_ctrl);
       
         for (unsigned c = 0; c < n_components_ctrl; c++) {
-             sol_ctrl_jqp_bdry[c].resize(n_jqp_bdry);
-                 std::fill(sol_ctrl_jqp_bdry[c].begin(), sol_ctrl_jqp_bdry[c].end(), 0.);
+             sol_ctrl_qp_of_jface[c].resize(n_qp_of_jface);
+                 std::fill(sol_ctrl_qp_of_jface[c].begin(), sol_ctrl_qp_of_jface[c].end(), 0.);
             }
 
       
-         for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
+         for(unsigned qp_of_jface = 0; qp_of_jface < n_qp_of_jface; qp_of_jface++) {
 
-    elem_all[qrule_j][jelGeom_bdry][solType_coords]->JacJacInv(geom_element_jel.get_coords_at_dofs_bdry_3d(), jqp_bdry, Jac_jel_bdry_jqp_bdry, JacI_jel_bdry_jqp_bdry, detJac_jel_bdry_jqp_bdry, space_dim);
+    elem_all[qrule_j][jelGeom_bdry][solType_coords]->JacJacInv(geom_element_jel.get_coords_at_dofs_bdry_3d(), qp_of_jface, Jac_jel_bdry_qp_of_jface, JacI_jel_bdry_qp_of_jface, detJac_jel_bdry_qp_of_jface, space_dim);
     
-    weight_jqp_bdry[jqp_bdry] = detJac_jel_bdry_jqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_j, jelGeom_bdry).GetGaussWeightsPointer()[jqp_bdry];
+    weight_qp_of_jface[qp_of_jface] = detJac_jel_bdry_qp_of_jface * ml_prob.GetQuadratureRuleMultiple(qrule_j, jelGeom_bdry).GetGaussWeightsPointer()[qp_of_jface];
 
-    elem_all[qrule_j][jelGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(jqp_bdry, JacI_jel_bdry_jqp_bdry, phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry], phi_ctrl_x_jel_bdry_jqp_bdry[jqp_bdry], boost::none, space_dim);
+    elem_all[qrule_j][jelGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(qp_of_jface, JacI_jel_bdry_qp_of_jface, phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface], phi_ctrl_x_jel_bdry_qp_of_jface[qp_of_jface], boost::none, space_dim);
             
-    elem_all[qrule_j][jelGeom_bdry][solType_coords] ->shape_funcs_current_elem(jqp_bdry, JacI_jel_bdry_jqp_bdry, phi_coords_jel_bdry_jqp_bdry[jqp_bdry], phi_coords_x_jel_bdry_jqp_bdry[jqp_bdry], boost::none, space_dim);
+    elem_all[qrule_j][jelGeom_bdry][solType_coords] ->shape_funcs_current_elem(qp_of_jface, JacI_jel_bdry_qp_of_jface, phi_coords_jel_bdry_qp_of_jface[qp_of_jface], phi_coords_x_jel_bdry_qp_of_jface[qp_of_jface], boost::none, space_dim);
 
 //========== compute gauss quantities on the boundary - BEGIN ===============================================
-//--- geom
-           x_jqp_bdry[jqp_bdry].assign(dim, 0.);
+//--- geom - BEGIN
+           x_qp_of_jface[qp_of_jface].assign(dim, 0.);
           
 //        if(kproc == iproc) {
          for(unsigned d = 0; d < dim; d++) {
 	      for (int j_bdry = 0; j_bdry < geom_element_jel.get_coords_at_dofs_bdry_3d()[d].size(); j_bdry++)  {
 			
-              x_jqp_bdry[jqp_bdry][d] += geom_element_jel.get_coords_at_dofs_bdry_3d()[d][j_bdry] * phi_coords_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
+              x_qp_of_jface[qp_of_jface][d] += geom_element_jel.get_coords_at_dofs_bdry_3d()[d][j_bdry] * phi_coords_jel_bdry_qp_of_jface[qp_of_jface][j_bdry];
 
 		      }
             }
 //        }
-//       MPI_Bcast(& x_jqp_bdry[jqp_bdry][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
-//--- geom
+//       MPI_Bcast(& x_qp_of_jface[qp_of_jface][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+//--- geom - END
     
-//--- solution
+//--- solution - BEGIN
       for (unsigned c = 0; c < n_components_ctrl; c++) {
-         sol_ctrl_jqp_bdry[c][jqp_bdry] = 0.;
+         sol_ctrl_qp_of_jface[c][qp_of_jface] = 0.;
 //        if(kproc == iproc) {
-	      for (int j_bdry = 0; j_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl]*/; j_bdry++)  {
+	      for (int j_bdry = 0; j_bdry < phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface].size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl]*/; j_bdry++)  {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex_PassElemType(jel_geommm, jface, j_bdry);
 			
-			sol_ctrl_jqp_bdry[c][jqp_bdry] +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_jel[c][j_vol] * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
+			sol_ctrl_qp_of_jface[c][qp_of_jface] +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_jel[c][j_vol] * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][j_bdry];
 
 	      }
        }
 //        }
-//       MPI_Bcast(& sol_ctrl_jqp_bdry[dim], 1, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
-//--- solution
+//       MPI_Bcast(& sol_ctrl_qp_of_jface[dim], 1, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+//--- solution - END
 //========== compute gauss quantities on the boundary - END ================================================
 
 
-        }  //jqp_bdry
+        }  //qp_of_jface
 
 // // //         //we can do the broadcast after the loop, faster
-// // //         for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
-// // //             MPI_Bcast(& x_jqp_bdry[jqp_bdry][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+// // //         for(unsigned qp_of_jface = 0; qp_of_jface < n_qp_of_jface; qp_of_jface++) {
+// // //             MPI_Bcast(& x_qp_of_jface[qp_of_jface][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 // // //         }
-// // //             MPI_Bcast(& sol_ctrl_jqp_bdry[0], n_jqp_bdry, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+// // //             MPI_Bcast(& sol_ctrl_qp_of_jface[0], n_qp_of_jface, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
   
         
-// // // //---- Quadrature in jqp_bdry, preparation right before iel - END ------- 
+// // // //---- Quadrature in qp_of_jface, preparation right before iel - END ------- 
 
     
 // ---- boundary faces in jface: compute and broadcast - BEGIN ----
@@ -1335,8 +1345,8 @@ unsigned nDof_iel_vec = 0;
                               jelGeom_bdry,
                               KK_local_iel_mixed_num,
                               Res_local_iel_mixed_num,
-  //////////   3D only - END
                               solType_coords,
+  //////////   3D only - END
                               integral
                              ); 
                 }
@@ -1361,21 +1371,21 @@ unsigned nDof_iel_vec = 0;
             
             
 // ********* BOUNDED PART - BEGIN ***************
-            for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
+            for(unsigned qp_of_jface = 0; qp_of_jface < n_qp_of_jface; qp_of_jface++) {
 
               double dist_xyz = 0.;
               for(unsigned d = 0; d < x_iqp_bdry.size(); d++) {
-                dist_xyz += (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]) * (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]);
+                dist_xyz += (x_iqp_bdry[d] - x_qp_of_jface[qp_of_jface][d]) * (x_iqp_bdry[d] - x_qp_of_jface[qp_of_jface][d]);
               }
 
               const double denom = pow(dist_xyz, (double)(  0.5 * /*dim*/dim_bdry + s_frac));
               
-              const double common_weight = (0.5 * C_ns) * operator_Hhalf * beta * check_limits * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+              const double common_weight = (0.5 * C_ns) * operator_Hhalf * beta * check_limits * weight_iqp_bdry * weight_qp_of_jface[qp_of_jface]  / denom;
 
               for (unsigned c = 0; c < n_components_ctrl; c++) {
                   
-                  integral +=  common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_jqp_bdry[c][jqp_bdry]) * sol_ctrl_iqp_bdry[c];
-                  integral +=  common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_jqp_bdry[c][jqp_bdry]) * (- sol_ctrl_jqp_bdry[c][jqp_bdry]);
+                  integral +=  common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * sol_ctrl_iqp_bdry[c];
+                  integral +=  common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- sol_ctrl_qp_of_jface[c][qp_of_jface]);
                   
               }              
               
@@ -1387,15 +1397,15 @@ unsigned nDof_iel_vec = 0;
 
               const unsigned res_pos_iel = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
               const unsigned res_pos_jel = assemble_jacobian<double,double>::res_row_index(nDof_jel, c, l_vol_jel);
-                Res_nonlocal_iel[ res_pos_iel /*l_vol_iel*/ ]      +=      - common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_jqp_bdry[c][jqp_bdry]) * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry]);
+                Res_nonlocal_iel[ res_pos_iel /*l_vol_iel*/ ]      +=      - common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry]);
 
-                Res_nonlocal_jel[ res_pos_jel /*l_vol_jel*/ ]      +=      - common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_jqp_bdry[c][jqp_bdry]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry]);
+                Res_nonlocal_jel[ res_pos_jel /*l_vol_jel*/ ]      +=      - common_weight * (sol_ctrl_iqp_bdry[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry]);
 
                
 //                 for(unsigned j = 0; j < nDof_jel; j++) {
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) {
-                      for(unsigned m_bdry = 0; m_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size(); m_bdry++) { //dofs of unknown function
+                      for(unsigned m_bdry = 0; m_bdry < phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface].size(); m_bdry++) { //dofs of unknown function
                		    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                		    unsigned int m_vol_jel = msh->el->GetIG(jel_geommm, jface, m_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, m_bdry)*/;
 
@@ -1406,11 +1416,11 @@ unsigned nDof_iel_vec = 0;
                     
              /*  u(x) v(x)*/     KK_nonlocal_iel_iel[ jac_pos_iel_iel /*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight *          phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
 
-             /*- u(y) v(x)*/     KK_nonlocal_iel_jel[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
+             /*- u(y) v(x)*/     KK_nonlocal_iel_jel[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
 
-             /*- u(x) v(y)*/     KK_nonlocal_jel_iel[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *   phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
+             /*- u(x) v(y)*/     KK_nonlocal_jel_iel[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *   phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
 
-             /*  u(y) v(y)*/     KK_nonlocal_jel_jel[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] += common_weight *          phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
+             /*  u(y) v(y)*/     KK_nonlocal_jel_jel[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] += common_weight *          phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
 
 
                      }
@@ -1420,7 +1430,7 @@ unsigned nDof_iel_vec = 0;
                 
                }
                
-              } //endl jqp_bdry loop
+              } //endl qp_of_jface loop
 // ********* BOUNDED PART - END ***************
             
 // ********* UNBOUNDED PART - BEGIN ***************
@@ -1460,8 +1470,8 @@ unsigned nDof_iel_vec = 0;
                               jelGeom_bdry,
                               KK_local_iel_mixed_num,
                               Res_local_iel_mixed_num,
-  //////////   3D only - END
                               solType_coords,
+  //////////   3D only - END
                               integral
                              );
                
