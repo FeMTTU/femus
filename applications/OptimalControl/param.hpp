@@ -218,8 +218,8 @@ namespace ctrl {
 //******************************** Choice of Cost Functional-related stuff - BEGIN *********************** 
 #define  DOMAIN_NAMESPACE   square_or_cube
 
-#define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_between_extreme
-// #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
+// #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_between_extreme
+#define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
 
    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
 //       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
@@ -229,12 +229,12 @@ namespace ctrl {
 //------------------------------------ single: BEGIN ------------------------------------
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four
 
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Single_control_in_front_linear
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
+// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_in_front_constant
 
 //------------------------------------ single: END ------------------------------------
@@ -245,7 +245,7 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three_One
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three_Two
@@ -255,7 +255,7 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four_Three
 
 //  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS   DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Double_controls_adjacent_in_front_linear
-// #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_in_front_constant
 
 //------------------------------------ double: END ------------------------------------

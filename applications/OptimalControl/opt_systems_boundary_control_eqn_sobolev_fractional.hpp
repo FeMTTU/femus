@@ -580,7 +580,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
   unsigned count_visits_of_boundary_faces = 0;
 
 
- // integral - BEGIN ************
+// integral - BEGIN ************
   double integral  = 0.;
 // integral - END ************
       
@@ -592,7 +592,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
   
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
-// --- geometry
+// --- geometry - BEGIN 
    // all these little vectors are filled in one proc and broadcast to all       
 
         // --- 
@@ -635,7 +635,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
       }
         MPI_Bcast(& geom_element_jel.get_elem_center_3d()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 
-// --- geometry        
+// --- geometry - END        
 
         
 // // // all of this is not used right now in this routine        
@@ -666,7 +666,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // ******* jel-related stuff - BEGIN *************
 // ***************************************
 
-// --- 2 - solution -----------------
+// --- 2 - solution - BEGIN -----------------
       vector< unsigned > nDof_jel(n_components_ctrl);
 
       if(kproc == iproc) {
@@ -700,10 +700,10 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
       for (unsigned c = 0; c < n_components_ctrl; c++) {
          MPI_Bcast(& sol_ctrl_jel[c][0], nDof_jel[c], MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
       }
-    // --- 2 - solution -----------------
+// --- 2 - solution - END -----------------
 
       
-// --- 3 - l2GMap -----------------
+// --- 3 - l2GMap - BEGIN -----------------
       for (unsigned c = 0; c < n_components_ctrl; c++) {
           l2gMap_jel[c].resize(nDof_jel[c]);
       }
@@ -722,16 +722,16 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
          MPI_Bcast(& l2gMap_jel[c][0], nDof_jel[c], MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
       }
       // ******************************************************************
-// --- 3 - l2GMap -----------------
+// --- 3 - l2GMap - END -----------------
 
 
 
-// --- l2GMapVec -----------------
+// --- l2GMapVec - BEGIN -----------------
     l2gMap_jel_vec.resize(0);
       for (unsigned c = 0; c < n_components_ctrl; c++) {
           l2gMap_jel_vec.insert(l2gMap_jel_vec.end(), l2gMap_jel[c].begin(), l2gMap_jel[c].end());
       }
-// --- l2GMapVec -----------------
+// --- l2GMapVec - END -----------------
 
 
 
@@ -742,7 +742,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
       
 //------------------------------------        
-//------------ jface opening ---------        
+//------------ jface opening - BEGIN ---------        
 //------------------------------------        
       
 // --- 
@@ -757,7 +757,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 	  for(unsigned jface = 0; jface < n_faces_jel; jface++) {
           
           
-// --- geometry        
+// --- geometry - BEGIN         
        unsigned jelGeom_bdry;
        if(kproc == iproc) {
            jelGeom_bdry = msh->GetElementFaceType(jel, jface);
@@ -793,7 +793,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
       for(unsigned k = 0; k < space_dim; k++) {
         MPI_Bcast(& geom_element_jel.get_elem_center_bdry_3d()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
       }
-// --- geometry        
+// --- geometry - END        
 
      /*bool*/int jface_is_a_boundary_control;
        if(kproc == iproc) {
@@ -804,7 +804,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
       
 	    if( jface_is_a_boundary_control ) {
 //------------------------------------        
-//------------ jface opening ---------    
+//------------ jface opening - END ---------    
 //------------------------------------        
 
             
@@ -847,7 +847,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
             
     elem_all[qrule_j][jelGeom_bdry][solType_coords] ->shape_funcs_current_elem(jqp_bdry, JacI_jel_bdry_jqp_bdry, phi_coords_jel_bdry_jqp_bdry[jqp_bdry], phi_coords_x_jel_bdry_jqp_bdry[jqp_bdry], boost::none, space_dim);
 
-//========== compute gauss quantities on the boundary ===============================================
+//========== compute gauss quantities on the boundary - BEGIN ===============================================
 //--- geom
            x_jqp_bdry[jqp_bdry].assign(dim, 0.);
           
@@ -877,7 +877,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 //        }
 //       MPI_Bcast(& sol_ctrl_jqp_bdry[dim], 1, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 //--- solution
-//========== compute gauss quantities on the boundary ================================================
+//========== compute gauss quantities on the boundary - END ================================================
 
 
         }  //jqp_bdry
@@ -926,16 +926,16 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
 
               
-       for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+       for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1] ; iel++) {
            
            
-// --- geometry        
+// --- geometry - BEGIN        
         geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
 
         short unsigned ielGeom = geom_element_iel.geom_type();
               
         geom_element_iel.set_elem_center_3d(iel, solType_coords);
-// --- geometry        
+// --- geometry - END        
 
       
 	// Perform face loop over elements that contain some control face
@@ -946,7 +946,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // ***************************************
         
       
-// --- l2GMap
+// --- l2GMap - BEGIN
         vector< unsigned > nDof_iel(n_components_ctrl);
         
        for (unsigned c = 0; c < n_components_ctrl; c++) {
@@ -959,17 +959,17 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
           l2gMap_iel[c][i] = pdeSys->GetSystemDof(solIndex_ctrl[c], solPdeIndex_ctrl[c], i, iel);
            }
          }
-// --- l2GMap
+// --- l2GMap - END 
 
-// --- l2GMapVec -----------------
+// --- l2GMapVec - BEGIN -----------------
     l2gMap_iel_vec.resize(0);
       for (unsigned c = 0; c < n_components_ctrl; c++) {
           l2gMap_iel_vec.insert(l2gMap_iel_vec.end(), l2gMap_iel[c].begin(), l2gMap_iel[c].end());
       }
-// --- l2GMapVec -----------------
+// --- l2GMapVec - END -----------------
 
 
-// --- element matrix and vector resizing
+// --- element matrix and vector resizing - BEGIN
 unsigned nDof_iel_vec = 0;
         for (unsigned c = 0; c < n_components_ctrl; c++) {  nDof_iel_vec  +=  nDof_iel[c];    }
 
@@ -993,10 +993,10 @@ unsigned nDof_iel_vec = 0;
             KK_local_iel_refined.assign(nDof_iel_vec * nDof_iel_vec, 0.);
           }
         }
-// --- element matrix and vector resizing 
+// --- element matrix and vector resizing - END 
 
 
-// --- solution        
+// --- solution - BEGIN        
 
         for (unsigned c = 0; c < n_components_ctrl; c++) {
            sol_ctrl_iel[c].resize(nDof_iel[c]);
@@ -1007,7 +1007,7 @@ unsigned nDof_iel_vec = 0;
           sol_ctrl_iel[c][i] = (*sol->_Sol[solIndex_ctrl[c]])(iDof);  // global extraction and local storage for the element coordinates
           }
         }
-// --- solution        
+// --- solution - END        
 
 // ***************************************
 // ******* iel-related stuff - END *************
@@ -1016,20 +1016,20 @@ unsigned nDof_iel_vec = 0;
 
 
         
-//------------ iface opening ---------        
+//------------ iface opening - BEGIN  ---------        
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
           
-// --- geom          
+// --- geom - BEGIN          
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
        
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
  
        geom_element_iel.set_elem_center_bdry_3d();
-// --- geom          
+// --- geom - END           
 
    
 	    if( femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, iel, iface) ) {
-//------------ iface opening ---------        
+//------------ iface opening - END ---------        
 		
 //                 count_visits_of_boundary_faces++;
 
@@ -1085,7 +1085,7 @@ unsigned nDof_iel_vec = 0;
     elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
             
 //========== compute gauss quantities on the boundary - BEGIN ===============================================
-//--- geom
+//--- geom - BEGIN 
           std::vector < double > x_iqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
 
             for(unsigned d = 0; d < x_iqp_bdry.size(); d++) {
@@ -1095,9 +1095,9 @@ unsigned nDof_iel_vec = 0;
 
 		      }
             }
-//--- geom
+//--- geom - END
     
-//--- solution
+//--- solution - BEGIN 
         for (unsigned c = 0; c < n_components_ctrl; c++) {
           sol_ctrl_iqp_bdry[c] = 0.;
 	        for (int i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++)  {
@@ -1107,7 +1107,7 @@ unsigned nDof_iel_vec = 0;
 
 		      }
        }
-//--- solution
+//--- solution - END
 //========== compute gauss quantities on the boundary - END ================================================
 
 
@@ -1196,7 +1196,7 @@ unsigned nDof_iel_vec = 0;
             
 //                 elem_all[qrule_k][kelGeom_bdry][solType_coords] ->shape_funcs_current_elem(k_qp_bdry, JacI_kel_bdry_kqp_bdry, phi_coords_kel_bdry_kqp_bdry, phi_coords_x_kel_bdry_kqp_bdry, boost::none, space_dim);
 
-//--- geom
+//--- geom - BEGIN
                 vector < double > x_kqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
 
                 for(unsigned d = 0; d < x_kqp_bdry.size(); d++) {
@@ -1206,7 +1206,7 @@ unsigned nDof_iel_vec = 0;
 
                   }
                 }
-//--- geom
+//--- geom - END
     
                 std::vector<double> xi3(dim, 0.);
 
@@ -1305,8 +1305,6 @@ unsigned nDof_iel_vec = 0;
                               operator_Hhalf,
                               beta,
                               nDof_jel, ///@todo
-//                               KK_local_iel_refined,
-//                               Res_local_iel_refined,
                               KK_local_iel,
                               Res_local_iel,
                               KK_local_iel_mixed_num,
@@ -1457,24 +1455,20 @@ unsigned nDof_iel_vec = 0;
             
       }   //end iqp_bdry
       
-//                std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
-//          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
-//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_iel_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 5);
       
+
       
               
-//----- iface ---        
+//----- iface closing - BEGIN ---        
         } //end face for control
         
       } //end iface
-//----- iface ---        
-
-
+//----- iface closing - END ---        
 
 
                 
 //============ add to global - BEGIN ==================
-// // multiply everything by -1.? Don't think so
+// // multiply everything by -1.? Don't think so - BEGIN 
 // std::transform(KK_local_iel.begin(), KK_local_iel.end(), KK_local_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // std::transform(Res_local_iel.begin(), Res_local_iel.end(), Res_local_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // 
@@ -1491,10 +1485,10 @@ unsigned nDof_iel_vec = 0;
 // 
 // std::transform(Res_nonlocal_iel.begin(), Res_nonlocal_iel.end(), Res_nonlocal_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // std::transform(Res_nonlocal_jel.begin(), Res_nonlocal_jel.end(), Res_nonlocal_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// // multiply everything by -1.
+// // multiply everything by -1. - END
 
 
- if( check_if_same_elem(iel, jel)/*check_if_same_elem_bdry(iel, jel, iface, jface) if you put it inside the face loops */ ) {
+ if( check_if_same_elem(iel, jel) /*check_if_same_elem_bdry(iel, jel, iface, jface)*/ /* if you put it inside the face loops */ ) {
      
 
          RES->add_vector_blocked(Res_local_iel, l2gMap_iel_vec);
@@ -1521,7 +1515,6 @@ unsigned nDof_iel_vec = 0;
         KK->add_matrix_blocked(KK_nonlocal_jel_jel, l2gMap_jel_vec, l2gMap_jel_vec);
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
 
-//============ add to global - END ==================
 
         
           
@@ -1531,36 +1524,33 @@ unsigned nDof_iel_vec = 0;
 //          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_iel_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 5);
 // //      }
          
+//============ add to global - END ==================
+
 
         
-//----- iel ---        
-    } //end control elem flag i (control_flag_iel == 1)
-  } //end iel
-//----- iel ---        
+//----- iel closing - BEGIN ---        
+          } //end control elem flag i (control_flag_iel == 1)
+      } //end iel
+//----- iel closing - END ---        
 
 
-//----- jface ---        
+//----- jface closing - BEGIN ---        
      
-} //end face for control
-
-
+        } //end face for control
       } //end jface
 
- //----- jface ---   
+//----- jface closing - END ---   
  
      
+//----- jel closing - BEGIN ---        
     }  //end control elem flag jel
-    
-
-
-
    } //end jel
-//----- jel ---        
+//----- jel closing - END ---        
    
  } //end kproc
     
     
-    // integral - BEGIN ************
+// integral - BEGIN ************
   std::cout << std::endl;
   std::cout <<  "&&&&&& Integrals from previous iteration &&&&&&&&&&" << std::endl;
   double integral_parallel = 0.; MPI_Allreduce( &integral, &integral_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
