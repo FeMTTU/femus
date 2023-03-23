@@ -1298,6 +1298,7 @@ unsigned nDof_iel_vec = 0;
             }
      }
 // ********* BOUNDED PART - END ***************
+
 // ********* UNBOUNDED PART - BEGIN ***************
                 if( iqp_bdry == integration_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
                     
@@ -1358,51 +1359,6 @@ unsigned nDof_iel_vec = 0;
       //============ Either different elements, or lack of adaptivity (so all elements) - BEGIN ==================
         else {  //  if(iel != jel || integration_num_split == 0) 
             
-// ********* UNBOUNDED PART - BEGIN ***************
-//           if(check_if_same_elem_bdry(iel, jel, iface, jface)) { //TODO I removed this since we don't want iel==jel here
-              
-               mixed_integral(unbounded,
-                              dim,
-                              dim_bdry,
-//////////                             
-                              weight_iqp_bdry,
-                              x_iqp_bdry,
-                              phi_ctrl_iel_bdry_iqp_bdry,
-                              sol_ctrl_iqp_bdry,
-//////////                             
-                              s_frac,
-                              check_limits,
-                              C_ns,
-                              operator_Hhalf,
-                              beta,
-//////////                             
-                              msh,
-                              sol,
-                              ml_sol,
-//////////                             
-                              iel,
-                              iface,
-                              nDof_iel,
-                              KK_local_iel,
-                              Res_local_iel,
-//////////                             
-  //////////   3D only - BEGIN
-                              N_div_unbounded,
-                              node_based_bdry_bdry_in,
-                              bdry_bdry,
-                              jel,
-                              geom_element_jel,
-                              jelGeom_bdry,
-                              KK_local_iel_mixed_num,
-                              Res_local_iel_mixed_num,
-  //////////   3D only - END
-                              solType_coords,
-                              integral
-                             );
-               
-//           }
-              
-// ********* UNBOUNDED PART - END ***************
             
 // ********* BOUNDED PART - BEGIN ***************
             for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
@@ -1467,6 +1423,51 @@ unsigned nDof_iel_vec = 0;
               } //endl jqp_bdry loop
 // ********* BOUNDED PART - END ***************
             
+// ********* UNBOUNDED PART - BEGIN ***************
+//           if(check_if_same_elem_bdry(iel, jel, iface, jface)) { //TODO I removed this since we don't want iel==jel here
+              
+               mixed_integral(unbounded,
+                              dim,
+                              dim_bdry,
+//////////                             
+                              weight_iqp_bdry,
+                              x_iqp_bdry,
+                              phi_ctrl_iel_bdry_iqp_bdry,
+                              sol_ctrl_iqp_bdry,
+//////////                             
+                              s_frac,
+                              check_limits,
+                              C_ns,
+                              operator_Hhalf,
+                              beta,
+//////////                             
+                              msh,
+                              sol,
+                              ml_sol,
+//////////                             
+                              iel,
+                              iface,
+                              nDof_iel,
+                              KK_local_iel,
+                              Res_local_iel,
+//////////                             
+  //////////   3D only - BEGIN
+                              N_div_unbounded,
+                              node_based_bdry_bdry_in,
+                              bdry_bdry,
+                              jel,
+                              geom_element_jel,
+                              jelGeom_bdry,
+                              KK_local_iel_mixed_num,
+                              Res_local_iel_mixed_num,
+  //////////   3D only - END
+                              solType_coords,
+                              integral
+                             );
+               
+//           }
+              
+// ********* UNBOUNDED PART - END ***************
             
          } //end if(iel != jel || integration_num_split == 0)
       //============ Either different elements, or lack of adaptivity (so all elements) - END ==================
