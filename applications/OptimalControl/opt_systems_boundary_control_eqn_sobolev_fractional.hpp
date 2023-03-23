@@ -34,40 +34,42 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   static void mixed_integral(const unsigned unbounded,
                       const unsigned dim,
                       const unsigned dim_bdry,
-//                       const std::vector < std::vector < double > > & ex_control,
-                      const unsigned div, 
+//////////
                       const double weight_iqp_bdry,
                       const std::vector < double > & x_iqp_bdry,
                       const std::vector < double > & phi_ctrl_iel_bdry_iqp_bdry,
-                      const std::vector<double> sol_ctrl_iqp_bdry,   //////////
+                      const std::vector<double> sol_ctrl_iqp_bdry,
+//////////
                       const double s_frac,
                       const double check_limits,
                       const double C_ns,
                       const unsigned int operator_Hhalf,
                       const double beta,
-                      const std::vector<unsigned int> nDof_vol_iel,  //////////
-                      std::vector < double > & KK_local_iel,
-                      std::vector < double > & Res_local_iel,
-                      std::vector < double > & KK_local_iel_mixed_num,
-                      std::vector < double > & Res_local_iel_mixed_num,
+//////////
                       const Mesh * msh,
                       const Solution *    sol,
                       const MultiLevelSolution *    ml_sol,
+//////////
                       const int iel,
-                      const int jel,
                       const unsigned iface,
+                      const std::vector<unsigned int> nDof_vol_iel, 
+                      std::vector < double > & KK_local_iel,
+                      std::vector < double > & Res_local_iel,
+  //////////   3D only - BEGIN
+                      const unsigned div, 
                       std::string node_based_bdry_bdry_in,
                       std::vector <int> bdry_bdry,
+                      const int jel,
                       CurrentElem < double > & geom_element_jel,
                       const unsigned jelGeom_bdry,
+                      std::vector < double > & KK_local_iel_mixed_num,
+                      std::vector < double > & Res_local_iel_mixed_num,
+  //////////   3D only - END
                       unsigned solType_coords,
                       double & integral
                      ) {
       
      
-  const unsigned  sol_node_flag_index =  ml_sol->GetIndex( node_based_bdry_bdry_in.c_str() );
-  const unsigned  group_salome = 2;   ///@todo fix here, maybe pass it in the args
-  
   const unsigned int n_components_ctrl = nDof_vol_iel.size();
   
   unsigned nDof_iel_vec = 0;
@@ -114,12 +116,12 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
       }
     }
     
-  //------------ END ---------
+  //loop over element of the class 'list of face for control' to find the t-index of the current Gamma_c - END ---------
 
 
 
 
-//--- Control domain - END -------
+//--- Denominator - BEGIN -------
 
               
               double dist2_1 = 0.;
@@ -144,6 +146,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               dist_2 = sqrt( dist2_2 );
               
               double mixed_denominator = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
+//--- Denominator - END -------
 
               
               for (unsigned c = 0; c < n_components_ctrl; c++) {
@@ -175,12 +178,20 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
               }
            }
+           
+           
       }
       
     //============ Mixed Integral 2D - Numerical ==================      
       else if (dim_bdry == 2) {           
           
-            unsigned iel_geom_type = msh->GetElementType(iel);
+          
+  const unsigned  sol_node_flag_index =  ml_sol->GetIndex( node_based_bdry_bdry_in.c_str() );
+  const unsigned  group_salome = 2;   ///@todo fix here, maybe pass it in the args
+  
+
+  
+  unsigned iel_geom_type = msh->GetElementType(iel);
             unsigned iel_geom_type_face = msh->GetElementFaceType(iel, iface);
 
             unsigned f_n_faces_faces  =  msh->el->GetNFC(iel_geom_type, iel_geom_type_face); /* ElementFaceFaceNumber */
@@ -1293,32 +1304,37 @@ unsigned nDof_iel_vec = 0;
               mixed_integral(unbounded,
                               dim,
                               dim_bdry,
-//                               ex_control,
-                              N_div_unbounded,
+//////////                             
                               weight_kqp_bdry,
                               x_kqp_bdry,
                               phi_ctrl_kel_bdry_kqp_bdry,
                               sol_ctrl_kqp_bdry,
+//////////                             
                               s_frac,
                               check_limits,
                               C_ns,
                               operator_Hhalf,
                               beta,
-                              nDof_jel, ///@todo
-                              KK_local_iel,
-                              Res_local_iel,
-                              KK_local_iel_mixed_num,
-                              Res_local_iel_mixed_num,
+//////////                             
                               msh,
                               sol,
                               ml_sol,
+//////////                             
                               iel,
-                             jel,
                               iface,
+                              nDof_jel, ///@todo
+                              KK_local_iel,
+                              Res_local_iel,
+  //////////   3D only - BEGIN
+                              N_div_unbounded,
                              node_based_bdry_bdry_in,
                               bdry_bdry,
+                             jel,
                               geom_element_jel,
                               jelGeom_bdry,
+                              KK_local_iel_mixed_num,
+                              Res_local_iel_mixed_num,
+  //////////   3D only - END
                               solType_coords,
                               integral
                              ); 
@@ -1348,32 +1364,38 @@ unsigned nDof_iel_vec = 0;
                mixed_integral(unbounded,
                               dim,
                               dim_bdry,
-//                               ex_control,
-                              N_div_unbounded,
+//////////                             
                               weight_iqp_bdry,
                               x_iqp_bdry,
                               phi_ctrl_iel_bdry_iqp_bdry,
                               sol_ctrl_iqp_bdry,
+//////////                             
                               s_frac,
                               check_limits,
                               C_ns,
                               operator_Hhalf,
                               beta,
-                              nDof_iel,
-                              KK_local_iel,
-                              Res_local_iel,
-                              KK_local_iel_mixed_num,
-                              Res_local_iel_mixed_num,
+//////////                             
                               msh,
                               sol,
                               ml_sol,
+//////////                             
                               iel,
-                              jel,
                               iface,
+                              nDof_iel,
+                              KK_local_iel,
+                              Res_local_iel,
+//////////                             
+  //////////   3D only - BEGIN
+                              N_div_unbounded,
                               node_based_bdry_bdry_in,
                               bdry_bdry,
+                              jel,
                               geom_element_jel,
                               jelGeom_bdry,
+                              KK_local_iel_mixed_num,
+                              Res_local_iel_mixed_num,
+  //////////   3D only - END
                               solType_coords,
                               integral
                              );
