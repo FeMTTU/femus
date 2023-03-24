@@ -792,35 +792,35 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
         unsigned nve_bdry;
        if(jproc == iproc) {
           nve_bdry  = msh->GetElementFaceDofNumber(jel, jface, solType_coords);
-        }  
+        }
       MPI_Bcast(& nve_bdry, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 
-      
+
        geom_element_jel.allocate_coords_at_dofs_bdry_3d(jel, jface, nve_bdry);
       unsigned coords_at_dofs_bdry_3d_size = 0;
-      
+
        if(jproc == iproc) {
          geom_element_jel.fill_coords_at_dofs_bdry_3d(jel, jface, solType_coords);
          coords_at_dofs_bdry_3d_size = geom_element_jel.get_coords_at_dofs_bdry_3d()[0].size();  ///@todo all coords have the same ndofs
-        }  
+        }
       MPI_Bcast(& coords_at_dofs_bdry_3d_size, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
-      
+
       for(unsigned k = 0; k < space_dim; k++) {
          MPI_Bcast(& geom_element_jel.get_coords_at_dofs_bdry_3d()[k][0], coords_at_dofs_bdry_3d_size, MPI_DOUBLE, jproc, MPI_COMM_WORLD);
       }
-            
-      
+
+
            std::fill(geom_element_jel.get_elem_center_bdry_3d().begin(), geom_element_jel.get_elem_center_bdry_3d().end(), 0.);
 
        if(jproc == iproc) {
        geom_element_jel.set_elem_center_bdry_3d();
-        }  
+        }
       for(unsigned k = 0; k < space_dim; k++) {
         MPI_Bcast(& geom_element_jel.get_elem_center_bdry_3d()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
       }
-// --- geometry - END        
+// --- geometry - END
 
-// --- - BEGIN  
+// --- - BEGIN
 //        std::make_pair jface_is_a_boundary_control
        unsigned int jface_boundary_control_index;
 
