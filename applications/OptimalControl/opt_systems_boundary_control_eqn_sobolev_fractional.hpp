@@ -545,7 +545,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
     
     
    const unsigned  elem_dof_size_max = n_components_ctrl * max_size;
- 
+
  
   //-------- local to global mappings - BEGIN --------------
   vector< vector< int > > l2gMap_iel(n_components_ctrl); 
@@ -821,9 +821,16 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // --- geometry - END        
 
 // --- - BEGIN  
+//        std::make_pair jface_is_a_boundary_control
+       unsigned int jface_boundary_control_index;
+
      /*bool*/int jface_is_a_boundary_control;
+
        if(jproc == iproc) {
-           jface_is_a_boundary_control = femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
+
+           std::tie (jface_is_a_boundary_control,jface_boundary_control_index)= femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
+
+           //            jface_is_a_boundary_control = femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
        }
       MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
 // --- - END
@@ -943,7 +950,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 ///         }
 ///         n_faces = bdry_bdry.size();
 ///       }
-/// 
+///
 ///       MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 /// 
 ///       bdry_bdry.resize(n_faces);
@@ -1059,8 +1066,14 @@ unsigned nDof_iel_vec = 0;
        geom_element_iel.set_elem_center_bdry_3d();
 // --- geom - END           
 
-   
-	    if( femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, iel, iface) ) {
+       unsigned int iface_boundary_control_index;
+        int iface_is_a_Gamma_control_face;
+
+           std::tie (iface_is_a_Gamma_control_face,iface_boundary_control_index)= femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
+
+//    const int iface_is_a_Gamma_control_face = femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
+
+	    if( /*iel==jel && */iface_boundary_control_index == jface_boundary_control_index ) {
 //------------ iface opening - END ---------        
 		
 //                 count_visits_of_boundary_faces++;
