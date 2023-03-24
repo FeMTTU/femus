@@ -53,8 +53,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                       const int iel,
                       const unsigned iface,
                       const std::vector<unsigned int> nDof_vol_iel, 
-                      std::vector < double > & KK_local_iel,
-                      std::vector < double > & Res_local_iel,
+                      std::vector < double > & KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
+                      std::vector < double > & Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
   //////////   3D only - BEGIN
                       const unsigned div, 
                       std::string node_based_bdry_bdry_in,
@@ -62,8 +62,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                       const int jel,
                       CurrentElem < double > & geom_element_jel,
                       const unsigned jelGeom_bdry,
-                      std::vector < double > & KK_local_iel_mixed_num,
-                      std::vector < double > & Res_local_iel_mixed_num,
+                      std::vector < double > & KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
+                      std::vector < double > & Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                       unsigned solType_coords,
   //////////   3D only - END
                       double & integral
@@ -167,7 +167,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
                 const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, i_vol_iel);
 
-                Res_local_iel[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
+                Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -175,7 +175,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
                   const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, i_vol_iel, j_vol_iel);         
 
-                  KK_local_iel[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
+                  KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
                      }
                 
                   }
@@ -258,7 +258,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               }
               for(unsigned n = 0; n < div; n++) {
                   
-                const unsigned dir_x_for_atan = ( ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2 ) + 1 ) % 3;  ///@todo I think needs to be changed
+                const unsigned dir_x_for_atan = ( ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2 ) + 1 ) % 3;  ///@todooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo I think needs to be changed
                 const unsigned dir_y_for_atan = ( dir_x_for_atan + 1 ) % 3 ;  ///@todo I think needs to be changed
 // // //                 double teta2 = atan2(delta_coordinates_bdry_bdry_refined[(n+1) + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[(n+1) + dir_x_for_atan * div]);
 // // //                 double teta1 = atan2(delta_coordinates_bdry_bdry_refined[n + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[n + dir_x_for_atan * div]);
@@ -302,11 +302,11 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 //              for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); i_bdry++) {
 //                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 //                 
-//                 Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface * weight_qp_of_iface * mixed_denominator_numerical  * (1. / s_frac);
+//                 Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ i_vol_iel ] += - 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface * weight_qp_of_iface * mixed_denominator_numerical  * (1. / s_frac);
 //                 
 //                 for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); j_bdry++) {
 //                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-//                   KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry]  * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
+//                   KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry]  * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
 //                 }
 //                 
 //               }
@@ -329,7 +329,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
                 const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, i_vol_iel);
 
-                Res_local_iel_mixed_num[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
+                Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -337,7 +337,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
                   const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, i_vol_iel, j_vol_iel);         
 
-                  KK_local_iel_mixed_num[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
+                  KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
                      }
                 
                   }
@@ -562,16 +562,20 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
 
   //-------- Local matrices and rhs - BEGIN --------------
-  vector < double > Res_local_iel; Res_local_iel.reserve(elem_dof_size_max);
-  vector < double > KK_local_iel;  KK_local_iel.reserve(elem_dof_size_max * elem_dof_size_max);
+  vector < double > Res_local_iel_integer_operators; Res_local_iel_integer_operators.reserve(elem_dof_size_max);
+  vector < double > KK_local_iel_integer_operators;  KK_local_iel_integer_operators.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   Local matrices and rhs for adaptive quadrature (iel == jel)
-  vector < double > Res_local_iel_refined; Res_local_iel_refined.reserve(elem_dof_size_max);
-  vector < double > KK_local_iel_refined;   KK_local_iel_refined.reserve(elem_dof_size_max * elem_dof_size_max);
+  vector < double > Res_local_iel_only_refined; Res_local_iel_only_refined.reserve(elem_dof_size_max);
+  vector < double > KK_local_iel_only_refined;   KK_local_iel_only_refined.reserve(elem_dof_size_max * elem_dof_size_max);
+
+//   (both adaptive and non-adaptive)
+  vector < double > Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref; Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.reserve(elem_dof_size_max);
+  vector < double > KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref;  KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   Local matrices and rhs for the mixed internal-external integral term (both adaptive and non-adaptive)
-  vector < double > Res_local_iel_mixed_num;  Res_local_iel_mixed_num.reserve(elem_dof_size_max);
-  vector < double > KK_local_iel_mixed_num;   KK_local_iel_mixed_num.reserve(elem_dof_size_max * elem_dof_size_max);
+  vector < double > Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref;  Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.reserve(elem_dof_size_max);
+  vector < double > KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref;   KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   Non local matrices and vectors for H^s laplacian operator
   vector< double >         Res_nonlocal_iel;  Res_nonlocal_iel.reserve(elem_dof_size_max);
@@ -1024,17 +1028,23 @@ unsigned nDof_iel_vec = 0;
         Res_nonlocal_iel.assign(nDof_iel_vec, 0.);    //resize
         Res_nonlocal_jel.assign(nDof_jel_vec, 0.);    //resize
 
-        Res_local_iel_mixed_num.assign(nDof_iel_vec, 0.);    //resize
-        KK_local_iel_mixed_num.assign(nDof_iel_vec * nDof_iel_vec, 0.);
+        Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec, 0.);    //resize
+        KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec * nDof_iel_vec, 0.);
 
         if( check_if_same_elem(iel, jel) ) {
-          Res_local_iel.assign(nDof_iel_vec, 0.);    //resize
-          KK_local_iel.assign(nDof_iel_vec * nDof_iel_vec, 0.);
+            
+          Res_local_iel_integer_operators.assign(nDof_iel_vec, 0.);    //resize
+          KK_local_iel_integer_operators.assign(nDof_iel_vec * nDof_iel_vec, 0.);
+          
+          Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.assign(nDof_iel_vec, 0.);    //resize
+          KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.assign(nDof_iel_vec * nDof_iel_vec, 0.);
+          
           if(integration_num_split != 0) {
 //             Vectors and matrices for adaptive quadrature
-            Res_local_iel_refined.assign(nDof_iel_vec, 0.);    //resize
-            KK_local_iel_refined.assign(nDof_iel_vec * nDof_iel_vec, 0.);
+            Res_local_iel_only_refined.assign(nDof_iel_vec, 0.);    //resize
+            KK_local_iel_only_refined.assign(nDof_iel_vec * nDof_iel_vec, 0.);
           }
+          
         }
 // --- element matrix and vector resizing - END 
 
@@ -1186,15 +1196,15 @@ unsigned nDof_iel_vec = 0;
 
               double mass_res_i = phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * sol_ctrl_qp_of_iface[c];
               const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol);
-              Res_local_iel[ res_pos/*l_vol*/ ] += operator_L2 * alpha * weight_qp_of_iface * mass_res_i ;
-              Res_local_iel[ res_pos/*l_vol*/ ] += - rhs_one * weight_qp_of_iface * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += operator_L2 * alpha * weight_qp_of_iface * mass_res_i ;
+              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += - rhs_one * weight_qp_of_iface * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
               
               for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
             for(unsigned m_bdry = 0; m_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); m_bdry++) {
                		    unsigned int m_vol = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                 const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol, m_vol);         
-                KK_local_iel[ jac_pos/*l_vol * nDof_iel + m_vol*/ ] += operator_L2 * alpha * phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * phi_ctrl_iel_bdry_qp_of_iface[m_bdry] * weight_qp_of_iface;
+                KK_local_iel_integer_operators[ jac_pos/*l_vol * nDof_iel + m_vol*/ ] += operator_L2 * alpha * phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * phi_ctrl_iel_bdry_qp_of_iface[m_bdry] * weight_qp_of_iface;
                  }
                }
              }
@@ -1323,7 +1333,7 @@ unsigned nDof_iel_vec = 0;
                   unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
 
               const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
-                  Res_local_iel_refined[res_pos/* l_vol_iel*/ ]    +=      - common_weight * (sol_ctrl_qp_of_iface[c] - solY3[c]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
+                  Res_local_iel_only_refined[res_pos/* l_vol_iel*/ ]    +=      - common_weight * (sol_ctrl_qp_of_iface[c] - solY3[c]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
 
               for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) {
@@ -1331,7 +1341,7 @@ unsigned nDof_iel_vec = 0;
                     unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                     
                     const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_iel);         
-                KK_local_iel_refined[ jac_pos/*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight * (phi_ctrl_iel_bdry_qp_of_iface[m_bdry] - phi_ctrl_kel_bdry_kqp_bdry[m_bdry]) * 
+                KK_local_iel_only_refined[ jac_pos/*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight * (phi_ctrl_iel_bdry_qp_of_iface[m_bdry] - phi_ctrl_kel_bdry_kqp_bdry[m_bdry]) * 
                                                         (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
 
                   }
@@ -1367,8 +1377,8 @@ unsigned nDof_iel_vec = 0;
                               iel,
                               iface,
                               nDof_jel, ///@todo
-                              KK_local_iel,
-                              Res_local_iel,
+                              KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
+                              Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
   //////////   3D only - BEGIN
                               N_div_unbounded,
                              node_based_bdry_bdry_in,
@@ -1376,8 +1386,8 @@ unsigned nDof_iel_vec = 0;
                              jel,
                               geom_element_jel,
                               jelGeom_bdry,
-                              KK_local_iel_mixed_num,
-                              Res_local_iel_mixed_num,
+                              KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
+                              Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               solType_coords,
   //////////   3D only - END
                               integral
@@ -1499,8 +1509,8 @@ unsigned nDof_iel_vec = 0;
                               iel,
                               iface,
                               nDof_iel,
-                              KK_local_iel,
-                              Res_local_iel,
+                              KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
+                              Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
 //////////                             
   //////////   3D only - BEGIN
                               N_div_unbounded,
@@ -1509,8 +1519,8 @@ unsigned nDof_iel_vec = 0;
                               jel,
                               geom_element_jel,
                               jelGeom_bdry,
-                              KK_local_iel_mixed_num,
-                              Res_local_iel_mixed_num,
+                              KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
+                              Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               solType_coords,
   //////////   3D only - END
                               integral
@@ -1546,14 +1556,14 @@ unsigned nDof_iel_vec = 0;
                 
 //============ add to global - BEGIN ==================
 // // multiply everything by -1.? Don't think so - BEGIN 
-// std::transform(KK_local_iel.begin(), KK_local_iel.end(), KK_local_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// std::transform(Res_local_iel.begin(), Res_local_iel.end(), Res_local_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.begin(), KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.end(), KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.begin(), Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.end(), Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // 
-// std::transform(KK_local_iel_refined.begin(), KK_local_iel_refined.end(), KK_local_iel_refined.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// std::transform(Res_local_iel_refined.begin(), Res_local_iel_refined.end(), Res_local_iel_refined.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_local_iel_only_refined.begin(), KK_local_iel_only_refined.end(), KK_local_iel_only_refined.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_local_iel_only_refined.begin(), Res_local_iel_only_refined.end(), Res_local_iel_only_refined.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // 
-// std::transform(KK_local_iel_mixed_num.begin(), KK_local_iel_mixed_num.end(), KK_local_iel_mixed_num.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// std::transform(Res_local_iel_mixed_num.begin(), Res_local_iel_mixed_num.end(), Res_local_iel_mixed_num.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.begin(), KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.end(), KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.begin(), Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.end(), Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref_both_ref_and_non_ref.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // 
 // std::transform(KK_nonlocal_iel_iel.begin(), KK_nonlocal_iel_iel.end(), KK_nonlocal_iel_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // std::transform(KK_nonlocal_iel_jel.begin(), KK_nonlocal_iel_jel.end(), KK_nonlocal_iel_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
@@ -1567,20 +1577,23 @@ unsigned nDof_iel_vec = 0;
 
  if( check_if_same_elem(iel, jel) /*check_if_same_elem_bdry(iel, jel, iface, jface)*/ /* if you put it inside the face loops */ ) {
      
+         RES->add_vector_blocked(Res_local_iel_integer_operators, l2gMap_iel_vec);
+          KK->add_matrix_blocked(KK_local_iel_integer_operators, l2gMap_iel_vec, l2gMap_iel_vec);
+        
 
-         RES->add_vector_blocked(Res_local_iel, l2gMap_iel_vec);
-          KK->add_matrix_blocked(KK_local_iel, l2gMap_iel_vec, l2gMap_iel_vec);
+         RES->add_vector_blocked(Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref, l2gMap_iel_vec);
+          KK->add_matrix_blocked(KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref, l2gMap_iel_vec, l2gMap_iel_vec);
         
         
           if(integration_num_split != 0) {
-            RES->add_vector_blocked(Res_local_iel_refined, l2gMap_iel_vec);
-            KK->add_matrix_blocked(KK_local_iel_refined, l2gMap_iel_vec, l2gMap_iel_vec);
+            RES->add_vector_blocked(Res_local_iel_only_refined, l2gMap_iel_vec);
+            KK->add_matrix_blocked(KK_local_iel_only_refined, l2gMap_iel_vec, l2gMap_iel_vec);
           }
           
        }
 
-        RES->add_vector_blocked(Res_local_iel_mixed_num, l2gMap_iel_vec);
-        KK->add_matrix_blocked(KK_local_iel_mixed_num, l2gMap_iel_vec, l2gMap_iel_vec);
+        RES->add_vector_blocked(Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref, l2gMap_iel_vec);
+        KK->add_matrix_blocked(KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref, l2gMap_iel_vec, l2gMap_iel_vec);
         
 
         RES->add_vector_blocked(Res_nonlocal_iel, l2gMap_iel_vec);
@@ -1598,7 +1611,7 @@ unsigned nDof_iel_vec = 0;
 // //              if (print_algebra_local) {
 //          std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
 // //          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
-//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_iel_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref, Sol_n_el_dofs_Mat_vol2, 10, 5);
 // //      }
          
 //============ add to global - END ==================
