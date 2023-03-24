@@ -31,7 +31,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
  
  public:
   
-  static void mixed_integral(const unsigned unbounded,
+  static void unbounded_integral_over_exterior_of_boundary_control_face(const unsigned unbounded,
                       const unsigned dim,
                       const unsigned dim_bdry,
 //////////
@@ -827,12 +827,16 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
      /*bool*/int jface_is_a_boundary_control;
 
        if(jproc == iproc) {
-
-           std::tie (jface_is_a_boundary_control,jface_boundary_control_index)= femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
+           
+           std::pair< int, unsigned int > pair_control_jface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
+           
+           jface_is_a_boundary_control  = pair_control_jface.first;
+           jface_boundary_control_index = pair_control_jface.second;
 
            //            jface_is_a_boundary_control = femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
        }
       MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
+      MPI_Bcast(& jface_boundary_control_index, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 // --- - END
 
       
@@ -847,8 +851,8 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
 // Wait a second... If I want to prepare the qp_of_jface loop, I must be inside jface as well...
 // So now it seems to me that I have to do jel jface iel iface instead...
-// Previously it was jel iel iqp jqp
-// Now, it has to be jel jface  - iel iface - qp_of_iface qp_of_jface
+// Previously it was jel          iel         iqp           jqp
+// Now, it has to be jel jface  - iel iface - qp_of_iface - qp_of_jface
 // The two quadrature loops must be the innermost. In this way you exclude all non-needed volume elements and all non-needed faces, so that you minimize the number of inner ifs. You keep them outside as much as possible
 // There will be a storage of qp_of_jface
 
@@ -1066,14 +1070,15 @@ unsigned nDof_iel_vec = 0;
        geom_element_iel.set_elem_center_bdry_3d();
 // --- geom - END           
 
+       int iface_is_a_boundary_control;
        unsigned int iface_boundary_control_index;
-        int iface_is_a_Gamma_control_face;
 
-           std::tie (iface_is_a_Gamma_control_face,iface_boundary_control_index)= femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
+           std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
+           
+           iface_is_a_boundary_control  = pair_control_iface.first;
+           iface_boundary_control_index = pair_control_iface.second;
 
-//    const int iface_is_a_Gamma_control_face = femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
-
-	    if( /*iel==jel && */iface_boundary_control_index == jface_boundary_control_index ) {
+	    if( iface_is_a_boundary_control && (iface_boundary_control_index == jface_boundary_control_index) ) {
 //------------ iface opening - END ---------        
 		
 //                 count_visits_of_boundary_faces++;
@@ -1122,7 +1127,9 @@ unsigned nDof_iel_vec = 0;
 //------------ qp_of_iface opening - BEGIN  ---------        
 		for(unsigned qp_of_iface = 0; qp_of_iface < n_qp_of_iface; qp_of_iface++) {
 //------------ qp_of_iface opening - END  ---------        
+
             
+//========== qp_of_iface FE shape - BEGIN ===============================================
     elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), qp_of_iface, Jac_iel_bdry_qp_of_iface, JacI_iel_bdry_qp_of_iface, detJac_iel_bdry_qp_of_iface, space_dim);
     
     weight_qp_of_iface = detJac_iel_bdry_qp_of_iface * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[qp_of_iface];
@@ -1130,8 +1137,9 @@ unsigned nDof_iel_vec = 0;
     elem_all[qrule_i][ielGeom_bdry][solType_coords] ->shape_funcs_current_elem(qp_of_iface, JacI_iel_bdry_qp_of_iface, phi_coords_iel_bdry_qp_of_iface, phi_coords_x_iel_bdry_qp_of_iface, boost::none, space_dim);
 
     elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(qp_of_iface, JacI_iel_bdry_qp_of_iface, phi_ctrl_iel_bdry_qp_of_iface, phi_ctrl_x_iel_bdry_qp_of_iface, boost::none, space_dim);
+//========== qp_of_iface FE shape - END ===============================================
             
-//========== compute gauss quantities on the boundary - BEGIN ===============================================
+//========== qp_of_iface quantities - BEGIN ===============================================
 //--- geom - BEGIN 
           std::vector < double > x_qp_of_iface(dim, 0.);  ///@todo is this dim or dim_bdry?
 
@@ -1155,7 +1163,7 @@ unsigned nDof_iel_vec = 0;
 		      }
        }
 //--- solution - END
-//========== compute gauss quantities on the boundary - END ================================================
+//========== qp_of_iface quantities - END ================================================
 
 
   
@@ -1337,7 +1345,7 @@ unsigned nDof_iel_vec = 0;
 // ********* UNBOUNDED PART - BEGIN ***************
                 if( qp_of_iface == integration_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
                     
-              mixed_integral(unbounded,
+              unbounded_integral_over_exterior_of_boundary_control_face(unbounded,
                               dim,
                               dim_bdry,
 //////////                             
@@ -1394,7 +1402,7 @@ unsigned nDof_iel_vec = 0;
       //============ Or different elements, or lack of adaptivity (so all elements) - BEGIN ==================
         else {  //  if(iel != jel || integration_num_split == 0) 
             
-            
+// // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {  
 // ********* BOUNDED PART - BEGIN ***************
             
 //------------ qp_of_jface opening - BEGIN  ---------        
@@ -1464,11 +1472,12 @@ unsigned nDof_iel_vec = 0;
 
 
 // ********* BOUNDED PART - END ***************
-            
+// // //             }
+// // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {  
 // ********* UNBOUNDED PART - BEGIN ***************
 //           if(check_if_same_elem_bdry(iel, jel, iface, jface)) { //TODO I removed this since we don't want iel==jel here
               
-               mixed_integral(unbounded,
+               unbounded_integral_over_exterior_of_boundary_control_face(unbounded,
                               dim,
                               dim_bdry,
 //////////                             
@@ -1510,6 +1519,7 @@ unsigned nDof_iel_vec = 0;
 //           }
               
 // ********* UNBOUNDED PART - END ***************
+// // //             }
             
          } //end if(iel != jel || integration_num_split == 0)
       //============ Or different elements, or lack of adaptivity (so all elements) - END ==================
