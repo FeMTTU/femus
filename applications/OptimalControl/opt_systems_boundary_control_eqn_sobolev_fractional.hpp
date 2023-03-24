@@ -52,6 +52,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 //////////
                       const int iel,
                       const unsigned iface,
+                      unsigned int i_element_face_index,
                       const std::vector<unsigned int> nDof_vol_iel, 
                       std::vector < double > & KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
                       std::vector < double > & Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
@@ -95,7 +96,6 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   
   //loop over element of the class 'list of face for control' to find the t-index of the current Gamma_c - BEGIN
   
-  const unsigned int i_element_face_index = - ( msh->el->GetFaceElementIndex(iel, iface) + 1);    //get the face index
   
   const unsigned int number_of_face_for_controls = LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; // get the number of Gamma_c
   
@@ -1376,7 +1376,8 @@ unsigned nDof_iel_vec = 0;
 //////////                             
                               iel,
                               iface,
-                              nDof_jel, ///@todo
+                              iface_boundary_control_index,
+                              nDof_iel,
                               KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
                               Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
   //////////   3D only - BEGIN
@@ -1508,6 +1509,7 @@ unsigned nDof_iel_vec = 0;
 //////////                             
                               iel,
                               iface,
+                              iface_boundary_control_index,
                               nDof_iel,
                               KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
                               Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
