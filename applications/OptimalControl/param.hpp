@@ -111,11 +111,11 @@ namespace ctrl {
 
 #if NORM_GIR_RAV == 0
 
-  #define OP_L2       0/*1*/
+  #define OP_L2       0
   #define OP_H1       0
   #define OP_Hhalf    1
 
-  #define UNBOUNDED   1/*0*/
+  #define UNBOUNDED   1
 
   #define USE_Cns     1
 

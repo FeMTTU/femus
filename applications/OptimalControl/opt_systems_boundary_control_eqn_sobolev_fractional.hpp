@@ -801,7 +801,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 	  for(unsigned jface = 0; jface < n_faces_jel; jface++) {
           
           
-// --- geometry - BEGIN         
+// --- geometry about jface - BEGIN         
        unsigned jelGeom_bdry;
        if(jproc == iproc) {
            jelGeom_bdry = msh->GetElementFaceType(jel, jface);
@@ -837,9 +837,9 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
       for(unsigned k = 0; k < space_dim; k++) {
         MPI_Bcast(& geom_element_jel.get_elem_center_bdry_3d()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
       }
-// --- geometry - END
+// --- geometry about jface - END
 
-// --- - BEGIN
+// --- jface is control - BEGIN
 //        std::make_pair jface_is_a_boundary_control
 
      /*bool*/int    jface_is_a_boundary_control;
@@ -856,7 +856,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
        }
       MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
       MPI_Bcast(& jface_boundary_control_index, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
-// --- - END
+// --- jface is control - END
 
       
 	    if( jface_is_a_boundary_control ) {
@@ -1197,7 +1197,9 @@ unsigned nDof_iel_vec = 0;
   
       //============  Non-fractional assembly - BEGIN ==================
           
-            if( /*0 == jel*/ check_if_same_elem_bdry(iel, jel, iface, jface) ) {
+            if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {  //in principle, "jel" and "jface" could be any values in their range, 
+                                                                                    //but "jel == iel" and "jface == iface" is the only value that always guarantees that we reach this point,
+                                                                                    //because we are under additional constraints "jface_is_a_boundary_control" from above
               
                 
        //============  Mass assembly - BEGIN ==================
