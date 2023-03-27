@@ -86,7 +86,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   if(unbounded == 1) {
       
       //============ Mixed Integral 1D - Analytical ==================      
-      if (dim_bdry == 1) {
+      if (dim_bdry == 1 && check_if_same_elem(iel, jel) ) {
 
 // ---------- extreme coordinates, initialize - BEGIN
   std::vector < double > extreme_coords_Gamma_c_along_abscissa(2); //number of extremes of the 1D ctrl segment
@@ -209,7 +209,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 
          double mixed_denominator_numerical = 0.;
          
-            // *** Face Gauss point loop (Integral over 2d object) ***
+            // *** Face loop (Integral over 2d object) ***
             for(unsigned e_bdry_bdry = 0; e_bdry_bdry < f_n_faces_faces/*bdry_bdry.size()*/; e_bdry_bdry++) {  ///@todo I think this has to be fixed
 
               // look for boundary faces
@@ -1507,8 +1507,7 @@ unsigned nDof_iel_vec = 0;
 // // //             }
 // // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {  
 // ********* UNBOUNDED PART - BEGIN ***************
-//           if(check_if_same_elem_bdry(iel, jel, iface, jface)) { //TODO I removed this since we don't want iel==jel here
-              
+
                unbounded_integral_over_exterior_of_boundary_control_face(
 //
 //                               count_unbounded,
@@ -1553,7 +1552,6 @@ unsigned nDof_iel_vec = 0;
                               integral
                              );
                
-//           }
               
 // ********* UNBOUNDED PART - END ***************
 // // //             }
