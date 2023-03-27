@@ -60,7 +60,7 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 3 // for 2D applications
+#define N_UNIFORM_LEVELS 2 // for 2D applications
 // #define N_UNIFORM_LEVELS 2 // for 3D bdry application
 
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
@@ -84,7 +84,7 @@ namespace ctrl {
 
 //*********************** Control, cost functional, regularization - BEGIN *******************************************************
 // for pure boundary approaches
-#define ALPHA_CTRL_BDRY 1.e-7
+#define ALPHA_CTRL_BDRY 1/*.e-7*/
 #define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 // for lifting approaches (both internal and external)
@@ -111,11 +111,11 @@ namespace ctrl {
 
 #if NORM_GIR_RAV == 0
 
-  #define OP_L2       0
+  #define OP_L2       0/*1*/
   #define OP_H1       0
   #define OP_Hhalf    1
 
-  #define UNBOUNDED   1
+  #define UNBOUNDED   1/*0*/
 
   #define USE_Cns     1
 

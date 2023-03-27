@@ -12,7 +12,7 @@
 #include "fractional_functions.hpp"
 
 
-#define TEST_IEL_SINGLE_FOR_LOOP  /*10*/iel
+#define TEST_JEL_SINGLE_FOR_LOOP  /*0*/iel
 
 //*******************************************************************************************
 //*********************** Mesh independent - BEGIN *****************************************
@@ -90,7 +90,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   if(unbounded == 1) {
       
       //============ Mixed Integral 1D - Analytical ==================      
-      if (dim_bdry == 1 && check_if_same_elem( TEST_IEL_SINGLE_FOR_LOOP /*iel*/, jel) ) {
+      if (dim_bdry == 1 && check_if_same_elem( TEST_JEL_SINGLE_FOR_LOOP /*iel*/, jel) ) {
 
 // ---------- extreme coordinates, initialize - BEGIN
   std::vector < double > extreme_coords_Gamma_c_along_abscissa(2); //number of extremes of the 1D ctrl segment
@@ -162,7 +162,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               
 //--- Integral - BEGIN -------
               for (unsigned c = 0; c < n_components_ctrl; c++) {
-                  integral +=  0.5 * C_ns * check_limits * operator_Hhalf  * beta * sol_ctrl_qp_of_iface[c] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
+                  integral +=  0.5 * C_ns * check_limits * operator_Hhalf  * beta * sol_ctrl_qp_of_iface[c] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface  * mixed_denominator * (1. / s_frac);
               }   
 //--- Integral - END -------
               
@@ -176,7 +176,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
                 const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, i_vol_iel);
 
-                Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
+                Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta  * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -1049,7 +1049,7 @@ unsigned nDof_iel_vec = 0;
         Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec, 0.);    //resize
         KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec * nDof_iel_vec, 0.);
 
-        if( check_if_same_elem(TEST_IEL_SINGLE_FOR_LOOP /*iel*/, jel) ) {
+        if( check_if_same_elem(TEST_JEL_SINGLE_FOR_LOOP /*iel*/, jel) ) {
             
           Res_local_iel_integer_operators.assign(nDof_iel_vec, 0.);    //resize
           KK_local_iel_integer_operators.assign(nDof_iel_vec * nDof_iel_vec, 0.);
@@ -1197,7 +1197,7 @@ unsigned nDof_iel_vec = 0;
   
       //============  Non-fractional assembly - BEGIN ==================
           
-            if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {
+            if( /*0 == jel*/ check_if_same_elem_bdry(iel, jel, iface, jface) ) {
               
                 
        //============  Mass assembly - BEGIN ==================
@@ -1214,8 +1214,8 @@ unsigned nDof_iel_vec = 0;
 
               double mass_res_i = phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * sol_ctrl_qp_of_iface[c];
               const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol);
-              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += operator_L2 * alpha * weight_qp_of_iface * mass_res_i ;
-              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += - rhs_one * weight_qp_of_iface * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += (-1.) * operator_L2 * alpha * weight_qp_of_iface * mass_res_i ;
+              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += (-1.) * rhs_one * weight_qp_of_iface * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
               
               for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -1605,7 +1605,7 @@ unsigned nDof_iel_vec = 0;
 // // multiply everything by -1. - END
 
 
- if( check_if_same_elem( TEST_IEL_SINGLE_FOR_LOOP /*iel*/, jel) /*check_if_same_elem_bdry(iel, jel, iface, jface)*/ /* if you put it inside the face loops */ ) {
+ if( check_if_same_elem( TEST_JEL_SINGLE_FOR_LOOP /*iel*/, jel) /*check_if_same_elem_bdry(iel, jel, iface, jface)*/ /* if you put it inside the face loops */ ) {
 
         // RES & KK of half norm second integral in a 2D domain (double integral over Gamma_c and over R\Gamma_c) - BEGIN
 
