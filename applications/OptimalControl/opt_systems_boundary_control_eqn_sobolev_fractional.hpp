@@ -12,7 +12,7 @@
 #include "fractional_functions.hpp"
 
 
-
+#define TEST_IEL_SINGLE_FOR_LOOP  /*10*/iel
 
 //*******************************************************************************************
 //*********************** Mesh independent - BEGIN *****************************************
@@ -39,34 +39,38 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                       const unsigned dim,
                       const unsigned dim_bdry,
 //////////
-                      const double weight_qp_of_iface,
-                      const std::vector < double > & x_qp_of_iface,
-                      const std::vector < double > & phi_ctrl_iel_bdry_qp_of_iface,
-                      const std::vector<double> sol_ctrl_qp_of_iface,
-//////////
+                      const unsigned int operator_Hhalf,
                       const double s_frac,
                       const double check_limits,
                       const double C_ns,
-                      const unsigned int operator_Hhalf,
                       const double beta,
 //////////
                       const Mesh * msh,
                       const Solution *    sol,
                       const MultiLevelSolution *    ml_sol,
 //////////
+//////////   Both 2D and 3D - BEGIN
                       const int iel,
                       const unsigned iface,
                       unsigned int i_element_face_index,
                       const std::vector<unsigned int> nDof_vol_iel, 
+//////////
+                      const double weight_qp_of_iface,
+                      const std::vector < double > & x_qp_of_iface,
+                      const std::vector < double > & phi_ctrl_iel_bdry_qp_of_iface,
+                      const std::vector<double> sol_ctrl_qp_of_iface,
+//////////   Both 2D and 3D - END
+  //////////   2D only - BEGIN
                       std::vector < double > & KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
                       std::vector < double > & Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
+  //////////   2D only - END
   //////////   3D only - BEGIN
-                      const unsigned div, 
+                      const int jel,
+                      const unsigned jelGeom_bdry,
                       std::string node_based_bdry_bdry_in,
                       std::vector <int> bdry_bdry,
-                      const int jel,
+                      const unsigned div, 
                       CurrentElem < double > & geom_element_jel,
-                      const unsigned jelGeom_bdry,
                       std::vector < double > & KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                       std::vector < double > & Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                       unsigned solType_coords,
@@ -86,7 +90,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   if(unbounded == 1) {
       
       //============ Mixed Integral 1D - Analytical ==================      
-      if (dim_bdry == 1 && check_if_same_elem(iel, jel) ) {
+      if (dim_bdry == 1 && check_if_same_elem( TEST_IEL_SINGLE_FOR_LOOP /*iel*/, jel) ) {
 
 // ---------- extreme coordinates, initialize - BEGIN
   std::vector < double > extreme_coords_Gamma_c_along_abscissa(2); //number of extremes of the 1D ctrl segment
@@ -1045,7 +1049,7 @@ unsigned nDof_iel_vec = 0;
         Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec, 0.);    //resize
         KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec * nDof_iel_vec, 0.);
 
-        if( check_if_same_elem(iel, jel) ) {
+        if( check_if_same_elem(TEST_IEL_SINGLE_FOR_LOOP /*iel*/, jel) ) {
             
           Res_local_iel_integer_operators.assign(nDof_iel_vec, 0.);    //resize
           KK_local_iel_integer_operators.assign(nDof_iel_vec * nDof_iel_vec, 0.);
@@ -1379,15 +1383,10 @@ unsigned nDof_iel_vec = 0;
                               dim,
                               dim_bdry,
 //////////                             
-                              weight_kqp_bdry,
-                              x_kqp_bdry,
-                              phi_ctrl_kel_bdry_kqp_bdry,
-                              sol_ctrl_kqp_bdry,
-//////////                             
+                              operator_Hhalf,
                               s_frac,
                               check_limits,
                               C_ns,
-                              operator_Hhalf,
                               beta,
 //////////                             
                               msh,
@@ -1398,15 +1397,19 @@ unsigned nDof_iel_vec = 0;
                               iface,
                               iface_boundary_control_index,
                               nDof_iel,
+                              weight_kqp_bdry,
+                              x_kqp_bdry,
+                              phi_ctrl_kel_bdry_kqp_bdry,
+                              sol_ctrl_kqp_bdry,
                               KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
                               Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
   //////////   3D only - BEGIN
-                              N_div_unbounded,
+                             jel,
+                              jelGeom_bdry,
                              node_based_bdry_bdry_in,
                               bdry_bdry,
-                             jel,
+                              N_div_unbounded,
                               geom_element_jel,
-                              jelGeom_bdry,
                               KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               solType_coords,
@@ -1516,15 +1519,10 @@ unsigned nDof_iel_vec = 0;
                               dim,
                               dim_bdry,
 //////////                             
-                              weight_qp_of_iface,
-                              x_qp_of_iface,
-                              phi_ctrl_iel_bdry_qp_of_iface,
-                              sol_ctrl_qp_of_iface,
-//////////                             
+                              operator_Hhalf,
                               s_frac,
                               check_limits,
                               C_ns,
-                              operator_Hhalf,
                               beta,
 //////////                             
                               msh,
@@ -1535,16 +1533,20 @@ unsigned nDof_iel_vec = 0;
                               iface,
                               iface_boundary_control_index,
                               nDof_iel,
+                              weight_qp_of_iface,
+                              x_qp_of_iface,
+                              phi_ctrl_iel_bdry_qp_of_iface,
+                              sol_ctrl_qp_of_iface,
                               KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
                               Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
 //////////                             
   //////////   3D only - BEGIN
-                              N_div_unbounded,
+                              jel,
+                              jelGeom_bdry,
                               node_based_bdry_bdry_in,
                               bdry_bdry,
-                              jel,
+                              N_div_unbounded,
                               geom_element_jel,
-                              jelGeom_bdry,
                               KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               solType_coords,
@@ -1603,7 +1605,7 @@ unsigned nDof_iel_vec = 0;
 // // multiply everything by -1. - END
 
 
- if( check_if_same_elem(iel, jel) /*check_if_same_elem_bdry(iel, jel, iface, jface)*/ /* if you put it inside the face loops */ ) {
+ if( check_if_same_elem( TEST_IEL_SINGLE_FOR_LOOP /*iel*/, jel) /*check_if_same_elem_bdry(iel, jel, iface, jface)*/ /* if you put it inside the face loops */ ) {
 
         // RES & KK of half norm second integral in a 2D domain (double integral over Gamma_c and over R\Gamma_c) - BEGIN
 
