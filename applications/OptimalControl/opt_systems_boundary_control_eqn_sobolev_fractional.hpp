@@ -31,7 +31,11 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
  
  public:
   
-  static void unbounded_integral_over_exterior_of_boundary_control_face(const unsigned unbounded,
+  static void unbounded_integral_over_exterior_of_boundary_control_face(
+//
+//                       int & count,
+//
+                      const unsigned unbounded,
                       const unsigned dim,
                       const unsigned dim_bdry,
 //////////
@@ -69,6 +73,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   //////////   3D only - END
                       double & integral
                      ) {
+//       count++;
       
      
   const unsigned int n_components_ctrl = nDof_vol_iel.size();
@@ -355,7 +360,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   
  }
   
-  
+//********** BDRY_BDRY_FLAG_COPY_AND_DELETE- BEGIN *****************************************
+
   static   void   bdry_bdry_flag_copy_and_delete(   MultiLevelProblem & ml_prob,
                                              MultiLevelSolution & ml_sol,
                                            const MultiLevelMesh & ml_mesh, 
@@ -378,8 +384,10 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   delete ml_sol_bdry_bdry_flag;
      
      }  
+//********** BDRY_BDRY_FLAG_COPY_AND_DELETE- END*****************************************
 
-  
+//********** BDRY_BDRY_FLAG- BEGIN *****************************************
+
   static    MultiLevelSolution *  bdry_bdry_flag(  Files & files,
                                             MultiLevelMesh & ml_mesh, 
                                                const std::string infile,
@@ -418,13 +426,14 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
  return ml_sol_bdry_bdry_flag;
  
 }
+//********** BDRY_BDRY_FLAG- END*****************************************
 
 
   
   
 
   
-    //********** FRAC CONTROL - BEGIN *****************************************
+//********** FRAC CONTROL - BEGIN *****************************************
 
  static  void control_eqn_bdry(const unsigned iproc,
                                    const unsigned nprocs,
@@ -492,6 +501,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                         //-----------
                         const bool print_algebra_local
                        ) {
+
+
 
 // --- Fractional - BEGIN
 const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);  
@@ -826,9 +837,9 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
 // --- - BEGIN
 //        std::make_pair jface_is_a_boundary_control
-       unsigned int jface_boundary_control_index;
 
-     /*bool*/int jface_is_a_boundary_control;
+     /*bool*/int    jface_is_a_boundary_control;
+       unsigned int jface_boundary_control_index;
 
        if(jproc == iproc) {
            
@@ -845,6 +856,9 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
       
 	    if( jface_is_a_boundary_control ) {
+
+            int count_unbounded = 0;
+            int count_bounded = 0;
 //------------------------------------        
 //------------ jface opening - END ---------    
 //------------------------------------        
@@ -1088,7 +1102,7 @@ unsigned nDof_iel_vec = 0;
            iface_is_a_boundary_control  = pair_control_iface.first;
            iface_boundary_control_index = pair_control_iface.second;
 
-	    if( iface_is_a_boundary_control && (iface_boundary_control_index == jface_boundary_control_index) ) {
+	    if( iface_is_a_boundary_control && (iface_boundary_control_index == jface_boundary_control_index) ) {  //the integration is along the same Boundary face, not cross integration along different boundary faces
 //------------ iface opening - END ---------        
 		
 //                 count_visits_of_boundary_faces++;
@@ -1350,12 +1364,18 @@ unsigned nDof_iel_vec = 0;
               }
             }
      }
+//      count_bounded++;
 // ********* BOUNDED PART - END ***************
 
 // ********* UNBOUNDED PART - BEGIN ***************
+
                 if( qp_of_iface == integration_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
-                    
-              unbounded_integral_over_exterior_of_boundary_control_face(unbounded,
+
+              unbounded_integral_over_exterior_of_boundary_control_face(
+                  //
+//                   count_unbounded,
+                  //
+                  unbounded,
                               dim,
                               dim_bdry,
 //////////                             
@@ -1481,14 +1501,19 @@ unsigned nDof_iel_vec = 0;
               } //endl qp_of_jface loop
 //------------ qp_of_jface closing - END ---------
 
-
+//  count_bounded++;
 // ********* BOUNDED PART - END ***************
+
 // // //             }
 // // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {  
 // ********* UNBOUNDED PART - BEGIN ***************
 //           if(check_if_same_elem_bdry(iel, jel, iface, jface)) { //TODO I removed this since we don't want iel==jel here
               
-               unbounded_integral_over_exterior_of_boundary_control_face(unbounded,
+               unbounded_integral_over_exterior_of_boundary_control_face(
+//
+//                               count_unbounded,
+//
+                              unbounded,
                               dim,
                               dim_bdry,
 //////////                             
@@ -1542,6 +1567,9 @@ unsigned nDof_iel_vec = 0;
             
 //------------ qp_of_iface closing - BEGIN  ---------        
       }   //end qp_of_iface
+       count_bounded++;
+//        count_unbounded++;
+
 //------------ qp_of_iface closing - END ---------        
       
       
@@ -1578,26 +1606,35 @@ unsigned nDof_iel_vec = 0;
 
 
  if( check_if_same_elem(iel, jel) /*check_if_same_elem_bdry(iel, jel, iface, jface)*/ /* if you put it inside the face loops */ ) {
-     
+
+        // RES & KK of half norm second integral in a 2D domain (double integral over Gamma_c and over R\Gamma_c) - BEGIN
+
          RES->add_vector_blocked(Res_local_iel_integer_operators, l2gMap_iel_vec);
           KK->add_matrix_blocked(KK_local_iel_integer_operators, l2gMap_iel_vec, l2gMap_iel_vec);
         
 
          RES->add_vector_blocked(Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref, l2gMap_iel_vec);
           KK->add_matrix_blocked(KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref, l2gMap_iel_vec, l2gMap_iel_vec);
-        
+        // RES & KK of half norm second integral in a 2D domain (double integral over Gamma_c and over R\Gamma_c) - END
+
         
           if(integration_num_split != 0) {
             RES->add_vector_blocked(Res_local_iel_only_refined, l2gMap_iel_vec);
             KK->add_matrix_blocked(KK_local_iel_only_refined, l2gMap_iel_vec, l2gMap_iel_vec);
           }
+
+          count_unbounded++;
           
        }
 
+//         count_unbounded--;
+
+        // RES & KK of half norm second integral in a 3D domain (double integral over Gamma_c and over R\Gamma_c) - BEGIN
         RES->add_vector_blocked(Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref, l2gMap_iel_vec);
         KK->add_matrix_blocked(KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref, l2gMap_iel_vec, l2gMap_iel_vec);
-        
+        // RES & KK of half norm second integral in a 3D domain (double integral over Gamma_c and over R\Gamma_c)- END
 
+        // RES & KK of half norm first integral (double integral over Gamma_c) - BEGIN
         RES->add_vector_blocked(Res_nonlocal_iel, l2gMap_iel_vec);
         RES->add_vector_blocked(Res_nonlocal_jel, l2gMap_jel_vec);
         
@@ -1605,6 +1642,8 @@ unsigned nDof_iel_vec = 0;
         KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel_vec, l2gMap_jel_vec);
         KK->add_matrix_blocked(KK_nonlocal_jel_iel, l2gMap_jel_vec, l2gMap_iel_vec);
         KK->add_matrix_blocked(KK_nonlocal_jel_jel, l2gMap_jel_vec, l2gMap_jel_vec);
+        // RES & KK of half norm first integral (double integral over Gamma_c) - END
+
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
 
 
@@ -1662,7 +1701,7 @@ unsigned nDof_iel_vec = 0;
   
   }
     
-  //**********FRAC CONTROL - END *****************************************
+//**********FRAC CONTROL - END *****************************************
   
 
 //*********************** Mesh independent, ALMOST - END *****************************************
