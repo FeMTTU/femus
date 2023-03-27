@@ -589,13 +589,13 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
   vector < double > KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref;   KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   Non local matrices and vectors for H^s laplacian operator
-  vector< double >         Res_nonlocal_iel;  Res_nonlocal_iel.reserve(elem_dof_size_max);
-  vector< double >         Res_nonlocal_jel;  Res_nonlocal_jel.reserve(elem_dof_size_max);
+  vector< double >         Res_nonlocal_iel_bounded_integral;  Res_nonlocal_iel_bounded_integral.reserve(elem_dof_size_max);
+  vector< double >         Res_nonlocal_jel_bounded_integral;  Res_nonlocal_jel_bounded_integral.reserve(elem_dof_size_max);
 
-  vector < double > KK_nonlocal_iel_iel;  KK_nonlocal_iel_iel.reserve(elem_dof_size_max * elem_dof_size_max);
-  vector < double > KK_nonlocal_iel_jel;  KK_nonlocal_iel_jel.reserve(elem_dof_size_max * elem_dof_size_max);
-  vector < double > KK_nonlocal_jel_iel;  KK_nonlocal_jel_iel.reserve(elem_dof_size_max * elem_dof_size_max);
-  vector < double > KK_nonlocal_jel_jel;  KK_nonlocal_jel_jel.reserve(elem_dof_size_max * elem_dof_size_max); 
+  vector < double > KK_nonlocal_iel_iel_bounded_integral;  KK_nonlocal_iel_iel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
+  vector < double > KK_nonlocal_iel_jel_bounded_integral;  KK_nonlocal_iel_jel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
+  vector < double > KK_nonlocal_jel_iel_bounded_integral;  KK_nonlocal_jel_iel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
+  vector < double > KK_nonlocal_jel_jel_bounded_integral;  KK_nonlocal_jel_jel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max); 
   //-------- Local matrices and rhs - END --------------
 
   
@@ -1035,12 +1035,12 @@ unsigned nDof_iel_vec = 0;
         for (unsigned c = 0; c < n_components_ctrl; c++) {  nDof_iel_vec  +=  nDof_iel[c];    }
 
 
-        KK_nonlocal_iel_iel.assign(nDof_iel_vec * nDof_iel_vec, 0.);   //resize
-        KK_nonlocal_iel_jel.assign(nDof_iel_vec * nDof_jel_vec, 0.);   //resize
-        KK_nonlocal_jel_iel.assign(nDof_jel_vec * nDof_iel_vec, 0.);   //resize
-        KK_nonlocal_jel_jel.assign(nDof_jel_vec * nDof_jel_vec, 0.);   //resize
-        Res_nonlocal_iel.assign(nDof_iel_vec, 0.);    //resize
-        Res_nonlocal_jel.assign(nDof_jel_vec, 0.);    //resize
+        KK_nonlocal_iel_iel_bounded_integral.assign(nDof_iel_vec * nDof_iel_vec, 0.);   //resize
+        KK_nonlocal_iel_jel_bounded_integral.assign(nDof_iel_vec * nDof_jel_vec, 0.);   //resize
+        KK_nonlocal_jel_iel_bounded_integral.assign(nDof_jel_vec * nDof_iel_vec, 0.);   //resize
+        KK_nonlocal_jel_jel_bounded_integral.assign(nDof_jel_vec * nDof_jel_vec, 0.);   //resize
+        Res_nonlocal_iel_bounded_integral.assign(nDof_iel_vec, 0.);    //resize
+        Res_nonlocal_jel_bounded_integral.assign(nDof_jel_vec, 0.);    //resize
 
         Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec, 0.);    //resize
         KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.assign(nDof_iel_vec * nDof_iel_vec, 0.);
@@ -1464,9 +1464,9 @@ unsigned nDof_iel_vec = 0;
 
               const unsigned res_pos_iel = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
               const unsigned res_pos_jel = assemble_jacobian<double,double>::res_row_index(nDof_jel, c, l_vol_jel);
-                Res_nonlocal_iel[ res_pos_iel /*l_vol_iel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry]);
+                Res_nonlocal_iel_bounded_integral[ res_pos_iel /*l_vol_iel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry]);
 
-                Res_nonlocal_jel[ res_pos_jel /*l_vol_jel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry]);
+                Res_nonlocal_jel_bounded_integral[ res_pos_jel /*l_vol_jel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry]);
 
                
 //                 for(unsigned j = 0; j < nDof_jel; j++) {
@@ -1481,13 +1481,13 @@ unsigned nDof_iel_vec = 0;
                     const unsigned jac_pos_jel_iel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_iel);
                     const unsigned jac_pos_jel_jel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_jel);
                     
-             /*  u(x) v(x)*/     KK_nonlocal_iel_iel[ jac_pos_iel_iel /*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight *          phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
+             /*  u(x) v(x)*/     KK_nonlocal_iel_iel_bounded_integral[ jac_pos_iel_iel /*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight *          phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
 
-             /*- u(y) v(x)*/     KK_nonlocal_iel_jel[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
+             /*- u(y) v(x)*/     KK_nonlocal_iel_jel_bounded_integral[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
 
-             /*- u(x) v(y)*/     KK_nonlocal_jel_iel[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *   phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
+             /*- u(x) v(y)*/     KK_nonlocal_jel_iel_bounded_integral[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *   phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
 
-             /*  u(y) v(y)*/     KK_nonlocal_jel_jel[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] += common_weight *          phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
+             /*  u(y) v(y)*/     KK_nonlocal_jel_jel_bounded_integral[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] += common_weight *          phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
 
 
                      }
@@ -1595,13 +1595,13 @@ unsigned nDof_iel_vec = 0;
 // std::transform(KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.begin(), KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.end(), KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // std::transform(Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.begin(), Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.end(), Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref_both_ref_and_non_ref.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // 
-// std::transform(KK_nonlocal_iel_iel.begin(), KK_nonlocal_iel_iel.end(), KK_nonlocal_iel_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// std::transform(KK_nonlocal_iel_jel.begin(), KK_nonlocal_iel_jel.end(), KK_nonlocal_iel_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// std::transform(KK_nonlocal_jel_iel.begin(), KK_nonlocal_jel_iel.end(), KK_nonlocal_jel_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// std::transform(KK_nonlocal_jel_jel.begin(), KK_nonlocal_jel_jel.end(), KK_nonlocal_jel_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_iel_iel_bounded_integral.begin(), KK_nonlocal_iel_iel_bounded_integral.end(), KK_nonlocal_iel_iel_bounded_integral.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_iel_jel_bounded_integral.begin(), KK_nonlocal_iel_jel_bounded_integral.end(), KK_nonlocal_iel_jel_bounded_integral.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_jel_iel_bounded_integral.begin(), KK_nonlocal_jel_iel_bounded_integral.end(), KK_nonlocal_jel_iel_bounded_integral.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_jel_jel_bounded_integral.begin(), KK_nonlocal_jel_jel_bounded_integral.end(), KK_nonlocal_jel_jel_bounded_integral.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // 
-// std::transform(Res_nonlocal_iel.begin(), Res_nonlocal_iel.end(), Res_nonlocal_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
-// std::transform(Res_nonlocal_jel.begin(), Res_nonlocal_jel.end(), Res_nonlocal_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_nonlocal_iel_bounded_integral.begin(), Res_nonlocal_iel_bounded_integral.end(), Res_nonlocal_iel_bounded_integral.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_nonlocal_jel_bounded_integral.begin(), Res_nonlocal_jel_bounded_integral.end(), Res_nonlocal_jel_bounded_integral.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // // multiply everything by -1. - END
 
 
@@ -1635,13 +1635,13 @@ unsigned nDof_iel_vec = 0;
         // RES & KK of half norm second integral in a 3D domain (double integral over Gamma_c and over R\Gamma_c)- END
 
         // RES & KK of half norm first integral (double integral over Gamma_c) - BEGIN
-        RES->add_vector_blocked(Res_nonlocal_iel, l2gMap_iel_vec);
-        RES->add_vector_blocked(Res_nonlocal_jel, l2gMap_jel_vec);
+        RES->add_vector_blocked(Res_nonlocal_iel_bounded_integral, l2gMap_iel_vec);
+        RES->add_vector_blocked(Res_nonlocal_jel_bounded_integral, l2gMap_jel_vec);
         
-        KK->add_matrix_blocked(KK_nonlocal_iel_iel, l2gMap_iel_vec, l2gMap_iel_vec);
-        KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel_vec, l2gMap_jel_vec);
-        KK->add_matrix_blocked(KK_nonlocal_jel_iel, l2gMap_jel_vec, l2gMap_iel_vec);
-        KK->add_matrix_blocked(KK_nonlocal_jel_jel, l2gMap_jel_vec, l2gMap_jel_vec);
+        KK->add_matrix_blocked(KK_nonlocal_iel_iel_bounded_integral, l2gMap_iel_vec, l2gMap_iel_vec);
+        KK->add_matrix_blocked(KK_nonlocal_iel_jel_bounded_integral, l2gMap_iel_vec, l2gMap_jel_vec);
+        KK->add_matrix_blocked(KK_nonlocal_jel_iel_bounded_integral, l2gMap_jel_vec, l2gMap_iel_vec);
+        KK->add_matrix_blocked(KK_nonlocal_jel_jel_bounded_integral, l2gMap_jel_vec, l2gMap_jel_vec);
         // RES & KK of half norm first integral (double integral over Gamma_c) - END
 
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
