@@ -1089,8 +1089,8 @@ unsigned nDof_iel_vec = 0;
         
 //------------ iface opening - BEGIN  ---------        
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
-          
-// --- geom - BEGIN          
+
+// --- geom - BEGIN
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
        
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
@@ -1197,7 +1197,7 @@ unsigned nDof_iel_vec = 0;
   
       //============  Non-fractional assembly - BEGIN ==================
           
-            if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {  //in principle, "jel" and "jface" could be any values in their range, 
+            if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {  //in principle, "jel" and "jface" could be any values in their range,
                                                                                     //but "jel == iel" and "jface == iface" is the only value that always guarantees that we reach this point,
                                                                                     //because we are under additional constraints "jface_is_a_boundary_control" from above
               
@@ -1242,9 +1242,138 @@ unsigned nDof_iel_vec = 0;
              
       //============  Fractional assembly - BEGIN ==================
         if(operator_Hhalf != 0) {
-                 
+
+      //============ Or different elements, or lack of adaptivity (so all elements) - BEGIN ==================
+        if( !(check_if_same_elem_bdry(iel, jel, iface, jface) && integration_num_split != 0) ) {  //  if(iel != jel || integration_num_split == 0)
+
+// // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {
+// ********* BOUNDED PART - BEGIN ***************
+
+//------------ qp_of_jface opening - BEGIN  ---------
+            for(unsigned qp_of_jface = 0; qp_of_jface < n_qp_of_jface; qp_of_jface++) {
+//------------ qp_of_jface opening - END  ---------
+
+              double dist_xyz = 0.;
+              for(unsigned d = 0; d < x_qp_of_iface.size(); d++) {
+                dist_xyz += (x_qp_of_iface[d] - x_qp_of_jface[qp_of_jface][d]) * (x_qp_of_iface[d] - x_qp_of_jface[qp_of_jface][d]);
+              }
+
+              const double denom = pow(dist_xyz, (double)(  0.5 * /*dim*/dim_bdry + s_frac));
+
+              const double common_weight = (0.5 * C_ns) * operator_Hhalf * beta * check_limits * weight_qp_of_iface * weight_qp_of_jface[qp_of_jface]  / denom;
+
+              for (unsigned c = 0; c < n_components_ctrl; c++) {
+
+                  integral +=  common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * sol_ctrl_qp_of_iface[c];
+                  integral +=  common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- sol_ctrl_qp_of_jface[c][qp_of_jface]);
+
+              }
+
+
+              for (unsigned c = 0; c < n_components_ctrl; c++) {
+                 for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); l_bdry++) { //dofs of test function
+               		    unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
+               		    unsigned int l_vol_jel = msh->el->GetIG(jel_geommm, jface, l_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, l_bdry)*/;
+
+              const unsigned res_pos_iel = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
+              const unsigned res_pos_jel = assemble_jacobian<double,double>::res_row_index(nDof_jel, c, l_vol_jel);
+                Res_nonlocal_iel_bounded_integral[ res_pos_iel /*l_vol_iel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry]);
+
+                Res_nonlocal_jel_bounded_integral[ res_pos_jel /*l_vol_jel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry]);
+
+
+//                 for(unsigned j = 0; j < nDof_jel; j++) {
+                for (unsigned e = 0; e < n_components_ctrl; e++) {
+                  if (e == c) {
+                      for(unsigned m_bdry = 0; m_bdry < phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface].size(); m_bdry++) { //dofs of unknown function
+               		    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
+               		    unsigned int m_vol_jel = msh->el->GetIG(jel_geommm, jface, m_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, m_bdry)*/;
+
+                    const unsigned jac_pos_iel_iel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_iel);
+                    const unsigned jac_pos_iel_jel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_jel);
+                    const unsigned jac_pos_jel_iel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_iel);
+                    const unsigned jac_pos_jel_jel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_jel);
+
+             /*  u(x) v(x)*/     KK_nonlocal_iel_iel_bounded_integral[ jac_pos_iel_iel /*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight *          phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
+
+             /*- u(y) v(x)*/     KK_nonlocal_iel_jel_bounded_integral[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
+
+             /*- u(x) v(y)*/     KK_nonlocal_jel_iel_bounded_integral[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *   phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
+
+             /*  u(y) v(y)*/     KK_nonlocal_jel_jel_bounded_integral[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] += common_weight *          phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
+
+
+                     }
+                   }
+                 }
+                }
+
+               }
+
+//------------ qp_of_jface closing - BEGIN  ---------
+              } //endl qp_of_jface loop
+//------------ qp_of_jface closing - END ---------
+
+//  count_bounded++;
+// ********* BOUNDED PART - END ***************
+
+// // //             }
+// // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {
+// ********* UNBOUNDED PART - BEGIN ***************
+
+               unbounded_integral_over_exterior_of_boundary_control_face(
+//
+//                               count_unbounded,
+//
+                              unbounded,
+                              dim,
+                              dim_bdry,
+//////////
+                              operator_Hhalf,
+                              s_frac,
+                              check_limits,
+                              C_ns,
+                              beta,
+//////////
+                              msh,
+                              sol,
+                              ml_sol,
+//////////
+                              iel,
+                              iface,
+                              iface_boundary_control_index,
+                              nDof_iel,
+                              weight_qp_of_iface,
+                              x_qp_of_iface,
+                              phi_ctrl_iel_bdry_qp_of_iface,
+                              sol_ctrl_qp_of_iface,
+                              KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
+                              Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
+//////////
+  //////////   3D only - BEGIN
+                              jel,
+                              jelGeom_bdry,
+                              node_based_bdry_bdry_in,
+                              bdry_bdry,
+                              N_div_unbounded,
+                              geom_element_jel,
+                              KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
+                              Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
+                              solType_coords,
+  //////////   3D only - END
+                              integral
+                             );
+
+
+// ********* UNBOUNDED PART - END ***************
+// // //             }
+
+         } //end if(iel != jel || integration_num_split == 0)
+      //============ Or different elements, or lack of adaptivity (so all elements) - END ==================
+
+
       //============ Either Same element && Adaptive quadrature - BEGIN ==================
-        if( check_if_same_elem_bdry(iel, jel, iface, jface) && integration_num_split != 0) {
+       else  {
                 
           /*const*/ short unsigned kelGeom_bdry = ielGeom_bdry;
            
@@ -1434,136 +1563,7 @@ unsigned nDof_iel_vec = 0;
             }  //end iel == jel && integration_num_split != 0
       //============ Either Same element && Adaptive quadrature - END ==================
               
-             
-      //============ Or different elements, or lack of adaptivity (so all elements) - BEGIN ==================
-        else {  //  if(iel != jel || integration_num_split == 0) 
-            
-// // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {  
-// ********* BOUNDED PART - BEGIN ***************
-            
-//------------ qp_of_jface opening - BEGIN  ---------        
-            for(unsigned qp_of_jface = 0; qp_of_jface < n_qp_of_jface; qp_of_jface++) {
-//------------ qp_of_jface opening - END  ---------        
 
-              double dist_xyz = 0.;
-              for(unsigned d = 0; d < x_qp_of_iface.size(); d++) {
-                dist_xyz += (x_qp_of_iface[d] - x_qp_of_jface[qp_of_jface][d]) * (x_qp_of_iface[d] - x_qp_of_jface[qp_of_jface][d]);
-              }
-
-              const double denom = pow(dist_xyz, (double)(  0.5 * /*dim*/dim_bdry + s_frac));
-              
-              const double common_weight = (0.5 * C_ns) * operator_Hhalf * beta * check_limits * weight_qp_of_iface * weight_qp_of_jface[qp_of_jface]  / denom;
-
-              for (unsigned c = 0; c < n_components_ctrl; c++) {
-                  
-                  integral +=  common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * sol_ctrl_qp_of_iface[c];
-                  integral +=  common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- sol_ctrl_qp_of_jface[c][qp_of_jface]);
-                  
-              }              
-              
-              
-              for (unsigned c = 0; c < n_components_ctrl; c++) {
-                 for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); l_bdry++) { //dofs of test function
-               		    unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
-               		    unsigned int l_vol_jel = msh->el->GetIG(jel_geommm, jface, l_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, l_bdry)*/;
-
-              const unsigned res_pos_iel = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
-              const unsigned res_pos_jel = assemble_jacobian<double,double>::res_row_index(nDof_jel, c, l_vol_jel);
-                Res_nonlocal_iel_bounded_integral[ res_pos_iel /*l_vol_iel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry]);
-
-                Res_nonlocal_jel_bounded_integral[ res_pos_jel /*l_vol_jel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry]);
-
-               
-//                 for(unsigned j = 0; j < nDof_jel; j++) {
-                for (unsigned e = 0; e < n_components_ctrl; e++) {
-                  if (e == c) {
-                      for(unsigned m_bdry = 0; m_bdry < phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface].size(); m_bdry++) { //dofs of unknown function
-               		    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
-               		    unsigned int m_vol_jel = msh->el->GetIG(jel_geommm, jface, m_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, m_bdry)*/;
-
-                    const unsigned jac_pos_iel_iel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_iel);         
-                    const unsigned jac_pos_iel_jel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_jel);
-                    const unsigned jac_pos_jel_iel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_iel);
-                    const unsigned jac_pos_jel_jel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_jel);
-                    
-             /*  u(x) v(x)*/     KK_nonlocal_iel_iel_bounded_integral[ jac_pos_iel_iel /*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight *          phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
-
-             /*- u(y) v(x)*/     KK_nonlocal_iel_jel_bounded_integral[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
-
-             /*- u(x) v(y)*/     KK_nonlocal_jel_iel_bounded_integral[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *   phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
-
-             /*  u(y) v(y)*/     KK_nonlocal_jel_jel_bounded_integral[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] += common_weight *          phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
-
-
-                     }
-                   }
-                 }
-                }
-                
-               }
-               
-//------------ qp_of_jface closing - BEGIN  ---------        
-              } //endl qp_of_jface loop
-//------------ qp_of_jface closing - END ---------
-
-//  count_bounded++;
-// ********* BOUNDED PART - END ***************
-
-// // //             }
-// // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {  
-// ********* UNBOUNDED PART - BEGIN ***************
-
-               unbounded_integral_over_exterior_of_boundary_control_face(
-//
-//                               count_unbounded,
-//
-                              unbounded,
-                              dim,
-                              dim_bdry,
-//////////                             
-                              operator_Hhalf,
-                              s_frac,
-                              check_limits,
-                              C_ns,
-                              beta,
-//////////                             
-                              msh,
-                              sol,
-                              ml_sol,
-//////////                             
-                              iel,
-                              iface,
-                              iface_boundary_control_index,
-                              nDof_iel,
-                              weight_qp_of_iface,
-                              x_qp_of_iface,
-                              phi_ctrl_iel_bdry_qp_of_iface,
-                              sol_ctrl_qp_of_iface,
-                              KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
-                              Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
-//////////                             
-  //////////   3D only - BEGIN
-                              jel,
-                              jelGeom_bdry,
-                              node_based_bdry_bdry_in,
-                              bdry_bdry,
-                              N_div_unbounded,
-                              geom_element_jel,
-                              KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
-                              Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
-                              solType_coords,
-  //////////   3D only - END
-                              integral
-                             );
-               
-              
-// ********* UNBOUNDED PART - END ***************
-// // //             }
-            
-         } //end if(iel != jel || integration_num_split == 0)
-      //============ Or different elements, or lack of adaptivity (so all elements) - END ==================
-
-        
          } //operator_Hhalf != 0              
       //============  Fractional assembly - END ==================
             
