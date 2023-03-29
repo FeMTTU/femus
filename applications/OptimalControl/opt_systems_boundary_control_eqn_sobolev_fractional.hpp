@@ -90,7 +90,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   if(unbounded == 1) {
       
       //============ Mixed Integral 1D - Analytical ==================      
-      if (dim_bdry == 1 && check_if_same_elem( TEST_JEL_SINGLE_FOR_LOOP /*iel*/, jel) ) {
+      if (dim_bdry == 1 && check_if_same_elem( TEST_JEL_SINGLE_FOR_LOOP , jel) ) {
 
 // ---------- extreme coordinates, initialize - BEGIN
   std::vector < double > extreme_coords_Gamma_c_along_abscissa(2); //number of extremes of the 1D ctrl segment
@@ -799,7 +799,10 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
       
 	  // loop on faces of the current element
 	  for(unsigned jface = 0; jface < n_faces_jel; jface++) {
-          
+
+// // // //            const unsigned int number_of_face_for_controls = LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; // get the number of Gamma_c
+// // // //            for(int t = 0; t < number_of_face_for_controls; t++) {
+
           
 // --- geometry about jface - BEGIN         
        unsigned jelGeom_bdry;
@@ -859,7 +862,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // --- jface is control - END
 
       
-	    if( jface_is_a_boundary_control ) {
+	    if( jface_is_a_boundary_control /*jface_boundary_control_index== LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] */  ) {
 
             int count_unbounded = 0;
             int count_bounded = 0;
@@ -1090,6 +1093,10 @@ unsigned nDof_iel_vec = 0;
 //------------ iface opening - BEGIN  ---------        
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
 
+// //             const unsigned int number_of_face_for_controls = LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; // get the number of Gamma_c
+// //            for(int w = 0; w < number_of_face_for_controls; w++) {
+
+
 // --- geom - BEGIN
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
        
@@ -1197,7 +1204,7 @@ unsigned nDof_iel_vec = 0;
   
       //============  Non-fractional assembly - BEGIN ==================
           
-            if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {  //in principle, "jel" and "jface" could be any values in their range,
+            if( check_if_same_elem_bdry(iel, jel, iface, jface) /*&& (t == w)*/ ) {  //in principle, "jel" and "jface" could be any values in their range,
                                                                                     //but "jel == iel" and "jface == iface" is the only value that always guarantees that we reach this point,
                                                                                     //because we are under additional constraints "jface_is_a_boundary_control" from above
               
@@ -1244,7 +1251,7 @@ unsigned nDof_iel_vec = 0;
         if(operator_Hhalf != 0) {
 
       //============ Or different elements, or lack of adaptivity (so all elements) - BEGIN ==================
-        if( !(check_if_same_elem_bdry(iel, jel, iface, jface) && integration_num_split != 0) ) {  //  if(iel != jel || integration_num_split == 0)
+        if( !( check_if_same_elem_bdry(iel, jel, iface, jface) && integration_num_split != 0 ) ) {  //  if(iel != jel || integration_num_split == 0)
 
 // // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {
 // ********* BOUNDED PART - BEGIN ***************
@@ -1318,7 +1325,7 @@ unsigned nDof_iel_vec = 0;
 // ********* BOUNDED PART - END ***************
 
 // // //             }
-// // //            if ( iface_boundary_control_index == jface_boundary_control_index )  {
+//                 if ( iface_boundary_control_index == jface_boundary_control_index  /*t == w*/)  {
 // ********* UNBOUNDED PART - BEGIN ***************
 
                unbounded_integral_over_exterior_of_boundary_control_face(
@@ -1366,7 +1373,7 @@ unsigned nDof_iel_vec = 0;
 
 
 // ********* UNBOUNDED PART - END ***************
-// // //             }
+//                    }
 
          } //end if(iel != jel || integration_num_split == 0)
       //============ Or different elements, or lack of adaptivity (so all elements) - END ==================
@@ -1501,7 +1508,7 @@ unsigned nDof_iel_vec = 0;
      }
 //      count_bounded++;
 // ********* BOUNDED PART - END ***************
-
+// // //  if ( /*iface_boundary_control_index == jface_boundary_control_index */ t == w)  {
 // ********* UNBOUNDED PART - BEGIN ***************
 
                 if( qp_of_iface == integration_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
@@ -1551,7 +1558,7 @@ unsigned nDof_iel_vec = 0;
 
 
 // ********* UNBOUNDED PART - END ***************
-                                         
+// // //  }
                   } //end k_qp_bdry
                 } //end r
               }  //end split
@@ -1562,7 +1569,7 @@ unsigned nDof_iel_vec = 0;
                 
             }  //end iel == jel && integration_num_split != 0
       //============ Either Same element && Adaptive quadrature - END ==================
-              
+
 
          } //operator_Hhalf != 0              
       //============  Fractional assembly - END ==================
@@ -1580,6 +1587,8 @@ unsigned nDof_iel_vec = 0;
               
 //----- iface closing - BEGIN ---        
         } //end face for control
+
+// //            } // end w face
         
       } //end iface
 //----- iface closing - END ---        
@@ -1670,6 +1679,7 @@ unsigned nDof_iel_vec = 0;
 //----- jface closing - BEGIN ---        
      
         } //end face for control
+// // // // //            } //end t face
       } //end jface
 
 //----- jface closing - END ---   

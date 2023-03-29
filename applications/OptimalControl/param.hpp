@@ -107,11 +107,11 @@ namespace ctrl {
 
 #define S_FRAC 0.5       /* Order of fractional derivative */
 
-#define NORM_GIR_RAV  0 /* Leave it at 0 */
+#define NORM_GIR_RAV 0/* Leave it at 0 */
 
 #if NORM_GIR_RAV == 0
 
-  #define OP_L2       0
+  #define OP_L2       /*0 */1
   #define OP_H1       0
   #define OP_Hhalf    1
 
@@ -269,7 +269,7 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Four_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three_One
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Four_One
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three_Four
+// // // // // // // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Four_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three_One_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE :: TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three_Two_Four
