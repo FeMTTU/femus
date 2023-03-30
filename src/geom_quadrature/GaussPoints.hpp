@@ -19,6 +19,11 @@
 #include <vector>
 #include <string>
 
+#include <iostream>
+#include <iomanip>
+#include <limits>
+// #include <numbers>
+
 namespace femus {
 
   class hex_gauss {
@@ -65,6 +70,7 @@ namespace femus {
     static const double Gauss2[3][9];
     static const double Gauss3[3][16];
     static const double Gauss4[3][25];
+    static const double Gauss5[3][36];
   };
   
 
@@ -136,6 +142,41 @@ namespace femus {
     return gauss_order;
   };
   
+
+  static void print_tensor_product_1D ( const double  weights_and_nodes_in[][6], const unsigned dim, const unsigned n_points_1D){
+
+
+             std::cout << std::setprecision(17);
+
+             const bool print_weights =false;
+             const bool print_nodes_x =false;
+             const bool print_nodes_y =true;
+             const bool print_nodes_z =false;
+
+      if(dim==2){
+
+       for ( unsigned int p =0; p< n_points_1D; p++){
+
+         for ( unsigned int q =0; q< n_points_1D; q++){
+
+//              std::cout << p << " " << q << std::endl ;
+           if(print_weights) {  std::cout << weights_and_nodes_in[0][p] * weights_and_nodes_in[0][q] ; }
+           if(print_nodes_y) {  std::cout << weights_and_nodes_in[dim-1][q] ; }
+           if(print_nodes_x) {  std::cout << weights_and_nodes_in[dim-1][p] ; }
+
+//            std::cout << endl ;
+           std::cout << ", " ;
+
+        }
+
+    }
+ }
+
+
+
+}
+
+
   protected:
     
     int gauss_order;

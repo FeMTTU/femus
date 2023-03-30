@@ -180,6 +180,10 @@ int main(int argc, char** args) {
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  Gauss::print_tensor_product_1D(femus::line_gauss::Gauss5, 2, 6);
+  exit(0);
+
+
   // ======= Problem - BEGIN  ==================
   MultiLevelProblem ml_prob;
 
