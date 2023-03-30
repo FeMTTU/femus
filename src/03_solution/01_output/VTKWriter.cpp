@@ -272,19 +272,21 @@ namespace femus {
   void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
 
       
-    // *********** level ************
+    // *********** level - BEGIN ************
     if (my_level < 1 || my_level > _gridn) { std::cout << "Level index in this routine is from 1 to num_levels" << std::endl; abort(); }  
       
     std::ostringstream level_name_stream;    
     level_name_stream << ".level" << my_level;
     std::string level_name(level_name_stream.str());   
+    // *********** level - END ************
        
-    // *********** FE index ************
+    // *********** FE index - BEGIN ************
     const std::string order_str(order);
     unsigned index = fe_index(order_str);
+    // *********** FE index - END ************
 
 
-    // *********** open vtu streams *************
+    // *********** open vtu streams - BEGIN *************
     std::string dirnamePVTK = "VTKParallelFiles/";
     Files files;
     files.CheckDir( output_path, "" );
@@ -300,9 +302,10 @@ namespace femus {
       std::cout << std::endl << " The output file " << filename.str() << " cannot be opened.\n";
       abort();
     }
+    // *********** open vtu streams - END *************
 
 
-    // *********** open pvtu stream *************
+    // *********** open pvtu stream - BEGIN *************
     std::ofstream Pfout;
     if( _iproc != 0 ) {
       Pfout.rdbuf();   //redirect to dev_null
@@ -319,12 +322,14 @@ namespace femus {
         abort();
       }
     }
+    // *********** open pvtu stream - END *************
     
 
-    // *********** write vtu header ************
+    // *********** write vtu header - BEGIN ************
     vtk_unstructured_header_iproc(fout);
+    // *********** write vtu header - END ************
     
-    // *********** write pvtu header ***********
+    // *********** write pvtu header - BEGIN ***********
     vtk_unstructured_header_parallel_wrapper(Pfout);
     
     for( int jproc = 0; jproc < _nprocs; jproc++ ) {
@@ -332,10 +337,10 @@ namespace femus {
             << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order <<  suffix_pre_extension << ".vtu"
             << "\"/>" << std::endl;
     }
-    // ****************************************
+    // *********** write pvtu header - END ***********
 
     
-    //------------- NODE and ELEMENT INFO ----------------------------------------------------------------------------------
+    //------------- NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
     Mesh* mesh = _ml_mesh->GetLevel( my_level - 1 );
     Solution* solution;     if( _ml_sol != NULL ) { solution = _ml_sol->GetSolutionLevel( my_level - 1 ); }
     
@@ -375,11 +380,11 @@ namespace femus {
     cch = b64::b64_encode( &buffer_char[0], buffer_size , NULL, 0 );
     std::vector <char> enc;
     enc.resize( cch );
-    //-----------------------------------------------------------------------------------------------
+    //------------- NODE and ELEMENT INFO - END ----------------------------------------------------------------------------------
     
     
     
-    //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
+    //---- NumericVector used for node-based fields - BEGIN -------------------------------------------------------------------------------------------
     NumericVector* num_vec_aux_for_node_fields;
     num_vec_aux_for_node_fields = NumericVector::build().release();
 
@@ -392,13 +397,13 @@ namespace femus {
                                          mesh->dofmap_get_own_size(index, _iproc),
                                          mesh->dofmap_get_ghost_dofs(index, _iproc), false, GHOSTED );
     }
-    //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
+    //---- NumericVector used for node-based fields - END -------------------------------------------------------------------------------------------
 
     
-    //-----------------------------------------------------------------------------------------------
+    //----------- IPROC - BEGIN ------------------------------------------------------------------------------------
     piece_iproc_begin(fout, nvt, nel);
 
-    // print coordinates *********************************************Solu*******************************************
+    // print coordinates - BEGIN ****************************************************************************************
     fout  << "     <Points>" << std::endl;
     Pfout << "    <PPoints>" << std::endl;
     
@@ -480,9 +485,9 @@ namespace femus {
     
     fout  << "      </Points>" << std::endl;
     Pfout << "    </PPoints>" << std::endl;
-    //-----------------------------------------------------------------------------------------------
+    // print coordinates - END ****************************************************************************************
 
-    //-----------------------------------------------------------------------------------------------
+    //----- Printing of element connectivity - offset - format type  * - BEGIN ------------------------------------------------------------------------------------------
     // Printing of element connectivity - offset - format type  *
     fout  << "      <Cells>" << std::endl;
     Pfout << "    <PCells>" << std::endl;
@@ -507,9 +512,10 @@ namespace femus {
 
     fout  << "      </Cells>" << std::endl;
     Pfout << "    </PCells>" << std::endl;
+    //----- Printing of element connectivity - offset - format type  * - END ------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------
 
-    // /Print Cell Data ****************************************************************************
+    // /Print Cell Data - BEGIN ****************************************************************************
     fout  << "      <CellData Scalars=\"scalars\">" << std::endl;
     Pfout << "    <PCellData Scalars=\"scalars\">" << std::endl;
     
@@ -525,11 +531,12 @@ namespace femus {
     print_element_based_fields< float >("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
     print_element_based_fields< float >("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
+    // /Print Cell Data - END ****************************************************************************
 
     
 
 
-    //------------------------------------------- SOLUTIONS ---------------------------------------------------------
+    //------------------------------------------- SOLUTIONS - BEGIN ---------------------------------------------------------
    const bool print_all = print_all_sols(vars);
     
     
@@ -641,16 +648,22 @@ namespace femus {
       Pfout << "    </PPointData>" << std::endl;
       
     }  //end _ml_sol != NULL
+    //------------------------------------------- SOLUTIONS - END ---------------------------------------------------------
 
     //------------------------------------------------------------------------------------------------
 
     piece_iproc_end(fout);
+    //----------- IPROC - END ------------------------------------------------------------------------------------
 
+    // *********** write vtu footer and close stream - BEGIN ************
     vtk_unstructured_footer_iproc(fout);
     fout.close();
+    // *********** write vtu footer - END ************
 
+    // *********** write pvtu footer and close stream - BEGIN ***********
     vtk_unstructured_footer_parallel_wrapper(Pfout);
     Pfout.close();
+    // *********** write pvtu footer - END ***********
 
 
     //-----------------------------------------------------------------------------------------------------
