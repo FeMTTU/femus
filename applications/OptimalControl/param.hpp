@@ -111,7 +111,7 @@ namespace ctrl {
 
 #if NORM_GIR_RAV == 0
 
-  #define OP_L2       /*0 */1
+  #define OP_L2       /*0*/ 1
   #define OP_H1       0
   #define OP_Hhalf    1
 
@@ -218,8 +218,8 @@ namespace ctrl {
 //******************************** Choice of Cost Functional-related stuff - BEGIN *********************** 
 #define  DOMAIN_NAMESPACE   square_or_cube
 
-// #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_between_extreme
-#define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
+#define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_between_extreme
+// #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
 
    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
 //       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
