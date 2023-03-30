@@ -24,17 +24,20 @@
 #include <limits>
 // #include <numbers>
 
+#define NUM_QUAD_RULE_HEX_QUAD_LINE 6
+
 namespace femus {
 
   class hex_gauss {
   public:
-    static const unsigned GaussPoints[5];
-    static const double *Gauss[5];  
+    static const unsigned GaussPoints[NUM_QUAD_RULE_HEX_QUAD_LINE];
+    static const double *Gauss[NUM_QUAD_RULE_HEX_QUAD_LINE];
     static const double Gauss0[4][1];
     static const double Gauss1[4][8];
     static const double Gauss2[4][27];
     static const double Gauss3[4][64];
     static const double Gauss4[4][125];
+    static const double Gauss5[4][216];
   };
   
   
@@ -63,8 +66,8 @@ namespace femus {
 
   class quad_gauss {
   public:
-    static const unsigned GaussPoints[5];
-    static const double *Gauss[5];  
+    static const unsigned GaussPoints[NUM_QUAD_RULE_HEX_QUAD_LINE];
+    static const double *Gauss[NUM_QUAD_RULE_HEX_QUAD_LINE];
     static const double Gauss0[3][1];
     static const double Gauss1[3][4];
     static const double Gauss2[3][9];
@@ -88,9 +91,9 @@ namespace femus {
   
   class line_gauss {
   public:
-    static const unsigned GaussPoints[6];  /// @todo why is this 6 instead of 5?
-    static const double *Gauss[6];   
-    static const double Gauss0[2][1];      /// @todo the first index is function evaluation plus number of space derivatives; the second index is the number of Quadrature Points
+    static const unsigned GaussPoints[NUM_QUAD_RULE_HEX_QUAD_LINE];
+    static const double *Gauss[NUM_QUAD_RULE_HEX_QUAD_LINE];
+    static const double Gauss0[2][1];
     static const double Gauss1[2][2];
     static const double Gauss2[2][3];
     static const double Gauss3[2][4];
@@ -142,35 +145,47 @@ namespace femus {
     return gauss_order;
   };
   
-
-  static void print_tensor_product_1D ( const double  weights_and_nodes_in[][6], const unsigned dim, const unsigned n_points_1D){
+#define FEMUS_QUAD_DIM  3
+  static void print_tensor_product_1D ( const double  weights_and_nodes_in[][6], const unsigned n_points_1D){
 
 
              std::cout << std::setprecision(17);
 
              const bool print_weights =false;
              const bool print_nodes_x =false;
-             const bool print_nodes_y =true;
-             const bool print_nodes_z =false;
+             const bool print_nodes_y =false;
+             const bool print_nodes_z =true;
 
-      if(dim==2){
 
        for ( unsigned int p =0; p< n_points_1D; p++){
 
          for ( unsigned int q =0; q< n_points_1D; q++){
 
+#if FEMUS_QUAD_DIM == 3
+          for ( unsigned int r =0; r< n_points_1D; r++){
+#endif
+
 //              std::cout << p << " " << q << std::endl ;
-           if(print_weights) {  std::cout << weights_and_nodes_in[0][p] * weights_and_nodes_in[0][q] ; }
-           if(print_nodes_y) {  std::cout << weights_and_nodes_in[dim-1][q] ; }
-           if(print_nodes_x) {  std::cout << weights_and_nodes_in[dim-1][p] ; }
+           if(print_weights) {  std::cout << weights_and_nodes_in[0][p] * weights_and_nodes_in[0][q]
+ #if FEMUS_QUAD_DIM == 3
+       * weights_and_nodes_in[0][r]
+#endif
+               ; }
+           if(print_nodes_x) {  std::cout << weights_and_nodes_in[1][p] ; }
+           if(print_nodes_y) {  std::cout << weights_and_nodes_in[1][q] ; }
+ #if FEMUS_QUAD_DIM == 3
+           if(print_nodes_z) {  std::cout << weights_and_nodes_in[1][r] ; }
+#endif
 
 //            std::cout << endl ;
            std::cout << ", " ;
 
+#if FEMUS_QUAD_DIM == 3
+          }
+#endif
         }
 
     }
- }
 
 
 

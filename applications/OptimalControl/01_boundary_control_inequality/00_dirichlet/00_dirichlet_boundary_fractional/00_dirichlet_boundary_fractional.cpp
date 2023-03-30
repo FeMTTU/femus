@@ -180,9 +180,6 @@ int main(int argc, char** args) {
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  Gauss::print_tensor_product_1D(femus::line_gauss::Gauss5, 2, 6);
-  exit(0);
-
 
   // ======= Problem - BEGIN  ==================
   MultiLevelProblem ml_prob;
@@ -367,8 +364,8 @@ int main(int argc, char** args) {
 
   // ======= Problem, Quad Rule - BEGIN  ========================
   std::vector< std::string > fe_quad_rule_vec;
-  fe_quad_rule_vec.push_back("seventh");
-  fe_quad_rule_vec.push_back("eighth");
+  fe_quad_rule_vec.push_back("seventh" /*"ninth"*/);
+  fe_quad_rule_vec.push_back("eighth" /*"tenth"*/);
 
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
