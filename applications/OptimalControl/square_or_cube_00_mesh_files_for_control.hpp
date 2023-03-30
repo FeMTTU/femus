@@ -21,6 +21,7 @@ namespace mesh {
   const std::string _3d_cube_single_face_control_2             = "GroupofNode_Face2.med";
   const std::string _3d_cube_single_face_control_2_old         = "Mesh_3_groups_with_bdry_nodes.med";
   const std::string _3d_cube_single_face_control_2_old_coarser = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+  const std::string _3d_cube_single_face_control_2_old_coarser_between = "Mesh_3_groups_with_bdry_nodes_coarser_BETWEEN_BETWEEN.med";
   const std::string _3d_cube_single_face_control_3             = "GroupofNode_Face3.med";
   const std::string _3d_cube_single_face_control_4             = "GroupofNode_Face4.med";
 

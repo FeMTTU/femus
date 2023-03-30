@@ -222,7 +222,8 @@ namespace ctrl {
 // #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
 
 // // // // // //    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
-      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
+//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
+      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser_between;
 
 //       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_1;
 
