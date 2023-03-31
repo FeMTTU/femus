@@ -30,7 +30,7 @@ class cost_functional_without_regularization : public  femus::ctrl::cost_functio
 
 public:
 
-static const unsigned int axis_direction_target_reg(const unsigned int face_index) {
+static const unsigned int normal_direction_to_face_attached_to_target_reg(const unsigned int face_index) {
 
     unsigned int axis_dir;
 
@@ -55,7 +55,7 @@ static int ElementTargetFlag(const std::vector<double> & elem_center) {
 
   const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
 
-  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_TARGET);
+  const unsigned int axis_dir = normal_direction_to_face_attached_to_target_reg(FACE_FOR_TARGET);
 
   const int  target_line_sign =  ctrl:: square_or_cube:: List_of_faces ::sign_function_for_delimiting_region(FACE_FOR_TARGET);
 

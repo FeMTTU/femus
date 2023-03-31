@@ -90,9 +90,15 @@ static constexpr double domain_length = 1.;
       
  };
  
+ 
+ }
+ 
+ 
+  namespace square {
+
 //*********************** Gamma_c, list of control faces, 2d - BEGIN *****************************************
 // Here, the assumption is that each face of the Domain contains at most 1 interval of Control (hence, two extremes)
-   class List_of_Gamma_control_faces : public List_of_faces {
+   class List_of_Gamma_control_faces : public square_or_cube::List_of_faces {
 
   public:
 
@@ -1128,6 +1134,13 @@ namespace  boundary_control_full_face {
 
  }
  
+ 
+  namespace cube {
+
+  }
+  
+  
+  
  
   }
 
