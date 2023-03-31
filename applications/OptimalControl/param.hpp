@@ -217,15 +217,17 @@ namespace ctrl {
 //******************************** Choice of corresponding boundary conditions and *****************************************
 //******************************** Choice of Cost Functional-related stuff - BEGIN *********************** 
 #define  DOMAIN_NAMESPACE   square_or_cube
+// #define  DOMAIN_NAMESPACE_CHILD   square
+#define  DOMAIN_NAMESPACE_CHILD   cube
 
 #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_between_extreme
 // #define  TYPE_OF_BOUNDARY_CONTROL   boundary_control_full_face
 
-// // // // // //    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE ::mesh::_2d_square_1x1;
-//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser;
-      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_2_old_coarser_between;
+//    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE_CHILD ::mesh::_2d_square_1x1;
+//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser;
+      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser_between;
 
-//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE:: mesh::_3d_cube_single_face_control_1;
+//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_1;
 
 //------------------------------------ single: BEGIN ------------------------------------
 

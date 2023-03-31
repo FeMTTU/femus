@@ -8,7 +8,7 @@ namespace femus {
 
 namespace ctrl {
 
-namespace square_or_cube {
+namespace square {
 
 namespace mesh {
 
@@ -16,7 +16,15 @@ namespace mesh {
   const std::string _2d_square_1x2 = "parametric_square_1x2.med";
   const std::string _2d_square_2x2 = "parametric_square_2x2.med";
   const std::string _2d_square_4x5 = "parametric_square_4x5.med";
+}
 
+}
+
+
+namespace cube {
+
+namespace mesh {
+    
   const std::string _3d_cube_single_face_control_1             = "GroupofNode_Face1.med";
   const std::string _3d_cube_single_face_control_2             = "GroupofNode_Face2.med";
   const std::string _3d_cube_single_face_control_2_old         = "Mesh_3_groups_with_bdry_nodes.med";

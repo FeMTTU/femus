@@ -90,7 +90,7 @@ static constexpr double domain_length = 1.;
       
  };
  
-//*********************** Gamma_c, list of control faces - BEGIN *****************************************
+//*********************** Gamma_c, list of control faces, 2d - BEGIN *****************************************
 // Here, the assumption is that each face of the Domain contains at most 1 interval of Control (hence, two extremes)
    class List_of_Gamma_control_faces : public List_of_faces {
 
@@ -1122,7 +1122,7 @@ namespace  boundary_control_full_face {
 
 }
 
-//*********************** Gamma_c, list of control faces - END *****************************************
+//*********************** Gamma_c, list of control faces, 2d - END *****************************************
 
 
 
