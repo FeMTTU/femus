@@ -24,7 +24,7 @@ namespace ctrl {
 
 namespace  square_or_cube {
  
-template < class T >
+template < class LIST_OF_CTRL_FACES >
 class Domain_elements_containing_Gamma_control  {
 
   public:
@@ -62,7 +62,7 @@ static int ControlDomainFlag_external_restriction(const std::vector<double> & el
 
 //*********************** Find volume elements that contain a Control domain element *********************************
 
-// template < class T >
+// template < class LIST_OF_CTRL_FACES >
 static int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ******
@@ -77,18 +77,19 @@ static int ControlDomainFlag_internal_restriction(const std::vector<double> & el
   const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
 
 
-	  for(unsigned f = 0; f < /*ctrl::*/ T ::_face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
 
-   const int  line_sign =  /*ctrl::*/ T ::  sign_function_for_delimiting_region(/*ctrl::*/ T ::_face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
+   const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::  sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
 
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ T ::_face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
 
-   const unsigned int axis_dir = T ::tangential_direction_to_Gamma_control(/*ctrl::*/ T ::_face_with_extremes_index[f]);                  // 1-2 , 5-6 = 1 || 3-4 = 0
+   const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
+   
+   const unsigned int tang_dir = 1 - normal_dir;
 
-
-   if ( ( line_sign * elem_center[1 - axis_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
-       && ( elem_center[axis_dir] > control_domain_width_lower - offset_to_include_line )
-       && ( elem_center[axis_dir] < control_domain_width_upper + offset_to_include_line ) )
+   if ( ( line_sign * elem_center[normal_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
+       && ( elem_center[tang_dir] > control_domain_width_lower - offset_to_include_line )
+       && ( elem_center[tang_dir] < control_domain_width_upper + offset_to_include_line ) )
       { control_el_flag = 1; }
 
       }
@@ -112,7 +113,7 @@ static int ControlDomainFlag_internal_restriction(const std::vector<double> & el
 
 //*********************** Find volume elements that contain a Control Face element *********************************
 
-// template < class T >
+// template < class LIST_OF_CTRL_FACES >
 static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 
@@ -123,18 +124,21 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   const double control_domain_depth = BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C; //this picks a lot more elements, but then the if on the faces only gets the control boundary
 
 
-	  for(unsigned f = 0; f < /*ctrl::*/ T ::_face_with_extremes_index_size; f++) {
+	  for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
 
-   const int  line_sign =  /*ctrl::*/ T ::sign_function_for_delimiting_region(/*ctrl::*/ T ::_face_with_extremes_index[f]);
+   const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
 
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ T ::_face_with_extremes_index[f]);
+   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
+   
+   const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
+   
+   const unsigned int tang_dir = 1 - normal_dir;
 
-   const unsigned int Gamma_c_dir_tangential = T ::tangential_direction_to_Gamma_control(/*ctrl::*/ T ::_face_with_extremes_index[f]);
 
 
-   if ( ( line_sign * elem_center[1 - Gamma_c_dir_tangential] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
-       && ( elem_center[Gamma_c_dir_tangential] >/* ctrl::*/ T ::_face_with_extremes_extremes_on_tang_surface[f][0] - offset_to_include_line )
-       && ( elem_center[Gamma_c_dir_tangential] < /*ctrl::*/ T ::_face_with_extremes_extremes_on_tang_surface[f][1] + offset_to_include_line ) )
+   if ( ( line_sign * elem_center[normal_dir] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
+       && ( elem_center[tang_dir] >/* ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][LIST_OF_CTRL_FACES ::_num_of_tang_components_per_face_2d-1][0] - offset_to_include_line )
+       && ( elem_center[tang_dir] < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][LIST_OF_CTRL_FACES ::_num_of_tang_components_per_face_2d-1][1] + offset_to_include_line ) )
       { control_el_flag = 1; }
 
    }

@@ -112,7 +112,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
      if( i_element_face_index == LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] ) {
 
          for(int k = 0; k < extreme_coords_Gamma_c_along_abscissa.size(); k++){
-             extreme_coords_Gamma_c_along_abscissa[k] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes_on_tang_surface[t][k];
+             extreme_coords_Gamma_c_along_abscissa[k] = LIST_OF_CTRL_FACES :: _face_with_extremes_extremes_on_tang_surface[t][LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d-1][k];
          }
 
          int control_xyz                    = (LIST_OF_CTRL_FACES :: _face_with_extremes_index[t] - 1) / 2;
