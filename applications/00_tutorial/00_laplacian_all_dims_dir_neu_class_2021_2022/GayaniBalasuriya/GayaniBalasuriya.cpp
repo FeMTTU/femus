@@ -20,7 +20,7 @@
 using namespace femus;
  
 
-/// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
+
 
 
 double InitialValuesU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {

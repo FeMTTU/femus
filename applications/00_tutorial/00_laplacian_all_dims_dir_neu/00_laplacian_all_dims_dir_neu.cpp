@@ -24,7 +24,7 @@
 using namespace femus;
  
 
-/// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
+
 
 
 double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
@@ -139,7 +139,7 @@ int main(int argc, char** args) {
   app_segment._system_name = "Equation";
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_segment._bdry_func             = SetBoundaryCondition;
+  app_segment._boundary_conditions_types_and_values             = SetBoundaryCondition;
   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
 //   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
   ///@todo if this is not set, nothing should happen here
@@ -223,7 +223,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(app_segment._bdry_func);
+  ml_sol.AttachSetBoundaryConditionFunction(app_segment._boundary_conditions_types_and_values);
   ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
 
   // ======= Solutions that are Unknowns - END ==================

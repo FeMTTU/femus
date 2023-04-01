@@ -7,7 +7,6 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
-#include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
  
@@ -20,6 +19,7 @@
 
 using namespace femus;
 
+// ======= Domain-related and Mesh-related stuff - BEGIN =========================
 
 // SEGMENT - BEGIN
 double segment_dir_neu_fine__laplacian__true_solution(const std::vector<double> & x) {
@@ -597,21 +597,23 @@ double prism_annular_base__laplacian__rhs(const std::vector < double > & x) {
 
 
 
+// ======= Domain-related and Mesh-related stuff - END =========================
 
 
 
 
- //Unknown initial condition  ==================
+ //Unknown initial condition - BEGIN  ==================
 double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
   
 }
+ //Unknown initial condition - END  ==================
 
 
 
 
- //Unknown definition  ==================
+ //Unknown definition - BEGIN  ==================
  const std::vector< Unknown >  provide_list_of_unknowns() {
      
      
@@ -644,6 +646,7 @@ double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < doub
    return unknowns;
      
 }
+ //Unknown definition - END  ==================
 
 
 
@@ -693,81 +696,88 @@ int main(int argc, char** args) {
 //   app_specifics  app_circle;   //Gayani
  
   
-  //segment_dir_neu_fine
+  //segment_dir_neu_fine - BEGIN
   app_segment._mesh_files.push_back("assignment_segment_dir_neu_fine.med");
   
   app_segment._system_name = system_common_name;
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_segment._bdry_func             = segment_dir_neu_fine__laplacian__bc;
+  app_segment._boundary_conditions_types_and_values             = segment_dir_neu_fine__laplacian__bc;
   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;
+  //segment_dir_neu_fine - END
   
   
   
-  //assignment_tetra_prism_annular_base
+  //assignment_tetra_prism_annular_base - BEGIN
   app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_tetrahedral.med");
   app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_hexahedral.med");
   
   app_prism_annular_base._system_name = system_common_name;
   app_prism_annular_base._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_prism_annular_base._bdry_func             = prism_annular_base__laplacian__bc;
+  app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base__laplacian__bc;
   app_prism_annular_base._assemble_function_rhs = prism_annular_base__laplacian__rhs;
   app_prism_annular_base._true_solution    = prism_annular_base__laplacian__true_solution;
+  //assignment_tetra_prism_annular_base - END
   
   
   
-  //assignment_quarter_circle
+  //assignment_quarter_circle - BEGIN
   app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_triangular.med");
   app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
   
   app_quarter_circle._system_name = system_common_name;
   app_quarter_circle._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_quarter_circle._bdry_func             = quarter_circle__laplacian__bc;
+  app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle__laplacian__bc;
   app_quarter_circle._assemble_function_rhs = quarter_circle__laplacian__rhs;
   app_quarter_circle._true_solution    = quarter_circle__laplacian__true_solution;
+  //assignment_quarter_circle - END
+ 
   
   
-  
-  //assignment_cylinder
+  //assignment_cylinder - BEGIN
   app_cylinder._mesh_files.push_back("assignment_cylinder_tetrahedral.med");
   app_cylinder._mesh_files.push_back("assignment_cylinder_hexahedral.med");
   
   app_cylinder._system_name = system_common_name;
   app_cylinder._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_cylinder._bdry_func             = cylinder__laplacian__bc;
+  app_cylinder._boundary_conditions_types_and_values             = cylinder__laplacian__bc;
   app_cylinder._assemble_function_rhs = cylinder__laplacian__rhs;
   app_cylinder._true_solution    = cylinder__laplacian__true_solution;
- 
-  //assignment_semiannulus
+  //assignment_cylinder - END
+
+
+  //assignment_semiannulus - BEGIN
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_triangular.med");
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_quadrilateral.med");
   
   app_semiannulus._system_name = system_common_name;
   app_semiannulus._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_semiannulus._bdry_func             = semiannulus__laplacian__bc;
+  app_semiannulus._boundary_conditions_types_and_values             = semiannulus__laplacian__bc;
   app_semiannulus._assemble_function_rhs = semiannulus__laplacian__rhs;
   app_semiannulus._true_solution    = semiannulus__laplacian__true_solution;
+  //assignment_semiannulus - END
  
   
   
-  //assignment_annulus
+  //assignment_annulus - BEGIN
 //   app_annulus._mesh_files.push_back("assignment_annulus_triangular.med");
   app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
   
   app_annulus._system_name = system_common_name;
   app_annulus._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_annulus._bdry_func             = annulus__laplacian__bc;
+  app_annulus._boundary_conditions_types_and_values             = annulus__laplacian__bc;
   app_annulus._assemble_function_rhs = annulus__laplacian__rhs;
   app_annulus._true_solution    = annulus__laplacian__true_solution;
+  //assignment_annulus - END
  
 
-  //assignment_quarter_cylinder
+  //assignment_quarter_cylinder - BEGIN
   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_tetrahedral.med");
   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral.med");
 //   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral_0.med");
@@ -776,46 +786,50 @@ int main(int argc, char** args) {
   app_quarter_cylinder._system_name = system_common_name;
   app_quarter_cylinder._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
 
-  app_quarter_cylinder._bdry_func             = quarter_cylinder__laplacian__bc;
+  app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder__laplacian__bc;
   app_quarter_cylinder._assemble_function_rhs = quarter_cylinder__laplacian__rhs;
   app_quarter_cylinder._true_solution    = quarter_cylinder__laplacian__true_solution;
+  //assignment_quarter_cylinder - END
 
 
   
- //assignment_square
+ //assignment_square - BEGIN
   app_square._mesh_files.push_back("assignment_square_quadrilateral.med");
   
   app_square._system_name = system_common_name;
   app_square._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_square._bdry_func             = square__laplacian__bc;
+  app_square._boundary_conditions_types_and_values             = square__laplacian__bc;
   app_square._assemble_function_rhs = square__laplacian__rhs;
   app_square._true_solution    = square__laplacian__true_solution;
+ //assignment_square - END
 
 
   
 
- //assignment_cube
+ //assignment_cube - BEGIN
   app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
   
   app_cube._system_name = system_common_name;
   app_cube._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_cube._bdry_func             = cube__laplacian__bc;
+  app_cube._boundary_conditions_types_and_values             = cube__laplacian__bc;
   app_cube._assemble_function_rhs = cube__laplacian__rhs;
   app_cube._true_solution    = cube__laplacian__true_solution;
+ //assignment_cube - END
   
 
-  //assignment_quarter_circle
+  //assignment_quarter_circle - BEGIN
 //   app_semicircle._mesh_files.push_back("assignment_semicircle_triangular.med");
   app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
   
   app_semicircle._system_name = system_common_name;
   app_semicircle._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_semicircle._bdry_func             = semicircle__laplacian__bc;
+  app_semicircle._boundary_conditions_types_and_values             = semicircle__laplacian__bc;
   app_semicircle._assemble_function_rhs = semicircle__laplacian__rhs;
   app_semicircle._true_solution    = semicircle__laplacian__true_solution;
+  //assignment_quarter_circle - END
   
   
 
@@ -832,6 +846,7 @@ int main(int argc, char** args) {
   my_specifics.push_back(app_quarter_cylinder);
   my_specifics.push_back(app_prism_annular_base);
   my_specifics.push_back(app_semicircle);
+
     // ======= App Specifics - END  ==================
   
   
@@ -906,7 +921,7 @@ int main(int argc, char** args) {
       ml_sol.Initialize(unknowns[u]._name.c_str(), InitialValueU, & ml_prob);
   }
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._bdry_func);
+  ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._boundary_conditions_types_and_values);
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
   }

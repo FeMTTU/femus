@@ -457,11 +457,13 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
  //========= VOLUME - END ==================
  
  
+ //========= FROM LOCAL TO GLOBAL - BEGIN ==================   
     RES->add_vector_blocked(Res, l2GMap_AllVars);
 
     if (assembleMatrix) {
       JAC->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
+ //========= FROM LOCAL TO GLOBAL - END ==================   
    
    
   } //end element loop for each process

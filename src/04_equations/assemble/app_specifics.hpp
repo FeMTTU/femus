@@ -47,7 +47,7 @@ class app_specifics {
    //func pointer of Boundary Conditions
     typedef bool (*BoundaryFunction) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
     
-    BoundaryFunction   _bdry_func;
+    BoundaryFunction   _boundary_conditions_types_and_values;
 
     
     

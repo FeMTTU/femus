@@ -20,7 +20,7 @@
 using namespace femus;
  
 
-/// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
+
 
 // Right-hand side for Dirichlet BC.
 double quarter_cylinder__laplacian__rhs(const std::vector<double> & x_qp){
