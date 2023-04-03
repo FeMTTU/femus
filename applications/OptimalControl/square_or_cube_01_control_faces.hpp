@@ -90,6 +90,16 @@ static constexpr double domain_length = 1.;
       
  };
  
+// Here, the assumption is that each face of the Domain contains at most 1 interval of Control (hence, two extremes)
+template < unsigned N_TANG_COMPONENTS >
+      class List_of_Gamma_control_faces : public square_or_cube::List_of_faces {
+
+  public:
+
+       static constexpr unsigned _num_of_tang_components_per_face_2d = N_TANG_COMPONENTS;
+
+   };
+
  
  }
  
@@ -97,24 +107,13 @@ static constexpr double domain_length = 1.;
   namespace square {
 
 //*********************** Gamma_c, list of control faces, 2d - BEGIN *****************************************
-// Here, the assumption is that each face of the Domain contains at most 1 interval of Control (hence, two extremes)
-   class List_of_Gamma_control_faces : public square_or_cube::List_of_faces {
-
-  public:
-
-       static constexpr unsigned _num_of_tang_components_per_face_2d = 1;
-
-
-
-   };
-
 namespace boundary_control_between_extreme {
 
 
 //*********************** Single - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Single : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Single : public square_or_cube::List_of_Gamma_control_faces<1> {
 
   public:
 
@@ -186,7 +185,7 @@ namespace boundary_control_between_extreme {
 //*********************** Double - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Double : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Double : public square_or_cube::List_of_Gamma_control_faces<1> {
 
     public:
 
@@ -362,7 +361,7 @@ namespace boundary_control_between_extreme {
 //*********************** Triple - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Triple : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Triple : public square_or_cube::List_of_Gamma_control_faces<1> {
 
     public:
 
@@ -570,7 +569,7 @@ namespace boundary_control_between_extreme {
 //*********************** Quadruple - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Quadruple : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Quadruple : public square_or_cube::List_of_Gamma_control_faces<1> {
 
     public:
 
@@ -623,7 +622,7 @@ namespace  boundary_control_full_face {
 //*********************** Single - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Single : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Single : public square_or_cube::List_of_Gamma_control_faces<1> {
 
   public:
 
@@ -695,7 +694,7 @@ namespace  boundary_control_full_face {
 //*********************** Double - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Double : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Double : public square_or_cube::List_of_Gamma_control_faces<1> {
 
     public:
 
@@ -872,7 +871,7 @@ namespace  boundary_control_full_face {
 //*********************** Triple - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Triple : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Triple : public square_or_cube::List_of_Gamma_control_faces<1> {
 
     public:
 
@@ -1080,7 +1079,7 @@ namespace  boundary_control_full_face {
 //*********************** Quadruple - BEGIN *****************************************
 
 
-  class List_of_Gamma_control_faces_Quadruple : public List_of_Gamma_control_faces {
+  class List_of_Gamma_control_faces_Quadruple : public square_or_cube::List_of_Gamma_control_faces<1> {
 
     public:
 
@@ -1136,6 +1135,15 @@ namespace  boundary_control_full_face {
  
  
   namespace cube {
+      
+    namespace boundary_control_between_extreme {
+     class List_of_Gamma_control_faces_Two : public square :: boundary_control_between_extreme :: List_of_Gamma_control_faces_Two {
+      };
+   
+    } 
+      
+     namespace  boundary_control_full_face {
+     } 
 
   }
   

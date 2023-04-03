@@ -95,6 +95,24 @@ static int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 }
 
+  namespace square {
+      
+ class cost_functional_without_regularization : public  square_or_cube :: cost_functional_without_regularization {
+     
+ };
+      
+      
+  }
+  
+  namespace cube {
+      
+ class cost_functional_without_regularization : public  square_or_cube :: cost_functional_without_regularization {
+     
+ };
+      
+      
+  }
+
 }  //end namespace ctrl
 
 }
