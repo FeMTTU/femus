@@ -53,6 +53,33 @@ static constexpr double domain_length = 1.;
 
 
 
+//-------------- my change - BEGIN
+     static std::vector<  unsigned int > tangential_direction_to_Gamma_control(const unsigned int face_index, const unsigned boundary_dim) {
+
+         std::vector<  unsigned int > axis_dir( boundary_dim, 0);
+
+         if( boundary_dim == 1){
+
+             if (face_index == 1 || face_index == 2) { axis_dir[ 0 ] = 1; }
+        else if (face_index == 3 || face_index == 4) { axis_dir[ 0 ] = 0; }
+
+
+        }
+        else{
+
+            if (face_index == 1 || face_index == 2) { axis_dir[ 0 ] = 1; axis_dir[ 1 ]  = 2; }
+       else if (face_index == 3 || face_index == 4) { axis_dir[ 0 ] = 2; axis_dir[ 1 ]  = 0; }
+       else if (face_index == 5 || face_index == 6) { axis_dir[ 0 ] = 0; axis_dir[ 1 ]  = 1; }  ///@todo this depends on the mesh file
+
+        }
+
+
+
+    return axis_dir;
+
+}
+//-------------- my change - END
+
       static const unsigned int tangential_direction_to_Gamma_control(const unsigned int face_index) {
 
     unsigned int axis_dir;
