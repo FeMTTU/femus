@@ -45,50 +45,6 @@ using namespace femus;
 
 
 
- //Unknown definition  ==================
- const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
-     
-     
-  std::vector< FEFamily > feFamily;
-  std::vector< FEOrder >   feOrder;
-
-                        feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE);
- 
-                        feOrder.push_back(/*FIRST*/SECOND);  //same
-                        feOrder.push_back(/*FIRST*/SECOND);  //same
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);  //same
- 
-
-  assert( feFamily.size() == feOrder.size() );
- 
- std::vector< Unknown >  unknowns(feFamily.size());
-
-   unknowns[0]._name      = "state";
-   unknowns[1]._name      = "control";
-   unknowns[2]._name      = "adjoint";
-   unknowns[3]._name      = "mu";
-
-   unknowns[0]._is_sparse = true;
-   unknowns[1]._is_sparse = IS_CTRL_FRACTIONAL_SOBOLEV ? false: true;
-   unknowns[2]._is_sparse = true;
-   unknowns[3]._is_sparse = true;
-   
-     for (unsigned int u = 0; u < unknowns.size(); u++) {
-         
-              unknowns[u]._fe_family  = feFamily[u];
-              unknowns[u]._fe_order   = feOrder[u];
-              unknowns[u]._time_order = 0;
-              unknowns[u]._is_pde_unknown = true;
-              
-     }
- 
-   return unknowns;
-     
-}
 
 
 
@@ -296,7 +252,7 @@ int main(int argc, char** args) {
   // ======= Solution, Construction - END ==================
  
   // ======= Solutions that are Unknowns - BEGIN ==================
-  std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
+  std::vector< Unknown > unknowns = elliptic :: pure_boundary< IS_CTRL_FRACTIONAL_SOBOLEV > :: provide_list_of_unknowns( ml_mesh.GetDimension() );
 
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   
@@ -382,7 +338,7 @@ int main(int argc, char** args) {
   for (unsigned int u = 0; u < unknowns.size(); u++) { system_opt.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  }
        // ======= System Unknowns ========================
 
-  system_opt.SetAssembleFunction( elliptic::pure_boundary::assemble_elliptic_dirichlet_control );
+  system_opt.SetAssembleFunction( elliptic::pure_boundary< IS_CTRL_FRACTIONAL_SOBOLEV >::assemble_elliptic_dirichlet_control );
 
 // *****************
   const unsigned n_components_state = n_components_ctrl;

@@ -95,31 +95,35 @@ namespace ctrl {
   
 
 //*********************** Control, cost functional, regularization (almost), Boundary, Fractional or Integer - BEGIN  *******************************************************
+     #define OP_H1       1 /*0*/
 
+#define CONTROL_FORMULATION   0  /* 0 = pure boundary; 1 = lifting internal; 2 = lifting external */  
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV 1  /* 0: integer norm, 1: fractional norm */
+#if CONTROL_FORMULATION == 0
+
+  
+#define RHS_ONE             0.
+
+#define KEEP_ADJOINT_PUSH   1
+
+
+  #define IS_CTRL_FRACTIONAL_SOBOLEV 1  /* 0: integer norm, 1: fractional norm */
 
 
   //for L2 norm test
 #if IS_CTRL_FRACTIONAL_SOBOLEV == 0
      #define OP_L2       1
-     #define OP_H1       0 /*1*/
 #endif
 
-
-#define RHS_ONE             0.
-
-#define KEEP_ADJOINT_PUSH   1
-
-#define S_FRAC 0.5       /* Order of fractional derivative */
+#if IS_CTRL_FRACTIONAL_SOBOLEV == 1
 
 #define NORM_GIR_RAV 0 /* Leave it at 0 */
 
 #if NORM_GIR_RAV == 0
 
   #define OP_L2       0 /*1*/
-  #define OP_H1       0
+  
   #define OP_Hhalf    1
 
   #define UNBOUNDED   1
@@ -129,13 +133,20 @@ namespace ctrl {
 #elif NORM_GIR_RAV == 1 
 
   #define OP_L2       1
-  #define OP_H1       0
+  
   #define OP_Hhalf    1 /*0*/
 
   #define UNBOUNDED   0
 
   #define USE_Cns     0
 #endif
+  
+  #define S_FRAC 0.5       /* Order of fractional derivative */
+#endif
+  
+  #endif
+
+  
 //***** Operator-related - END ****************** 
 
   

@@ -26,10 +26,63 @@
 namespace femus  {
 
 namespace elliptic  {
-    
+
+
+template < bool IS_BOUNDARY_CONTROL_INTEGER_OR_FRACTIONAL >    
 class pure_boundary : public femus::pure_boundary  {
 
+private:
+    
+    static constexpr bool _is_boundary_control_integer_or_fractional = IS_BOUNDARY_CONTROL_INTEGER_OR_FRACTIONAL;
+
+    
 public: 
+
+ //Unknown definition  ==================
+ static const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
+     
+     
+  std::vector< FEFamily > feFamily;
+  std::vector< FEOrder >   feOrder;
+
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+ 
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);  //same
+ 
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Unknown >  unknowns(feFamily.size());
+
+   unknowns[0]._name      = "state";
+   unknowns[1]._name      = "control";
+   unknowns[2]._name      = "adjoint";
+   unknowns[3]._name      = "mu";
+
+   unknowns[0]._is_sparse = true;
+   unknowns[1]._is_sparse = _is_boundary_control_integer_or_fractional ? false: true;
+   unknowns[2]._is_sparse = true;
+   unknowns[3]._is_sparse = true;
+   
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+         
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
+              
+     }
+ 
+   return unknowns;
+     
+}
+
     
  static void assemble_elliptic_dirichlet_control(MultiLevelProblem & ml_prob) {
     
@@ -313,7 +366,7 @@ public:
 
 
     
-  if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
+  if ( _is_boundary_control_integer_or_fractional ) {
      // fractional
      femus::ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
