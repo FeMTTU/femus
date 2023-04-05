@@ -98,8 +98,10 @@ namespace ctrl {
 
 
 //***** Operator-related - BEGIN ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV  0   /* 0: integer norm, 1: fractional norm */
+#define IS_CTRL_FRACTIONAL_SOBOLEV 1  /* 0: integer norm, 1: fractional norm */
 
+
+  //for L2 norm test
 #if IS_CTRL_FRACTIONAL_SOBOLEV == 0
      #define OP_L2       1
      #define OP_H1       0 /*1*/
@@ -112,7 +114,7 @@ namespace ctrl {
 
 #define S_FRAC 0.5       /* Order of fractional derivative */
 
-#define NORM_GIR_RAV 1 /* Leave it at 0 */
+#define NORM_GIR_RAV 0 /* Leave it at 0 */
 
 #if NORM_GIR_RAV == 0
 
@@ -128,7 +130,7 @@ namespace ctrl {
 
   #define OP_L2       1
   #define OP_H1       0
-  #define OP_Hhalf    /*1*/ 0
+  #define OP_Hhalf    1 /*0*/
 
   #define UNBOUNDED   0
 

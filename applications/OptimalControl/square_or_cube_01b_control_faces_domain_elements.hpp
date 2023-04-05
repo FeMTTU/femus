@@ -124,24 +124,30 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
   const double control_domain_depth = BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C; //this picks a lot more elements, but then the if on the faces only gets the control boundary
 
 
-	  for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
+  for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
 
-   const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
+         const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
 
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
-   
-   const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
-   
-   const unsigned int tang_dir = 1 - normal_dir;
+         const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
 
+         const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
 
+        const std::vector<unsigned int> tang_dir = LIST_OF_CTRL_FACES ::tangential_direction_to_Gamma_control( LIST_OF_CTRL_FACES ::_face_with_extremes_index[f], LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d );
 
-   if ( ( line_sign * elem_center[normal_dir] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) )
-       && ( elem_center[tang_dir] >/* ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][LIST_OF_CTRL_FACES ::_num_of_tang_components_per_face_2d-1][0] - offset_to_include_line )
-       && ( elem_center[tang_dir] < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][LIST_OF_CTRL_FACES ::_num_of_tang_components_per_face_2d-1][1] + offset_to_include_line ) )
-      { control_el_flag = 1; }
+        if ( line_sign * elem_center[normal_dir] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) ) {
+            control_el_flag = 1;
+            for( int t = 0; t < tang_dir.size(); t++){
 
-   }
+                if(  !(
+                     (elem_center[tang_dir[t]] >/* ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][0] - offset_to_include_line )
+                     &&
+                     (elem_center[tang_dir[t]] < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][1] + offset_to_include_line )
+                      )   ){control_el_flag = 0;}
+
+            }
+        }
+
+ }
 
 
 

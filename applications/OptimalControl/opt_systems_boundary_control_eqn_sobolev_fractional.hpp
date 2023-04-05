@@ -1236,6 +1236,7 @@ unsigned nDof_iel_vec = 0;
              }
              
             } 
+
        }
         //============  Mass assembly - END ==================
          

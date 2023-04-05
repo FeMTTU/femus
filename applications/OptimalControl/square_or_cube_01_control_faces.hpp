@@ -1170,6 +1170,7 @@ namespace  boundary_control_full_face {
 
 
         ///BEGIN
+
   class List_of_Gamma_control_faces_Single : public square_or_cube::List_of_Gamma_control_faces<2> {
 
   public:
@@ -1203,7 +1204,7 @@ namespace  boundary_control_full_face {
 
 
 
-//       ///END
+      ///END
 
 
 /*

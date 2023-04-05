@@ -314,7 +314,7 @@ public:
 
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
-  
+     // fractional
      femus::ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
                 femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
@@ -389,7 +389,7 @@ public:
   }
   
   else {
-  
+   // integer
    femus::ctrl::Gamma_control_equation_integer_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
                 femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
