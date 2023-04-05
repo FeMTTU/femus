@@ -82,31 +82,6 @@
   }
   
 
-  
-  
-  ///@deprecated
-  template < class T >
-  bool face_is_a_Gamma_control_face(/*const*/ femus::elem * el, const unsigned jel, const unsigned jface) {
-      
-  	    // look for boundary faces
-            const int bdry_index_j = el->GetFaceElementIndex(jel, jface);
-	    // look for face number equal to control face
-	      const unsigned int face_index_in_rectangle_domain_j = - ( el->GetFaceElementIndex(jel,jface) + 1);
-
-	    // look for boundary faces && look for control faces
-		
-          bool  is_face_for_control = false;
-          
-          		  for(unsigned f = 0; f <  T ::_face_with_extremes_index_size; f++) {
-                      if (face_index_in_rectangle_domain_j ==  T ::_face_with_extremes_index[f]) { is_face_for_control = true; }
-                  }
-
-          
-   return ( bdry_index_j < 0 && is_face_for_control );
-      
-  }
-
-
   template < class T >
   std::pair< bool, unsigned int > face_is_a_Gamma_control_face_of_some_index(/*const*/ femus::elem * el, const unsigned jel, const unsigned jface) {
 

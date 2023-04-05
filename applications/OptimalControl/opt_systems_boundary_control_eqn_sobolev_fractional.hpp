@@ -855,7 +855,6 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
            jface_is_a_boundary_control  = pair_control_jface.first;
            jface_boundary_control_index = pair_control_jface.second;
 
-           //            jface_is_a_boundary_control = femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
        }
       MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
       MPI_Bcast(& jface_boundary_control_index, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);

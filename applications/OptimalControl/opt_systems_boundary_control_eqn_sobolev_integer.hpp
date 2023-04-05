@@ -176,7 +176,11 @@ public:
 
 // --- geometry        
          
-	    if( femus::face_is_a_Gamma_control_face< LIST_OF_CTRL_FACES >(msh->el, iel, iface) ) {
+        std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
+
+         int   iface_is_a_boundary_control  = pair_control_iface.first;
+
+	    if( iface_is_a_boundary_control ) {
               
 
 //========= initialize gauss quantities on the boundary ============================================

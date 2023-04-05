@@ -288,9 +288,11 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
        geom_element_iel.set_elem_center_bdry_3d();
 // ----------
 
-		
-	    if( femus:: face_is_a_Gamma_control_face<  LIST_OF_CTRL_FACES  >(msh->el, iel, iface) ) {
+          std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
 
+          const int  iface_is_a_boundary_control  = pair_control_iface.first;
+
+	    if( iface_is_a_boundary_control ) {
 	
 		//============ initialize gauss quantities on the boundary ==========================================
                 double sol_ctrl_bdry_gss = 0.;
@@ -1170,16 +1172,20 @@ double integral_g_dot_n = 0.;
         
     vector<double> normal_iqp(dim_offset_grad /*space_dim*/, 0.);
 	  
-    for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+    for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
 
-       const unsigned ielGeom_bd = msh->GetElementFaceType(iel, jface);    
+       const unsigned ielGeom_bd = msh->GetElementFaceType(iel, iface);
        
-       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
  
        geom_element_iel.set_elem_center_bdry_3d();
 
-	    // look for boundary faces
-	    if( femus:: face_is_a_Gamma_control_face<  LIST_OF_CTRL_FACES  >(msh->el, iel, jface) ) {
+       std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
+
+          const int iface_is_a_boundary_control  = pair_control_iface.first;
+
+	    if( iface_is_a_boundary_control ) {
+
 	  
 //=================================================== 
 		
@@ -1207,10 +1213,10 @@ double integral_g_dot_n = 0.;
 	  for(unsigned ivar2 = 0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) { gradVctrl_bd_qp[k][ivar2] = 0.; }
 	  
 	  for (unsigned i = 0; i < nDofsVctrl; i++) {
-                 const unsigned ndof_bdry = msh->GetElementFaceDofNumber(iel, jface, solVctrlType);
+                 const unsigned ndof_bdry = msh->GetElementFaceDofNumber(iel, iface, solVctrlType);
 
 		   for(int i_bd = 0; i_bd < ndof_bdry; i_bd++) {
-		       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
+		       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bd);
 		       Vctrl_bd_qp[k] += phiVctrl_gss_bd[i_bd] * solVctrl[k][i_vol];
 		       for(unsigned ivar2 = 0; ivar2 < dim_offset_grad; ivar2++) {
 			   gradVctrl_bd_qp[k][ivar2] += phiVctrl_x_gss_bd[i_bd * dim_offset_grad + ivar2 ] * solVctrl[k][i_vol]; 
@@ -1237,7 +1243,7 @@ double integral_g_dot_n = 0.;
              }    //end if control face
 
         
-    }  // loop over element faces //jface  
+    }  // loop over element faces //iface
       
 // // //   } //end if control element flag
 

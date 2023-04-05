@@ -545,11 +545,13 @@ public:
        
        const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
 // -------
-       
+
+        std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->el, iel, iface);
+
+        const int  iface_is_a_boundary_control  = pair_control_iface.first;
+
+	    if( iface_is_a_boundary_control ) {
 		
-	    if( femus::face_is_a_Gamma_control_face< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->el, iel, iface) ) {
-              
- 
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
@@ -905,8 +907,12 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
-                
-       if(  femus::face_is_a_Gamma_control_face< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >( el, iel, iface) ) {
+
+       std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->el, iel, iface);
+
+        const int  iface_is_a_boundary_control  = pair_control_iface.first;
+
+	    if( iface_is_a_boundary_control ) {
 
        femus::ctrl::mixed_state_or_ctrl_inequality< femus::ctrl::square_or_cube::mixed_state_or_ctrl_inequality >::update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
