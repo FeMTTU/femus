@@ -74,6 +74,9 @@ public:
                         const double beta,
                         const double rhs_one,
                         //-----------
+                        const unsigned int operator_L2,
+                        const unsigned int operator_H1semi,
+                        //-----------
                         const unsigned qrule_i,
                         //-----------
                         const bool print_algebra_local
@@ -218,9 +221,9 @@ public:
 
 // integral - BEGIN ************
    for (unsigned c = 0; c < n_components_ctrl; c++) {
-                  integral_alpha +=  weight_iqp_bdry * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c]; 
+                  integral_alpha += operator_L2 * weight_iqp_bdry * sol_ctrl_iqp_bdry[c] * sol_ctrl_iqp_bdry[c];
                  for (unsigned d = 0; d < space_dim; d++) {
-                  integral_beta  +=  weight_iqp_bdry * sol_ctrl_x_iqp_bdry[c][d] * sol_ctrl_x_iqp_bdry[c][d];
+                  integral_beta  +=  operator_H1semi * weight_iqp_bdry * sol_ctrl_x_iqp_bdry[c][d] * sol_ctrl_x_iqp_bdry[c][d];
       }
    }
   // integral - END ************
@@ -243,8 +246,8 @@ public:
            const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_ctrl_only, /*pos_mat_ctrl +*/ c, i_vol);
            
                 Res_ctrl_only[ res_pos ]  +=  - control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry *
-                                         (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
-							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
+                                         (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * operator_L2 * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
+							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * operator_H1semi * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
 							                         );  //boundary optimality condition
                 Res_ctrl_only[ res_pos ] += - rhs_one * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
                           
@@ -265,8 +268,8 @@ public:
           
            const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(Sol_n_el_dofs_Mat_ctrl_only, sum_Sol_n_el_dofs_ctrl_only, /*pos_mat_ctrl +*/ c, /*pos_mat_ctrl +*/ e, i_vol, j_vol);
               Jac_ctrl_only[ jac_pos ]   +=  control_node_flag_iel_all_faces[c][i_vol] *  weight_iqp_bdry * (
-                                    ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
-			                      + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_mat_dctrl_ctrl_bdry_gss);   
+                                    ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * operator_L2 * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry]
+			                      + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * operator_H1semi * beta  * lap_mat_dctrl_ctrl_bdry_gss);
 				
 	        }   //end j loop
 	      }

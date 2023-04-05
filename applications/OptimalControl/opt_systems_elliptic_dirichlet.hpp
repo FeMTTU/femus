@@ -439,6 +439,8 @@ public:
                     alpha,
                     beta,
                     RHS_ONE,
+                    OP_L2,
+                    OP_H1,
                     qrule_i,
                     //-----------
                     print_algebra_local
@@ -634,8 +636,8 @@ public:
 
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, i_vol) ]  += 
                     - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry *
-                          (    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry]  * sol_ctrl_bdry_gss
-							+  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
+                          (    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_L2 * alpha * phi_ctrl_bdry[i_bdry]  * sol_ctrl_bdry_gss
+							+  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_H1 * beta * lap_rhs_dctrl_ctrl_bdry_gss_i
 							                            - KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
 // 							                           -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 						  );  //boundary optimality condition
@@ -670,8 +672,8 @@ if ( i_vol == j_vol )  {
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
-			                                              +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
+			+=  control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_L2 * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]
+			                                              +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_H1 * beta *  lap_mat_dctrl_ctrl_bdry_gss);
     
 		   
 //============ Bdry Jacobians - END ==================	
@@ -1465,8 +1467,8 @@ public:
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
 	     if ( control_el_flag == 1)    {    Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - AbsDetJxWeight_iqp * ( 
-													                                                  + alpha * phi_ctrl[i] * sol_ctrl_gss
-		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
+													                                                  + OP_L2 * alpha * phi_ctrl[i] * sol_ctrl_gss
+		                                                                                              + OP_H1 * beta * laplace_rhs_dctrl_ctrl_i
 		                                                                                              - laplace_rhs_dctrl_adj_i /// @todo this is here because variations of restricted functions are also restricted
 													                                                  /*+ ineq_flag * sol_mu_gss*/ 
                                                                                                       + target_flag *
@@ -1565,8 +1567,8 @@ public:
 	      //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl   )
 		Jac[ (nDof_u + i) * nDof_AllVars +
-		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * AbsDetJxWeight_iqp * ( beta * /*control_el_flag  **/ laplace_mat_dctrl_ctrl 
-		                                                                                + alpha * /*control_el_flag **/ phi_ctrl[i] * phi_ctrl[j] 
+		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * AbsDetJxWeight_iqp * ( OP_H1 * beta * /*control_el_flag  **/ laplace_mat_dctrl_ctrl
+		                                                                                + OP_L2 * alpha * /*control_el_flag **/ phi_ctrl[i] * phi_ctrl[j]
 		                                                                                            + target_flag *
                                                                             #if COST_FUNCTIONAL_TYPE == 0
 		                                                                                            phi_ctrl[i] * phi_ctrl[j] 
@@ -2427,8 +2429,8 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
                 }
 
                 else if ( group_flag == GROUP_EXTERNAL )  {
-                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_ctrl,i) ]   += - weight_qp * ( alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
-                            + beta * laplace_rhs_dctrl_ctrl_i
+                    Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_ctrl,i) ]   += - weight_qp * ( OP_L2 * alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
+                            + OP_H1 * beta * laplace_rhs_dctrl_ctrl_i
                             - laplace_rhs_dctrl_adj_ext_i /*+ 7000. * phi_fe_qp[SolFEType[pos_ctrl]][i]*/);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol,pos_adj_ext,i)] += - weight_qp *  ( - laplace_rhs_dadj_ext_ctrl_i - 0.);
                 }
@@ -2483,8 +2485,8 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
                             
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]     += weight_qp * ( 
-                                 alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j]  
-                                + beta * laplace_mat_dctrl_ctrl
+                                 OP_L2 * alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j]
+                                + OP_H1 * beta * laplace_mat_dctrl_ctrl
                                     );
 
                             Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_ctrl, pos_adj_ext, i, j) ]  += weight_qp * (-1.) * laplace_mat_dctrl_adj_ext;

@@ -641,6 +641,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
                     alpha,
                     beta,
                     RHS_ONE,
+                    OP_L2,
+                    OP_H1,
                     qrule_i,
                     //-----------
                     print_algebra_local

@@ -93,17 +93,14 @@ template < class LIST_OF_CTRL_FACES >
                                         const std::vector < double > & x,
                                         bool &  dirichlet)  {
 
-             /*static*/ bool  is_facename_a_control_face = false;
-             /*static*/ bool  is_bndry_cntrl_region = false;
-
              const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d;
              std::pair< bool, bool > boundary_and_control_flags_region = square_or_cube:: Boundary_Condition<LIST_OF_CTRL_FACES >::is_boundary_of_boundary_region(faceName, x, number_of_tangential_direction_components);
 
-             is_facename_a_control_face = boundary_and_control_flags_region.first;
-             is_bndry_cntrl_region      = boundary_and_control_flags_region.second;
+             /*static*/ bool is_facename_a_control_face = boundary_and_control_flags_region.first;
+             /*static*/ bool is_bndry_cntrl_region      = boundary_and_control_flags_region.second;
 
              if  (is_facename_a_control_face == false) { dirichlet = true; }
-             if  ( (is_facename_a_control_face == true) && !(is_bndry_cntrl_region) ) { dirichlet = true; }
+        else if  ( (is_facename_a_control_face == true) && !(is_bndry_cntrl_region) ) { dirichlet = true; }
 
              return dirichlet;
              }
@@ -146,15 +143,11 @@ static double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem *
 
 //      assert( _face_with_extremes_index_size == 2 );
 
-
-    /*static*/ bool  is_facename_a_control_face = false;
-    /*static*/ bool  is_bndry_cntrl_region = false;
-
     const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d;
     std::pair< bool, bool > boundary_and_control_flags_region = square_or_cube:: Boundary_Condition<LIST_OF_CTRL_FACES >:: is_boundary_of_boundary_region(faceName, x, number_of_tangential_direction_components);
 
-    is_facename_a_control_face = boundary_and_control_flags_region.first;
-    is_bndry_cntrl_region      = boundary_and_control_flags_region.second;
+    /*static*/ bool  is_facename_a_control_face = boundary_and_control_flags_region.first;
+    /*static*/ bool  is_bndry_cntrl_region      = boundary_and_control_flags_region.second;
 
 
 
