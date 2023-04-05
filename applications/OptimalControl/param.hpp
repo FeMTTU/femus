@@ -103,10 +103,6 @@ namespace ctrl {
 #if CONTROL_FORMULATION == 0
 
   
-#define RHS_ONE             0.
-
-#define KEEP_ADJOINT_PUSH   1
-
 
   #define IS_CTRL_FRACTIONAL_SOBOLEV 1  /* 0: integer norm, 1: fractional norm */
 
@@ -141,7 +137,6 @@ namespace ctrl {
   #define USE_Cns     0
 #endif
   
-  #define S_FRAC 0.5       /* Order of fractional derivative */
 #endif
   
   #endif
@@ -164,9 +159,6 @@ namespace ctrl {
 //***** Quadrature-related - END ****************** 
 
   
-//***** Implementation-related: where are L2 and H1 norms implemented - BEGIN ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY   0  // 1 internal routine; 0 external routine
-//***** Implementation-related: where are L2 and H1 norms implemented - END ****************** 
 
 
 //******** Penalties for equations - BEGIN ******************************

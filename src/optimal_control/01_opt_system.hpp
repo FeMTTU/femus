@@ -11,6 +11,15 @@ class pure_boundary {
 public:
 
 
+  static constexpr double _rhs_one = 0.;//_rhs_one             0.
+
+  static constexpr int _keep_adjoint_push = 1;  //attention to int vs unsigned int
+
+  static constexpr double _s_frac = 0.5;
+
+//***** Implementation-related: where are L2 and H1 norms implemented - BEGIN ****************** 
+  static constexpr int _is_block_dctrl_ctrl_inside_main_big_assembly  = 0;  // 1 internal routine; 0 external routine
+//***** Implementation-related: where are L2 and H1 norms implemented - END ****************** 
 
     //***** How to identify boundary of boundary in the 3D case - BEGIN ******************
   static const std::string  _node_based_bdry_bdry;

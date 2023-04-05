@@ -490,7 +490,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
     
    
   // ======= Fractional - BEGIN =======
-  const double s_frac = S_FRAC;
+  const double s_frac = _s_frac;
 
   const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
    
@@ -558,7 +558,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
                     n_components_ctrl,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
-                    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
+                    _is_block_dctrl_ctrl_inside_main_big_assembly,
                     //-----------
                     JAC,
                     RES,
@@ -572,7 +572,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
                     USE_Cns,
                     OP_Hhalf,
                     OP_L2,
-                    RHS_ONE,
+                    _rhs_one,
                     UNBOUNDED,
                     _node_based_bdry_bdry,
                     //-----------
@@ -632,7 +632,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
                     n_components_ctrl,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
-                    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
+                    _is_block_dctrl_ctrl_inside_main_big_assembly,
                     //-----------
                     JAC,
                     RES,
@@ -640,7 +640,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
                     //-----------
                     alpha,
                     beta,
-                    RHS_ONE,
+                    _rhs_one,
                     OP_L2,
                     OP_H1,
                     qrule_i,
@@ -914,8 +914,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 /*delta_state row */	   if (i_vol < nDofsV)      Res[kdim]                 [i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * penalty_dirichlet_bc_u_equal_q * (Sol_eldofs_Mat[SolPdeIndex[kdim + state_pos_begin]][i_vol] - Sol_eldofs_Mat[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if (i_vol < nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
 /*delta_control row */     if (i_vol < nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag_iel_jface[kdim][i_vol] * AbsDetJxWeight_iqp_bdry * (
-                                                                                          IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry]
-                                                                                        + IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_res_dctrl_ctrl_bd_kdim
+                                                                                          _is_block_dctrl_ctrl_inside_main_big_assembly * alpha * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry]
+                                                                                        + _is_block_dctrl_ctrl_inside_main_big_assembly * beta * lap_res_dctrl_ctrl_bd_kdim
                                                                                         - IRe * grad_adj_dot_n_res_qp[kdim]  * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry]
                                                                                         - /*(*sol->_Sol[SolIndex_Mat[theta_index]])(0)*/solTheta * phi_bd_gss_fe[SolFEType_Mat[kdim +  ctrl_pos_begin]][i_bdry] * normal_iqp[kdim]      //*sol->_Sol[SolIndex_Mat[theta_index]])(0) finds the global value from KKDof pos(72, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
                                                                                         );
@@ -952,8 +952,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 //DIAG BLOCK delta_control - control  --------------------------------------------------------------------------------------
 			  if(i_vol < nDofsGctrl && j_vol < nDofsGctrl) {
 				      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol * nDofsGctrl + j_vol] +=   control_node_flag_iel_jface[kdim][i_vol] * AbsDetJxWeight_iqp_bdry * (
-                                                                                                       IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin] ][j_bdry]
-                                                                                                    + IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_jac_dctrl_ctrl_bd[kdim]
+                                                                                                       _is_block_dctrl_ctrl_inside_main_big_assembly * alpha * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin] ][j_bdry]
+                                                                                                    + _is_block_dctrl_ctrl_inside_main_big_assembly * beta * lap_jac_dctrl_ctrl_bd[kdim]
                                                                                                  );
                   } 
                   

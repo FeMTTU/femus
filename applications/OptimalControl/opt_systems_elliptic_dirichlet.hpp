@@ -351,7 +351,7 @@ public:
   
   const unsigned dim_bdry = dim - 1;
   
-  const double s_frac = S_FRAC;
+  const double s_frac = _s_frac;
 
   const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
 
@@ -412,7 +412,7 @@ public:
                     n_components_ctrl,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
-                    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
+                    _is_block_dctrl_ctrl_inside_main_big_assembly,
                     //-----------
                     JAC,
                     RES,
@@ -425,7 +425,7 @@ public:
                     USE_Cns,
                     OP_Hhalf,
                     OP_L2,
-                    RHS_ONE,
+                    _rhs_one,
                     UNBOUNDED,
                     _node_based_bdry_bdry,
                     //-----------
@@ -483,7 +483,7 @@ public:
                     n_components_ctrl,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
-                    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
+                    _is_block_dctrl_ctrl_inside_main_big_assembly,
                     //-----------
                     JAC,
                     RES,
@@ -491,7 +491,7 @@ public:
                     //-----------
                     alpha,
                     beta,
-                    RHS_ONE,
+                    _rhs_one,
                     OP_L2,
                     OP_H1,
                     qrule_i,
@@ -685,15 +685,15 @@ public:
 		 
 //============ Bdry Residuals - BEGIN  ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_state, i_vol) ] +=
-                    - control_node_flag[first_loc_comp_ctrl][i_vol] * penalty_dirichlet_bc_u_equal_q     * KEEP_ADJOINT_PUSH * (   Sol_eldofs_Mat[pos_mat_state][i_vol] - Sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
-                    - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
+                    - control_node_flag[first_loc_comp_ctrl][i_vol] * penalty_dirichlet_bc_u_equal_q     * _keep_adjoint_push * (   Sol_eldofs_Mat[pos_mat_state][i_vol] - Sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
+                    - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * _keep_adjoint_push * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
 
 
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, i_vol) ]  += 
                     - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry *
-                          (    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_L2 * alpha * phi_ctrl_bdry[i_bdry]  * sol_ctrl_bdry_gss
-							+  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_H1 * beta * lap_rhs_dctrl_ctrl_bdry_gss_i
-							                            - KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
+                          (    _is_block_dctrl_ctrl_inside_main_big_assembly * OP_L2 * alpha * phi_ctrl_bdry[i_bdry]  * sol_ctrl_bdry_gss
+							+  _is_block_dctrl_ctrl_inside_main_big_assembly * OP_H1 * beta * lap_rhs_dctrl_ctrl_bdry_gss_i
+							                            - _keep_adjoint_push * grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
 // 							                           -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 						  );  //boundary optimality condition
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_vol, pos_mat_adj, i_vol) ]  += 0.; 
@@ -710,9 +710,9 @@ public:
                  
 if ( i_vol == j_vol )  {
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i_vol, j_vol) ] += 
-		     penalty_dirichlet_bc_u_equal_q * KEEP_ADJOINT_PUSH * ( control_node_flag[first_loc_comp_ctrl][i_vol]) * ( 1.);
+		     penalty_dirichlet_bc_u_equal_q * _keep_adjoint_push * ( control_node_flag[first_loc_comp_ctrl][i_vol]) * ( 1.);
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_ctrl, i_vol, j_vol) ]  += 
-		     penalty_dirichlet_bc_u_equal_q * KEEP_ADJOINT_PUSH * ( control_node_flag[first_loc_comp_ctrl][i_vol]) * (-1.);
+		     penalty_dirichlet_bc_u_equal_q * _keep_adjoint_push * ( control_node_flag[first_loc_comp_ctrl][i_vol]) * (-1.);
 		}
 //============ u = q - END ===========================
 
@@ -727,8 +727,8 @@ if ( i_vol == j_vol )  {
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_L2 * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]
-			                                              +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * OP_H1 * beta *  lap_mat_dctrl_ctrl_bdry_gss);
+			+=  control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * ( _is_block_dctrl_ctrl_inside_main_big_assembly * OP_L2 * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]
+			                                              +  _is_block_dctrl_ctrl_inside_main_big_assembly * OP_H1 * beta *  lap_mat_dctrl_ctrl_bdry_gss);
     
 		   
 //============ Bdry Jacobians - END ==================	
@@ -748,11 +748,11 @@ if ( i_vol == j_vol )  {
 		      
 //==========block delta_control/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_adj, i_vol, j) ]  += 
-		     control_node_flag[first_loc_comp_ctrl][i_vol] * (-1.) * weight_iqp_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
+		     control_node_flag[first_loc_comp_ctrl][i_vol] * (-1.) * weight_iqp_bdry * _keep_adjoint_push * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
 
 //==========block delta_state/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat_vol, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i_vol, j) ] += 
-		     control_node_flag[first_loc_comp_ctrl][i_vol] * (1.) * weight_iqp_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
+		     control_node_flag[first_loc_comp_ctrl][i_vol] * (1.) * weight_iqp_bdry * _keep_adjoint_push * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
 		      
 		    }   //end loop i_bdry // j_vol
 	      
