@@ -77,24 +77,24 @@ static int ControlDomainFlag_internal_restriction(const std::vector<double> & el
   const double control_domain_width_upper = LIFTING_INTERNAL_WIDTH_UPPER;
 
 
-	  for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
+// 	  for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
+//
+//    const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::  sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
+//
+//    const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
+//
+//    const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
+//
+//    const unsigned int tang_dir = 1 - normal_dir;
+//
+//    if ( ( line_sign * elem_center[normal_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
+//        && ( elem_center[tang_dir] > control_domain_width_lower - offset_to_include_line )
+//        && ( elem_center[tang_dir] < control_domain_width_upper + offset_to_include_line ) )
+//       { control_el_flag = 1; }
+//
+//       }
 
-   const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::  sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
-
-   const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);        //1,3,5 = 0 || 2,4,6 = +1
-
-   const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
-   
-   const unsigned int tang_dir = 1 - normal_dir;
-
-   if ( ( line_sign * elem_center[normal_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
-       && ( elem_center[tang_dir] > control_domain_width_lower - offset_to_include_line )
-       && ( elem_center[tang_dir] < control_domain_width_upper + offset_to_include_line ) )
-      { control_el_flag = 1; }
-
-      }
-
-     return control_el_flag;
+     return /*control_el_flag*/ 1;
 
 }
 
@@ -126,9 +126,9 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
   for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
 
-         const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
+         const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);  //1,3,5 = 1 || 2,4,6 = -1
 
-         const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
+         const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);    //1,3,5 = 0 || 2,4,6 = +1
 
          const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
 
@@ -151,7 +151,7 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 
 
-     return control_el_flag;
+     return control_el_flag/* 1 */;
 }
 
 
