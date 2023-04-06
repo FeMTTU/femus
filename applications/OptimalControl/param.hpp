@@ -60,8 +60,8 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 3// for 2D applications
-// #define N_UNIFORM_LEVELS 2 // for 3D bdry application
+// #define N_UNIFORM_LEVELS 6// for 2D applications
+#define N_UNIFORM_LEVELS 3 // for 3D bdry application
 
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
@@ -103,13 +103,15 @@ namespace ctrl {
 #if CONTROL_FORMULATION == 0
 
   
-
-  #define IS_CTRL_FRACTIONAL_SOBOLEV  1 /* 0: integer norm, 1: fractional norm */
+/* 0: integer norm, 1: fractional norm */
+//   #define IS_CTRL_FRACTIONAL_SOBOLEV  0 // INTEGER NORM
+  #define IS_CTRL_FRACTIONAL_SOBOLEV  1  // FRACTIONAL NORM
 
 
   //for L2 norm test
 #if IS_CTRL_FRACTIONAL_SOBOLEV == 0
      #define OP_L2       1
+
      #define OP_Hhalf    0
 
      #define UNBOUNDED    0
