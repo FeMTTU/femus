@@ -252,6 +252,16 @@ public:
       * In that case, and if the Solution is time-dependent, then both Sol and SolOld are initialized. */
     void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
   
+template < class LIST_OF_CTRL_FACES >
+  void InitializeBasedOnFaces(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
+    InitializeBasedOnFaces<LIST_OF_CTRL_FACES>(name, NULL, func, ml_prob);
+  }
+    
+    /** A Solution is by default initialized to zero, or by a provided function     */
+template < class LIST_OF_CTRL_FACES >
+  void InitializeBasedOnFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob);
+  
+  
     inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
     
     void UpdateSolution(const char name[], InitFunc func, const double& time);
@@ -543,6 +553,155 @@ inline
 void MultiLevelSolution::Set(const char * name, InitFuncMLProb funcMLProb, const MultiLevelProblem * ml_prob) {
     Initialize(name, funcMLProb, ml_prob);
 }
+
+} //end namespace femus
+
+
+
+#include "NumericVector.hpp"  //this is here because the template needs to be in the header file (implicit instantiation)
+#include "CurrentElem.hpp"
+
+namespace femus {
+    
+ template < class LIST_OF_CTRL_FACES >
+  void MultiLevelSolution::InitializeBasedOnFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
+
+    
+
+   std::vector< unsigned > sol_start_end =  solution_start_and_end(std::string (name));
+      
+      
+    for(unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
+      unsigned sol_type = _solType[i];
+
+      for(unsigned ig = 0; ig < _gridn; ig++) {
+
+        _solution[ig]->ResizeSolutionVector(_solName[i]);
+        _solution[ig]->_Sol[i]->zero();
+
+        if(func || funcMLProb) {
+          double value = 0.;
+
+          if(sol_type < 3) {
+              abort();
+//             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
+//               for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
+//                   iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
+//                 unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, sol_type);
+// 
+//                 for(int j = 0; j < nloc_dof; j++) {
+//                   unsigned inode_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
+//                   unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
+//                   std::vector < double > xx(3);
+//                   xx[0] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+//                   xx[1] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+//                   xx[2] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
+// 
+//                   value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
+// 
+//                   _solution[ig]->_Sol[i]->set(inode_Metis, value);
+// 
+//                   if(_solTimeOrder[i] == 2) {
+//                     _solution[ig]->_SolOld[i]->set(inode_Metis, value);
+//                   }
+//                 }
+//               }
+//             }
+          }
+          else if(sol_type < 5) {
+              
+              const double offset_to_include_line = 1.e-8;
+              
+               const unsigned solType_coords = BIQUADR_FE;
+
+              const unsigned dim = _mlMesh->GetDimension();
+              
+  CurrentElem < double > geom_element_iel(dim, _mlMesh->GetLevel(ig) );
+  
+              for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[_iproc];
+                  iel < _mlMesh->GetLevel(ig)->_elementOffset[_iproc + 1]; iel++) {
+                  value = 0.;
+
+// ------- - BEGIN
+    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    const short unsigned ielGeom = geom_element_iel.geom_type();
+
+    geom_element_iel.set_elem_center_3d(iel, solType_coords);
+// ------- - END
+
+              
+	  for(unsigned iface = 0; iface < _mlMesh->GetLevel(ig)->GetElementFaceNumber(iel); iface++) {
+       
+          
+        const int bdry_index = _mlMesh->GetLevel(ig)->el->GetFaceElementIndex(iel, iface);
+        
+        if (bdry_index < 0) {
+        const unsigned int face_index_in_domain = - ( bdry_index + 1);
+        
+        //compute face element center - BEGIN
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
+ 
+       geom_element_iel.set_elem_center_bdry_3d();
+
+       const unsigned ielGeom_bdry = _mlMesh->GetLevel(ig)->GetElementFaceType(iel, iface);    
+        //compute face element center - END
+        
+
+            for(unsigned f = 0; f <  LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
+                
+                  if (face_index_in_domain == /*ctrl::*/LIST_OF_CTRL_FACES :: _face_with_extremes_index[f]) {
+                const unsigned number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::  _num_of_tang_components_per_face_2d;
+                
+                            for(unsigned t = 0; t < number_of_tangential_direction_components; t++) {
+
+                          if (
+                                  (geom_element_iel.get_elem_center_bdry_3d()[ /*ctrl::*/LIST_OF_CTRL_FACES ::tangential_direction_to_Gamma_control(face_index_in_domain, number_of_tangential_direction_components)[t] ] >
+                                            /*ctrl::*/LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][0] + offset_to_include_line &&
+                                   geom_element_iel.get_elem_center_bdry_3d()[ /*ctrl::*/LIST_OF_CTRL_FACES ::tangential_direction_to_Gamma_control(face_index_in_domain, number_of_tangential_direction_components)[t] ] <
+                                            /*ctrl::*/LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][1] - offset_to_include_line
+                                  )
+                             ) { value = 1.; }
+
+                            }
+            }
+
+
+        }//end face_contol_index loop      
+          
+          
+//                 value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
+                
+                unsigned placeholder_index = 0/*2*/;
+
+                unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(placeholder_index, iel, sol_type);
+
+                _solution[ig]->_Sol[i]->set(solDof, value);
+
+                if(_solTimeOrder[i] == 2) {
+                  _solution[ig]->_SolOld[i]->set(solDof, value);
+                }
+                
+        }
+              } //end iface
+                
+              } //end iel
+
+          }
+
+          _solution[ig]->_Sol[i]->close();
+
+          if(_solTimeOrder[i] == 2) {
+            _solution[ig]->_SolOld[i]->close();
+          }
+        }
+        
+      }
+    }
+
+    return;
+  }
+
 
 
 } //end namespace femus

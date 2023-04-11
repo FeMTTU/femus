@@ -38,9 +38,6 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     else if(!strcmp(name, "TargReg")) {
         value = femus::ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
     }
-    else if(!strcmp(name, "ContReg")) {
-        value = femus::ctrl::  square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::ControlDomainFlag_bdry(x);
-    }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
     }
@@ -153,7 +150,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("mu",  Solution_set_initial_conditions, & ml_prob);
   
   ml_sol.Initialize("TargReg",  Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("ContReg",  Solution_set_initial_conditions, & ml_prob);
+  ml_sol.InitializeBasedOnFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name[0].c_str(),  Solution_set_initial_conditions, & ml_prob);
 
   // attach the boundary condition function and generate boundary data

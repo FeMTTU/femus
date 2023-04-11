@@ -376,7 +376,7 @@ namespace femus {
                   
                 unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, 0);
               
-              // evaluate at average of biquadratic nodes (element center) -----
+              // evaluate at average of biquadratic nodes (element center) - BEGIN -----
                 std::vector < double > xx(3, 0.);
 
                 for(int j = 0; j < nloc_dof; j++) {
@@ -389,7 +389,7 @@ namespace femus {
                 xx[0] /= nloc_dof;
                 xx[1] /= nloc_dof;
                 xx[2] /= nloc_dof;
-              // evaluate at average of biquadratic nodes (element center) -----
+              // evaluate at average of biquadratic nodes (element center) - END -----
 
                 value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
                 
@@ -420,6 +420,8 @@ namespace femus {
   }
 
 
+  
+  
   std::vector< unsigned >  MultiLevelSolution::solution_start_and_end(const std::string name) {
 
       std::vector< unsigned > sol_start_end(2, 0);
@@ -1183,6 +1185,9 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   }
 
 
+  
+
+  
 
 } //end namespace femus
 

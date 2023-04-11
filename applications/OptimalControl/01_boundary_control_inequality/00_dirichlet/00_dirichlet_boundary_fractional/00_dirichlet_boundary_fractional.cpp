@@ -44,10 +44,6 @@ using namespace femus;
 
 
 
-
-
-
-
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
@@ -67,9 +63,6 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     
     else if(!strcmp(name, "TargReg")) {
         value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
-    }
-    else if(!strcmp(name, "ContReg")) {
-        value = ctrl::  square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(x);
     }
     else if(!strcmp(name, "act_flag")) {
         value = 0.;
@@ -268,9 +261,9 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   
-  
-  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  const std::string volume_control_region = "ContReg";
+  ml_sol.AddSolution(volume_control_region.c_str(), DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.InitializeBasedOnFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
   
   // ******** active flag - BEGIN 
   //MU
