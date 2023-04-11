@@ -39,7 +39,16 @@
 using namespace femus;
 
  
-double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double Solution_set_initial_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+
+    double value = 0.;
+
+    return value;
+    
+}
+
+
+double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
 
@@ -52,8 +61,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 }
 
 
-
-bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
   
   bool dirichlet = true;
@@ -292,10 +300,10 @@ int main(int argc, char** args) {
    }
    
  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
-      ml_sol_all_levels->Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+      ml_sol_all_levels->Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions_Unknowns, & ml_prob);
   }
   
-      ml_sol_all_levels->AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+      ml_sol_all_levels->AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions_Unknowns);
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
      ml_sol_all_levels->GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
   }
@@ -304,9 +312,10 @@ int main(int argc, char** args) {
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
             ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
+   ml_sol_all_levels->Initialize("TargReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
+   
             ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
-   ml_sol_all_levels->Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
-   ml_sol_all_levels->InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
+   ml_sol_all_levels->InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
             
             
@@ -374,10 +383,10 @@ int main(int argc, char** args) {
    }
    
  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
-      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions_Unknowns, & ml_prob);
   }
   
-  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions_Unknowns);
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
      ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
   }
@@ -386,11 +395,11 @@ int main(int argc, char** args) {
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
-   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
 
   const std::string volume_control_region = "ContReg";
    ml_sol.AddSolution(volume_control_region.c_str(),  DISCONTINUOUS_POLYNOMIAL, ZERO);
-   ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
+   ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
    
    
  ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
@@ -426,7 +435,7 @@ int main(int argc, char** args) {
    for(unsigned int d = 0; d <  act_set_flag_name.size(); d++)  {
        act_set_flag_name[d] = "act_flag_" + std::to_string(d);
     ml_sol.AddSolution(act_set_flag_name[d].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);
-    ml_sol.Initialize(act_set_flag_name[d].c_str(), Solution_set_initial_conditions, & ml_prob);
+    ml_sol.Initialize(act_set_flag_name[d].c_str(), Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
    }
   // ******** active flag - END 
 #endif

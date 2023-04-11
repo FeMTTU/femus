@@ -44,24 +44,19 @@ using namespace femus;
 
 
 
-double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double Solution_set_initial_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
 
-    if(!strcmp(name, "state")) {
-        value = 0.;
-    }
-    else if(!strcmp(name, "control")) {
-        value = 0.;
-    }
-    else if(!strcmp(name, "adjoint")) {
-        value = 0.;
-    }
-    else if(!strcmp(name, "mu")) {
-        value = 0.;
-    }
+    return value;
     
-    else if(!strcmp(name, "TargReg")) {
+}
+
+double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+    
+    double value = 0.;
+    
+    if(!strcmp(name, "TargReg")) {
         value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
     }
     else if(!strcmp(name, "act_flag")) {
@@ -75,7 +70,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 
 ///@todo notice that even if you set Dirichlet from the mesh file, here you can override it
-bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = false; // = true; //dirichlet
   value = 0.;
@@ -247,11 +242,11 @@ int main(int argc, char** args) {
   // ======= Solutions that are Unknowns - BEGIN ==================
   std::vector< Unknown > unknowns = elliptic :: pure_boundary< IS_CTRL_FRACTIONAL_SOBOLEV > :: provide_list_of_unknowns( ml_mesh.GetDimension() );
 
-  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions_Unknowns);
   
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
-      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions_Unknowns, & ml_prob);
       ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
   }
   // ======= Solutions that are Unknowns - END ==================
@@ -259,11 +254,11 @@ int main(int argc, char** args) {
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
   
   const std::string volume_control_region = "ContReg";
   ml_sol.AddSolution(volume_control_region.c_str(), DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
+  ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
   
   // ******** active flag - BEGIN 
   //MU
@@ -280,7 +275,7 @@ int main(int argc, char** args) {
    act_set_flag_name[0] = "act_flag";
 
    ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);               
-   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
   // ******** active flag - END 
   
   

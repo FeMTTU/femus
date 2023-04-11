@@ -66,25 +66,19 @@ using namespace femus;
 
 
 
-double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double Solution_set_initial_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
+    
+        return value;
+}
 
-    if(!strcmp(name,"state")) {
-        value = 0.;
-    }
-    else if(!strcmp(name,"control")) {
-        value = 0.;
-    }
-    else if(!strcmp(name,"adjoint")) {
-        value = 0.;
-    }
-    else if(!strcmp(name,"mu")) {
-        value = 0.;
-    }
     
+double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+
+    double value = 0.;
     
-    else if(!strcmp(name,"TargReg")) {
+    if(!strcmp(name,"TargReg")) {
         value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
@@ -100,7 +94,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 
 
-bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = false; //dirichlet
   value = 0.;
@@ -223,9 +217,9 @@ int main(int argc, char** args) {
  
   for (unsigned int u = 0; u < unknowns.size(); u++) { ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown); }
    
- for (unsigned int u = 0; u < unknowns.size(); u++)  { ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob); }
+ for (unsigned int u = 0; u < unknowns.size(); u++)  { ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions_Unknowns, & ml_prob); }
   
-  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions_Unknowns);
    for (unsigned int u = 0; u < unknowns.size(); u++)  {  ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);  }
   // ======= Solutions that are Unknowns - END ==================
 
@@ -234,10 +228,10 @@ int main(int argc, char** args) {
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde); //this variable is not solution of any eqn, it's just a given field
-  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
 
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde); //this variable is not solution of any eqn, it's just a given field
-  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
 
   // ******** active flag - BEGIN 
   //MU
@@ -254,7 +248,7 @@ int main(int argc, char** args) {
    act_set_flag_name[0] = "act_flag";
 
    ml_sol.AddSolution(act_set_flag_name[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, act_set_fake_time_dep_flag, act_flag_is_an_unknown_of_a_pde);               
-   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
   // ******** active flag - END 
 
   // ******** state plus cont - BEGIN 
@@ -264,7 +258,7 @@ int main(int argc, char** args) {
   const unsigned int state_plus_ctrl_fake_time_dep_flag = 0;
   const bool         state_plus_ctrl_is_an_unknown_of_a_pde = false;
    ml_sol.AddSolution(state_plus_ctrl[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, state_plus_ctrl_fake_time_dep_flag, state_plus_ctrl_is_an_unknown_of_a_pde);               
-   ml_sol.Initialize(state_plus_ctrl[0].c_str(), Solution_set_initial_conditions, & ml_prob);
+   ml_sol.Initialize(state_plus_ctrl[0].c_str(), Solution_set_initial_conditions_Unknowns, & ml_prob);
 
    // ******** state plus cont - END 
    
