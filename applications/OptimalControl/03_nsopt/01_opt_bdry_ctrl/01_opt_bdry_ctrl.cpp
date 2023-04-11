@@ -306,7 +306,7 @@ int main(int argc, char** args) {
             ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
             ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO);
    ml_sol_all_levels->Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
-   ml_sol_all_levels->InitializeBasedOnFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
+   ml_sol_all_levels->InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
             
             
@@ -390,7 +390,7 @@ int main(int argc, char** args) {
 
   const std::string volume_control_region = "ContReg";
    ml_sol.AddSolution(volume_control_region.c_str(),  DISCONTINUOUS_POLYNOMIAL, ZERO);
-   ml_sol.InitializeBasedOnFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
+   ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
    
    
  ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<

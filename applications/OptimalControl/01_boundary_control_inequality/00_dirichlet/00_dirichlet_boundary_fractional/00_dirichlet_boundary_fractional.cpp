@@ -263,7 +263,7 @@ int main(int argc, char** args) {
   
   const std::string volume_control_region = "ContReg";
   ml_sol.AddSolution(volume_control_region.c_str(), DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.InitializeBasedOnFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
+  ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
   
   // ******** active flag - BEGIN 
   //MU

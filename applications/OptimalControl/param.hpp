@@ -60,7 +60,7 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-#define N_UNIFORM_LEVELS 3// for 2D applications
+#define N_UNIFORM_LEVELS 7// for 2D applications
 // #define N_UNIFORM_LEVELS 3 // for 3D bdry application
 
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
@@ -249,9 +249,9 @@ namespace ctrl {
 
 
 //------------------------------------ Square: BEGIN ------------------------------------
-// // // #define  DOMAIN_NAMESPACE_CHILD   square
+#define  DOMAIN_NAMESPACE_CHILD   square
 
-// // //    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE_CHILD ::mesh::_2d_square_1x1;
+   const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE_CHILD ::mesh::_2d_square_1x1;
 
 //------------------------------------ single: BEGIN ------------------------------------
 
@@ -272,7 +272,7 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_One
-// // // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three_One
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three_Two
@@ -282,7 +282,7 @@ namespace ctrl {
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four_Three
 
 //  #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS   DOMAIN_NAMESPACE_CHILD :: TYPE_OF_BOUNDARY_CONTROL :: Double_controls_adjacent_in_front_linear
-// // // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE_CHILD :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
+#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE_CHILD :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE_CHILD :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_in_front_constant
 
 //------------------------------------ double: END ------------------------------------
@@ -332,18 +332,18 @@ namespace ctrl {
 
 //------------------------------------ Cube: BEGIN ------------------------------------
 
-#define  DOMAIN_NAMESPACE_CHILD   cube
+// // // #define  DOMAIN_NAMESPACE_CHILD   cube
 
-      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser;
+// // //       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser;
 //       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser_between;
 
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_One
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
+// // // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    DOMAIN_NAMESPACE_CHILD ::TYPE_OF_BOUNDARY_CONTROL :: List_of_Gamma_control_faces_Four
 
-#define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE_CHILD :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
+// // // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    DOMAIN_NAMESPACE_CHILD :: TYPE_OF_BOUNDARY_CONTROL :: Multiple_controls_and_homogeneous_boundary_conditions
 
 //------------------------------------ Cube: END ------------------------------------
 

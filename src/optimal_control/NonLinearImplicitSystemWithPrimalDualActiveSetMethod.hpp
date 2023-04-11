@@ -36,9 +36,12 @@ class NonLinearImplicitSystemWithPrimalDualActiveSetMethod : public NonLinearImp
 
 public:
 
+// constructor - BEGIN ======   
     /** Constructor.  Optionally initializes required data structures. */
     NonLinearImplicitSystemWithPrimalDualActiveSetMethod (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type );
+// constructor - END ======   
 
+// system name - BEGIN ======   
     /**
      * Helps in identifying
      * the system type in an equation system file.
@@ -46,7 +49,10 @@ public:
     virtual std::string system_type () const {
         return "NonlinearImplicitWithPrimalDualActiveSetMethod";
     }
-    
+// system name - END ======   
+
+
+// active flag - BEGIN ======   
     /** Set the active set flag name */
     void SetActiveSetFlagName(const std::vector<std::string> & name_in ) {
         _active_flag_name = name_in;
@@ -57,15 +63,39 @@ public:
         return _active_flag_name;
     }
     
+protected:
+  
+    std::vector< std::string > _active_flag_name;
+
+// active flag - END ======
+
+
+// // ContReg flag - BEGIN ======   
+//     /** Set the active set flag name */
+//     void SetContRegFlagName(const std::vector<std::string> & name_in ) {
+//         _cont_reg_flag_name = name_in;
+//     }
+//     
+//     /** Set the active set flag name */
+//     std::vector<std::string> GetContRegFlagName() const {
+//         return _cont_reg_flag_name;
+//     }
+//     
+// protected:
+//   
+//     std::vector< std::string > _cont_reg_flag_name;
+// 
+// // ContReg flag - END ======
+
+    
+// solver - BEGIN ======   
+public:
     /** Solves the system. */
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     
     
     void nonlinear_solve_single_level(const MgSmootherType& mgSmootherType, double & totalAssembyTime, const unsigned int grid0, const unsigned int igridn);
-
-protected:
-  
-    std::vector< std::string > _active_flag_name;
+// solver - END ======   
 
     
 // debug function sub-class - BEGIN ======   

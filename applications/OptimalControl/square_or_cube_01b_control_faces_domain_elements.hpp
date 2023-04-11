@@ -28,6 +28,8 @@ template < class LIST_OF_CTRL_FACES >
 class Domain_elements_containing_Gamma_control  {
 
   public:
+      
+  static const std::string _cont_reg_name;    
 
 
 static const double face_coordinate_extreme_position_normal_to_Gamma_control(const unsigned int face_index) {
@@ -99,58 +101,22 @@ static int ControlDomainFlag_internal_restriction(const std::vector<double> & el
 
 
 
- static bool volume_elem_contains_a_Gamma_control_face( const std::vector<double> & elem_center ) {
+ static bool volume_elem_contains_a_Gamma_control_face(const Solution * sol, const Mesh * msh, const unsigned int iel ) {
+    
+     
+     const std::string sol_for_cont_reg = Domain_elements_containing_Gamma_control<LIST_OF_CTRL_FACES>::_cont_reg_name;
+     const unsigned sol_for_cont_reg_index = sol->GetIndex(sol_for_cont_reg.c_str());
+     const unsigned sol_for_cont_reg_fe_type = sol->GetSolutionType( sol_for_cont_reg_index );
+     
+     const unsigned placeholder_index = 0;
+     
+     const unsigned sol_for_cont_reg_dof = msh->GetSolutionDof(placeholder_index, iel, sol_for_cont_reg_fe_type);
+     
+     const bool does_iel_contain_Gamma_c = (bool) (*sol->_Sol[sol_for_cont_reg_index])(sol_for_cont_reg_dof);
 
-      int control_flag_jel = 0;
-        control_flag_jel =  ControlDomainFlag_bdry(elem_center);
-
-        return (control_flag_jel == 1);
-
-
+        return (does_iel_contain_Gamma_c == true);
+        
   }
-
-
-//*********************** Find volume elements that contain a Control Face element *********************************
-
-static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
-
-
-  int control_el_flag = 0;
-
-  const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
-
-  const double control_domain_depth = BOUNDARY_ORTHOGONAL_DISTANCE_FROM_GAMMA_C; //this picks a lot more elements, but then the if on the faces only gets the control boundary
-
-
-  for(unsigned f = 0; f < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
-
-         const int  line_sign =  /*ctrl::*/ LIST_OF_CTRL_FACES ::sign_function_for_delimiting_region(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
-
-         const double extreme_pos = face_coordinate_extreme_position_normal_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
-
-         const unsigned int normal_dir =  LIST_OF_CTRL_FACES ::normal_direction_to_Gamma_control(/*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index[f]);
-
-        const std::vector<unsigned int> tang_dir = LIST_OF_CTRL_FACES ::tangential_direction_to_Gamma_control( LIST_OF_CTRL_FACES ::_face_with_extremes_index[f], LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d );
-
-        if ( line_sign * elem_center[normal_dir] <   line_sign * (  extreme_pos  + line_sign * control_domain_depth) ) {
-            control_el_flag = 1;
-            for( int t = 0; t < tang_dir.size(); t++){
-
-                if(  !(
-                     (elem_center[tang_dir[t]] >/* ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][0] - offset_to_include_line )
-                     &&
-                     (elem_center[tang_dir[t]] < /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][1] + offset_to_include_line )
-                      )   ){control_el_flag = 0;}
-
-            }
-        }
-
- }
-
-
-
-     return control_el_flag /*1 */;
-}
 
 
 
@@ -160,6 +126,8 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 };
 
+template < class LIST_OF_CTRL_FACES >
+  const std::string Domain_elements_containing_Gamma_control<LIST_OF_CTRL_FACES>::_cont_reg_name = "ContReg";    
 
 
 }

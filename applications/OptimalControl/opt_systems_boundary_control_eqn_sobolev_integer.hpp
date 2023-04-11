@@ -144,7 +144,7 @@ public:
  //***************************************************
 
 
-    if ( DOMAIN_CONTAINING_CTRL_FACES ::volume_elem_contains_a_Gamma_control_face(geom_element_iel.get_elem_center_3d()) ) {
+    if ( DOMAIN_CONTAINING_CTRL_FACES ::volume_elem_contains_a_Gamma_control_face(sol, msh, iel) ) {
         
   
  //************ set control flag *********************

@@ -150,7 +150,9 @@ int main(int argc, char** args) {
   ml_sol.Initialize("mu",  Solution_set_initial_conditions, & ml_prob);
   
   ml_sol.Initialize("TargReg",  Solution_set_initial_conditions, & ml_prob);
-  ml_sol.InitializeBasedOnFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
+  
+  const std::string volume_control_region = "ContReg";
+  ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name[0].c_str(),  Solution_set_initial_conditions, & ml_prob);
 
   // attach the boundary condition function and generate boundary data

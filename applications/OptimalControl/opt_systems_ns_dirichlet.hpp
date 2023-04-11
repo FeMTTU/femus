@@ -691,8 +691,9 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
    //***************************************       
    
  //************ set control flag - BEGIN *********************
-    int does_iel_contain_a_bdry_control_face = 0;
-        does_iel_contain_a_bdry_control_face = ctrl ::  square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > :: ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
+        const bool does_iel_contain_Gamma_c = ctrl::square_or_cube :: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( sol, msh, iel );
+  int does_iel_contain_a_bdry_control_face = does_iel_contain_Gamma_c? 1 : 0;
+
  //************ initialize control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
     std::vector< std::vector<int> > control_node_flag_iel_jface(n_components_ctrl);
 	    for(unsigned idim=0; idim < control_node_flag_iel_jface.size(); idim++) {
@@ -1471,7 +1472,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >:: volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >:: volume_elem_contains_a_Gamma_control_face( sol, msh, iel ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {

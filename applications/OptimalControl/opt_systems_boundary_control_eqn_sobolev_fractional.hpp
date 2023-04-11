@@ -702,7 +702,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 	// Perform face loop over elements that contain some control face
         
         
-	if ( DOMAIN_CONTAINING_CTRL_FACES :: volume_elem_contains_a_Gamma_control_face(geom_element_jel.get_elem_center_3d()) ) {
+	if ( DOMAIN_CONTAINING_CTRL_FACES :: volume_elem_contains_a_Gamma_control_face(sol, msh, jel) ) {
 // --- jel opening - END
 
       
@@ -1003,7 +1003,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
       
 	// Perform face loop over elements that contain some control face
-	if ( DOMAIN_CONTAINING_CTRL_FACES ::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
+	if ( DOMAIN_CONTAINING_CTRL_FACES ::volume_elem_contains_a_Gamma_control_face(sol, msh, iel ) ) {
         
         
 // --- iel opening - END

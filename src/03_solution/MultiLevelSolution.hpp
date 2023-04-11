@@ -253,13 +253,13 @@ public:
     void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
   
 template < class LIST_OF_CTRL_FACES >
-  void InitializeBasedOnFaces(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
-    InitializeBasedOnFaces<LIST_OF_CTRL_FACES>(name, NULL, func, ml_prob);
+  void InitializeBasedOnControlFaces(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
+    InitializeBasedOnControlFaces<LIST_OF_CTRL_FACES>(name, NULL, func, ml_prob);
   }
     
     /** A Solution is by default initialized to zero, or by a provided function     */
 template < class LIST_OF_CTRL_FACES >
-  void InitializeBasedOnFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob);
+  void InitializeBasedOnControlFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob);
   
   
     inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
@@ -564,7 +564,7 @@ void MultiLevelSolution::Set(const char * name, InitFuncMLProb funcMLProb, const
 namespace femus {
     
  template < class LIST_OF_CTRL_FACES >
-  void MultiLevelSolution::InitializeBasedOnFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
+  void MultiLevelSolution::InitializeBasedOnControlFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
 
     
 

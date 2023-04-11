@@ -62,22 +62,6 @@ double DesiredTarget(const std::vector<double> & xyz)
 }
 
 
-
-
-//*********************** Find volume elements that contain a Control Face element *********************************
-
-int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
-
- //***** set control domain flag ***** 
-  double mesh_size = 1./NSUB_Y;
-  int control_el_flag = 0;
-   if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
-
-     return control_el_flag;
-}
-
-
-
 //*********************** Find volume elements that contain a Control domain element *********************************
 
 int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_center) {
