@@ -652,18 +652,23 @@ namespace femus {
                 
                   if (face_index_in_domain == /*ctrl::*/LIST_OF_CTRL_FACES :: _face_with_extremes_index[f]) {
                 const unsigned number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::  _num_of_tang_components_per_face_2d;
-                
+                                          
+                unsigned cond_for_tang_component_all = 1;      
+
                             for(unsigned t = 0; t < number_of_tangential_direction_components; t++) {
 
-                          if (
-                                  (geom_element_iel.get_elem_center_bdry_3d()[ /*ctrl::*/LIST_OF_CTRL_FACES ::tangential_direction_to_Gamma_control(face_index_in_domain, number_of_tangential_direction_components)[t] ] >
+                          const bool cond_for_tang_component_t = (geom_element_iel.get_elem_center_bdry_3d()[ /*ctrl::*/LIST_OF_CTRL_FACES ::tangential_direction_to_Gamma_control(face_index_in_domain, number_of_tangential_direction_components)[t] ] >
                                             /*ctrl::*/LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][0] + offset_to_include_line &&
                                    geom_element_iel.get_elem_center_bdry_3d()[ /*ctrl::*/LIST_OF_CTRL_FACES ::tangential_direction_to_Gamma_control(face_index_in_domain, number_of_tangential_direction_components)[t] ] <
                                             /*ctrl::*/LIST_OF_CTRL_FACES ::_face_with_extremes_extremes_on_tang_surface[f][t][1] - offset_to_include_line
-                                  )
-                             ) { value = 1.; }
+                                  );      
+                                
+                          if (  cond_for_tang_component_t == false )  { cond_for_tang_component_all *= 0; }
 
                             }
+                            
+                 if (cond_for_tang_component_all == true) {  value = 1.; }         
+                            
             }
 
 

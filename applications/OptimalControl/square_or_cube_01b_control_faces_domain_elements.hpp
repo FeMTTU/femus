@@ -149,7 +149,7 @@ static int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
 
 
-     return /*control_el_flag*/ 1 ;
+     return control_el_flag /*1 */;
 }
 
 
