@@ -16,80 +16,12 @@ using namespace femus;
 
 
 
- //Unknown definition  ==================
- const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
-     
-     
-  std::vector< FEFamily > feFamily;
-  std::vector< FEOrder >   feOrder;
-
-                        feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE);
- 
-                        feOrder.push_back(/*FIRST*/SECOND);  //same
-                        feOrder.push_back(/*FIRST*/SECOND);  //same
-                        feOrder.push_back(/*FIRST*/SECOND);
-                        feOrder.push_back(/*FIRST*/SECOND);  //same
- 
-
-  assert( feFamily.size() == feOrder.size() );
- 
- std::vector< Unknown >  unknowns(feFamily.size());
-
-   unknowns[0]._name      = "state";
-   unknowns[1]._name      = "control";
-   unknowns[2]._name      = "adjoint";
-   unknowns[3]._name      = "mu";
-
-   unknowns[0]._is_sparse = true;
-   unknowns[1]._is_sparse = true;
-   unknowns[2]._is_sparse = true;
-   unknowns[3]._is_sparse = true;
-   
-     for (unsigned int u = 0; u < unknowns.size(); u++) {
-         
-              unknowns[u]._fe_family  = feFamily[u];
-              unknowns[u]._fe_order   = feOrder[u];
-              unknowns[u]._time_order = 0;
-              unknowns[u]._is_pde_unknown = true;
-              
-     }
- 
- 
-   return unknowns;
-     
-}
-
-
-
-
-
+ // Unknowns - BEGIN  ==================
 double Solution_set_initial_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
     
         return value;
-}
-
-    
-double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
-
-    double value = 0.;
-    
-    if(!strcmp(name,"TargReg")) {
-        value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
-    }
-    else if(!strcmp(name,"ContReg")) {
-        value = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
-    }
-    else if(!strcmp(name,"act_flag")) {
-        value = 0.;
-    }
-
-
-    return value;
 }
 
 
@@ -133,7 +65,29 @@ bool Solution_set_boundary_conditions_Unknowns(const MultiLevelProblem * ml_prob
   
   return dirichlet;
 }
+ // Unknowns - END  ==================
 
+
+    
+ // Not Unknowns - BEGIN  ==================
+double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+
+    double value = 0.;
+    
+    if(!strcmp(name,"TargReg")) {
+        value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
+    }
+    else if(!strcmp(name,"ContReg")) {
+        value = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
+    }
+    else if(!strcmp(name,"act_flag")) {
+        value = 0.;
+    }
+
+
+    return value;
+}
+ // Not Unknowns - END  ==================
 
 
 
@@ -213,7 +167,7 @@ int main(int argc, char** args) {
 
 
   // ======= Solutions that are Unknowns - BEGIN ==================
-  std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
+  std::vector< Unknown > unknowns = elliptic :: lifting_internal :: provide_list_of_unknowns( ml_mesh.GetDimension() );
  
   for (unsigned int u = 0; u < unknowns.size(); u++) { ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown); }
    
@@ -227,11 +181,16 @@ int main(int argc, char** args) {
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
+  
+  // ******** targ reg - BEGIN 
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde); //this variable is not solution of any eqn, it's just a given field
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
+  // ******** targ reg - END
 
+  // ******** cont reg - BEGIN 
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde); //this variable is not solution of any eqn, it's just a given field
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
+  // ******** cont reg - END
 
   // ******** active flag - BEGIN 
   //MU
@@ -260,7 +219,7 @@ int main(int argc, char** args) {
    ml_sol.AddSolution(state_plus_ctrl[0].c_str(), unknowns[index_control]._fe_family, unknowns[index_control]._fe_order, state_plus_ctrl_fake_time_dep_flag, state_plus_ctrl_is_an_unknown_of_a_pde);               
    ml_sol.Initialize(state_plus_ctrl[0].c_str(), Solution_set_initial_conditions_Unknowns, & ml_prob);
 
-   // ******** state plus cont - END 
+  // ******** state plus cont - END 
    
    
   // ======= Solutions that are not Unknowns - END  ==================

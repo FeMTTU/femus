@@ -44,6 +44,7 @@ using namespace femus;
 
 
 
+ // Unknowns - BEGIN  ==================
 double Solution_set_initial_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
@@ -51,23 +52,6 @@ double Solution_set_initial_conditions_Unknowns(const MultiLevelProblem * ml_pro
     return value;
     
 }
-
-double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
-    
-    double value = 0.;
-    
-    if(!strcmp(name, "TargReg")) {
-        value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
-    }
-    else if(!strcmp(name, "act_flag")) {
-        value = 0.;
-    }
-
-
-    return value;
-}
-
-
 
 ///@todo notice that even if you set Dirichlet from the mesh file, here you can override it
 bool Solution_set_boundary_conditions_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
@@ -113,6 +97,28 @@ bool Solution_set_boundary_conditions_Unknowns(const MultiLevelProblem * ml_prob
   
   return dirichlet;
 }
+ // Unknowns - END  ==================
+
+
+
+ // Not Unknowns - BEGIN  ==================
+double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+    
+    double value = 0.;
+    
+    if(!strcmp(name, "TargReg")) {
+        value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
+    }
+    else if(!strcmp(name, "act_flag")) {
+        value = 0.;
+    }
+
+
+    return value;
+}
+ // Not Unknowns - END  ==================
+
+
 
 
 
@@ -194,7 +200,7 @@ int main(int argc, char** args) {
   //RefineMesh contains a similar procedure as ReadCoarseMesh. In particular, the dofmap at each level is filled there
   // ======= Mesh: Refinement - END ==================
 
-  // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
+  // ======= Solutions that are not Unknowns, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
   const std::string node_based_bdry_bdry_flag_name = femus::pure_boundary::_node_based_bdry_bdry;
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
@@ -216,7 +222,7 @@ int main(int argc, char** args) {
                                                               node_bdry_bdry_flag_fe_fam,
                                                               node_bdry_bdry_flag_fe_ord);
   
-  // ======= Solution, auxiliary - END  ==================
+  // ======= Solutions that are not Unknowns, auxiliary - END  ==================
 
   
   // ======= Mesh: Coarse erasing - BEGIN  ========================
@@ -253,12 +259,16 @@ int main(int argc, char** args) {
   
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
+  // ******** targ reg - BEGIN 
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
+  // ******** targ reg - END
   
+  // ******** cont reg - BEGIN 
   const std::string volume_control_region = "ContReg";
   ml_sol.AddSolution(volume_control_region.c_str(), DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.InitializeBasedOnControlFaces< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(volume_control_region.c_str(),  Solution_set_initial_conditions_Not_Unknowns, & ml_prob);
+  // ******** cont reg - END
   
   // ******** active flag - BEGIN 
   //MU
@@ -279,6 +289,7 @@ int main(int argc, char** args) {
   // ******** active flag - END 
   
   
+  // ******** bdry of bdry - BEGIN 
  ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
                 femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
@@ -294,6 +305,7 @@ int main(int argc, char** args) {
                                 node_bdry_bdry_flag_fe_fam,
                                 node_bdry_bdry_flag_fe_ord);
   
+  // ******** bdry of bdry - END 
 
   // ======= Solutions that are not Unknowns - END  ==================
   
