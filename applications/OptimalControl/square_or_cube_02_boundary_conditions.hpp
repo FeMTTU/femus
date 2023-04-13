@@ -91,10 +91,11 @@ static double linear_function_normal_direction(const double domain_length, const
 }// end namespace square_or_cube
   
   
+namespace boundary_control_between_extreme {
+    
   namespace square {
   
   
-namespace boundary_control_between_extreme {
 
 template < class LIST_OF_CTRL_FACES >
  class Boundary_Condition_control_between_extreme: public square_or_cube :: Boundary_Condition<LIST_OF_CTRL_FACES > {
@@ -371,7 +372,30 @@ template < class LIST_OF_CTRL_FACES >
 
 }
 
-namespace boundary_control_full_face {
+
+
+        
+  namespace cube {
+      
+        
+template < class LIST_OF_CTRL_FACES >
+ class Multiple_controls_and_homogeneous_boundary_conditions : public femus:: ctrl :: boundary_control_between_extreme :: square :: Multiple_controls_and_homogeneous_boundary_conditions< LIST_OF_CTRL_FACES > {
+
+ };
+ 
+        
+        
+      }
+      
+  }
+  
+  
+  
+ namespace boundary_control_full_face {
+     
+ namespace square {
+  
+
 
 template < class LIST_OF_CTRL_FACES >
  class Boundary_Condition_control_full_face: public square_or_cube :: Boundary_Condition<LIST_OF_CTRL_FACES > {
@@ -616,22 +640,9 @@ template < class LIST_OF_CTRL_FACES >
 
 }
 
-  }
-  
-  
-  namespace cube {
-      
-    namespace boundary_control_between_extreme {
         
-template < class LIST_OF_CTRL_FACES >
- class Multiple_controls_and_homogeneous_boundary_conditions : public femus:: ctrl :: square :: boundary_control_between_extreme :: Multiple_controls_and_homogeneous_boundary_conditions< LIST_OF_CTRL_FACES > {
-
- };
- 
-        
-        
-      }
-    namespace boundary_control_full_face {
+   namespace cube {
+     
     }  
       
   }  

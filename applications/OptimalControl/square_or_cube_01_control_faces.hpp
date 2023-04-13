@@ -131,9 +131,11 @@ template < unsigned N_TANG_COMPONENTS >
  }
  
  
+namespace boundary_control_between_extreme {
+
+    
   namespace square {
 
-namespace boundary_control_between_extreme {
 
 
 //*********************** Single - BEGIN *****************************************
@@ -642,7 +644,122 @@ namespace boundary_control_between_extreme {
 }
 
 
-namespace  boundary_control_full_face {
+
+  namespace cube {
+      
+
+
+//*********************** Single - BEGIN *****************************************
+
+
+  class List_of_Gamma_control_faces_Single : public square_or_cube::List_of_Gamma_control_faces<2> {
+
+  public:
+
+     static constexpr unsigned _face_with_extremes_index_size = 1 ;
+
+     static constexpr bool     _face_with_extremes_extract_subface[ _face_with_extremes_index_size ] = {
+         true
+    };
+
+     static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][ _num_of_tang_components_per_face ][_num_of_control_extremes_per_tang_comp_per_face];
+
+
+  };
+
+
+  const double   List_of_Gamma_control_faces_Single::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][ _num_of_tang_components_per_face ][_num_of_control_extremes_per_tang_comp_per_face] = {
+          { { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX },
+            { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX /*0., 1.*/ } }
+    };
+
+
+
+
+    class List_of_Gamma_control_faces_One :  public  List_of_Gamma_control_faces_Single {
+
+  public:
+
+     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
+
+  };
+
+     const unsigned List_of_Gamma_control_faces_One::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    1    };
+
+
+
+  class List_of_Gamma_control_faces_Two : public List_of_Gamma_control_faces_Single {
+
+  public:
+
+     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
+
+  };
+
+      const unsigned List_of_Gamma_control_faces_Two::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    2    };
+
+
+      class List_of_Gamma_control_faces_Three : public List_of_Gamma_control_faces_Single {
+
+  public:
+
+     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
+
+  };
+
+      const unsigned List_of_Gamma_control_faces_Three::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    3    };
+
+
+
+      class List_of_Gamma_control_faces_Four : public List_of_Gamma_control_faces_Single {
+
+  public:
+
+     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
+
+  };
+
+      const unsigned List_of_Gamma_control_faces_Four::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    4    };
+      
+
+      
+     class List_of_Gamma_control_faces_Five : public List_of_Gamma_control_faces_Single {
+
+  public:
+
+     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
+
+  };
+
+      const unsigned List_of_Gamma_control_faces_Five::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    5    };
+      
+
+
+     class List_of_Gamma_control_faces_Six : public List_of_Gamma_control_faces_Single {
+
+  public:
+
+     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
+
+  };
+
+      const unsigned List_of_Gamma_control_faces_Six::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    6    };
+      
+
+//*********************** Single - END *****************************************
+
+
+
+    }
+
+      
+} //end namespace boundary_control_between_extreme
+
+ 
+ namespace  boundary_control_full_face {
+     
+  namespace square {
+
 
 
 //*********************** Single - BEGIN *****************************************
@@ -1155,121 +1272,9 @@ namespace  boundary_control_full_face {
 
 
 
+ 
 
- }
- 
- 
   namespace cube {
-      
-    namespace boundary_control_between_extreme {
-
-
-//*********************** Single - BEGIN *****************************************
-
-
-  class List_of_Gamma_control_faces_Single : public square_or_cube::List_of_Gamma_control_faces<2> {
-
-  public:
-
-     static constexpr unsigned _face_with_extremes_index_size = 1 ;
-
-     static constexpr bool     _face_with_extremes_extract_subface[ _face_with_extremes_index_size ] = {
-         true
-    };
-
-     static const double   _face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][ _num_of_tang_components_per_face ][_num_of_control_extremes_per_tang_comp_per_face];
-
-
-  };
-
-
-  const double   List_of_Gamma_control_faces_Single::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][ _num_of_tang_components_per_face ][_num_of_control_extremes_per_tang_comp_per_face] = {
-          { { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX },
-            { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX /*0., 1.*/ } }
-    };
-
-
-
-
-    class List_of_Gamma_control_faces_One :  public  List_of_Gamma_control_faces_Single {
-
-  public:
-
-     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
-
-  };
-
-     const unsigned List_of_Gamma_control_faces_One::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    1    };
-
-
-
-  class List_of_Gamma_control_faces_Two : public List_of_Gamma_control_faces_Single {
-
-  public:
-
-     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
-
-  };
-
-      const unsigned List_of_Gamma_control_faces_Two::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    2    };
-
-
-      class List_of_Gamma_control_faces_Three : public List_of_Gamma_control_faces_Single {
-
-  public:
-
-     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
-
-  };
-
-      const unsigned List_of_Gamma_control_faces_Three::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    3    };
-
-
-
-      class List_of_Gamma_control_faces_Four : public List_of_Gamma_control_faces_Single {
-
-  public:
-
-     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
-
-  };
-
-      const unsigned List_of_Gamma_control_faces_Four::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    4    };
-      
-
-      
-     class List_of_Gamma_control_faces_Five : public List_of_Gamma_control_faces_Single {
-
-  public:
-
-     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
-
-  };
-
-      const unsigned List_of_Gamma_control_faces_Five::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    5    };
-      
-
-
-     class List_of_Gamma_control_faces_Six : public List_of_Gamma_control_faces_Single {
-
-  public:
-
-     static const unsigned _face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ];
-
-  };
-
-      const unsigned List_of_Gamma_control_faces_Six::_face_with_extremes_index[ List_of_Gamma_control_faces_Single::_face_with_extremes_index_size ] = {    6    };
-      
-
-//*********************** Single - END *****************************************
-
-
-
-    } //end namespace boundary_control_between_extreme
-      
-     namespace  boundary_control_full_face {
-
-
 
 //*********************** Single - BEGIN *****************************************
 
