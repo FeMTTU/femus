@@ -9,7 +9,7 @@
 //*********************** Control, cost functional, target region - BEGIN *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_TARGET         1
+#define FACE_FOR_TARGET         5
 
 #define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
 //*********************** Control, cost functional, target region - END *******************************************************
@@ -55,7 +55,7 @@ static int ElementTargetFlag(const std::vector<double> & elem_center) {
 
   const double offset_to_include_line = OFFSET_TO_INCLUDE_LINE;
 
-  const unsigned int axis_dir = normal_direction_to_face_attached_to_target_reg(FACE_FOR_TARGET);
+  const unsigned int normal_dir = normal_direction_to_face_attached_to_target_reg(FACE_FOR_TARGET);
 
   const int  target_line_sign =  ctrl:: square_or_cube:: List_of_faces ::sign_function_for_delimiting_region(FACE_FOR_TARGET);
 
@@ -63,8 +63,8 @@ static int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 
 
-      if ((  target_line_sign * elem_center[axis_dir] < target_line_sign * target_line ) &&
-          (  target_line_sign * elem_center[axis_dir] > - target_line_position_along_coordinate + target_line_sign * (target_line_position_along_coordinate - target_line_sign * offset_to_include_line)))
+      if ((  target_line_sign * elem_center[normal_dir] < target_line_sign * target_line ) &&
+          (  target_line_sign * elem_center[normal_dir] > - target_line_position_along_coordinate + target_line_sign * (target_line_position_along_coordinate - target_line_sign * offset_to_include_line)))
           {  target_flag = 1;  }
 
      return target_flag;

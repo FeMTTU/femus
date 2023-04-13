@@ -1,0 +1,151 @@
+<CustomFilterDefinitions>
+  <CustomProxyDefinition name="slice&#x26;warp" group="filters">
+    <CompoundSourceProxy id="18714" servers="1">
+      <Proxy group="filters" type="Cut" id="8189" servers="1" compound_name="Slice2">
+        <Property name="ContourValues" id="8189.ContourValues" number_of_elements="1">
+          <Element index="0" value="0"/>
+          <Domain name="bounds" id="8189.ContourValues.bounds"/>
+        </Property>
+        <Property name="CutFunction" id="8189.CutFunction" number_of_elements="1">
+          <Proxy value="8183"/>
+          <Domain name="proxy_list" id="8189.CutFunction.proxy_list">
+            <Proxy value="8184"/>
+            <Proxy value="8185"/>
+            <Proxy value="8183"/>
+            <Proxy value="8186"/>
+          </Domain>
+        </Property>
+        <Property name="HyperTreeGridImplicitFunction" id="8189.HyperTreeGridImplicitFunction" number_of_elements="1">
+          <Proxy value="8187"/>
+          <Domain name="proxy_list" id="8189.HyperTreeGridImplicitFunction.proxy_list">
+            <Proxy value="8188"/>
+            <Proxy value="8187"/>
+          </Domain>
+        </Property>
+        <Property name="Input" id="8189.Input" number_of_elements="1">
+          <Domain name="groups" id="8189.Input.groups"/>
+          <Domain name="input_type" id="8189.Input.input_type"/>
+        </Property>
+        <Property name="InputBounds" id="8189.InputBounds">
+          <Domain name="bounds" id="8189.InputBounds.bounds"/>
+        </Property>
+        <Property name="MergePoints" id="8189.MergePoints" number_of_elements="1">
+          <Element index="0" value="1"/>
+          <Domain name="bool" id="8189.MergePoints.bool"/>
+        </Property>
+        <Property name="PreserveInputCells" id="8189.PreserveInputCells" number_of_elements="1">
+          <Element index="0" value="0"/>
+          <Domain name="bool" id="8189.PreserveInputCells.bool"/>
+        </Property>
+        <Property name="SetDual" id="8189.SetDual" number_of_elements="1">
+          <Element index="0" value="0"/>
+          <Domain name="bool" id="8189.SetDual.bool"/>
+        </Property>
+        <Property name="Triangulate the slice" id="8189.Triangulate the slice" number_of_elements="1">
+          <Element index="0" value="1"/>
+          <Domain name="bool" id="8189.Triangulate the slice.bool"/>
+        </Property>
+      </Proxy>
+      <Proxy group="filters" type="WarpScalar" id="8420" servers="1" compound_name="WarpByScalar2">
+        <Property name="Input" id="8420.Input" number_of_elements="1">
+          <Proxy value="8189" output_port="0"/>
+          <Domain name="groups" id="8420.Input.groups"/>
+          <Domain name="input_array" id="8420.Input.input_array"/>
+          <Domain name="input_type" id="8420.Input.input_type"/>
+        </Property>
+        <Property name="Normal" id="8420.Normal" number_of_elements="3">
+          <Element index="0" value="1"/>
+          <Element index="1" value="0"/>
+          <Element index="2" value="0"/>
+          <Domain name="range" id="8420.Normal.range"/>
+        </Property>
+        <Property name="ScaleFactor" id="8420.ScaleFactor" number_of_elements="1">
+          <Element index="0" value="0.01"/>
+          <Domain name="range" id="8420.ScaleFactor.range"/>
+        </Property>
+        <Property name="SelectInputScalars" id="8420.SelectInputScalars" number_of_elements="5">
+          <Element index="0" value=""/>
+          <Element index="1" value=""/>
+          <Element index="2" value=""/>
+          <Element index="3" value="0"/>
+          <Element index="4" value="control"/>
+          <Domain name="array_list" id="8420.SelectInputScalars.array_list">
+            <String text="Bdcadjoint"/>
+            <String text="Bdccontrol"/>
+            <String text="Bdcmu"/>
+            <String text="Bdcstate"/>
+            <String text="Epsadjoint"/>
+            <String text="Epscontrol"/>
+            <String text="Epsmu"/>
+            <String text="Epsstate"/>
+            <String text="Resadjoint"/>
+            <String text="Rescontrol"/>
+            <String text="Resmu"/>
+            <String text="Resstate"/>
+            <String text="act_flag"/>
+            <String text="adjoint"/>
+            <String text="control"/>
+            <String text="mu"/>
+            <String text="state"/>
+            <String text="state_plus_ctrl"/>
+          </Domain>
+        </Property>
+        <Property name="UseNormal" id="8420.UseNormal" number_of_elements="1">
+          <Element index="0" value="0"/>
+          <Domain name="bool" id="8420.UseNormal.bool"/>
+        </Property>
+        <Property name="XYPlane" id="8420.XYPlane" number_of_elements="1">
+          <Element index="0" value="0"/>
+          <Domain name="bool" id="8420.XYPlane.bool"/>
+        </Property>
+      </Proxy>
+      <Proxy group="implicit_functions" type="Plane" id="8183" servers="21" compound_name="auto_8183">
+        <Property name="Normal" id="8183.Normal" number_of_elements="3">
+          <Element index="0" value="1"/>
+          <Element index="1" value="0"/>
+          <Element index="2" value="0"/>
+          <Domain name="range" id="8183.Normal.range"/>
+        </Property>
+        <Property name="Offset" id="8183.Offset" number_of_elements="1">
+          <Element index="0" value="0"/>
+        </Property>
+        <Property name="Origin" id="8183.Origin" number_of_elements="3">
+          <Element index="0" value="1"/>
+          <Element index="1" value="0.5"/>
+          <Element index="2" value="0.5"/>
+          <Domain name="range" id="8183.Origin.range"/>
+        </Property>
+      </Proxy>
+      <Proxy group="implicit_functions" type="Plane" id="8187" servers="21" compound_name="auto_8187">
+        <Property name="Normal" id="8187.Normal" number_of_elements="3">
+          <Element index="0" value="1"/>
+          <Element index="1" value="0"/>
+          <Element index="2" value="0"/>
+          <Domain name="range" id="8187.Normal.range"/>
+        </Property>
+        <Property name="Offset" id="8187.Offset" number_of_elements="1">
+          <Element index="0" value="0"/>
+        </Property>
+        <Property name="Origin" id="8187.Origin" number_of_elements="3">
+          <Element index="0" value="0.5"/>
+          <Element index="1" value="0.5"/>
+          <Element index="2" value="0.5"/>
+          <Domain name="range" id="8187.Origin.range"/>
+        </Property>
+      </Proxy>
+      <ExposedProperties>
+        <Property name="Input" proxy_name="Slice2" exposed_name="Input"/>
+        <Property name="InputBounds" proxy_name="Slice2" exposed_name="Input Bounds"/>
+        <Property name="Normal" proxy_name="WarpByScalar2" exposed_name="Normal"/>
+        <Property name="SelectInputScalars" proxy_name="WarpByScalar2" exposed_name="Scalars"/>
+        <Property name="ScaleFactor" proxy_name="WarpByScalar2" exposed_name="Scale Factor"/>
+        <Property name="ContourValues" proxy_name="Slice2" exposed_name="Slice Offset Values"/>
+        <Property name="CutFunction" proxy_name="Slice2" exposed_name="Slice Type"/>
+      </ExposedProperties>
+      <OutputPort name="Output" proxy="WarpByScalar2" port_index="0"/>
+      <Hints>
+        <ShowInMenu/>
+      </Hints>
+    </CompoundSourceProxy>
+  </CustomProxyDefinition>
+</CustomFilterDefinitions>

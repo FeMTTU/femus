@@ -111,8 +111,8 @@ static int ControlDomainFlag_internal_restriction(const std::vector<double> & el
    const unsigned int tang_dir = 1 - normal_dir;
 
    if ( ( line_sign * elem_center[normal_dir] <   line_sign * ( extreme_pos + line_sign * control_domain_depth ) )
-       && ( elem_center[tang_dir] > control_domain_width_lower - offset_to_include_line )
-       && ( elem_center[tang_dir] < control_domain_width_upper + offset_to_include_line ) )
+       /*&& ( elem_center[tang_dir] > control_domain_width_lower - offset_to_include_line )
+       && ( elem_center[tang_dir] < control_domain_width_upper + offset_to_include_line )*/ )
       { control_el_flag = 1; }
 
       }
