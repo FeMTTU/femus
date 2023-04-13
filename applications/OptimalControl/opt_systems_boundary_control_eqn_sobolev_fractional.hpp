@@ -700,9 +700,15 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
    
 	// Perform face loop over elements that contain some control face
+        bool vol_elem_contains_control;
+        if(jproc == iproc) {
+           vol_elem_contains_control =  DOMAIN_CONTAINING_CTRL_FACES :: volume_elem_contains_a_Gamma_control_face(sol, msh, jel);
+        }
+      MPI_Bcast(& vol_elem_contains_control, 1, MPI_C_BOOL, proc_to_bcast_from, MPI_COMM_WORLD);
         
         
-	if ( DOMAIN_CONTAINING_CTRL_FACES :: volume_elem_contains_a_Gamma_control_face(sol, msh, jel) ) {
+        
+	if ( vol_elem_contains_control ) {
 // --- jel opening - END
 
       
