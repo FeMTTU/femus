@@ -516,7 +516,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
      ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
-                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                femus::ctrl:: square_or_cube:: pure_boundary< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
                 >
 ::control_eqn_bdry(iproc,
                    nprocs,
@@ -593,7 +593,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   
    femus::ctrl::Gamma_control_equation_integer_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
-                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                femus::ctrl:: square_or_cube:: pure_boundary< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
                 >
                 ::control_eqn_bdry(iproc,
                     ml_prob,
@@ -691,7 +691,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
    //***************************************       
    
  //************ set control flag - BEGIN *********************
-        const bool does_iel_contain_Gamma_c = ctrl::square_or_cube :: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( sol, msh, iel );
+        const bool does_iel_contain_Gamma_c = ctrl::square_or_cube :: pure_boundary< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( sol, msh, iel );
   int does_iel_contain_a_bdry_control_face = does_iel_contain_Gamma_c? 1 : 0;
 
  //************ initialize control node flag: for each Volume Elem, tell me if we have a Boundary Control dof *********************
@@ -1472,7 +1472,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >:: volume_elem_contains_a_Gamma_control_face( sol, msh, iel ) ) {
+	if ( ctrl:: square_or_cube:: pure_boundary< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >:: volume_elem_contains_a_Gamma_control_face( sol, msh, iel ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -2979,7 +2979,7 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl:: square_or_cube:: lifting_internal< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
 
   std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
        
@@ -3791,7 +3791,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl:: square_or_cube:: lifting_internal< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {

@@ -227,7 +227,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
  //*************************************************** 
    
  //************** set control flag *******************
-        const bool does_iel_contain_Gamma_c = ctrl::square_or_cube :: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( sol, msh, iel );
+        const bool does_iel_contain_Gamma_c = ctrl::square_or_cube :: pure_boundary< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( sol, msh, iel );
   int control_el_flag = does_iel_contain_Gamma_c? 1 : 0;
         
   std::vector<int> control_node_flag(nDofx,0);
@@ -1041,7 +1041,7 @@ vector < double >  sol_adj; // local solution
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(elem_center);
+  control_el_flag = femus::ctrl:: square_or_cube:: lifting_internal< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(elem_center);
   std::vector<int> control_node_flag(nDof_ctrl,0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 

@@ -78,7 +78,7 @@ double Solution_set_initial_conditions_Not_Unknowns(const MultiLevelProblem * ml
         value = ctrl::square_or_cube :: cost_functional_without_regularization::ElementTargetFlag(x);
     }
     else if(!strcmp(name,"ContReg")) {
-        value = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
+        value = ctrl:: square_or_cube:: lifting_internal< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
     }
     else if(!strcmp(name,"act_flag")) {
         value = 0.;
@@ -286,11 +286,14 @@ int main(int argc, char** args) {
 
   
   femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,
-                                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ,
+                                femus::ctrl:: square_or_cube:: lifting_internal< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ,
                                 femus::ctrl::COST_FUNCTIONAL_WITHOUT_REG >
                                 ::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
   
-  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >, femus::ctrl::COST_FUNCTIONAL_WITHOUT_REG >::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
+  femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,
+                                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >,
+                                femus::ctrl::COST_FUNCTIONAL_WITHOUT_REG >
+  ::compute_cost_functional_regularization_bdry(ml_prob, 0, 0, state_plus_ctrl, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
   // ======= Post-processing, Computations - END ========================
   
   

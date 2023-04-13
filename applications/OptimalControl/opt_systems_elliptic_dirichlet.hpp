@@ -369,7 +369,7 @@ public:
      // fractional
      femus::ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
-                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                femus::ctrl:: square_or_cube:: pure_boundary< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
                 >::control_eqn_bdry(
                     iproc,
                     nprocs,
@@ -444,7 +444,7 @@ public:
    // integer
    femus::ctrl::Gamma_control_equation_integer_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
-                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                femus::ctrl:: square_or_cube:: pure_boundary< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
                 >
                 ::control_eqn_bdry(iproc,
                     ml_prob,
@@ -572,7 +572,7 @@ public:
   //*************************************************** 
  
 
-	if ( femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::volume_elem_contains_a_Gamma_control_face(sol, msh, iel) ) {
+	if ( femus::ctrl:: square_or_cube:: pure_boundary< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ::volume_elem_contains_a_Gamma_control_face(sol, msh, iel) ) {
 	  
 	  std::vector<double> normal(space_dim, 0.);
 	       
@@ -952,7 +952,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
                          L2G_dofmap_Mat);
 // -------
 
-	if ( ctrl::square_or_cube :: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( sol, msh, iel ) ) {
+	if ( ctrl::square_or_cube :: pure_boundary< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >  ::volume_elem_contains_a_Gamma_control_face( sol, msh, iel ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1446,7 +1446,7 @@ public:
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = femus::ctrl:: square_or_cube:: lifting_internal< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES>::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
   std::vector<int> control_node_flag(nDof_ctrl, 0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
@@ -1839,7 +1839,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl:: square_or_cube:: lifting_internal< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {
@@ -2692,7 +2692,7 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
       
     //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
+  control_el_flag = ctrl:: square_or_cube:: lifting_internal < ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(geom_element_iel.get_elem_center_3d());
  
     
     if (control_el_flag == 1) {

@@ -345,7 +345,7 @@ int main(int argc, char** args) {
   
   MultiLevelSolution * ml_sol_bdry_bdry_flag = ctrl::Gamma_control_equation_fractional_sobolev_differentiability_index<
                 femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES, 
-                femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
+                femus::ctrl:: square_or_cube:: pure_boundary< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >
                 >
 ::bdry_bdry_flag(files,
                                                               ml_mesh, 

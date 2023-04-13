@@ -23,7 +23,7 @@ using namespace femus;
 
 
 double InitialValueContReg(const std::vector < double >& x) {
-  return femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
+  return femus::ctrl:: square_or_cube:: lifting_internal< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >::ControlDomainFlag_internal_restriction(x);
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
@@ -108,6 +108,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("state", InitialValueState);
   mlSol.Initialize("control", InitialValueControl);
   mlSol.Initialize("adjoint", InitialValueAdjoint);
+  
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
 
@@ -148,7 +149,7 @@ int main(int argc, char** args) {
   std::vector<std::string> state_vars(n_components_state);  state_vars[0] = "state";
   std::vector<std::string> ctrl_vars(n_components_ctrl);     ctrl_vars[0] = "control";
   
-   femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl:: square_or_cube:: Domain_elements_containing_Gamma_control< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ,
+   femus::ctrl::cost_functional< femus::ctrl::GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES,  femus::ctrl:: square_or_cube:: lifting_internal< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES > ,
                                 femus::ctrl::COST_FUNCTIONAL_WITHOUT_REG  >::compute_cost_functional_regularization_lifting_internal(ml_prob, 0, 0, state_vars, ctrl_vars, ALPHA_CTRL_VOL, BETA_CTRL_VOL, QRULE_I);
 
  
@@ -157,6 +158,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("state");
   variablesToBePrinted.push_back("control");
   variablesToBePrinted.push_back("adjoint");
+  
   variablesToBePrinted.push_back("TargReg");
   variablesToBePrinted.push_back("ContReg");
 
