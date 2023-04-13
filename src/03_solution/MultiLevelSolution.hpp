@@ -651,7 +651,7 @@ namespace femus {
             for(unsigned f = 0; f <  LIST_OF_CTRL_FACES ::_face_with_extremes_index_size; f++) {
                 
                   if (face_index_in_domain == /*ctrl::*/LIST_OF_CTRL_FACES :: _face_with_extremes_index[f]) {
-                const unsigned number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::  _num_of_tang_components_per_face_2d;
+                const unsigned number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::   _num_of_tang_components_per_face ;
                                           
                 unsigned cond_for_tang_component_all = 1;      
 

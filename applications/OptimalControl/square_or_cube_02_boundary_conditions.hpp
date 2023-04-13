@@ -107,7 +107,7 @@ template < class LIST_OF_CTRL_FACES >
                                         const std::vector < double > & x,
                                         bool &  dirichlet)  {
 
-             const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d;
+             const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::  _num_of_tang_components_per_face ;
              std::pair< bool, bool > boundary_and_control_flags_region = square_or_cube:: Boundary_Condition<LIST_OF_CTRL_FACES >::is_boundary_of_boundary_region(faceName, x, number_of_tangential_direction_components);
 
              /*static*/ bool is_facename_a_control_face = boundary_and_control_flags_region.first;
@@ -157,7 +157,7 @@ static double ctrl_or_state_set_dirichlet_fixed_values(const MultiLevelProblem *
 
 //      assert( _face_with_extremes_index_size == 2 );
 
-    const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d;
+    const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::  _num_of_tang_components_per_face ;
     std::pair< bool, bool > boundary_and_control_flags_region = square_or_cube:: Boundary_Condition<LIST_OF_CTRL_FACES >:: is_boundary_of_boundary_region(faceName, x, number_of_tangential_direction_components);
 
     /*static*/ bool  is_facename_a_control_face = boundary_and_control_flags_region.first;
@@ -269,7 +269,7 @@ template < class LIST_OF_CTRL_FACES >
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
      assert( /*ctrl::*/ LIST_OF_CTRL_FACES ::_face_with_extremes_index_size == 2 );
 
-     const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d;
+     const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::  _num_of_tang_components_per_face ;
      std::pair< bool, bool > boundary_and_control_flags_region =  square_or_cube:: Boundary_Condition<LIST_OF_CTRL_FACES >::is_boundary_of_boundary_region(faceName, x, number_of_tangential_direction_components);
 
      /*static*/ bool is_facename_a_control_face = boundary_and_control_flags_region.first;
@@ -316,7 +316,7 @@ template < class LIST_OF_CTRL_FACES >
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
 
-     const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES :: _num_of_tang_components_per_face_2d;
+     const unsigned int number_of_tangential_direction_components = LIST_OF_CTRL_FACES ::  _num_of_tang_components_per_face ;
      std::pair< bool, bool > boundary_and_control_flags_region =  square_or_cube:: Boundary_Condition<LIST_OF_CTRL_FACES >::is_boundary_of_boundary_region(faceName, x, number_of_tangential_direction_components);
 
      /*static*/ bool is_facename_a_control_face = boundary_and_control_flags_region.first;
