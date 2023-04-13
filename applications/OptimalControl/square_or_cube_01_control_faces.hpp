@@ -1187,7 +1187,7 @@ namespace  boundary_control_full_face {
 
   const double   List_of_Gamma_control_faces_Single::_face_with_extremes_extremes_on_tang_surface[ _face_with_extremes_index_size ][_num_of_tang_components_per_face_2d][_num_of_control_extremes_per_tang_comp_per_face] = {
           { { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX },
-            { /*SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX*/ 0., 1. } }
+            { SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MIN, SQUARE_OR_CUBE__CONTROL_FACE_TANG_COORD_MAX /*0., 1.*/ } }
     };
 
 
