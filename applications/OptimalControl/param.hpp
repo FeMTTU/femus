@@ -335,8 +335,8 @@ namespace ctrl {
 #define  DOMAIN_NAMESPACE_CHILD   cube
 
 //       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser;
-      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser_between;
-
+//       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_single_face_control_2_old_coarser_between;
+      const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_all_faces_between_between;
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_One
 #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Two

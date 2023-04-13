@@ -32,6 +32,7 @@ namespace mesh {
   const std::string _3d_cube_single_face_control_2_old_coarser_between = "Mesh_3_groups_with_bdry_nodes_coarser_BETWEEN_BETWEEN.med";
   const std::string _3d_cube_single_face_control_3             = "GroupofNode_Face3.med";
   const std::string _3d_cube_single_face_control_4             = "GroupofNode_Face4.med";
+  const std::string _3d_cube_all_faces_between_between         = "All_Face_For_Control_Parametric_Group_of_Nodes_MERGED_FACES_BETWEEN_BETWEEN.med";
 
 
 }

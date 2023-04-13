@@ -202,7 +202,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
           
           
   const unsigned  sol_node_flag_index =  ml_sol->GetIndex( node_based_bdry_bdry_in.c_str() );
-  const unsigned  group_salome = 2;   ///@todo fix here, maybe pass it in the args
+  const unsigned  group_salome = 3/*2*/;   ///@todo fix here, maybe pass it in the args
   
 
   
