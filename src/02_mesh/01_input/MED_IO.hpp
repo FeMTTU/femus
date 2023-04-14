@@ -87,9 +87,11 @@ class MED_IO : public MeshInput<Mesh>
      
   void node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  vector < TYPE_FOR_REAL_DATASET >  & node_group_map);
   
+ public:
   hid_t open_mesh_file(const std::string& name);
   
   void close_mesh_file(hid_t file_id);
+ private:
   
   std::string get_element_info_all_dims_H5Group(const std::string mesh_menu) const;
   
@@ -147,9 +149,11 @@ class MED_IO : public MeshInput<Mesh>
 
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names, const std::string  geom_elem_type) const;
    
+ public:
    const std::vector< GroupInfo > get_all_groups_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
-   
+    
    const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
+ private:
      
    std::pair<int, std::vector<int> >  isolate_number_in_string_between_underscores(const std::string & string_in, const int begin_pos_to_investigate) const;
       
@@ -182,7 +186,7 @@ class MED_IO : public MeshInput<Mesh>
    static const std::string nodes_coord_list;                //COO
    static const std::string group_ensemble;            //FAS
    static const std::string group_elements;            //ELEME
-   static const std::string group_nodes;               //NOEUD  //if you ever use group of nodes, not used now
+   static const std::string group_nodes;               //NOEUD
    static const uint max_length;
 
    std::vector< GeomElemBase* > _geom_elems;

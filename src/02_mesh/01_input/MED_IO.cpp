@@ -154,51 +154,62 @@ namespace femus {
     const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
 
-    // dimension and geom_el types ===============
+    // dimension and geom_el types - BEGIN ===============
 
     const std::vector< GeomElemBase* > geom_elem_per_dimension = set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(file_id, mesh_menus[0]);
 
     const unsigned mesh_dim = mesh.GetDimension();
+    // dimension and geom_el types - END ===============
 
-    // meshes ========================
+    // meshes - BEGIN ========================
     for(unsigned j = 0; j < mesh_menus.size(); j++) {
 
-      // node coordinates
+      // node coordinates - BEGIN
       set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
+      // node coordinates - END
 
-      // Volume connectivity
+      // Volume connectivity - BEGIN
       //       for(unsigned i = 0; i < mesh_dim; i++) {
       unsigned i = mesh_dim - 1;
       set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
+      // Volume connectivity - END
 
 
 
+        // Groups of the mesh - BEGIN ===============
       if(read_domain_groups_flag == true || read_boundary_groups_flag == true)  {
 
-        // Groups of the mesh ===============
+        // Group info - BEGIN ===============
         std::vector< GroupInfo >     group_info = get_all_groups_per_mesh(file_id, mesh_menus[j]);
+        // Group info - END ===============
 
+        // Group Geom Elem and Size - BEGIN ===============
         for(unsigned i = 0; i < group_info.size(); i++) {
           compute_group_geom_elem_and_size(file_id, mesh_menus[j], group_info[i]);
         }
+        // Group Geom Elem and Size - END ===============
 
-        // Domain groups (dimension same as max mesh dimension) ===============
+        // Domain groups (dimension same as max mesh dimension) - BEGIN ===============
         if(read_domain_groups_flag == true) {
           if(i == (mesh_dim - 1)) {
 //           for(unsigned i = 0; i < mesh_dim; i++) {
             set_elem_group_ownership(file_id, mesh_menus[j], group_info, geom_elem_per_dimension[i], i);
           }
         }
+        // Domain groups (dimension same as max mesh dimension) - END ===============
 
-        // Boundary groups ===============
+        // Boundary groups (dimension - 1) - BEGIN ===============
         if(read_boundary_groups_flag == true)  {
           set_elem_group_ownership_boundary(file_id, mesh_menus[j], group_info, geom_elem_per_dimension, mesh_dim, mesh.el->GetElementNearFaceArray());
         }
+        // Boundary groups (dimension - 1) - END ===============
 
       }
+        // Groups of the mesh - END ===============
 
 
     }
+    // meshes - END ========================
 
 
     close_mesh_file(file_id);
@@ -267,13 +278,13 @@ namespace femus {
 
     if (group_info._node_or_cell_group == group_nodes ) {
          
-// ========= group geom elem ==========
+// ========= group geom elem - BEGIN ==========
         std::string  elem_types_str = nodes_folder;
         
        group_info._geom_el = get_geom_elem_from_med_name(elem_types_str);
-// ========= group geom elem ==========
+// ========= group geom elem - END ==========
  
-// ========= group size ==========
+// ========= group size - BEGIN ==========
      std::string my_mesh_name_dir = get_node_info_H5Group(mesh_menu);
  
      std::string fam_name_dir = my_mesh_name_dir  + group_fam + "/";
@@ -294,7 +305,7 @@ namespace femus {
        }
        
        group_info._size = group_size;
-// ========= group size ==========
+// ========= group size - END ==========
          
      }
      
@@ -611,13 +622,14 @@ namespace femus {
                
         close_mesh_file(file_id);
         
-        //reorder with femus mapping
+        //reorder with femus mapping - BEGIN
        std::vector < TYPE_FOR_REAL_DATASET > node_group_map_with_femus_ordering(GetMesh().GetNumberOfNodes());
 
 
         for(unsigned j = 0; j < node_group_map_with_med_ordering.size(); j++) {
           node_group_map_with_femus_ordering[ mapping[j] ] = node_group_map_with_med_ordering[j];
         }
+        //reorder with femus mapping - END
        
         
         return node_group_map_with_femus_ordering;

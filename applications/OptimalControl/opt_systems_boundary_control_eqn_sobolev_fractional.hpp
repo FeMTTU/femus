@@ -45,7 +45,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                       const double C_ns,
                       const double beta,
 //////////
-                      const Mesh * msh,
+                      /************const*/ Mesh * msh,
                       const Solution *    sol,
                       const MultiLevelSolution *    ml_sol,
 //////////
@@ -202,8 +202,38 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
           
           
   const unsigned  sol_node_flag_index =  ml_sol->GetIndex( node_based_bdry_bdry_in.c_str() );
-  const unsigned  group_salome = 3/*2*/;   ///@todo fix here, maybe pass it in the args
   
+  
+  //med_flag_of_node_bdry_bdry_for_control_face BEGIN
+         unsigned  med_flag_of_node_bdry_bdry_for_control_face = 3;
+       
+//   MED_IO  med_io(*msh/*Mesh, the coarse or whatever?*/);
+//   
+//   std::string mesh_file_location = "../../../input/" + ml_sol->_mlMesh->_mesh_filename;
+//   
+//     hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
+// 
+//     const std::vector< std::string > mesh_menus = med_io.get_mesh_names(file_id);
+//          
+//     
+// 
+// 
+//     for (unsigned j = 0; j < mesh_menus.size(); j++)   {
+//         
+//         std::vector< GroupInfo >     group_info = med_io.get_all_groups_per_mesh(file_id, mesh_menus[j]);
+//    
+//     
+//       for ( unsigned gr = 0; gr < group_info.size(); gr++) {
+//              for  ( unsigned w = 0; w < LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; w++) {
+// 
+//             if ( (group_info[gr]._user_defined_flag - 6) == LIST_OF_CTRL_FACES :: _face_with_extremes_index[w]) 
+//             {///@todo fix here,
+//                 med_flag_of_node_bdry_bdry_for_control_face = group_info[gr]._med_flag; }
+//              }
+//                 
+//         }
+//      }    
+  //med_flag_of_node_bdry_bdry_for_control_face END
 
   
   unsigned iel_geom_type = msh->GetElementType(iel);
@@ -246,7 +276,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               }
               
               
-                bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, group_salome);
+                bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, med_flag_of_node_bdry_bdry_for_control_face);
 
               if(is_face_bdry_bdry) {
                 
@@ -444,7 +474,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                         MultiLevelProblem &    ml_prob,
                         MultiLevelSolution*    ml_sol,
                         const Solution*        sol,
-                        const Mesh * msh,
+                        /*const*/ Mesh * msh,
                         const  LinearEquationSolver* pdeSys,
                         //-----------
                         CurrentElem < double > & geom_element_iel,
