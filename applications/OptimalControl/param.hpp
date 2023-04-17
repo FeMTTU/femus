@@ -121,7 +121,7 @@ namespace ctrl {
 
 #if IS_CTRL_FRACTIONAL_SOBOLEV == 1
 
-#define NORM_GIR_RAV 0 /*1*/ /* Leave it at 0 */
+#define NORM_GIR_RAV /*0*/ 1 /* Leave it at 0 */
 
 #if NORM_GIR_RAV == 0
 

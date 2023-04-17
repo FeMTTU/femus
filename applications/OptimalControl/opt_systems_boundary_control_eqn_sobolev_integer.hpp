@@ -147,12 +147,12 @@ public:
     if ( DOMAIN_CONTAINING_CTRL_FACES ::volume_elem_contains_a_Gamma_control_face(sol, msh, iel) ) {
         
   
- //************ set control flag *********************
+ //************ set control flag - BEGIN *********************
   std::vector< std::vector< int > > control_node_flag_iel_all_faces = 
        femus::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
        
        ///@todo here I have to do it "on the go", for each boundary dof!!!
-  //*************************************************** 
+ //************ set control flag - END *********************
       
 	  
 	  // loop on faces of the current element
@@ -167,14 +167,14 @@ public:
        
 // ---     
        
-// --- geometry        
+// --- geometry - BEGIN        
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
        
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
  
        geom_element_iel.set_elem_center_bdry_3d();
 
-// --- geometry        
+// --- geometry - END        
          
         std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
 
@@ -183,7 +183,7 @@ public:
 	    if( iface_is_a_boundary_control ) {
               
 
-//========= initialize gauss quantities on the boundary ============================================
+//========= initialize gauss quantities on the boundary - BEGIN  ============================================
                 std::vector< double > sol_ctrl_iqp_bdry(n_components_ctrl);
                 std::vector< std::vector< double > > sol_ctrl_x_iqp_bdry(n_components_ctrl);
                 
@@ -191,7 +191,7 @@ public:
                sol_ctrl_iqp_bdry[c] = 0.;                
                sol_ctrl_x_iqp_bdry[c].assign(space_dim, 0.); 
             }
-//========= initialize gauss quantities on the boundary ============================================
+//========= initialize gauss quantities on the boundary - END ============================================
 		
         const unsigned n_qp_bdry = ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussPointsNumber();
         
@@ -208,7 +208,7 @@ public:
     elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl + c]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
    }  
    
-//========== compute gauss quantities on the boundary ===============================================
+//========== compute gauss quantities on the boundary - BEGIN ===============================================
    for (unsigned c = 0; c < n_components_ctrl; c++) {
           sol_ctrl_iqp_bdry[c] = 0.;
                   std::fill(sol_ctrl_x_iqp_bdry[c].begin(), sol_ctrl_x_iqp_bdry[c].end(), 0.);
@@ -221,7 +221,7 @@ public:
 			    }
 		      }
    }
-//========== compute gauss quantities on the boundary ================================================
+//========== compute gauss quantities on the boundary - END ================================================
 
 // integral - BEGIN ************
    for (unsigned c = 0; c < n_components_ctrl; c++) {
