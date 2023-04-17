@@ -59,7 +59,7 @@ using namespace femus;
 //***** Quadrature-related ****************** 
 #define Nsplit      0
 
-#define N_DIV_UNBOUNDED  10
+#define N_DIV_FACE_OF_FACE_FOR_UNBOUNDED_INTEGRAL  10
 
 //**************************************
 
@@ -891,7 +891,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                         faceCoordinates[k][i] =  x2[k][inode] - xg3[k]; // We extract the local coordinates on the face from local coordinates on the element.
                       }
                     }
-                    const unsigned div = N_DIV_UNBOUNDED;
+                    const unsigned div = N_DIV_FACE_OF_FACE_FOR_UNBOUNDED_INTEGRAL;
                     vector  < vector  <  double> > interpCoordinates(dim);
                     for(int k = 0; k < dim; k++) {
                       interpCoordinates[k].resize(div + 1); // set "4" as a parameter
@@ -996,7 +996,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 }
               }
               
-              const unsigned div = N_DIV_UNBOUNDED;
+              const unsigned div = N_DIV_FACE_OF_FACE_FOR_UNBOUNDED_INTEGRAL;
               vector  < vector  <  double> > interpCoordinates(dim);
               for(int k = 0; k < dim; k++) {
                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter

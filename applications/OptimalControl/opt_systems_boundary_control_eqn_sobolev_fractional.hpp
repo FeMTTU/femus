@@ -66,10 +66,9 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   //////////   2D only - END
   //////////   3D only - BEGIN
                       const int jel,
-                      const unsigned jelGeom_bdry,
+                      const unsigned jface,
                       std::string node_based_bdry_bdry_in,
-                      std::vector <int> bdry_bdry,
-                      const unsigned div, 
+                      const unsigned n_divisions_face_of_face, 
                       CurrentElem < double > & geom_element_jel,
                       std::vector < double > & KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                       std::vector < double > & Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
@@ -236,88 +235,97 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   //med_flag_of_node_bdry_bdry_for_control_face END
 
   
-  unsigned iel_geom_type = msh->GetElementType(iel);
-            unsigned iel_geom_type_face = msh->GetElementFaceType(iel, iface);
+//--- Denominator, unbounded integral, numerical - BEGIN -------
+            unsigned jel_geom_type = msh->GetElementType(jel);
+            unsigned jel_geom_type_face = msh->GetElementFaceType(jel, jface);
 
-            unsigned f_n_faces_faces  =  msh->el->GetNFC(iel_geom_type, iel_geom_type_face); /* ElementFaceFaceNumber */
+            unsigned jel_n_faces_faces  =  msh->el->GetNFC(jel_geom_type, jel_geom_type_face); /* ElementFaceFaceNumber */
 
          double mixed_denominator_numerical = 0.;
          
-            // *** Face loop (Integral over 2d object) ***
-            for(unsigned e_bdry_bdry = 0; e_bdry_bdry < f_n_faces_faces/*bdry_bdry.size()*/; e_bdry_bdry++) {  ///@todo I think this has to be fixed
 
-              // look for boundary faces
-            
+         for(unsigned e_bdry_bdry = 0; e_bdry_bdry < jel_n_faces_faces; e_bdry_bdry++) {
 
-//               unsigned n_dofs_bdry_bdry = msh->el->GetNFC(LINE, solType_coords);
+              // look for boundary faces and compute delta coords (probably could do it later) - BEGIN
               
-              unsigned n_dofs_bdry_bdry =  msh->el->GetNFACENODES(iel_geom_type_face/*jelGeom_bdry*/, e_bdry_bdry, solType_coords); //TODO ///@todo this is only taking linear nodes, do we want to do that for the coordinates too?
+              unsigned jel_n_dofs_bdry_bdry =  msh->el->GetNFACENODES(jel_geom_type_face, e_bdry_bdry, solType_coords);
 
-              vector  < vector  <  double> > delta_coordinates_bdry_bdry(dim);    // A matrix holding the face coordinates rowwise.
-              for(int k = 0; k < dim; k++) {
-                delta_coordinates_bdry_bdry[k].resize(n_dofs_bdry_bdry);
-              }
+              // look for boundary of boundary faces - BEGIN
+                  std::vector < int > nodes_face_face_flags(jel_n_dofs_bdry_bdry, 0); 
               
-                  std::vector < int > nodes_face_face_flags(n_dofs_bdry_bdry, 0); 
-              
-              for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_dofs_bdry_bdry; i_bdry_bdry++) {
+              for(unsigned jdof_bdry_bdry = 0; jdof_bdry_bdry < jel_n_dofs_bdry_bdry; jdof_bdry_bdry++) { 
                   
-                unsigned inode_bdry = msh->el->GetIG(jelGeom_bdry, e_bdry_bdry/*bdry_bdry[e_bdry_bdry]*/, i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
-                unsigned inode_vol    = msh->el->GetIG(iel_geom_type, iface, inode_bdry); //from n-1 to n
-
-                unsigned node_global = msh->el->GetElementDofIndex(jel, inode_vol);
+                unsigned jnode_bdry_bdry     = msh->el->GetIG(jel_geom_type_face, e_bdry_bdry, jdof_bdry_bdry); // face-to-element local node mapping.
+                unsigned jnode_bdry_bdry_vol = msh->el->GetIG(jel_geom_type, jface, jnode_bdry_bdry);
                 
-                nodes_face_face_flags[i_bdry_bdry] = (*sol->_Sol[sol_node_flag_index])(node_global);
-                
-              // delta coords  -----
-                for(unsigned k = 0; k < dim; k++) {
-                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs_3d()[k][inode_vol] - x_qp_of_iface[k];  ///@todo// TODO We extract the local coordinates on the face from local coordinates on the element.
-                }
+              // nodes_face_face_flags  -----
+                unsigned node_global = msh->el->GetElementDofIndex(jel, jnode_bdry_bdry_vol);
+                nodes_face_face_flags[jdof_bdry_bdry] = (*sol->_Sol[sol_node_flag_index])(node_global);
               }
               
               
                 bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, med_flag_of_node_bdry_bdry_for_control_face);
+              // look for boundary of boundary faces - END
+                
 
               if(is_face_bdry_bdry) {
-                
-              // delta coords - refinement -----
-              
-// // //               std::vector  <  double > delta_coordinates_bdry_bdry_refined( (div + 1) * dim);
-              
-              vector  < vector  <  double > > delta_coordinates_bdry_bdry_refined(dim);
+                  
+              // delta coords - BEGIN
+              vector  < vector  <  double> > radius_centered_at_x_qp_of_iface_bdry_bdry(dim);    // A matrix holding the face coordinates rowwise.
               for(int k = 0; k < dim; k++) {
-                delta_coordinates_bdry_bdry_refined[k].resize(div + 1); // set "4" as a parameter
+                radius_centered_at_x_qp_of_iface_bdry_bdry[k].resize(jel_n_dofs_bdry_bdry);
               }
               
-              for(unsigned n = 0; n <= div; n++) {
+              for(unsigned jdof_bdry_bdry = 0; jdof_bdry_bdry < jel_n_dofs_bdry_bdry; jdof_bdry_bdry++) { 
+                  
+                unsigned jnode_bdry_bdry     = msh->el->GetIG(jel_geom_type_face, e_bdry_bdry, jdof_bdry_bdry); // face-to-element local node mapping.
+                unsigned jnode_bdry_bdry_vol = msh->el->GetIG(jel_geom_type, jface, jnode_bdry_bdry);
+                
+              // delta coords  -----
+                for(unsigned k = 0; k < dim; k++) {
+                  radius_centered_at_x_qp_of_iface_bdry_bdry[k][jdof_bdry_bdry] = geom_element_jel.get_coords_at_dofs_3d()[k][jnode_bdry_bdry_vol] - x_qp_of_iface[k];
+                }
+                
+              }
+              
+                  
+              // delta coords - END
+                
+              // delta coords - refinement - BEGIN -----
+              vector  < vector  <  double > > radius_centered_at_x_qp_of_iface_bdry_bdry_refined(dim);
+              for(int k = 0; k < dim; k++) {
+                radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k].resize(n_divisions_face_of_face + 1);
+              }
+              
+              for(unsigned n = 0; n <= n_divisions_face_of_face; n++) {
                 for(int k = 0; k < dim; k++) {
-// // //                   delta_coordinates_bdry_bdry_refined[n + k * div] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
-                  delta_coordinates_bdry_bdry_refined[k][n] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
+                  const double increment_in_current_dim = (radius_centered_at_x_qp_of_iface_bdry_bdry[k][1] - radius_centered_at_x_qp_of_iface_bdry_bdry[k][0]) /  n_divisions_face_of_face;
+                  radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n] = radius_centered_at_x_qp_of_iface_bdry_bdry[k][0] + n * increment_in_current_dim ;
                 }
               }
-              for(unsigned n = 0; n < div; n++) {
+              // delta coords - refinement - END -----
+              
+              
+              // compute unbounded integral - BEGIN -----
+              for(unsigned n = 0; n < n_divisions_face_of_face; n++) {
                   
                 const unsigned dir_x_for_atan = ( ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2 ) + 1 ) % 3;  ///@todooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo I think needs to be changed
                 const unsigned dir_y_for_atan = ( dir_x_for_atan + 1 ) % 3 ;  ///@todo I think needs to be changed
-// // //                 double teta2 = atan2(delta_coordinates_bdry_bdry_refined[(n+1) + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[(n+1) + dir_x_for_atan * div]);
-// // //                 double teta1 = atan2(delta_coordinates_bdry_bdry_refined[n + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[n + dir_x_for_atan * div]);
-                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n + 1], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n + 1]);
-                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n]);
+                double theta_2 = atan2(radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_y_for_atan][n + 1], radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_x_for_atan][n + 1]);
+                double theta_1 = atan2(radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_y_for_atan][n], radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_x_for_atan][n]);
 
 // // //                 double delta_teta = 0.;
-// // //                 if(teta2 < teta1) delta_teta = std::min(teta1 - teta2, 2. * M_PI + teta2 - teta1);
-// // //                 else delta_teta = std::min(teta2 - teta1, 2. * M_PI + teta1 - teta2);
-                if(teta2 < teta1) {
-                    teta2 += 2. * M_PI;
+// // //                 if(theta_2 < theta_1) delta_teta = std::min(theta_1 - theta_2, 2. * M_PI + theta_2 - theta_1);
+// // //                 else delta_teta = std::min(theta_2 - theta_1, 2. * M_PI + theta_1 - theta_2);
+                if(theta_2 < theta_1) {
+                    theta_2 += 2. * M_PI;
                 }
                 
-                double delta_teta = teta2 - teta1;
+                double delta_teta = theta_2 - theta_1;
 
-                vector <double> mid_point;
-                mid_point.resize(dim);
+                vector <double> mid_point(dim, 0.);
                 for(unsigned k = 0; k < dim; k++) {
-// // //                   mid_point[k] = (delta_coordinates_bdry_bdry_refined[(n+1) + k * div] + delta_coordinates_bdry_bdry_refined[n + k * div]) * 0.5;
-                  mid_point[k] = (delta_coordinates_bdry_bdry_refined[k][n + 1] + delta_coordinates_bdry_bdry_refined[k][n]) * 0.5;
+                  mid_point[k] = (radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n + 1] + radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n]) * 0.5;
                 }
                 double dist2 = 0;
                 for(int k = 0; k < dim; k++) {
@@ -327,30 +335,16 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
                 mixed_denominator_numerical += pow(dist, -  2. * s_frac) * delta_teta;
               }
-//               delta coords - refinement -----
+              // compute unbounded integral - END -----
 
           
               }
               
             }
             
-
-            
-            
-            
-//              for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); i_bdry++) {
-//                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-//                 
-//                 Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ i_vol_iel ] += - 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface * weight_qp_of_iface * mixed_denominator_numerical  * (1. / s_frac);
-//                 
-//                 for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); j_bdry++) {
-//                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-//                   KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry]  * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
-//                 }
-//                 
-//               }
             
             /// @todo ONLY DIFFERENCES: the mixed_denominator is numerical, and so also the corresponding Res and Jac. It could be done with a single function
+//--- Denominator, unbounded integral, numerical - END -------
             
 //--- Integral - BEGIN -------
               for (unsigned c = 0; c < n_components_ctrl; c++) {
@@ -363,20 +357,20 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 //--- Equation - BEGIN -------
               for (unsigned c = 0; c < n_components_ctrl; c++) {
 
-              for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); i_bdry++) {
-                unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+              for(unsigned row_bdry = 0; row_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); row_bdry++) {
+                unsigned int row_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, row_bdry);
                 
-                const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, i_vol_iel);
+                const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, row_vol_iel);
 
-                Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
+                Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ res_pos/*row_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[row_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
-                     for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); j_bdry++) {
-                  unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-                  const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, i_vol_iel, j_vol_iel);         
+                     for(unsigned col_bdry = 0; col_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); col_bdry++) {
+                  unsigned int col_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, col_bdry);
+                  const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, row_vol_iel, col_vol_iel);         
 
-                  KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
+                  KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ jac_pos /*row_vol_iel * nDof_vol_iel + col_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[row_bdry] * phi_ctrl_iel_bdry_qp_of_iface[col_bdry] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
                      }
                 
                   }
@@ -531,7 +525,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                         const unsigned qrule_k,
                         const unsigned int integration_num_split,
                         const unsigned int integration_split_index,
-                        const unsigned int N_div_unbounded,
+                        const unsigned int N_div_face_of_face,
                         //-----------
                         const bool print_algebra_local
                        ) {
@@ -990,37 +984,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // // // //----  qp_of_jface, preparation right before iel - END ------- 
 
     
-// ---- boundary faces in jface: compute and broadcast - BEGIN ----
-// This is only needed for when the boundary is a 2D face. We'll look at it later on
-// look for what face of jface are on the boundary of the domain
-// I believe we have to see deeply how we can extend this to the boundary case
-// TODO: instead of faceIndex we want to have the new group condition that we impose 
-// on the boundary of the boundary.
-
-
-       std::vector< int > bdry_bdry(0);
-///       unsigned n_faces;
-/// 
-///       if(iproc == jproc) {
-///         for(unsigned j_bd_face = 0; j_bd_face < msh->GetElementFaceNumber_PassElemType(jelGeom_bdry); j_bd_face++) {
-///           int faceIndex = msh->el->GetBoundaryIndex(jface, j_bd_face); /// TODO find a new condition and correct msh->GetElementFaceNumber ///@todo this is wrong
-/// 
-///           // look for boundary faces of the boundary
-///           if(faceIndex >= 1) {
-///             unsigned i = bdry_bdry.size();
-///             bdry_bdry.resize(i + 1);
-///             bdry_bdry[i] = jface;
-///           }
-///         }
-///         n_faces = bdry_bdry.size();
-///       }
-///
-///       MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
-/// 
-///       bdry_bdry.resize(n_faces);
-///       MPI_Bcast(& bdry_bdry[0], n_faces, MPI_INT, proc_to_bcast_from, MPI_COMM_WORLD);  
-
-// ---- boundary faces in jface: compute and broadcast - END ----    
+   
 
 
               
@@ -1395,10 +1359,9 @@ unsigned nDof_iel_vec = 0;
 //////////
   //////////   3D only - BEGIN
                               jel,
-                              jelGeom_bdry,
+                              jface,
                               node_based_bdry_bdry_in,
-                              bdry_bdry,
-                              N_div_unbounded,
+                              N_div_face_of_face,
                               geom_element_jel,
                               KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
@@ -1579,10 +1542,9 @@ unsigned nDof_iel_vec = 0;
                               Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref,
   //////////   3D only - BEGIN
                              jel,
-                              jelGeom_bdry,
+                             jface,
                              node_based_bdry_bdry_in,
-                              bdry_bdry,
-                              N_div_unbounded,
+                              N_div_face_of_face,
                               geom_element_jel,
                               KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,

@@ -433,7 +433,7 @@ public:
                     qrule_k,
                     Nsplit,
                     Quadrature_split_index,
-                    N_DIV_UNBOUNDED,
+                    N_DIV_FACE_OF_FACE_FOR_UNBOUNDED_INTEGRAL,
                     //-----------
                     print_algebra_local
                     );

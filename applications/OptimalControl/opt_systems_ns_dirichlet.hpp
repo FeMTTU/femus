@@ -581,7 +581,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
                     qrule_k,
                     Nsplit,
                     Quadrature_split_index,
-                    N_DIV_UNBOUNDED,
+                    N_DIV_FACE_OF_FACE_FOR_UNBOUNDED_INTEGRAL,
                     //-----------
                     print_algebra_local
                     );
