@@ -204,7 +204,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   
   
   //med_flag_of_node_bdry_bdry_for_control_face BEGIN
-         unsigned  med_flag_of_node_bdry_bdry_for_control_face = 3;
+         unsigned  med_flag_of_node_bdry_bdry_for_control_face = 2;
        
 //   MED_IO  med_io(*msh/*Mesh, the coarse or whatever?*/);
 //   
@@ -297,9 +297,15 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k].resize(n_divisions_face_of_face + 1);
               }
               
+                constexpr unsigned point_along_face_of_face_first = 0;
+                constexpr unsigned point_along_face_of_face_last  = 1;
+
+              
               for(unsigned n = 0; n <= n_divisions_face_of_face; n++) {
                 for(int k = 0; k < dim; k++) {
-                  const double increment_in_current_dim = (radius_centered_at_x_qp_of_iface_bdry_bdry[k][1] - radius_centered_at_x_qp_of_iface_bdry_bdry[k][0]) /  n_divisions_face_of_face;
+                  const double increment_in_current_dim = 
+                  (radius_centered_at_x_qp_of_iface_bdry_bdry[k][ point_along_face_of_face_last ] - 
+                   radius_centered_at_x_qp_of_iface_bdry_bdry[k][ point_along_face_of_face_first]) /  n_divisions_face_of_face;
                   radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n] = radius_centered_at_x_qp_of_iface_bdry_bdry[k][0] + n * increment_in_current_dim ;
                 }
               }
@@ -308,22 +314,41 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               
               // compute unbounded integral - BEGIN -----
               for(unsigned n = 0; n < n_divisions_face_of_face; n++) {
-                  
-                const unsigned dir_x_for_atan = ( ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2 ) + 1 ) % 3;  ///@todooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo I think needs to be changed
-                const unsigned dir_y_for_atan = ( dir_x_for_atan + 1 ) % 3 ;  ///@todo I think needs to be changed
-                double theta_2 = atan2(radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_y_for_atan][n + 1], radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_x_for_atan][n + 1]);
-                double theta_1 = atan2(radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_y_for_atan][n], radius_centered_at_x_qp_of_iface_bdry_bdry_refined[dir_x_for_atan][n]);
+                
+///@todooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+              // what are the global axes that are consistent with outgoing normal - BEGIN -----
+                std::vector< unsigned > global_dirs_for_atan(dim_bdry);
+                constexpr unsigned global_dir_first = 0;
+                constexpr unsigned global_dir_second = 1;
+                global_dirs_for_atan[global_dir_first ] = ( ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2 ) + 1 ) % 3;
+                global_dirs_for_atan[global_dir_second] = ( global_dirs_for_atan[0] + 1 ) % 3 ;
+                
+                if ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] % 2) == 1 ) {  std::reverse(global_dirs_for_atan.begin(), global_dirs_for_atan.end()); } 
+              //  what are the global axes that are consistent with outgoing normal - END -----
+                
+              // theta's - BEGIN -----
+                std::vector< double > theta_first_and_last_radius(2);
+                constexpr unsigned theta_of_radius_first = 0;
+                constexpr unsigned theta_of_radius_second = 1;
 
-// // //                 double delta_teta = 0.;
-// // //                 if(theta_2 < theta_1) delta_teta = std::min(theta_1 - theta_2, 2. * M_PI + theta_2 - theta_1);
-// // //                 else delta_teta = std::min(theta_2 - theta_1, 2. * M_PI + theta_1 - theta_2);
-                if(theta_2 < theta_1) {
-                    theta_2 += 2. * M_PI;
+                for(unsigned p = 0; p < theta_first_and_last_radius.size(); p++) {
+                   theta_first_and_last_radius[p] = atan2(radius_centered_at_x_qp_of_iface_bdry_bdry_refined[ global_dirs_for_atan[global_dir_second] ][n + p],
+                                                          radius_centered_at_x_qp_of_iface_bdry_bdry_refined[ global_dirs_for_atan[global_dir_first] ][n + p]);
+                              }
+
+// // //                 double delta_theta = 0.;
+// // //                 if(theta_first_and_last_radius[1] < theta_first_and_last_radius[0]) delta_theta = std::min(theta_first_and_last_radius[0] - theta_first_and_last_radius[1], 2. * M_PI + theta_first_and_last_radius[1] - theta_first_and_last_radius[0]);
+// // //                 else delta_theta = std::min(theta_first_and_last_radius[1] - theta_first_and_last_radius[0], 2. * M_PI + theta_first_and_last_radius[0] - theta_first_and_last_radius[1]);
+                if(theta_first_and_last_radius[ theta_of_radius_second ] < theta_first_and_last_radius[ theta_of_radius_first ]) {
+                    theta_first_and_last_radius[theta_of_radius_second ] += 2. * M_PI;
                 }
                 
-                double delta_teta = theta_2 - theta_1;
+                double delta_theta = theta_first_and_last_radius[ theta_of_radius_second ] -
+                                     theta_first_and_last_radius[ theta_of_radius_first ];
+              // theta's - END -----
 
-                vector <double> mid_point(dim, 0.);
+               // distance |x - y| at midpoint - BEGIN -----
+               vector <double> mid_point(dim, 0.);
                 for(unsigned k = 0; k < dim; k++) {
                   mid_point[k] = (radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n + 1] + radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n]) * 0.5;
                 }
@@ -332,8 +357,12 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                   dist2 += mid_point[k] * mid_point[k];
                 }
                 double dist = sqrt(dist2);
+               // distance |x - y| at midpoint - END -----
                 
-                mixed_denominator_numerical += pow(dist, -  2. * s_frac) * delta_teta;
+               // integral - BEGIN -----
+                mixed_denominator_numerical += pow(dist, -  2. * s_frac)  * delta_theta;
+               // integral - END -----
+                
               }
               // compute unbounded integral - END -----
 
