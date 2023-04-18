@@ -208,11 +208,11 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   
        
   // group info - BEGIN
-  std::string mesh_file_location_prefix =  "../../../";
+  std::string relative_path_to_input_folder =  "../../../";
   
   MED_IO  med_io(*msh/*Mesh, the coarse or whatever?*/);
   
-  const std::string mesh_file_location = Files::get_input_file_with_prefix(ml_sol->_mlMesh->_mesh_filename, mesh_file_location_prefix)/*mesh_file_location_prefix + DEFAULT_INPUTDIR + ml_sol->_mlMesh->_mesh_filename*/;
+  const std::string mesh_file_location = Files::get_input_file_with_prefix(ml_sol->_mlMesh->_mesh_filename, relative_path_to_input_folder)/*relative_path_to_input_folder + DEFAULT_INPUTDIR + ml_sol->_mlMesh->_mesh_filename*/;
   ;
   
     hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
