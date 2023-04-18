@@ -52,7 +52,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 //////////   Both 2D and 3D - BEGIN
                       const int iel,
                       const unsigned iface,
-                      unsigned int i_element_face_index,
+                      const unsigned int i_element_face_index,
                       const std::vector<unsigned int> nDof_vol_iel, 
 //////////
                       const double weight_qp_of_iface,
@@ -67,6 +67,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   //////////   3D only - BEGIN
                       const int jel,
                       const unsigned jface,
+                      const unsigned int j_element_face_index,
                       std::string node_based_bdry_bdry_in,
                       const unsigned n_divisions_face_of_face, 
                       CurrentElem < double > & geom_element_jel,
@@ -203,36 +204,57 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   const unsigned  sol_node_flag_index =  ml_sol->GetIndex( node_based_bdry_bdry_in.c_str() );
   
   
-  //med_flag_of_node_bdry_bdry_for_control_face BEGIN
-         unsigned  med_flag_of_node_bdry_bdry_for_control_face = 2;
        
-//   MED_IO  med_io(*msh/*Mesh, the coarse or whatever?*/);
-//   
-//   std::string mesh_file_location = "../../../input/" + ml_sol->_mlMesh->_mesh_filename;
-//   
-//     hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
-// 
-//     const std::vector< std::string > mesh_menus = med_io.get_mesh_names(file_id);
-//          
-//     
-// 
-// 
-//     for (unsigned j = 0; j < mesh_menus.size(); j++)   {
-//         
-//         std::vector< GroupInfo >     group_info = med_io.get_all_groups_per_mesh(file_id, mesh_menus[j]);
-//    
-//     
-//       for ( unsigned gr = 0; gr < group_info.size(); gr++) {
-//              for  ( unsigned w = 0; w < LIST_OF_CTRL_FACES :: _face_with_extremes_index_size; w++) {
-// 
-//             if ( (group_info[gr]._user_defined_flag - 6) == LIST_OF_CTRL_FACES :: _face_with_extremes_index[w]) 
-//             {///@todo fix here,
-//                 med_flag_of_node_bdry_bdry_for_control_face = group_info[gr]._med_flag; }
-//              }
-//                 
-//         }
-//      }    
-  //med_flag_of_node_bdry_bdry_for_control_face END
+  // group info - BEGIN
+  MED_IO  med_io(*msh/*Mesh, the coarse or whatever?*/);
+  
+  std::string mesh_file_location = "../../../input/" + ml_sol->_mlMesh->_mesh_filename;
+  
+    hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
+
+    const std::vector< std::string > mesh_menus = med_io.get_mesh_names(file_id);
+         
+    
+        std::vector< std::vector< GroupInfo > >  group_info_all_meshes(mesh_menus.size());  
+
+    for (unsigned m = 0; m < group_info_all_meshes.size(); m++)   {
+        
+            group_info_all_meshes[m] = med_io.get_all_groups_per_mesh(file_id, mesh_menus[m]);
+     }    
+  // group info - END
+ 
+  // ctrl face to node-node association - BEGIN
+ std::map<unsigned int, unsigned int >  ctrl_faces_VS_their_nodes;
+ 
+ ctrl_faces_VS_their_nodes[1] =  7  ;
+ ctrl_faces_VS_their_nodes[2] =  8  ;
+ ctrl_faces_VS_their_nodes[3] =  9  ;
+ ctrl_faces_VS_their_nodes[4] =  10  ;
+ ctrl_faces_VS_their_nodes[5] =  11  ;
+ ctrl_faces_VS_their_nodes[6] =  12  ;
+  // ctrl face to node-node association - END
+ 
+ 
+          const unsigned t_face_that_I_want = j_element_face_index;
+
+  //t_med_flag_of_node_bdry_bdry_for_control_face BEGIN
+          
+            unsigned  t_med_flag_of_node_bdry_bdry_for_control_face;
+          
+    for (unsigned m = 0; m < group_info_all_meshes.size(); m++)   {
+    
+                //find its corresponding node_node group
+                 unsigned gr_node_node;
+          for ( unsigned gr = 0; gr < group_info_all_meshes[m].size(); gr++) {
+                      if ( group_info_all_meshes[m][gr]._user_defined_flag  == ctrl_faces_VS_their_nodes[ t_face_that_I_want ]) {
+                          gr_node_node = gr;
+                      }
+          }
+                
+                t_med_flag_of_node_bdry_bdry_for_control_face = group_info_all_meshes[m][gr_node_node]._med_flag;
+                
+     }    
+  //t_med_flag_of_node_bdry_bdry_for_control_face END
 
   
 //--- Denominator, unbounded integral, numerical - BEGIN -------
@@ -264,7 +286,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               }
               
               
-                bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, med_flag_of_node_bdry_bdry_for_control_face);
+                bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, t_med_flag_of_node_bdry_bdry_for_control_face);
               // look for boundary of boundary faces - END
                 
 
@@ -1389,6 +1411,7 @@ unsigned nDof_iel_vec = 0;
   //////////   3D only - BEGIN
                               jel,
                               jface,
+                              jface_boundary_control_index,
                               node_based_bdry_bdry_in,
                               N_div_face_of_face,
                               geom_element_jel,
@@ -1572,6 +1595,7 @@ unsigned nDof_iel_vec = 0;
   //////////   3D only - BEGIN
                              jel,
                              jface,
+                             jface_boundary_control_index,
                              node_based_bdry_bdry_in,
                               N_div_face_of_face,
                               geom_element_jel,

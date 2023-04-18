@@ -9,7 +9,7 @@
 //*********************** Control, cost functional, target region - BEGIN *******************************************************
   /* Rectangular/Hexahedral domain:  1-2 x coords, 3-4 y coords, 5-6 z coords */
   /* L-shaped domain (2d):  1-2 x coords, 3-4 y coords, 5 indent between 1 and 2, 6 indent between 3 and 4 */
-#define FACE_FOR_TARGET         2
+#define FACE_FOR_TARGET         4
 
 #define  TARGET_LINE_ORTHOGONAL_DISTANCE_FROM_FACE_ATTACHED_TO_TARGET_REG  0.5
 //*********************** Control, cost functional, target region - END *******************************************************
