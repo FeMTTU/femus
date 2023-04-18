@@ -2,11 +2,13 @@
 #define __opt_systems_boundary_control_eqn_sobolev_fractional_hpp__
 
 
+#include "FemusDefault.hpp"
 
 #include "Assemble_useful_functions.hpp"
 #include "opt_common.hpp"
 
 //for reading additional fields from MED file (based on MED ordering)
+#include "Files.hpp"
 #include "MED_IO.hpp"
 
 #include "fractional_functions.hpp"
@@ -206,9 +208,12 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   
        
   // group info - BEGIN
+  std::string mesh_file_location_prefix =  "../../../";
+  
   MED_IO  med_io(*msh/*Mesh, the coarse or whatever?*/);
   
-  std::string mesh_file_location = "../../../input/" + ml_sol->_mlMesh->_mesh_filename;
+  const std::string mesh_file_location = Files::get_input_file_with_prefix(ml_sol->_mlMesh->_mesh_filename, mesh_file_location_prefix)/*mesh_file_location_prefix + DEFAULT_INPUTDIR + ml_sol->_mlMesh->_mesh_filename*/;
+  ;
   
     hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
 
