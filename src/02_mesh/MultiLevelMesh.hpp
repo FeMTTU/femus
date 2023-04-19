@@ -16,6 +16,8 @@ PURPOSE.  See the above copyright notice for more information.
 #ifndef __femus_mesh_MultiLevelMesh_hpp__
 #define __femus_mesh_MultiLevelMesh_hpp__
 
+#include <vector>
+
 
 #include "ElemTypeEnum.hpp"
 #include "FETypeEnum.hpp"
@@ -23,7 +25,8 @@ PURPOSE.  See the above copyright notice for more information.
 #include "WriterEnum.hpp"
 #include "Writer.hpp"
 
-#include <vector>
+#include "MED_IO.hpp" 
+
 
 
 namespace femus {
@@ -209,6 +212,16 @@ private:
   void DeleteFETypesForExistingGeomElements();
   
 //==== FE - END ======== 
+  
+//====================
+//==== Mesh Group Info - BEGIN  ======== 
+public:
+    
+  std::vector< std::vector< GroupInfo > >  _group_info_all_meshes;
+  
+  void  set_group_info(const std::string relative_path_to_input_folder);
+//==== Mesh Group Info - END ======== 
+  
   
 //====================
 //==== File input - BEGIN  ======== 

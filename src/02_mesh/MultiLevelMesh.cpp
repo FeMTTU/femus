@@ -557,6 +557,32 @@ void MultiLevelMesh::AddAMRMeshLevel()
 
   }
 
+  
+   void  MultiLevelMesh::set_group_info(const std::string relative_path_to_input_folder) {
+      
+  
+  MED_IO  med_io(*GetLevel(0)/* coarse or whatever?*/);
+  
+  const std::string mesh_file_location = Files::get_input_file_with_prefix(_mesh_filename, relative_path_to_input_folder)/*relative_path_to_input_folder + DEFAULT_INPUTDIR + ml_sol->_mlMesh->_mesh_filename*/;
+  ;
+  
+    hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
+
+    const std::vector< std::string > mesh_menus = med_io.get_mesh_names(file_id);
+         
+    
+        std::vector< std::vector< GroupInfo > >  group_info_all_meshes(mesh_menus.size());  
+
+    for (unsigned m = 0; m < group_info_all_meshes.size(); m++)   {
+        
+            group_info_all_meshes[m] = med_io.get_all_groups_per_mesh(file_id, mesh_menus[m]);
+     }    
+ 
+     _group_info_all_meshes = group_info_all_meshes;
+ 
+  }
+  
+  
 } //end namespace femus
 
 

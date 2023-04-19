@@ -124,6 +124,7 @@ namespace ctrl {
 #define NORM_GIR_RAV 0  /* Leave it at 0 --> 0 = Gagliardo seminorm   */
 // #define NORM_GIR_RAV  1    /* Leave it at 0 --> 1 = Girault Raviart norm */
 
+
 #if NORM_GIR_RAV == 0
 
   #define OP_L2       0 /*1*/
@@ -340,11 +341,11 @@ namespace ctrl {
       const std::string mesh_input = ctrl::DOMAIN_NAMESPACE_CHILD:: mesh::_3d_cube_all_faces_between_between;
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_One
-#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Two
+// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Four
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Five
-// #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Six
+#define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Six
 
 #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: Multiple_controls_and_homogeneous_boundary_conditions
 

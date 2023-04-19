@@ -124,6 +124,24 @@ template < unsigned N_TANG_COMPONENTS >
   public:
 
        static constexpr unsigned  _num_of_tang_components_per_face  = N_TANG_COMPONENTS;
+       
+       static  std::map<unsigned int, unsigned int >  from_ctrl_faces_to_their_boundaries() {
+          
+         // ctrl face to node-node association - BEGIN
+          std::map<unsigned int, unsigned int >  ctrl_faces_VS_their_nodes;
+          
+          ctrl_faces_VS_their_nodes[1] =  7  ;
+          ctrl_faces_VS_their_nodes[2] =  8  ;
+          ctrl_faces_VS_their_nodes[3] =  9  ;
+          ctrl_faces_VS_their_nodes[4] =  10  ;
+          ctrl_faces_VS_their_nodes[5] =  11  ;
+          ctrl_faces_VS_their_nodes[6] =  12  ;
+         // ctrl face to node-node association - END
+ 
+ return ctrl_faces_VS_their_nodes;
+
+      }
+       
 
    };
 
