@@ -1,5 +1,5 @@
 <CustomFilterDefinitions>
-  <CustomProxyDefinition name="slice&#x26;warp" group="filters">
+  <CustomProxyDefinition name="slice_and_warp" group="filters">
     <CompoundSourceProxy id="18714" servers="1">
       <Proxy group="filters" type="Cut" id="8189" servers="1" compound_name="Slice2">
         <Property name="ContourValues" id="8189.ContourValues" number_of_elements="1">

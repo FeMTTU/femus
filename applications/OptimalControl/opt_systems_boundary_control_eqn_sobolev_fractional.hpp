@@ -70,9 +70,9 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                       const int jel,
                       const unsigned jface,
                       const unsigned int j_element_face_index,
+                      CurrentElem < double > & geom_element_jel,
                       std::string node_based_bdry_bdry_in,
                       const unsigned n_divisions_face_of_face, 
-                      CurrentElem < double > & geom_element_jel,
                       std::vector < double > & KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                       std::vector < double > & Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                       unsigned solType_coords,
@@ -229,14 +229,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   // group info - END
  
   // ctrl face to node-node association - BEGIN
- std::map<unsigned int, unsigned int >  ctrl_faces_VS_their_nodes;
- 
- ctrl_faces_VS_their_nodes[1] =  7  ;
- ctrl_faces_VS_their_nodes[2] =  8  ;
- ctrl_faces_VS_their_nodes[3] =  9  ;
- ctrl_faces_VS_their_nodes[4] =  10  ;
- ctrl_faces_VS_their_nodes[5] =  11  ;
- ctrl_faces_VS_their_nodes[6] =  12  ;
+ std::map<unsigned int, unsigned int >  ctrl_faces_VS_their_nodes = LIST_OF_CTRL_FACES :: from_ctrl_faces_to_their_boundaries();
   // ctrl face to node-node association - END
  
  
@@ -1417,9 +1410,9 @@ unsigned nDof_iel_vec = 0;
                               jel,
                               jface,
                               jface_boundary_control_index,
+                              geom_element_jel,
                               node_based_bdry_bdry_in,
                               N_div_face_of_face,
-                              geom_element_jel,
                               KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               solType_coords,
@@ -1601,9 +1594,9 @@ unsigned nDof_iel_vec = 0;
                              jel,
                              jface,
                              jface_boundary_control_index,
+                              geom_element_jel,
                              node_based_bdry_bdry_in,
                               N_div_face_of_face,
-                              geom_element_jel,
                               KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref,
                               solType_coords,
