@@ -175,7 +175,9 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
                 const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, i_vol_iel);
 
-                Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ res_pos/*i_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta  * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
+                Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ res_pos/*i_vol_iel*/ ] += - 0.5 *
+                /** control_node_flag_iel_all_faces[c][i_vol_iel] * */
+                C_ns * check_limits * operator_Hhalf  * beta  * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -183,7 +185,9 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
                   const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, i_vol_iel, j_vol_iel);         
 
-                  KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
+                  KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref[ jac_pos /*i_vol_iel * nDof_vol_iel + j_vol_iel*/ ] += 0.5 *
+                  /** control_node_flag_iel_all_faces[c][i_vol_iel] * control_node_flag_jel_all_faces[c][j_vol_iel] **/
+                  C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[i_bdry] * phi_ctrl_iel_bdry_qp_of_iface[j_bdry] * weight_qp_of_iface * mixed_denominator * (1. / s_frac);
                      }
                 
                   }
@@ -362,7 +366,9 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
                 const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_vol_iel, c, row_vol_iel);
 
-                Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ res_pos/*row_vol_iel*/ ] += - 0.5 * C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[row_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
+                Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ res_pos/*row_vol_iel*/ ] += - 0.5 *
+                /** control_node_flag_iel_all_faces[c][row_vol_iel] * */
+                C_ns * check_limits * operator_Hhalf  * beta * phi_ctrl_iel_bdry_qp_of_iface[row_bdry] * sol_ctrl_qp_of_iface[c] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
                 
                 for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
@@ -370,7 +376,9 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                   unsigned int col_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, col_bdry);
                   const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_vol_iel, nDof_iel_vec, c, e, row_vol_iel, col_vol_iel);         
 
-                  KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ jac_pos /*row_vol_iel * nDof_vol_iel + col_vol_iel*/ ] += 0.5 * C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[row_bdry] * phi_ctrl_iel_bdry_qp_of_iface[col_bdry] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
+                  KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref[ jac_pos /*row_vol_iel * nDof_vol_iel + col_vol_iel*/ ] += 0.5 *
+                  /* control_node_flag_iel_all_faces[c][col_vol_iel] * */
+                  C_ns * check_limits * operator_Hhalf * beta * phi_ctrl_iel_bdry_qp_of_iface[row_bdry] * phi_ctrl_iel_bdry_qp_of_iface[col_bdry] * weight_qp_of_iface * mixed_denominator_numerical * (1. / s_frac);
                      }
                 
                   }
@@ -531,12 +539,11 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                        ) {
 
 
-
 // --- Fractional - BEGIN
 const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);  
 // --- Fractional - END
       
-      
+
 // --- Geometry - BEGIN
   CurrentElem < double > geom_element_jel(dim, msh);            // must be adept if the domain is moving, otherwise double
 // --- Geometry - END
@@ -549,8 +556,6 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
     
     double detJac_jel_bdry_qp_of_jface;
 // --- Quadrature - END
-
-
 
 
  //********************* bdry cont *******************
@@ -657,6 +662,17 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // --- jel opening - BEGIN
     for(int jel = msh->_elementOffset[jproc]; jel < msh->_elementOffset[jproc + 1]; jel++) {
 
+// --- Sol_n_el_dofs_Mat - BEGIN
+    if (iproc == jproc) {
+        for (unsigned  k = 0; k < Sol_n_el_dofs_Mat.size(); k++) {
+                    unsigned  ndofs_unk = msh->GetElementDofNumber(jel, SolFEType_Mat[k]);
+                    Sol_n_el_dofs_Mat[k] = ndofs_unk;
+        }
+    }
+    MPI_Bcast(& Sol_n_el_dofs_Mat[0], n_unknowns , MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+// --- Sol_n_el_dofs_Mat- END
+
+
 // --- geometry - BEGIN 
    // all these little vectors are filled in one proc and broadcast to all       
 
@@ -702,9 +718,9 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
         MPI_Bcast(& geom_element_jel.get_elem_center_3d()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 // --- coords - elem center - END
 
-// --- geometry - END        
+// --- geometry - END
 
-        
+// comment: el_dofs_unknowns_vol - BEGIN
 // // // all of this is not used right now in this routine        
 // // //       if(jproc == iproc) {
 // // //  //***************************************************
@@ -721,7 +737,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // // //         MPI_Bcast(& SolPdeIndex[0], , MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 // // //         MPI_Bcast(& Sol_n_el_dofs_Mat[0], , MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 // // //   //***************************************************
-
+// comment: el_dofs_unknowns_vol - END
    
 	// Perform face loop over elements that contain some control face
         bool vol_elem_contains_control;
@@ -735,7 +751,11 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 	if ( vol_elem_contains_control ) {
 // --- jel opening - END
 
-      
+//************ set control flag - BEGIN *********************
+       std::vector< std::vector< int > > control_node_flag_jel_all_faces =
+       femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, jel /*ok*/, geom_element_jel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat /*ok*/, Sol_n_el_dofs_Mat, pos_mat_ctrl /*ok*/, n_components_ctrl /*ok*/);
+//************ set control flag - END *********************
+
 // ***************************************
 // ******* jel-related stuff - BEGIN *************
 // ***************************************
@@ -1004,9 +1024,16 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
       
 	// Perform face loop over elements that contain some control face
 	if ( DOMAIN_CONTAINING_CTRL_FACES ::volume_elem_contains_a_Gamma_control_face(sol, msh, iel ) ) {
-        
-        
+
 // --- iel opening - END
+
+//************ set control flag - BEGIN *********************
+        std::vector< std::vector< int > > control_node_flag_iel_all_faces =
+        femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, iel /*ok*/, geom_element_iel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
+//************ set control flag - END *********************
+
+        
+
         
 // ***************************************
 // ******* iel-related stuff - BEGIN *************
@@ -1208,7 +1235,7 @@ unsigned nDof_iel_vec = 0;
                                                                                     //because we are under additional constraints "jface_is_a_boundary_control" from above
               
                 
-       //============  Mass assembly - BEGIN ==================
+       //============  Mass assembly (local operator) - BEGIN ==================
     for (unsigned c = 0; c < n_components_ctrl; c++) {
         
         integral += operator_L2 * alpha * weight_qp_of_iface * sol_ctrl_qp_of_iface[c] * sol_ctrl_qp_of_iface[c];
@@ -1222,15 +1249,19 @@ unsigned nDof_iel_vec = 0;
 
               double mass_res_i = phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * sol_ctrl_qp_of_iface[c];
               const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol);
-              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += (-1.) * operator_L2 * alpha * weight_qp_of_iface * mass_res_i ;
-              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += (-1.) * rhs_one * weight_qp_of_iface * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += (-1.) *
+              control_node_flag_iel_all_faces[c][l_vol]  * operator_L2 * alpha * weight_qp_of_iface * mass_res_i ;
+              Res_local_iel_integer_operators[ res_pos/*l_vol*/ ] += (-1.) *
+              control_node_flag_iel_all_faces[c][l_vol]  * rhs_one * weight_qp_of_iface * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
               
               for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) { 
             for(unsigned m_bdry = 0; m_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); m_bdry++) {
                		    unsigned int m_vol = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                 const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol, m_vol);         
-                KK_local_iel_integer_operators[ jac_pos/*l_vol * nDof_iel + m_vol*/ ] += operator_L2 * alpha * phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * phi_ctrl_iel_bdry_qp_of_iface[m_bdry] * weight_qp_of_iface;
+                KK_local_iel_integer_operators[ jac_pos/*l_vol * nDof_iel + m_vol*/ ] +=
+                control_node_flag_iel_all_faces[c][l_vol] *
+                operator_L2 * alpha * phi_ctrl_iel_bdry_qp_of_iface[l_bdry] * phi_ctrl_iel_bdry_qp_of_iface[m_bdry] * weight_qp_of_iface;
                  }
                }
              }
@@ -1238,7 +1269,7 @@ unsigned nDof_iel_vec = 0;
             } 
 
        }
-        //============  Mass assembly - END ==================
+       //============  Mass assembly (local operator) - END ==================
          
       //============  Laplacian assembly - BEGIN ==================
       //============  Laplacian assembly - END ==================
@@ -1284,9 +1315,13 @@ unsigned nDof_iel_vec = 0;
 
               const unsigned res_pos_iel = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
               const unsigned res_pos_jel = assemble_jacobian<double,double>::res_row_index(nDof_jel, c, l_vol_jel);
-                Res_nonlocal_iel_bounded_integral[ res_pos_iel /*l_vol_iel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry]);
+                Res_nonlocal_iel_bounded_integral[ res_pos_iel /*l_vol_iel*/ ]      +=      -
+                 control_node_flag_iel_all_faces[c][l_vol_iel] * control_node_flag_jel_all_faces[c][l_vol_jel] *
+                common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry]);
 
-                Res_nonlocal_jel_bounded_integral[ res_pos_jel /*l_vol_jel*/ ]      +=      - common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry]);
+                Res_nonlocal_jel_bounded_integral[ res_pos_jel /*l_vol_jel*/ ]      +=      -
+                 control_node_flag_iel_all_faces[c][l_vol_iel] * control_node_flag_jel_all_faces[c][l_vol_jel]*
+                common_weight * (sol_ctrl_qp_of_iface[c] - sol_ctrl_qp_of_jface[c][qp_of_jface]) * (- phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry]);
 
 
 //                 for(unsigned j = 0; j < nDof_jel; j++) {
@@ -1301,13 +1336,21 @@ unsigned nDof_iel_vec = 0;
                     const unsigned jac_pos_jel_iel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_iel);
                     const unsigned jac_pos_jel_jel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_jel, m_vol_jel);
 
-             /*  u(x) v(x)*/     KK_nonlocal_iel_iel_bounded_integral[ jac_pos_iel_iel /*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight *          phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
+             /*  u(x) v(x)*/     KK_nonlocal_iel_iel_bounded_integral[ jac_pos_iel_iel /*l_vol_iel * nDof_jel + m_vol_iel*/ ] +=
+              control_node_flag_iel_all_faces[c][l_vol_iel] * control_node_flag_jel_all_faces[c][l_vol_jel] *
+             common_weight *          phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
 
-             /*- u(y) v(x)*/     KK_nonlocal_iel_jel_bounded_integral[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
+             /*- u(y) v(x)*/     KK_nonlocal_iel_jel_bounded_integral[ jac_pos_iel_jel /*l_vol_iel * nDof_jel + m_vol_jel*/ ] +=
+              control_node_flag_iel_all_faces[c][l_vol_iel] * control_node_flag_jel_all_faces[c][l_vol_jel] *
+             common_weight * (- 1.) * phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_iel_bdry_qp_of_iface[l_bdry];
 
-             /*- u(x) v(y)*/     KK_nonlocal_jel_iel_bounded_integral[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *   phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
+             /*- u(x) v(y)*/     KK_nonlocal_jel_iel_bounded_integral[ jac_pos_jel_iel /*l_vol_jel * nDof_jel + m_vol_iel*/ ] +=
+              control_node_flag_iel_all_faces[c][l_vol_iel] * control_node_flag_jel_all_faces[c][l_vol_jel] *
+             common_weight * (- 1.) * phi_ctrl_iel_bdry_qp_of_iface[m_bdry]            *   phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
 
-             /*  u(y) v(y)*/     KK_nonlocal_jel_jel_bounded_integral[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] += common_weight *          phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
+             /*  u(y) v(y)*/     KK_nonlocal_jel_jel_bounded_integral[ jac_pos_jel_jel /*l_vol_jel * nDof_jel + m_vol_jel*/ ] +=
+              control_node_flag_iel_all_faces[c][l_vol_iel] * control_node_flag_jel_all_faces[c][l_vol_jel] *
+             common_weight *          phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][m_bdry]  *    phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface][l_bdry];
 
 
                      }
@@ -1488,7 +1531,9 @@ unsigned nDof_iel_vec = 0;
                   unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
 
               const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
-                  Res_local_iel_only_refined[res_pos/* l_vol_iel*/ ]    +=      - common_weight * (sol_ctrl_qp_of_iface[c] - solY3[c]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
+                  Res_local_iel_only_refined[res_pos/* l_vol_iel*/ ]    += -
+                   control_node_flag_iel_all_faces[c][l_vol_iel] *
+                  common_weight * (sol_ctrl_qp_of_iface[c] - solY3[c]) * (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
 
               for (unsigned e = 0; e < n_components_ctrl; e++) {
                   if (e == c) {
@@ -1496,7 +1541,9 @@ unsigned nDof_iel_vec = 0;
                     unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                     
                     const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_iel);         
-                KK_local_iel_only_refined[ jac_pos/*l_vol_iel * nDof_jel + m_vol_iel*/ ] += common_weight * (phi_ctrl_iel_bdry_qp_of_iface[m_bdry] - phi_ctrl_kel_bdry_kqp_bdry[m_bdry]) * 
+                KK_local_iel_only_refined[ jac_pos/*l_vol_iel * nDof_jel + m_vol_iel*/ ] +=
+                 control_node_flag_iel_all_faces[c][l_vol_iel] *
+                common_weight * (phi_ctrl_iel_bdry_qp_of_iface[m_bdry] - phi_ctrl_kel_bdry_kqp_bdry[m_bdry]) *
                                                         (phi_ctrl_iel_bdry_qp_of_iface[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
 
                   }

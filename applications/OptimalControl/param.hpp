@@ -121,7 +121,8 @@ namespace ctrl {
 
 #if IS_CTRL_FRACTIONAL_SOBOLEV == 1
 
-#define NORM_GIR_RAV /*0*/ 1 /* Leave it at 0 */
+// #define NORM_GIR_RAV 0  /* Leave it at 0 --> 0 = Gagliardo seminorm   */
+#define NORM_GIR_RAV  1    /* Leave it at 0 --> 1 = Girault Raviart norm */
 
 #if NORM_GIR_RAV == 0
 
