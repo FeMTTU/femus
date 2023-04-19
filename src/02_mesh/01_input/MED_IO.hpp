@@ -228,49 +228,6 @@ MED_IO::~MED_IO () {
 }
 
    
-//template specialization in h file, explicit instantiation in cpp file
- template < >  
-  void MED_IO::dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(hid_t file_id, std::vector< TYPE_FOR_INT_DATASET > & fam_map, const std::string fam_name_dir_i) const  {
-      
-       hid_t dtset_fam            = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
-      hid_t filespace_fam        = H5Dget_space(dtset_fam);
-      hsize_t dims_fam[2];
-      hid_t status_fam           = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-      if(status_fam == 0) {
-        std::cerr << "MED_IO::read dims not found";
-        abort();
-      }
-
-      const unsigned n_elements = dims_fam[0];
-//       std::vector< TYPE_FOR_INT_DATASET > fam_map(n_elements);
-      fam_map.resize(n_elements);
-      hid_t status_conn = H5Dread(dtset_fam,/*ONLY DIFFERENCE*/H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
-      H5Dclose(dtset_fam);     
-      
-  }
-
-
-  
- template < >  
-  void MED_IO::dataset_open_and_close_store_in_vector<TYPE_FOR_REAL_DATASET>(hid_t file_id, std::vector< TYPE_FOR_REAL_DATASET > & fam_map, const std::string fam_name_dir_i) const  {
-      
-       hid_t dtset_fam            = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
-      hid_t filespace_fam        = H5Dget_space(dtset_fam);
-      hsize_t dims_fam[2];
-      hid_t status_fam           = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-      if(status_fam == 0) {
-        std::cerr << "MED_IO::read dims not found";
-        abort();
-      }
-
-      const unsigned n_elements = dims_fam[0];
-//       std::vector< TYPE_FOR_REAL_DATASET > fam_map(n_elements);
-      fam_map.resize(n_elements);
-      hid_t status_conn = H5Dread(dtset_fam,/*ONLY DIFFERENCE*/ H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
-      H5Dclose(dtset_fam);     
-      
-  }  
-   
   
 
 // MED_IO::~MED_IO() {
