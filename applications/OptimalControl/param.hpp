@@ -60,7 +60,7 @@ namespace ctrl {
 //*********************** Mesh - BEGIN *****************************************
 
 //*********************** Mesh, Number of refinements - BEGIN *****************************************
-// #define N_UNIFORM_LEVELS 7// for 2D applications
+// #define N_UNIFORM_LEVELS 6 // for 2D applications
 #define N_UNIFORM_LEVELS 3 // for 3D bdry application
 
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
@@ -121,8 +121,8 @@ namespace ctrl {
 
 #if IS_CTRL_FRACTIONAL_SOBOLEV == 1
 
-// #define NORM_GIR_RAV 0  /* Leave it at 0 --> 0 = Gagliardo seminorm   */
-#define NORM_GIR_RAV  1    /* Leave it at 0 --> 1 = Girault Raviart norm */
+#define NORM_GIR_RAV 0  /* Leave it at 0 --> 0 = Gagliardo seminorm   */
+// #define NORM_GIR_RAV  1    /* Leave it at 0 --> 1 = Girault Raviart norm */
 
 #if NORM_GIR_RAV == 0
 
@@ -250,19 +250,19 @@ namespace ctrl {
 
 
 //------------------------------------ Square: BEGIN ------------------------------------
-// // // #define  DOMAIN_NAMESPACE_CHILD   square
+// #define  DOMAIN_NAMESPACE_CHILD   square
 
-// // //    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE_CHILD ::mesh::_2d_square_1x1;
+//    const std::string mesh_input = ctrl:: DOMAIN_NAMESPACE_CHILD ::mesh::_2d_square_1x1;
 
 //------------------------------------ single: BEGIN ------------------------------------
 
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_One
-// // // // // // // // // // // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Two
+// // // // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Two
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Three
 // #define  GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES      TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: List_of_Gamma_control_faces_Four
 
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: Single_control_in_front_linear
-// // // // // // // // // // // // // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: Multiple_controls_and_homogeneous_boundary_conditions
+// // // // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: Multiple_controls_and_homogeneous_boundary_conditions
 // #define NAMESPACE_FOR_GAMMA_C_BOUNDARY_CONDITIONS    TYPE_OF_BOUNDARY_CONTROL :: DOMAIN_NAMESPACE_CHILD :: Multiple_controls_in_front_constant
 
 //------------------------------------ single: END ------------------------------------
