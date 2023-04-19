@@ -215,7 +215,11 @@ private:
   
 //====================
 //==== Mesh Group Info - BEGIN  ======== 
-//   std::vector< std::vector< GroupInfo > >  _group_info_all_meshes;
+public:
+    
+  std::vector< std::vector< GroupInfo > >  _group_info_all_meshes;
+  
+  void  set_group_info(const std::string relative_path_to_input_folder);
 //==== Mesh Group Info - END ======== 
   
   

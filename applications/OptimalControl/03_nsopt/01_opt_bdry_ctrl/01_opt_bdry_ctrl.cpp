@@ -231,7 +231,8 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   MultiLevelMesh ml_mesh;
 
-  const std::string infile = Files::get_input_file_with_prefix(ctrl::mesh_input, "../../../");
+  const std::string relative_path_to_mesh_input_folder = "../../../";
+  const std::string infile = Files::get_input_file_with_prefix(ctrl::mesh_input, relative_path_to_mesh_input_folder);
 
 
   const bool read_groups = true;
@@ -334,6 +335,10 @@ int main(int argc, char** args) {
   
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END ==================
+
+  // ======= Mesh: Group info - BEGIN ==================
+   ml_mesh.set_group_info(relative_path_to_mesh_input_folder);
+  // ======= Mesh: Group info - END ==================
 
   // ======= Solution, auxiliary; needed for Boundary of Boundary of Control region - BEFORE COARSE ERASING - BEGIN  ==================
   const std::string node_based_bdry_bdry_flag_name = femus::pure_boundary::_node_based_bdry_bdry;

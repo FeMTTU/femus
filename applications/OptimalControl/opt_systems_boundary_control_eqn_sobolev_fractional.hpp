@@ -47,7 +47,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                       const double C_ns,
                       const double beta,
 //////////
-                      /************const*/ Mesh * msh,
+                      const Mesh * msh,
                       const Solution *    sol,
                       const MultiLevelSolution *    ml_sol,
 //////////
@@ -203,34 +203,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
       else if (dim_bdry == 2) {           
           
           
-  const unsigned  sol_node_flag_index =  ml_sol->GetIndex( node_based_bdry_bdry_in.c_str() );
-  
-  
-       
-  // group info - BEGIN
-  std::string relative_path_to_input_folder =  "../../../";
-  
-  MED_IO  med_io(*msh/*Mesh, the coarse or whatever?*/);
-  
-  const std::string mesh_file_location = Files::get_input_file_with_prefix(ml_sol->_mlMesh->_mesh_filename, relative_path_to_input_folder)/*relative_path_to_input_folder + DEFAULT_INPUTDIR + ml_sol->_mlMesh->_mesh_filename*/;
-  ;
-  
-    hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
-
-    const std::vector< std::string > mesh_menus = med_io.get_mesh_names(file_id);
-         
-    
-        std::vector< std::vector< GroupInfo > >  group_info_all_meshes(mesh_menus.size());  
-
-    for (unsigned m = 0; m < group_info_all_meshes.size(); m++)   {
-        
-            group_info_all_meshes[m] = med_io.get_all_groups_per_mesh(file_id, mesh_menus[m]);
-     }    
-  // group info - END
- 
-  // ctrl face to node-node association - BEGIN
+  // ctrl face to node-node association
  std::map<unsigned int, unsigned int >  ctrl_faces_VS_their_nodes = LIST_OF_CTRL_FACES :: from_ctrl_faces_to_their_boundaries();
-  // ctrl face to node-node association - END
  
  
           const unsigned t_face_that_I_want = j_element_face_index;
@@ -239,22 +213,25 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
           
             unsigned  t_med_flag_of_node_bdry_bdry_for_control_face;
           
-    for (unsigned m = 0; m < group_info_all_meshes.size(); m++)   {
+    for (unsigned m = 0; m < ml_sol->_mlMesh->_group_info_all_meshes.size(); m++)   {
     
                 //find its corresponding node_node group
                  unsigned gr_node_node;
-          for ( unsigned gr = 0; gr < group_info_all_meshes[m].size(); gr++) {
-                      if ( group_info_all_meshes[m][gr]._user_defined_flag  == ctrl_faces_VS_their_nodes[ t_face_that_I_want ]) {
+          for ( unsigned gr = 0; gr < ml_sol->_mlMesh->_group_info_all_meshes[m].size(); gr++) {
+                      if ( ml_sol->_mlMesh->_group_info_all_meshes[m][gr]._user_defined_flag  == ctrl_faces_VS_their_nodes[ t_face_that_I_want ]) {
                           gr_node_node = gr;
                       }
           }
                 
-                t_med_flag_of_node_bdry_bdry_for_control_face = group_info_all_meshes[m][gr_node_node]._med_flag;
+                t_med_flag_of_node_bdry_bdry_for_control_face = ml_sol->_mlMesh->_group_info_all_meshes[m][gr_node_node]._med_flag;
                 
      }    
   //t_med_flag_of_node_bdry_bdry_for_control_face END
 
   
+  // bdry bdry flag
+  const unsigned  sol_node_flag_index =  ml_sol->GetIndex( node_based_bdry_bdry_in.c_str() );
+ 
 //--- Denominator, unbounded integral, numerical - BEGIN -------
             unsigned jel_geom_type = msh->GetElementType(jel);
             unsigned jel_geom_type_face = msh->GetElementFaceType(jel, jface);
@@ -266,7 +243,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 
          for(unsigned e_bdry_bdry = 0; e_bdry_bdry < jel_n_faces_faces; e_bdry_bdry++) {
 
-              // look for boundary faces and compute delta coords (probably could do it later) - BEGIN
+              // look for boundary faces - BEGIN
               
               unsigned jel_n_dofs_bdry_bdry =  msh->el->GetNFACENODES(jel_geom_type_face, e_bdry_bdry, solType_coords);
 
@@ -301,7 +278,6 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 unsigned jnode_bdry_bdry     = msh->el->GetIG(jel_geom_type_face, e_bdry_bdry, jdof_bdry_bdry); // face-to-element local node mapping.
                 unsigned jnode_bdry_bdry_vol = msh->el->GetIG(jel_geom_type, jface, jnode_bdry_bdry);
                 
-              // delta coords  -----
                 for(unsigned k = 0; k < dim; k++) {
                   radius_centered_at_x_qp_of_iface_bdry_bdry[k][jdof_bdry_bdry] = geom_element_jel.get_coords_at_dofs_3d()[k][jnode_bdry_bdry_vol] - x_qp_of_iface[k];
                 }

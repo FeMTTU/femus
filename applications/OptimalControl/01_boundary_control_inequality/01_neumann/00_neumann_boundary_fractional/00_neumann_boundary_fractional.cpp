@@ -100,30 +100,38 @@ int main(int argc, char** args) {
   files.RedirectCout(true);
 
   // define multilevel mesh
-  MultiLevelMesh mlMsh;
+  MultiLevelMesh ml_mesh;
   double Lref = 1.;
 
   std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  
+  const std::string relative_path_to_mesh_input_folder = "./";
+  std::ostringstream mystream; mystream << relative_path_to_mesh_input_folder << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
 
   const bool read_groups = true;
   const bool read_boundary_groups = true;
   
 
-  mlMsh.ReadCoarseMesh(infile.c_str(), "seventh", Lref, read_groups, read_boundary_groups);
+  ml_mesh.ReadCoarseMesh(infile.c_str(), "seventh", Lref, read_groups, read_boundary_groups);
     
   
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  mlMsh.PrintInfo();
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.PrintInfo();
+  
+  // ======= Mesh: Group info - BEGIN ==================
+   ml_mesh.set_group_info(relative_path_to_mesh_input_folder);
+  // ======= Mesh: Group info - END ==================
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution ml_sol(&mlMsh);
+
+
+  // define the multilevel solution and attach the ml_mesh object to it
+  MultiLevelSolution ml_sol(&ml_mesh);
 
   // add variables to ml_sol
   ml_sol.AddSolution("state", LAGRANGE, FIRST);
