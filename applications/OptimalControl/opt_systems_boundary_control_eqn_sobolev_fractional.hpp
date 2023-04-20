@@ -319,13 +319,15 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                 
 ///@todooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
               // what are the global axes that are consistent with outgoing normal - BEGIN -----
+                const unsigned current_jctrl_face = j_element_face_index /*LIST_OF_CTRL_FACES :: _face_with_extremes_index[0]*/; /*FACE_FOR_CONTROL*/
+
                 std::vector< unsigned > global_dirs_for_atan(dim_bdry);
                 constexpr unsigned global_dir_first = 0;
                 constexpr unsigned global_dir_second = 1;
-                global_dirs_for_atan[global_dir_first ] = ( ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] /*FACE_FOR_CONTROL*/ - 1) / 2 ) + 1 ) % 3;
+                global_dirs_for_atan[global_dir_first ] = ( ( ( current_jctrl_face  - 1) / 2 ) + 1 ) % 3;
                 global_dirs_for_atan[global_dir_second] = ( global_dirs_for_atan[0] + 1 ) % 3 ;
                 
-                if ( (LIST_OF_CTRL_FACES :: _face_with_extremes_index[0] % 2) == 1 ) {  std::reverse(global_dirs_for_atan.begin(), global_dirs_for_atan.end()); } 
+                if ( (current_jctrl_face % 2) == 1 ) {  std::reverse(global_dirs_for_atan.begin(), global_dirs_for_atan.end()); } 
               //  what are the global axes that are consistent with outgoing normal - END -----
                 
               // theta's - BEGIN -----
