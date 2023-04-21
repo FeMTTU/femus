@@ -149,7 +149,7 @@ public:
   
  //************ set control flag - BEGIN *********************
   std::vector< std::vector< int > > control_node_flag_iel_all_faces = 
-       femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, iel /*ok*/, geom_element_iel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat /*ok*/, Sol_n_el_dofs_Mat, pos_mat_ctrl /*ok*/, n_components_ctrl /*ok*/);
+       femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, iel /*ok*/, ielGeom, geom_element_iel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat /*ok*/, Sol_n_el_dofs_Mat, pos_mat_ctrl /*ok*/, n_components_ctrl /*ok*/);
        
        ///@todo here I have to do it "on the go", for each boundary dof!!!
  //************ set control flag - END *********************

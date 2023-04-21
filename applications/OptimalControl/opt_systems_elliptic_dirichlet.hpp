@@ -568,7 +568,7 @@ public:
 
  //************ set control flag *********************
    std::vector< std::vector< int > > control_node_flag = 
-       femus::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
+       femus::is_dof_associated_to_Gamma_control_equation(msh, ml_sol, & ml_prob, iel, ielGeom, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 

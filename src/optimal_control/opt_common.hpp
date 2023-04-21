@@ -17,6 +17,7 @@
       /*const*/ femus::MultiLevelSolution * ml_sol,
          const femus::MultiLevelProblem *    ml_prob,
       const unsigned iel,
+      const unsigned short iel_geom_elem_type,
       femus::CurrentElem < double > & geom_element_iel,
       const unsigned solType_coords,
       std::vector < std::string > Solname_Mat,
@@ -50,7 +51,7 @@
             const int bdry_index = msh->el->GetFaceElementIndex(iel, iface);
             
 	    if( bdry_index < 0) {
-	      const unsigned int face_in_rectangle_domain = - ( msh->el->GetFaceElementIndex(iel, iface) + 1);
+	      const unsigned int face_in_rectangle_domain = - ( bdry_index + 1);
          
          
          
@@ -64,7 +65,7 @@
               
           const unsigned ndofs_ctrl_bdry = msh->GetElementFaceDofNumber(iel, iface, SolFEType_Mat[pos_mat_ctrl + c]);
 		  for(unsigned i_bdry = 0; i_bdry < ndofs_ctrl_bdry; i_bdry++) {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex_PassElemType(iel_geom_elem_type, iface, i_bdry);
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 		
 				  control_node_flag_iel_all_faces[c][i_vol] = 1;

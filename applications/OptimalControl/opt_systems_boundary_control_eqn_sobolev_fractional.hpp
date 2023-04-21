@@ -783,7 +783,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
 //************ set control flag - BEGIN *********************
        std::vector< std::vector< int > > control_node_flag_jel_all_faces =
-       femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, jel /*ok*/, geom_element_jel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat /*ok*/, Sol_n_el_dofs_Mat, pos_mat_ctrl /*ok*/, n_components_ctrl /*ok*/);
+       femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, jel /*ok*/, jel_geommm, geom_element_jel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat /*ok*/, Sol_n_el_dofs_Mat, pos_mat_ctrl /*ok*/, n_components_ctrl /*ok*/);
 //************ set control flag - END *********************
 
 // ***************************************
@@ -1059,7 +1059,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
 //************ set control flag - BEGIN *********************
         std::vector< std::vector< int > > control_node_flag_iel_all_faces =
-        femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, iel /*ok*/, geom_element_iel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
+        femus::is_dof_associated_to_Gamma_control_equation(msh /*ok*/, ml_sol /*ok*/, & ml_prob /*ok*/, iel /*ok*/, ielGeom, geom_element_iel /*ok*/, solType_coords /*ok*/, Solname_Mat /*ok*/, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
 //************ set control flag - END *********************
 
         
