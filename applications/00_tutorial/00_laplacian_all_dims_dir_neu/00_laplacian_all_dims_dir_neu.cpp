@@ -137,7 +137,7 @@ int main(int argc, char** args) {
   app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
   
   app_segment._system_name = "Equation";
-  app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
+  app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
   app_segment._boundary_conditions_types_and_values             = SetBoundaryCondition;
   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
@@ -241,7 +241,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("d_s");
  
   // attach the assembling function to system
-  system.SetAssembleFunction( femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double> );
+  system.SetAssembleFunction( app_segment._assemble_function );
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
