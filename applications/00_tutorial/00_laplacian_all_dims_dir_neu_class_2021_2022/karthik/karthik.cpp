@@ -62,7 +62,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
       dirichlet = true;
         value = 0.; //Neumann value
     }
-
+// true or false here should assign or deassign the type of boundary conditions
     
  }
  
@@ -71,15 +71,15 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
      
     if (face_name == 1) {
       dirichlet = true;
-        value = 0.;
+        value = 1.;
   }
   else if (face_name == 2) {
       dirichlet = true;
-        value = 0.;
+        value = 1.;
   }
   else if (face_name == 3) {
       dirichlet = true;
-        value = 0.;
+        value = 1.;
   }
   else if (face_name == 4) {
       dirichlet = false;
@@ -134,7 +134,7 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("Mesh_2_xz_all_dir.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
+  app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
@@ -194,7 +194,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/3;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================
