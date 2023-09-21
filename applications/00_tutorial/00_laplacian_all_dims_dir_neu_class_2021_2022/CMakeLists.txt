@@ -12,5 +12,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
   ADD_SUBDIRECTORY(./shaflynn/)
 
   ADD_SUBDIRECTORY(./karthik/)
+  ADD_SUBDIRECTORY(./shankar/)
 
   ADD_SUBDIRECTORY(./zzz_giorgiobornia_collect_all/)
