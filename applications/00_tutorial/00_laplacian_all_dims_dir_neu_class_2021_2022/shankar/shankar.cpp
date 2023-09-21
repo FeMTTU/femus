@@ -26,17 +26,6 @@ using namespace femus;
  
 
 
-
-
-double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
-    
-    // for a 1d segment
-    
-    return  -2.;
-}
-
-
-
 double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
@@ -44,9 +33,18 @@ double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < dou
 }
 
 
+
+
+// SEGMENT - BEGIN
+double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
+    
+    // for a 1d segment
+    
+    return  -2.;
+}
+
  
- 
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool segment_dir_neu_fine__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
   value = 0.;
@@ -67,10 +65,23 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
     
  }
  
- if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
+ 
+  return dirichlet;
+  
+ }
+// SEGMENT - END
+
+
+// SQUARE - BEGIN
+bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+  
+   bool dirichlet = false;
+  value = 0.;
+    
      
-     
-    if (face_name == 1) {
+  if (face_name == 1) {
       dirichlet = true;
         value = 0.;
   }
@@ -78,27 +89,34 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
       dirichlet = true;
         value = 0.;
   }
-  else if (face_name == 3) {
+
+ else  if (face_name == 3) {
       dirichlet = true;
         value = 0.;
   }
   else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
+      dirichlet = true;
+        value = 0.;//x[0] * x[0];
   }
-   
- 
- }
- 
- if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
-     std::cout << "Not implemented"; abort();
- }
- 
-  return dirichlet;
   
- }
+  
 
+   return dirichlet;
+   
+}
 
+double square__laplacian__rhs(const std::vector < double >& x) {
+    
+  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+  
+}
+
+double square__laplacian__true_solution(const std::vector < double >& x) {
+    
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    
+}
+// SQUARE - END
 
 
 
@@ -135,14 +153,19 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
-  
   app_segment._system_name = "Equation";
   app_segment._assemble_function = shankar::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_segment._boundary_conditions_types_and_values             = SetBoundaryCondition;
-  app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-//   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
+// // //   app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
+// // //   app_segment._boundary_conditions_types_and_values             = segment_dir_neu_fine__laplacian__bc;
+// // //   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
+// // // //   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
+  
+  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+  app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
+  app_segment._assemble_function_rhs = square__laplacian__rhs;
+//   app_segment._true_solution    = square__laplacian__true_solution; 
+  
   ///@todo if this is not set, nothing should happen here
 
   
