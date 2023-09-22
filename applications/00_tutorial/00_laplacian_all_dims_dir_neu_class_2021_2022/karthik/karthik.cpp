@@ -3,7 +3,7 @@
  *     - \Delta u = 1
 */
 
-
+// library includes
 #include "FemusInit.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
@@ -18,22 +18,12 @@
 #include "Assemble_unknown_jacres.hpp"
 
 
-#include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
+// application includes
+#include "00_poisson_eqn.hpp"
 
 
 using namespace femus;
  
-
-
-
-
-double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
-    
-    // for a 1d segment
-    
-    return  -2.;
-}
-
 
 
 double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -43,9 +33,18 @@ double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < dou
 }
 
 
+
+
+// SEGMENT - BEGIN
+double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
+    
+    // for a 1d segment
+    
+    return  -2.;
+}
+
  
- 
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool segment_dir_neu_fine__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
   value = 0.;
@@ -59,45 +58,65 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
         value = 0.; //Dirichlet value
     }
   else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.; //Neumann value
+      dirichlet = false;
+        value = 1.; //Neumann value
     }
-// true or false here should assign or deassign the type of boundary conditions
+
     
  }
  
- if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
-     
-     
-    if (face_name == 1) {
-      dirichlet = true;
-        value = 1.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 1.;
-  }
-  else if (face_name == 3) {
-      dirichlet = true;
-        value = 1.;
-  }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
-  }
-   
- 
- }
- 
- if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
-     std::cout << "Not implemented"; abort();
- }
  
   return dirichlet;
   
  }
+// SEGMENT - END
 
 
+// SQUARE - BEGIN
+bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+  
+   bool dirichlet = false;
+  value = 0.;
+    
+     
+  if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+
+ else  if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 4) {
+      dirichlet = false;
+        value = 1.*x[0] * x[0];
+  }
+  
+  
+
+   return dirichlet;
+   
+}
+
+double square__laplacian__rhs(const std::vector < double >& x) {
+    
+  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+  
+}
+
+double square__laplacian__true_solution(const std::vector < double >& x) {
+    
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    
+}
+// SQUARE - END
 
 
 
@@ -105,7 +124,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
 
 
 int main(int argc, char** args) {
- // Very impotant to be there to run in parallel
+
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -113,10 +132,10 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob;
 
   // ======= Files - BEGIN  ========================
-  const bool use_output_time_folder = false; //not everytime this will go to output folder. This allows you to run the code multiple times without overwritting. This guy will generate output folder each time you run.
-  const bool redirect_cout_to_file = false; // puts the output to a file instead of the command window or the konsole. In a log file.
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
-        files.CheckIODirectories(use_output_time_folder); //dot operator is calling or accessing the function in that class of that name.
+        files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
   // ======= Problem, Files ========================
@@ -134,14 +153,19 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
-  
   app_segment._system_name = "Equation";
-  app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
+  app_segment._assemble_function = karthik::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_segment._boundary_conditions_types_and_values             = SetBoundaryCondition;
-  app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-//   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
+// // //   app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
+// // //   app_segment._boundary_conditions_types_and_values             = segment_dir_neu_fine__laplacian__bc;
+// // //   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
+// // // //   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
+  
+  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+  app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
+  app_segment._assemble_function_rhs = square__laplacian__rhs;
+//   app_segment._true_solution    = square__laplacian__true_solution; 
+  
   ///@todo if this is not set, nothing should happen here
 
   
@@ -150,7 +174,6 @@ int main(int argc, char** args) {
 
   // ======= Mesh, files - BEGIN  ==================   
 //    mesh_files.push_back("Mesh_2_xy_all_dir.med");
-  //    mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
@@ -194,7 +217,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/3;
+  unsigned numberOfUniformLevels = /*1*/4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================
@@ -212,7 +235,7 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   // ======= Problem, Mesh and Solution  ==================
-  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol); // & looking for the address of the ml_sol
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
   // ======= Solution - END ==================
 
   // ======= Solutions that are Unknowns - BEGIN ==================
@@ -242,7 +265,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("d_s");
  
   // attach the assembling function to system
-  system.SetAssembleFunction( femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double> );
+  system.SetAssembleFunction( app_segment._assemble_function );
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
