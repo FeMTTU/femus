@@ -41,8 +41,8 @@ class Files {
 
 public:
   
-   Files();
-  ~Files();
+   Files(); //constructor
+  ~Files(); // destructor
 
 // Directory management =========
          void CheckIODirectories(const bool use_output_time_folder);
