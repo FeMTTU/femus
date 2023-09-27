@@ -9,7 +9,10 @@
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
+
+
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"
@@ -51,7 +54,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   bool dirichlet = false;
   value = 0.;
   
-  const double tolerance = 1.e-5;
+  const double tolerance = 1.e-8;
   
  if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
   
@@ -135,7 +138,7 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
+  app_segment._mesh_files.push_back("dome_tri.med");
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = shankar::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
@@ -150,6 +153,7 @@ int main(int argc, char** args) {
 
 
   // ======= Mesh, files - BEGIN  ==================   
+//    mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_2_xy_all_dir.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
