@@ -19,7 +19,19 @@
 
 
 // application includes
-#include "00_poisson_eqn.hpp"
+
+#define LIBRARY_OR_USER   0 //0: library; 1: user
+
+#if LIBRARY_OR_USER == 0
+   #include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
+   #define NAMESPACE_FOR_POISSON  femus
+#elif LIBRARY_OR_USER == 1
+   #include "00_poisson_eqn.hpp"
+   #define NAMESPACE_FOR_POISSON  karthik
+#endif
+
+
+
 
 
 using namespace femus;
@@ -154,7 +166,7 @@ int main(int argc, char** args) {
 
   //segment_dir_neu_fine
   app_segment._system_name = "Equation";
-  app_segment._assemble_function = karthik::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
+  app_segment._assemble_function = NAMESPACE_FOR_POISSON :: poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
 // // //   app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
 // // //   app_segment._boundary_conditions_types_and_values             = segment_dir_neu_fine__laplacian__bc;
