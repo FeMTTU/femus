@@ -156,11 +156,10 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-<<<<<<< HEAD
+// <<<<<<< HEAD
   app_segment._mesh_files.push_back("dome_tri.med");
   
-=======
->>>>>>> femttu/master
+
   app_segment._system_name = "Equation";
   app_segment._assemble_function = shankar::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
@@ -169,7 +168,7 @@ int main(int argc, char** args) {
 // // //   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
 // // // //   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
   
-  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+  app_segment._mesh_files.push_back("dome_tri.med");
   app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
   app_segment._assemble_function_rhs = square__laplacian__rhs;
 //   app_segment._true_solution    = square__laplacian__true_solution; 

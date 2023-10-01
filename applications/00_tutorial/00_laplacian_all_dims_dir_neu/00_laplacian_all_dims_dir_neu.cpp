@@ -134,7 +134,7 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("Mesh_2_xz_all_dir.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
+  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
