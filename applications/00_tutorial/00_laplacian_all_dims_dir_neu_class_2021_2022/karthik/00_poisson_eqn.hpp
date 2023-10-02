@@ -186,7 +186,7 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
              }
          }
          
-           double grad_u_dot_n_qp = 0.;
+           double grad_u_dot_n_qp = 0.;  ///@todo here we should do a function that provides the gradient at the boundary, and then we do "dot n" with the normal at qp
      ml_sol->GetBdcFunctionMLProb()(ml_prob, x_qp_bdry, solname_u.c_str(), grad_u_dot_n_qp, face, 0.);
 
 //---------------------------------------------------------------------------------------------------------
