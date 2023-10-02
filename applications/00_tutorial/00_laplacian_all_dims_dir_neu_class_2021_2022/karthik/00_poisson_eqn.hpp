@@ -98,8 +98,6 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
                        const unsigned dim,
                        const unsigned space_dim,
                        const unsigned max_size
-
-                       const unsigned x_qp_bdry      //////// declaring x_qp_bdry
                     ) {
 
 
@@ -109,6 +107,9 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
     for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {   Jac_iqp_bdry[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_iqp_bdry.size(); d++) { JacI_iqp_bdry[d].resize(dim-1); }
 
+    
+    
+    
     double detJac_iqp_bdry;
   double weight_iqp_bdry = 0.;
 // ---
@@ -120,7 +121,14 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
   phi_u_x_bdry.reserve(max_size * space_dim);
 // ---
 
+// ---
+  std::vector <double> phi_coords_bdry;
+  std::vector <double> phi_coords_x_bdry;
 
+  phi_coords_bdry.reserve(max_size);
+  phi_coords_x_bdry.reserve(max_size * space_dim);
+// ---
+   
 
 
      double grad_u_dot_n = 0.;
@@ -168,16 +176,18 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
 //---------------------------------------------------------------------------------------------------------
 
-     elem_all[ielGeom_bdry][solFEType_coords ]->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
+     elem_all[ielGeom_bdry][solType_coords ]->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
 
   std::vector<double> x_qp_bdry(dim, 0.);
 
-         for (unsigned i = 0; i < phi_coords.size(); i++) {
+         for (unsigned i = 0; i < phi_coords_bdry.size(); i++) {
            	for (unsigned d = 0; d < dim; d++) {
  	                                                x_qp_bdry[d]    += geom_element.get_coords_at_dofs_bdry_3d()[d][i] * phi_coords_bdry[i]; // fetch of coordinate points
              }
          }
-           ml_sol->GetBdcFunctionMLProb()(ml_prob, x_qp_bdry, solname_u.c_str(), grad_u_dot_n_qp, face, 0.);
+         
+           double grad_u_dot_n_qp = 0.;
+     ml_sol->GetBdcFunctionMLProb()(ml_prob, x_qp_bdry, solname_u.c_str(), grad_u_dot_n_qp, face, 0.);
 
 //---------------------------------------------------------------------------------------------------------
 
@@ -190,7 +200,7 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
-                 Res[i_vol] +=  weight_iqp_bdry * grad_u_dot_n/*_qp*/ * phi_u_bdry[i_bdry];
+                 Res[i_vol] +=  weight_iqp_bdry * grad_u_dot_n_qp /*grad_u_dot_n*/  * phi_u_bdry[i_bdry];
 
                            }
 
@@ -229,7 +239,7 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
 
   const unsigned  dim = msh->GetDimension();
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
   unsigned    iproc = msh->processor_id();
 
@@ -254,11 +264,9 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
  //***************************************************
   std::vector <double> phi_coords;
   std::vector <double> phi_coords_x;
-  std::vector <double> phi_coords_xx;
 
-  phi_coords.reserve(maxSize);
-  phi_coords_x.reserve(maxSize * space_dim);
-  phi_coords_xx.reserve(maxSize * dim2);
+  phi_coords.reserve(max_size);
+  phi_coords_x.reserve(max_size * space_dim);
 
 
  //********************* quadrature, unknowns ***********************
@@ -267,9 +275,9 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
   std::vector <double> phi_u_x;
   std::vector <double> phi_u_xx;
 
-  phi_u.reserve(maxSize);
-  phi_u_x.reserve(maxSize * space_dim);
-  phi_u_xx.reserve(maxSize * dim2);
+  phi_u.reserve(max_size);
+  phi_u_x.reserve(max_size * space_dim);
+  phi_u_xx.reserve(max_size * dim2);
 
 
   const std::string solname_u = ml_sol->GetSolName_string_vec()[0];
@@ -280,8 +288,8 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
   unsigned solPdeIndex_u;
   solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
 
-  std::vector < double >  sol_u;     sol_u.reserve(maxSize);
-  std::vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
+  std::vector < double >  sol_u;     sol_u.reserve(max_size);
+  std::vector< int > l2GMap_u;    l2GMap_u.reserve(max_size);
  //***************************************************
  //***************************************************
 
@@ -289,9 +297,9 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
  //***************************************************
  //********* WHOLE SET OF VARIABLES ******************
 
-  std::vector< int > l2GMap_AllVars; l2GMap_AllVars.reserve(n_vars*maxSize); // local to global mapping
-  std::vector< double >         Res;            Res.reserve(n_vars*maxSize);  // local redidual vector
-  std::vector < double >        Jac;            Jac.reserve(n_vars*maxSize * n_vars*maxSize);
+  std::vector< int > l2GMap_AllVars; l2GMap_AllVars.reserve(n_vars*max_size); // local to global mapping
+  std::vector< double >         Res;            Res.reserve(n_vars*max_size);  // local redidual vector
+  std::vector < double >        Jac;            Jac.reserve(n_vars*max_size * n_vars*max_size);
  //***************************************************
 
   RES->zero();
@@ -358,7 +366,7 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
                       elem_all,
                       dim,
                       space_dim,
-                      maxSize
+                      max_size
                      );
  //========= BOUNDARY - END ==================
 
