@@ -98,6 +98,8 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
                        const unsigned dim,
                        const unsigned space_dim,
                        const unsigned max_size
+
+                       const unsigned x_qp_bdry      //////// declaring x_qp_bdry
                     ) {
 
 
@@ -162,16 +164,24 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
     elem_all[ielGeom_bdry][solFEType_u ]->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_u_bdry, phi_u_x_bdry,  boost::none, space_dim);
 
-// // //     elem_all[ielGeom_bdry][solFEType_coords ]->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
-// // //
-// // //  std::vector<double> x_qp_bdry(dim, 0.);
-// // //
-// // //         for (unsigned i = 0; i < phi_coords.size(); i++) {
-// // //           	for (unsigned d = 0; d < dim; d++) {
-// // // 	                                                x_qp_bdry[d]    += geom_element.get_coords_at_dofs_bdry_3d()[d][i] * phi_coords_bdry[i]; // fetch of coordinate points
-// // //             }
-// // //         }
-// // //           ml_sol->GetBdcFunctionMLProb()(ml_prob, x_qp_bdry, solname_u.c_str(), grad_u_dot_n_qp, face, 0.);
+
+
+//---------------------------------------------------------------------------------------------------------
+
+     elem_all[ielGeom_bdry][solFEType_coords ]->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
+
+  std::vector<double> x_qp_bdry(dim, 0.);
+
+         for (unsigned i = 0; i < phi_coords.size(); i++) {
+           	for (unsigned d = 0; d < dim; d++) {
+ 	                                                x_qp_bdry[d]    += geom_element.get_coords_at_dofs_bdry_3d()[d][i] * phi_coords_bdry[i]; // fetch of coordinate points
+             }
+         }
+           ml_sol->GetBdcFunctionMLProb()(ml_prob, x_qp_bdry, solname_u.c_str(), grad_u_dot_n_qp, face, 0.);
+
+//---------------------------------------------------------------------------------------------------------
+
+
 
 
     unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
