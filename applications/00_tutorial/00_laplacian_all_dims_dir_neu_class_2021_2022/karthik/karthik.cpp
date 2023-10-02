@@ -229,7 +229,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================
