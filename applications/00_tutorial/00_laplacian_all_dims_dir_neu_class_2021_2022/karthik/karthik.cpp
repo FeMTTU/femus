@@ -17,10 +17,13 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
+#define _USE_MATH_DEFINES
+
+#include <math.h>
 
 // application includes
 
-#define LIBRARY_OR_USER   0 //0: library; 1: user
+#define LIBRARY_OR_USER   1 //0: library; 1: user
 
 #if LIBRARY_OR_USER == 0
    #include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
@@ -84,51 +87,113 @@ bool segment_dir_neu_fine__laplacian__bc(const MultiLevelProblem * ml_prob, cons
 // SEGMENT - END
 
 
+
+
 // SQUARE - BEGIN
 bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-  
+
    bool dirichlet = false;
   value = 0.;
-    
-     
+
+
   if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
+      // dirichlet = true;
+      //   value = 0.;
+      dirichlet = false;
+      value = -1. * x[1] * ( 1. - x[1]) ;
   }
   else if (face_name == 2) {
       dirichlet = true;
         value = 0.;
+      // dirichlet = false;
+      // value = -1. * x[1] * ( 1. - x[1]) ;
   }
 
  else  if (face_name == 3) {
       dirichlet = true;
         value = 0.;
+      // dirichlet = false;
+      // value = -1. * x[0] * ( 1. - x[0]) ;
   }
   else if (face_name == 4) {
-      dirichlet = false;
-        value = 1.*x[0] * x[0];
+      dirichlet = true;
+        value = 0.;
+      // dirichlet = false;
+      //   value = -1. * x[0] * ( 1. - x[0]) ;
   }
-  
-  
+
+
 
    return dirichlet;
-   
+
 }
 
 double square__laplacian__rhs(const std::vector < double >& x) {
-    
+
   return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-  
+
 }
 
 double square__laplacian__true_solution(const std::vector < double >& x) {
-    
+
   return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    
+
 }
 // SQUARE - END
+
+
+
+
+
+// // // // SQUARE - BEGIN
+// // // bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+// // // 
+// // //   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+// // // 
+// // //    bool dirichlet = false;
+// // //   value = 0.;
+// // // 
+// // // 
+// // //   if (face_name == 1) {
+// // //       dirichlet = true;
+// // //         value = 0.;
+// // //   }
+// // //   else if (face_name == 2) {
+// // //       dirichlet = true;
+// // //         value = 0.;
+// // //   }
+// // // 
+// // //  else  if (face_name == 3) {
+// // //       dirichlet = false;
+// // //         value = 0.;
+// // //   }
+// // //   else if (face_name == 4) {
+// // //       dirichlet = false;
+// // //         value = M_PI*cos(M_PI * x[0])*sin(M_PI*x[1]);
+// // //   }
+// // // 
+// // // 
+// // // 
+// // //    return dirichlet;
+// // // 
+// // // }
+// // // 
+// // // double square__laplacian__rhs(const std::vector < double >& x) {
+// // // 
+// // //   //return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+// // //   return -M_PI*M_PI*sin(M_PI*x[0])*sin(M_PI*x[1]);
+// // // 
+// // // }
+// // // 
+// // // double square__laplacian__true_solution(const std::vector < double >& x) {
+// // // 
+// // // //  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+// // //   return sin(M_PI * x[0])*sin(M_PI*x[1]);
+// // // 
+// // // }
+// // // // SQUARE - END
 
 
 
@@ -190,7 +255,10 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
 //    mesh_files.push_back("Mesh_1_z_all_dir.med");
-//    mesh_files.push_back("Mesh_2_xz_all_dir.med");
+//    mesh_files.push_back("Mesh_2_xz_all_dir.med")
+
+
+  ;
 //    mesh_files.push_back("Mesh_2_yz_all_dir.med");
 //    mesh_files.push_back("Mesh_3_xyz_all_dir.med");
 //    mesh_files.push_back("dome_tri.med");
@@ -229,7 +297,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/3;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================
