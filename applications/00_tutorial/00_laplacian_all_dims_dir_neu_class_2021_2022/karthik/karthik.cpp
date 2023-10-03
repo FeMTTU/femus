@@ -147,54 +147,62 @@ double square__laplacian__true_solution(const std::vector < double >& x) {
 
 
 
-// // // // SQUARE - BEGIN
-// // // bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-// // // 
-// // //   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-// // // 
-// // //    bool dirichlet = false;
-// // //   value = 0.;
-// // // 
-// // // 
-// // //   if (face_name == 1) {
-// // //       dirichlet = true;
-// // //         value = 0.;
-// // //   }
-// // //   else if (face_name == 2) {
-// // //       dirichlet = true;
-// // //         value = 0.;
-// // //   }
-// // // 
-// // //  else  if (face_name == 3) {
-// // //       dirichlet = false;
-// // //         value = 0.;
-// // //   }
-// // //   else if (face_name == 4) {
-// // //       dirichlet = false;
-// // //         value = M_PI*cos(M_PI * x[0])*sin(M_PI*x[1]);
-// // //   }
-// // // 
-// // // 
-// // // 
-// // //    return dirichlet;
-// // // 
-// // // }
-// // // 
-// // // double square__laplacian__rhs(const std::vector < double >& x) {
-// // // 
-// // //   //return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-// // //   return -M_PI*M_PI*sin(M_PI*x[0])*sin(M_PI*x[1]);
-// // // 
-// // // }
-// // // 
-// // // double square__laplacian__true_solution(const std::vector < double >& x) {
-// // // 
-// // // //  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-// // //   return sin(M_PI * x[0])*sin(M_PI*x[1]);
-// // // 
-// // // }
-// // // // SQUARE - END
+// CUBE - BEGIN
+bool cube__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
+  if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
+
+   bool dirichlet = false;
+  value = 0.;
+
+
+  if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+
+ else  if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 4) {
+      dirichlet = true;
+        value = 0.;
+  }
+ else  if (face_name == 5) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 6) {
+      dirichlet = true;
+        value = 0.;
+  }
+
+
+
+   return dirichlet;
+
+}
+
+
+
+
+double cube__laplacian__rhs(const std::vector < double >& x) {
+
+  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) +  x[2] * (1. - x[2]) );
+
+}
+
+double cube__laplacian__true_solution(const std::vector < double >& x) {
+
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]) * x[2] * (1. - x[2]);
+
+}
+// CUBE - END
 
 
  
@@ -238,7 +246,7 @@ int main(int argc, char** args) {
 // // //   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
 // // // //   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
   
-  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+  app_segment._mesh_files.push_back("Mesh_3_xyz_all_dir.med");
   app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
   app_segment._assemble_function_rhs = square__laplacian__rhs;
 //   app_segment._true_solution    = square__laplacian__true_solution; 
