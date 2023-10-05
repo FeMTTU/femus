@@ -120,9 +120,9 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
   else if (face_name == 4) {
       //dirichlet = false;
       //  value = 0.;
-      //value = -1. * x[0] * ( 1. - x[0]);
+      value = -1. * x[0] * ( 1. - x[0]);
        dirichlet = false;
-       value = -M_PI * sin( M_PI * x[0] );
+       // // // value = -M_PI * sin( M_PI * x[0] );
 //        dirichlet = false;
 //        value = -M_PI * sin( M_PI * x[0] ) - 0.2 * (5. * M_PI) * sin( 5. * M_PI * x[0] );
 //        dirichlet = false;
@@ -138,8 +138,8 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
 
 double square__laplacian__rhs(const std::vector < double >& x) {
 
-//   return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-    return -2.* M_PI * M_PI * sin(M_PI * x[0] ) * sin( M_PI * x[1] );
+  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+    // // // return -2.* M_PI * M_PI * sin(M_PI * x[0] ) * sin( M_PI * x[1] );
 //     return -2.* M_PI * M_PI * sin( M_PI * x[0] ) * sin( M_PI * x[1] ) - 2. * 0.2 * 25. * M_PI * M_PI * sin( 5* M_PI * x[0] ) * sin( 5* M_PI * x[1] );
 //     return -8.* M_PI * M_PI * sin( 2. * M_PI * x[0] ) * sin( 2. * M_PI * x[1] ) ;
 
@@ -148,8 +148,8 @@ double square__laplacian__rhs(const std::vector < double >& x) {
 
 double square__laplacian__true_solution(const std::vector < double >& x) {
 
-//   return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-   return sin(M_PI * x[0] ) * sin( M_PI * x[1] );
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+   // // // return sin(M_PI * x[0] ) * sin( M_PI * x[1] );
 //    return sin(M_PI * x[0] ) * sin( M_PI * x[1] ) + 0.2 * sin( 5* M_PI * x[0] ) * sin( 5* M_PI * x[1] );
 //    return sin( 2. * M_PI * x[0] ) * sin( 2. * M_PI * x[1] );
 
@@ -317,7 +317,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfUniformLevels = /*1*/6;
   unsigned numberOfSelectiveLevels = 0/*0*/;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================

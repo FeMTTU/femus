@@ -158,7 +158,26 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
 
              if ( !(is_dirichlet) /* &&  (grad_u_dot_n != 0.)*/ ) {  //dirichlet == false and nonhomogeneous Neumann
 
+    unsigned n_dofs_face_u = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
 
+// dof-based - BEGIN
+     std::vector< double > grad_u_dot_n_at_dofs(n_dofs_face_u);
+
+
+    for (unsigned i_bdry = 0; i_bdry < grad_u_dot_n_at_dofs.size(); i_bdry++) {
+        std::vector<double> x_at_node(dim, 0.);
+        for (unsigned jdim = 0; jdim < x_at_node.size(); jdim++) x_at_node[jdim] = geom_element.get_coords_at_dofs_bdry_3d()[jdim][i_bdry];
+
+      double grad_u_dot_n_at_dofs_temp = 0.;
+      ml_sol->GetBdcFunctionMLProb()(ml_prob, x_at_node, solname_u.c_str(), grad_u_dot_n_at_dofs_temp, face, 0.);
+     grad_u_dot_n_at_dofs[i_bdry] = grad_u_dot_n_at_dofs_temp;
+      
+    }
+
+// dof-based - END
+    
+               
+               
 
                         const unsigned n_gauss_bdry = ml_prob->GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
 
@@ -187,16 +206,22 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
          }
          
            double grad_u_dot_n_qp = 0.;  ///@todo here we should do a function that provides the gradient at the boundary, and then we do "dot n" with the normal at qp
-     ml_sol->GetBdcFunctionMLProb()(ml_prob, x_qp_bdry, solname_u.c_str(), grad_u_dot_n_qp, face, 0.);
+ 
+// dof-based
+         for (unsigned i_bdry = 0; i_bdry < phi_u_bdry.size(); i_bdry ++) {
+           grad_u_dot_n_qp +=  grad_u_dot_n_at_dofs[i_bdry] * phi_u_bdry[i_bdry];
+         } 
+
+// quadrature point based         
+ // // // ml_sol->GetBdcFunctionMLProb()(ml_prob, x_qp_bdry, solname_u.c_str(), grad_u_dot_n_qp, face, 0.);
 
 //---------------------------------------------------------------------------------------------------------
 
 
 
 
-    unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
 
-                  for (unsigned i_bdry = 0; i_bdry < n_dofs_face; i_bdry++) {
+                  for (unsigned i_bdry = 0; i_bdry < n_dofs_face_u; i_bdry++) {
 
                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
