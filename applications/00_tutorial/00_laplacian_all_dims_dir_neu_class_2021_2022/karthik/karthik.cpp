@@ -99,10 +99,10 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
 
 
   if (face_name == 1) {
-      // dirichlet = true;
-      //   value = 0.;
-      dirichlet = false;
-      value = -1. * x[1] * ( 1. - x[1]) ;
+       dirichlet = true;
+         value = 0.;
+      //dirichlet = false;
+      //value = -1. * x[1] * ( 1. - x[1]) ;
   }
   else if (face_name == 2) {
       dirichlet = true;
@@ -118,10 +118,16 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
       // value = -1. * x[0] * ( 1. - x[0]) ;
   }
   else if (face_name == 4) {
-      dirichlet = true;
-        value = 0.;
-      // dirichlet = false;
-      //   value = -1. * x[0] * ( 1. - x[0]) ;
+      //dirichlet = false;
+      //  value = 0.;
+      //value = -1. * x[0] * ( 1. - x[0]);
+       dirichlet = false;
+       value = -M_PI * sin( M_PI * x[0] );
+//        dirichlet = false;
+//        value = -M_PI * sin( M_PI * x[0] ) - 0.2 * (5. * M_PI) * sin( 5. * M_PI * x[0] );
+//        dirichlet = false;
+//        value = -2. * M_PI * sin( 2. * M_PI * x[0] );
+
   }
 
 
@@ -132,13 +138,22 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
 
 double square__laplacian__rhs(const std::vector < double >& x) {
 
-  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+//   return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+    return -2.* M_PI * M_PI * sin(M_PI * x[0] ) * sin( M_PI * x[1] );
+//     return -2.* M_PI * M_PI * sin( M_PI * x[0] ) * sin( M_PI * x[1] ) - 2. * 0.2 * 25. * M_PI * M_PI * sin( 5* M_PI * x[0] ) * sin( 5* M_PI * x[1] );
+//     return -8.* M_PI * M_PI * sin( 2. * M_PI * x[0] ) * sin( 2. * M_PI * x[1] ) ;
+
 
 }
 
 double square__laplacian__true_solution(const std::vector < double >& x) {
 
-  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+//   return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+   return sin(M_PI * x[0] ) * sin( M_PI * x[1] );
+//    return sin(M_PI * x[0] ) * sin( M_PI * x[1] ) + 0.2 * sin( 5* M_PI * x[0] ) * sin( 5* M_PI * x[1] );
+//    return sin( 2. * M_PI * x[0] ) * sin( 2. * M_PI * x[1] );
+
+
 
 }
 // SQUARE - END
@@ -246,7 +261,7 @@ int main(int argc, char** args) {
 // // //   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
 // // // //   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
   
-  app_segment._mesh_files.push_back("Mesh_3_xyz_all_dir.med");
+  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
   app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
   app_segment._assemble_function_rhs = square__laplacian__rhs;
 //   app_segment._true_solution    = square__laplacian__true_solution; 
@@ -263,10 +278,7 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
 //    mesh_files.push_back("Mesh_1_z_all_dir.med");
-//    mesh_files.push_back("Mesh_2_xz_all_dir.med")
-
-
-  ;
+//    mesh_files.push_back("Mesh_2_xz_all_dir.med");
 //    mesh_files.push_back("Mesh_2_yz_all_dir.med");
 //    mesh_files.push_back("Mesh_3_xyz_all_dir.med");
 //    mesh_files.push_back("dome_tri.med");
@@ -305,8 +317,8 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/3;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfUniformLevels = /*1*/4;
+  unsigned numberOfSelectiveLevels = 0/*0*/;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================
 
