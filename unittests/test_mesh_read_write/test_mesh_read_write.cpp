@@ -100,41 +100,17 @@ int main(int argc,char **args) {
   
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
-//  input_files.push_back("turek_FSI1.neu");
-//  input_files.push_back("turek_FSI1.med");
-//  input_files.push_back("turek_FSI1_3d.med");
-//  input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
-//  input_files.push_back("turek_FSI1_no_bc.neu");
-//  input_files.push_back("cyl.med");
-//    input_files.push_back("horse3.med");
-//  input_files.push_back("knot.neu");
-//  input_files.push_back("dome_tri.med");
-//  input_files.push_back("dome_quad.med");
-//   input_files.push_back("square_quad.neu");
-  input_files.push_back("parametric_square_4x5.med");
-//   input_files.push_back("./geom_elem_many_Quad9_Four_boundaries_groups.med");
-//   input_files.push_back("./geom_elem_many_Quad9_Nine_without_groups.med"); //Some boundary face was not set in the mesh MED file
-//   input_files.push_back("./geom_elem_many_Tri6_Two_boundaries.med"); //error
-//   input_files.push_back("./geom_elem_many_Hex27_One_boundaries_groups.med");
-//   input_files.push_back("./geom_elem_many_Tet10_Twelve_boundaries.med"); ///@todo there seems to be an error in the output computation of biquadratic nodes
-//   input_files.push_back("./geom_elem_one_OneTet10.med");//Some boundary face was not set in the mesh MED file
-// 
-// fsi 3d - one layer
-// volumes: 66
-// faces:  66*2 + 42 = 132 + 42 = 174
-// edges: 42*2 + 4 = 88
-// 
-// Total mesh:
-// volumes: 264
-// faces:  66*2  + 42*4 =  132 + 168 = 300     
+
+ input_files.push_back("square_0-1x0-1_divisions_2x2.med");
+
 
  
   for(unsigned m = 0; m < input_files.size(); m++) {
 
+  // ======= Mesh - BEGIN  ========================
             
 #if FEMUS_TEST_MESH != 0
-  // ======= Mesh ========================
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_files[m];
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << "./salome_parametric_with_notebook/" << input_files[m];
   const std::string infile = mystream.str();
 
   //Nondimensional
@@ -156,10 +132,11 @@ int main(int argc,char **args) {
 //   ml_mesh.EraseCoarseLevels(erased_levels);
   
   ml_mesh.PrintInfo();
+  // ======= Mesh - END  ========================
+  
+//============ Solution - BEGIN ==================
   
 #if FEMUS_TEST_SOLUTION != 0
-  
-//============ Solution ==================
   
   MultiLevelSolution ml_sol(&ml_mesh);
 
@@ -180,17 +157,17 @@ int main(int argc,char **args) {
   ml_sol.Initialize(sol_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //   ml_sol.Initialize("all"); 
     }
-//====================================================
 
  
 #endif
 
+//============ Solution - END ==================
 
 #endif
   
 
   
-  //============ Print ==================
+  //============ Print - BEGIN ==================
   
 #if FEMUS_TEST_FILES != 0
   const std::string output_dir = files.GetOutputPath();
@@ -255,6 +232,7 @@ int main(int argc,char **args) {
 
 #endif
 
+  //============ Print - END ==================
 
 
     }
