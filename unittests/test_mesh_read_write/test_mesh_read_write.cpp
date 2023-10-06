@@ -75,21 +75,24 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 
 int main(int argc,char **args) {
-
+  
+  // ======= Init - BEGIN  ========================
 #if FEMUS_TEST_INIT != 0
-  // ======= Init ========================
   FemusInit init(argc, args, MPI_COMM_WORLD);
 #endif
+  // ======= Init - END  ========================
 
 
+  // ======= Files - BEGIN  ========================
 #if FEMUS_TEST_FILES != 0
-  // ======= Files ========================
   const bool use_output_time_folder = false;
   const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 #endif
+ // ======= Files - END  ========================
+
         
 #if FEMUS_TEST_INPUT_PARSER != 0
   // it works, just pay attention that integers do not turn into unsigned
@@ -97,6 +100,7 @@ int main(int argc,char **args) {
   FemusInputParser< unsigned > mesh_map("Mesh", "./"/*files.GetOutputPath()*/);
   const unsigned numberOfUniformLevels =  mesh_map.get("n_levels");
 #endif
+  
   
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
@@ -107,9 +111,10 @@ int main(int argc,char **args) {
  
   for(unsigned m = 0; m < input_files.size(); m++) {
 
-  // ======= Mesh - BEGIN  ========================
             
 #if FEMUS_TEST_MESH != 0
+    
+  // ======= Mesh - BEGIN  ========================
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << "./salome_parametric_with_notebook/" << input_files[m];
   const std::string infile = mystream.str();
 
