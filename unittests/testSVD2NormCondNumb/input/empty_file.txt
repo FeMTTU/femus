@@ -1,1 +1,1 @@
-placeholder to track the empty input/ directory
+placeholder to track an empty directory
