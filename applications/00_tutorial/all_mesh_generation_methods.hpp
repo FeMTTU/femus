@@ -36,16 +36,14 @@ std::string quad9_all_mesh_generation_methods_Structured(const unsigned method_f
         case 1: {
             mesh_name += "_salome";
 //   // ======= Mesh, coarse gen, III: from Salome - BEGIN  ========================
-   ml_mesh.ReadCoarseMesh("./input/square_2x2_centered_at_origin.med", fe_quad_rule.c_str(), scalingFactor);
+   ml_mesh.ReadCoarseMesh("../../../include/00_mesh_files/00_salome/01_non_parametric/square_2x2_centered_at_origin.med", fe_quad_rule.c_str(), scalingFactor);
 //   // ======= Mesh, coarse gen, III: from Salome - END ========================
             break;
         }
         case 2: {
             mesh_name += "_gambit";
 //   // ======= Mesh, coarse gen, II: from Gambit - BEGIN  ========================
-    ml_mesh.ReadCoarseMesh("./input/square_quad.neu", fe_quad_rule.c_str(), scalingFactor);
-//     ml_mesh.ReadCoarseMesh("./input/square_tri.neu", fe_quad_rule.c_str(), scalingFactor);
-//   //   ml_mesh.ReadCoarseMesh("./input/cube_tet.neu", fe_quad_rule.c_str(), scalingFactor);
+    ml_mesh.ReadCoarseMesh("../../../include/00_mesh_files/01_gambit/square_-0p5-0p5x-0p5-0p5/square_2x2_quad.neu", fe_quad_rule.c_str(), scalingFactor);
   // ======= Mesh, coarse gen, II: from Gambit - END ========================
             break;
         }
