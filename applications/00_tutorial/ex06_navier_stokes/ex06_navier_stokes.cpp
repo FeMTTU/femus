@@ -131,6 +131,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   return 0;
@@ -323,7 +324,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k]; // pressure gradient
         }
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += - NSV[k] * weight;
+          aResV[k][i] += - NSV[k] * weight;  /// @todo check this sign
         }
       } // end phiV_i loop
 
