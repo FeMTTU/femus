@@ -115,7 +115,8 @@ int main(int argc,char **args) {
 #if FEMUS_TEST_MESH != 0
     
   // ======= Mesh - BEGIN  ========================
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << "./salome_parametric_with_notebook/" << input_files[m];
+  std::ostringstream mystream; mystream << "../../../" << DEFAULT_PACKAGE_DIR << "/" << DEFAULT_SOURCE_DIR << "02_mesh/01_input/00_mesh_files/" << 
+  "00_salome/00_parametric/with_notebook/" << input_files[m];
   const std::string infile = mystream.str();
 
   //Nondimensional
