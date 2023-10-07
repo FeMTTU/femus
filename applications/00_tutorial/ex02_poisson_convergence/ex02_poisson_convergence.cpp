@@ -20,8 +20,11 @@
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 
+#include "00_poisson_eqn_with_all_dirichlet_bc.hpp"
+
 #include "../tutorial_common.hpp"
 
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 #include "adept.h"
 
@@ -202,7 +205,7 @@ int main(int argc, char** args) {
   
 
     // ======= Unknowns - BEGIN ========================
-    std::vector< Unknown > unknowns = systems__provide_list_of_unknowns_lagrangian();
+    std::vector< Unknown > unknowns = systems__generate_list_of_scalar_unknowns_for_each_FE_family_lagrangian();
     // ======= Unknowns - END ========================
 
 
