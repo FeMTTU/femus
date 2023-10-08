@@ -74,7 +74,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ( "./input/rectangle.neu", "seventh", scalingFactor );
+  mlMsh.ReadCoarseMesh ( "../../../include/00_mesh_files/01_gambit/rectangle-2p5-2p5x-0p5-0p5/rectangle_quad.neu", "seventh", scalingFactor );
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -289,7 +289,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
     
-    // *** Face Gauss point loop (boundary Integral) ***
+    // *** Face Gauss point loop (boundary Integral) - BEGIN ***
     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
       int faceIndex = el->GetBoundaryIndex(iel, jface);
       // look for boundary faces
@@ -330,6 +330,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         }
       }
     }   
+    // *** Face Gauss point loop (boundary Integral) - END ***
+    
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
@@ -360,7 +362,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
 
-      double nu = 1;
+      double nu = 1.;
 
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
@@ -374,7 +376,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k]; // pressure gradient
         }
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += NSV[k] * weight;
+          aResV[k][i] += NSV[k] * weight;  /// @todo check this sign
         }
       } // end phiV_i loop
 
@@ -422,7 +424,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     s.independent(&solP[0], nDofsP);
 
     // get the and store jacobian matrix (row-major)
-    s.jacobian(&Jac[0] , true); // This is rowwise order.
+    s.jacobian(&Jac[0] , true);
     KK->add_matrix_blocked(Jac, sysDof, sysDof);
 
     s.clear_independents();

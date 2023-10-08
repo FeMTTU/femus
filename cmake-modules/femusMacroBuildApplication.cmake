@@ -13,7 +13,7 @@ ADD_EXECUTABLE(${appname} ${PROJECT_SOURCE_DIR}/${mainname}.cpp)
 set_target_properties(${appname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
 
-# Link the executable to the petsc anf femttu libs
+# Link the executable to the libs - BEGIN
 TARGET_LINK_LIBRARIES(${appname} femus)
 TARGET_LINK_LIBRARIES(${appname} ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(${appname} ${B64_LIBRARIES})
@@ -37,12 +37,17 @@ ENDIF(MPI_FOUND)
 IF(HDF5_FOUND)
   TARGET_LINK_LIBRARIES(${appname} ${HDF5_LIBRARIES})
 ENDIF(HDF5_FOUND)
+# Link the executable to the libs - END
 
+# Application directories - BEGIN
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output/)
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/input/)
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/save/)
 FILE(COPY           ${PROJECT_SOURCE_DIR}/input/ DESTINATION ${PROJECT_BINARY_DIR}/input/)
-# TODO this file copy does not generate a dependency rule in the makefiles, maybe we should think of how to obtain that,
+# @todo   this file copy does not generate a dependency rule in the makefiles, maybe we should think of how to obtain that,
 # to avoid re-running cmake when new input files are added in the applications
+# Application directories - END
+
+
 
 ENDMACRO(femusMacroBuildApplication)

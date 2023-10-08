@@ -51,7 +51,7 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("../../../include/00_mesh_files/01_gambit/cube_-0p5-0p5x-0p5-0p5x-0p5-0p5/cube_tet.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme

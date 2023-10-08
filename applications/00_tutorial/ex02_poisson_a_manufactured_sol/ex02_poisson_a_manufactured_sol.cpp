@@ -9,6 +9,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "Files.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
@@ -16,7 +17,15 @@
 
 #include "Assemble_jacobian.hpp"
 
+
+#include "00_poisson_eqn_with_all_dirichlet_bc.hpp"
+
+
+
 #include "../tutorial_common.hpp"
+
+#include "../all_mesh_generation_methods.hpp"
+
 
 #include "adept.h"
 
@@ -77,7 +86,21 @@ int main(int argc, char** args) {
   // ======= Problem  ==================
   MultiLevelProblem ml_prob;
 
-    // ======= Quad Rule - BEGIN ========================
+  
+  // ======= Files - BEGIN  ========================
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = true;
+  Files files; 
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
+
+  // ======= Problem, Files ========================
+  ml_prob.SetFilesHandler(&files);
+  // ======= Files - END  ========================
+
+  
+  
+  // ======= Quad Rule - BEGIN ========================
    std::string fe_quad_rule("seventh");
     // ======= Quad Rule - END ========================
  
@@ -147,7 +170,7 @@ int main(int argc, char** args) {
     // print mesh info
     ml_mesh.PrintInfo();
 
-    std::vector< Unknown > unknowns = systems__provide_list_of_unknowns_lagrangian();
+    std::vector< Unknown > unknowns = systems__generate_list_of_scalar_unknowns_for_each_FE_family_lagrangian();
     
     l2Norm[i].resize(unknowns.size());
     semiNorm[i].resize(unknowns.size());

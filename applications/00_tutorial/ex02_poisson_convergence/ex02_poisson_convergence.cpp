@@ -20,8 +20,11 @@
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 
+#include "00_poisson_eqn_with_all_dirichlet_bc.hpp"
+
 #include "../tutorial_common.hpp"
 
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 #include "adept.h"
 
@@ -167,14 +170,15 @@ int main(int argc, char** args) {
 
 //     std::string input_file = "square_0-1x0-1_divisions_2x2.med"; // @todo does not work with biquadratic exact solution
 //     std::string input_file = "square_0-1x0-1_divisions_5x4.med"; // @todo does not work with biquadratic exact solution 
-//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2.med";  // @todo does not work with biquadratic exact solution 
-    std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
-//     std::string input_file = "../../../../unittests/test_mesh_read_write/input/salome_parametric_with_notebook/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact //      std::string input_file = "assignment_square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
+//     std::string input_file = "../../../include/00_mesh_files/00_salome/00_parametric/with_notebook/square_0-1x0-1_divisions_2x2.med";  // @todo does not work with biquadratic exact solution 
+    std::string input_file = "../../../include/00_mesh_files/00_salome/00_parametric/with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
+//     std::string input_file = "../../../include/00_mesh_files/00_salome/00_parametric/with_notebook/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact 
+//     std::string input_file = "square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
 
 //     std::string input_file = "L_shaped_domain.med";
 //     std::string input_file = "interval.med";
 //     std::string input_file = "cylinder_hexahedral.med";
-    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+    std::ostringstream mystream; mystream << "./"  << input_file;
     const std::string infile = mystream.str();
 
     const double Lref = 1.;
@@ -202,7 +206,7 @@ int main(int argc, char** args) {
   
 
     // ======= Unknowns - BEGIN ========================
-    std::vector< Unknown > unknowns = systems__provide_list_of_unknowns_lagrangian();
+    std::vector< Unknown > unknowns = systems__generate_list_of_scalar_unknowns_for_each_FE_family_lagrangian();
     // ======= Unknowns - END ========================
 
 

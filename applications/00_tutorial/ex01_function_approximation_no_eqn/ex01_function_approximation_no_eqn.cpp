@@ -40,7 +40,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh; // Consider the "mlMsh" object of "MultiLevel" class.
   double scalingFactor = 1.;
   // read coarse level mesh and generate finers level meshes 
-  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor); // Let mlMsh read the coarse mesh.
+  mlMsh.ReadCoarseMesh("../../../include/00_mesh_files/01_gambit/square_-0p5-0p5x-0p5-0p5/square_16x16_quad.neu", "seventh", scalingFactor); // Let mlMsh read the coarse mesh.
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 3; // We apply uniform refinement.
