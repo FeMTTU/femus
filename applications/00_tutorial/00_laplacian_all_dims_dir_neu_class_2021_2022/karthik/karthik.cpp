@@ -146,7 +146,6 @@ double square__laplacian__true_solution(const std::vector < double >& x) {
 
 
 
-
 // // // // SQUARE - BEGIN
 // // // bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 // // // 
