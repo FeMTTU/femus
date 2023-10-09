@@ -279,7 +279,7 @@ CONFIGURE_FILE(
 #############################################################################################
 ### Mesh files
 #############################################################################################
-FILE(COPY           ${PROJECT_SOURCE_DIR}/src/02_mesh/01_input/00_mesh_files/ DESTINATION ${PROJECT_BINARY_DIR}/include/00_mesh_files/)
+FILE(COPY           ${PROJECT_SOURCE_DIR}/src/02_mesh/01_input/00_mesh_files/ DESTINATION ${PROJECT_BINARY_DIR}/src/02_mesh/01_input/00_mesh_files/)
   
   
 #############################################################################################

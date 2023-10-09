@@ -116,7 +116,7 @@ int main(int argc,char **args) {
     
   // ======= Mesh - BEGIN  ========================
   const std::string relative_path_to_build_directory =  "../../";
-  std::ostringstream mystream; mystream << relative_path_to_build_directory << "include/00_mesh_files/00_salome/00_parametric/with_notebook/" << input_files[m];
+  std::ostringstream mystream; mystream << relative_path_to_build_directory << DEFAULT_MESH_FILES_PATH << "00_salome/00_parametric/with_notebook/" << input_files[m];
   const std::string infile = mystream.str();
 
   //Nondimensional
