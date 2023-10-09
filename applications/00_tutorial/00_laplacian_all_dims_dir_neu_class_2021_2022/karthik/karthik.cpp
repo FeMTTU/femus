@@ -161,7 +161,7 @@ double square__laplacian__true_solution(const std::vector < double >& x) {
 
 
 
-<<<<<<< HEAD
+// <<<<<<< HEAD
 // // // // SQUARE - BEGIN
 // // // bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 // // // 
@@ -209,11 +209,11 @@ double square__laplacian__true_solution(const std::vector < double >& x) {
 // // // 
 // // // }
 // // // // SQUARE - END
-=======
+
 
 // CUBE - BEGIN
 bool cube__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
->>>>>>> femttu/master
+// >>>>>>> femttu/master
 
   if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
 
