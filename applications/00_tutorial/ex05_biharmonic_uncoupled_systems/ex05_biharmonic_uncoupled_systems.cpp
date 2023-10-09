@@ -163,7 +163,7 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 2; j < 3; j++) {
+    for (unsigned j = 0; j < 3; j++) {
       std::cout << semiNorm[i][j] << "\t";
     }
 
