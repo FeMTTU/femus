@@ -9,9 +9,7 @@
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
-#include "cmath"
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"
@@ -24,16 +22,7 @@
 #include "00_poisson_eqn.hpp"
 
 
-#define LIBRARY_OR_USER   1 //0: library; 1: user
-
-#if LIBRARY_OR_USER == 0
-   #include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
-   #define NAMESPACE_FOR_POISSON  femus
-#elif LIBRARY_OR_USER == 1
-   #include "00_poisson_eqn.hpp"
-   #define NAMESPACE_FOR_POISSON  shankar
-#endif
-
+using namespace femus;
  
 
 
@@ -60,7 +49,7 @@ bool segment_dir_neu_fine__laplacian__bc(const MultiLevelProblem * ml_prob, cons
   bool dirichlet = false;
   value = 0.;
   
-  const double tolerance = 1.e-8;
+  const double tolerance = 1.e-5;
   
  if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
   
@@ -94,16 +83,16 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
      
   if (face_name == 1) {
       dirichlet = true;
-        value = 1.5;
+        value = 0.;
   }
   else if (face_name == 2) {
       dirichlet = true;
-        value = 1.5;
+        value = 0.;
   }
 
  else  if (face_name == 3) {
       dirichlet = true;
-        value = 1.5;
+        value = 0.;
   }
   else if (face_name == 4) {
       dirichlet = true;
@@ -118,14 +107,13 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
 
 double square__laplacian__rhs(const std::vector < double >& x) {
     
-  return 8*(M_1_PI*M_1_PI)*cos(2*M_1_PI*x[0])*cos(2*M_1_PI*x[1]);
-//return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+  
 }
 
 double square__laplacian__true_solution(const std::vector < double >& x) {
-
-    return cos(2*M_1_PI*x[0])*cos(2*M_1_PI*x[1]);
-  //return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
     
 }
 // SQUARE - END
@@ -165,12 +153,8 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-// <<<<<<< HEAD
-  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
-  
-
   app_segment._system_name = "Equation";
-  app_segment._assemble_function = NAMESPACE_FOR_POISSON::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
+  app_segment._assemble_function = shankar::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
 // // //   app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
 // // //   app_segment._boundary_conditions_types_and_values             = segment_dir_neu_fine__laplacian__bc;
@@ -189,7 +173,6 @@ int main(int argc, char** args) {
 
 
   // ======= Mesh, files - BEGIN  ==================   
-//    mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_2_xy_all_dir.med");
 //    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");

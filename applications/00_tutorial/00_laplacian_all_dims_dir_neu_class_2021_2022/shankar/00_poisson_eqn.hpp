@@ -423,7 +423,7 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
  /// @assignment for your manufactured right-hand side, implement a function that receives the coordinate of the quadrature point
  /// Put it after the includes, in the top part of this file
  if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  -ml_prob.get_app_specs_pointer()->_assemble_function_rhs(x_qp)  ) - laplace_res_du_u_i);
-  //        if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {

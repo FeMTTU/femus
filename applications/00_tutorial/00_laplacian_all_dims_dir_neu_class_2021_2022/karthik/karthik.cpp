@@ -161,59 +161,9 @@ double square__laplacian__true_solution(const std::vector < double >& x) {
 
 
 
-<<<<<<< HEAD
-// // // // SQUARE - BEGIN
-// // // bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-// // // 
-// // //   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-// // // 
-// // //    bool dirichlet = false;
-// // //   value = 0.;
-// // // 
-// // // 
-// // //   if (face_name == 1) {
-// // //       dirichlet = true;
-// // //         value = 0.;
-// // //   }
-// // //   else if (face_name == 2) {
-// // //       dirichlet = true;
-// // //         value = 0.;
-// // //   }
-// // // 
-// // //  else  if (face_name == 3) {
-// // //       dirichlet = false;
-// // //         value = 0.;
-// // //   }
-// // //   else if (face_name == 4) {
-// // //       dirichlet = false;
-// // //         value = M_PI*cos(M_PI * x[0])*sin(M_PI*x[1]);
-// // //   }
-// // // 
-// // // 
-// // // 
-// // //    return dirichlet;
-// // // 
-// // // }
-// // // 
-// // // double square__laplacian__rhs(const std::vector < double >& x) {
-// // // 
-// // //   //return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-// // //   return -M_PI*M_PI*sin(M_PI*x[0])*sin(M_PI*x[1]);
-// // // 
-// // // }
-// // // 
-// // // double square__laplacian__true_solution(const std::vector < double >& x) {
-// // // 
-// // // //  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-// // //   return sin(M_PI * x[0])*sin(M_PI*x[1]);
-// // // 
-// // // }
-// // // // SQUARE - END
-=======
 
 // CUBE - BEGIN
 bool cube__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
->>>>>>> femttu/master
 
   if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
 
