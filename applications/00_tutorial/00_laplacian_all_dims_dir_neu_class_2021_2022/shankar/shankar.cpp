@@ -35,7 +35,7 @@
 #endif
 
  
-using namespace femus;
+
 
 double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
@@ -94,20 +94,20 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
      
   if (face_name == 1) {
       dirichlet = true;
-        value = 1.;
+        value = 1.5;
   }
   else if (face_name == 2) {
       dirichlet = true;
-        value = 0.;
+        value = 1.5;
   }
 
  else  if (face_name == 3) {
       dirichlet = true;
-        value = 0;
+        value = 1.5;
   }
   else if (face_name == 4) {
       dirichlet = true;
-        value = 1.;//x[0] * x[0];
+        value = 0.;//x[0] * x[0];
   }
   
   
@@ -117,87 +117,21 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
 }
 
 double square__laplacian__rhs(const std::vector < double >& x) {
-
-        return pow((M_1_PI/4),2) * (cos((M_1_PI/4)*x[0]) - sin((M_1_PI/4)*x[1]));
-//     return 8*(M_1_PI*M_1_PI)*cos(2*M_1_PI*)*cos(2*M_1_PI*x[1]);
-//     return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+    
+  return 8*(M_1_PI*M_1_PI)*cos(2*M_1_PI*x[0])*cos(2*M_1_PI*x[1]);
+//return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
 }
 
 double square__laplacian__true_solution(const std::vector < double >& x) {
 
-       return cos((M_1_PI/4)*x[0]) + sin((M_1_PI/4)*x[1]);
-//     return cos(2*M_1_PI*x[0])*cos(2*M_1_PI*x[1]);
-//     return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    return cos(2*M_1_PI*x[0])*cos(2*M_1_PI*x[1]);
+  //return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
     
 }
 // SQUARE - END
 
 
-// CUBE - BEGIN
-namespace cube {
 
-namespace function_0 {
-
-bool cube_laplacian_bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-
-  if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
-
-   bool dirichlet = false;
-  value = 0.;
-
-
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.;
-  }
-
- else  if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 4) {
-      dirichlet = true;
-        value = 0.;
-  }
- else  if (face_name == 5) {
-      dirichlet = false;
-        value = 0.;
-  }
-  else if (face_name == 6) {
-      dirichlet = true;
-        value = 0.;
-  }
-
-
-
-   return dirichlet;
-
-}
-
-
-
-
-double cube_laplacian_bc_rhs(const std::vector < double >& x) {
-
-  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) +  x[2] * (1. - x[2]) );
-
-}
-
-double cube_laplacian_bc_true_solution(const std::vector < double >& x) {
-
-  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]) * x[2] * (1. - x[2]);
-
-}
-
-}
-
-
-}
-// CUBE - END
  
 
 
@@ -228,12 +162,13 @@ int main(int argc, char** args) {
   // ======= Problem, Quad Rule - END  ========================
 
     // ======= App Specifics - BEGIN  ==================
- /*
- //SEGMENT - BEGIN
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-//   app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+// <<<<<<< HEAD
+  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+  
+
   app_segment._system_name = "Equation";
   app_segment._assemble_function = NAMESPACE_FOR_POISSON::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
@@ -246,22 +181,6 @@ int main(int argc, char** args) {
   app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
   app_segment._assemble_function_rhs = square__laplacian__rhs;
 //   app_segment._true_solution    = square__laplacian__true_solution; 
-  //SEGMENT - END*/
-
-
- //assignment_cube - BEGIN
-  app_specifics app_cube;
-//   app_cube._system_name = system_common_name;
-  app_cube._assemble_function                            = NAMESPACE_FOR_POISSON::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-
-  app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
-
-  app_cube._boundary_conditions_types_and_values             = cube::function_0::cube_laplacian_bc;
-  app_cube._assemble_function_rhs = cube::function_0::cube_laplacian_bc_rhs;
-  app_cube._true_solution    = cube::function_0::cube_laplacian_bc_true_solution;
- //assignment_cube - END
-
-
   
   ///@todo if this is not set, nothing should happen here
 
@@ -287,15 +206,14 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("disk_tri.med");
 //    mesh_files.push_back("disk_tri_45x.med");
 //    mesh_files.push_back("disk_tri_90x.med");
-//    mesh_files.push_back("assignment_cube_hexahedral.med");
   // ======= Mesh, files - END ==================
 
 
 
- for (unsigned int m = 0; m < app_cube._mesh_files.size(); m++)  {
+ for (unsigned int m = 0; m < app_segment._mesh_files.size(); m++)  {
    
   // ======= Problem, App (every Problem has 1 App for now) ========================
-  ml_prob.set_app_specs_pointer(& app_cube);
+  ml_prob.set_app_specs_pointer(& app_segment);
   
   
   // ======= Mesh - BEGIN  ==================
@@ -308,7 +226,7 @@ int main(int argc, char** args) {
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
-  std::string mesh_file_tot = "./input/" + app_cube._mesh_files[m];
+  std::string mesh_file_tot = "./input/" + app_segment._mesh_files[m];
   
   ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
@@ -346,7 +264,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(app_cube._boundary_conditions_types_and_values);
+  ml_sol.AttachSetBoundaryConditionFunction(app_segment._boundary_conditions_types_and_values);
   ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
 
   // ======= Solutions that are Unknowns - END ==================
@@ -357,14 +275,14 @@ int main(int argc, char** args) {
     // ======= Problem, System - BEGIN ========================
   ml_prob.clear_systems();
 
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > (app_cube._system_name);
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > (app_segment._system_name);
   
   system.SetDebugNonlinear(true);
  
   system.AddSolutionToSystemPDE("d_s");
  
   // attach the assembling function to system
-  system.SetAssembleFunction( app_cube._assemble_function );
+  system.SetAssembleFunction( app_segment._assemble_function );
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
@@ -383,7 +301,7 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(app_cube._mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(app_segment._mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
     // ======= Print - END ========================
 
   }  //end mesh file loop
