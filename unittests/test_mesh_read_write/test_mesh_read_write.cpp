@@ -115,8 +115,8 @@ int main(int argc,char **args) {
 #if FEMUS_TEST_MESH != 0
     
   // ======= Mesh - BEGIN  ========================
-  std::ostringstream mystream; mystream << "../../include/"  << "00_mesh_files/" << 
-  "00_salome/00_parametric/with_notebook/" << input_files[m];
+  const std::string relative_path_to_build_directory =  "../../";
+  std::ostringstream mystream; mystream << relative_path_to_build_directory << "include/00_mesh_files/00_salome/00_parametric/with_notebook/" << input_files[m];
   const std::string infile = mystream.str();
 
   //Nondimensional

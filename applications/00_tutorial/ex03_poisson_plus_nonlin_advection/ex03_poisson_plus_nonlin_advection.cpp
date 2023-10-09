@@ -51,9 +51,10 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("../../../include/00_mesh_files/01_gambit/cube_-0p5-0p5x-0p5-0p5x-0p5-0p5/cube_tet.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
-
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + "include/00_mesh_files/01_gambit/cube_-0p5-0p5x-0p5-0p5x-0p5-0p5/cube_tet.neu";
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();

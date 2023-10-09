@@ -70,7 +70,9 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("../../../include/00_mesh_files/00_salome/00_parametric/with_notebook/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med", "seventh", scalingFactor);
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + "include/00_mesh_files/00_salome/00_parametric/with_notebook/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   // mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   unsigned maxNumberOfMeshes = 5;

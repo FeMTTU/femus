@@ -168,11 +168,12 @@ int main(int argc, char** args) {
     // ======= Mesh, Coarse - BEGIN ========================
     MultiLevelMesh ml_mesh;
 
+  const std::string relative_path_to_build_directory =  "../../../";
 //     std::string input_file = "square_0-1x0-1_divisions_2x2.med"; // @todo does not work with biquadratic exact solution
 //     std::string input_file = "square_0-1x0-1_divisions_5x4.med"; // @todo does not work with biquadratic exact solution 
-//     std::string input_file = "../../../include/00_mesh_files/00_salome/00_parametric/with_notebook/square_0-1x0-1_divisions_2x2.med";  // @todo does not work with biquadratic exact solution 
-    std::string input_file = "../../../include/00_mesh_files/00_salome/00_parametric/with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
-//     std::string input_file = "../../../include/00_mesh_files/00_salome/00_parametric/with_notebook/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact 
+//     std::string input_file = relative_path_to_build_directory + "include/00_mesh_files/00_salome/00_parametric/with_notebook/square_0-1x0-1_divisions_2x2.med";  // @todo does not work with biquadratic exact solution 
+   const std::string input_file = relative_path_to_build_directory + "include/00_mesh_files/00_salome/00_parametric/with_notebook/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
+//     std::string input_file = relative_path_to_build_directory + "include/00_mesh_files/00_salome/00_parametric/with_notebook/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact 
 //     std::string input_file = "square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
 
 //     std::string input_file = "L_shaped_domain.med";
