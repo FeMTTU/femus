@@ -55,8 +55,10 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor); //3D
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor); //2D
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/square_-0p5-0p5x-0p5-0p5/square_2x2_quad_Three_face_groups.neu";
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor); //2D
+  //mlMsh.ReadCoarseMesh("./input/cube_2x2x2_hex_Three_face_groups.neu","seventh",scalingFactor); //3D
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
