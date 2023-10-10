@@ -19,7 +19,7 @@ ADD_SUBDIRECTORY(ex05_biharmonic_uncoupled_systems/)
 
 ADD_SUBDIRECTORY(ex06_navier_stokes/)
 ADD_SUBDIRECTORY(ex06b_navier_stokes/)
-# ADD_SUBDIRECTORY(ex06c_navier_stokes_poiseuille/)
+# ADD_SUBDIRECTORY(ex06c_navier_stokes_poiseuille/)  #copied from petsc tutorial, should remove it
 
 ADD_SUBDIRECTORY(ex07_boussinesq/)
 ADD_SUBDIRECTORY(ex08_boussinesq/)
