@@ -74,8 +74,8 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
 
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/square_2x2_quad_Three_face_groups_Four_volume_groups_AMR.neu";
-  mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
+  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/square_-0p5-0p5x-0p5-0p5/square_2x2_quad_Three_face_groups_Four_volume_groups_AMR.neu";
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -140,9 +140,10 @@ int main(int argc, char** args) {
   system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMgType(F_CYCLE);
-
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
+
+
   // initilaize and solve the system
   system.init();
 
