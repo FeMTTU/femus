@@ -26,6 +26,15 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id();
 
+
+//***************** Check Number of Unknowns **********************************  
+  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
+  if (n_vars != 1)  { std::cout << "Function written for only 1 scalar unknown";  abort();  }
+
+//***************** Check that true solution is provided **********************************  
+  if (ml_prob.get_app_specs_pointer()->_true_solution == NULL) {  std::cout << "No true solution provided";  abort();  }
+
+
   //=============== Geometry ========================================
   unsigned xType = BIQUADR_FE; // the FE for the domain need not be biquadratic
   
@@ -34,10 +43,6 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
   constexpr unsigned int space_dim = 3;
 //***************************************************  
 
-
-//***************** Check Number of Unknowns **********************************  
-  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
-  if (n_vars != 1)  { std::cout << "Function written for only 1 scalar unknown";  abort();  }
 
  //******************** quadrature *******************************  
   double jacXweight_qp; 
@@ -67,8 +72,7 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
   unsigned solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
 
-  unsigned solPdeIndex_u;
-  solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
+  unsigned solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
 
   std::vector < double >  sol_u;     sol_u.reserve(maxSize);
   std::vector < double >  sol_u_true;     sol_u_true.reserve(maxSize);
@@ -111,6 +115,7 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
      unsigned solDof_u = msh->GetSolutionDof(i, iel, solFEType_u);
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
     }
+    //***************************************************  
     
  //**************** true sol **************************** 
     sol_u_true    .resize(nDof_u);
@@ -129,7 +134,6 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
  //*************************************************** 
     
 
-// // //  //========= BOUNDARY ==================   
  
  //========= VOLUME ==================   
    
