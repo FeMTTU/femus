@@ -108,10 +108,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   mlMsh.GenerateCoarseBoxMesh(2, 2, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());
-//   mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
-//   //mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
-//   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-//      probably in the furure it is not going to be an argument of this function   */
+
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 1;
