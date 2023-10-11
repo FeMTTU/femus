@@ -852,13 +852,14 @@ int main(int argc, char** args) {
   app_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
   app_specifics  app_prism_annular_base;  //Abu
  
+  const std::string relative_path_to_build_directory =  "../../../";
   
   //segment - BEGIN
   app_segment._system_name = system_common_name;
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
   app_segment._mesh_files.push_back("segment_16_dir_neu.med");
-  app_segment._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment_0-1/");
   
   app_segment._boundary_conditions_types_and_values             = segment::bc_all_dirichlet;
 
@@ -872,7 +873,7 @@ int main(int argc, char** args) {
   app_square._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
   app_square._mesh_files.push_back("assignment_square_quadrilateral.med");
-  app_square._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square_0-1x0-1/");
   
   app_square._boundary_conditions_types_and_values             = square::bc_all_dirichlet;
   app_square._assemble_function_rhs = square::function_0::laplacian;
@@ -885,7 +886,7 @@ int main(int argc, char** args) {
   app_cube._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
   app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
-  app_cube._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube_0-1x0-1x0-1/");
   
   app_cube._boundary_conditions_types_and_values             = cube::bc_all_dirichlet;
   app_cube._assemble_function_rhs = cube::function_0::laplacian;
@@ -899,7 +900,7 @@ int main(int argc, char** args) {
   
 //   app_semicircle._mesh_files.push_back("assignment_semicircle_triangular.med");
   app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
-  app_semicircle._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_semicircle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_semi/");
   
   app_semicircle._boundary_conditions_types_and_values             = semicircle::bc_all_dirichlet;
   app_semicircle._assemble_function_rhs = semicircle::function_0::laplacian;
@@ -913,8 +914,8 @@ int main(int argc, char** args) {
   
   app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_triangular.med");
   app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
-  app_quarter_circle._mesh_files_path_relative_to_executable.push_back("./input/");
-  app_quarter_circle._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
+  app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   
   app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle::bc_all_dirichlet;
   app_quarter_circle._assemble_function_rhs = quarter_circle::function_0::laplacian;
@@ -928,7 +929,7 @@ int main(int argc, char** args) {
   
 //   app_annulus._mesh_files.push_back("assignment_annulus_triangular.med");
   app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
-  app_annulus._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_annulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus/");
   
   app_annulus._boundary_conditions_types_and_values             = annulus::bc_all_dirichlet;
 
@@ -943,8 +944,8 @@ int main(int argc, char** args) {
   
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_triangular.med");
   app_semiannulus._mesh_files.push_back("assignment_semiannulus_quadrilateral.med");
-  app_semiannulus._mesh_files_path_relative_to_executable.push_back("./input/");
-  app_semiannulus._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
+  app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
   
   app_semiannulus._boundary_conditions_types_and_values             = semiannulus::bc_all_dirichlet;
 
@@ -959,8 +960,8 @@ int main(int argc, char** args) {
   
   app_cylinder._mesh_files.push_back("assignment_cylinder_tetrahedral.med");
   app_cylinder._mesh_files.push_back("assignment_cylinder_hexahedral.med");
-  app_cylinder._mesh_files_path_relative_to_executable.push_back("./input/");
-  app_cylinder._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
+  app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
   
   app_cylinder._boundary_conditions_types_and_values             = cylinder::bc_all_dirichlet;
 
@@ -977,8 +978,8 @@ int main(int argc, char** args) {
   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral.med");
 //   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral_0.med");
 //   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral_1.med");
-  app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back("./input/");
-  app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
+  app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   
   app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder::bc_all_dirichlet;
   app_quarter_cylinder._assemble_function_rhs = quarter_cylinder::function_0::laplacian;
@@ -994,8 +995,8 @@ int main(int argc, char** args) {
   
   app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_tetrahedral.med");
   app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_hexahedral.med");
-  app_prism_annular_base._mesh_files_path_relative_to_executable.push_back("./input/");
-  app_prism_annular_base._mesh_files_path_relative_to_executable.push_back("./input/");
+  app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
+  app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
   
   app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base::bc_all_dirichlet;
 
