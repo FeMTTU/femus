@@ -857,7 +857,7 @@ int main(int argc, char** args) {
   app_segment._system_name = system_common_name;
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_segment._mesh_files.push_back("assignment_segment_dir_neu_fine.med");
+  app_segment._mesh_files.push_back("segment_16_dir_neu.med");
   
   app_segment._boundary_conditions_types_and_values             = segment::bc_all_dirichlet;
 

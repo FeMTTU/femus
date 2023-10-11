@@ -24,15 +24,74 @@
 using namespace femus;
  
 
+// SEGMENT - BEGIN
+
+namespace segment {
+
+  
+  namespace function_0 {
+    
+
+double value(const std::vector<double> & x) {
+    
+    // for a 1d segment
+    
+    return  x[0] * (1. - x[0]);
+}
 
 
-
-double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
+// user-made equation - accepts only coordinates
+double laplacian(const std::vector<double> & x){
     
     // for a 1d segment
     
     return  -2.;
-}
+     }
+
+  }
+
+  
+  
+ 
+// This depends on: 
+// mesh file (for the face flags)
+// underlying exact solution (if provided)
+// equation (name of the unknowns; also, if it is Laplace, biharmonic, Stokes, etc)
+// 
+// 
+bool bc_all_dirichlet(const MultiLevelProblem * ml_prob,
+                      const std::vector < double >& x,
+                      const char name[], 
+                      double& value,
+                      const int face_name,
+                      const double time) {
+
+  bool dirichlet = false;
+  value = 0.;
+  
+  
+ if (ml_prob->GetMLMesh()->GetDimension() != 1 )  abort();
+  
+  if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+    }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+    }
+
+ 
+  return dirichlet;
+  
+ }
+ 
+  }
+  
+  
+
+// SEGMENT - END
+
 
 
 
@@ -41,64 +100,6 @@ double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < dou
   return 0.;
   
 }
-
-
- 
- 
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-
-  bool dirichlet = false;
-  value = 0.;
-  
-  const double tolerance = 1.e-5;
-  
- if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
-  
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-    }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.; //Neumann value
-    }
-
-    
- }
- 
- if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
-     
-     
-    if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 4) {
-      dirichlet = false;
-        value = 1. * ( x[0] * x[0]); //Neumann function, here we specify the WHOLE normal derivative, which is a scalar, not each Cartesian component
-  }
-   
- 
- }
- 
- if (ml_prob->GetMLMesh()->GetDimension() == 3 )  {
-     std::cout << "Not implemented"; abort();
- }
- 
-  return dirichlet;
-  
- }
-
-
-
 
 
  
@@ -134,14 +135,14 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
+  app_segment._mesh_files.push_back("segment_16_dir_neu.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_segment._boundary_conditions_types_and_values             = SetBoundaryCondition;
-  app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-//   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
+  app_segment._boundary_conditions_types_and_values             = segment::bc_all_dirichlet;
+  app_segment._assemble_function_rhs = segment::function_0::laplacian;
+//   app_segment._true_solution    = segment::function_0::value;  
   ///@todo if this is not set, nothing should happen here
 
   
@@ -186,9 +187,10 @@ int main(int argc, char** args) {
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
-  std::string mesh_file_tot = "./input/" + app_segment._mesh_files[m];
-  
-  ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment_0-1/" + app_segment._mesh_files[m];
+    
+  ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
   // ======= Mesh, Coarse reading - END ==================
