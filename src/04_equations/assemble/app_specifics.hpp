@@ -32,6 +32,8 @@ class app_specifics {
       }
   
    std::vector< std::string >   _mesh_files;  //same domain, only potentially multiple mesh discretizations 
+
+   std::vector< std::string >   _mesh_files_path_relative_to_executable;  //same domain, only potentially multiple mesh discretizations 
  
    std::string  _system_name;  //for now we only accept 1 System in a certain App. This name is needed to retrieve the equation from the Problem
    

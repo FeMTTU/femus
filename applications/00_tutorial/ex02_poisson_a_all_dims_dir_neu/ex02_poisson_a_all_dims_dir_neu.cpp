@@ -135,7 +135,9 @@ int main(int argc, char** args) {
   app_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
-  app_segment._mesh_files.push_back("segment_16_dir_neu.med"); //push back is a command for accessing the vector. Takes one vector and adds the element at the end.
+  const std::string relative_path_to_build_directory =  "../../../";
+  app_segment._mesh_files.push_back("segment_16_dir_neu.med");
+  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment_0-1/");
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
@@ -143,32 +145,10 @@ int main(int argc, char** args) {
   app_segment._boundary_conditions_types_and_values             = segment::bc_all_dirichlet;
   app_segment._assemble_function_rhs = segment::function_0::laplacian;
 //   app_segment._true_solution    = segment::function_0::value;  
-  ///@todo if this is not set, nothing should happen here
+  ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
 
   
     // ======= App Specifics - END  ==================
-
-
-  // ======= Mesh, files - BEGIN  ==================   
-//    mesh_files.push_back("Mesh_2_xy_all_dir.med");
-  //    mesh_files.push_back("Mesh_1_x_dir_neu.med");
-//    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
-//    mesh_files.push_back("Mesh_1_x_all_dir.med");
-//    mesh_files.push_back("Mesh_1_y_all_dir.med");
-//    mesh_files.push_back("Mesh_1_z_all_dir.med");
-//    mesh_files.push_back("Mesh_2_xz_all_dir.med");
-//    mesh_files.push_back("Mesh_2_yz_all_dir.med");
-//    mesh_files.push_back("Mesh_3_xyz_all_dir.med");
-//    mesh_files.push_back("dome_tri.med");
-//    mesh_files.push_back("dome_quad.med");
-//    mesh_files.push_back("disk_quad.med");
-//    mesh_files.push_back("disk_quad_45x.med");
-//    mesh_files.push_back("disk_quad_90x.med");
-//    mesh_files.push_back("disk_tri.med");
-//    mesh_files.push_back("disk_tri_45x.med");
-//    mesh_files.push_back("disk_tri_90x.med");
-  // ======= Mesh, files - END ==================
-
 
 
  for (unsigned int m = 0; m < app_segment._mesh_files.size(); m++)  {
@@ -187,8 +167,8 @@ int main(int argc, char** args) {
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   const bool read_boundary_groups = true;
   
-  const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment_0-1/" + app_segment._mesh_files[m];
+  const std::string mesh_file =  app_segment._mesh_files_path_relative_to_executable[m] + 
+                                 app_segment._mesh_files[m];
     
   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups, read_boundary_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());

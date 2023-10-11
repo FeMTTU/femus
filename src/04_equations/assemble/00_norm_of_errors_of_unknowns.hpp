@@ -233,9 +233,9 @@ void compute_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
    double norm_dof_based_parallel = 0.; MPI_Allreduce( &norm_dof_based, &norm_dof_based_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
    double norm_qp_based_parallel = 0.; MPI_Allreduce( &norm_qp_based, &norm_qp_based_parallel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
  
-  std::cout << std::scientific << std::setw(20) << std::setprecision(15) << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm dof: " << norm_dof_based_parallel << std::endl;
+  std::cout << std::scientific << std::setw(20) << std::setprecision(15) << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& L2-Norm of the error, dof-based: " << norm_dof_based_parallel << std::endl;
   
-  std::cout << std::scientific << std::setw(20) << std::setprecision(15) << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Norm qp: " << norm_qp_based_parallel << std::endl;
+  std::cout << std::scientific << std::setw(20) << std::setprecision(15) << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& L2-Norm of the error, qp-based " << norm_qp_based_parallel << std::endl;
 
 
 
