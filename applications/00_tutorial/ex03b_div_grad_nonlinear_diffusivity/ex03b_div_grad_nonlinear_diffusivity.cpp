@@ -55,7 +55,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/square_-1-1x-1-1/square_2x2_quad_Two_face_groups.neu"; 
+  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/02_2d/square/minus1-plus1_minus1-plus1/square_2x2_quad_Two_face_groups.neu"; 
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
