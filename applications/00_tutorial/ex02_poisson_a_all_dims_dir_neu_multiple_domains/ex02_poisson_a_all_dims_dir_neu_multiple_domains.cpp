@@ -819,7 +819,7 @@ int main(int argc, char** args) {
   
   // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
