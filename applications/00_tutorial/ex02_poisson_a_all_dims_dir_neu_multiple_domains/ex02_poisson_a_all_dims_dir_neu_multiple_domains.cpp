@@ -859,7 +859,7 @@ int main(int argc, char** args) {
   app_segment._assemble_function = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
   app_segment._mesh_files.push_back("segment_16_dir_neu.med");
-  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment_0-1/");
+  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/");
   
   app_segment._boundary_conditions_types_and_values             = segment::bc_all_dirichlet;
 
@@ -873,7 +873,7 @@ int main(int argc, char** args) {
   app_square._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
   app_square._mesh_files.push_back("assignment_square_quadrilateral.med");
-  app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square_0-1x0-1/");
+  app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/");
   
   app_square._boundary_conditions_types_and_values             = square::bc_all_dirichlet;
   app_square._assemble_function_rhs = square::function_0::laplacian;
@@ -886,7 +886,7 @@ int main(int argc, char** args) {
   app_cube._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
   app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
-  app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube_0-1x0-1x0-1/");
+  app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube/0-1x0-1x0-1/");
   
   app_cube._boundary_conditions_types_and_values             = cube::bc_all_dirichlet;
   app_cube._assemble_function_rhs = cube::function_0::laplacian;

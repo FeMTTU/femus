@@ -38,7 +38,7 @@ std::string quad9_all_mesh_generation_methods_Structured(const unsigned method_f
         case 1: {
             mesh_name += "_salome";
 //   // ======= Mesh, coarse gen, III: from Salome - BEGIN  ========================
-    const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square_-0p5-0p5x-0p5-0p5/square_2x2_centered_at_origin.med";
+    const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/-0p5-0p5x-0p5-0p5/square_2x2_centered_at_origin.med";
    ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 //   // ======= Mesh, coarse gen, III: from Salome - END ========================
             break;
@@ -46,7 +46,7 @@ std::string quad9_all_mesh_generation_methods_Structured(const unsigned method_f
         case 2: {
             mesh_name += "_gambit";
 //   // ======= Mesh, coarse gen, II: from Gambit - BEGIN  ========================
-    const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/square_-0p5-0p5x-0p5-0p5/square_2x2_quad.neu";
+    const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/square/-0p5-0p5x-0p5-0p5/square_2x2_quad.neu";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
   // ======= Mesh, coarse gen, II: from Gambit - END ========================
             break;
