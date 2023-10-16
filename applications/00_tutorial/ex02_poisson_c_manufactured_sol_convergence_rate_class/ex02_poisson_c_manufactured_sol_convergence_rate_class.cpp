@@ -20,7 +20,7 @@
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 
-#include "00_poisson_eqn_with_all_dirichlet_bc.hpp"
+#include "00_poisson_eqn_with_all_dirichlet_bc_AD_or_nonAD_switch.hpp"
 
 #include "../tutorial_common.hpp"
 

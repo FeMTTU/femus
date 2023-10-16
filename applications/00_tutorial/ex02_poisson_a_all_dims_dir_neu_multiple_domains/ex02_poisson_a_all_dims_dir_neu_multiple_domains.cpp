@@ -841,12 +841,12 @@ int main(int argc, char** args) {
   
   app_specifics  app_segment;   //me
   app_specifics  app_square;   //me
-  app_specifics  app_cube;   //me
 //   app_specifics  app_circle;   //Gayani
   app_specifics  app_semicircle;   //Himali
   app_specifics  app_quarter_circle;      //Max
   app_specifics  app_annulus;       //Jon
   app_specifics  app_semiannulus;        //Fahad
+  app_specifics  app_cube;   //me
   app_specifics  app_cylinder;            //Aman
 //   app_specifics  app_semicylinder;   //Rifat
   app_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
@@ -880,19 +880,6 @@ int main(int argc, char** args) {
   app_square._true_solution    = square::function_0::value;
  //assignment_square - END
 
-
- //assignment_cube - BEGIN
-  app_cube._system_name = system_common_name;
-  app_cube._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
-  
-  app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
-  app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube/0-1x0-1x0-1/");
-  
-  app_cube._boundary_conditions_types_and_values             = cube::bc_all_dirichlet;
-  app_cube._assemble_function_rhs = cube::function_0::laplacian;
-  app_cube._true_solution    = cube::function_0::value;
- //assignment_cube - END
-  
 
   //assignment_semicircle - BEGIN
   app_semicircle._system_name = system_common_name;
@@ -953,6 +940,20 @@ int main(int argc, char** args) {
   app_semiannulus._true_solution    = semiannulus::function_0::value;
   //assignment_semiannulus - END
  
+
+ //assignment_cube - BEGIN
+  app_cube._system_name = system_common_name;
+  app_cube._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
+  
+  app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
+  app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube/0-1x0-1x0-1/");
+  
+  app_cube._boundary_conditions_types_and_values             = cube::bc_all_dirichlet;
+  app_cube._assemble_function_rhs = cube::function_0::laplacian;
+  app_cube._true_solution    = cube::function_0::value;
+ //assignment_cube - END
+  
+
   
   //assignment_cylinder - BEGIN
   app_cylinder._system_name = system_common_name;
@@ -1012,11 +1013,11 @@ int main(int argc, char** args) {
   
   my_specifics.push_back(app_segment);
   my_specifics.push_back(app_square);
-  my_specifics.push_back(app_cube);
   my_specifics.push_back(app_semicircle);
   my_specifics.push_back(app_quarter_circle);
   my_specifics.push_back(app_annulus);
   my_specifics.push_back(app_semiannulus);
+  my_specifics.push_back(app_cube);
   my_specifics.push_back(app_cylinder);
   my_specifics.push_back(app_quarter_cylinder);
   my_specifics.push_back(app_prism_annular_base);
