@@ -177,7 +177,7 @@ int main(int argc, char** args) {
 //     std::string input_file = "square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
 
 //     std::string input_file = "L_shaped_domain.med";
-//     std::string input_file = "interval.med";
+//     std::string input_file = "segment_1_all_dir.med";
 //     std::string input_file = "cylinder_hexahedral.med";
     std::ostringstream mystream; mystream << "./"  << input_file;
     const std::string infile = mystream.str();

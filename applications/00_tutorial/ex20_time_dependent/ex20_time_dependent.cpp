@@ -190,7 +190,7 @@ int main(int argc,char **args) {
 //    std::string input_file = "circle_tri6.med";
 //    std::string input_file = "ellipse_tri6.med";
 //    std::string input_file = "ellipse_with_hole_tri6.med";
-   std::string input_file = "interval.med";
+   std::string input_file = "segment_1_all_dir.med";
    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   

@@ -59,18 +59,19 @@ double laplacian(const std::vector<double> & x){
 // equation (name of the unknowns; also, if it is Laplace, biharmonic, Stokes, etc)
 // 
 // 
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob,
+bool function_0_bc_all_dirichlet(const MultiLevelProblem * ml_prob,
                       const std::vector < double >& x,
                       const char name[], 
                       double& value,
                       const int face_name,
                       const double time) {
 
+ if (ml_prob->GetMLMesh()->GetDimension() != 1 )  abort();
+
+  
   bool dirichlet = false;
   value = 0.;
   
-  
- if (ml_prob->GetMLMesh()->GetDimension() != 1 )  abort();
   
   if (face_name == 1) {
       dirichlet = true;
@@ -86,6 +87,68 @@ bool bc_all_dirichlet(const MultiLevelProblem * ml_prob,
   
  }
  
+ 
+
+bool function_0_bc_left_dirichlet_right_neumann(const MultiLevelProblem * ml_prob,
+                      const std::vector < double >& x,
+                      const char name[], 
+                      double& value,
+                      const int face_name,
+                      const double time) {
+
+ if (ml_prob->GetMLMesh()->GetDimension() != 1 )  abort();
+
+  
+  bool dirichlet = false;
+  value = 0.;
+  
+  
+  if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+    }
+  else if (face_name == 2) {
+      dirichlet = false;
+        value = -1.; //value of normal derivative
+    }
+
+ 
+  return dirichlet;
+  
+ }
+ 
+ 
+ 
+bool function_0_bc_left_neumann_right_dirichlet(const MultiLevelProblem * ml_prob,
+                      const std::vector < double >& x,
+                      const char name[], 
+                      double& value,
+                      const int face_name,
+                      const double time) {
+
+ if (ml_prob->GetMLMesh()->GetDimension() != 1 )  abort();
+
+  
+  bool dirichlet = false;
+  value = 0.;
+  
+  
+  if (face_name == 1) {
+      dirichlet = false;
+        value = -1.; //value of normal derivative (notice that the outgoing normal is -x)
+    }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.; 
+    }
+
+ 
+  return dirichlet;
+  
+ }
+ 
+ 
+ 
   }
   
   
@@ -95,7 +158,7 @@ bool bc_all_dirichlet(const MultiLevelProblem * ml_prob,
 
 
 
-double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double InitialValue(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
     
   return 0.;
   
@@ -106,7 +169,7 @@ double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < dou
 
 
 int main(int argc, char** args) {
- // Very impotant to be there to run in parallel
+
   // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -114,10 +177,10 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob;
 
   // ======= Files - BEGIN  ========================
-  const bool use_output_time_folder = false; //not everytime this will go to output folder. This allows you to run the code multiple times without overwritting. This guy will generate output folder each time you run.
-  const bool redirect_cout_to_file = false; // puts the output to a file instead of the command window or the konsole. In a log file.
+  const bool use_output_time_folder = false; // This allows you to run the code multiple times without overwriting. This will generate an output folder each time you run.
+  const bool redirect_cout_to_file = false; // puts the output in a log file instead of the term
   Files files; 
-        files.CheckIODirectories(use_output_time_folder); //dot operator is calling or accessing the function in that class of that name.
+        files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
   // ======= Problem, Files ========================
@@ -136,13 +199,15 @@ int main(int argc, char** args) {
 
   //segment_dir_neu_fine
   const std::string relative_path_to_build_directory =  "../../../";
-  app_segment._mesh_files.push_back("segment_16_dir_neu.med");
+  app_segment._mesh_files.push_back("segment_2_dir_neu.med");
   app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/");
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_segment._boundary_conditions_types_and_values             = segment::bc_all_dirichlet;
+  // app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_all_dirichlet;
+  // app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_dirichlet_right_neumann;
+  app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_neumann_right_dirichlet;
   app_segment._assemble_function_rhs = segment::function_0::laplacian;
 //   app_segment._true_solution    = segment::function_0::value;  
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
@@ -164,7 +229,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - BEGIN ==================
   double scalingFactor = 1.;
  
-  const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
+  const bool read_groups = true;
   const bool read_boundary_groups = true;
   
   const std::string mesh_file =  app_segment._mesh_files_path_relative_to_executable[m] + 
@@ -176,7 +241,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/3;
+  unsigned numberOfUniformLevels = /*1*/2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================
@@ -199,15 +264,15 @@ int main(int argc, char** args) {
 
   // ======= Solutions that are Unknowns - BEGIN ==================
   // add variables to ml_sol
-  ml_sol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+  ml_sol.AddSolution("u", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
 
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all variables to zero
-  ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
+  ml_sol.Initialize("u", InitialValue, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
   ml_sol.AttachSetBoundaryConditionFunction(app_segment._boundary_conditions_types_and_values);
-  ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
+  ml_sol.GenerateBdc("u", "Steady",  & ml_prob);
 
   // ======= Solutions that are Unknowns - END ==================
 
@@ -221,7 +286,7 @@ int main(int argc, char** args) {
   
   system.SetDebugNonlinear(true);
  
-  system.AddSolutionToSystemPDE("d_s");
+  system.AddSolutionToSystemPDE("u");
  
   // attach the assembling function to system
   system.SetAssembleFunction( app_segment._assemble_function );
