@@ -67,7 +67,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol);
 
 void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob);
 
-std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol);
+
 
 int main (int argc, char** args) {
 

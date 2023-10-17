@@ -423,7 +423,7 @@ template < class type>
   CurrentElem < double > geom_element_iel(dim, msh);
 
   
-  //-----------------  V initialization - BEGIN
+//-----------------  VOLUME initialization - BEGIN
  //***************************************************  
    std::vector < std::vector < double > >  JacI_qp(space_dim);
    std::vector < std::vector < double > >  Jac_qp(dim);
@@ -456,12 +456,12 @@ template < class type>
   vector < vector < type > > x(dim_offset_grad);    // local coordinates
   for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
 
-//-----------------  V initialization - END
+//-----------------  VOLUME initialization - END
 
   
   
   
-//-----------------  B initialization - BEGIN
+//-----------------  BOUNDARY initialization - BEGIN
     
  //***************************************************  
      std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
@@ -479,7 +479,7 @@ template < class type>
   phi_u_bdry.reserve(max_size);
   phi_u_x_bdry.reserve(max_size * space_dim);
 
-//-----------------  B initialization - END
+//-----------------  BOUNDARY initialization - END
 
   
   
@@ -592,17 +592,18 @@ if (volume_or_boundary == 1 )	{
        }
 		 //========== QP eval - END ===============================================
 
-// H^0 ==============      
+// H^0 - BEGIN ==============      
       type exactSol_bdry = 0.; if (ex_sol_in != NULL) exactSol_bdry = ex_sol_in->value(x_gss_bdry);
                  norms_exact_function[0] += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry; 
 //                  norms_exact_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
 
       norms_inexact_dofs[0]   += (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)   * (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)  * weight_iqp_bdry;
                  norms_inexact_dofs[0]   += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry; 
+// H^0 - END ==============      
                   
                   
                   
-// H^1 ==============      
+// H^1 - BEGIN ==============
     /*else*/ if (norm_flag == 1) {
       std::vector < type > exactGradSol_bdry(dim_offset_grad, 0.);    if (ex_sol_in != NULL) exactGradSol_bdry = ex_sol_in->gradient(x_gss_bdry);  
       ///@todo THIS IS WRONG! It is NOT the SURFACE GRADIENTTTT, so we have to be careful when we have more than one boundary face!!!
@@ -614,7 +615,7 @@ if (volume_or_boundary == 1 )	{
         norms_inexact_dofs[1]   += ((sol_u_x_bdry_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d])  * (sol_u_x_bdry_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d])) * weight_iqp_bdry;
       }
    }
-   
+// H^1 - END ==============
                   
         }
             

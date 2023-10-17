@@ -50,7 +50,7 @@ double InitalValue(const std::vector < double >& x) {
 
 void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob);
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
+
 
 int main(int argc, char** args) {
 

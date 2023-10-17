@@ -13,8 +13,8 @@
 
 #include "FemusInit.hpp"
 #include "Files.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "LinearImplicitSystem.hpp"
 
@@ -24,6 +24,7 @@
 
 #include "../tutorial_common.hpp"
 
+#include "../all_mesh_generation_methods.hpp"
 
 
 using namespace femus;
@@ -63,6 +64,7 @@ void AssemblePoissonProblem_old_fe_quadrature_AD_interface(MultiLevelProblem& ml
 }
 
 
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   
   bool dirichlet = true; //dirichlet
@@ -81,34 +83,32 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-//   // ======= Files ========================
-//   Files files; 
-//         files.CheckIODirectories(true);
-//         files.RedirectCout(true);
+  // ======= Files - BEGIN  ========================
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
+  Files files; 
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
+  // ======= Files - END  ========================
+
  
   // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     In the future it is not going to be an argument of the mesh function   */
 
+  // ======= Mesh - BEGIN ========================
  // define multilevel mesh
   MultiLevelMesh ml_mesh;
- // read coarse level mesh and generate finers level meshes
-  double scalingFactor = 1.;
-  const unsigned int nsub_x = 2;
-  const unsigned int nsub_y = 2;
-  const unsigned int nsub_z = 0;
-  const std::vector<double> xyz_min = {-0.5,-0.5,0.};
-  const std::vector<double> xyz_max = { 0.5, 0.5,0.};
-  const ElemType geom_elem_type = QUAD9;
-  ml_mesh.GenerateCoarseBoxMesh(nsub_x, nsub_y, nsub_z, xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, fe_quad_rule.c_str());
-//   ml_mesh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
+  // read coarse level mesh
+  const unsigned mesh_file_type = 1; //salome   
+  const std::string mesh_name = Domain_square_m05p05::quad9_all_mesh_generation_methods_Structured(mesh_file_type, ml_mesh, fe_quad_rule);
+  
   MultiLevelMesh ml_mesh_finest;
-  ml_mesh_finest.GenerateCoarseBoxMesh(nsub_x, nsub_y, nsub_z, xyz_min[0], xyz_max[0], xyz_min[1], xyz_max[1], xyz_min[2], xyz_max[2], geom_elem_type, fe_quad_rule.c_str());
-//   ml_mesh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  const std::string mesh_name_finest = Domain_square_m05p05::quad9_all_mesh_generation_methods_Structured(mesh_file_type, ml_mesh_finest, fe_quad_rule);
 
-   
+ 
   unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -117,6 +117,7 @@ int main(int argc, char** args) {
   } else {
     maxNumberOfMeshes = 4;
   }
+  // ======= Mesh - END ========================
 
   const unsigned gap = 1;
 
@@ -176,7 +177,7 @@ int main(int argc, char** args) {
       // define the multilevel problem attach the ml_sol object to it
       MultiLevelProblem ml_prob(&ml_sol);
 
-//       ml_prob.SetFilesHandler(&files);
+       ml_prob.SetFilesHandler(&files);
       
        ml_prob.get_systems_map().clear();
        ml_prob.set_current_system_number(0/*u*/);               //way to communicate to the assemble function, which doesn't belong to any class
@@ -266,9 +267,9 @@ int main(int argc, char** args) {
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
 
-      ml_sol.GetWriter()->Write(/*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);
       
-      ml_sol_finest->GetWriter()->Write(i+1, /*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic"/*_finest*/, variablesToBePrinted, i+3 + maxNumberOfMeshes);
+      ml_sol_finest->GetWriter()->Write(i+1, files.GetOutputPath(), "biquadratic"/*_finest*/, variablesToBePrinted, i+3 + maxNumberOfMeshes);
 
     }
   }

@@ -30,21 +30,23 @@
 // exp(-2 pi^2 t) sin(PI x) sin(PI y) 
 //  sin(acos(-1.) * coordsX) * sin( acos(-1.) * coordsY) * exp(-2. * acos(-1.)^2 * t)
 
-#include "MultiLevelSolution.hpp"
+
+#include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
+#include "Files.hpp"
+#include "MultiLevelSolution.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
+
 #include "Fluid.hpp"
 #include "Parameter.hpp"
-#include "FemusInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
+
 #include "NonLinearImplicitSystem.hpp"
 #include "FElemTypeEnum.hpp"
-#include "Files.hpp"
 
-using std::cout;
-using std::endl;
+
 using namespace femus;
 
 void AssembleMatrixRes(MultiLevelProblem &ml_prob);
@@ -848,9 +850,3 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
   RES->close();
   // ***************** END ASSEMBLY *******************
 }
-  /**
-   * 
-   * It would be nice to add some code that can check the error in some appropriate norm, or potentially some convergence tests.
-   * 
-   **/
-

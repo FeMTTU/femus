@@ -2,6 +2,7 @@
 #define __femus_00_norms_of_errors_of_unknowns_hpp__
 
 
+#include "Assemble_unknown.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
 
