@@ -20,7 +20,8 @@ namespace femus {
  **/
 
 void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
-                                                    double    (* right_hand_side )  (const std::vector<double> & )
+                                                    double    (* right_hand_side )  (const std::vector<double> & ),
+                                                    double    (* exact_solution )  (const std::vector<double> & )
                                                     ) {
   //  ml_prob is the global object from/to where get/set all the data
 
@@ -42,6 +43,7 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
   std::vector< Unknown >   unknowns = ml_prob.get_system< LinearImplicitSystem >(current_system_number).get_unknown_list_for_assembly();
 
   
+  if (unknowns.size() != 1) abort();
   
   
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -71,6 +73,9 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
   vector < double >  solu; // local solution
   solu.reserve(maxSize);
 
+  vector < double >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(maxSize);
+
+  
   vector < vector < double > > x (dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BI/TRIQUADRATIC)
 
@@ -111,19 +116,6 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
 
     std::vector<unsigned> Sol_n_el_dofs_Mat_vol(1, nDofu);
   
-    // resize local arrays
-    solu.resize(nDofu);
-    l2GMap.resize(nDofu);
-
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // local to global solution mapping
-      solu[i] = (*sol->_Sol[soluIndex])(solDof);      // local storage of solution
-      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);   // local to global system solution mapping
-    }
-    
-    
-
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
     }
@@ -137,6 +129,24 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
       }
     }
 
+
+    // resize local arrays
+    l2GMap.resize(nDofu);
+    
+    solu.resize(nDofu);
+    solu_exact_at_dofs.resize(nDofu);
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofu; i++) {
+        std::vector<double> x_at_node(dim,0.);
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // local to global solution mapping
+      solu[i] = (*sol->_Sol[soluIndex])(solDof);      // local storage of solution
+      solu_exact_at_dofs[i] = exact_solution(x_at_node);
+      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);   // local to global system solution mapping
+    }
+    
+    
 
 
     Res.assign(nDofu, 0.);    //resize and set to zero
@@ -152,12 +162,14 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
     
       vector < double > gradSolu_gss(dim, 0.);
+      vector < double > gradSolu_exact_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
        
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+          gradSolu_gss[jdim]       += phi_x[i * dim + jdim] * solu[i];
+          gradSolu_exact_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
@@ -166,12 +178,15 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
       for (unsigned i = 0; i < nDofu; i++) {
 
         double weakLaplace = 0.;
+        double laplace_weak_exact = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          weakLaplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          weakLaplace        +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          laplace_weak_exact +=  phi_x[i * dim + jdim] * gradSolu_exact_gss[jdim];
         }
         
-        Res[i] += - (   right_hand_side(x_gss) * phi[i] + weakLaplace) * weight;
+        Res[i] += ( -  right_hand_side(x_gss) * phi[i] - weakLaplace) * weight;
+        // Res[i] += (laplace_weak_exact                  - weakLaplace) * weight;
 
         // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {
@@ -227,7 +242,8 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
  *                  J w = f(x) - J u0
  **/
 void AssemblePoissonProblem_old_fe_quadrature_AD(MultiLevelProblem& ml_prob,
-                                                    double    (* right_hand_side )  (const std::vector<double> & )
+                                                    double    (* right_hand_side )  (const std::vector<double> & ),
+                                                    double    (* exact_solution )  (const std::vector<double> & )
                                                     ) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled

@@ -33,25 +33,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
-};
-
-
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
-
-
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
-};
-
-
 
 
 void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob);
@@ -220,6 +201,26 @@ int main(int argc, char** args) {
 }
 
 
+
+
+
+double GetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return cos(pi * x[0]) * cos(pi * x[1]);
+};
+
+
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+};
+
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+};
 
 
 

@@ -60,11 +60,11 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
 
 
 void AssemblePoissonProblem_old_fe_quadrature_nonAD_interface(MultiLevelProblem& ml_prob) {
-          AssemblePoissonProblem_old_fe_quadrature_nonAD(ml_prob, GetExactSolutionLaplace);
+          AssemblePoissonProblem_old_fe_quadrature_nonAD(ml_prob, GetExactSolutionLaplace, NULL);
 }
 
 void AssemblePoissonProblem_old_fe_quadrature_AD_interface(MultiLevelProblem& ml_prob) {
-          AssemblePoissonProblem_old_fe_quadrature_AD(ml_prob, GetExactSolutionLaplace);
+          AssemblePoissonProblem_old_fe_quadrature_AD(ml_prob, GetExactSolutionLaplace, NULL);
 }
 
 
@@ -86,7 +86,6 @@ bool square_bc_all_dirichlet(const std::vector < double >& x, const char solName
 int main(int argc, char** args) {
 
   // ======= Init ========================
-  // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   // ======= Problem  ==================
@@ -111,7 +110,7 @@ int main(int argc, char** args) {
     // ======= Quad Rule - END ========================
  
    
-  // ======= Mesh file types (function, salome, gambit) ========================
+  // ======= Mesh file types (function, salome, gambit) - BEGIN ========================
     for (unsigned  mesh_file_type = 0; mesh_file_type < 3; mesh_file_type++) {  
   
   // define multilevel mesh
@@ -207,7 +206,7 @@ int main(int argc, char** args) {
        ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
        
 
-      ml_prob.get_systems_map().clear();
+       ml_prob.get_systems_map().clear();
        ml_prob.set_current_system_number(0/*u*/);               //way to communicate to the assemble function, which doesn't belong to any class
       
     // ======= System - BEGIN ========================
@@ -219,6 +218,7 @@ int main(int argc, char** args) {
         // add solution "u" to system
       system.AddSolutionToSystemPDE( unknowns[u]._name.c_str() );
 
+        // set unknown list
         std::vector< Unknown > unknowns_vec(1);
         unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
 
@@ -330,7 +330,8 @@ int main(int argc, char** args) {
   // ======= Assemble functions (AD or NON-AD) - END ========================
 
     
-    } //end mesh file type
+    }
+  // ======= Mesh file types (function, salome, gambit) - END ========================
     
     
   return 0;

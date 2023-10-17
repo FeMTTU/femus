@@ -2,6 +2,9 @@
 #define __femus_applications_00_tutorial_hpp__
 
 
+#include "Assemble_unknown.hpp"
+
+
 using namespace femus;
 
 
