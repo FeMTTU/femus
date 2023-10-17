@@ -11,8 +11,8 @@
  **/
 
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
@@ -21,6 +21,44 @@
 
 
 using namespace femus;
+
+
+
+
+double GetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return cos(pi * x[0]) * cos(pi * x[1]);
+};
+
+
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+};
+
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+};
+
+
+
+// for v - BEGIN ----
+double LaplaceGetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+};
+
+void LaplaceGetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] =  2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
+};
+// for v - END ----
+
+
 
 
 
@@ -37,7 +75,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob);
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
+std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, const std::string,
+                                                                    double    (* function_value )  (const std::vector<double> & ),
+                                                                    void    (* function_gradient)  (const std::vector < double > & , std::vector < double >&  ));
 
 
 
@@ -119,7 +159,10 @@ int main(int argc, char** args) {
       system.init();
       system.MGsolve();
 
-      std::pair< double , double > norm = GetErrorNorm(&mlSol);
+      std::pair< double , double > norm = GetErrorNorm(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
+      // std::pair< double , double > norm = GetErrorNorm(&mlSol, "v", LaplaceGetExactSolutionValue, LaplaceGetExactSolutionGradient );
+      
+      
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
       // print solutions
@@ -203,24 +246,6 @@ int main(int argc, char** args) {
 
 
 
-
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
-};
-
-
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
-
-
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
-};
 
 
 
@@ -453,7 +478,10 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
 
 
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
+std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, const std::string unknown_scalar,
+                                                                    double    (* function_value )  (const std::vector<double> & ),
+                                                                    void    (* function_gradient)  (const std::vector < double > & , std::vector < double >&   )
+                                         ){
   
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
@@ -466,7 +494,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
   //solution variable
   unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  soluIndex = mlSol->GetIndex( unknown_scalar.c_str() );    // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   vector < double >  solu; // local solution
@@ -543,13 +571,13 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
       }
 
       vector <double> solGrad(dim);
-      GetExactSolutionGradient(xGauss, solGrad);
+      function_gradient(xGauss, solGrad);
 
       for (unsigned j = 0; j < dim ; j++) {
         seminorm   += ((soluGauss_x[j] - solGrad[j]) * (soluGauss_x[j] - solGrad[j])) * weight;
       }
 
-      double exactSol = GetExactSolutionValue(xGauss);
+      double exactSol = function_value(xGauss);
       l2norm += (exactSol - soluGauss) * (exactSol - soluGauss) * weight;
     } // end gauss point loop
   } //end element loop for each process
