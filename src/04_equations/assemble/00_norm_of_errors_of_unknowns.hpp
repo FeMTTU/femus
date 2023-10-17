@@ -377,6 +377,205 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
 
 
 
+// ||u_i - u_h||/||u_i-u_(h/2)|| = 2^alpha, alpha is order of conv 
+std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolution* ml_sol,
+                                          Solution* sol_finer,
+                                          std::vector< Unknown > & unknowns_vec,
+                                                                    double    (* function_value )  (const std::vector<double> & ),
+                                                                    void    (* function_gradient)  (const std::vector < double > & , std::vector < double >&  )
+                                          ) {
+  
+  if (unknowns_vec.size() != 1) abort();
+  
+  unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
+  //  extract pointers to the several objects that we are going to use
+  Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*     el  = msh->el;  // pointer to the elem object in msh (level)
+  Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+  //solution variable
+  unsigned soluIndex = ml_sol->GetIndex( unknowns_vec[0]._name.c_str() );    // get the position of "u" in the ml_sol object
+  unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+
+  vector < double >  solu; // local solution
+
+  vector < vector < double > > x(dim);    // local coordinates
+  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  vector <double> phi;  // local test function
+  vector <double> phi_x; // local test function first order partial derivatives
+
+  double weight; // gauss point weight
+
+  // reserve memory for the local standar vectors
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  solu.reserve(maxSize);
+
+  vector < double >  solu_finer;   solu_finer.reserve(maxSize);
+  
+  vector < double >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
+
+  for (unsigned i = 0; i < dim; i++)
+    x[i].reserve(maxSize);
+
+  phi.reserve(maxSize);
+  phi_x.reserve(maxSize * dim);
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+
+  double seminorm = 0.;
+  double l2norm = 0.;
+  double seminorm_exact_dofs = 0.;
+  double l2norm_exact_dofs = 0.;
+  double seminorm_inexact = 0.;
+  double l2norm_inexact = 0.;
+
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    
+    short unsigned ielGeom = msh->GetElementType(iel);
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+
+    // resize local arrays
+    solu.resize(nDofu);
+    solu_finer.resize(nDofu);
+    solu_exact_at_dofs.resize(nDofu);
+
+    for (int i = 0; i < dim; i++) {
+      x[i].resize(nDofx);
+    }
+
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofx; i++) {
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned jdim = 0; jdim < dim; jdim++) {
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);  // global extraction and local storage for the element coordinates
+      }
+    }
+    
+    const double weird_multigrid_factor = 0.25;  //don't know!
+    
+         vector<double> x_at_node(dim,0.);
+      for (unsigned i = 0; i < nDofu; i++) {
+         for (unsigned jdim = 0; jdim < dim; jdim++) {
+             x_at_node[jdim] = x[jdim][i];
+         }
+      }
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofu; i++) {
+//         std::vector<double> x_at_node(dim,0.);
+//         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+      solu[i]       = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
+      solu_finer[i] = /*weird_multigrid_factor * */(*sol_finer->_Sol[soluIndex])(solDof);
+      solu_exact_at_dofs[i] = function_value(x_at_node);
+    }
+
+
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+        
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
+
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      double solu_gss = 0.;
+      double solu_finer_gss = 0.;
+      double exactSol_from_dofs_gss = 0.;
+      vector < double > gradSolu_gss(dim, 0.);
+      vector < double > gradSolu_exact_at_dofs_gss(dim, 0.);
+      vector < double > gradSolu_finer_gss(dim, 0.);
+      vector < double > x_gss(dim, 0.);
+
+      for (unsigned i = 0; i < nDofu; i++) {
+        solu_gss       += phi[i] * solu[i];
+        solu_finer_gss += phi[i] * solu_finer[i];
+        exactSol_from_dofs_gss += phi[i] * solu_exact_at_dofs[i];
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+          gradSolu_exact_at_dofs_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
+          gradSolu_finer_gss[jdim] += phi_x[i * dim + jdim] * solu_finer[i];
+          x_gss[jdim] += x[jdim][i] * phi[i];
+        }
+      }
+
+      vector <double> exactGradSol(dim);
+      function_gradient(x_gss, exactGradSol);
+
+      for (unsigned j = 0; j < dim ; j++) {
+        seminorm           += ((gradSolu_gss[j]       - exactGradSol[j]) * (gradSolu_gss[j]       - exactGradSol[j])) * weight;
+        seminorm_inexact   += ((gradSolu_gss[j] - gradSolu_finer_gss[j]) * (gradSolu_gss[j] - gradSolu_finer_gss[j])) * weight;
+        seminorm_exact_dofs      += ((gradSolu_gss[j]       - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j]       - gradSolu_exact_at_dofs_gss[j])) * weight;
+      }
+
+      double exactSol = function_value(x_gss);
+      l2norm              += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
+      l2norm_exact_dofs   += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss)       * weight;
+      l2norm_inexact      += (solu_gss - solu_finer_gss)          * (solu_gss - solu_finer_gss) * weight;
+   } // end gauss point loop
+  } //end element loop for each process
+
+  // add the norms of all processes
+  NumericVector* norm_vec;
+  norm_vec = NumericVector::build().release();
+  norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
+
+  norm_vec->set(iproc, l2norm);
+  norm_vec->close();
+  l2norm = norm_vec->l1_norm();
+
+  norm_vec->set(iproc, seminorm);
+  norm_vec->close();
+  seminorm = norm_vec->l1_norm();
+
+  delete norm_vec;
+
+   // add the norms of all processes
+  NumericVector* norm_vec_exact_dofs;
+  norm_vec_exact_dofs = NumericVector::build().release();
+  norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
+
+  norm_vec_exact_dofs->set(iproc, l2norm_exact_dofs);
+  norm_vec_exact_dofs->close();
+  l2norm_exact_dofs = norm_vec_exact_dofs->l1_norm();
+
+  norm_vec_exact_dofs->set(iproc, seminorm_exact_dofs);
+  norm_vec_exact_dofs->close();
+  seminorm_exact_dofs = norm_vec_exact_dofs->l1_norm();
+
+  delete norm_vec_exact_dofs;
+
+  // add the norms of all processes
+  NumericVector* norm_vec_inexact;
+  norm_vec_inexact = NumericVector::build().release();
+  norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
+
+  norm_vec_inexact->set(iproc, l2norm_inexact);
+  norm_vec_inexact->close();
+  l2norm_inexact = norm_vec_inexact->l1_norm();
+
+  norm_vec_inexact->set(iproc, seminorm_inexact);
+  norm_vec_inexact->close();
+  seminorm_inexact = norm_vec_inexact->l1_norm();
+
+  delete norm_vec_inexact;
+
+  std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+  
+  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
+  // return std::pair < double, double > (sqrt(l2norm_exact_dofs), sqrt(seminorm_exact_dofs));  ///@todo does not seem to work
+  // return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));        ///@todo does not seem to work
+
+}
+
+
 
 } //end namespace femus
 
