@@ -103,7 +103,7 @@ int main(int argc,char **args) {
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
 
-  input_files.push_back("parametric_square_1x2.med");
+  input_files.push_back("square_0-1x0-1_divisions_1x2.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Four_boundaries_groups.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Nine_without_groups.med"); //Some boundary face was not set in the mesh MED file
 //   input_files.push_back("./geom_elem_many_Tri6_Two_boundaries.med"); //error

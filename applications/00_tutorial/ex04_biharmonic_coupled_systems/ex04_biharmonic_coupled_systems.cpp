@@ -17,10 +17,9 @@
 #include "VTKWriter.hpp"
 #include "NumericVector.hpp"
 
-#include "adept.h"
-
 #include "FE_convergence.hpp"
 
+#include "adept.h"
 
 
 using namespace femus;
