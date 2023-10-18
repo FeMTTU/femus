@@ -11,5 +11,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
   ADD_SUBDIRECTORY(./rifat/)
   ADD_SUBDIRECTORY(./shaflynn/)
 
-  ADD_SUBDIRECTORY(./karthik/)
+  ADD_SUBDIRECTORY(./karthik_poisson/)
+  ADD_SUBDIRECTORY(./Karthik_coupled_biharmonic/)
+  ADD_SUBDIRECTORY(./Karthik_uncoupled_biharmonic/)
+
+
   ADD_SUBDIRECTORY(./shankar/)
