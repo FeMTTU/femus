@@ -27,6 +27,7 @@ using namespace femus;
 
 
 
+
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
   return cos(pi * x[0]) * cos(pi * x[1]);
@@ -61,6 +62,9 @@ void LaplaceGetExactSolutionGradient(const std::vector < double >& x, vector < d
 // for v - END ----
 
 
+
+
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
@@ -85,9 +89,7 @@ int main(int argc, char** args) {
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in the furure it is not going to be an argument of this function   */
-  unsigned dim = mlMsh.GetDimension();
+
   unsigned maxNumberOfMeshes = 5;
 
   vector < vector < double > > l2Norm;
@@ -152,9 +154,6 @@ int main(int argc, char** args) {
       systemU.init();
       systemV.init();
 
-      systemV.SetOuterSolver(PREONLY);
-      systemU.SetOuterSolver(PREONLY);
-      
       systemV.MGsolve(); //first solve for v
       systemU.MGsolve(); //then solve for u using v
 
@@ -449,8 +448,6 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
 void AssembleU_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
-  //  levelMax is the Maximum level of the MultiLevelProblem
-  //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
   // call the adept stack object
   adept::Stack& s = FemusInit::_adeptStack;

@@ -10,9 +10,21 @@ namespace femus   {
 
 
 template < class real_num, class real_num_mov >
-void compute_L2_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
+void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem& ml_prob) {
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> (ml_prob.get_app_specs_pointer()->_system_name);  
+  NonLinearImplicitSystem* mlPdeSys  = & ml_prob.get_system<NonLinearImplicitSystem> (ml_prob.get_app_specs_pointer()->_system_name);  
+
+
+//***************** Check Number of Unknowns - BEGIN **********************************  
+  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
+  if (n_vars != 1)  { std::cout << "Function written for only 1 scalar unknown";  abort();  }
+//***************** Check Number of Unknowns - END **********************************  
+
+//***************** Check that true solution is provided - BEGIN **********************************  
+  if (ml_prob.get_app_specs_pointer()->_true_solution == NULL) {  std::cout << "No true solution provided";  abort();  }
+//***************** Check that true solution is provided - END **********************************  
+
+
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
@@ -27,13 +39,6 @@ void compute_L2_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id();
 
-
-//***************** Check Number of Unknowns **********************************  
-  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
-  if (n_vars != 1)  { std::cout << "Function written for only 1 scalar unknown";  abort();  }
-
-//***************** Check that true solution is provided **********************************  
-  if (ml_prob.get_app_specs_pointer()->_true_solution == NULL) {  std::cout << "No true solution provided";  abort();  }
 
 
   //=============== Geometry ========================================
@@ -73,7 +78,6 @@ void compute_L2_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
   unsigned solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
 
-  unsigned solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
 
   std::vector < double >  sol_u;     sol_u.reserve(maxSize);
   std::vector < double >  sol_u_true;     sol_u_true.reserve(maxSize);
@@ -254,6 +258,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
                                                                     ) {      
   
   unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
+  
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)

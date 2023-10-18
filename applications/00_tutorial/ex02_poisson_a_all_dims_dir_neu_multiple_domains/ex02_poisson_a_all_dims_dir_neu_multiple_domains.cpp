@@ -1131,7 +1131,7 @@ int main(int argc, char** args) {
   
   system.MGsolve();
   
-  compute_L2_norm_of_errors_of_unknowns<double, double>(ml_prob);
+  compute_L2_norm_of_errors_of_unknowns_with_analytical_sol<double, double>(ml_prob);
     // ======= Problem, System - END ========================
   
   

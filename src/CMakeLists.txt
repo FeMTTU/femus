@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(femus)
 
 #############################################################################################
-### Source files
+### Source files - BEGIN
 #############################################################################################
 
 SET(femus_src 
@@ -115,6 +115,19 @@ uq/sparseGrid.cpp
 #   )
 # ENDIF(HAVE_HDF5) 
 
+
+
+#############################################################################################
+### Source files - END
+#############################################################################################
+
+
+
+#############################################################################################
+### Library files - BEGIN
+#############################################################################################
+
+
 IF (NOT LIBRARY_OUTPUT_PATH)
   SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib64 CACHE PATH
        "Single output directory for building all libraries.")
@@ -122,6 +135,8 @@ IF (NOT LIBRARY_OUTPUT_PATH)
 ENDIF (NOT LIBRARY_OUTPUT_PATH)
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${femus_src})
+
+
 
 IF(APPLE)
 target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libhdf5.dylib)
@@ -138,3 +153,7 @@ target_link_libraries(${PROJECT_NAME} ${JSONCPP_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ADEPT_LIBRARIES})
 
 ENDIF(APPLE)
+
+#############################################################################################
+### Library files - END
+#############################################################################################
