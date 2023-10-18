@@ -13,23 +13,17 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
-#include "NumericVector.hpp"
-#include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "VTKWriter.hpp"
+#include "NumericVector.hpp"
 
 #include "adept.h"
 
+#include "00_norm_of_errors_of_unknowns.hpp"
+
+
 
 using namespace femus;
-
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = true; //dirichlet
-  value = 0;
-  return dirichlet;
-}
-
-void AssembleU_AD(MultiLevelProblem& ml_prob);
-void AssembleV_AD(MultiLevelProblem& ml_prob);
 
 
 
@@ -52,7 +46,31 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
 };
 
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
+
+// for v - BEGIN ----
+double LaplaceGetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+};
+
+void LaplaceGetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] =  2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
+};
+// for v - END ----
+
+
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+  value = 0;
+  return dirichlet;
+}
+
+void AssembleU_AD(MultiLevelProblem& ml_prob);
+void AssembleV_AD(MultiLevelProblem& ml_prob);
+
+
 
 int main(int argc, char** args) {
 
@@ -64,7 +82,6 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-//   mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
@@ -79,7 +96,13 @@ int main(int argc, char** args) {
   vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
+    std::vector<FEOrder> feOrder;  
+    feOrder.push_back(FIRST);
+    feOrder.push_back(SERENDIPITY);
+    feOrder.push_back(SECOND);
+    
+    
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
@@ -91,11 +114,11 @@ int main(int argc, char** args) {
     // print mesh info
     mlMsh.PrintInfo();
 
-    FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
-    l2Norm[i].resize(3);
-    semiNorm[i].resize(3);
+    l2Norm[i].resize( feOrder.size() );
+    semiNorm[i].resize( feOrder.size() );
 
-    for (unsigned j = 0; j < 3; j++) {   // loop on the FE Order
+    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
+
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
 
@@ -135,7 +158,10 @@ int main(int argc, char** args) {
       systemV.MGsolve(); //first solve for v
       systemU.MGsolve(); //then solve for u using v
 
-      std::pair< double , double > norm = GetErrorNorm(&mlSol);
+      // convergence for u
+      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
+      // // convergence for v
+      // std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "v", LaplaceGetExactSolutionValue, LaplaceGetExactSolutionGradient );
       
       
       l2Norm[i][j]  = norm.first;
@@ -150,17 +176,17 @@ int main(int argc, char** args) {
     }
   }
 
-  // print the seminorm of the error and the order of convergence between different levels
+  // ======= L2 - BEGIN  ========================
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < feOrder.size(); j++) {
       std::cout << l2Norm[i][j] << "\t";
     }
 
@@ -170,7 +196,7 @@ int main(int argc, char** args) {
       std::cout.precision(3);
       std::cout << "\t\t";
 
-      for (unsigned j = 0; j < 3; j++) {
+      for (unsigned j = 0; j < feOrder.size(); j++) {
         std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
       }
 
@@ -178,17 +204,22 @@ int main(int argc, char** args) {
     }
 
   }
+  // ======= L2 - END  ========================
 
+  
+  
+  // ======= H1 - BEGIN  ========================
+  
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < feOrder.size(); j++) {
       std::cout << semiNorm[i][j] << "\t";
     }
 
@@ -198,7 +229,7 @@ int main(int argc, char** args) {
       std::cout.precision(3);
       std::cout << "\t\t";
 
-      for (unsigned j = 0; j < 3; j++) {
+      for (unsigned j = 0; j < feOrder.size(); j++) {
         std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
       }
 
@@ -206,6 +237,9 @@ int main(int argc, char** args) {
     }
 
   }
+
+  // ======= H1 - END  ========================
+
 
   return 0;
 }
@@ -616,134 +650,5 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
 
   KK->close();
 
-  // ***************** END ASSEMBLY *******************
 }
 
-
-
-
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
-  
-  
-  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
-  //  extract pointers to the several objects that we are going to use
-  Mesh*          msh          = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
-  Solution*    sol        = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-
-  //solution variable
-  unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
-
-  vector < double >  solu; // local solution
-
-  vector < vector < double > > x(dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
-  double weight; // gauss point weight
-
-  // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-  solu.reserve(maxSize);
-
-  for (unsigned i = 0; i < dim; i++)
-    x[i].reserve(maxSize);
-
-  phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim);
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  phi_xx.reserve(maxSize * dim2);
-
-  double seminorm = 0.;
-  double l2norm = 0.;
-
-  // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    
-    short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    
-    // resize local arrays
-    solu.resize(nDofs);
-
-    for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofs2);
-    }
-
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofs; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-    }
-
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofs2; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-      }
-    }
-
-    // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-      // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      double soluGauss = 0;
-      vector < double > soluGauss_x(dim, 0.);
-      vector < double > xGauss(dim, 0.);
-
-      for (unsigned i = 0; i < nDofs; i++) {
-        soluGauss += phi[i] * solu[i];
-
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          soluGauss_x[jdim] += phi_x[i * dim + jdim] * solu[i];
-          xGauss[jdim] += x[jdim][i] * phi[i];
-        }
-      }
-
-      vector <double> solGrad(dim);
-      GetExactSolutionGradient(xGauss, solGrad);
-
-      for (unsigned j = 0; j < dim ; j++) {
-        seminorm   += ((soluGauss_x[j] - solGrad[j]) * (soluGauss_x[j] - solGrad[j])) * weight;
-      }
-
-      double exactSol = GetExactSolutionValue(xGauss);
-      l2norm += (exactSol - soluGauss) * (exactSol - soluGauss) * weight;
-    } // end gauss point loop
-  } //end element loop for each process
-
-  // add the norms of all processes
-  NumericVector* norm_vec;
-  norm_vec = NumericVector::build().release();
-  norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
-
-  norm_vec->set(iproc, l2norm);
-  norm_vec->close();
-  l2norm = norm_vec->l1_norm();
-
-  norm_vec->set(iproc, seminorm);
-  norm_vec->close();
-  seminorm = norm_vec->l1_norm();
-
-  delete norm_vec;
-
-  std::pair < double, double > norm;
-  norm.first  = sqrt(l2norm);
-  norm.second = sqrt(seminorm);
-
-  return norm;
-
-}

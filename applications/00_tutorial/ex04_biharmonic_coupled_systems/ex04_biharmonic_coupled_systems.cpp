@@ -13,9 +13,9 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
-#include "NumericVector.hpp"
-#include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "VTKWriter.hpp"
+#include "NumericVector.hpp"
 
 #include "adept.h"
 
@@ -114,7 +114,7 @@ int main(int argc, char** args) {
 
     unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
-    mlMsh.RefineMesh( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+    mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
     // erase all the coarse mesh levels
     mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -126,8 +126,6 @@ int main(int argc, char** args) {
     semiNorm[i].resize( feOrder.size() );
 
     for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
-
-      std::cout << "level = " << i << " FEM = " << j << std::endl;
 
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
@@ -159,7 +157,9 @@ int main(int argc, char** args) {
       system.init();
       system.MGsolve();
 
+      // convergence for u
       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
+      // // convergence for v
       // std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "v", LaplaceGetExactSolutionValue, LaplaceGetExactSolutionGradient );
       
       
