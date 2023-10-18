@@ -289,7 +289,6 @@ template < class real_num>
                                                                       const unsigned int norm_flag) {
 
    if(mesh_lev < norm[solution].size() - 2)  {
-//   std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE: " << fam << " " << ord << "\n\n";
 
     std::cout << mesh_lev + 1 << "\t\t";
     std::cout.precision(14);
