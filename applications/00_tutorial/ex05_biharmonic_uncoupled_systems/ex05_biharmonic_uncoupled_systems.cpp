@@ -32,6 +32,26 @@ void AssembleU_AD(MultiLevelProblem& ml_prob);
 void AssembleV_AD(MultiLevelProblem& ml_prob);
 
 
+
+double GetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return cos(pi * x[0]) * cos(pi * x[1]);
+};
+
+
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+};
+
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+};
+
+
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
 
 int main(int argc, char** args) {
@@ -111,10 +131,13 @@ int main(int argc, char** args) {
 
       systemV.SetOuterSolver(PREONLY);
       systemU.SetOuterSolver(PREONLY);
-      systemV.MGsolve();
-      systemU.MGsolve();
+      
+      systemV.MGsolve(); //first solve for v
+      systemU.MGsolve(); //then solve for u using v
 
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
+      
+      
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
       // print solutions
@@ -188,45 +211,8 @@ int main(int argc, char** args) {
 }
 
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
-};
 
-
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
-
-
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
-};
-
-
-/**
- * Given the non linear problem
- *
- *      - \Delta u + < u, u, u > \cdot \nabla u = f(x),
- *
- * in the unit box centered in the origin with
- *
- *                      f(x) = - \Delta u_e + < u_e, u_e, u_e > \cdot \nabla u_e,
- *                    u_e = \cos ( \pi * x ) * \cos( \pi * y ),
- *
- *the following function assembles the residual vector Res(u^i) and using automatic differentiation gets
- *the exact Jacobian matrix J(u^i) for the Newton iteration, i.e.
- *
- *                   J(u^i) w = Res(u^i) = f(x) - ( - \Delta u^i + < u^i, u^i, u^i > \cdot \nabla u^i ),
- *         u^{i+1} = u^i + w,
- *        where
- *        J(u^i) w = - \Delta w  + < w , w , w >  \cdot \nabla u^i + < u^i , u^i , u^i >  \cdot \nabla w.
- *
- **/
-
+// - Delta v = f
 void AssembleV_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -424,6 +410,8 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
+
+// - Delta u = v
 void AssembleU_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -635,6 +623,8 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
 
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
+  
+  
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*          msh          = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object

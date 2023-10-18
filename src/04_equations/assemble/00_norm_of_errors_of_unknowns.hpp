@@ -246,16 +246,12 @@ void compute_L2_norm_of_errors_of_unknowns(MultiLevelProblem& ml_prob) {
 
 
 
-
 //This function does not seem to require an equation
 std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSolution* ml_sol, 
-                                                                    std::vector< Unknown > & unknowns_vec,
+                                                                    std::string solution_name,
                                                                     double    (* function_value )  (const std::vector<double> & ),
                                                                     void    (* function_gradient)  (const std::vector < double > & , std::vector < double >&  )
-                                                                    ) {
-    
-  if (unknowns_vec.size() != 1) abort();
-  
+                                                                    ) {      
   
   unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
@@ -267,7 +263,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
-  unsigned soluIndex = ml_sol->GetIndex( unknowns_vec[0]._name.c_str() );    // get the position of "u" in the ml_sol object
+  unsigned soluIndex = ml_sol->GetIndex( solution_name.c_str() );    // get the position of "u" in the ml_sol object
   unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   vector < double >  solu; // local solution
@@ -375,6 +371,17 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
 
 }
 
+
+std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSolution* ml_sol, 
+                                                                    std::vector< Unknown > & unknowns_vec,
+                                                                    double    (* function_value )  (const std::vector<double> & ),
+                                                                    void    (* function_gradient)  (const std::vector < double > & , std::vector < double >&  )
+                                                                    ){
+   if (unknowns_vec.size() != 1) abort();
+                                                                     
+ return   GetErrorNorm_L2_H1_with_analytical_sol(ml_sol, unknowns_vec[0]._name, function_value, function_gradient) ;                                                                       
+                                                                      
+                                                                    }
 
 
 
