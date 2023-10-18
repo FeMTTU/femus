@@ -240,11 +240,11 @@ int main(int argc, char** args) {
 
 //     Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
 
-    Domain_square_01by01_Mesh_Distorted::Function_Zero_on_boundary_Continuous0_NotC1_1< double >  analytical_function_1;
-//     Domain_square_01by01_Mesh_Straight::Function_Zero_on_boundary_Continuous1_1< double >  analytical_function_1;
+    // Domain_square_01by01_Mesh_Distorted::Function_Zero_on_boundary_Continuous0_NotC1_1< double >  analytical_function_1;
+    // Domain_square_01by01_Mesh_Straight::Function_Zero_on_boundary_Continuous1_1< double >  analytical_function_1;
 //     Domain_square_01by01_Mesh_Straight::Function_NonZero_on_boundary_Continuous0_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
-//     Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
+    Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
 //     Zero< double >  analytical_function_1;
@@ -258,8 +258,8 @@ int main(int argc, char** args) {
      const unsigned   convergence_rate_computation_method = 0;
     // 2) Choose how to compute the convergence order - END ============== 
 
-     // 3) Choose what norms to compute - BEGIN  (//0 = only L2: //1 = L2 + H1) ==============
-     const unsigned norms_to_be_computed = 1;
+     // 3) Choose what norms to compute - BEGIN  (//0 = only L2: //1 = only H1) ==============
+     const unsigned norms_to_be_computed = 0/*1*/;
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Choose what norms to compute - BEGIN  (//0 = only V: //1 = V and B) ==============
@@ -270,12 +270,10 @@ int main(int argc, char** args) {
        const bool equation_solve = false; 
      // 5) Solve Equation or only Approximation Theory  - END   ==============
 
-     // object ================
-    FE_convergence<>  fe_convergence;
-
+     // Convergence ================
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
 
-    fe_convergence.convergence_study(ml_prob, 
+    FE_convergence<>::convergence_study(ml_prob, 
                                      ml_mesh, 
                                      ml_mesh_all_levels, 
                                      max_number_of_meshes, 

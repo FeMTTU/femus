@@ -164,6 +164,8 @@ int main(int argc, char** args) {
       
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
+
+      
       // print solutions
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
