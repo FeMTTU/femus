@@ -235,6 +235,15 @@ int main(int argc, char** args) {
     // Auxiliary mesh, all levels - END  ================
 
 
+    
+     // Convergence ================
+    
+    
+     // 5) Solve Equation or only Approximation Theory - BEGIN   ==============
+       const bool equation_solve = false; 
+     // 5) Solve Equation or only Approximation Theory  - END   ==============
+
+
     // 1) Which exact solution - BEGIN ================
     std::vector< Math::Function< double > * > analytical_function( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
@@ -262,15 +271,10 @@ int main(int argc, char** args) {
      const unsigned norms_to_be_computed = 0/*1*/;
      // 3) Choose what norms to compute - END  ==============
 
-     // 4) Choose what norms to compute - BEGIN  (//0 = only V: //1 = V and B) ==============
+     // 4) Choose VB - BEGIN  (//0 = only V: //1 = V and B) ==============
      const unsigned volume_or_both_volume_and_boundary = 1;
-     // 4) Choose what norms to compute - END  ==============
+     // 4) Choose VB - END  ==============
      
-     // 5) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool equation_solve = false; 
-     // 5) Solve Equation or only Approximation Theory  - END   ==============
-
-     // Convergence ================
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
 
     FE_convergence<>::convergence_study(ml_prob, 
