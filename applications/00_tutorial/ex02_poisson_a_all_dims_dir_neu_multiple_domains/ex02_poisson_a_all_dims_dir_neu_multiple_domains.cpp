@@ -13,7 +13,7 @@
 
 
 #include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
-#include "00_norm_of_errors_of_unknowns.hpp"
+#include "FE_convergence.hpp"
 
 #include "app_specifics.hpp"
 
@@ -1131,7 +1131,7 @@ int main(int argc, char** args) {
   
   system.MGsolve();
   
-  compute_L2_norm_of_errors_of_unknowns_with_analytical_sol<double, double>(ml_prob);
+  compute_L2_norm_of_errors_of_unknowns_with_analytical_sol<double>(ml_prob, system.GetLevelToAssemble(), system.GetSolPdeIndex().size());
     // ======= Problem, System - END ========================
   
   

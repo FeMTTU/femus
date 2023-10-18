@@ -2,9 +2,16 @@
 #define __femus_FE_convergence_sol_generation_hpp__
 
 
+#include "MultiLevelSolution.hpp"
+
+
 namespace femus {
 
-    
+class MultiLevelProblem;
+class MultiLevelMesh;
+
+
+
 class Solution_generation_single_level {
     
 public: 

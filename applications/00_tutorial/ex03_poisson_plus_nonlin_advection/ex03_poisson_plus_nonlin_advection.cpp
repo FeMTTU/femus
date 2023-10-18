@@ -18,7 +18,7 @@
 #include "adept.h"
 
 
-#include "00_norm_of_errors_of_unknowns.hpp"
+#include "FE_convergence.hpp"
 
 #include "../tutorial_common.hpp"
 
