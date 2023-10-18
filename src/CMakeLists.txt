@@ -47,6 +47,13 @@ SET(femus_src
 03_solution/01_output/VTKWriter.cpp
 03_solution/01_output/GMVWriter.cpp
 03_solution/01_output/XDMFWriter.cpp
+04_equations/00_stationary/ExplicitSystem.cpp
+04_equations/00_stationary/ImplicitSystem.cpp
+04_equations/00_stationary/LinearImplicitSystem.cpp
+04_equations/00_stationary/MonolithicFSINonLinearImplicitSystem.cpp
+04_equations/00_stationary/NonLinearImplicitSystem.cpp
+04_equations/00_stationary/System.cpp
+04_equations/01_time_dependent/TransientSystem.cpp
 04_equations/assemble/Quantity.cpp
 04_equations/assemble/DofMap.cpp
 04_equations/assemble/Assemble_jacobian.cpp
@@ -56,13 +63,6 @@ SET(femus_src
 04_equations/assemble/CurrentQuantity.cpp
 04_equations/assemble/SystemTwo.cpp
 04_equations/assemble/TimeLoop.cpp
-04_equations/time_dependent/TransientSystem.cpp
-04_equations/ExplicitSystem.cpp
-04_equations/ImplicitSystem.cpp
-04_equations/LinearImplicitSystem.cpp
-04_equations/MonolithicFSINonLinearImplicitSystem.cpp
-04_equations/NonLinearImplicitSystem.cpp
-04_equations/System.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
