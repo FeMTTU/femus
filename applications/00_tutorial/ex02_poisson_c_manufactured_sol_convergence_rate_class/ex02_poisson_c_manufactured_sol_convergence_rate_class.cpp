@@ -264,15 +264,16 @@ int main(int argc, char** args) {
     // 1) Which exact solution - END ================
 
     // 2) Choose how to compute the convergence order - BEGIN ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...    
-     const unsigned   convergence_rate_computation_method = 0;
+      for (unsigned convergence_rate_computation_method = 0; convergence_rate_computation_method < 2; convergence_rate_computation_method++) {
     // 2) Choose how to compute the convergence order - END ============== 
+  
 
      // 3) Choose what norms to compute - BEGIN  (//0 = only L2: //1 = only H1) ==============
-     const unsigned norms_to_be_computed = /*0*/1;
+      for (unsigned norms_to_be_computed = 0; norms_to_be_computed < 2; norms_to_be_computed++) {
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Choose VB - BEGIN  (//0 = only V: //1 = only B) ==============
-     const unsigned volume_or_boundary = 0/*1*/;
+      for (unsigned volume_or_boundary = 0; volume_or_boundary < 2; volume_or_boundary++) {
      // 4) Choose VB - END  ==============
      
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
@@ -292,7 +293,10 @@ int main(int argc, char** args) {
                                      Solution_set_boundary_conditions
                                     );
 
-
+           }
+        }
+      }      
+      
     // ======= Convergence study - END ========================
 
     

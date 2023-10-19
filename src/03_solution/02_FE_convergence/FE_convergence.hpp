@@ -107,8 +107,8 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        std::vector < std::vector < std::vector < real_num > > >  &  norms,
                                                        const unsigned i,
                                                        const unsigned norm_flag,
-                                                       const unsigned conv_rate_computation_method,
-                                                       const unsigned volume_or_boundary
+                                                       const unsigned volume_or_boundary,
+                                                       const unsigned conv_rate_computation_method
                                                        );
 
 
@@ -187,8 +187,8 @@ template < class real_num>
                                                                         norms,
                                                                         lev,
                                                                         norm_flag,
-                                                                        conv_rate_computation_method,
-                                                                        volume_or_boundary);
+                                                                        volume_or_boundary,
+                                                                        conv_rate_computation_method);
         
       }
    
@@ -802,8 +802,8 @@ template < class real_num>
                                                                                    std::vector < std::vector < std::vector < real_num > > >  &  norms,
                                                                                    const unsigned i,
                                                                                    const unsigned norm_flag,
-                                                                                   const unsigned conv_rate_computation_method,
-                                                                                   const unsigned volume_or_boundary
+                                                                                   const unsigned volume_or_boundary,
+                                                                                   const unsigned conv_rate_computation_method
                                          ) {
      
     
