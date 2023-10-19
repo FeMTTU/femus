@@ -272,7 +272,7 @@ int main(int argc, char** args) {
      // 3) Choose what norms to compute - END  ==============
 
      // 4) Choose VB - BEGIN  (//0 = only V: //1 = only B) ==============
-     const unsigned volume_or_boundary = /*0*/1;
+     const unsigned volume_or_boundary = 0/*1*/;
      // 4) Choose VB - END  ==============
      
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
