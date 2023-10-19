@@ -8,6 +8,8 @@
 #include "Math.hpp"
 #include "Assemble_unknown.hpp"
 
+#include <vector>
+#include <iostream>
 
 
 namespace femus {
@@ -260,7 +262,7 @@ template < class real_num>
 
    const unsigned number_of_norms = 2;  //L2, H1        
            
-   std::vector < std::vector < std::vector < std::vector < real_num > > > > norms( volume_or_boundary + 1 );
+   std::vector < std::vector < std::vector < std::vector < real_num > > > > norms( /*volume_or_boundary +*/ 1 );
   
     for (unsigned int vb = 0; vb < norms.size(); vb++) { //0: volume, 1: boundary
           norms[vb].resize( unknowns_size );     
@@ -327,11 +329,10 @@ template < class real_num>
     
     const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
   
-    for (unsigned int vb = 0; vb < volume_or_boundary + 1; vb++) {
         
-     std::cout << "==== Volume = 0, boundary = 1: here we have " << vb << std::endl;
+     std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary << std::endl;
      
-    assert( unknowns.size() == norms[vb].size() );
+    assert( unknowns.size() == norms[/*vb*/0].size() );
     
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
@@ -339,13 +340,13 @@ template < class real_num>
             " FE Family " << unknowns[u]._fe_family << " , " <<
             " FE Order "  << unknowns[u]._fe_order  << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
             
-            for (int i = 0; i < norms[vb][u].size(); i++) {
-                output_convergence_order(norms[vb], u, i, n);
+            for (int i = 0; i < norms[/*vb*/0][u].size(); i++) {
+                output_convergence_order(norms[/*vb*/0], u, i, n);
             }
             std::cout << std::endl;
             
        }
-      }
+
       
  }
      
@@ -429,22 +430,32 @@ template < class real_num>
   CurrentElem < double > geom_element_iel(dim, msh);
 
   
+//-----------------  VOLUME, common to both - BEGIN
+  vector < real_num >  sol_u;                               sol_u.reserve(max_size);
+  vector < real_num >  sol_u_exact_at_dofs;   sol_u_exact_at_dofs.reserve(max_size);
+  vector < real_num >  sol_u_inexact_prolongated_from_coarser_level;     sol_u_inexact_prolongated_from_coarser_level.reserve(max_size);
+
+  
+  
+  unsigned solType_coords = BIQUADR_FE;
+  vector < vector < real_num > > x(dim_offset_grad);    // local coordinates
+  for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
+
+//-----------------  VOLUME, common to both - END
+
+  
 //-----------------  VOLUME initialization - BEGIN
- //***************************************************  
+ 
+//***************************************************  
    std::vector < std::vector < double > >  JacI_qp(space_dim);
    std::vector < std::vector < double > >  Jac_qp(dim);
     for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
     for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
     
-    real_num detJac_qp = 0.;
+  real_num detJac_qp = 0.;
   real_num weight = 0.; // gauss point weight
  //***************************************************  
 
-  vector < real_num > phi_coords;
-  vector < real_num > phi_coords_x;
-
-  phi_coords.reserve(max_size);
-  phi_coords_x.reserve(max_size * dim_offset_grad);
 
   vector < real_num > phi;
   vector < real_num > phi_x;
@@ -452,15 +463,16 @@ template < class real_num>
   phi.reserve(max_size);
   phi_x.reserve(max_size * dim_offset_grad);
   
+  
+  
+  vector < real_num > phi_coords;
+  vector < real_num > phi_coords_x;
+
+  phi_coords.reserve(max_size);
+  phi_coords_x.reserve(max_size * dim_offset_grad);
 
 
-  vector < real_num >  sol_u;                               sol_u.reserve(max_size);
-  vector < real_num >  sol_u_exact_at_dofs;   sol_u_exact_at_dofs.reserve(max_size);
-  vector < real_num >  sol_u_inexact_prolongated_from_coarser_level;     sol_u_inexact_prolongated_from_coarser_level.reserve(max_size);
-
-  unsigned solType_coords = BIQUADR_FE;
-  vector < vector < real_num > > x(dim_offset_grad);    // local coordinates
-  for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
+ 
 
 //-----------------  VOLUME initialization - END
 
@@ -483,7 +495,14 @@ template < class real_num>
   std::vector <double> phi_u_x_bdry; 
 
   phi_u_bdry.reserve(max_size);
-  phi_u_x_bdry.reserve(max_size * space_dim);
+  phi_u_x_bdry.reserve(max_size * dim_offset_grad);
+  
+  
+  vector < real_num > phi_coords_bdry;
+  vector < real_num > phi_coords_x_bdry;
+
+  phi_coords_bdry.reserve(max_size);
+  phi_coords_x_bdry.reserve(max_size * dim_offset_grad);
 
 //-----------------  BOUNDARY initialization - END
 
@@ -492,20 +511,11 @@ template < class real_num>
   
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-//----------------
+//---------------- Geometry - BEGIN
       geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
-//----------------
-    
-    
-    unsigned nDofu  = msh->GetElementDofNumber(iel, sol_uType);
     unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);
-
-    // resize local arrays
-    sol_u.resize(nDofu);
-    sol_u_exact_at_dofs.resize(nDofu);
-    sol_u_inexact_prolongated_from_coarser_level.resize(nDofu);
-
+    
     for (int i = 0; i < x.size(); i++) {
       x[i].resize(nDofx);
     }
@@ -519,7 +529,16 @@ template < class real_num>
       }
     }
     
+//---------------- Geometry - END
     
+    
+//---------------- Solution - BEGIN
+    unsigned nDofu  = msh->GetElementDofNumber(iel, sol_uType);
+
+    // resize local arrays
+    sol_u.resize(nDofu);
+    sol_u_exact_at_dofs.resize(nDofu);
+    sol_u_inexact_prolongated_from_coarser_level.resize(nDofu);
 
     
     // local storage of global mapping and solution
@@ -533,9 +552,10 @@ template < class real_num>
       sol_u_inexact_prolongated_from_coarser_level[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[sol_uIndex])(solDof);
       if (ex_sol_in != NULL) sol_u_exact_at_dofs[i] = ex_sol_in->value(x_at_dof);
     }
+//---------------- Solution - END
 
 
-    // *** BOUNDARY - BEGIN ***
+// *** BOUNDARY - BEGIN ***
 if (volume_or_boundary == 1 )	{  
 	       
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -557,9 +577,9 @@ if (volume_or_boundary == 1 )	{
 		  
     elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_iqp_bdry, space_dim);
     weight_iqp_bdry = detJac_iqp_bdry * quad_rules[ielGeom_bdry].GetGaussWeightsPointer()[ig_bdry];
-    elem_all[ielGeom_bdry][sol_uType] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
-
-    elem_all[ielGeom_bdry][solType_coords]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_coords, phi_coords_x,  boost::none, space_dim);
+    
+    elem_all[ielGeom_bdry][sol_uType]     ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
 
 		  
 		 //========== QP eval - BEGIN ===============================================
@@ -591,9 +611,9 @@ if (volume_or_boundary == 1 )	{
 
        std::vector < real_num > x_gss_bdry(dim_offset_grad, 0.);
        
-    for (unsigned i = 0; i < phi_coords.size(); i++) {
+    for (unsigned i = 0; i < phi_coords_bdry.size(); i++) {
           for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
-           x_gss_bdry[jdim] += geom_element_iel.get_coords_at_dofs_bdry_3d()[jdim][i] * phi_coords[i];
+           x_gss_bdry[jdim] += geom_element_iel.get_coords_at_dofs_bdry_3d()[jdim][i] * phi_coords_bdry[i];
           }
        }
 		 //========== QP eval - END ===============================================
@@ -637,9 +657,9 @@ if (volume_or_boundary == 1 )	{
      
     
 }   
-    // *** BOUNDARY - END ***
+// *** BOUNDARY - END ***
   
-    // *** VOLUME - BEGIN ***
+// *** VOLUME - BEGIN ***
   else if (volume_or_boundary == 0) {  
       
       
@@ -717,7 +737,7 @@ if (volume_or_boundary == 1 )	{
       
    } // end gauss point loop
   }
-    // *** VOLUME - END ***
+// *** VOLUME - END ***
   
   
   
@@ -800,7 +820,8 @@ template < class real_num>
             ml_sol_all_levels->RefineSolution(i);
             
             // =======  compute the error norm at the current level (i) ========================
-    for (unsigned int vb = 0; vb < volume_or_boundary + 1; vb++) { //0: volume, 1: boundary
+    for (unsigned int vb = 0; vb < /*volume_or_boundary +*/ 1; vb++) { //0: volume, 1: boundary
+      
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
             std::vector< real_num > norm_out;
@@ -808,7 +829,7 @@ template < class real_num>
             norm_out = FE_convergence::compute_error_norms_volume_or_boundary_with_analytical_sol (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_rate_computation_method, vb,  ex_sol_in[u]);
             
             
-              for (int n = 0; n < norms[vb][u][i-1].size(); n++)      norms[vb][u][i-1][n] = norm_out[n];
+              for (int n = 0; n < norms[vb][u][i-1].size(); n++)      norms[/*vb*/0][u][i-1][n] = norm_out[n];
                                        
                    }
                    
