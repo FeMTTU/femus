@@ -290,19 +290,24 @@ template < class real_num>
 
    if(mesh_lev < norm[solution].size() - 2)  {
 
-    std::cout << mesh_lev + 1 << "\t\t";
+    std::cout << mesh_lev + 1;
+    
+    //error value
+    std::cout << "\t\t";
     std::cout.precision(14);
 
     std::cout << norm[solution][mesh_lev][norm_flag] << "\t";
 
     std::cout << std::endl;
   
-      std::cout.precision(3);
-      std::cout << "\t\t";
+    //convergence rate value
+    std::cout << "\t\t";
+    std::cout.precision(3);
 
-        std::cout << log( norm[solution][mesh_lev][norm_flag] / norm[solution][mesh_lev + 1][norm_flag] ) / log(2.) << "  \t\t\t\t";
+    std::cout << log( norm[solution][mesh_lev][norm_flag] / norm[solution][mesh_lev + 1][norm_flag] ) / log(2.);
 
-      std::cout << std::endl;
+    std::cout << std::endl;
+      
     }
     
   
@@ -333,6 +338,7 @@ template < class real_num>
             std::cout << unknowns[u]._name          << " , " << 
             " FE Family " << unknowns[u]._fe_family << " , " <<
             " FE Order "  << unknowns[u]._fe_order  << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
+            
             for (int i = 0; i < norms[vb][u].size(); i++) {
                 output_convergence_order(norms[vb], u, i, n);
             }

@@ -252,8 +252,8 @@ int main(int argc, char** args) {
     // Domain_square_01by01_Mesh_Distorted::Function_Zero_on_boundary_Continuous0_NotC1_1< double >  analytical_function_1;
     // Domain_square_01by01_Mesh_Straight::Function_Zero_on_boundary_Continuous1_1< double >  analytical_function_1;
 //     Domain_square_01by01_Mesh_Straight::Function_NonZero_on_boundary_Continuous0_1< double >  analytical_function_1;
-//     Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
-    Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
+    Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
+    // Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
 //     Domain_square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
 //     Zero< double >  analytical_function_1;
