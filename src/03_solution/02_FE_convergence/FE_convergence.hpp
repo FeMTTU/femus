@@ -61,9 +61,9 @@ static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProble
                                                                );
 
 
-static   std::vector < std::vector < std::vector < real_num > > >   initialize_vector_of_norms(const unsigned volume_or_boundary,
-                                                                                                          const unsigned unknowns_size, 
-                                                                                                          const unsigned max_number_of_meshes,                                                                                              const unsigned norm_flag);
+static   std::vector < std::vector < std::vector < real_num > > >   initialize_vector_of_norms(const unsigned unknowns_size, 
+                                                                                               const unsigned max_number_of_meshes,
+                                                                                               const unsigned norm_flag);
 
     
    
@@ -103,12 +103,13 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        const MultiLevelSolution* ml_sol_single_level,
                                                        MultiLevelSolution* ml_sol_all_levels,
                                                        const std::vector< Unknown > &  unknowns,
+                                                       const std::vector< Math::Function< real_num > * > & ex_sol_in,
+                                                       std::vector < std::vector < std::vector < real_num > > >  &  norms,
                                                        const unsigned i,
                                                        const unsigned norm_flag,
-                                                       std::vector < std::vector < std::vector < real_num > > >  &  norms,
                                                        const unsigned conv_rate_computation_method,
-                                                       const unsigned volume_or_boundary,
-                                                       const  std::vector< Math::Function< real_num > * > & ex_sol_in);
+                                                       const unsigned volume_or_boundary
+                                                       );
 
 
  
@@ -147,9 +148,9 @@ template < class real_num>
 
   
     
-    std::vector < std::vector < std::vector < double > > >   norms = FE_convergence::initialize_vector_of_norms (  volume_or_boundary,
-                                                                                                                                 unknowns.size(), 
-                                                                                                                                 max_number_of_meshes,                                                                                                  norm_flag);
+    std::vector < std::vector < std::vector < double > > >   norms = FE_convergence::initialize_vector_of_norms (unknowns.size(), 
+                                                                                                                 max_number_of_meshes,
+                                                                                                                 norm_flag);
     
      MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(ml_prob,
                                                                                                  unknowns,
@@ -182,12 +183,12 @@ template < class real_num>
                                                                         & ml_sol_single_level,
                                                                         & ml_sol_all_levels,
                                                                         unknowns,
+                                                                        exact_sol,
+                                                                        norms,
                                                                         lev,
                                                                         norm_flag,
-                                                                        norms,
                                                                         conv_rate_computation_method,
-                                                                        volume_or_boundary,
-                                                                        exact_sol);
+                                                                        volume_or_boundary);
         
       }
    
@@ -253,8 +254,7 @@ template < class real_num>
 
 template < class real_num>
 /*static*/    std::vector < std::vector < std::vector < real_num > > >  
-         FE_convergence< real_num >::initialize_vector_of_norms(const unsigned volume_or_boundary,
-                                                                const unsigned unknowns_size,
+         FE_convergence< real_num >::initialize_vector_of_norms(const unsigned unknowns_size,
                                                                 const unsigned max_number_of_meshes,
                                                                 const unsigned norm_flag) {
    
@@ -798,12 +798,12 @@ template < class real_num>
                                                                                    const MultiLevelSolution* ml_sol_single_level,
                                                                                    MultiLevelSolution* ml_sol_all_levels,
                                                                                    const std::vector< Unknown > &  unknowns,
+                                                                                   const  std::vector< Math::Function< real_num > * > &  ex_sol_in,
+                                                                                   std::vector < std::vector < std::vector < real_num > > >  &  norms,
                                                                                    const unsigned i,
                                                                                    const unsigned norm_flag,
-                                                                                   std::vector < std::vector < std::vector < real_num > > >  &  norms,
                                                                                    const unsigned conv_rate_computation_method,
-                                                                                   const unsigned volume_or_boundary,
-                                                                                   const  std::vector< Math::Function< real_num > * > &  ex_sol_in
+                                                                                   const unsigned volume_or_boundary
                                          ) {
      
     
