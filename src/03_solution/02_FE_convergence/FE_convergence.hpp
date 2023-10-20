@@ -61,7 +61,7 @@ static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProble
                                                                );
 
 
-static   std::vector < std::vector < std::vector < real_num > > >   initialize_vector_of_norms(const unsigned unknowns_size, 
+static   std::vector < std::vector < real_num > >    initialize_vector_of_norms(const unsigned unknowns_size, 
                                                                                                const unsigned max_number_of_meshes,
                                                                                                const unsigned norm_flag);
 
@@ -69,15 +69,14 @@ static   std::vector < std::vector < std::vector < real_num > > >   initialize_v
    
 
 //   print the error and the order of convergence between different levels
-static  void output_convergence_order(const std::vector < std::vector < std::vector < real_num > > > &  norm,
+static  void output_convergence_order(const std::vector < std::vector < real_num > >  &  norm,
                                       const unsigned int u,
-                                      const unsigned int i,
-                                      const unsigned int n);
+                                      const unsigned int i);
 
 
 
 static  void output_convergence_order_all(const std::vector< Unknown > &  unknowns,
-                                        const std::vector < std::vector < std::vector < real_num > > >  &  norms, 
+                                        const std::vector < std::vector < real_num > >   &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned volume_or_boundary);
 
@@ -104,7 +103,7 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        MultiLevelSolution* ml_sol_all_levels,
                                                        const std::vector< Unknown > &  unknowns,
                                                        const std::vector< Math::Function< real_num > * > & ex_sol_in,
-                                                       std::vector < std::vector < std::vector < real_num > > >  &  norms,
+                                                       std::vector < std::vector < real_num > >   &  norms,
                                                        const unsigned i,
                                                        const unsigned norm_flag,
                                                        const unsigned volume_or_boundary,
@@ -148,7 +147,7 @@ template < class real_num>
 
   
     
-    std::vector < std::vector < std::vector < double > > >   norms = FE_convergence::initialize_vector_of_norms (unknowns.size(), 
+     std::vector < std::vector < double > >   norms = FE_convergence::initialize_vector_of_norms (unknowns.size(), 
                                                                                                                  max_number_of_meshes,
                                                                                                                  norm_flag);
     
@@ -253,24 +252,18 @@ template < class real_num>
 
 
 template < class real_num>
-/*static*/    std::vector < std::vector < std::vector < real_num > > >  
+/*static*/    std::vector < std::vector < real_num > >  
          FE_convergence< real_num >::initialize_vector_of_norms(const unsigned unknowns_size,
                                                                 const unsigned max_number_of_meshes,
                                                                 const unsigned norm_flag) {
    
-       // VB, how many Unknowns, how many mesh levels, how many norms
-
-   const unsigned number_of_norms = 2;  //L2, H1        
            
-   std::vector < std::vector < std::vector < real_num > > >  norms( unknowns_size );
+   std::vector < std::vector < real_num > >   norms( unknowns_size );
    
   
       for (unsigned int u = 0; u < norms.size(); u++) {
               norms[u].resize( max_number_of_meshes );
-       for (int i = 0; i < norms[u].size(); i++) {   // loop on the mesh level
-               norms[u][i].resize( number_of_norms );
-               std::fill(norms[u][i].begin(), norms[u][i].end(), 0.);
-           }   
+               std::fill(norms[u].begin(), norms[u].end(), 0.);
        }
 
     
@@ -284,10 +277,10 @@ template < class real_num>
 
 //   print the error and the order of convergence between different levels
 template < class real_num>
-/*static*/  void FE_convergence< real_num >::output_convergence_order(const std::vector < std::vector < std::vector < real_num > > > &  norm,
+/*static*/  void FE_convergence< real_num >::output_convergence_order(const std::vector < std::vector < real_num > >  &  norm,
                                                                       const unsigned int solution,
-                                                                      const unsigned int mesh_lev,
-                                                                      const unsigned int norm_flag) {
+                                                                      const unsigned int mesh_lev
+                                                                      ) {
 
    if(mesh_lev < norm[solution].size() - 2)  {
 
@@ -297,7 +290,7 @@ template < class real_num>
     std::cout << "\t\t";
     std::cout.precision(14);
 
-    std::cout << norm[solution][mesh_lev][norm_flag] << "\t";
+    std::cout << norm[solution][mesh_lev] << "\t";
 
     std::cout << std::endl;
   
@@ -305,7 +298,7 @@ template < class real_num>
     std::cout << "\t\t";
     std::cout.precision(3);
 
-    std::cout << log( norm[solution][mesh_lev][norm_flag] / norm[solution][mesh_lev + 1][norm_flag] ) / log(2.);
+    std::cout << log( norm[solution][mesh_lev] / norm[solution][mesh_lev + 1] ) / log(2.);
 
     std::cout << std::endl;
       
@@ -318,11 +311,10 @@ template < class real_num>
 
 template < class real_num>
 /*static */ void FE_convergence< real_num >::output_convergence_order_all(const std::vector< Unknown > &  unknowns,
-                                        const std::vector < std::vector < std::vector < real_num > > > &  norms, 
+                                        const std::vector < std::vector < real_num > >  &  norms, 
                                         const unsigned norm_flag,
                                         const unsigned volume_or_boundary) {
     
-    int n = norm_flag;
     
      std::cout << std::endl;
     
@@ -337,10 +329,10 @@ template < class real_num>
          
             std::cout << unknowns[u]._name          << " , " << 
             " FE Family " << unknowns[u]._fe_family << " , " <<
-            " FE Order "  << unknowns[u]._fe_order  << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
+            " FE Order "  << unknowns[u]._fe_order  << " : " << norm_names[norm_flag] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
             
             for (int i = 0; i < norms[u].size(); i++) {
-                output_convergence_order(norms, u, i, n);
+                output_convergence_order(norms, u, i);
             }
             std::cout << std::endl;
             
@@ -799,7 +791,7 @@ template < class real_num>
                                                                                    MultiLevelSolution* ml_sol_all_levels,
                                                                                    const std::vector< Unknown > &  unknowns,
                                                                                    const  std::vector< Math::Function< real_num > * > &  ex_sol_in,
-                                                                                   std::vector < std::vector < std::vector < real_num > > >  &  norms,
+                                                                                   std::vector < std::vector < real_num > >  &  norms,
                                                                                    const unsigned i,
                                                                                    const unsigned norm_flag,
                                                                                    const unsigned volume_or_boundary,
@@ -827,7 +819,7 @@ template < class real_num>
             norm_out = FE_convergence::compute_error_norms_volume_or_boundary_with_analytical_sol (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_rate_computation_method, volume_or_boundary,  ex_sol_in[u]);
             
             
-              for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
+            norms[u][i-1] = norm_out[norm_flag];
                                        
                    }
                    
