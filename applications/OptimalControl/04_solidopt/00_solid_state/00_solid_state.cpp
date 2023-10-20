@@ -229,13 +229,17 @@ int main(int argc, char** args) {
 
     
      // Convergence ================
+    std::vector < bool > convergence_rate_computation_method_Flag = {true, false};
+    std::vector < bool > volume_or_boundary_Flag                  = {true, true};
+    std::vector < bool > sobolev_norms_Flag                       = {false, true};
+   
     FE_convergence<>::convergence_study(ml_prob,
                                      ml_mesh, 
                                      ml_mesh_all_levels,
                                      max_number_of_meshes,
-                                     0,
-                                     0,
-                                     0,
+                                     convergence_rate_computation_method_Flag,
+                                     volume_or_boundary_Flag,
+                                     sobolev_norms_Flag,
                                      true,
                                      my_main,
                                      unknowns,

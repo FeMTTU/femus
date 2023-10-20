@@ -36,9 +36,9 @@ static  void  convergence_study(MultiLevelProblem & ml_prob,
                           MultiLevelMesh & ml_mesh,
                           MultiLevelMesh & ml_mesh_all_levels,   //auxiliary
                           const unsigned max_number_of_meshes,   //auxiliary
-                          const unsigned sobolev_norms,
-                          const unsigned convergence_rate_computation_method,
-                          const unsigned volume_or_boundary,
+                                                  const std::vector < bool > convergence_rate_computation_method_Flag,
+                                                  const std::vector < bool > volume_or_boundary_Flag,
+                                                  const std::vector < bool > sobolev_norms_Flag,
                           const bool equation_solve,                                          // true only if I have a System inside
                           const Solution_generation_single_level & main_in,
                           const std::vector< Unknown > & unknowns,                            //vector of Solutions
@@ -127,9 +127,9 @@ template < class real_num>
                                                   MultiLevelMesh & ml_mesh,
                                                   MultiLevelMesh & ml_mesh_all_levels,
                                                   const unsigned max_number_of_meshes,
-                                                  const unsigned a/*sobolev_norms*/,
-                                                  const unsigned b/*convergence_rate_computation_method*/,
-                                                  const unsigned c/*volume_or_boundary*/,
+                                                  const std::vector < bool > convergence_rate_computation_method_Flag,
+                                                  const std::vector < bool > volume_or_boundary_Flag,
+                                                  const std::vector < bool > sobolev_norms_Flag,
                                                   const bool equation_solve,
                                                   const Solution_generation_single_level & main_in,
                                                   const std::vector< Unknown > & unknowns,
@@ -141,12 +141,13 @@ template < class real_num>
       // Controls - BEGIN 
       if ( equation_solve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
       
-       // if (convergence_rate_computation_method == 1 && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
+       if (convergence_rate_computation_method_Flag[1] == true && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
        // Controls - END
 
-    std::vector < bool > convergence_rate_computation_method_Flag = {true, false};
-    std::vector < bool > volume_or_boundary_Flag                  = {true, true};
-    std::vector < bool > sobolev_norms_Flag                       = {false, true};
+    
+    if ( convergence_rate_computation_method_Flag.size() != 2 ) { std::cout << "Not implemented" << std::endl; abort(); }
+    if ( volume_or_boundary_Flag.size() != 2 )                  { std::cout << "Not implemented" << std::endl; abort(); }
+    if ( sobolev_norms_Flag.size() != 2 )                       { std::cout << "Not implemented" << std::endl; abort(); }
   
     
     // ================= initialize norms - BEGIN 

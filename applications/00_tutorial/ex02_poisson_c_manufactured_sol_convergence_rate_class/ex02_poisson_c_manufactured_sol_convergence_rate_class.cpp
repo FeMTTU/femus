@@ -268,14 +268,17 @@ int main(int argc, char** args) {
 
      
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
+    std::vector < bool > convergence_rate_computation_method_Flag = {false, true};
+    std::vector < bool > volume_or_boundary_Flag                  = {true, true};
+    std::vector < bool > sobolev_norms_Flag                       = {false, true};
 
     FE_convergence<>::convergence_study(ml_prob, 
                                      ml_mesh, 
                                      ml_mesh_all_levels, 
                                      max_number_of_meshes, 
-                                     0/*sobolev_norms*/,
-                                     0/*convergence_rate_computation_method*/,
-                                     0/*volume_or_boundary*/,
+                                     convergence_rate_computation_method_Flag,
+                                     volume_or_boundary_Flag,
+                                     sobolev_norms_Flag,
                                      equation_solve,
                                      my_solution_generation, 
                                      unknowns/*[u]*/,
