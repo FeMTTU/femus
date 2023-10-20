@@ -78,7 +78,8 @@ static  void output_convergence_order(const std::vector < std::vector < real_num
 static  void output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < real_num > >   &  norms, 
                                         const unsigned norm_flag, 
-                                        const unsigned volume_or_boundary);
+                                        const unsigned volume_or_boundary,
+                                        const unsigned convergence_computation_method);
 
 
 static  void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i); 
@@ -191,7 +192,7 @@ template < class real_num>
         
       }
    
-       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag, volume_or_boundary);
+       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag, volume_or_boundary, conv_rate_computation_method);
    
 }
 
@@ -313,7 +314,8 @@ template < class real_num>
 /*static */ void FE_convergence< real_num >::output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < real_num > >  &  norms, 
                                         const unsigned norm_flag,
-                                        const unsigned volume_or_boundary) {
+                                        const unsigned volume_or_boundary,
+                                        const unsigned convergence_computation_method) {
     
     
      std::cout << std::endl;
@@ -321,6 +323,8 @@ template < class real_num>
     const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
   
         
+     std::cout << "==== Convergence computation method: " << convergence_computation_method << std::endl;
+     
      std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary << std::endl;
      
     assert( unknowns.size() == norms.size() );
