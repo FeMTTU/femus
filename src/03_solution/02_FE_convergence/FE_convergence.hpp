@@ -48,6 +48,12 @@ static  void  convergence_study(MultiLevelProblem & ml_prob,
                          );    //vector of Exact Solutions, if available
 
     
+//   print the error and the order of convergence between different levels
+static  void output_convergence_order(const std::vector < std::vector < real_num > >  &  norm,
+                                      const unsigned int u,
+                                      const unsigned int i);
+
+
 private: 
     
 static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProblem & ml_prob,
@@ -66,11 +72,6 @@ static   std::vector < std::vector < real_num > >    initialize_vector_of_norms(
 
     
    
-
-//   print the error and the order of convergence between different levels
-static  void output_convergence_order(const std::vector < std::vector < real_num > >  &  norm,
-                                      const unsigned int u,
-                                      const unsigned int i);
 
 
 

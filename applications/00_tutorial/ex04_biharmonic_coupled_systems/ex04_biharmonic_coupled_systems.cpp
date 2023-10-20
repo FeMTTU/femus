@@ -176,6 +176,10 @@ int main(int argc, char** args) {
     }
   }
 
+  
+  // FE_convergence::output_convergence_order();
+  
+  
   // ======= L2 - BEGIN  ========================
   std::cout << std::endl;
   std::cout << std::endl;
