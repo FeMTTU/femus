@@ -226,20 +226,16 @@ int main(int argc, char** args) {
    if (nsub[2] == 0)   max_number_of_meshes = 2;
    else                max_number_of_meshes = 4;
   
-//    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
-   const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
-   const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
 
     
      // Convergence ================
-    const unsigned volume_or_boundary = 0;
     FE_convergence<>::convergence_study(ml_prob,
                                      ml_mesh, 
                                      ml_mesh_all_levels,
                                      max_number_of_meshes,
-                                     norm_flag,
-                                     conv_order_flag,
-                                     volume_or_boundary,
+                                     0,
+                                     0,
+                                     0,
                                      true,
                                      my_main,
                                      unknowns,

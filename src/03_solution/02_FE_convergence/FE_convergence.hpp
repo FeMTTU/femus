@@ -36,8 +36,8 @@ static  void  convergence_study(MultiLevelProblem & ml_prob,
                           MultiLevelMesh & ml_mesh,
                           MultiLevelMesh & ml_mesh_all_levels,   //auxiliary
                           const unsigned max_number_of_meshes,   //auxiliary
-                          const unsigned norm_flag,
-                          const unsigned conv_rate_computation_method,
+                          const unsigned sobolev_norms,
+                          const unsigned convergence_rate_computation_method,
                           const unsigned volume_or_boundary,
                           const bool equation_solve,                                          // true only if I have a System inside
                           const Solution_generation_single_level & main_in,
@@ -62,8 +62,7 @@ static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProble
 
 
 static   std::vector < std::vector < real_num > >    initialize_vector_of_norms(const unsigned unknowns_size, 
-                                                                                               const unsigned max_number_of_meshes,
-                                                                                               const unsigned norm_flag);
+                                                                                const unsigned max_number_of_meshes);
 
     
    
@@ -77,7 +76,7 @@ static  void output_convergence_order(const std::vector < std::vector < real_num
 
 static  void output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < real_num > >   &  norms, 
-                                        const unsigned norm_flag, 
+                                        const unsigned sobolev_norms, 
                                         const unsigned volume_or_boundary,
                                         const unsigned convergence_computation_method);
 
@@ -91,8 +90,8 @@ static  std::vector< real_num > compute_error_norms_volume_or_boundary_with_anal
                                                 const MultiLevelSolution* ml_sol_all_levels,
                                                 const std::string & unknown,
                                                 const unsigned current_level,
-                                                const unsigned norm_flag,
-                                                const unsigned conv_rate_computation_method,
+                                                const unsigned sobolev_norms,
+                                                const unsigned convergence_rate_computation_method,
                                                 const unsigned volume_or_boundary,
                                                 const Math::Function< real_num > * ex_sol_in
                                              );
@@ -106,9 +105,9 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
                                                        const std::vector< Math::Function< real_num > * > & ex_sol_in,
                                                        std::vector < std::vector < real_num > >   &  norms,
                                                        const unsigned i,
-                                                       const unsigned norm_flag,
+                                                       const unsigned sobolev_norms,
                                                        const unsigned volume_or_boundary,
-                                                       const unsigned conv_rate_computation_method
+                                                       const unsigned convergence_rate_computation_method
                                                        );
 
 
@@ -128,9 +127,9 @@ template < class real_num>
                                                   MultiLevelMesh & ml_mesh,
                                                   MultiLevelMesh & ml_mesh_all_levels,
                                                   const unsigned max_number_of_meshes,
-                                                  const unsigned norm_flag,
-                                                  const unsigned conv_rate_computation_method,
-                                                  const unsigned volume_or_boundary,
+                                                  const unsigned a/*sobolev_norms*/,
+                                                  const unsigned b/*convergence_rate_computation_method*/,
+                                                  const unsigned c/*volume_or_boundary*/,
                                                   const bool equation_solve,
                                                   const Solution_generation_single_level & main_in,
                                                   const std::vector< Unknown > & unknowns,
@@ -142,15 +141,47 @@ template < class real_num>
       // Controls - BEGIN 
       if ( equation_solve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
       
-       if (conv_rate_computation_method == 1 && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
+       // if (convergence_rate_computation_method == 1 && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
        // Controls - END
 
-
+    std::vector < bool > convergence_rate_computation_method_Flag = {true, false};
+    std::vector < bool > volume_or_boundary_Flag                  = {true, true};
+    std::vector < bool > sobolev_norms_Flag                       = {false, true};
   
     
-     std::vector < std::vector < double > >   norms = FE_convergence::initialize_vector_of_norms (unknowns.size(), 
-                                                                                                                 max_number_of_meshes,
-                                                                                                                 norm_flag);
+    // ================= initialize norms - BEGIN 
+    
+     std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > >   norms;
+     
+     norms.resize(convergence_rate_computation_method_Flag.size());
+     
+      for (unsigned convergence_rate_computation_method = 0; 
+                    convergence_rate_computation_method < convergence_rate_computation_method_Flag.size(); 
+                    convergence_rate_computation_method++) {
+        //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+        
+     norms[convergence_rate_computation_method].resize( volume_or_boundary_Flag.size() );  
+
+      for (unsigned volume_or_boundary = 0;
+                    volume_or_boundary < volume_or_boundary_Flag.size(); 
+                    volume_or_boundary++) {// (//0 = only V: //1 = only B) 
+
+        norms[convergence_rate_computation_method][volume_or_boundary].resize( sobolev_norms_Flag.size() );   
+     
+      for (unsigned sobolev_norms = 0; 
+                    sobolev_norms < sobolev_norms_Flag.size();
+                    sobolev_norms++) {  //  what Sobolev norms to compute //0 = only L2: //1 = only H1)
+
+     // norms[convergence_rate_computation_method][volume_or_boundary][sobolev_norms].resize( unknowns.size() );
+
+     norms[convergence_rate_computation_method][volume_or_boundary][sobolev_norms] = FE_convergence::initialize_vector_of_norms (unknowns.size(), max_number_of_meshes);
+     
+           }
+        }
+      }
+     
+    // ================= initialize norms - END
+     
     
      MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(ml_prob,
                                                                                                  unknowns,
@@ -166,6 +197,7 @@ template < class real_num>
   ml_prob.get_all_abstract_fe(elem_all);
             
        for (int lev = 0; lev < max_number_of_meshes; lev++) {
+         
                   
             const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(ml_prob,
                                                                                        ml_mesh,
@@ -177,6 +209,24 @@ template < class real_num>
                                                                                        equation_solve
                                                                                       );
             
+            
+    // ================= - BEGIN 
+      for (unsigned convergence_rate_computation_method = 0; 
+                    convergence_rate_computation_method < convergence_rate_computation_method_Flag.size();
+                    convergence_rate_computation_method++) {
+        if( convergence_rate_computation_method_Flag[convergence_rate_computation_method] ) {
+        
+        for (unsigned volume_or_boundary = 0;
+                      volume_or_boundary < volume_or_boundary_Flag.size();
+                      volume_or_boundary++) { 
+          if( volume_or_boundary_Flag[volume_or_boundary] ) {
+
+     
+           for (unsigned sobolev_norms = 0; 
+                         sobolev_norms < sobolev_norms_Flag.size();
+                         sobolev_norms++) {
+          if( sobolev_norms_Flag[sobolev_norms] ) {
+        
 
             FE_convergence::compute_error_norms_per_unknown_per_level ( elem_all,
                                                                         ml_prob.GetQuadratureRuleAllGeomElems(),
@@ -184,16 +234,46 @@ template < class real_num>
                                                                         & ml_sol_all_levels,
                                                                         unknowns,
                                                                         exact_sol,
-                                                                        norms,
+                                                                        norms[convergence_rate_computation_method][volume_or_boundary][sobolev_norms],
                                                                         lev,
-                                                                        norm_flag,
+                                                                        sobolev_norms,
                                                                         volume_or_boundary,
-                                                                        conv_rate_computation_method);
+                                                                        convergence_rate_computation_method);
+           }}
+        }}
+       }}
+    // ================= - END 
+        
         
       }
+      
+      
    
-       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag, volume_or_boundary, conv_rate_computation_method);
-   
+    // ================= - BEGIN 
+      for (unsigned convergence_rate_computation_method = 0; 
+                    convergence_rate_computation_method < convergence_rate_computation_method_Flag.size();
+                    convergence_rate_computation_method++) {
+        if( convergence_rate_computation_method_Flag[convergence_rate_computation_method] ) {
+        
+        for (unsigned volume_or_boundary = 0;
+                      volume_or_boundary < volume_or_boundary_Flag.size();
+                      volume_or_boundary++) { 
+          if( volume_or_boundary_Flag[volume_or_boundary] ) {
+
+     
+           for (unsigned sobolev_norms = 0; 
+                         sobolev_norms < sobolev_norms_Flag.size();
+                         sobolev_norms++) {
+          if( sobolev_norms_Flag[sobolev_norms] ) {
+                     
+       FE_convergence::output_convergence_order_all(unknowns, norms[convergence_rate_computation_method][volume_or_boundary][sobolev_norms], sobolev_norms, volume_or_boundary, convergence_rate_computation_method);
+       
+             }}
+          }}
+        }}
+    // ================= - END 
+ 
+ 
 }
 
     
@@ -255,8 +335,7 @@ template < class real_num>
 template < class real_num>
 /*static*/    std::vector < std::vector < real_num > >  
          FE_convergence< real_num >::initialize_vector_of_norms(const unsigned unknowns_size,
-                                                                const unsigned max_number_of_meshes,
-                                                                const unsigned norm_flag) {
+                                                                const unsigned max_number_of_meshes) {
    
            
    std::vector < std::vector < real_num > >   norms( unknowns_size );
@@ -313,12 +392,14 @@ template < class real_num>
 template < class real_num>
 /*static */ void FE_convergence< real_num >::output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < real_num > >  &  norms, 
-                                        const unsigned norm_flag,
+                                        const unsigned sobolev_norms,
                                         const unsigned volume_or_boundary,
                                         const unsigned convergence_computation_method) {
     
     
-     std::cout << std::endl;
+    assert( unknowns.size() == norms.size() );
+    
+    std::cout << std::endl;
     
     const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
   
@@ -326,17 +407,18 @@ template < class real_num>
      std::cout << "==== Convergence computation method: " << convergence_computation_method << std::endl;
      
      std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary << std::endl;
-     
-    assert( unknowns.size() == norms.size() );
+
+     std::cout << "==== ERROR and ORDER OF CONVERGENCE for the norm " << norm_names[sobolev_norms] << std::endl;
+
     
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
             std::cout << unknowns[u]._name          << " , " << 
             " FE Family " << unknowns[u]._fe_family << " , " <<
-            " FE Order "  << unknowns[u]._fe_order  << " : " << norm_names[norm_flag] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
+            " FE Order "  << unknowns[u]._fe_order  << std::endl;
             
-            for (int i = 0; i < norms[u].size(); i++) {
-                output_convergence_order(norms, u, i);
+            for (int lev = 0; lev < norms[u].size(); lev++) {
+                output_convergence_order(norms, u, lev);
             }
             std::cout << std::endl;
             
@@ -372,8 +454,8 @@ template < class real_num>
                                                                             const MultiLevelSolution* ml_sol_all_levels,
                                                                             const std::string & unknown,
                                                                             const unsigned current_level,
-                                                                            const unsigned norm_flag,
-                                                                            const unsigned conv_rate_computation_method,
+                                                                            const unsigned sobolev_norms,
+                                                                            const unsigned convergence_rate_computation_method,
                                                                             const unsigned volume_or_boundary,
                                                                             const Math::Function< real_num > * ex_sol_in
                                              ) {
@@ -383,10 +465,10 @@ template < class real_num>
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-   if (conv_rate_computation_method == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
+   if (convergence_rate_computation_method == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
    
     
-  const unsigned num_norms = norm_flag + 1;
+  const unsigned num_norms = 2;
   //norms that we are computing here //first L2, then H1 ============
   std::vector< real_num > norms_exact_function(num_norms);                  std::fill(norms_exact_function.begin(), norms_exact_function.end(), 0.);   
   std::vector< real_num > norms_exact_dofs(num_norms);       std::fill(norms_exact_dofs.begin(), norms_exact_dofs.end(), 0.);
@@ -625,7 +707,7 @@ if (volume_or_boundary == 1 )	{
                   
                   
 // H^1 - BEGIN ==============
-    /*else*/ if (norm_flag == 1) {
+    /*else*/ if (sobolev_norms == 1) {
       std::vector < real_num > exactGradSol_bdry(dim_offset_grad, 0.);    if (ex_sol_in != NULL) exactGradSol_bdry = ex_sol_in->gradient(x_gss_bdry);  
       ///@todo THIS IS WRONG! It is NOT the SURFACE GRADIENTTTT, so we have to be careful when we have more than one boundary face!!!
 
@@ -711,7 +793,7 @@ if (volume_or_boundary == 1 )	{
       
 
 // H^0 ==============      
-//     if (norm_flag == 0) {
+//     if (sobolev_norms == 0) {
       real_num exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
 
       norms_exact_function[0] += (sol_u_gss - exactSol)                * (sol_u_gss - exactSol)       * weight;
@@ -720,7 +802,7 @@ if (volume_or_boundary == 1 )	{
 //     }
     
 // H^1 ==============      
-    /*else*/ if (norm_flag == 1) {
+    /*else*/ if (sobolev_norms == 1) {
       std::vector < real_num > exactGradSol(dim_offset_grad,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
 
       for (unsigned d = 0; d < dim_offset_grad ; d++) {
@@ -744,8 +826,8 @@ if (volume_or_boundary == 1 )	{
                  norm_vec_exact_using_qp = NumericVector::build().release();
                  norm_vec_exact_using_qp->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec_exact_using_qp->set(iproc, norms_exact_function[0]);  norm_vec_exact_using_qp->close();  norms_exact_function[0] = norm_vec_exact_using_qp->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec_exact_using_qp->set(iproc, norms_exact_function[1]);  norm_vec_exact_using_qp->close();  norms_exact_function[1] = norm_vec_exact_using_qp->l1_norm(); }
+         /*if (sobolev_norms == 0) {*/ norm_vec_exact_using_qp->set(iproc, norms_exact_function[0]);  norm_vec_exact_using_qp->close();  norms_exact_function[0] = norm_vec_exact_using_qp->l1_norm(); /*}*/
+    /*else*/ if (sobolev_norms == 1) { norm_vec_exact_using_qp->set(iproc, norms_exact_function[1]);  norm_vec_exact_using_qp->close();  norms_exact_function[1] = norm_vec_exact_using_qp->l1_norm(); }
 
           delete norm_vec_exact_using_qp;
 
@@ -754,8 +836,8 @@ if (volume_or_boundary == 1 )	{
                  norm_vec_exact_dofs = NumericVector::build().release();
                  norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm(); }
+         /*if (sobolev_norms == 0) {*/ norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm(); /*}*/
+    /*else*/ if (sobolev_norms == 1) { norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm(); }
 
           delete norm_vec_exact_dofs;
 
@@ -764,8 +846,8 @@ if (volume_or_boundary == 1 )	{
                  norm_vec_inexact = NumericVector::build().release();
                  norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec_inexact->set(iproc, norms_inexact_dofs[0]);  norm_vec_inexact->close();  norms_inexact_dofs[0] = norm_vec_inexact->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec_inexact->set(iproc, norms_inexact_dofs[1]);  norm_vec_inexact->close();  norms_inexact_dofs[1] = norm_vec_inexact->l1_norm(); }
+         /*if (sobolev_norms == 0) {*/ norm_vec_inexact->set(iproc, norms_inexact_dofs[0]);  norm_vec_inexact->close();  norms_inexact_dofs[0] = norm_vec_inexact->l1_norm(); /*}*/
+    /*else*/ if (sobolev_norms == 1) { norm_vec_inexact->set(iproc, norms_inexact_dofs[1]);  norm_vec_inexact->close();  norms_inexact_dofs[1] = norm_vec_inexact->l1_norm(); }
 
           delete norm_vec_inexact;
 
@@ -777,8 +859,8 @@ if (volume_or_boundary == 1 )	{
     }
     
     
-if (conv_rate_computation_method == 0)  return norms_inexact_dofs;
-if (conv_rate_computation_method == 1)  return norms_exact_function;
+if (convergence_rate_computation_method == 0)  return norms_inexact_dofs;
+if (convergence_rate_computation_method == 1)  return norms_exact_function;
  //   return norms_exact_dofs;
 
  
@@ -797,9 +879,9 @@ template < class real_num>
                                                                                    const  std::vector< Math::Function< real_num > * > &  ex_sol_in,
                                                                                    std::vector < std::vector < real_num > >  &  norms,
                                                                                    const unsigned i,
-                                                                                   const unsigned norm_flag,
+                                                                                   const unsigned sobolev_norms,
                                                                                    const unsigned volume_or_boundary,
-                                                                                   const unsigned conv_rate_computation_method
+                                                                                   const unsigned convergence_rate_computation_method
                                          ) {
      
     
@@ -820,10 +902,10 @@ template < class real_num>
                 
             std::vector< real_num > norm_out;
             
-            norm_out = FE_convergence::compute_error_norms_volume_or_boundary_with_analytical_sol (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_rate_computation_method, volume_or_boundary,  ex_sol_in[u]);
+            norm_out = FE_convergence::compute_error_norms_volume_or_boundary_with_analytical_sol (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, sobolev_norms, convergence_rate_computation_method, volume_or_boundary,  ex_sol_in[u]);
             
             
-            norms[u][i-1] = norm_out[norm_flag];
+            norms[u][i-1] = norm_out[sobolev_norms];
                                        
                    }
                    
