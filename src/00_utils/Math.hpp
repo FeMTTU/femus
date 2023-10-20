@@ -19,6 +19,8 @@ namespace Math {
    inline void zeroN(double* x,const uint N); 
    inline double dotN(const double* x,const double* y,const uint N);  //TODO this will be deleted 
    inline double dot(const double* x,const double* y, const uint spacedim);
+   inline double dot(const std::vector< double > x, const std::vector< double > y, const uint spacedim);
+   inline std::vector< double > tangent_vector_from_normal(const std::vector< double > orig_vector, const std::vector< double > normal, const uint spacedim);
    inline  void cross(const double* a,const double* b, double* res);
    inline void extend(const double* a, double* a3D, const uint spacedim);
    inline void extend_nds(const uint,const double*, double*, const uint spacedim);
@@ -51,6 +53,12 @@ inline double dotN(const double* x,const double* y,const uint N)  {
 
 /// dot product
 inline double dot(const double* x,const double* y, const uint spacedim) {
+  double dotprod=0.;
+  for (uint idim=0; idim < spacedim; idim++)  dotprod += x[idim]*y[idim];
+  return dotprod;
+}
+
+inline double dot(const std::vector< double > x,const std::vector< double > y, const uint spacedim) {
   double dotprod=0.;
   for (uint idim=0; idim < spacedim; idim++)  dotprod += x[idim]*y[idim];
   return dotprod;
@@ -92,6 +100,21 @@ inline void extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D,
 
   return;
 }
+
+
+
+   inline std::vector< double > tangent_vector_from_normal(const std::vector< double > orig_vector, const std::vector< double > normal, const uint spacedim) {
+     
+      const double  orig_vector_dot_normal = Math::dot(orig_vector, normal, orig_vector.size());
+
+      std::vector < double > orig_vector_dot_tangent(orig_vector.size(), 0.);
+            for (unsigned d = 0; d < orig_vector_dot_tangent.size() ; d++) {
+              orig_vector_dot_tangent[d] = orig_vector[d] - orig_vector_dot_normal * normal[d];   // a - (a.n) n
+            }
+     
+    return orig_vector_dot_tangent;
+   }
+
 
 
 

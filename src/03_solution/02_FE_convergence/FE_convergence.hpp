@@ -142,12 +142,12 @@ template < class real_num>
       if ( equation_solve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
       
        if (convergence_rate_computation_method_Flag[1] == true && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
-       // Controls - END
 
     
     if ( convergence_rate_computation_method_Flag.size() != 2 ) { std::cout << "Not implemented" << std::endl; abort(); }
     if ( volume_or_boundary_Flag.size() != 2 )                  { std::cout << "Not implemented" << std::endl; abort(); }
     if ( sobolev_norms_Flag.size() != 2 )                       { std::cout << "Not implemented" << std::endl; abort(); }
+       // Controls - END
   
     
     // ================= initialize norms - BEGIN 
@@ -291,6 +291,11 @@ template < class real_num>
                                                                                             const bool equation_solve
                                                                                            )  {
 
+ //Problem - BEGIN ==================
+  MultiLevelProblem  ml_prob_aux(ml_prob);
+ //Problem - END ==================
+  
+  
  //Mesh: construct all levels - BEGIN  ==================
         unsigned numberOfUniformLevels_finest = max_number_of_meshes;
         ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
@@ -305,16 +310,17 @@ template < class real_num>
  //Solution - END ==================
 
  //Problem - BEGIN ==================
-  MultiLevelProblem  ml_prob_aux(ml_prob);
   ml_prob_aux.SetMultiLevelMeshAndSolution(& ml_sol_all_levels);
  //Problem - END ==================
                
                
+  //Solution, Initialize - BEGIN ==================
                for (unsigned int u = 0; u < unknowns.size(); u++) {
                ml_sol_all_levels.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);  //We have to do so to avoid buildup of AddSolution with different FE families
                ml_sol_all_levels.set_analytical_function(unknowns[u]._name.c_str(), exact_sol[u]);   
                ml_sol_all_levels.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob_aux);
                }
+  //Solution, Initialize - END ==================
                
                
  // Only for an EQUATION - BEGIN  ==================
@@ -403,9 +409,10 @@ template < class real_num>
     std::cout << std::endl;
     
     const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
+    const std::vector< std::string > convergence_computation_names = {"Incremental", "Absolute, with analytical sol"};
   
         
-     std::cout << "==== Convergence computation method: " << convergence_computation_method << std::endl;
+     std::cout << "==== Convergence computation method: " << convergence_computation_names[convergence_computation_method] << std::endl;
      
      std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary << std::endl;
 
@@ -634,7 +641,9 @@ template < class real_num>
 
 
 // *** BOUNDARY - BEGIN ***
-if (volume_or_boundary == 1 )	{  
+if (volume_or_boundary == 1 )	{
+  
+	  std::vector<double> normal_at_qp_bdry(space_dim, 0.);
 	       
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
           
@@ -658,6 +667,7 @@ if (volume_or_boundary == 1 )	{
     
     elem_all[ielGeom_bdry][sol_uType]     ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
     elem_all[ielGeom_bdry][solType_coords]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
+	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal_at_qp_bdry);
 
 		  
 		 //========== QP eval - BEGIN ===============================================
@@ -709,14 +719,27 @@ if (volume_or_boundary == 1 )	{
                   
 // H^1 - BEGIN ==============
     /*else*/ if (sobolev_norms == 1) {
+      
+      std::cout << "Here you have to ROTATE the boundary element appropriately, I think" << std::endl;
       std::vector < real_num > exactGradSol_bdry(dim_offset_grad, 0.);    if (ex_sol_in != NULL) exactGradSol_bdry = ex_sol_in->gradient(x_gss_bdry);  
       ///@todo THIS IS WRONG! It is NOT the SURFACE GRADIENTTTT, so we have to be careful when we have more than one boundary face!!!
+      
+      std::vector < real_num > exactGradSol_bdry_dot_tangent =  Math::tangent_vector_from_normal( exactGradSol_bdry, normal_at_qp_bdry, exactGradSol_bdry.size() );
+      
+      std::vector < real_num > sol_u_x_bdry_gss_dot_tangent =  Math::tangent_vector_from_normal( sol_u_x_bdry_gss, normal_at_qp_bdry, sol_u_x_bdry_gss.size() );
 
+      std::vector < real_num > gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent =  Math::tangent_vector_from_normal( gradSolu_inexact_prolongated_from_coarser_level_bdry_gss, normal_at_qp_bdry, gradSolu_inexact_prolongated_from_coarser_level_bdry_gss.size() );
+
+      
       for (unsigned d = 0; d < dim_offset_grad ; d++) {
-        norms_exact_function[1] += ( (sol_u_x_bdry_gss[d] - exactGradSol_bdry[d])               * (sol_u_x_bdry_gss[d]  - exactGradSol_bdry[d]) ) * weight_iqp_bdry;
+        norms_exact_function[1] += ( (sol_u_x_bdry_gss_dot_tangent[d] - exactGradSol_bdry_dot_tangent[d])  *  
+                                     (sol_u_x_bdry_gss_dot_tangent[d] - exactGradSol_bdry_dot_tangent[d]) ) * weight_iqp_bdry;
         
-//         norms_exact_dofs[1]     += ((gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d]) * (gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d])) * weight_iqp_bdry;
-        norms_inexact_dofs[1]   += ((sol_u_x_bdry_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d])  * (sol_u_x_bdry_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d])) * weight_iqp_bdry;
+//         norms_exact_dofs[1]     += ((gradSolu_gss_dot_tangent[d] - gradSolu_exact_at_dofs_gss_dot_tangent[d]) * 
+//                                     (gradSolu_gss_dot_tangent[d] - gradSolu_exact_at_dofs_gss_dot_tangent[d])) * weight_iqp_bdry;
+                                     
+        norms_inexact_dofs[1]   += ( (sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent[d])   *
+                                     (sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent[d]) ) * weight_iqp_bdry;
       }
    }
 // H^1 - END ==============
@@ -891,6 +914,8 @@ template < class real_num>
             else if (volume_or_boundary == 1) {
             }
             else { std::cout << "Boundary of boundary not implemented in function " << __func__; abort(); }
+            
+            
    
         if ( i > 0 ) {
 
