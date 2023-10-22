@@ -113,9 +113,9 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 1 || dim == 2) {
-    maxNumberOfMeshes = 6;
+    maxNumberOfMeshes = 8;
   } else {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = 5;
   }
   // ======= Mesh - END ========================
 

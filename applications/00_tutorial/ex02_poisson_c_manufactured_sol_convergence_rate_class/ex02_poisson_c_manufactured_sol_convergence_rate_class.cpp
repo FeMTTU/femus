@@ -127,7 +127,7 @@ public:
                                                   const std::vector< Math::Function< double > * > &  exact_sol,
                                                   const MultiLevelSolution::InitFuncMLProb      SetInitialCondition_in,
                                                   const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition_in,
-                                                  const bool equation_solve
+                                                  const bool my_solution_generation_has_equation_solve
                                                   ) const;
 
 };
@@ -155,29 +155,30 @@ int main(int argc, char** args) {
     ml_prob.SetFilesHandler(&files);
     // ======= Files - END  =========================
 
-    // ======= Quad Rule - BEGIN ========================
-    std::string fe_quad_rule("seventh");
-    /* this is the order of accuracy that is used in the gauss integration scheme
-       In the future it is not going to be an argument of the mesh function   */
-    
-    ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-    ml_prob.set_all_abstract_fe_multiple();
-    // ======= Quad Rule - END ========================
-
 
     // ======= Mesh, Coarse - BEGIN ========================
     MultiLevelMesh ml_mesh;
 
   const std::string relative_path_to_build_directory =  "../../../";
-//     std::string input_file = "square_0-1x0-1_divisions_2x2.med"; // @todo does not work with biquadratic exact solution
-//     std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";  // @todo does not work with biquadratic exact solution 
-   const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2_unstructured.med";  // @todo WORKS with biquadratic exact solution
-//     std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/L_shaped_domain/L_shaped_domain_quad9.med";  // @todo WORKS with biquadratic exact 
-//     std::string input_file = "square_regular_triangular.med";    // @todo WORKS with biquadratic exact solution
 
-//     std::string input_file = "L_shaped_domain.med";
+      const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";  
+           // @todo works with given Function;
+           // @todo does not work with Laplace solution, for biquadratic exact solution;
+  
+   // const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2_unstructured.med";  
+         // @todo works with given Function;
+         // @todo WORKS with with Laplace equation
+  
+//    const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/L_shaped_domain/L_shaped_domain_quad9.med";
+          // @todo WORKS with biquadratic exact 
+  
+//    const std::string input_file = "square_regular_triangular.med";    
+          // @todo WORKS with biquadratic exact solution
+
+
 //     std::string input_file = "segment_1_all_dir.med";
 //     std::string input_file = "cylinder_hexahedral.med";
+      
     std::ostringstream mystream; mystream << "./"  << input_file;
     const std::string infile = mystream.str();
 
@@ -185,13 +186,6 @@ int main(int argc, char** args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
     
-//   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
-
-// // //   const unsigned mesh_file_type = 0;
-// // //    std::string mesh_name = Domain_square_m05p05::quad9_all_mesh_generation_methods_Structured(mesh_file_type, ml_mesh, fe_quad_rule);
-
-  
-  
   
   ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
     
@@ -203,8 +197,20 @@ int main(int argc, char** args) {
   ml_mesh.PrepareNewLevelsForRefinement();
 
     // ======= Mesh, Coarse - END ========================
-  
 
+
+  
+    // ======= Quad Rule - BEGIN ========================
+    std::string fe_quad_rule("seventh");
+    /* this is the order of accuracy that is used in the gauss integration scheme
+       In the future it is not going to be an argument of the mesh function   */
+    
+    ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+    ml_prob.set_all_abstract_fe_multiple();
+    // ======= Quad Rule - END ========================
+
+
+    
     // ======= Unknowns - BEGIN ========================
     std::vector< Unknown > unknowns = systems__generate_list_of_scalar_unknowns_for_each_FE_family_lagrangian();
     // ======= Unknowns - END ========================
@@ -243,12 +249,12 @@ int main(int argc, char** args) {
     
     
      // 5) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool equation_solve = false; 
+       const bool my_solution_generation_has_equation_solve = false; 
      // 5) Solve Equation or only Approximation Theory  - END   ==============
 
 
     // 1) Which exact solution - BEGIN ================
-    std::vector< Math::Function< double > * > analytical_function( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
+    std::vector< Math::Function< double > * > unknowns_analytical_functions( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
 //     Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
 
@@ -261,16 +267,16 @@ int main(int argc, char** args) {
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
 //     Zero< double >  analytical_function_1;
 
-    for (unsigned int u = 0; u < analytical_function.size(); u++) {
-    analytical_function[u] =  & analytical_function_1;
+    for (unsigned int u = 0; u < unknowns_analytical_functions.size(); u++) {
+    unknowns_analytical_functions[u] =  & analytical_function_1;
     }
     // 1) Which exact solution - END ================
 
      
 // we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
     std::vector < bool > convergence_rate_computation_method_Flag = {true, true};
-    std::vector < bool > volume_or_boundary_Flag                  = {false, true};
-    std::vector < bool > sobolev_norms_Flag                       = {true, false};
+    std::vector < bool > volume_or_boundary_Flag                  = {true, true};
+    std::vector < bool > sobolev_norms_Flag                       = {true, true};
 
     FE_convergence<>::convergence_study(ml_prob, 
                                      ml_mesh, 
@@ -279,10 +285,10 @@ int main(int argc, char** args) {
                                      convergence_rate_computation_method_Flag,
                                      volume_or_boundary_Flag,
                                      sobolev_norms_Flag,
-                                     equation_solve,
+                                     my_solution_generation_has_equation_solve,
                                      my_solution_generation, 
                                      unknowns/*[u]*/,
-                                     analytical_function,
+                                     unknowns_analytical_functions,
                                      Solution_set_initial_conditions,
                                      Solution_set_boundary_conditions
                                     );
@@ -311,7 +317,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
                                                                                 const std::vector< Math::Function< double > * > &  exact_sol,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
-                                                                                const bool equation_solve
+                                                                                const bool my_solution_generation_has_equation_solve
 
 ) const {
 
@@ -345,18 +351,21 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
     for (unsigned int u = 0; u < unknowns.size(); u++) {
 
-        // ======= Solution, II ==================
+        // ======= Solution, Initialize, II - BEGIN ==================
         ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
         ml_sol_single_level.set_analytical_function(unknowns[u]._name.c_str(), exact_sol[u]);   
         ml_sol_single_level.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob);
+        // ======= Solution, Initialize, II - END ==================
 
         
 // // If you just want an interpolation study, without equation, just initialize every Solution with some function - BEGIN      
-       if (equation_solve)  {
+       if (my_solution_generation_has_equation_solve)  {
        
 
+        // ======= Solution, Boundary Conditions - BEGIN ==================
         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
         ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
+        // ======= Solution, Boundary Conditions - END ==================
 
         // ======= Problem, System - BEGIN ========================
         std::ostringstream sys_name;
