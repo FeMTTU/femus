@@ -236,11 +236,10 @@ int main(int argc, char** args) {
     // If you try to use the default copy constructor it doesn't work.
     // In fact, the copy constructor will copy ALL THE POINTERS, and if there are pointers that were dynamically allocated with new, and destroyed with delete,
     //     new will be called only once but delete will be called twice...
-//     MultiLevelMesh ml_mesh_all_levels( ml_mesh);
-    MultiLevelMesh ml_mesh_all_levels;
+//     MultiLevelMesh ml_mesh_all_levels_needed_for_incremental( ml_mesh);
+    MultiLevelMesh ml_mesh_all_levels_needed_for_incremental;
 
-    ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
-// // //     Domain_square_m05p05::quad9_all_mesh_generation_methods_Structured(mesh_file_type, ml_mesh_all_levels, fe_quad_rule);
+    ml_mesh_all_levels_needed_for_incremental.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
     // Auxiliary mesh, all levels - END  ================
 
 
@@ -280,7 +279,7 @@ int main(int argc, char** args) {
 
     FE_convergence<>::convergence_study(ml_prob, 
                                      ml_mesh, 
-                                     ml_mesh_all_levels, 
+                                     ml_mesh_all_levels_needed_for_incremental, 
                                      max_number_of_meshes, 
                                      convergence_rate_computation_method_Flag,
                                      volume_or_boundary_Flag,

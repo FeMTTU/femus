@@ -34,8 +34,8 @@ public:
 
 static  void  convergence_study(MultiLevelProblem & ml_prob,
                           MultiLevelMesh & ml_mesh,
-                          MultiLevelMesh & ml_mesh_all_levels,   //auxiliary
-                          const unsigned max_number_of_meshes,   //auxiliary
+                          MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental,   //auxiliary
+                          const unsigned max_number_of_meshes,
                           const std::vector < bool > convergence_rate_computation_method_Flag,
                           const std::vector < bool > volume_or_boundary_Flag,
                           const std::vector < bool > sobolev_norms_Flag,
@@ -59,7 +59,7 @@ private:
 static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProblem & ml_prob,
                                                                 const std::vector< Unknown > &  unknowns,  
                                                                 const std::vector< Math::Function< double > * >  & exact_sol,
-                                                                MultiLevelMesh & ml_mesh_all_levels, 
+                                                                MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental, 
                                                                 const unsigned max_number_of_meshes, 
                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
@@ -88,7 +88,7 @@ static  void output_convergence_rate( double norm_i, double norm_ip1, std::strin
 static  std::vector< real_num > compute_error_norms_volume_or_boundary_with_analytical_sol_or_not(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, double> *  > > & elem_all,
                                                 const std::vector<Gauss> & quad_rules,
                                                 const MultiLevelSolution* ml_sol, 
-                                                const MultiLevelSolution* ml_sol_all_levels,
+                                                const MultiLevelSolution* ml_sol_all_levels_needed_for_incremental,
                                                 const std::string & unknown,
                                                 const Math::Function< real_num > * ex_sol_in,
                                                 const unsigned current_level,
@@ -101,7 +101,7 @@ static  std::vector< real_num > compute_error_norms_volume_or_boundary_with_anal
 static  void compute_error_norms_per_unknown_per_level(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, double> *  > > & elem_all,
                                                        const std::vector<Gauss> & quad_rules,
                                                        const MultiLevelSolution* ml_sol_single_level,
-                                                       MultiLevelSolution* ml_sol_all_levels,
+                                                       MultiLevelSolution* ml_sol_all_levels_needed_for_incremental,
                                                        const std::vector< Unknown > &  unknowns,
                                                        const std::vector< Math::Function< real_num > * > & ex_sol_in,
                                                        std::vector < std::vector < real_num > >   &  norms,
@@ -126,7 +126,7 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
 template < class real_num>
 /*static*/  void  FE_convergence< real_num >::convergence_study(MultiLevelProblem & ml_prob,
                                                   MultiLevelMesh & ml_mesh,
-                                                  MultiLevelMesh & ml_mesh_all_levels,
+                                                  MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental,
                                                   const unsigned max_number_of_meshes,
                                                   const std::vector < bool > convergence_rate_computation_method_Flag,
                                                   const std::vector < bool > volume_or_boundary_Flag,
@@ -185,10 +185,10 @@ template < class real_num>
     // ================= initialize norms - END
      
     
-     MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(ml_prob,
+     MultiLevelSolution         ml_sol_all_levels_needed_for_incremental = FE_convergence::initialize_convergence_study(ml_prob,
                                                                                                  unknowns,
                                                                                                  exact_sol,
-                                                                                                 ml_mesh_all_levels, 
+                                                                                                 ml_mesh_all_levels_needed_for_incremental, 
                                                                                                  max_number_of_meshes, 
                                                                                                  SetInitialCondition, 
                                                                                                  SetBoundaryCondition,
@@ -233,7 +233,7 @@ template < class real_num>
             FE_convergence::compute_error_norms_per_unknown_per_level ( elem_all,
                                                                         ml_prob.GetQuadratureRuleAllGeomElems(),
                                                                         & ml_sol_single_level,
-                                                                        & ml_sol_all_levels,
+                                                                        & ml_sol_all_levels_needed_for_incremental,
                                                                         unknowns,
                                                                         exact_sol,
                                                                         norms[convergence_rate_computation_method][volume_or_boundary][sobolev_norms],
@@ -285,7 +285,7 @@ template < class real_num>
 /*static*/   const MultiLevelSolution  FE_convergence< real_num >::initialize_convergence_study(MultiLevelProblem & ml_prob, 
                                                                                             const std::vector< Unknown > &  unknowns,
                                                                                             const std::vector< Math::Function< double > * > &  exact_sol,
-                                                                                            MultiLevelMesh & ml_mesh_all_levels,
+                                                                                            MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental,
                                                                                             const unsigned max_number_of_meshes,
                                                                                             const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                             const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
@@ -299,27 +299,27 @@ template < class real_num>
   
  //Mesh: construct all levels - BEGIN  ==================
         unsigned numberOfUniformLevels_finest = max_number_of_meshes;
-        ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
-//      ml_mesh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
+        ml_mesh_all_levels_needed_for_incremental.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//      ml_mesh_all_levels_needed_for_incremental.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
  //Mesh: construct all levels - END ==================
 
  
  //Solution - BEGIN ==================
-//         std::vector < MultiLevelSolution * >   ml_sol_all_levels(unknowns.size());
-//                ml_sol_all_levels[u] = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-               MultiLevelSolution ml_sol_all_levels(& ml_mesh_all_levels);
+//         std::vector < MultiLevelSolution * >   ml_sol_all_levels_needed_for_incremental(unknowns.size());
+//                ml_sol_all_levels_needed_for_incremental[u] = new MultiLevelSolution (& ml_mesh_all_levels_needed_for_incremental);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+               MultiLevelSolution ml_sol_all_levels_needed_for_incremental(& ml_mesh_all_levels_needed_for_incremental);
  //Solution - END ==================
 
  //Problem - BEGIN ==================
-  ml_prob_aux.SetMultiLevelMeshAndSolution(& ml_sol_all_levels);
+  ml_prob_aux.SetMultiLevelMeshAndSolution(& ml_sol_all_levels_needed_for_incremental);
  //Problem - END ==================
                
                
   //Solution, Initialize - BEGIN ==================
                for (unsigned int u = 0; u < unknowns.size(); u++) {
-               ml_sol_all_levels.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);  //We have to do so to avoid buildup of AddSolution with different FE families
-               ml_sol_all_levels.set_analytical_function(unknowns[u]._name.c_str(), exact_sol[u]);   
-               ml_sol_all_levels.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob_aux);
+               ml_sol_all_levels_needed_for_incremental.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);  //We have to do so to avoid buildup of AddSolution with different FE families
+               ml_sol_all_levels_needed_for_incremental.set_analytical_function(unknowns[u]._name.c_str(), exact_sol[u]);   
+               ml_sol_all_levels_needed_for_incremental.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob_aux);
                }
   //Solution, Initialize - END ==================
                
@@ -327,15 +327,15 @@ template < class real_num>
  // Only for an EQUATION - BEGIN  ==================
          if (main_in_has_equation_solve) {
              
-         ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
+         ml_sol_all_levels_needed_for_incremental.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
                for (unsigned int u = 0; u < unknowns.size(); u++) {
-               ml_sol_all_levels.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob_aux);
+               ml_sol_all_levels_needed_for_incremental.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob_aux);
                }
                
          }
  // Only for an EQUATION - END  ==================
 
- return ml_sol_all_levels;
+ return ml_sol_all_levels_needed_for_incremental;
 } 
     
 
@@ -461,7 +461,7 @@ template < class real_num>
                                                                             const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, double> *  > > & elem_all,
                                                                             const std::vector<Gauss> & quad_rules,
                                                                             const MultiLevelSolution* ml_sol_single_level,
-                                                                            const MultiLevelSolution* ml_sol_all_levels,
+                                                                            const MultiLevelSolution* ml_sol_all_levels_needed_for_incremental,
                                                                             const std::string & unknown,
                                                                             const Math::Function< real_num > * ex_sol_in,
                                                                             const unsigned current_level,
@@ -637,7 +637,7 @@ template < class real_num>
         
       unsigned solDof = msh->GetSolutionDof(i, iel, sol_uType);
                    sol_u[i]  =                                        (*sol->_Sol[sol_uIndex])(solDof);
-      sol_u_inexact_prolongated_from_coarser_level[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[sol_uIndex])(solDof);
+      sol_u_inexact_prolongated_from_coarser_level[i]  = (*ml_sol_all_levels_needed_for_incremental->GetSolutionLevel(current_level)->_Sol[sol_uIndex])(solDof);
       if (ex_sol_in != NULL) sol_u_exact_at_dofs[i] = ex_sol_in->value(x_at_dof);
     }
 //---------------- Solution - END
@@ -898,12 +898,35 @@ if (convergence_rate_computation_method == 1)  return norms_exact_function_at_qp
  
  
 
-     
+// 
+// If the method uses the exact solution, in the vector of norms I will put
+// || u_h - u_{true} ||       coarsest level
+// || u_{h/2} - u_{true} ||
+// || u_{h/4} - u_{true} ||
+// 
+//  Every u_h is the C^0 LAGRANGE INTERPOLANT at that level of the original function
+//  If I evaluate the analytical true solution at the real Quadrature Point, it is like using a BETTER INTERPOLANT,
+// that is the interpolant with ORTHOGONAL POLYNOMIALS that is under the construction of Gauss quadrature rules 
+// So actually every level is of the type 
+// || u_h - u_{true} || = || I_{h, Lagrange} u  -  I_{h, Orthogonal Polynomials} u  ||
+// 
+// These observations tell us that if we compared the ALGEBRAIC VECTORS (which only contain DOFS of LAGRANGE INTERPOLANT)
+// we would probably get ALL ZEROs, so in that case we could only do it in INCREMENTAL way
+///  @todo do it  || x_h - x_{h/2} || where the vectors are algebraic
+
+// If the method is incremental, in the vector of norms I will put
+// || u_h     - u_{h/2} ||       coarsest level and 1st finer
+// || u_{h/2} - u_{h/4} ||
+// || u_{h/4} - u_{h/8} ||
+// So, it is clear that at each stage I involve 2 different levels instead of one
+
+
 template < class real_num>
-/*static*/  void FE_convergence< real_num >::compute_error_norms_per_unknown_per_level(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, double> *  > > & elem_all,
+/*static*/  void FE_convergence< real_num >::compute_error_norms_per_unknown_per_level(
+                                     const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, double> *  > > & elem_all,
                                                                                    const std::vector<Gauss> & quad_rules,
                                                                                    const MultiLevelSolution* ml_sol_single_level,
-                                                                                   MultiLevelSolution* ml_sol_all_levels,
+                                                                                   MultiLevelSolution* ml_sol_all_levels_needed_for_incremental,
                                                                                    const std::vector< Unknown > &  unknowns,
                                                                                    const  std::vector< Math::Function< real_num > * > &  ex_sol_in,
                                                                                    std::vector < std::vector < real_num > >  &  norms,
@@ -914,18 +937,20 @@ template < class real_num>
                                          ) {
      
     
-              if (volume_or_boundary == 0) {
+        // ======= Control - BEGIN
+            if (volume_or_boundary == 0) {
             }
             else if (volume_or_boundary == 1) {
             }
             else { std::cout << "Boundary of boundary not implemented in function " << __func__; abort(); }
+        // ======= Control - END
             
             
    
         if ( lev > 0 ) {
 
             // ======= prolongate to the current level (lev) from the coarser level (lev-1) (so that you can compare the two) ========================
-            ml_sol_all_levels->RefineSolution(lev);
+            ml_sol_all_levels_needed_for_incremental->RefineSolution(lev);
             
             // =======  compute the error norm at the current level (lev) ========================
       
@@ -936,7 +961,7 @@ template < class real_num>
             norm_out = FE_convergence::compute_error_norms_volume_or_boundary_with_analytical_sol_or_not (elem_all,
                                                                                                    quad_rules, 
                                                                                                    ml_sol_single_level,
-                                                                                                   ml_sol_all_levels, 
+                                                                                                   ml_sol_all_levels_needed_for_incremental, 
                                                                                                    unknowns[u]._name,
                                                                                                    ex_sol_in[u], 
                                                                                                    lev,
@@ -954,7 +979,7 @@ template < class real_num>
                  
               // ======= store the last computed solution to prepare the next iteration (the current level i is now overwritten) ========================
               const unsigned level_to_pick_from = ml_sol_single_level->_mlMesh->GetNumberOfLevels() - 1;
-            ml_sol_all_levels->fill_at_level_from_level(lev, level_to_pick_from, *ml_sol_single_level);
+            ml_sol_all_levels_needed_for_incremental->fill_at_level_from_level(lev, level_to_pick_from, *ml_sol_single_level);
         
                  
                  
@@ -1360,6 +1385,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
   if (unknowns_vec.size() != 1) abort();
   
   unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
+  
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)
