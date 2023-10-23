@@ -176,8 +176,9 @@ int main(int argc, char** args) {
           // @todo WORKS with biquadratic exact solution
 
 
-//     std::string input_file = "segment_1_all_dir.med";
-//     std::string input_file = "cylinder_hexahedral.med";
+//    const std::string input_file = "segment_1_all_dir.med";
+   
+//    const std::string input_file = "cylinder_hexahedral.med";
       
     std::ostringstream mystream; mystream << "./"  << input_file;
     const std::string infile = mystream.str();
@@ -286,7 +287,7 @@ int main(int argc, char** args) {
                                      sobolev_norms_Flag,
                                      my_solution_generation_has_equation_solve,
                                      my_solution_generation, 
-                                     unknowns/*[u]*/,
+                                     unknowns,
                                      unknowns_analytical_functions,
                                      Solution_set_initial_conditions,
                                      Solution_set_boundary_conditions

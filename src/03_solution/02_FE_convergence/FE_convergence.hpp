@@ -479,9 +479,10 @@ template < class real_num>
    
     
   const unsigned num_norms = 2;
+
   //norms that we are computing here //first L2, then H1 ============
   std::vector< real_num > norms_exact_function_at_qp(num_norms);                  std::fill(norms_exact_function_at_qp.begin(), norms_exact_function_at_qp.end(), 0.);   
-  std::vector< real_num > norms_exact_dofs(num_norms);       std::fill(norms_exact_dofs.begin(), norms_exact_dofs.end(), 0.);
+  std::vector< real_num > norms_exact_function_at_dofs(num_norms);       std::fill(norms_exact_function_at_dofs.begin(), norms_exact_function_at_dofs.end(), 0.);
   std::vector< real_num > norms_inexact_dofs(num_norms);     std::fill(norms_inexact_dofs.begin(), norms_inexact_dofs.end(), 0.);
   //norms that we are computing here //first L2, then H1 ============
   
@@ -643,130 +644,8 @@ template < class real_num>
 //---------------- Solution - END
 
 
-// *** BOUNDARY - BEGIN ***
-if (volume_or_boundary == 1 )	{
-  
-	  std::vector<double> normal_at_qp_bdry(space_dim, 0.);
-	       
-	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
-          
-       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
-       
-// ----------
-       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
- 
-// ----------
-
-		            const int bdry_index_j = msh->el->GetFaceElementIndex(iel, iface);
-
-	    if(  bdry_index_j < 0 ) {
-
-	
-		
-		for(unsigned ig_bdry = 0; ig_bdry < quad_rules[ielGeom_bdry].GetGaussPointsNumber(); ig_bdry++) {
-		  
-    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_iqp_bdry, space_dim);
-    weight_iqp_bdry = detJac_iqp_bdry * quad_rules[ielGeom_bdry].GetGaussWeightsPointer()[ig_bdry];
-    
-    elem_all[ielGeom_bdry][sol_uType]     ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
-    elem_all[ielGeom_bdry][solType_coords]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
-	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal_at_qp_bdry);
-
-		  
-		 //========== QP eval - BEGIN ===============================================
-      real_num		  sol_u_bdry_gss = 0.;
-      real_num exactSol_from_dofs_gss = 0.;
-      real_num sol_u_inexact_prolongated_from_coarser_level_gss = 0.;
-          
-      std::vector< real_num > sol_u_x_bdry_gss(space_dim, 0.);
-      std::vector < real_num > gradSolu_exact_at_dofs_bdry_gss(dim_offset_grad, 0.);
-      std::vector < real_num > gradSolu_inexact_prolongated_from_coarser_level_bdry_gss(dim_offset_grad, 0.);
-
-                  
-		      for (int i_bdry = 0; i_bdry < phi_u_bdry.size(); i_bdry++)  {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-			
-			sol_u_bdry_gss                                    +=  sol_u[i_vol]              * phi_u_bdry[i_bdry];
-            exactSol_from_dofs_gss                            += sol_u_exact_at_dofs[i_vol] * phi_u_bdry[i_bdry];
-            
-            sol_u_inexact_prolongated_from_coarser_level_gss  += sol_u_inexact_prolongated_from_coarser_level[i_vol]              * phi_u_bdry[i_bdry];
-        
-            for (int d = 0; d < space_dim; d++) {
-			      sol_u_x_bdry_gss[d] += sol_u[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
-			      gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d] += sol_u_inexact_prolongated_from_coarser_level[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
-			    }
-		    }
-		      
-		      double laplace_u_bdry = 0.;  for (int d = 0; d < space_dim; d++) { laplace_u_bdry += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
-
-
-       std::vector < real_num > x_gss_bdry(dim_offset_grad, 0.);
-       
-    for (unsigned i = 0; i < phi_coords_bdry.size(); i++) {
-          for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
-           x_gss_bdry[jdim] += geom_element_iel.get_coords_at_dofs_bdry_3d()[jdim][i] * phi_coords_bdry[i];
-          }
-       }
-		 //========== QP eval - END ===============================================
-
-// H^0 - BEGIN ============== 
- if (sobolev_norms == 0) {
-      real_num exactSol_bdry = 0.; if (ex_sol_in != NULL) exactSol_bdry = ex_sol_in->value(x_gss_bdry);
-      
-      norms_exact_function_at_qp[0] += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry; 
-//                  norms_exact_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
-
-      norms_inexact_dofs[0]   += (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)   * (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)  * weight_iqp_bdry;
-  }
-// H^0 - END ==============      
-                  
-                  
-                  
-// H^1 - BEGIN ==============
-    else if (sobolev_norms == 1) {
-      
-      std::cout << "Here you have to ROTATE the boundary element appropriately, I think" << std::endl;
-      std::vector < real_num > exactGradSol_bdry(dim_offset_grad, 0.);    if (ex_sol_in != NULL) exactGradSol_bdry = ex_sol_in->gradient(x_gss_bdry);  
-      ///@todo THIS IS WRONG! It is NOT the SURFACE GRADIENTTTT, so we have to be careful when we have more than one boundary face!!!
-      
-      std::vector < real_num > exactGradSol_bdry_dot_tangent =  Math::tangent_vector_from_normal( exactGradSol_bdry, normal_at_qp_bdry, exactGradSol_bdry.size() );
-      
-      std::vector < real_num > sol_u_x_bdry_gss_dot_tangent =  Math::tangent_vector_from_normal( sol_u_x_bdry_gss, normal_at_qp_bdry, sol_u_x_bdry_gss.size() );
-
-      std::vector < real_num > gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent =  Math::tangent_vector_from_normal( gradSolu_inexact_prolongated_from_coarser_level_bdry_gss, normal_at_qp_bdry, gradSolu_inexact_prolongated_from_coarser_level_bdry_gss.size() );
-
-      
-      for (unsigned d = 0; d < dim_offset_grad ; d++) {
-        norms_exact_function_at_qp[1] += ( (sol_u_x_bdry_gss_dot_tangent[d] - exactGradSol_bdry_dot_tangent[d])  *  
-                                     (sol_u_x_bdry_gss_dot_tangent[d] - exactGradSol_bdry_dot_tangent[d]) ) * weight_iqp_bdry;
-        
-//         norms_exact_dofs[1]     += ((gradSolu_gss_dot_tangent[d] - gradSolu_exact_at_dofs_gss_dot_tangent[d]) * 
-//                                     (gradSolu_gss_dot_tangent[d] - gradSolu_exact_at_dofs_gss_dot_tangent[d])) * weight_iqp_bdry;
-                                     
-        norms_inexact_dofs[1]   += ( (sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent[d])   *
-                                     (sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent[d]) ) * weight_iqp_bdry;
-      }
-   }
-// H^1 - END ==============
-                  
-        }
-            
-        
-	      } //end face
-	      
-	  }  // loop over element faces   
-	  
-
-//=====================================================================================================================  
-//=====================================================================================================================  
-//=====================================================================================================================  
-     
-    
-}   
-// *** BOUNDARY - END ***
-  
 // *** VOLUME - BEGIN ***
-  else if (volume_or_boundary == 0) {  
+ if (volume_or_boundary == 0) {  
       
       
     const short unsigned ielGeom = geom_element_iel.geom_type();
@@ -826,7 +705,7 @@ if (volume_or_boundary == 1 )	{
       real_num exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
 
       norms_exact_function_at_qp[0] += (sol_u_gss - exactSol)                * (sol_u_gss - exactSol)       * weight;
-      norms_exact_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
+      norms_exact_function_at_dofs[0]     += (sol_u_gss - exactSol_from_dofs_gss)  * (sol_u_gss - exactSol_from_dofs_gss) * weight;
       norms_inexact_dofs[0]   += (sol_u_gss - sol_u_inexact_prolongated_from_coarser_level_gss)   * (sol_u_gss - sol_u_inexact_prolongated_from_coarser_level_gss)  * weight;
     }
     
@@ -836,7 +715,7 @@ if (volume_or_boundary == 1 )	{
 
       for (unsigned d = 0; d < dim_offset_grad ; d++) {
         norms_exact_function_at_qp[1] += ((gradSolu_gss[d] - exactGradSol[d])               * (gradSolu_gss[d]  - exactGradSol[d])) * weight;
-        norms_exact_dofs[1]     += ((gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d]) * (gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d])) * weight;
+        norms_exact_function_at_dofs[1]     += ((gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d]) * (gradSolu_gss[d] - gradSolu_exact_at_dofs_gss[d])) * weight;
         norms_inexact_dofs[1]   += ((gradSolu_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_gss[d])  * (gradSolu_gss[d] - gradSolu_inexact_prolongated_from_coarser_level_gss[d]))  * weight;
       }
    }
@@ -845,6 +724,136 @@ if (volume_or_boundary == 1 )	{
   }
 // *** VOLUME - END ***
   
+
+  
+// *** BOUNDARY - BEGIN ***
+else if (volume_or_boundary == 1 )	{
+  
+	  std::vector<double> normal_at_qp_bdry(space_dim, 0.);
+	       
+	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
+          
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
+       
+// ----------
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
+ 
+// ----------
+
+		            const int bdry_index_j = msh->el->GetFaceElementIndex(iel, iface);
+
+	    if(  bdry_index_j < 0 ) {
+
+	
+		
+		for(unsigned ig_bdry = 0; ig_bdry < quad_rules[ielGeom_bdry].GetGaussPointsNumber(); ig_bdry++) {
+		  
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_iqp_bdry, space_dim);
+    weight_iqp_bdry = detJac_iqp_bdry * quad_rules[ielGeom_bdry].GetGaussWeightsPointer()[ig_bdry];
+    
+    elem_all[ielGeom_bdry][sol_uType]     ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_coords_bdry, phi_coords_x_bdry,  boost::none, space_dim);
+	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal_at_qp_bdry);
+
+		  
+		 //========== QP eval - BEGIN ===============================================
+      real_num		  sol_u_bdry_gss = 0.;
+      real_num exactSol_from_dofs_bdry_gss = 0.;
+      real_num sol_u_inexact_prolongated_from_coarser_level_gss = 0.;
+          
+      std::vector < real_num >  sol_u_x_bdry_gss(space_dim, 0.);
+      std::vector < real_num >  gradSolu_exact_at_dofs_bdry_gss(dim_offset_grad, 0.);
+      std::vector < real_num >  gradSolu_inexact_prolongated_from_coarser_level_bdry_gss(dim_offset_grad, 0.);
+
+                  
+		      for (int i_bdry = 0; i_bdry < phi_u_bdry.size(); i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+			
+			sol_u_bdry_gss                                    +=  sol_u[i_vol]              * phi_u_bdry[i_bdry];
+            exactSol_from_dofs_bdry_gss                       += sol_u_exact_at_dofs[i_vol] * phi_u_bdry[i_bdry];
+            
+            sol_u_inexact_prolongated_from_coarser_level_gss  += sol_u_inexact_prolongated_from_coarser_level[i_vol]              * phi_u_bdry[i_bdry];
+        
+            for (int d = 0; d < space_dim; d++) {
+			      sol_u_x_bdry_gss[d] += sol_u[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
+                  gradSolu_exact_at_dofs_bdry_gss[d] += sol_u_exact_at_dofs[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
+			      gradSolu_inexact_prolongated_from_coarser_level_bdry_gss[d] += sol_u_inexact_prolongated_from_coarser_level[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
+			    }
+		    }
+		      
+		      double laplace_u_bdry = 0.;  for (int d = 0; d < space_dim; d++) { laplace_u_bdry += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
+
+
+       std::vector < real_num > x_gss_bdry(dim_offset_grad, 0.);
+       
+    for (unsigned i = 0; i < phi_coords_bdry.size(); i++) {
+          for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
+           x_gss_bdry[jdim] += geom_element_iel.get_coords_at_dofs_bdry_3d()[jdim][i] * phi_coords_bdry[i];
+          }
+       }
+		 //========== QP eval - END ===============================================
+
+// H^0 - BEGIN ============== 
+ if (sobolev_norms == 0) {
+      real_num exactSol_bdry = 0.; if (ex_sol_in != NULL) exactSol_bdry = ex_sol_in->value(x_gss_bdry);
+      
+      norms_exact_function_at_qp[0] += (sol_u_bdry_gss - exactSol_bdry) * (sol_u_bdry_gss - exactSol_bdry) * weight_iqp_bdry;
+      
+      norms_exact_function_at_dofs[0]  += (sol_u_bdry_gss - exactSol_from_dofs_bdry_gss)  * 
+                                          (sol_u_bdry_gss - exactSol_from_dofs_bdry_gss) * weight;
+
+      norms_inexact_dofs[0]   += (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)   * (sol_u_bdry_gss - sol_u_inexact_prolongated_from_coarser_level_gss)  * weight_iqp_bdry;
+  }
+// H^0 - END ==============      
+                  
+                  
+                  
+// H^1 - BEGIN ==============
+    else if (sobolev_norms == 1) {
+      
+      std::cout << "Here you have to ROTATE the boundary element appropriately, I think" << std::endl;
+      
+      std::vector < real_num > exactGradSol_bdry(dim_offset_grad, 0.);    if (ex_sol_in != NULL) exactGradSol_bdry = ex_sol_in->gradient(x_gss_bdry);  
+      ///@todo THIS IS WRONG! It is NOT the SURFACE GRADIENTTTT, so we have to be careful when we have more than one boundary face!!!
+      
+      std::vector < real_num > exactGradSol_bdry_dot_tangent =  Math::tangent_vector_from_normal( exactGradSol_bdry, normal_at_qp_bdry, exactGradSol_bdry.size() );
+      
+      std::vector < real_num > sol_u_x_bdry_gss_dot_tangent =  Math::tangent_vector_from_normal( sol_u_x_bdry_gss, normal_at_qp_bdry, sol_u_x_bdry_gss.size() );
+
+      std::vector < real_num > gradSolu_exact_at_dofs_bdry_gss_dot_tangent =  Math::tangent_vector_from_normal( gradSolu_exact_at_dofs_bdry_gss, normal_at_qp_bdry, gradSolu_exact_at_dofs_bdry_gss.size() );
+      
+      std::vector < real_num > gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent =  Math::tangent_vector_from_normal( gradSolu_inexact_prolongated_from_coarser_level_bdry_gss, normal_at_qp_bdry, gradSolu_inexact_prolongated_from_coarser_level_bdry_gss.size() );
+
+      
+      for (unsigned d = 0; d < dim_offset_grad ; d++) {
+        norms_exact_function_at_qp[1] += ( (sol_u_x_bdry_gss_dot_tangent[d] - exactGradSol_bdry_dot_tangent[d])  *  
+                                     (sol_u_x_bdry_gss_dot_tangent[d] - exactGradSol_bdry_dot_tangent[d]) ) * weight_iqp_bdry;
+        
+        norms_exact_function_at_dofs[1]   += (( sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_exact_at_dofs_bdry_gss_dot_tangent[d]) * 
+                                              ( sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_exact_at_dofs_bdry_gss_dot_tangent[d])) * weight_iqp_bdry;
+                                     
+        norms_inexact_dofs[1]   += ( (sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent[d])   *
+                                     (sol_u_x_bdry_gss_dot_tangent[d] - gradSolu_inexact_prolongated_from_coarser_level_bdry_gss_dot_tangent[d]) ) * weight_iqp_bdry;
+      }
+   }
+// H^1 - END ==============
+                  
+        }
+            
+        
+	      } //end face
+	      
+	  }  // loop over element faces   
+	  
+
+//=====================================================================================================================  
+//=====================================================================================================================  
+//=====================================================================================================================  
+     
+    
+}   
+// *** BOUNDARY - END ***
+
   
   
   } //end element loop for each process
@@ -861,14 +870,14 @@ if (volume_or_boundary == 1 )	{
           delete norm_vec_exact_using_qp;
 
    // add the norms of all processes
-  NumericVector* norm_vec_exact_dofs;
-                 norm_vec_exact_dofs = NumericVector::build().release();
-                 norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
+  NumericVector* norm_vec_exact_using_dofs;
+                 norm_vec_exact_using_dofs = NumericVector::build().release();
+                 norm_vec_exact_using_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         if (sobolev_norms == 0) { norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm(); }
-    else if (sobolev_norms == 1) { norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm(); }
+         if (sobolev_norms == 0) { norm_vec_exact_using_dofs->set(iproc, norms_exact_function_at_dofs[0]);  norm_vec_exact_using_dofs->close();  norms_exact_function_at_dofs[0] = norm_vec_exact_using_dofs->l1_norm(); }
+    else if (sobolev_norms == 1) { norm_vec_exact_using_dofs->set(iproc, norms_exact_function_at_dofs[1]);  norm_vec_exact_using_dofs->close();  norms_exact_function_at_dofs[1] = norm_vec_exact_using_dofs->l1_norm(); }
 
-          delete norm_vec_exact_dofs;
+          delete norm_vec_exact_using_dofs;
 
   // add the norms of all processes
   NumericVector* norm_vec_inexact;
@@ -883,14 +892,14 @@ if (volume_or_boundary == 1 )	{
           
     for (int n = 0; n < norms_exact_function_at_qp.size(); n++) { 
    norms_exact_function_at_qp[n] = sqrt(norms_exact_function_at_qp[n]);                                            
-             norms_exact_dofs[n] = sqrt(norms_exact_dofs[n]);                                            
+   norms_exact_function_at_dofs[n] = sqrt(norms_exact_function_at_dofs[n]);                                            
            norms_inexact_dofs[n] = sqrt(norms_inexact_dofs[n]);
     }
     
     
 if (convergence_rate_computation_method == 0)  return norms_inexact_dofs;
 if (convergence_rate_computation_method == 1)  return norms_exact_function_at_qp;
- //   return norms_exact_dofs;
+// if (convergence_rate_computation_method == 1)  return   norms_exact_function_at_dofs; //@todo this one does not work in the ABSOLUTE case but only in the INCREMENTAL case
 
  
 } 
@@ -1536,19 +1545,19 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
   delete norm_vec;
 
    // add the norms of all processes
-  NumericVector* norm_vec_exact_dofs;
-  norm_vec_exact_dofs = NumericVector::build().release();
-  norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
+  NumericVector* norm_vec_exact_using_dofs;
+  norm_vec_exact_using_dofs = NumericVector::build().release();
+  norm_vec_exact_using_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-  norm_vec_exact_dofs->set(iproc, l2norm_exact_dofs);
-  norm_vec_exact_dofs->close();
-  l2norm_exact_dofs = norm_vec_exact_dofs->l1_norm();
+  norm_vec_exact_using_dofs->set(iproc, l2norm_exact_dofs);
+  norm_vec_exact_using_dofs->close();
+  l2norm_exact_dofs = norm_vec_exact_using_dofs->l1_norm();
 
-  norm_vec_exact_dofs->set(iproc, seminorm_exact_dofs);
-  norm_vec_exact_dofs->close();
-  seminorm_exact_dofs = norm_vec_exact_dofs->l1_norm();
+  norm_vec_exact_using_dofs->set(iproc, seminorm_exact_dofs);
+  norm_vec_exact_using_dofs->close();
+  seminorm_exact_dofs = norm_vec_exact_using_dofs->l1_norm();
 
-  delete norm_vec_exact_dofs;
+  delete norm_vec_exact_using_dofs;
 
   // add the norms of all processes
   NumericVector* norm_vec_inexact;
