@@ -2,11 +2,14 @@
 #define __femus_app_specifics_hpp__
 
 
+#include "CurrentElem.hpp"
+#include "ElemType_template.hpp"
+#include "Function.hpp"
+
 #include <vector>
 #include <string>
 
-#include "CurrentElem.hpp"
-#include "ElemType_template.hpp"
+
 
 namespace femus {
     
@@ -46,26 +49,36 @@ class app_specifics {
 
 
    //func pointer of RHS - BEGIN
+   // [[deprecated]]
    typedef  double    (* AssembleFunctionRHS )  (const std::vector<double> & x_qp);
    
    AssembleFunctionRHS  _assemble_function_rhs;
    //func pointer of RHS - END
+   
 
    //func pointer of Boundary Conditions - BEGIN
-    typedef bool (*BoundaryFunction) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
+    typedef bool (*BoundaryFunction) (const MultiLevelProblem * ml_prob, 
+                                      const std::vector < double >& x,
+                                      const char name[], 
+                                      double &value, 
+                                      const int FaceName,
+                                      const double time);
+    
     
     BoundaryFunction   _boundary_conditions_types_and_values;
    //func pointer of Boundary Conditions - END
 
 
     //func pointer of true solution - BEGIN
+   // [[deprecated]]
    typedef  double    (* TrueSolution )  (const std::vector<double> & x_qp);
    
    TrueSolution  _true_solution;
     //func pointer of true solution - END
   
+   Math::Function< double > *  _true_solution_func;
     
-    
+   Math::Function< double > *  _assemble_function_rhs_func;
    
 };
 

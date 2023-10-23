@@ -17,40 +17,17 @@
 
 #include "app_specifics.hpp"
 
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
+
+
+
 using namespace femus;
 
 
 // ======= Domain-related and Mesh-related stuff - BEGIN =========================
 
-// SEGMENT - BEGIN
 
-namespace segment_0x1 {
-
-  
-  namespace function_0 {
-    
-
-double value(const std::vector<double> & x) {
-    
-    // for a 1d segment
-    
-    return  x[0] * (1. - x[0]);
-}
-
-
-// user-made equation - accepts only coordinates
-double laplacian(const std::vector<double> & x){
-    
-    // for a 1d segment
-    
-    return  -2.;
-     }
-
-  }
-
-}
-
-
+// 1D - BEGIN ===============================
 
 namespace segment_0x1 {
   
@@ -90,35 +67,14 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob,
  
   }
   
-  
+// 1D - END ===============================
 
-// SEGMENT - END
 
+
+// 2D - BEGIN ===============================
 
 
 // SQUARE - BEGIN
-namespace square_01_by_01 {
-  
-  
-namespace function_0 {
-
-double value(const std::vector < double >& x) {
-    
-  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    
-}
-
-double laplacian(const std::vector < double >& x) {
-    
-  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-  
-}
-
-
-}
-
-}
-
 
 namespace square_01_by_01 {
 
@@ -162,29 +118,192 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 
 
 
-// CUBE - BEGIN
-namespace cube_01_by_01_by_01 {
-
-namespace function_0 {
+// CIRCLE - BEGIN
 
 
-double value(const std::vector < double >& x) {
-    
-  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]) * x[2] * (1. - x[2]);
-    
-}
 
-
-double laplacian(const std::vector < double >& x) {
-    
-  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) +  x[2] * (1. - x[2]) );
+namespace circle {
   
+  
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+ if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+  
+
+
+//  return dirichlet;
+    
+}
+
+
+
+
+
+
+}
+// CIRCLE - END
+
+
+
+// SEMICIRCLE - BEGIN
+
+
+namespace semicircle {
+
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+    
+   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+
+  bool dirichlet = false;
+  value = 0.;
+   
+   
+     if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }   
+  
+       return dirichlet;
+
+    
 }
 
 
 }
+// SEMICIRCLE - END
+
+
+
+// QUARTER CIRCLE - BEGIN
+
+
+namespace quarter_circle {
+
+
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+    
+ if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+ 
+  bool dirichlet = false;
+  value = 0.;
+  
+  const double tolerance = 1.e-5;
+  
+  
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+
+  
+  
+
+  return dirichlet;
+  
+ }
+ 
+ 
+
+ }
+// QUARTER CIRCLE - END
+
+
+
+
+// ANNULUS - BEGIN
+
+
+namespace annulus {
+ 
+ 
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+     if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+     
+  bool dirichlet = false;
+  value = 0.;
+    
+
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+   
+   return dirichlet;
+    
+}
+
+ 
+}
+// ANNULUS - END
+
+
+
+// SEMIANNULUS - BEGIN
+
+namespace semiannulus {
+ 
+ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+ if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+ 
+  bool dirichlet = false;
+  value = 0.;
+  
+     
+    if (face_name == 1) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 4) {
+      dirichlet = true;
+        value = 0.;
+  }
+   
+ 
+ 
+  return dirichlet;
+  
+ }
+
+ 
+ 
 
 }
+// SEMIANNULUS - END
+
+
+// 2D - END ===============================
+
+
+
+// 3D - BEGIN ===============================
+
+// CUBE - BEGIN
 
 
 namespace cube_01_by_01_by_01 {
@@ -238,352 +357,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 
 
 
-
-
-// CIRCLE - BEGIN
-namespace circle {
-  
-  
-namespace function_0 {
-  
-  
-double value(const std::vector < double >& x) {
-}
-
-double laplacian(const std::vector < double >& x) {
-}
-
-
-}
-
-}
-
-
-
-namespace circle {
-  
-  
-bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-
- if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-  
-
-
-//  return dirichlet;
-    
-}
-
-
-
-
-
-
-}
-// CIRCLE - END
-
-
-
-// SEMICIRCLE - BEGIN
-namespace semicircle {
-
-namespace function_0 {
-
-
-double value(const std::vector < double >& x) {
-    
-    double xxx = x[0];
-    double yyy = x[1];
-    const double r2 = xxx * xxx + yyy * yyy;
-    double r = (1. - r2) * yyy;
-    
-    return r;
-   
-}
-
-double laplacian(const std::vector < double >& x) {
-
-   return  - 8. * x[1]; 
-    
-}
-
-
-}
-
-}
-
-
-
-namespace semicircle {
-
-bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-    
-   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-
-  bool dirichlet = false;
-  value = 0.;
-   
-   
-     if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.;
-  }   
-  
-       return dirichlet;
-
-    
-}
-
-
-}
-// SEMICIRCLE - END
-
-
-
-// QUARTER CIRCLE - BEGIN
-namespace quarter_circle {
-
- namespace function_0 {
-   
-double value(const std::vector<double> & x_qp){
-    
-    // for a quarter-circle in Quadrant 1
-    
-    double x = x_qp[0];
-    double y = x_qp[1];
-    
-    return  x * y * (1.0 - (x*x + y*y)); // forced to be zero on the x and y axis, and the circle edge
-}
-
- 
-
-// this is specifically the laplacian of the function given above
-// flynn, user-made equation - accepts only coordinates
-double laplacian(const std::vector<double> & x_qp){
-    
-    // for a quarter-circle in Quadrant 1
-    
-    double x = x_qp[0];
-    double y = x_qp[1];
-    
-    return  -12. * x * y;
-}
-
-
- } 
- 
-}
-
-
-namespace quarter_circle {
-
-
-bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-    
- if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
- 
-  bool dirichlet = false;
-  value = 0.;
-  
-  const double tolerance = 1.e-5;
-  
-  
-    if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-
-  
-  
-
-  return dirichlet;
-  
- }
- 
- 
-
- }
-// QUARTER CIRCLE - END
-
-
-
-
-// ANNULUS - BEGIN
-namespace annulus {
-  
- namespace function_0 {
-
-double value(const std::vector < double >& x) {
-    
-  double r2 = x[0] * x[0] + x[1] * x[1];
-  double y = (1. - r2) * ( r2 - 0.25 );
-//   double yprime = (1. - r2)' * ( r2 - 0.25 ) +   (1. - r2) * ( r2 - 0.25 )'; 
-  return y;
-
-    
-}
-
-
-double laplacian(const std::vector < double >& x) {
-    
-  double r2 = x[0] * x[0] + x[1] * x[1];
-  double y = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
-//   double y = 16. * (0.3125 - r2);
-  return y;
-  
-}
-
-
- }
- 
-}
-
-
-
-namespace annulus {
- 
- 
-bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-
-     if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-     
-  bool dirichlet = false;
-  value = 0.;
-    
-
-    if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.;
-  }
-   
-   return dirichlet;
-    
-}
-
- 
-}
-// ANNULUS - END
-
-
-
-// SEMIANNULUS - BEGIN
-namespace semiannulus {
-  
- namespace function_0 {
-   
-
-double value(const std::vector < double >& x) {
-    
-     double r2 = x[0] * x[0] + x[1] * x[1];
-
-     return   x[0] * (1. - sqrt(r2) ) * ( sqrt(r2) - .5);
-//      return   x[0] * (r2 - 1. ) * (.25 - r2);
-}
-
-
-double laplacian(const std::vector < double >& x) {
-  
-    double r2 = x[0] * x[0] + x[1] * x[1];
-    double temp = -x[0] * (8. - 4.5 / (sqrt(r2)));
-    //double temp = (4. - 1.5 / (sqrt(r2)));
-  return temp;
-
-//   return - 20. * x[0] * (-0.45 + x[0] * x[0] - 0.6 * x[1] * x[1] );
-    
-}
-
-
- }
- 
-}
-
-
-
-namespace semiannulus {
- 
- bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-
- if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
- 
-  bool dirichlet = false;
-  value = 0.;
-  
-     
-    if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 4) {
-      dirichlet = true;
-        value = 0.;
-  }
-   
- 
- 
-  return dirichlet;
-  
- }
-
- 
- 
-
-}
-// SEMIANNULUS - END
-
-
-
-
-
 // CYLINDER - BEGIN
-namespace cylinder {
-
- namespace function_0 {
-   
-   
-double value(const std::vector<double> & xxx){
-  
-      double x = xxx[0];
-      double y = xxx[1];
-      double z = xxx[2];
-     double r = z * (2. - z) * ( 1 - (x-1) * (x-1) - (y-1) * (y-1) ) ;
-  return r;
-
-     
-}
- 
-double  laplacian(const std::vector < double >& x_qp) {
-    
-   double r = 4*x_qp[2]*(x_qp[2] - 2.)  +  2*( (x_qp[0] - 1.)*(x_qp[0] - 1.)  +  (x_qp[1] - 1.)*(x_qp[1] - 1.) - 1.);
-  return r;
-}
-
- }
- 
- 
-}
 
 
 namespace cylinder {
@@ -621,24 +395,6 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 
 
 // SEMICYLINDER - BEGIN
-namespace semicylinder {
-
- namespace function_0 {
-  
-
-double value(const std::vector < double >& x) {
-}
-
-
-double laplacian(const std::vector < double >& x) {
-}
-
-
-
- }
- 
-}
-
 
 namespace semicylinder {
   
@@ -660,44 +416,6 @@ namespace semicylinder {
 
 
 // QUARTER CYLINDER - BEGIN
-namespace quarter_cylinder {
-
- namespace function_0 {
-  
-
-
-double value(const std::vector < double >& x_qp) {
-
-    double x = x_qp[0];
-    double y = x_qp[1];
-    double z = x_qp[2];
-    
-     return  x*y*z * (2.0 - z)*(-x*x - y*y + 1.0);
-}
-
-
-double laplacian(const std::vector < double >& x_qp) {
-
-      
-    // Quarter cylinder of radius 1 and length 2
-    
-    double x = x_qp[0];
-    double y = x_qp[1];
-    double z = x_qp[2];
-    
-    // Function = x*y*z*(z-2.0)*(x*x + y*y - 1.0)
-    
-    // Return -Delta U0
-    return ( - 12.0 * x * y * z * (2.0 - z) + 2 * x * y * ( x * x + y * y ) );
-  
-    
-    
-}
-
- }
- 
- }
-
  
  
 namespace quarter_cylinder {
@@ -747,33 +465,6 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 
 
 // PRISM WITH ANNULAR BASE - BEGIN
-namespace prism_annular_base {
-
- namespace function_0 {
-
-
-
- double value(const std::vector<double> & x) {
-     
-     return  x[2] * (1. - x[2] ) * (1. - x[0]*x[0] - x[1]*x[1]) * (-0.25 + x[0]*x[0] + x[1]*x[1]);
- }
- 
-
-//calculator: f = z(z - 1)(1 - x^2 - y^2)(1/4 - x^2 - y^2);
-double laplacian(const std::vector < double > & x) {
-    
-  double r2 = 0.5 - 2.5*pow(x[0],2) + 2*pow(x[0],4) - 2.5*pow(x[1],2) + 4*pow(x[0],2)*pow(x[1],2) + 2*pow(x[1],4) + 5.*x[2] - 16*pow(x[0],2)*x[2] - 16*pow(x[1],2)*x[2] - 5.*pow(x[2],2) + 16*pow(x[0],2)*pow(x[2],2) + 16*pow(x[1],2)*pow(x[2],2);
-  
-   return  r2;
-   
-  }
- 
- }
- 
- 
-}
-
-
 
 
 namespace prism_annular_base {
@@ -813,6 +504,9 @@ namespace prism_annular_base {
 
 }
 // PRISM WITH ANNULAR BASE - END
+
+
+// 3D - END ===============================
 
 
 
