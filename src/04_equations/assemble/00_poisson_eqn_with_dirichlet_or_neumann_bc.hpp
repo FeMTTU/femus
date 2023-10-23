@@ -266,11 +266,11 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
   unsigned solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
 
-  unsigned solPdeIndex_u;
-  solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
+  unsigned solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
 
-  std::vector < double >  sol_u;     sol_u.reserve(maxSize);
+
   std::vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
+  std::vector < double >  sol_u;     sol_u.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
@@ -482,8 +482,8 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
    
   } //end element loop for each process
 
+  
   RES->close();
-
 
   if (assembleMatrix) JAC->close();
 

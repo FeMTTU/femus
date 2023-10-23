@@ -9,16 +9,13 @@
 #include "MultiLevelSolution.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
- 
-
+#include "app_specifics.hpp"
 
 #include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
-#include "FE_convergence.hpp"
-
-#include "app_specifics.hpp"
 
 #include "Solution_functions_over_domains_or_mesh_files.hpp"
 
+#include "FE_convergence.hpp"
 
 
 using namespace femus;
@@ -596,12 +593,14 @@ int main(int argc, char** args) {
   std::vector< app_specifics >   my_specifics;
   
   app_specifics  app_segment;   //me
+
   app_specifics  app_square;   //me
 //   app_specifics  app_circle;   //Gayani
   app_specifics  app_semicircle;   //Himali
   app_specifics  app_quarter_circle;      //Max
   app_specifics  app_annulus;       //Jon
   app_specifics  app_semiannulus;        //Fahad
+
   app_specifics  app_cube;   //me
   app_specifics  app_cylinder;            //Aman
 //   app_specifics  app_semicylinder;   //Rifat
@@ -619,8 +618,8 @@ int main(int argc, char** args) {
   
   app_segment._boundary_conditions_types_and_values             = segment_0x1::bc_all_dirichlet_homogeneous;
 
-  app_segment._true_solution    = segment_0x1::function_0::value;
   app_segment._assemble_function_rhs = segment_0x1::function_0::laplacian;
+  app_segment._true_solution    = segment_0x1::function_0::value;
   //segment - END
   
   
@@ -632,6 +631,7 @@ int main(int argc, char** args) {
   app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/");
   
   app_square._boundary_conditions_types_and_values             = square_01_by_01::bc_all_dirichlet_homogeneous;
+
   app_square._assemble_function_rhs = square_01_by_01::function_0::laplacian;
   app_square._true_solution    = square_01_by_01::function_0::value;
  //assignment_square - END
@@ -646,6 +646,7 @@ int main(int argc, char** args) {
   app_semicircle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_semi/");
   
   app_semicircle._boundary_conditions_types_and_values             = semicircle::bc_all_dirichlet_homogeneous;
+
   app_semicircle._assemble_function_rhs = semicircle::function_0::laplacian;
   app_semicircle._true_solution    = semicircle::function_0::value;
   //assignment_semicircle - END
@@ -661,6 +662,7 @@ int main(int argc, char** args) {
   app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   
   app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle::bc_all_dirichlet_homogeneous;
+
   app_quarter_circle._assemble_function_rhs = quarter_circle::function_0::laplacian;
   app_quarter_circle._true_solution    = quarter_circle::function_0::value;
   //assignment_quarter_circle - END
@@ -705,6 +707,7 @@ int main(int argc, char** args) {
   app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube/0-1x0-1x0-1/");
   
   app_cube._boundary_conditions_types_and_values             = cube_01_by_01_by_01::bc_all_dirichlet_homogeneous;
+  
   app_cube._assemble_function_rhs = cube_01_by_01_by_01::function_0::laplacian;
   app_cube._true_solution    = cube_01_by_01_by_01::function_0::value;
  //assignment_cube - END
@@ -739,6 +742,7 @@ int main(int argc, char** args) {
   app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   
   app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder::bc_all_dirichlet_homogeneous;
+  
   app_quarter_cylinder._assemble_function_rhs = quarter_cylinder::function_0::laplacian;
   app_quarter_cylinder._true_solution    = quarter_cylinder::function_0::value;
   //assignment_quarter_cylinder - END

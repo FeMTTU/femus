@@ -7,9 +7,6 @@
 
 namespace femus {
 
-// remember that you have to declare all these functions "inline", otherwise you get "multiple definition" in linking
-
- // Operations ---------------------------------
 
 namespace Math {
     
