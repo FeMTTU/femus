@@ -55,7 +55,12 @@ static  void output_convergence_order(const std::vector < std::vector < real_num
 
 
 private: 
-    
+  
+static       const std::vector< std::string > norm_names;
+static       const std::vector< std::string > convergence_computation_names;
+static       const std::vector< std::string > volume_or_boundary_names;
+
+
 static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProblem & ml_prob,
                                                                 const std::vector< Unknown > &  unknowns,  
                                                                 const std::vector< Math::Function< double > * >  & exact_sol,
@@ -118,6 +123,12 @@ static  void compute_error_norms_per_unknown_per_level(const std::vector < std::
 
 
 
+template < class real_num>
+/*static*/       const std::vector< std::string > FE_convergence< real_num >::norm_names = {"L2-NORM", "H1-SEMINORM"};
+template < class real_num>
+/*static*/       const std::vector< std::string > FE_convergence< real_num >::convergence_computation_names = {"Incremental", "Absolute, with analytical sol"};
+template < class real_num>
+/*static*/       const std::vector< std::string > FE_convergence< real_num >::volume_or_boundary_names = {"Volume", "Boundary"};
 
 
 
@@ -145,9 +156,9 @@ template < class real_num>
        if (convergence_rate_computation_method_Flag[1] == true && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
 
     
-    if ( convergence_rate_computation_method_Flag.size() != 2 ) { std::cout << "Not implemented" << std::endl; abort(); }
-    if ( volume_or_boundary_Flag.size() != 2 )                  { std::cout << "Not implemented" << std::endl; abort(); }
-    if ( sobolev_norms_Flag.size() != 2 )                       { std::cout << "Not implemented" << std::endl; abort(); }
+    if ( convergence_rate_computation_method_Flag.size() !=   convergence_computation_names.size() ) { std::cout << "Not implemented" << std::endl; abort(); }
+    if ( volume_or_boundary_Flag.size() != volume_or_boundary_names.size() )                  { std::cout << "Not implemented" << std::endl; abort(); }
+    if ( sobolev_norms_Flag.size() != norm_names.size() )                       { std::cout << "Not implemented" << std::endl; abort(); }
        // Controls - END
   
     
@@ -408,14 +419,11 @@ template < class real_num>
     assert( unknowns.size() == norms.size() );
     
     std::cout << std::endl;
-    
-    const std::vector< std::string > norm_names = {"L2-NORM", "H1-SEMINORM"};
-    const std::vector< std::string > convergence_computation_names = {"Incremental", "Absolute, with analytical sol"};
-  
+      
         
      std::cout << "==== Convergence computation method: " << convergence_computation_names[convergence_computation_method] << std::endl;
      
-     std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary << std::endl;
+     std::cout << "==== Volume = 0, boundary = 1: here we have " << volume_or_boundary_names[volume_or_boundary] << std::endl;
 
      std::cout << "==== ERROR and ORDER OF CONVERGENCE for the norm " << norm_names[sobolev_norms] << std::endl;
 
@@ -470,7 +478,7 @@ template < class real_num>
                                                                             const unsigned volume_or_boundary
                                              ) {
      
-  // (//0 = only L2: //1 = L2 + H1)
+
   
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
@@ -478,7 +486,7 @@ template < class real_num>
    if (convergence_rate_computation_method == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
    
     
-  const unsigned num_norms = 2;
+  const unsigned num_norms = norm_names.size();
 
   //norms that we are computing here //first L2, then H1 ============
   std::vector< real_num > norms_exact_function_at_qp(num_norms);                  std::fill(norms_exact_function_at_qp.begin(), norms_exact_function_at_qp.end(), 0.);   
@@ -859,7 +867,8 @@ else if (volume_or_boundary == 1 )	{
   } //end element loop for each process
 
   
-  // add the norms of all processes
+// *** Add norms to all processes - BEGIN ***
+
   NumericVector* norm_vec_exact_using_qp;
                  norm_vec_exact_using_qp = NumericVector::build().release();
                  norm_vec_exact_using_qp->init(msh->n_processors(), 1 , false, AUTOMATIC);
@@ -891,10 +900,12 @@ else if (volume_or_boundary == 1 )	{
 
           
     for (int n = 0; n < norms_exact_function_at_qp.size(); n++) { 
-   norms_exact_function_at_qp[n] = sqrt(norms_exact_function_at_qp[n]);                                            
+     norms_exact_function_at_qp[n] = sqrt(norms_exact_function_at_qp[n]);                                            
    norms_exact_function_at_dofs[n] = sqrt(norms_exact_function_at_dofs[n]);                                            
-           norms_inexact_dofs[n] = sqrt(norms_inexact_dofs[n]);
+             norms_inexact_dofs[n] = sqrt(norms_inexact_dofs[n]);
     }
+
+// *** Add norms to all processes - END ***
     
     
 if (convergence_rate_computation_method == 0)  return norms_inexact_dofs;
