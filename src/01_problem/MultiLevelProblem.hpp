@@ -321,13 +321,13 @@ public:
   void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
   
   
-  void set_all_abstract_fe_multiple() {
+  void set_all_abstract_fe_AD_or_not() {
       
       const unsigned n_qrules = _qrule.size();
       
-      _elem_all_dd.resize(n_qrules);
-      _elem_all_ad.resize(n_qrules);
-      _elem_all_aa.resize(n_qrules);
+      _elem_all_dd.resize(n_qrules);  //derivative of unknowns by hand, fixed domain
+      _elem_all_ad.resize(n_qrules);  //derivative of unknowns with Automatic Differentiation, fixed domain
+      _elem_all_aa.resize(n_qrules);  //derivative of unknowns with Automatic Differentiation, moving domain
           
   for (int q = 0; q < n_qrules; q++) {
        set_all_abstract_fe<double, double>(q, _elem_all_dd[q]);
