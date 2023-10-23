@@ -647,7 +647,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
           exit(1);
         }
 
-        cout << " Set " << std::setw(14) << _bdcType[i_start] << " Boundary_condition"
+        cout << " Set " << std::setw(15) << _bdcType[i_start] << " Boundary_condition"
              << " for variable " << std::setw(3) << _solName[i_start] << endl;
       }
       else {

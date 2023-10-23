@@ -345,7 +345,7 @@ int main(int argc, char** args) {
     // ======= Convergence study - BEGIN ========================
     
     // Auxiliary mesh, all levels - BEGIN  ================
-    unsigned max_number_of_meshes = 8;
+    unsigned max_number_of_meshes = 6;
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
 
     ///set coarse storage mesh
@@ -365,7 +365,7 @@ int main(int argc, char** args) {
     
     
      // 5) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool my_solution_generation_has_equation_solve = true; 
+       const bool my_solution_generation_has_equation_solve = /*true*/false; 
      // 5) Solve Equation or only Approximation Theory  - END   ==============
 
 

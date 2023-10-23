@@ -394,7 +394,7 @@ template < class real_num>
     std::cout << std::endl;
   
     //convergence rate value
-    std::cout << "\t\t";
+    std::cout << "\t\t" /*<<  std::fixed*/;
     std::cout.precision(3);
 
     std::cout << log( norm[solution][mesh_lev] / norm[solution][mesh_lev + 1] ) / log(2.);
