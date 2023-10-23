@@ -19,11 +19,12 @@
 
 using namespace femus;
 
+
 // ======= Domain-related and Mesh-related stuff - BEGIN =========================
 
 // SEGMENT - BEGIN
 
-namespace segment {
+namespace segment_0x1 {
 
   
   namespace function_0 {
@@ -47,7 +48,11 @@ double laplacian(const std::vector<double> & x){
 
   }
 
-  
+}
+
+
+
+namespace segment_0x1 {
   
  
 // This depends on: 
@@ -56,7 +61,7 @@ double laplacian(const std::vector<double> & x){
 // equation (name of the unknowns; also, if it is Laplace, biharmonic, Stokes, etc)
 // 
 // 
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob,
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob,
                       const std::vector < double >& x,
                       const char name[], 
                       double& value,
@@ -92,7 +97,7 @@ bool bc_all_dirichlet(const MultiLevelProblem * ml_prob,
 
 
 // SQUARE - BEGIN
-namespace square {
+namespace square_01_by_01 {
   
   
 namespace function_0 {
@@ -112,9 +117,13 @@ double laplacian(const std::vector < double >& x) {
 
 }
 
+}
 
 
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+namespace square_01_by_01 {
+
+  
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
   
@@ -154,7 +163,7 @@ bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < dou
 
 
 // CUBE - BEGIN
-namespace cube {
+namespace cube_01_by_01_by_01 {
 
 namespace function_0 {
 
@@ -175,9 +184,12 @@ double laplacian(const std::vector < double >& x) {
 
 }
 
+}
 
 
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+namespace cube_01_by_01_by_01 {
+
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
   
@@ -244,8 +256,14 @@ double laplacian(const std::vector < double >& x) {
 
 }
 
+}
 
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+
+namespace circle {
+  
+  
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
   
@@ -270,11 +288,6 @@ namespace semicircle {
 
 namespace function_0 {
 
-double laplacian(const std::vector < double >& x) {
-
-   return  - 8. * x[1]; 
-    
-}
 
 double value(const std::vector < double >& x) {
     
@@ -287,13 +300,22 @@ double value(const std::vector < double >& x) {
    
 }
 
+double laplacian(const std::vector < double >& x) {
 
+   return  - 8. * x[1]; 
+    
+}
+
+
+}
 
 }
 
 
 
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+namespace semicircle {
+
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
     
    if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
 
@@ -353,9 +375,13 @@ double laplacian(const std::vector<double> & x_qp){
 
  } 
  
- 
+}
 
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+namespace quarter_circle {
+
+
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
     
  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
  
@@ -398,16 +424,6 @@ namespace annulus {
   
  namespace function_0 {
 
- 
-double laplacian(const std::vector < double >& x) {
-    
-  double r2 = x[0] * x[0] + x[1] * x[1];
-  double y = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
-//   double y = 16. * (0.3125 - r2);
-  return y;
-  
-}
-
 double value(const std::vector < double >& x) {
     
   double r2 = x[0] * x[0] + x[1] * x[1];
@@ -418,11 +434,27 @@ double value(const std::vector < double >& x) {
     
 }
 
+
+double laplacian(const std::vector < double >& x) {
+    
+  double r2 = x[0] * x[0] + x[1] * x[1];
+  double y = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
+//   double y = 16. * (0.3125 - r2);
+  return y;
+  
+}
+
+
  }
  
+}
+
+
+
+namespace annulus {
  
  
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
      
@@ -478,8 +510,13 @@ double laplacian(const std::vector < double >& x) {
 
  }
  
+}
+
+
+
+namespace semiannulus {
  
- bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
  
@@ -546,7 +583,12 @@ double  laplacian(const std::vector < double >& x_qp) {
  }
  
  
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+}
+
+
+namespace cylinder {
+ 
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
  if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
 
@@ -584,17 +626,24 @@ namespace semicylinder {
  namespace function_0 {
   
 
-double laplacian(const std::vector < double >& x) {
-}
-
 double value(const std::vector < double >& x) {
 }
 
 
+double laplacian(const std::vector < double >& x) {
+}
+
+
+
  }
  
- 
- bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+}
+
+
+namespace semicylinder {
+  
+  
+ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
     if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
 
@@ -647,9 +696,13 @@ double laplacian(const std::vector < double >& x_qp) {
 
  }
  
+ }
+
  
+ 
+namespace quarter_cylinder {
    
-bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
      if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
 
@@ -717,7 +770,16 @@ double laplacian(const std::vector < double > & x) {
  
  }
  
- bool bc_all_dirichlet(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+ 
+}
+
+
+
+
+namespace prism_annular_base {
+  
+  
+ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
  if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();   
  
@@ -861,10 +923,10 @@ int main(int argc, char** args) {
   app_segment._mesh_files.push_back("segment_16_dir_neu.med");
   app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/");
   
-  app_segment._boundary_conditions_types_and_values             = segment::bc_all_dirichlet;
+  app_segment._boundary_conditions_types_and_values             = segment_0x1::bc_all_dirichlet_homogeneous;
 
-  app_segment._true_solution    = segment::function_0::value;
-  app_segment._assemble_function_rhs = segment::function_0::laplacian;
+  app_segment._true_solution    = segment_0x1::function_0::value;
+  app_segment._assemble_function_rhs = segment_0x1::function_0::laplacian;
   //segment - END
   
   
@@ -875,9 +937,9 @@ int main(int argc, char** args) {
   app_square._mesh_files.push_back("square_0-1x0-1_divisions_1x1.med");
   app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/");
   
-  app_square._boundary_conditions_types_and_values             = square::bc_all_dirichlet;
-  app_square._assemble_function_rhs = square::function_0::laplacian;
-  app_square._true_solution    = square::function_0::value;
+  app_square._boundary_conditions_types_and_values             = square_01_by_01::bc_all_dirichlet_homogeneous;
+  app_square._assemble_function_rhs = square_01_by_01::function_0::laplacian;
+  app_square._true_solution    = square_01_by_01::function_0::value;
  //assignment_square - END
 
 
@@ -889,7 +951,7 @@ int main(int argc, char** args) {
   app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
   app_semicircle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_semi/");
   
-  app_semicircle._boundary_conditions_types_and_values             = semicircle::bc_all_dirichlet;
+  app_semicircle._boundary_conditions_types_and_values             = semicircle::bc_all_dirichlet_homogeneous;
   app_semicircle._assemble_function_rhs = semicircle::function_0::laplacian;
   app_semicircle._true_solution    = semicircle::function_0::value;
   //assignment_semicircle - END
@@ -904,7 +966,7 @@ int main(int argc, char** args) {
   app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   
-  app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle::bc_all_dirichlet;
+  app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle::bc_all_dirichlet_homogeneous;
   app_quarter_circle._assemble_function_rhs = quarter_circle::function_0::laplacian;
   app_quarter_circle._true_solution    = quarter_circle::function_0::value;
   //assignment_quarter_circle - END
@@ -918,7 +980,7 @@ int main(int argc, char** args) {
   app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
   app_annulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus/");
   
-  app_annulus._boundary_conditions_types_and_values             = annulus::bc_all_dirichlet;
+  app_annulus._boundary_conditions_types_and_values             = annulus::bc_all_dirichlet_homogeneous;
 
   app_annulus._assemble_function_rhs = annulus::function_0::laplacian;
   app_annulus._true_solution    = annulus::function_0::value;
@@ -934,7 +996,7 @@ int main(int argc, char** args) {
   app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
   app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
   
-  app_semiannulus._boundary_conditions_types_and_values             = semiannulus::bc_all_dirichlet;
+  app_semiannulus._boundary_conditions_types_and_values             = semiannulus::bc_all_dirichlet_homogeneous;
 
   app_semiannulus._assemble_function_rhs = semiannulus::function_0::laplacian;
   app_semiannulus._true_solution    = semiannulus::function_0::value;
@@ -948,9 +1010,9 @@ int main(int argc, char** args) {
   app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
   app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube/0-1x0-1x0-1/");
   
-  app_cube._boundary_conditions_types_and_values             = cube::bc_all_dirichlet;
-  app_cube._assemble_function_rhs = cube::function_0::laplacian;
-  app_cube._true_solution    = cube::function_0::value;
+  app_cube._boundary_conditions_types_and_values             = cube_01_by_01_by_01::bc_all_dirichlet_homogeneous;
+  app_cube._assemble_function_rhs = cube_01_by_01_by_01::function_0::laplacian;
+  app_cube._true_solution    = cube_01_by_01_by_01::function_0::value;
  //assignment_cube - END
   
 
@@ -964,7 +1026,7 @@ int main(int argc, char** args) {
   app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
   app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
   
-  app_cylinder._boundary_conditions_types_and_values             = cylinder::bc_all_dirichlet;
+  app_cylinder._boundary_conditions_types_and_values             = cylinder::bc_all_dirichlet_homogeneous;
 
   app_cylinder._assemble_function_rhs = cylinder::function_0::laplacian;
   app_cylinder._true_solution    = cylinder::function_0::value;
@@ -982,7 +1044,7 @@ int main(int argc, char** args) {
   app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   
-  app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder::bc_all_dirichlet;
+  app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder::bc_all_dirichlet_homogeneous;
   app_quarter_cylinder._assemble_function_rhs = quarter_cylinder::function_0::laplacian;
   app_quarter_cylinder._true_solution    = quarter_cylinder::function_0::value;
   //assignment_quarter_cylinder - END
@@ -999,7 +1061,7 @@ int main(int argc, char** args) {
   app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
   app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
   
-  app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base::bc_all_dirichlet;
+  app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base::bc_all_dirichlet_homogeneous;
 
   app_prism_annular_base._assemble_function_rhs = prism_annular_base::function_0::laplacian;
   app_prism_annular_base._true_solution    = prism_annular_base::function_0::value;
@@ -1122,10 +1184,10 @@ int main(int argc, char** args) {
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
-  system.SetMgType(V_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
+  // system.SetMgType(V_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
 
 
-  system.SetOuterSolver(GMRES);
+  system.SetOuterSolver(PREONLY/*GMRES*/);
  
   system.init();
   

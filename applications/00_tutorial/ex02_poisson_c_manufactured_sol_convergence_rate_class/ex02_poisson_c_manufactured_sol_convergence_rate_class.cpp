@@ -37,7 +37,7 @@ using namespace femus;
 
 
 
-double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
+double Solution_set_initial_conditions_with_analytical_sol(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
 
 Math::Function< double > *  exact_sol =  ml_prob->get_ml_solution()->get_analytical_function(name);
 
@@ -48,7 +48,7 @@ double value = exact_sol->value(x);
 }
 
 
-bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name, double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions_all_dirichlet_nonhomogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name, double& value, const int faceName, const double time) {
 
     bool dirichlet = true; //dirichlet
 
@@ -272,16 +272,16 @@ int main(int argc, char** args) {
     // ======= Files - END  =========================
 
 
-    // ======= Mesh, Coarse - BEGIN ========================
+    // ======= Mesh, Coarse, file - BEGIN ========================
     MultiLevelMesh ml_mesh;
 
   const std::string relative_path_to_build_directory =  "../../../";
 
-      const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";  
+      // const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";  
            // @todo works with given Function;
-           // @todo does not work with Laplace solution, for biquadratic exact solution;
+           // @todo WORKS with with Laplace equation
   
-   // const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2_unstructured.med";  
+   const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2_unstructured.med";  
          // @todo works with given Function;
          // @todo WORKS with with Laplace equation
   
@@ -295,7 +295,11 @@ int main(int argc, char** args) {
 //    const std::string input_file = "segment_1_all_dir.med";
    
 //    const std::string input_file = "cylinder_hexahedral.med";
-      
+   
+    // ======= Mesh, Coarse, file - END ========================
+
+   
+    // ======= Mesh, Coarse - BEGIN ========================
     std::ostringstream mystream; mystream << "./"  << input_file;
     const std::string infile = mystream.str();
 
@@ -365,12 +369,12 @@ int main(int argc, char** args) {
     
     
      // 5) Solve Equation or only Approximation Theory - BEGIN   ==============
-       const bool my_solution_generation_has_equation_solve = /*true*/false; 
+       const bool my_solution_generation_has_equation_solve = true/*false*/; 
      // 5) Solve Equation or only Approximation Theory  - END   ==============
 
 
     // 1) Which exact solution - BEGIN ================
-    std::vector< Math::Function< double > * > unknowns_analytical_functions( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
+    std::vector< Math::Function< double > * > unknowns_analytical_functions_Needed_for_absolute( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
 //     Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
 
@@ -383,16 +387,18 @@ int main(int argc, char** args) {
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
 //     Zero< double >  analytical_function_1;
 
-    for (unsigned int u = 0; u < unknowns_analytical_functions.size(); u++) {
-    unknowns_analytical_functions[u] =  & analytical_function_1;
+    for (unsigned int u = 0; u < unknowns_analytical_functions_Needed_for_absolute.size(); u++) {
+    unknowns_analytical_functions_Needed_for_absolute[u] =  & analytical_function_1;
     }
     // 1) Which exact solution - END ================
 
      
-// we are going to do one Convergence Study for each System. This will give more flexibility when we export this to an arbitrary Application   
+    // Various choices - BEGIN ================
     std::vector < bool > convergence_rate_computation_method_Flag = {true, true};
     std::vector < bool > volume_or_boundary_Flag                  = {true, true};
     std::vector < bool > sobolev_norms_Flag                       = {true, true};
+    // Various choices - END ================
+    
 
     FE_convergence<>::convergence_study(ml_prob, 
                                      ml_mesh, 
@@ -404,9 +410,9 @@ int main(int argc, char** args) {
                                      my_solution_generation_has_equation_solve,
                                      my_solution_generation, 
                                      unknowns,
-                                     unknowns_analytical_functions,
-                                     Solution_set_initial_conditions,
-                                     Solution_set_boundary_conditions
+                                     unknowns_analytical_functions_Needed_for_absolute,
+                                     Solution_set_initial_conditions_with_analytical_sol,
+                                     Solution_set_boundary_conditions_all_dirichlet_nonhomogeneous
                                     );
 
       

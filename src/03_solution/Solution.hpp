@@ -28,7 +28,7 @@
 #include "ParallelObject.hpp"
 #include "Mesh.hpp"
 #include "FElemTypeEnum.hpp"
-#include "Math.hpp"
+#include "Function.hpp"
 
 #include "petscmat.h"
 

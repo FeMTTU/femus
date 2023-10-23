@@ -1,10 +1,10 @@
 #ifndef __femus_utils_Math_hpp__
 #define __femus_utils_Math_hpp__
 
-#include <vector>
-#include <string>
+
 #include "Typedefs.hpp"
 
+#include <vector>
 
 
 
@@ -28,7 +28,7 @@ namespace Math {
 
 
 
-// ============== inline functions ==========================   
+// ============== inline functions - BEGIN ==========================   
    
 /// set to zero - n components
 inline void zeroN(double* x,const uint N)  {
@@ -115,25 +115,7 @@ inline void extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D,
     return orig_vector_dot_tangent;
    }
 
-
-
-
-template < class type = double >
-  class Function {
- 
-  public:
-      
- virtual type value(const std::vector < type >& x) const {}/*= 0*/;
-
- virtual std::vector < type >  gradient(const std::vector < type >& x) const  {}/*= 0*/;
-
- virtual type laplacian(const std::vector < type >& x) const {}/*= 0*/;
- 
-  type helmholtz(const std::vector < type >& x) const { return ( - laplacian(x) + value(x) ); };
-
-};
-
-
+// ============== inline functions - END ==========================
 
 
  

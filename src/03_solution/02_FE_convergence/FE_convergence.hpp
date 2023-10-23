@@ -6,6 +6,7 @@
 
 #include "MultiLevelSolution.hpp"
 #include "Math.hpp"
+#include "Function.hpp"
 #include "Assemble_unknown.hpp"
 
 #include <vector>
@@ -488,11 +489,11 @@ template < class real_num>
     
   const unsigned num_norms = norm_names.size();
 
-  //norms that we are computing here //first L2, then H1 ============
+  //norms that we are computing here //first L2, then H1 - BEGIN ============
   std::vector< real_num > norms_exact_function_at_qp(num_norms);                  std::fill(norms_exact_function_at_qp.begin(), norms_exact_function_at_qp.end(), 0.);   
   std::vector< real_num > norms_exact_function_at_dofs(num_norms);       std::fill(norms_exact_function_at_dofs.begin(), norms_exact_function_at_dofs.end(), 0.);
   std::vector< real_num > norms_inexact_dofs(num_norms);     std::fill(norms_inexact_dofs.begin(), norms_inexact_dofs.end(), 0.);
-  //norms that we are computing here //first L2, then H1 ============
+  //norms that we are computing here //first L2, then H1 - END ============
   
   
   unsigned level = ml_sol_single_level->_mlMesh->GetNumberOfLevels() - 1u; //this is supposed to be zero because a single level is used

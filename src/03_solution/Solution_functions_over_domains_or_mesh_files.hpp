@@ -5,7 +5,7 @@
 
 
 
-
+// Functions for every domain - BEGIN ===============================
 
 template < class type = double >
 class Zero : public Math::Function< type > {
@@ -37,7 +37,19 @@ public:
       
 };
 
+// Functions for every domain - END ===============================
 
+
+// 1D - BEGIN ===============================
+
+
+
+
+// 1D - END ===============================
+
+
+
+// 2D - BEGIN ===============================
 
 
 namespace  Domain_square_01by01  {
@@ -430,9 +442,16 @@ public:
 
 
 
+// 2D - END ===============================
 
 
 
+// 3D - BEGIN ===============================
+
+
+
+
+// 3D - END ===============================
 
 
 
