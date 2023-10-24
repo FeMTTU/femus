@@ -761,7 +761,6 @@ double value(const std::vector < double >& x) {
     
   double r2 = x[0] * x[0] + x[1] * x[1];
   double res = (1. - r2) * ( r2 - 0.25 );
-//   double yprime = (1. - r2)' * ( r2 - 0.25 ) +   (1. - r2) * ( r2 - 0.25 )'; 
   return res;
 
     
@@ -772,7 +771,6 @@ double laplacian(const std::vector < double >& x) {
     
   double r2 = x[0] * x[0] + x[1] * x[1];
   double res = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
-//   double y = 16. * (0.3125 - r2);
   return res;
   
 }
@@ -792,7 +790,10 @@ public:
 
     type value(const std::vector < type >& x) const {
         
-        // return    ;
+     double r2 = x[0] * x[0] + x[1] * x[1];
+     double res = (1. - r2) * ( r2 - 0.25 );
+     return res;
+        
     }
 
 
@@ -800,16 +801,20 @@ public:
 
         std::vector < type > solGrad(x.size());
 
-        // solGrad[0]  = ;
-        // solGrad[1]  = ;
+        double r2 = x[0] * x[0] + x[1] * x[1];
+  
+        solGrad[0]  = ( - 2. * x[0] ) * ( r2 - 0.25 ) +   (1. - r2) * ( 2. * x[0] );
+        solGrad[1]  = ( - 2. * x[1] ) * ( r2 - 0.25 ) +   (1. - r2) * ( 2. * x[1] );
 
-        // return solGrad;
+        return solGrad;
     }
 
 
     type laplacian(const std::vector < type >& x) const {
         
-        // return ;
+  double r2 = x[0] * x[0] + x[1] * x[1];
+  double res = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
+  return res;
     }
 
     
@@ -832,19 +837,13 @@ double value(const std::vector < double >& x) {
     
      double r2 = x[0] * x[0] + x[1] * x[1];
 
-     return   x[0] * (1. - sqrt(r2) ) * ( sqrt(r2) - .5);
-//      return   x[0] * (r2 - 1. ) * (.25 - r2);
+     return   x[0] * (1. - r2 ) * ( r2 - 0.25);
 }
 
 
 double laplacian(const std::vector < double >& x) {
   
-    double r2 = x[0] * x[0] + x[1] * x[1];
-    double temp = -x[0] * (8. - 4.5 / (sqrt(r2)));
-    //double temp = (4. - 1.5 / (sqrt(r2)));
-  return temp;
-
-//   return - 20. * x[0] * (-0.45 + x[0] * x[0] - 0.6 * x[1] * x[1] );
+          return -2. * x[0] * ( -5. + 12. * x[0] * x[0] + 12. * x[1] * x[1] );
     
 }
 
@@ -863,24 +862,28 @@ public:
 
     type value(const std::vector < type >& x) const {
         
-        // return    ;
+     double r2 = x[0] * x[0] + x[1] * x[1];
+
+     return   x[0] * (1. - r2 ) * ( r2 - 0.25);
     }
 
 
     std::vector < type >  gradient(const std::vector < type >& x) const {
 
         std::vector < type > solGrad(x.size());
+        
+     double r2 = x[0] * x[0] + x[1] * x[1];
 
-        // solGrad[0]  = ;
-        // solGrad[1]  = ;
+        solGrad[0]  =           (1. - r2 ) * ( r2 - 0.25) + (x[0]) * ( - 2. * x[0] ) * ( r2 - 0.25) + (x[0]) * (1. - r2 ) * ( 2. * x[0] );
+        solGrad[1]  =                                     + (x[0]) * ( - 2. * x[1] ) * ( r2 - 0.25) + (x[0]) * (1. - r2 ) * ( 2. * x[1] );
 
-        // return solGrad;
+        return solGrad;
     }
 
 
     type laplacian(const std::vector < type >& x) const {
         
-        // return ;
+         return -2. * x[0] * ( -5. + 12. * x[0] * x[0] + 12. * x[1] * x[1] );
     }
 
     
