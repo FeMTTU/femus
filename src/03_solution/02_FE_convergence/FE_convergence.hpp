@@ -1023,7 +1023,7 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
 //***************** Check Number of Unknowns - END **********************************  
 
 //***************** Check that true solution is provided - BEGIN **********************************  
-  if (ml_prob.get_app_specs_pointer()->_true_solution == NULL) {  std::cout << "No true solution provided";  abort();  }
+  if (ml_prob.get_app_specs_pointer()->_true_solution_function == NULL) {  std::cout << "No true solution provided";  abort();  }
 //***************** Check that true solution is provided - END **********************************  
 
 
@@ -1135,7 +1135,7 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
              	for (unsigned d = 0; d < xyz_i.size(); d++) {
                    xyz_i[d] = geom_element.get_coords_at_dofs_3d()[d][i];
                 }
-               sol_u_true[i]  =   ml_prob.get_app_specs_pointer()->_true_solution( xyz_i);  
+               sol_u_true[i]  =   ml_prob.get_app_specs_pointer()->_true_solution_function->value( xyz_i);  
     }
 
     //***************************************************  
@@ -1204,7 +1204,7 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
   
 	      
        norm_dof_based +=  jacXweight_qp * (  u_qp - u_true_qp) * (  u_qp - u_true_qp) ;
-       norm_qp_based  +=  jacXweight_qp * (  u_qp -  ml_prob.get_app_specs_pointer()->_true_solution( x_qp )) * (  u_qp - ml_prob.get_app_specs_pointer()->_true_solution( x_qp )) ;
+       norm_qp_based  +=  jacXweight_qp * (  u_qp -  ml_prob.get_app_specs_pointer()->_true_solution_function->value( x_qp )) * (  u_qp - ml_prob.get_app_specs_pointer()->_true_solution_function->value( x_qp )) ;
 //======================Residuals=======================
 	      
 // // //           if (assembleMatrix) {

@@ -619,7 +619,10 @@ int main(int argc, char** args) {
   app_segment._boundary_conditions_types_and_values             = segment_0x1::bc_all_dirichlet_homogeneous;
 
   app_segment._assemble_function_rhs = segment_0x1::function_0::laplacian;
-  app_segment._true_solution    = segment_0x1::function_0::value;
+
+  segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
+  app_segment._assemble_function_for_rhs   = & app_segment_function_zero_on_boundary_1;
+  app_segment._true_solution_function      = & app_segment_function_zero_on_boundary_1;
   //segment - END
   
   
@@ -633,7 +636,10 @@ int main(int argc, char** args) {
   app_square._boundary_conditions_types_and_values             = square_01_by_01::bc_all_dirichlet_homogeneous;
 
   app_square._assemble_function_rhs = square_01_by_01::function_0::laplacian;
-  app_square._true_solution    = square_01_by_01::function_0::value;
+  
+  square_01_by_01::Function_Zero_on_boundary_1<>   app_square_function_zero_on_boundary_1;
+  app_square._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_1;
+  app_square._true_solution_function           = & app_square_function_zero_on_boundary_1;
  //assignment_square - END
 
 
@@ -648,7 +654,10 @@ int main(int argc, char** args) {
   app_semicircle._boundary_conditions_types_and_values             = semicircle::bc_all_dirichlet_homogeneous;
 
   app_semicircle._assemble_function_rhs = semicircle::function_0::laplacian;
-  app_semicircle._true_solution    = semicircle::function_0::value;
+  
+  semicircle::Function_Zero_on_boundary_1<>     app_semicircle_function_zero_on_boundary_1;
+  app_semicircle._assemble_function_for_rhs = & app_semicircle_function_zero_on_boundary_1;
+  app_semicircle._true_solution_function    = & app_semicircle_function_zero_on_boundary_1;
   //assignment_semicircle - END
    
   
@@ -664,7 +673,10 @@ int main(int argc, char** args) {
   app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle::bc_all_dirichlet_homogeneous;
 
   app_quarter_circle._assemble_function_rhs = quarter_circle::function_0::laplacian;
-  app_quarter_circle._true_solution    = quarter_circle::function_0::value;
+  
+  quarter_circle::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
+  app_quarter_circle._assemble_function_for_rhs = & app_quarter_circle_function_zero_on_boundary_1;
+  app_quarter_circle._true_solution_function    = & app_quarter_circle_function_zero_on_boundary_1;
   //assignment_quarter_circle - END
  
 
@@ -679,7 +691,10 @@ int main(int argc, char** args) {
   app_annulus._boundary_conditions_types_and_values             = annulus::bc_all_dirichlet_homogeneous;
 
   app_annulus._assemble_function_rhs = annulus::function_0::laplacian;
-  app_annulus._true_solution    = annulus::function_0::value;
+  
+  annulus::Function_Zero_on_boundary_1<>     app_annulus_function_zero_on_boundary_1;
+  app_annulus._assemble_function_for_rhs = & app_annulus_function_zero_on_boundary_1;
+  app_annulus._true_solution_function    = & app_annulus_function_zero_on_boundary_1;
   //assignment_annulus - END
 
   
@@ -695,7 +710,10 @@ int main(int argc, char** args) {
   app_semiannulus._boundary_conditions_types_and_values             = semiannulus::bc_all_dirichlet_homogeneous;
 
   app_semiannulus._assemble_function_rhs = semiannulus::function_0::laplacian;
-  app_semiannulus._true_solution    = semiannulus::function_0::value;
+  
+  semiannulus::Function_Zero_on_boundary_1<>     app_semiannulus_function_zero_on_boundary_1;
+  app_semiannulus._assemble_function_for_rhs = & app_semiannulus_function_zero_on_boundary_1;
+  app_semiannulus._true_solution_function    = & app_semiannulus_function_zero_on_boundary_1;
   //assignment_semiannulus - END
  
 
@@ -709,7 +727,10 @@ int main(int argc, char** args) {
   app_cube._boundary_conditions_types_and_values             = cube_01_by_01_by_01::bc_all_dirichlet_homogeneous;
   
   app_cube._assemble_function_rhs = cube_01_by_01_by_01::function_0::laplacian;
-  app_cube._true_solution    = cube_01_by_01_by_01::function_0::value;
+  
+  cube_01_by_01_by_01::Function_Zero_on_boundary_1<>   app_cube_function_zero_on_boundary_1;
+  app_cube._assemble_function_for_rhs              = & app_cube_function_zero_on_boundary_1;
+  app_cube._true_solution_function                 = & app_cube_function_zero_on_boundary_1;
  //assignment_cube - END
   
 
@@ -726,7 +747,10 @@ int main(int argc, char** args) {
   app_cylinder._boundary_conditions_types_and_values             = cylinder_along_z_with_base_centered_at_1_by_1::bc_all_dirichlet_homogeneous;
 
   app_cylinder._assemble_function_rhs = cylinder_along_z_with_base_centered_at_1_by_1::function_0::laplacian;
-  app_cylinder._true_solution    = cylinder_along_z_with_base_centered_at_1_by_1::function_0::value;
+  
+  cylinder_along_z_with_base_centered_at_1_by_1::Function_Zero_on_boundary_1<>   app_cylinder_function_zero_on_boundary_1;
+  app_cylinder._assemble_function_for_rhs                                    = & app_cylinder_function_zero_on_boundary_1;
+  app_cylinder._true_solution_function                                       = & app_cylinder_function_zero_on_boundary_1;
   //assignment_cylinder - END
 
 
@@ -744,7 +768,10 @@ int main(int argc, char** args) {
   app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
   
   app_quarter_cylinder._assemble_function_rhs = quarter_cylinder_along_z_with_base_centered_at_0_by_0::function_0::laplacian;
-  app_quarter_cylinder._true_solution    = quarter_cylinder_along_z_with_base_centered_at_0_by_0::function_0::value;
+  
+  quarter_cylinder_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_quarter_cylinder_function_zero_on_boundary_1;
+  app_quarter_cylinder._assemble_function_for_rhs                                    = & app_quarter_cylinder_function_zero_on_boundary_1;
+  app_quarter_cylinder._true_solution_function                                       = & app_quarter_cylinder_function_zero_on_boundary_1;
   //assignment_quarter_cylinder - END
 
 
@@ -762,7 +789,10 @@ int main(int argc, char** args) {
   app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
   app_prism_annular_base._assemble_function_rhs = prism_annular_base_along_z_with_base_centered_at_0_by_0::function_0::laplacian;
-  app_prism_annular_base._true_solution         = prism_annular_base_along_z_with_base_centered_at_0_by_0::function_0::value;
+  
+  prism_annular_base_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_prism_annular_base_function_zero_on_boundary_1;
+  app_prism_annular_base._assemble_function_for_rhs                                    = & app_prism_annular_base_function_zero_on_boundary_1;
+  app_prism_annular_base._true_solution_function                                       = & app_prism_annular_base_function_zero_on_boundary_1;
   //assignment_tetra_prism_annular_base - END
   
  

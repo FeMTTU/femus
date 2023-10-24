@@ -27,10 +27,13 @@ class app_specifics {
       app_specifics() {
          
          _assemble_function = NULL;
-         _assemble_function_rhs = NULL;
          _boundary_conditions_types_and_values = NULL;
          
+         _assemble_function_rhs = NULL;
          _true_solution = NULL;
+         
+         _assemble_function_for_rhs = NULL;
+         _true_solution_function = NULL;         
          
       }
   
@@ -48,14 +51,6 @@ class app_specifics {
    //func pointer of EQUATION - END
 
 
-   //func pointer of RHS - BEGIN
-   // [[deprecated]]
-   typedef  double    (* AssembleFunctionRHS )  (const std::vector<double> & x_qp);
-   
-   AssembleFunctionRHS  _assemble_function_rhs;
-   //func pointer of RHS - END
-   
-
    //func pointer of Boundary Conditions - BEGIN
     typedef bool (*BoundaryFunction) (const MultiLevelProblem * ml_prob, 
                                       const std::vector < double >& x,
@@ -67,6 +62,15 @@ class app_specifics {
     
     BoundaryFunction   _boundary_conditions_types_and_values;
    //func pointer of Boundary Conditions - END
+    
+
+   //func pointer of RHS - BEGIN
+   // [[deprecated]]
+   typedef  double    (* AssembleFunctionRHS )  (const std::vector<double> & x_qp);
+   
+   AssembleFunctionRHS  _assemble_function_rhs;
+   //func pointer of RHS - END
+   
 
 
     //func pointer of true solution - BEGIN
@@ -76,10 +80,10 @@ class app_specifics {
    TrueSolution  _true_solution;
     //func pointer of true solution - END
   
-   Math::Function< double > *  _true_solution_func;
-    
-   Math::Function< double > *  _assemble_function_rhs_func;
+   Math::Function< double > *  _assemble_function_for_rhs;
    
+   Math::Function< double > *  _true_solution_function;
+    
 };
 
 
