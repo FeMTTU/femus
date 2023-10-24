@@ -7,8 +7,8 @@ PROJECT(femus)
 #############################################################################################
 
 SET(femus_src 
-00_utils/FemusInit.cpp
-00_utils/Files.cpp
+00_utils/00_application_initialization/FemusInit.cpp
+00_utils/01_application_file_handling/Files.cpp
 00_utils/input_parser/InputParser.cpp
 00_utils/input_parser/JsonInputParser.cpp
 00_utils/parallel/MyMatrix.cpp

@@ -164,7 +164,6 @@ int main(int argc, char** args) {
   app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
   app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
   app_segment._assemble_function_rhs = square__laplacian__rhs;
-//   app_segment._true_solution    = square__laplacian__true_solution; 
   
   ///@todo if this is not set, nothing should happen here
 

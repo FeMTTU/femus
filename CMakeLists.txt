@@ -2,10 +2,18 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 PROJECT(femus)
 
+#############################################################################################
+### CMake options - BEGIN
+#############################################################################################
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -O3 -march=native -mtune=native")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mtune=native")
 set(CMAKE_MACOSX_RPATH 1)
+#############################################################################################
+### CMake options - END
+#############################################################################################
+
+
 
 #############################################################################################
 ### Femus library version - BEGIN
@@ -337,8 +345,21 @@ IF(SLEPC_FOUND)
 ENDIF(SLEPC_FOUND)
 
 #include femus include files
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_mesh/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_mesh/00_geom_elements/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/03_solution/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/03_solution/01_output/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/04_equations/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/04_equations/01_time_dependent/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/04_equations/boundary_conditions/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/algebra/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/fe/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/ism/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/uq/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/00_application_initialization/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/01_application_file_handling/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/data_types/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/input_parser/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/math/)

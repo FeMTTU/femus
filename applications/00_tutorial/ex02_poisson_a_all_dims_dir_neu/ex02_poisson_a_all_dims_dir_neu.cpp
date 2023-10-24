@@ -30,14 +30,6 @@ namespace segment {
 
   
   namespace function_0 {
-    
-
-double value(const std::vector<double> & x) {
-    
-    // for a 1d segment
-    
-    return  x[0] * (1. - x[0]);
-}
 
 
 // user-made equation - accepts only coordinates
@@ -209,7 +201,7 @@ int main(int argc, char** args) {
   // app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_dirichlet_right_neumann;
   app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_neumann_right_dirichlet;
   app_segment._assemble_function_rhs = segment::function_0::laplacian;
-//   app_segment._true_solution    = segment::function_0::value;  
+
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
 
   

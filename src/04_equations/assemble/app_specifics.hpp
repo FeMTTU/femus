@@ -30,18 +30,21 @@ class app_specifics {
          _boundary_conditions_types_and_values = NULL;
          
          _assemble_function_rhs = NULL;
-         _true_solution = NULL;
          
          _assemble_function_for_rhs = NULL;
          _true_solution_function = NULL;         
          
       }
   
+   //mesh files - BEGIN
    std::vector< std::string >   _mesh_files;  //same domain, only potentially multiple mesh discretizations 
 
    std::vector< std::string >   _mesh_files_path_relative_to_executable;  //same domain, only potentially multiple mesh discretizations 
+   //mesh files - END
  
+   //System - BEGIN
    std::string  _system_name;  //for now we only accept 1 System in a certain App. This name is needed to retrieve the equation from the Problem
+   //System - END
    
    //func pointer of EQUATION - BEGIN
    /// @todo this should be templated
@@ -71,14 +74,6 @@ class app_specifics {
    AssembleFunctionRHS  _assemble_function_rhs;
    //func pointer of RHS - END
    
-
-
-    //func pointer of true solution - BEGIN
-   // [[deprecated]]
-   typedef  double    (* TrueSolution )  (const std::vector<double> & x_qp);
-   
-   TrueSolution  _true_solution;
-    //func pointer of true solution - END
   
    Math::Function< double > *  _assemble_function_for_rhs;
    
