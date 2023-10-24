@@ -357,7 +357,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 // CYLINDER - BEGIN
 
 
-namespace cylinder {
+namespace cylinder_along_z_with_base_centered_at_1_by_1 {
  
 bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
@@ -415,7 +415,7 @@ namespace semicylinder {
 // QUARTER CYLINDER - BEGIN
  
  
-namespace quarter_cylinder {
+namespace quarter_cylinder_along_z_with_base_centered_at_0_by_0 {
    
 bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
@@ -723,10 +723,10 @@ int main(int argc, char** args) {
   app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
   app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
   
-  app_cylinder._boundary_conditions_types_and_values             = cylinder::bc_all_dirichlet_homogeneous;
+  app_cylinder._boundary_conditions_types_and_values             = cylinder_along_z_with_base_centered_at_1_by_1::bc_all_dirichlet_homogeneous;
 
-  app_cylinder._assemble_function_rhs = cylinder::function_0::laplacian;
-  app_cylinder._true_solution    = cylinder::function_0::value;
+  app_cylinder._assemble_function_rhs = cylinder_along_z_with_base_centered_at_1_by_1::function_0::laplacian;
+  app_cylinder._true_solution    = cylinder_along_z_with_base_centered_at_1_by_1::function_0::value;
   //assignment_cylinder - END
 
 
@@ -741,10 +741,10 @@ int main(int argc, char** args) {
   app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   
-  app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder::bc_all_dirichlet_homogeneous;
+  app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
   
-  app_quarter_cylinder._assemble_function_rhs = quarter_cylinder::function_0::laplacian;
-  app_quarter_cylinder._true_solution    = quarter_cylinder::function_0::value;
+  app_quarter_cylinder._assemble_function_rhs = quarter_cylinder_along_z_with_base_centered_at_0_by_0::function_0::laplacian;
+  app_quarter_cylinder._true_solution    = quarter_cylinder_along_z_with_base_centered_at_0_by_0::function_0::value;
   //assignment_quarter_cylinder - END
 
 
