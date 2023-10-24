@@ -1110,9 +1110,8 @@ double laplacian(const std::vector < double >& x) {
     double yy = x[1];
     double zz = x[2];
     
-    // Return -Delta U0 @todo review this one
-    return ( - 12. * xx * yy * zz * (2. - zz) + 2. * xx * yy * ( xx * xx + yy * yy ) );
-  
+    return  2. * xx * yy * (-1. + xx * xx + yy * yy - 12. * zz + 6. * zz * zz);
+ 
 }
 
  }
@@ -1141,6 +1140,10 @@ public:
 
         std::vector < type > solGrad(x.size(), 0.);
 
+    double xx = x[0];
+    double yy = x[1];
+    double zz = x[2];
+    
         solGrad[0]  = yy * zz * (2. - zz) * (-xx * xx - yy * yy + 1.) + xx * yy * zz * (2. - zz) * (- 2. * xx );
         solGrad[1]  = xx * zz * (2. - zz) * (-xx * xx - yy * yy + 1.) + xx * yy * zz * (2. - zz) * (- 2. * yy );
         solGrad[2]  = xx * yy * (2. - 2. * zz) * (-xx * xx - yy * yy + 1.);
@@ -1151,7 +1154,11 @@ public:
 
     type laplacian(const std::vector < type >& x) const {
         
-        // return ;
+    double xx = x[0];
+    double yy = x[1];
+    double zz = x[2];
+    
+    return  2. * xx * yy * (-1. + xx * xx + yy * yy - 12. * zz + 6. * zz * zz);
     }
 
     
@@ -1163,7 +1170,7 @@ public:
  }
 
 
-namespace prism_annular_base {
+namespace prism_annular_base_along_z_with_base_centered_at_0_by_0 {
 
  namespace function_0 {
 
@@ -1171,17 +1178,17 @@ namespace prism_annular_base {
 
  double value(const std::vector<double> & x) {
      
-     return  x[2] * (1. - x[2] ) * (1. - x[0]*x[0] - x[1]*x[1]) * (-0.25 + x[0]*x[0] + x[1]*x[1]);
+     return  x[2] * (1. - x[2] ) * (1. - x[0] * x[0] - x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
+      // z * (1. - z ) * (1. - x * x - y * y) * (-0.25 + x * x + y * y);
  }
  
 
-//calculator: f = z(z - 1)(1 - x^2 - y^2)(1/4 - x^2 - y^2);
 double laplacian(const std::vector < double > & x) {
     
-  double r2 = 0.5 - 2.5*pow(x[0],2) + 2*pow(x[0],4) - 2.5*pow(x[1],2) + 4*pow(x[0],2)*pow(x[1],2) + 2*pow(x[1],4) + 5.*x[2] - 16*pow(x[0],2)*x[2] - 16*pow(x[1],2)*x[2] - 5.*pow(x[2],2) + 16*pow(x[0],2)*pow(x[2],2) + 16*pow(x[1],2)*pow(x[2],2);
-  
-   return  r2;
-   
+    return  2. * ( 0.25 + x[0] * x[0] * x[0] * x[0] + x[1] * x[1] * x[1] * x[1]  + 2.5 * x[2] - 2.5 * x[2] * x[2] +  
+      x[1] * x[1] * (-1.25 - 8. * x[2] + 8. * x[2] * x[2])
+    + x[0] * x[0] * (-1.25 + 2. * x[1] * x[1]  - 8. * x[2] + 8. * x[2] * x[2]) );
+    // return  2. * (0.25 + x^4 + y^4 + 2.5 z - 2.5 z^2 + y^2 (-1.25 - 8 z + 8 z^2) + x^2 (-1.25 + 2 y^2 - 8 z + 8 z^2));
   }
  
  }
@@ -1198,7 +1205,7 @@ public:
 
     type value(const std::vector < type >& x) const {
         
-        // return    ;
+     return  x[2] * (1. - x[2] ) * (1. - x[0] * x[0] - x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
     }
 
 
@@ -1206,17 +1213,20 @@ public:
 
         std::vector < type > solGrad(x.size(), 0.);
 
-        // solGrad[0]  = ;
-        // solGrad[1]  = ;
-        // solGrad[2]  = ;
+        solGrad[0]  = x[2] * (1. - x[2] ) * ( ( - 2. * x[0] ) * (-0.25 + x[0] * x[0] + x[1] * x[1]) + (1. - x[0] * x[0] - x[1] * x[1]) * ( 2. * x[0] ) );
+        solGrad[1]  = x[2] * (1. - x[2] ) * ( ( - 2. * x[1] ) * (-0.25 + x[0] * x[0] + x[1] * x[1]) + (1. - x[0] * x[0] - x[1] * x[1]) * ( 2. * x[1] ) );
+        solGrad[2]  =   (1. - 2. * x[2] ) * (1. - x[0] * x[0] - x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
 
-        // return solGrad;
+        return solGrad;
     }
 
 
     type laplacian(const std::vector < type >& x) const {
         
-        // return ;
+    return  2. * ( 0.25 + x[0] * x[0] * x[0] * x[0] + x[1] * x[1] * x[1] * x[1]  + 2.5 * x[2] - 2.5 * x[2] * x[2] +  
+      x[1] * x[1] * (-1.25 - 8. * x[2] + 8. * x[2] * x[2])
+    + x[0] * x[0] * (-1.25 + 2. * x[1] * x[1]  - 8. * x[2] + 8. * x[2] * x[2]) );
+    // return  2. * (0.25 + x^4 + y^4 + 2.5 z - 2.5 z^2 + y^2 (-1.25 - 8 z + 8 z^2) + x^2 (-1.25 + 2 y^2 - 8 z + 8 z^2));
     }
 
     

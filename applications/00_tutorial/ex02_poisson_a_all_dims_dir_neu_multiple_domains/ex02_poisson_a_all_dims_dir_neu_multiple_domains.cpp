@@ -464,7 +464,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 // PRISM WITH ANNULAR BASE - BEGIN
 
 
-namespace prism_annular_base {
+namespace prism_annular_base_along_z_with_base_centered_at_0_by_0 {
   
   
  bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
@@ -759,10 +759,10 @@ int main(int argc, char** args) {
   app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
   app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
   
-  app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base::bc_all_dirichlet_homogeneous;
+  app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  app_prism_annular_base._assemble_function_rhs = prism_annular_base::function_0::laplacian;
-  app_prism_annular_base._true_solution    = prism_annular_base::function_0::value;
+  app_prism_annular_base._assemble_function_rhs = prism_annular_base_along_z_with_base_centered_at_0_by_0::function_0::laplacian;
+  app_prism_annular_base._true_solution         = prism_annular_base_along_z_with_base_centered_at_0_by_0::function_0::value;
   //assignment_tetra_prism_annular_base - END
   
  
