@@ -27,12 +27,14 @@ namespace femus {
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class MonolithicFSINonLinearImplicitSystem;
+class System;
+class ExplicitSystem;
+class ImplicitSystem;
 class LinearImplicitSystem;
 class NonLinearImplicitSystem;
-class ExplicitSystem;
+class MonolithicFSINonLinearImplicitSystem;
+
 class MultiLevelProblem;
-class System;
 
 
 /**
@@ -133,12 +135,12 @@ private:
 
 // -----------------------------------------------------------
 // Useful typedefs
-typedef TransientSystem<LinearImplicitSystem> TransientImplicitSystem;
+typedef TransientSystem<System> TransientBaseSystem;
+typedef TransientSystem<ExplicitSystem> TransientExplicitSystem;
+typedef TransientSystem<ImplicitSystem> TransientImplicitSystem;
 typedef TransientSystem<LinearImplicitSystem> TransientLinearImplicitSystem;
 typedef TransientSystem<NonLinearImplicitSystem> TransientNonlinearImplicitSystem;
 typedef TransientSystem<MonolithicFSINonLinearImplicitSystem> TransientMonolithicFSINonlinearImplicitSystem;
-typedef TransientSystem<ExplicitSystem> TransientExplicitSystem;
-typedef TransientSystem<System> TransientBaseSystem;
 
 
 // ------------------------------------------------------------

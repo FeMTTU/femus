@@ -169,7 +169,7 @@ int main(int argc, char** args) {
   fe_quad_rule_vec.push_back("seventh");
   
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
+  ml_prob.set_all_abstract_fe_AD_or_not();
   // ======= Problem, Quad Rule - END  ========================
   
   
@@ -179,7 +179,7 @@ int main(int argc, char** args) {
     std::string mesh_folder_file = "input/";
   const std::string input_file = femus::ctrl::mesh_input;
 
-//   std::string input_file = "parametric_square_1x2.med";
+//   std::string input_file = "square_0-1x0-1_divisions_1x2.med";
 //   std::string input_file = "cyl.med"; // "fifth"
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << mesh_folder_file << input_file;

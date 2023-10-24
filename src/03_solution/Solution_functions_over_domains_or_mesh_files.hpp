@@ -2,10 +2,11 @@
 #define __femus_solution_functions_over_domains_or_mesh_files_hpp__
 
 
+#include "Function.hpp"
 
+using namespace femus;
 
-
-
+// Functions for every domain - BEGIN ===============================
 
 template < class type = double >
 class Zero : public Math::Function< type > {
@@ -20,7 +21,7 @@ public:
 
     vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  0.;
         solGrad[1]  =  0.;
@@ -37,6 +38,136 @@ public:
       
 };
 
+// Functions for every domain - END ===============================
+
+
+// 1D - BEGIN ===============================
+
+
+
+namespace segment_0x1 {
+
+  
+  namespace function_0 {
+    
+
+double value(const std::vector<double> & x) {
+    
+    return  x[0] * (1. - x[0]);
+}
+
+
+// user-made equation - accepts only coordinates
+double laplacian(const std::vector<double> & x){
+    
+    return  -2.;
+     }
+
+  }
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+    return  x[0] * (1. - x[0]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  =  1. - 2. * x[0];
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+    return  -2.;
+    }
+
+    
+    
+};
+
+
+}
+
+
+
+// 1D - END ===============================
+
+
+
+// 2D - BEGIN ===============================
+namespace square_01_by_01 {
+  
+  
+  namespace function_0 {
+
+double value(const std::vector < double >& x) {
+    
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    
+}
+
+double laplacian(const std::vector < double >& x) {
+    
+  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+  
+}
+
+
+}
+
+
+
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+    return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
+        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+    return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+    }
+
+    
+    
+};
+
+
+
+}
 
 
 
@@ -57,7 +188,7 @@ public:
 
     vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -91,9 +222,9 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -130,7 +261,7 @@ public:
 
     vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
         solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
@@ -164,7 +295,7 @@ public:
 
     vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
         solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
@@ -220,7 +351,7 @@ public:
     vector < type >  gradient(const std::vector < type >& x) const {
 //   std::cout << "Redo calc"; @todo
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -276,7 +407,7 @@ public:
 
   std::cout << "Redo calc";
   
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
         solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
         solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
    
@@ -315,7 +446,7 @@ public:
     vector < type >  gradient(const std::vector < type >& x) const {
 //   std::cout << "Redo calc";  @todo
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -360,7 +491,7 @@ public:
 
     vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
         solGrad[1]  = -pi * cos(pi * x[0]) * sin(pi * x[1]);
@@ -403,7 +534,7 @@ public:
 
     vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size());
+        vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -429,10 +560,686 @@ public:
 }
 
 
+namespace circle {
+///@todo
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        // return    ;
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        // solGrad[0]  = ;
+        // solGrad[1]  = ;
+
+        // return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        // return ;
+    }
+
+    
+    
+};
+
+
+
+}
+
+
+namespace semicircle {
+
+namespace function_0 {
+
+
+double value(const std::vector < double >& x) {
+    
+    double xxx = x[0];
+    double yyy = x[1];
+    const double r2 = xxx * xxx + yyy * yyy;
+    double r = (1. - r2) * yyy;
+    
+    return r;
+   
+}
+
+double laplacian(const std::vector < double >& x) {
+
+   return  - 8. * x[1]; 
+    
+}
+
+
+}
 
 
 
 
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+    double xxx = x[0];
+    double yyy = x[1];
+    const double r2 = xxx * xxx + yyy * yyy;
+    double r = (1. - r2) * yyy;
+    // double r = (1. - x[0] * x[0] - x[1] * x[1]) * x[1];
+    
+    return r;
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = -2. * x[0] * x[1];
+        solGrad[1]  = - 2. * x[1] * x[1] + 1. - x[0] * x[0] - x[1] * x[1];
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+   return  - 8. * x[1]; 
+    }
+
+    
+    
+};
+
+
+}
+
+
+namespace quarter_circle {
+
+ namespace function_0 {
+   
+double value(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return  x * y * (1.0 - (x*x + y*y)); // forced to be zero on the x and y axis, and the circle edge
+}
+
+ 
+
+double laplacian(const std::vector<double> & x_qp){
+    
+    // for a quarter-circle in Quadrant 1
+    
+    double x = x_qp[0];
+    double y = x_qp[1];
+    
+    return  -12. * x * y;
+}
+
+
+ } 
+
+
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+    // for a quarter-circle in Quadrant 1
+    
+    double xx = x[0];
+    double yy = x[1];
+    
+    return  xx * yy * (1.0 - (xx*xx + yy*yy) ); // forced to be zero on the x and y axis, and the circle edge
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+    double xx = x[0];
+    double yy = x[1];
+    
+        solGrad[0]  = yy * (1.0 - (xx*xx + yy*yy) ) + xx * yy * (-2. * xx);
+        solGrad[1]  = xx * (1.0 - (xx*xx + yy*yy) ) + yy * xx * (-2. * yy);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+    double xx = x[0];
+    double yy = x[1];
+    
+    return  -12. * xx * yy;
+    }
+
+    
+    
+};
+
+ 
+ 
+}
+
+
+namespace annulus {
+  
+ namespace function_0 {
+
+double value(const std::vector < double >& x) {
+    
+  double r2 = x[0] * x[0] + x[1] * x[1];
+  double res = (1. - r2) * ( r2 - 0.25 );
+  return res;
+
+    
+}
+
+
+double laplacian(const std::vector < double >& x) {
+    
+  double r2 = x[0] * x[0] + x[1] * x[1];
+  double res = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
+  return res;
+  
+}
+
+
+ }
+
+ 
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+     double r2 = x[0] * x[0] + x[1] * x[1];
+     double res = (1. - r2) * ( r2 - 0.25 );
+     return res;
+        
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        double r2 = x[0] * x[0] + x[1] * x[1];
+  
+        solGrad[0]  = ( - 2. * x[0] ) * ( r2 - 0.25 ) +   (1. - r2) * ( 2. * x[0] );
+        solGrad[1]  = ( - 2. * x[1] ) * ( r2 - 0.25 ) +   (1. - r2) * ( 2. * x[1] );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+  double r2 = x[0] * x[0] + x[1] * x[1];
+  double res = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
+  return res;
+    }
+
+    
+    
+};
+
+
+ 
+ 
+}
+
+
+
+namespace semiannulus {
+  
+ namespace function_0 {
+   
+
+double value(const std::vector < double >& x) {
+    
+     double r2 = x[0] * x[0] + x[1] * x[1];
+
+     return   x[0] * (1. - r2 ) * ( r2 - 0.25);
+}
+
+
+double laplacian(const std::vector < double >& x) {
+  
+          return -2. * x[0] * ( -5. + 12. * x[0] * x[0] + 12. * x[1] * x[1] );
+    
+}
+
+
+ }
+ 
+
+ 
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+     double r2 = x[0] * x[0] + x[1] * x[1];
+
+     return   x[0] * (1. - r2 ) * ( r2 - 0.25);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+        
+     double r2 = x[0] * x[0] + x[1] * x[1];
+
+        solGrad[0]  =           (1. - r2 ) * ( r2 - 0.25) + (x[0]) * ( - 2. * x[0] ) * ( r2 - 0.25) + (x[0]) * (1. - r2 ) * ( 2. * x[0] );
+        solGrad[1]  =                                     + (x[0]) * ( - 2. * x[1] ) * ( r2 - 0.25) + (x[0]) * (1. - r2 ) * ( 2. * x[1] );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+         return -2. * x[0] * ( -5. + 12. * x[0] * x[0] + 12. * x[1] * x[1] );
+    }
+
+    
+    
+};
+
+
+ 
+ 
+ 
+}
+
+
+
+// 2D - END ===============================
+
+
+
+// 3D - BEGIN ===============================
+
+namespace cube_01_by_01_by_01 {
+
+namespace function_0 {
+
+
+double value(const std::vector < double >& x) {
+    
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]) * x[2] * (1. - x[2]);
+    
+}
+
+
+double laplacian(const std::vector < double >& x) {
+    
+  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) +  x[2] * (1. - x[2]) );
+  
+}
+
+
+}
+
+
+
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]) * x[2] * (1. - x[2]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = (1. - 2. * x[0]) * x[1] * (1. - x[1]) * x[2] * (1. - x[2]);
+        solGrad[1]  = (1. - 2. * x[1]) * x[2] * (1. - x[2]) * x[0] * (1. - x[0]);
+        solGrad[2]  = (1. - 2. * x[2]) * x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) +  x[2] * (1. - x[2]) );
+    }
+
+    
+    
+};
+
+
+
+
+}
+
+
+
+namespace cylinder_along_z_with_base_centered_at_1_by_1 {
+
+ namespace function_0 {
+   
+   
+double value(const std::vector<double> & x) {
+  
+      double xx = x[0];
+      double yy = x[1];
+      double zz = x[2];
+      double r = zz * (2. - zz) * ( 1. - (xx - 1.) * (xx - 1.) - (yy - 1.) * (yy - 1.) ) ;
+      return r;
+     
+}
+ 
+double  laplacian(const std::vector < double >& x) {
+    
+   return  4. * x[2] * (x[2] - 2.)  +  2. * ( (x[0] - 1.) * (x[0] - 1.)  +  (x[1] - 1.) * (x[1] - 1.) - 1.);
+}
+
+ }
+ 
+ 
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+      double xx = x[0];
+      double yy = x[1];
+      double zz = x[2];
+      double r = zz * (2. - zz) * ( 1. - (xx - 1.) * (xx - 1.) - (yy - 1.) * (yy - 1.) ) ;
+      return r;
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+      double xx = x[0];
+      double yy = x[1];
+      double zz = x[2];
+        
+        solGrad[0]  = zz * (2. - zz) * (  - (2. * xx - 2. ) ) ;
+        solGrad[1]  = zz * (2. - zz) * (  - (2. * yy - 2. ) ) ;
+        solGrad[2]  = (2. - 2. * zz) * ( 1. - (xx - 1.) * (xx - 1.) - (yy - 1.) * (yy - 1.) ) ;
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+   return  4. * x[2] * (x[2] - 2.)  +  2. * ( (x[0] - 1.) * (x[0] - 1.)  +  (x[1] - 1.) * (x[1] - 1.) - 1.);
+    }
+
+    
+};
+
+
+}
+
+
+namespace semicylinder {
+///@todo
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        // return    ;
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        // solGrad[0]  = ;
+        // solGrad[1]  = ;
+        // solGrad[2]  = ;
+
+        // return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        // return ;
+    }
+
+    
+    
+};
+
+ 
+ 
+ 
+}
+
+
+
+namespace quarter_cylinder_along_z_with_base_centered_at_0_by_0 {
+
+ namespace function_0 {
+  
+
+
+double value(const std::vector < double >& x) {
+
+    double xx = x[0];
+    double yy = x[1];
+    double zz = x[2];
+    
+     return  xx * yy * zz * (2. - zz)*(-xx * xx - yy * yy + 1.);
+}
+
+
+double laplacian(const std::vector < double >& x) {
+
+      
+    // Quarter cylinder of radius 1 and length 2
+    
+    double xx = x[0];
+    double yy = x[1];
+    double zz = x[2];
+    
+    return  2. * xx * yy * (-1. + xx * xx + yy * yy - 12. * zz + 6. * zz * zz);
+ 
+}
+
+ }
+ 
+ 
+ 
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+    double xx = x[0];
+    double yy = x[1];
+    double zz = x[2];
+    
+     return  xx * yy * zz * (2. - zz) * (-xx * xx - yy * yy + 1.);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+    double xx = x[0];
+    double yy = x[1];
+    double zz = x[2];
+    
+        solGrad[0]  = yy * zz * (2. - zz) * (-xx * xx - yy * yy + 1.) + xx * yy * zz * (2. - zz) * (- 2. * xx );
+        solGrad[1]  = xx * zz * (2. - zz) * (-xx * xx - yy * yy + 1.) + xx * yy * zz * (2. - zz) * (- 2. * yy );
+        solGrad[2]  = xx * yy * (2. - 2. * zz) * (-xx * xx - yy * yy + 1.);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+    double xx = x[0];
+    double yy = x[1];
+    double zz = x[2];
+    
+    return  2. * xx * yy * (-1. + xx * xx + yy * yy - 12. * zz + 6. * zz * zz);
+    }
+
+    
+    
+};
+
+
+ 
+ }
+
+
+namespace prism_annular_base_along_z_with_base_centered_at_0_by_0 {
+
+ namespace function_0 {
+
+
+
+ double value(const std::vector<double> & x) {
+     
+     return  x[2] * (1. - x[2] ) * (1. - x[0] * x[0] - x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
+      // z * (1. - z ) * (1. - x * x - y * y) * (-0.25 + x * x + y * y);
+ }
+ 
+
+double laplacian(const std::vector < double > & x) {
+    
+    return  2. * ( 0.25 + x[0] * x[0] * x[0] * x[0] + x[1] * x[1] * x[1] * x[1]  + 2.5 * x[2] - 2.5 * x[2] * x[2] +  
+      x[1] * x[1] * (-1.25 - 8. * x[2] + 8. * x[2] * x[2])
+    + x[0] * x[0] * (-1.25 + 2. * x[1] * x[1]  - 8. * x[2] + 8. * x[2] * x[2]) );
+    // return  2. * (0.25 + x^4 + y^4 + 2.5 z - 2.5 z^2 + y^2 (-1.25 - 8 z + 8 z^2) + x^2 (-1.25 + 2 y^2 - 8 z + 8 z^2));
+  }
+ 
+ }
+ 
+ 
+ 
+
+template < class type = double >
+class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+     return  x[2] * (1. - x[2] ) * (1. - x[0] * x[0] - x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = x[2] * (1. - x[2] ) * ( ( - 2. * x[0] ) * (-0.25 + x[0] * x[0] + x[1] * x[1]) + (1. - x[0] * x[0] - x[1] * x[1]) * ( 2. * x[0] ) );
+        solGrad[1]  = x[2] * (1. - x[2] ) * ( ( - 2. * x[1] ) * (-0.25 + x[0] * x[0] + x[1] * x[1]) + (1. - x[0] * x[0] - x[1] * x[1]) * ( 2. * x[1] ) );
+        solGrad[2]  =   (1. - 2. * x[2] ) * (1. - x[0] * x[0] - x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+    return  2. * ( 0.25 + x[0] * x[0] * x[0] * x[0] + x[1] * x[1] * x[1] * x[1]  + 2.5 * x[2] - 2.5 * x[2] * x[2] +  
+      x[1] * x[1] * (-1.25 - 8. * x[2] + 8. * x[2] * x[2])
+    + x[0] * x[0] * (-1.25 + 2. * x[1] * x[1]  - 8. * x[2] + 8. * x[2] * x[2]) );
+    // return  2. * (0.25 + x^4 + y^4 + 2.5 z - 2.5 z^2 + y^2 (-1.25 - 8 z + 8 z^2) + x^2 (-1.25 + 2 y^2 - 8 z + 8 z^2));
+    }
+
+    
+    
+};
+
+
+ 
+ 
+ 
+}
+
+// 3D - END ===============================
 
 
 

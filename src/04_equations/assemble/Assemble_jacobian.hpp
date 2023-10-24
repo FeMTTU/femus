@@ -37,7 +37,7 @@ class assemble_jacobian/* : public assemble_jacobian_base*/ {
                                                 const std::vector < unsigned int > Sol_n_el_dofs,
                                                 const unsigned int sum_Sol_n_el_dofs,
                                                 const std::vector< UnknownLocal < real_num > > & unk_vec,
-                                                const std::vector< Phi < real_num_mov > > &  phi,
+                                                const std::vector< Phi < real_num > > &  phi,
                                                 const double weight,
                                                 std::vector< double > & Jac) const;
   
@@ -53,7 +53,7 @@ class assemble_jacobian/* : public assemble_jacobian_base*/ {
  void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
                                                const std::vector< std::vector< real_num > > & solu,
                                                const std::vector< real_num > & Res,
-                                               std::vector< real_num_mov > & Jac, 
+                                               std::vector< double/*real_num_mov*/ > & Jac, 
                                                const std::vector< int > & loc_to_glob_map,
                                                NumericVector*           RES,
                                                SparseMatrix*             KK
@@ -63,7 +63,7 @@ class assemble_jacobian/* : public assemble_jacobian_base*/ {
  void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
                                                const std::vector< UnknownLocal < real_num > > & unk_vec,
                                                const std::vector< real_num > & Res,
-                                               std::vector< real_num_mov > & Jac, 
+                                               std::vector< double/*real_num_mov*/ > & Jac, 
                                                const std::vector< int > & loc_to_glob_map,
                                                NumericVector*           RES,
                                                SparseMatrix*             KK

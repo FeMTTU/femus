@@ -20,9 +20,10 @@
 // includes
 //------------------------------------------------------------------------------
 #include "TransientSystem.hpp"
+
 #include <string>
 #include <vector>
-#include "assert.h"
+#include <cassert>
 
 namespace femus {
     
@@ -134,12 +135,12 @@ void NewmarkTransientSystem<Base>::SetNewmarkParameters(const double gamma, cons
 
 // -----------------------------------------------------------
 // Useful typedefs
-typedef NewmarkTransientSystem<LinearImplicitSystem> NewmarkTransientImplicitSystem;
+typedef NewmarkTransientSystem<System> NewmarkTransientBaseSystem;
+typedef NewmarkTransientSystem<ExplicitSystem> NewmarkTransientExplicitSystem;
+typedef NewmarkTransientSystem<ImplicitSystem> NewmarkTransientImplicitSystem;
 typedef NewmarkTransientSystem<LinearImplicitSystem> NewmarkTransientLinearImplicitSystem;
 typedef NewmarkTransientSystem<NonLinearImplicitSystem> NewmarkTransientNonlinearImplicitSystem;
 typedef NewmarkTransientSystem<MonolithicFSINonLinearImplicitSystem> NewmarkTransientMonolithicFSINonlinearImplicitSystem;
-typedef NewmarkTransientSystem<ExplicitSystem> NewmarkTransientExplicitSystem;
-typedef NewmarkTransientSystem<System> NewmarkTransientBaseSystem;
 
 } //end namespace femus
 

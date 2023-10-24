@@ -25,7 +25,7 @@ template < >
                                                 const std::vector < unsigned int > Sol_n_el_dofs,
                                                 const unsigned int sum_Sol_n_el_dofs,
                                                 const std::vector< UnknownLocal < adept::adouble > > & unk_vec,
-                                                const std::vector< Phi < double > > &  phi,
+                                                const std::vector< Phi < adept::adouble > > &  phi,
                                                 const double weight,
                                                 std::vector< double > & Jac) const { }
 

@@ -7,7 +7,6 @@
 #include "DenseMatrix.hpp"
 
 #include "Files.hpp"
-#include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "SystemTwo.hpp"
 #include "FETypeEnum.hpp"

@@ -12,10 +12,10 @@ namespace square {
 
 namespace mesh {
 
-  const std::string _2d_square_1x1 = "parametric_square_1x1.med";
-  const std::string _2d_square_1x2 = "parametric_square_1x2.med";
-  const std::string _2d_square_2x2 = "parametric_square_2x2.med";
-  const std::string _2d_square_4x5 = "parametric_square_4x5.med";
+  const std::string _2d_square_1x1 = "square_0-1x0-1_divisions_1x1.med";
+  const std::string _2d_square_1x2 = "square_0-1x0-1_divisions_1x2.med";
+  const std::string _2d_square_2x2 = "square_0-1x0-1_divisions_2x2.med";
+  const std::string _2d_square_4x5 = "square_0-1x0-1_divisions_4x5.med";
 }
 
 }

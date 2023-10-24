@@ -329,7 +329,7 @@ int main(int argc, char** args) {
   fe_quad_rule_vec.push_back("eighth" /*"tenth"*/);
 
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
+  ml_prob.set_all_abstract_fe_AD_or_not();
   // ======= Problem, Quad Rule - END  ========================
 
   // ======= Problem, System - BEGIN ========================

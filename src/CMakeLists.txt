@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(femus)
 
 #############################################################################################
-### Source files
+### Source files - BEGIN
 #############################################################################################
 
 SET(femus_src 
@@ -47,6 +47,13 @@ SET(femus_src
 03_solution/01_output/VTKWriter.cpp
 03_solution/01_output/GMVWriter.cpp
 03_solution/01_output/XDMFWriter.cpp
+04_equations/00_stationary/ExplicitSystem.cpp
+04_equations/00_stationary/ImplicitSystem.cpp
+04_equations/00_stationary/LinearImplicitSystem.cpp
+04_equations/00_stationary/MonolithicFSINonLinearImplicitSystem.cpp
+04_equations/00_stationary/NonLinearImplicitSystem.cpp
+04_equations/00_stationary/System.cpp
+04_equations/01_time_dependent/TransientSystem.cpp
 04_equations/assemble/Quantity.cpp
 04_equations/assemble/DofMap.cpp
 04_equations/assemble/Assemble_jacobian.cpp
@@ -56,13 +63,6 @@ SET(femus_src
 04_equations/assemble/CurrentQuantity.cpp
 04_equations/assemble/SystemTwo.cpp
 04_equations/assemble/TimeLoop.cpp
-04_equations/time_dependent/TransientSystem.cpp
-04_equations/ExplicitSystem.cpp
-04_equations/ImplicitSystem.cpp
-04_equations/LinearImplicitSystem.cpp
-04_equations/MonolithicFSINonLinearImplicitSystem.cpp
-04_equations/NonLinearImplicitSystem.cpp
-04_equations/System.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
@@ -115,6 +115,19 @@ uq/sparseGrid.cpp
 #   )
 # ENDIF(HAVE_HDF5) 
 
+
+
+#############################################################################################
+### Source files - END
+#############################################################################################
+
+
+
+#############################################################################################
+### Library files - BEGIN
+#############################################################################################
+
+
 IF (NOT LIBRARY_OUTPUT_PATH)
   SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib64 CACHE PATH
        "Single output directory for building all libraries.")
@@ -122,6 +135,8 @@ IF (NOT LIBRARY_OUTPUT_PATH)
 ENDIF (NOT LIBRARY_OUTPUT_PATH)
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${femus_src})
+
+
 
 IF(APPLE)
 target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libhdf5.dylib)
@@ -138,3 +153,7 @@ target_link_libraries(${PROJECT_NAME} ${JSONCPP_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ADEPT_LIBRARIES})
 
 ENDIF(APPLE)
+
+#############################################################################################
+### Library files - END
+#############################################################################################

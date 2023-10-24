@@ -21,7 +21,9 @@ using namespace femus;
 
 
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
+void System_assemble_flexible_Laplacian_With_Manufactured_Sol(
+                              const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
+                              const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num_mov, real_num_mov> *  > > & elem_all_for_domain,
                               const std::vector<Gauss> & quad_rules,
                               system_type * mlPdeSys,
                               MultiLevelMesh * ml_mesh_in,
@@ -70,7 +72,7 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
     for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
     for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
     
-    double detJac_qp;
+    real_num_mov detJac_qp;
  //*************************************************** 
 
     //=============== Integration ========================================
@@ -165,7 +167,7 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
         // *** Gauss point loop ***
         for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
 
-      elem_all[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+      elem_all/*_for_domain*/[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
       weight_qp = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
             
             // *** get gauss point weight, test function and test function partial derivatives ***
@@ -173,13 +175,13 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
          elem_all[ielGeom][unknowns_local[u].fe_type()]->shape_funcs_current_elem(ig, JacI_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), space_dim);
      }
 
-     elem_all[ielGeom][xType]->shape_funcs_current_elem(ig, JacI_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess(), space_dim);
+     elem_all_for_domain[ielGeom][xType]->shape_funcs_current_elem(ig, JacI_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess(), space_dim);
      
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;
             std::vector < real_num > gradSolu_gss(dim_offset_grad, 0.);
-            std::vector < double >   gradSolu_exact_gss(dim_offset_grad, 0.);
+            std::vector < real_num >   gradSolu_exact_gss(dim_offset_grad, 0.);
 
             for (unsigned  u = 0; u < n_unknowns; u++) {
                 for (unsigned i = 0; i < unknowns_local[u].num_elem_dofs(); i++) {
@@ -204,11 +206,11 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
 
             for (unsigned i = 0; i < unknowns_local[0].num_elem_dofs(); i++) {
 
-                real_num laplace = 0.;
+                real_num laplace_weak = 0.;
                 real_num laplace_weak_exact = 0.;
 
                 for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
-                    laplace            +=  unknowns_phi_dof_qp[0].phi_grad(i * dim_offset_grad + jdim) * gradSolu_gss[jdim];
+                    laplace_weak       +=  unknowns_phi_dof_qp[0].phi_grad(i * dim_offset_grad + jdim) * gradSolu_gss[jdim];
                     laplace_weak_exact +=  unknowns_phi_dof_qp[0].phi_grad(i * dim_offset_grad + jdim) * gradSolu_exact_gss[jdim];
                 }
 
@@ -223,26 +225,28 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(const std::vector 
 
 // Helmholtz(u) = source : strong
 //               double source_term = exact_sol.value(x_gss);
-//         unk_element_jac_res.res()[i] += ( source_term * phi()[i] - solu_gss * phi()[i] - laplace ) * weight_qp;
+//         unk_element_jac_res.res()[i] += ( source_term * phi()[i] - solu_gss * phi()[i] - laplace_weak ) * weight_qp;
 
 // Helmholtz(u) = Helmholtz(u_0) : strong
 //                 double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-//                 unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;
-
-// Laplace(u) = Laplace(u_0) : strong
-//                double laplace_strong_exact = exact_sol[0]->laplacian(x_gss);
-//         unk_element_jac_res.res()[i] += (- laplace_strong_exact * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
-
-// Laplace(u) = source 
-              double source_term = 1.;
-//               double source_term;
-//               if (geom_element.get_elem_center_3d()[0] < 0.5 + 1.e-5) source_term = 1.;
-//               else source_term = 2.;
-        unk_element_jac_res.res()[i] += (  source_term * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
+//                 unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace_weak) * weight_qp;
 
 
-// grad(u) grad(v) = grad(u_0) grad(v) : weak
-//            unk_element_jac_res.res()[i] += (laplace_weak_exact  - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
+// grad(u) grad(v)  =  - Laplace(u_0) v : strong
+               double laplace_strong_exact = exact_sol[0]->laplacian(x_gss);
+        unk_element_jac_res.res()[i] += ( - laplace_strong_exact * unknowns_phi_dof_qp[0].phi(i) - laplace_weak) * weight_qp;        //strong form of RHS and weak form of LHS
+
+// // grad(u) grad(v)  =   grad(u_0) grad(v) : weak
+//            unk_element_jac_res.res()[i] += (  laplace_weak_exact  - laplace_weak) * weight_qp;                  //weak form of RHS and weak form of LHS
+
+
+// // Laplace(u) = source 
+//               double source_term = 1.;
+// //               double source_term;
+// //               if (geom_element.get_elem_center_3d()[0] < 0.5 + 1.e-5) source_term = 1.;
+// //               else source_term = 2.;
+//         unk_element_jac_res.res()[i] += (  source_term * unknowns_phi_dof_qp[0].phi(i) - laplace_weak) * weight_qp;        //strong form of RHS and weak form of LHS
+
 
 
 
@@ -335,13 +339,13 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
 
 // *** phi_j loop ***
     for (unsigned j = 0; j < Sol_n_el_dofs[ pos_unk ]; j++) {
-        /*real_num*/double laplace_jac = 0.;
+        /*real_num*/double laplace_weak_jac = 0.;
 
         for (unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace_jac += (phi[ pos_unk].phi_grad(i * dim_offset_grad + kdim) * phi[ pos_unk ].phi_grad(j * dim_offset_grad + kdim));
+            laplace_weak_jac += (phi[ pos_unk].phi_grad(i * dim_offset_grad + kdim) * phi[ pos_unk ].phi_grad(j * dim_offset_grad + kdim));
         }
 
-        Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_unk, pos_unk, i, j) ] += (laplace_jac /*+   phi[ pos_unk ].phi(i) * phi[ pos_unk ].phi(j) */ ) * weight_qp;
+        Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_unk, pos_unk, i, j) ] += (laplace_weak_jac /*+   phi[ pos_unk ].phi(i) * phi[ pos_unk ].phi(j) */ ) * weight_qp;
     } // end phi_j loop
 
 

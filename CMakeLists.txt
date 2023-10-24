@@ -8,7 +8,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
 set(CMAKE_MACOSX_RPATH 1)
 
 #############################################################################################
-### Femus library version
+### Femus library version - BEGIN
 #############################################################################################
 
 SET(FEMUS_VERSION_MAJOR 1)
@@ -16,10 +16,13 @@ SET(FEMUS_VERSION_MINOR 0)
 SET(FEMUS_BUILD_VERSION 0)
 SET(FEMUS_VERSION "${FEMTTU_MAJOR_VERSION}.${FEMTTU_MINOR_VERSION}.${FEMTTU_BUILD_VERSION}")
 
+#############################################################################################
+### Femus library version - END
+#############################################################################################
 
    
 #############################################################################################
-### Compilers
+### Compilers - BEGIN
 #############################################################################################
 
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -36,9 +39,14 @@ ENDIF()
 #message("CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE})
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter")
+#############################################################################################
+### Compilers - END
+#############################################################################################
+
+
 
 #############################################################################################
-### Output libraries folder
+### Output libraries folder - BEGIN
 #############################################################################################
 
 # where to place output binaries
@@ -52,10 +60,12 @@ MARK_AS_ADVANCED (
   #EXECUTABLE_OUTPUT_PATH
 )
 
-
+#############################################################################################
+### Output libraries folder - END
+#############################################################################################
 
 #############################################################################################
-### Find packages
+### Find packages - BEGIN
 #############################################################################################
 
 # Find Petsc Library
@@ -137,7 +147,13 @@ ENDIF(LIBMESH_FOUND)
 set(CMAKE_CXX_STANDARD 11)
 
 #############################################################################################
-### Build options
+### Find packages - END
+#############################################################################################
+
+
+
+#############################################################################################
+### Build options - BEGIN
 #############################################################################################
 
 
@@ -207,7 +223,11 @@ OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
 OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
 
 #############################################################################################
-### Build documentation (Doxygen)
+### Build options - END
+#############################################################################################
+
+#############################################################################################
+### Build documentation (Doxygen) - BEGIN
 #############################################################################################
 
 IF(BUILD_DOCUMENTATION)
@@ -231,7 +251,12 @@ IF(BUILD_DOCUMENTATION)
 ENDIF(BUILD_DOCUMENTATION)
 
 #############################################################################################
-### Add external libraries
+### Build documentation (Doxygen) - END
+#############################################################################################
+
+
+#############################################################################################
+### Add external libraries - BEGIN
 #############################################################################################
 
 # Build the b64 library
@@ -261,7 +286,12 @@ ENDIF(BUILD_ADEPT)
 #message(${CMAKE_CXX_FLAGS_DEBUG})
 
 #############################################################################################
-### Configuration project file
+### Add external libraries - END
+#############################################################################################
+
+
+#############################################################################################
+### Configuration project file - BEGIN
 #############################################################################################
 
 # configure a header file to pass some of the CMake settings to the source code
@@ -275,15 +305,27 @@ CONFIGURE_FILE(
   "${PROJECT_BINARY_DIR}/UseFemus.CMake" @ONLY IMMEDIATE
   )
 
-  
 #############################################################################################
-### Mesh files
+### Configuration project file - END
 #############################################################################################
+
+
+
+#############################################################################################
+### Mesh files - BEGIN
+#############################################################################################
+
 FILE(COPY           ${PROJECT_SOURCE_DIR}/src/02_mesh/01_input/00_mesh_files/ DESTINATION ${PROJECT_BINARY_DIR}/src/02_mesh/01_input/00_mesh_files/)
-  
+
+#############################################################################################
+### Mesh files - END
+#############################################################################################
+
+
+
   
 #############################################################################################
-### Include files
+### Include files - BEGIN
 #############################################################################################
 
 # Include petsc files
@@ -297,7 +339,9 @@ ENDIF(SLEPC_FOUND)
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/data_types/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/input_parser/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/math/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/parallel)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/01_problem)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh)
@@ -308,9 +352,11 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/03_refinement/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/gencase/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/01_output/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/02_FE_convergence/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations/00_stationary/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations/01_time_dependent/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations/assemble/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations/time_dependent/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/algebra)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe_quadrature)
@@ -351,27 +397,39 @@ ENDIF(LIBMESH_FOUND)
 # libmesh_CPPFLAGS := $(shell ${FM_LM_DIR}/bin/libmesh-config --cppflags)
 # libmesh_LIBS     := $(shell ${FM_LM_DIR}/bin/libmesh-config --libs)
 
+#############################################################################################
+### Include files - END
+#############################################################################################
+
 
 #############################################################################################
-### Add sources
+### Add sources - BEGIN
 #############################################################################################
 
 # Add the femus library sources
 ADD_SUBDIRECTORY(src)
 
+#############################################################################################
+### Add sources - END
+#############################################################################################
+
 
 
 #############################################################################################
-### Add Applications
+### Add Applications - BEGIN
 #############################################################################################
 
 # Add applications
 ADD_SUBDIRECTORY(applications)
 
+#############################################################################################
+### Add Applications - END
+#############################################################################################
+
 
 
 #############################################################################################
-### Unit tests
+### Add Unit tests - BEGIN
 #############################################################################################
 
 INCLUDE(CTest)
@@ -380,6 +438,12 @@ IF(BUILD_TESTING)
   ENABLE_TESTING()
   ADD_SUBDIRECTORY(unittests)
 ENDIF(BUILD_TESTING)
+
+#############################################################################################
+### Add Unit tests - END
+#############################################################################################
+
+
 
 # message(petsc library = ${PETSC_LIBRARIES})
 # message(b64 library = ${B64_LIBRARIES})

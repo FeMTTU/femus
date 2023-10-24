@@ -6,10 +6,9 @@
 // The idea is that EACH PARAMETER HERE CAN EVENTUALLY BE OVERRIDDEN at RUNTIME,
 // either from a file to be read at runtime, or from the main, or from command line, or something
 
-#define DEFAULT_SOL_NCHARS   32    //GMV accepts at most 32 characters for a field
 
 //*********************************************
-//************** FILES ************************
+//************** FILES - BEGIN ************************
 #define DEFAULT_EXT_H5         ".h5"
 #define DEFAULT_EXT_XDMF       ".xmf" 
 #define DEFAULT_EXT_IN         ".in" 
@@ -43,11 +42,12 @@
 #define DEFAULT_APPLICATIONS_DIR    "applications/"
 #define DEFAULT_MESH_FILES_PATH    "src/02_mesh/01_input/00_mesh_files/"
 #define DEFAULT_RUNTIMECONF  "femus_conf.in"
+//************** FILES - END ************************
 //*********************************************
 
 
 //*********************************************
-//********** PRINT INFO ***********************
+//********** PRINT INFO - BEGIN ***********************
 // This is for configuring the "verbosity" of FEMuS:
 // important for a log of the program.
 // Deactivate it if you want to make faster runs.
@@ -59,17 +59,19 @@
 #if DEFAULT_PRINT_TIME==1
 #include <ctime>
 #endif
+//********** PRINT INFO - END ***********************
 //*********************************************
 
 //*********************************************
-//********** BOUNDARY CONDITIONS **************
+//********** BOUNDARY CONDITIONS - BEGIN **************
 #define DEFAULT_BC_FLAG 1 //=0 if you put a function on the RHS //you also have to comment the bc_read
 #define DEFAULT_BDRY_TOLL  0.0000001
+//********** BOUNDARY CONDITIONS - END **************
 //*********************************************
 
 
 //**************************************************************************************
-//************************EQNBASE - MULTIGRID ******************************************
+//************************EQNBASE - MULTIGRID - BEGIN ******************************************
 //**************************************************************************************
 #define DEFAULT_EPS_LSOLV  1.e-6 //1.e-20
 #define DEFAULT_EPS_LSOLV_C  1.e-20//1.e-10
@@ -80,9 +82,14 @@
 #define DEFAULT_NC_COARSE 40
 #define DEFAULT_NC_POST   8 //16 
 #define DEFAULT_REST_SIMPLE  0   //no simple restrictor
+//************************EQNBASE - MULTIGRID - END ******************************************
 //**************************************************************************************
 
-//**************************************************************************************
+//*********************** FILE PRINTING - BEGIN ***************************************************************
+#define DEFAULT_SOL_NCHARS   32    //GMV accepts at most 32 characters for a field
 #define DEFAULT_NDIGITS   4  //n of digits for the timestep printing
+//*********************** FILE PRINTING - END ***************************************************************
+
+
 
 #endif

@@ -296,10 +296,8 @@ int main(int argc, char** args) {
 //    const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
 // 
 //    
-//    // object ================  
-//     FE_convergence<>  fe_convergence;
-//     
-//     fe_convergence.convergence_study( ... );
+//    // Convergence ================  
+//     FE_convergence<>::convergence_study( ... );
   
     
   return 0;

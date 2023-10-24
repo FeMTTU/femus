@@ -19,7 +19,7 @@
 #include "LinearImplicitSystem.hpp"
 
 #include "00_poisson_eqn_with_all_dirichlet_bc_AD_or_nonAD_separate.hpp"
-#include "00_norm_of_errors_of_unknowns.hpp"
+#include "FE_convergence.hpp"
 
 
 #include "../tutorial_common.hpp"
@@ -113,9 +113,9 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 1 || dim == 2) {
-    maxNumberOfMeshes = 6;
+    maxNumberOfMeshes = 8;
   } else {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = 5;
   }
   // ======= Mesh - END ========================
 

@@ -18,7 +18,7 @@
 #include "adept.h"
 
 
-#include "00_norm_of_errors_of_unknowns.hpp"
+#include "FE_convergence.hpp"
 
 #include "../tutorial_common.hpp"
 
@@ -372,6 +372,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
            
+    
+  // ======= BOUNDARY - BEGIN ========================
+    
     // *** Face Gauss point loop (boundary Integral) ***
     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
       int faceIndex = el->GetBoundaryIndex(iel, jface);
@@ -410,7 +413,11 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
         }
       }
     }   
-    
+  // ======= BOUNDARY - END ========================
+  
+  
+  // ======= VOLUME - BEGIN ========================
+  
     // *** Element Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
@@ -446,6 +453,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       } // end phi_i loop
     } // end gauss point loop
 
+  // ======= VOLUME - END ========================
+
+
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
@@ -480,8 +490,5 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   KK->close();
 
-  // ***************** END ASSEMBLY *******************
-  
-  
 }
 

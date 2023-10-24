@@ -72,8 +72,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double Lref = 1.;
 
-   std::string input_file = "parametric_square_2x2.med";
-//   std::string input_file = "parametric_square_4x5.med";
+   std::string input_file = "square_0-1x0-1_divisions_2x2.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "../../../" << DEFAULT_INPUTDIR << "/" << input_file;
@@ -126,7 +125,7 @@ int main(int argc, char** args) {
   fe_quad_rule_vec.push_back("seventh");
   
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
+  ml_prob.set_all_abstract_fe_AD_or_not();
   // ======= Problem, Quad Rule - END  ========================
 
   // add system  in ml_prob as a Linear Implicit System

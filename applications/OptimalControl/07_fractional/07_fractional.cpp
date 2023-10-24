@@ -3,7 +3,6 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "TransientSystem.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
@@ -173,7 +172,7 @@ int main(int argc, char** argv)
 
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
-  ml_prob.set_all_abstract_fe_multiple();
+  ml_prob.set_all_abstract_fe_AD_or_not();
 
 
   // ========= System ==========================

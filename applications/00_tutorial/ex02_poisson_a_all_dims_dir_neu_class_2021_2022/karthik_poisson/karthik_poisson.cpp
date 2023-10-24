@@ -246,7 +246,7 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  ml_prob.set_all_abstract_fe_multiple();
+  ml_prob.set_all_abstract_fe_AD_or_not();
   // ======= Problem, Quad Rule - END  ========================
 
     // ======= App Specifics - BEGIN  ==================
