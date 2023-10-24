@@ -11,7 +11,7 @@
 #include "LinearEquationSolver.hpp"
 
 #include "Files.hpp"
-#include "Math.hpp"
+#include "Operations.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
 #include "SystemTwo.hpp"
