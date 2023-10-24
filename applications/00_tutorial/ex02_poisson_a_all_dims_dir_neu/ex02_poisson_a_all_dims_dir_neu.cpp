@@ -20,6 +20,8 @@
 
 #include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
 
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
+
 
 using namespace femus;
  
@@ -27,22 +29,6 @@ using namespace femus;
 // SEGMENT - BEGIN
 
 namespace segment {
-
-  
-  namespace function_0 {
-
-
-// user-made equation - accepts only coordinates
-double laplacian(const std::vector<double> & x){
-    
-    // for a 1d segment
-    
-    return  -2.;
-     }
-
-  }
-
-  
   
  
 // This depends on: 
@@ -200,8 +186,10 @@ int main(int argc, char** args) {
   // app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_all_dirichlet;
   // app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_dirichlet_right_neumann;
   app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_neumann_right_dirichlet;
-  app_segment._assemble_function_rhs = segment::function_0::laplacian;
-
+  
+  segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
+  app_segment._assemble_function_for_rhs   = & app_segment_function_zero_on_boundary_1;
+  app_segment._true_solution_function      = & app_segment_function_zero_on_boundary_1;
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
 
   

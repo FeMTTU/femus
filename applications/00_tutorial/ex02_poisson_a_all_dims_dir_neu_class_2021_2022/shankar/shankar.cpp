@@ -17,6 +17,7 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 // application includes
 #include "00_poisson_eqn.hpp"
@@ -32,16 +33,6 @@ double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < dou
   
 }
 
-
-
-
-// SEGMENT - BEGIN
-double segment_dir_neu_fine__laplacian__rhs(const std::vector<double> & x_qp){
-    
-    // for a 1d segment
-    
-    return  -2.;
-}
 
  
 bool segment_dir_neu_fine__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
@@ -105,17 +96,6 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
    
 }
 
-double square__laplacian__rhs(const std::vector < double >& x) {
-    
-  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-  
-}
-
-double square__laplacian__true_solution(const std::vector < double >& x) {
-    
-  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    
-}
 // SQUARE - END
 
 
@@ -158,13 +138,12 @@ int main(int argc, char** args) {
   
 // // //   app_segment._mesh_files.push_back("Mesh_1_x_dir_neu.med");
 // // //   app_segment._boundary_conditions_types_and_values             = segment_dir_neu_fine__laplacian__bc;
-// // //   app_segment._assemble_function_rhs = segment_dir_neu_fine__laplacian__rhs;
-// // // //   app_segment._true_solution    = segment_dir_neu_fine__laplacian__true_solution;  
   
   app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
   app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
-  app_segment._assemble_function_rhs = square__laplacian__rhs;
   
+  square_01_by_01::Function_Zero_on_boundary_1<>    app_square_function_zero_on_boundary_1;
+  app_segment._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_1;
   ///@todo if this is not set, nothing should happen here
 
   

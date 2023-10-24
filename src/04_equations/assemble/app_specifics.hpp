@@ -29,8 +29,6 @@ class app_specifics {
          _assemble_function = NULL;
          _boundary_conditions_types_and_values = NULL;
          
-         _assemble_function_rhs = NULL;
-         
          _assemble_function_for_rhs = NULL;
          _true_solution_function = NULL;         
          
@@ -65,19 +63,15 @@ class app_specifics {
     
     BoundaryFunction   _boundary_conditions_types_and_values;
    //func pointer of Boundary Conditions - END
-    
 
-   //func pointer of RHS - BEGIN
-   // [[deprecated]]
-   typedef  double    (* AssembleFunctionRHS )  (const std::vector<double> & x_qp);
-   
-   AssembleFunctionRHS  _assemble_function_rhs;
-   //func pointer of RHS - END
-   
   
+   //function to use for the right-hand side of the assemble function - BEGIN
    Math::Function< double > *  _assemble_function_for_rhs;
+   //function to use for the right-hand side of the assemble function - END
    
+   //function for the exact solution (optional) - BEGIN
    Math::Function< double > *  _true_solution_function;
+   //function for the exact solution (optional) - END
     
 };
 

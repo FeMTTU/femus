@@ -41,29 +41,12 @@ public:
 // Functions for every domain - END ===============================
 
 
-// 1D - BEGIN ===============================
+// Functions for 1D domains - BEGIN ===============================
 
 
 
 namespace segment_0x1 {
 
-  
-  namespace function_0 {
-    
-
-double value(const std::vector<double> & x) {
-    
-    return  x[0] * (1. - x[0]);
-}
-
-
-// user-made equation - accepts only coordinates
-double laplacian(const std::vector<double> & x){
-    
-    return  -2.;
-     }
-
-  }
 
 
 template < class type = double >
@@ -103,33 +86,12 @@ public:
 
 
 
-// 1D - END ===============================
+// Functions for 1D domains - END ===============================
 
 
 
-// 2D - BEGIN ===============================
+// Functions for 2D domains - BEGIN ===============================
 namespace square_01_by_01 {
-  
-  
-  namespace function_0 {
-
-double value(const std::vector < double >& x) {
-    
-  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    
-}
-
-double laplacian(const std::vector < double >& x) {
-    
-  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-  
-}
-
-
-}
-
-
-
 
 
 template < class type = double >
@@ -604,31 +566,6 @@ public:
 
 namespace semicircle {
 
-namespace function_0 {
-
-
-double value(const std::vector < double >& x) {
-    
-    double xxx = x[0];
-    double yyy = x[1];
-    const double r2 = xxx * xxx + yyy * yyy;
-    double r = (1. - r2) * yyy;
-    
-    return r;
-   
-}
-
-double laplacian(const std::vector < double >& x) {
-
-   return  - 8. * x[1]; 
-    
-}
-
-
-}
-
-
-
 
 template < class type = double >
 class Function_Zero_on_boundary_1 : public Math::Function< type > {
@@ -674,35 +611,6 @@ public:
 
 
 namespace quarter_circle {
-
- namespace function_0 {
-   
-double value(const std::vector<double> & x_qp){
-    
-    // for a quarter-circle in Quadrant 1
-    
-    double x = x_qp[0];
-    double y = x_qp[1];
-    
-    return  x * y * (1.0 - (x*x + y*y)); // forced to be zero on the x and y axis, and the circle edge
-}
-
- 
-
-double laplacian(const std::vector<double> & x_qp){
-    
-    // for a quarter-circle in Quadrant 1
-    
-    double x = x_qp[0];
-    double y = x_qp[1];
-    
-    return  -12. * x * y;
-}
-
-
- } 
-
-
 
 
 template < class type = double >
@@ -755,31 +663,6 @@ public:
 
 
 namespace annulus {
-  
- namespace function_0 {
-
-double value(const std::vector < double >& x) {
-    
-  double r2 = x[0] * x[0] + x[1] * x[1];
-  double res = (1. - r2) * ( r2 - 0.25 );
-  return res;
-
-    
-}
-
-
-double laplacian(const std::vector < double >& x) {
-    
-  double r2 = x[0] * x[0] + x[1] * x[1];
-  double res = -8. * r2 + 4. * (1. - r2) - 4. * (r2 - 0.25);
-  return res;
-  
-}
-
-
- }
-
- 
 
 
 template < class type = double >
@@ -830,29 +713,7 @@ public:
 
 
 namespace semiannulus {
-  
- namespace function_0 {
-   
 
-double value(const std::vector < double >& x) {
-    
-     double r2 = x[0] * x[0] + x[1] * x[1];
-
-     return   x[0] * (1. - r2 ) * ( r2 - 0.25);
-}
-
-
-double laplacian(const std::vector < double >& x) {
-  
-          return -2. * x[0] * ( -5. + 12. * x[0] * x[0] + 12. * x[1] * x[1] );
-    
-}
-
-
- }
- 
-
- 
 
 template < class type = double >
 class Function_Zero_on_boundary_1 : public Math::Function< type > {
@@ -899,35 +760,13 @@ public:
 
 
 
-// 2D - END ===============================
+// Functions for 2D domains - END ===============================
 
 
 
-// 3D - BEGIN ===============================
+// Functions for 3D domains - BEGIN ===============================
 
 namespace cube_01_by_01_by_01 {
-
-namespace function_0 {
-
-
-double value(const std::vector < double >& x) {
-    
-  return x[0] * (1. - x[0]) * x[1] * (1. - x[1]) * x[2] * (1. - x[2]);
-    
-}
-
-
-double laplacian(const std::vector < double >& x) {
-    
-  return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) +  x[2] * (1. - x[2]) );
-  
-}
-
-
-}
-
-
-
 
 
 template < class type = double >
@@ -972,27 +811,6 @@ public:
 
 
 namespace cylinder_along_z_with_base_centered_at_1_by_1 {
-
- namespace function_0 {
-   
-   
-double value(const std::vector<double> & x) {
-  
-      double xx = x[0];
-      double yy = x[1];
-      double zz = x[2];
-      double r = zz * (2. - zz) * ( 1. - (xx - 1.) * (xx - 1.) - (yy - 1.) * (yy - 1.) ) ;
-      return r;
-     
-}
- 
-double  laplacian(const std::vector < double >& x) {
-    
-   return  4. * x[2] * (x[2] - 2.)  +  2. * ( (x[0] - 1.) * (x[0] - 1.)  +  (x[1] - 1.) * (x[1] - 1.) - 1.);
-}
-
- }
- 
  
 
 template < class type = double >
@@ -1087,37 +905,6 @@ public:
 
 namespace quarter_cylinder_along_z_with_base_centered_at_0_by_0 {
 
- namespace function_0 {
-  
-
-
-double value(const std::vector < double >& x) {
-
-    double xx = x[0];
-    double yy = x[1];
-    double zz = x[2];
-    
-     return  xx * yy * zz * (2. - zz)*(-xx * xx - yy * yy + 1.);
-}
-
-
-double laplacian(const std::vector < double >& x) {
-
-      
-    // Quarter cylinder of radius 1 and length 2
-    
-    double xx = x[0];
-    double yy = x[1];
-    double zz = x[2];
-    
-    return  2. * xx * yy * (-1. + xx * xx + yy * yy - 12. * zz + 6. * zz * zz);
- 
-}
-
- }
- 
- 
- 
 
 template < class type = double >
 class Function_Zero_on_boundary_1 : public Math::Function< type > {
@@ -1171,28 +958,6 @@ public:
 
 
 namespace prism_annular_base_along_z_with_base_centered_at_0_by_0 {
-
- namespace function_0 {
-
-
-
- double value(const std::vector<double> & x) {
-     
-     return  x[2] * (1. - x[2] ) * (1. - x[0] * x[0] - x[1] * x[1]) * (-0.25 + x[0] * x[0] + x[1] * x[1]);
-      // z * (1. - z ) * (1. - x * x - y * y) * (-0.25 + x * x + y * y);
- }
- 
-
-double laplacian(const std::vector < double > & x) {
-    
-    return  2. * ( 0.25 + x[0] * x[0] * x[0] * x[0] + x[1] * x[1] * x[1] * x[1]  + 2.5 * x[2] - 2.5 * x[2] * x[2] +  
-      x[1] * x[1] * (-1.25 - 8. * x[2] + 8. * x[2] * x[2])
-    + x[0] * x[0] * (-1.25 + 2. * x[1] * x[1]  - 8. * x[2] + 8. * x[2] * x[2]) );
-    // return  2. * (0.25 + x^4 + y^4 + 2.5 z - 2.5 z^2 + y^2 (-1.25 - 8 z + 8 z^2) + x^2 (-1.25 + 2 y^2 - 8 z + 8 z^2));
-  }
- 
- }
- 
  
  
 
@@ -1239,7 +1004,7 @@ public:
  
 }
 
-// 3D - END ===============================
+// Functions for 3D domains - END ===============================
 
 
 
