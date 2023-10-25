@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
   
 
 unset(OPTCONTROL_FOLDER)
-set(OPTCONTROL_FOLDER OptimalControl/)
+set(OPTCONTROL_FOLDER 010_OptimalControl/)
 
 # Temperature Optimal Control
   set(OPT_APPLICATION 02_elliptic_with_given_advection)

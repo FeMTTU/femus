@@ -3,7 +3,7 @@
 #############################################################################################
 
 IF(BUILD_NAVIERSTOKESAPPS)
-  set(NS_FOLDER NavierStokes/)
+  set(NS_FOLDER 003_NavierStokes/)
   # Steady NavierStokes
   ADD_SUBDIRECTORY(${NS_FOLDER}/SteadyNavierStokesParallel)
 
@@ -23,7 +23,7 @@ ENDIF(BUILD_NAVIERSTOKESAPPS)
 
 
 IF(BUILD_FSIAPPS)
-  set(FSI_FOLDER FSI/)
+  set(FSI_FOLDER 005_FSI/)
   ADD_SUBDIRECTORY(${FSI_FOLDER})
   unset(FSI_FOLDER)
   
@@ -31,15 +31,15 @@ ENDIF(BUILD_FSIAPPS)
 
 
 IF(BUILD_OPTCONTROLAPPS)
-  ADD_SUBDIRECTORY(OptimalControl/)
+  ADD_SUBDIRECTORY(010_OptimalControl/)
 ENDIF(BUILD_OPTCONTROLAPPS)
 
 IF(BUILD_POISSON)
-  ADD_SUBDIRECTORY(Poisson/)
+  ADD_SUBDIRECTORY(001_Poisson/)
 ENDIF(BUILD_POISSON)
 
 IF(BUILD_POISSON_AMR)
-  ADD_SUBDIRECTORY(Poisson_AMR/)
+  ADD_SUBDIRECTORY(001_Poisson_AMR/)
 ENDIF(BUILD_POISSON_AMR)
 
 IF(BUILD_TUTORIAL)
