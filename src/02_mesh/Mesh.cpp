@@ -34,11 +34,6 @@
 
 namespace femus {
 
-  using std::cout;
-  using std::endl;
-  using std::min;
-  using std::sort;
-  using std::map;
 
   bool Mesh::_IsUserRefinementFunctionDefined = false;
 

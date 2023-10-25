@@ -16,7 +16,6 @@ PURPOSE.  See the above copyright notice for more information.
 #ifndef __femus_mesh_MultiLevelMesh_hpp__
 #define __femus_mesh_MultiLevelMesh_hpp__
 
-#include <vector>
 
 
 #include "ElemTypeEnum.hpp"
@@ -27,6 +26,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 #include "MED_IO.hpp" 
 
+
+#include <vector>
 
 
 namespace femus {

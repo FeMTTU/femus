@@ -29,8 +29,6 @@
 
 namespace femus {
 
-  using std::cout;
-  using std::endl;
 
   /*
    *  Constructor
@@ -293,7 +291,7 @@ _analytical_function.resize(new_size);
       index++;
 
       if(index == _Res.size()) {
-        cout << "error! invalid name entry GetIndex(...)" << endl;
+        std::cout << "error! invalid name entry GetIndex(...)" << std::endl;
         exit(0);
       }
     }
@@ -1035,7 +1033,7 @@ _analytical_function.resize(new_size);
       errTestTrue2 = parallelVec->l1_norm();
 
       if(volumeTestFalse != 0) {
-	cout.precision(24);
+	std::cout.precision(24);
 	printf("%e %e %e %e %e \n",errTestTrue2, solNorm2, volume, volumeRefined, volumeTestFalse);
         //std::cout  << errTestTrue2 << " " << solNorm2 << " " << volume << " " << volumeRefined << " " << volumeTestFalse << std::endl;
 	AMRthreshold[k] = sqrt(AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse);

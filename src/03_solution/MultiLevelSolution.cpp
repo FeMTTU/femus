@@ -36,8 +36,6 @@ PURPOSE.  See the above copyright notice for more information.
 namespace femus {
 
 
-  using std::cout;
-  using std::endl;
 
 //---------------------------------------------------------------------------------------------------
   MultiLevelSolution::~MultiLevelSolution()  {
@@ -157,8 +155,8 @@ namespace femus {
     _solPairInverseIndex[n] = n;
 
 
-    cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
-         << std::setw(12) << order << " and time discretization order " << tmorder << endl;
+    std::cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
+         << std::setw(12) << order << " and time discretization order " << tmorder << std::endl;
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
       _solution[ig]->AddSolution(_solName[n], _family[n], _order[n], _solTimeOrder[n], _pdeType[n]);
@@ -247,8 +245,8 @@ namespace femus {
 
 
 // ---------------------
-    cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
-         << std::setw(12) << order_v << " and time discretization order " << tmorder << endl;
+    std::cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
+         << std::setw(12) << order_v << " and time discretization order " << tmorder << std::endl;
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
       _solution[ig]->AddSolution(_solName[n], _family[n], _order[n],  order_b, _solTimeOrder[n], _pdeType[n]);
@@ -299,7 +297,7 @@ namespace femus {
       _addAMRPressureStability[index] == false;
     }
     else {
-      cout << "Error invalid property in function MultiLevelProblem::AssociatePropertyToSolution" << endl;
+      std::cout << "Error invalid property in function MultiLevelProblem::AssociatePropertyToSolution" << std::endl;
       exit(0);
     }
   }
@@ -448,7 +446,7 @@ namespace femus {
       index++;
 
       if(index == _solType.size()) {
-        cout << "error! invalid solution name: " << name << " in entry GetIndex(...)" << endl;
+        std::cout << "error! invalid solution name: " << name << " in entry GetIndex(...)" << std::endl;
         abort();
       }
     }
@@ -464,7 +462,7 @@ namespace femus {
       index++;
 
       if(index == _solType.size()) {
-        cout << "error! invalid name entry GetSolType(...)" << endl;
+        std::cout << "error! invalid name entry GetSolType(...)" << std::endl;
         abort();
       }
     }
@@ -594,8 +592,8 @@ namespace femus {
 void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, const MultiLevelProblem* ml_prob) {
 
     if(_useParsedBCFunction == false && _bdcFuncSet == false && _bdcFuncSetMLProb == false) {
-      cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
-           << endl;
+      std::cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
+           << std::endl;
       abort();
     }
 
@@ -621,8 +619,8 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       for(unsigned k = i_start; k < i_end; k++) {
         if(_solution[0]->_ResEpsBdcFlag[k]) {
           sprintf(_bdcType[k], "Steady");        /// @todo since bdc_type is a single string, why do we assume that All variables must be steady? They could also be all Time dependent...
-          cout << " Set " << std::setw(15) << _bdcType[k] << " Boundary_condition"
-               << " for variable " << std::setw(3) << _solName[k] << endl;
+          std::cout << " Set " << std::setw(15) << _bdcType[k] << " Boundary_condition"
+               << " for variable " << std::setw(3) << _solName[k] << std::endl;
         }
         else {
           sprintf(_bdcType[k], "Not-available");
@@ -642,13 +640,13 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
           strcpy(_bdcType[i_start], bdc_type);
         }
         else {
-          cout << "Error! Invalid boundary condition specified for " << _solName[i_start]
-               << " in GenerateBdc function" << endl;
+          std::cout << "Error! Invalid boundary condition specified for " << _solName[i_start]
+               << " in GenerateBdc function" << std::endl;
           exit(1);
         }
 
-        cout << " Set " << std::setw(15) << _bdcType[i_start] << " Boundary_condition"
-             << " for variable " << std::setw(3) << _solName[i_start] << endl;
+        std::cout << " Set " << std::setw(15) << _bdcType[i_start] << " Boundary_condition"
+             << " for variable " << std::setw(3) << _solName[i_start] << std::endl;
       }
       else {
         sprintf(_bdcType[i_start], "Not-available");

@@ -10,8 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "FElemTypeEnum.hpp"
 
-using std::cout;
-using std::endl;
+
 using namespace femus;
 
 void AssembleMatrixResFSI(MultiLevelProblem& ml_prob);
@@ -83,13 +82,13 @@ int main(int argc, char** args) {
 
   // Generate Solid Object
   Solid solid(par, E, ni, rhos, "Neo-Hookean");
-  cout << "Solid properties: " << endl;
-  cout << solid << endl;
+  std::cout << "Solid properties: " << std::endl;
+  std::cout << solid << std::endl;
 
   // Generate Fluid Object
   Fluid fluid(par, muf, rhof, "Newtonian");
-  cout << "Fluid properties: " << endl;
-  cout << fluid << endl;
+  std::cout << "Fluid properties: " << std::endl;
+  std::cout << fluid << std::endl;
 
   // Add fluid object
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;

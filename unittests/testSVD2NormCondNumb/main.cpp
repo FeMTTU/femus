@@ -1,8 +1,6 @@
 #include "SlepcSVD.hpp"
 #include "iostream"
 
-using std::cout;
-using std::endl;
 using namespace femus;
 
 /*
@@ -57,7 +55,7 @@ int main(int argc, char** args) {
   double cond_numb = slepcsvd.compute_2norm_condition_number();
   
   // print the result
-  cout << "Estimated condition number: " << cond_numb << endl;
+  std::cout << "Estimated condition number: " << cond_numb << std::endl;
   
   return 0;
 }

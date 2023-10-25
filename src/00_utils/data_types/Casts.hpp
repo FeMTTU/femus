@@ -10,7 +10,6 @@
 namespace femus
 {
 
-  using std::bad_cast;
 
 //TODO
   template <typename Tnew, typename Told>

@@ -12,8 +12,7 @@
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
 
-using std::cout;
-using std::endl;
+
 using namespace femus;
 
 void AssembleMatrixResNS(MultiLevelProblem& ml_prob);
@@ -37,12 +36,12 @@ int main(int argc, char** args) {
     else if (!strcmp("asm", args[1])) 	Asm = 1;
 
     if (Gmres + Asm == 0) {
-      cout << "wrong input arguments!" << endl;
+      std::cout << "wrong input arguments!" << std::endl;
       exit(0);
     }
   }
   else {
-    cout << "No input argument set default smoother = Gmres" << endl;
+    std::cout << "No input argument set default smoother = Gmres" << std::endl;
     Gmres = 1;
   }
 
@@ -53,10 +52,10 @@ int main(int argc, char** args) {
 
   unsigned short nm, nr;
   nm = 4;
-  std::cout << "MULTIGRID levels: " << nm << endl;
+  std::cout << "MULTIGRID levels: " << nm << std::endl;
 
   nr = 2;
-  std::cout << "MAX_REFINEMENT levels: " << nr << endl << endl;
+  std::cout << "MAX_REFINEMENT levels: " << nr << std::endl << std::endl;
 
   int tmp = nm;
   nm += nr;
@@ -108,8 +107,8 @@ int main(int argc, char** args) {
 
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
   Fluid fluid(parameter, 0.001, 1, "Newtonian", 0.001, 1.);
-  cout << "Fluid properties: " << endl;
-  cout << fluid << endl;
+  std::cout << "Fluid properties: " << std::endl;
+  std::cout << fluid << std::endl;
 
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
 

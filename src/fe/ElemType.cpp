@@ -23,8 +23,6 @@
 #include "Elem.hpp"
 #include "NumericVector.hpp"
 
-using std::cout;
-using std::endl;
 
 
 #define  PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES  1
@@ -106,7 +104,7 @@ namespace femus {
       else if ( !strcmp(geom_elem, "tri") )    { _dim = 2; _GeomElemType = TRI;   }
       else if ( !strcmp(geom_elem, "line") )   { _dim = 1; _GeomElemType = LINE;  }
       else {
-        cout << " No " << geom_elem << " implemented" << endl;
+        std::cout << " No " << geom_elem << " implemented" << std::endl;
         abort();
       }
  
@@ -122,7 +120,7 @@ namespace femus {
     else if(!strcmp(fe_order, "constant"))    _SolType = 3;
     else if(!strcmp(fe_order, "disc_linear")) _SolType = 4;
     else {
-      cout << fe_order << " is not a valid option " << endl;
+      std::cout << fe_order << " is not a valid option " << std::endl;
       abort();
     }  
        
@@ -164,7 +162,7 @@ namespace femus {
            _gauss_bdry = new  Gauss("quad", order_gauss); ///@todo this is wrong, we have to do a VECTOR of quadratures
        }
       else {
-        cout << " Boundary gauss points for " << geom_elem << " is not implemented yet" << endl;
+        std::cout << " Boundary gauss points for " << geom_elem << " is not implemented yet" << std::endl;
         abort();
       }
        
@@ -1680,12 +1678,12 @@ if( _SolType >= 3 && _SolType < 5 ) {
       else if(_SolType == 3) _pt_basis = new line0;
       else if(_SolType == 4) _pt_basis = new linepwLinear;
       else {
-        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        std::cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << std::endl;
         abort();
       }
     }
     else {
-      cout << geom_elem << " is not a valid option" << endl;
+      std::cout << geom_elem << " is not a valid option" << std::endl;
       abort();
     }
     
@@ -1709,7 +1707,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
       else if(_SolType == 3) _pt_basis = new quad0;
       else if(_SolType == 4) _pt_basis = new quadpwLinear;
       else {
-        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        std::cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << std::endl;
         abort();
       }
     }
@@ -1723,12 +1721,12 @@ if( _SolType >= 3 && _SolType < 5 ) {
       else if(_SolType == 3) _pt_basis = new tri0;
       else if(_SolType == 4) _pt_basis = new tripwLinear;
       else {
-        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        std::cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << std::endl;
         abort();
       }
     }
     else {
-      cout << geom_elem << " is not a valid option" << endl;
+      std::cout << geom_elem << " is not a valid option" << std::endl;
       abort();
     }
     
@@ -1751,7 +1749,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
       else if(_SolType == 3) _pt_basis = new hex0;
       else if(_SolType == 4) _pt_basis = new hexpwLinear;
       else {
-        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        std::cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << std::endl;
         abort();
       }
     }
@@ -1765,7 +1763,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
       else if(_SolType == 3) _pt_basis = new wedge0;
       else if(_SolType == 4) _pt_basis = new wedgepwLinear;
       else {
-        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        std::cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << std::endl;
         abort();
       }
     }
@@ -1779,12 +1777,12 @@ if( _SolType >= 3 && _SolType < 5 ) {
       else if(_SolType == 3) _pt_basis = new tet0;
       else if(_SolType == 4) _pt_basis = new tetpwLinear;
       else {
-        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        std::cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << std::endl;
         abort();
       }
     }
     else {
-      cout << geom_elem << " is not a valid option" << endl;
+      std::cout << geom_elem << " is not a valid option" << std::endl;
       abort();
     }
     

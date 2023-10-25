@@ -17,24 +17,24 @@
 // includes :
 //----------------------------------------------------------------------------
 
-#include <iostream>
-#include <fstream>
-#include <ctime>
-#include <fstream>
-#include <algorithm>
 #include "LinearEquation.hpp"
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 
+#include <iostream>
+#include <fstream>
+#include <ctime>
+#include <fstream>
+#include <algorithm>
+
+
 
 namespace femus {
 
 
 
-  using std::cout;
-  using std::endl;
 
 //--------------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ namespace femus {
     while(strcmp(_SolName[index], name)) {
       index++;
       if(index == _SolType.size()) {
-        cout << "error! invalid name entry GetIndex(...)" << endl;
+        std::cout << "error! invalid name entry GetIndex(...)" << std::endl;
         exit(0);
       }
     }

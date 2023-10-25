@@ -853,29 +853,31 @@ int main(int argc, char** args) {
   ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
   // ======= Solution - END ==================
   
-  // ======= Solutions that are Unknowns - BEGIN ==================
-
- // ======= Solution: Add ==================
+  
+ // ======= Solution: Add  - BEGIN ==================
   std::vector< Unknown > unknowns = provide_list_of_unknowns();   ///@todo probably this should go in the Problem, to be accessed from other places
   
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
   }
- // ======= Solution: Initial Conditions ==================
+ // ======= Solution: Add  - END ==================
+
+ // ======= Solution: Initial Conditions - BEGIN ==================
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.Initialize(unknowns[u]._name.c_str(), InitialValueU, & ml_prob);
   }
-  // ======= Solution: Boundary Conditions ==================
+ // ======= Solution: Initial Conditions  - END ==================
+  
+  
+  
+  // ======= Solution: Boundary Conditions - BEGIN ==================
   ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._boundary_conditions_types_and_values);
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
   }
-
-  // ======= Solutions that are Unknowns - END ==================
+  // ======= Solution: Boundary Conditions  - END ==================
 
   
-
-//   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all = ml_prob.evaluate_all_fe<double, double>();
   
     // ======= Problem, System - BEGIN ========================
   ml_prob.clear_systems();
@@ -900,17 +902,22 @@ int main(int argc, char** args) {
   system.init();
   
   system.MGsolve();
-  
-  compute_L2_norm_of_errors_of_unknowns_with_analytical_sol<double>(ml_prob, system.GetLevelToAssemble(), system.GetSolPdeIndex().size());
     // ======= Problem, System - END ========================
+
   
+    // ======= Error - BEGIN ========================
+  
+  compute_L2_norm_of_errors_of_unknowns_with_analytical_sol<double>(ml_prob, ml_mesh.GetNumberOfLevels() - 1 /*system.GetLevelToAssemble()*/, unknowns.size() );
+  
+    // ======= Error - END ========================
+
   
     // ======= Print - BEGIN ========================
   const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(/*my_specifics[app]._system_name + "_" +*/ my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
     // ======= Print - END ========================
   
     }  //end refinement loop
