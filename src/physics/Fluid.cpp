@@ -27,7 +27,6 @@
 namespace femus {
 
 
-using namespace std;
 
 Fluid::Fluid() : Material() {
   _viscosity = 1.;
@@ -68,7 +67,7 @@ Fluid::Fluid(Parameter& par, const double viscosity, const double density, const
   if (!strcmp(model,"Newtonian")) {
     _model = 0;
   } else {
-    cout<<"Error! This fluid model is not implemented "<<endl;
+    std::cout << "Error! This fluid model is not implemented " << std::endl;
     exit(1);
   }
 

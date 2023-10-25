@@ -33,8 +33,6 @@
 namespace femus {
 
 
-  using namespace std;
-
 //-----------------------------------------------------------------------
 // PetscMatrix members
   void PetscMatrix::init (const  int m,

@@ -28,7 +28,6 @@ namespace femus {
 
 
 
-using namespace std;
 
 Solid::Solid() : Material() {
   _young_module = 1.;
@@ -94,7 +93,7 @@ Solid::Solid(Parameter& par,
     _mass_penalty = (!strcmp(model,"Mooney-Rivlin-MassPenalty")) ? true : false;
   }
   else {
-    cout << "Error! This solid model is not implemented " << endl;
+    std::cout << "Error! This solid model is not implemented " << std::endl;
     abort();
   }
 
@@ -102,7 +101,7 @@ Solid::Solid(Parameter& par,
     _poisson_coeff = poisson_coeff;
   } 
   else {
-    cout << "Error: the value for the Poisson coeffcient must be greater than 0 and less equal than 0.5!" << endl;
+    std::cout << "Error: the value for the Poisson coeffcient must be greater than 0 and less equal than 0.5!" << std::endl;
     abort();
   }
   
@@ -111,12 +110,12 @@ Solid::Solid(Parameter& par,
     _lambda_lame = (_young_module*_poisson_coeff)/((1.+_poisson_coeff)*(1.-2.*_poisson_coeff));
   }
   else if (true == _penalty){
-    std::cout << "Error this solid model requires a Poisson coeffcient strictly less than 0.5"<<endl;
+    std::cout << "Error this solid model requires a Poisson coeffcient strictly less than 0.5" << std::endl;
     abort();
   }
   else{
-    cout << "Warning: the value for the Poisson coeffcient is 0.5, the material is incompressible"<<endl
-	 << "The Lame constant is infinity and it has been set equal to 1.0e100" << endl;
+    std::cout << "Warning: the value for the Poisson coeffcient is 0.5, the material is incompressible" << std::endl
+	 << "The Lame constant is infinity and it has been set equal to 1.0e100" << std::endl;
     _lambda_lame = 1.0e100;
   }
   _mu_lame     = _young_module/(2.*(1.+_poisson_coeff));

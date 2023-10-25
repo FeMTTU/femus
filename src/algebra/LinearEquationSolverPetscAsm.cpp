@@ -30,7 +30,6 @@
 
 namespace femus {
 
-  using namespace std;
 
   // ====================================================
   // ------------------- Class functions ------------
@@ -102,7 +101,7 @@ namespace femus {
 
     std::vector <bool> owned(DofOffsetSize, false);
 
-    map<int, bool> mymap;
+    std::map<int, bool> mymap;
 
     unsigned ElemOffset   = _msh->_dofOffset[3][iproc];
     unsigned ElemOffsetp1 = _msh->_dofOffset[3][iproc + 1];
