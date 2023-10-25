@@ -60,11 +60,11 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
 
 
 void AssemblePoissonProblem_old_fe_quadrature_nonAD_interface(MultiLevelProblem& ml_prob) {
-          AssemblePoissonProblem_old_fe_quadrature_nonAD(ml_prob, GetExactSolutionLaplace, NULL);
+          AssemblePoissonProblem_old_fe_quadrature_nonAD(ml_prob, GetExactSolutionLaplace, GetExactSolutionValue);
 }
 
 void AssemblePoissonProblem_old_fe_quadrature_AD_interface(MultiLevelProblem& ml_prob) {
-          AssemblePoissonProblem_old_fe_quadrature_AD(ml_prob, GetExactSolutionLaplace, NULL);
+          AssemblePoissonProblem_old_fe_quadrature_AD(ml_prob, GetExactSolutionLaplace, GetExactSolutionValue);
 }
 
 

@@ -28,7 +28,7 @@ using namespace femus;
 
 // SEGMENT - BEGIN
 
-namespace segment {
+namespace segment_0x1 {
   
  
 // This depends on: 
@@ -183,9 +183,9 @@ int main(int argc, char** args) {
   app_segment._system_name = "Equation";
   app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  // app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_all_dirichlet;
-  // app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_dirichlet_right_neumann;
-  app_segment._boundary_conditions_types_and_values             = segment::function_0_bc_left_neumann_right_dirichlet;
+  // app_segment._boundary_conditions_types_and_values             = segment_0x1::function_0_bc_all_dirichlet;
+  // app_segment._boundary_conditions_types_and_values             = segment_0x1::function_0_bc_left_dirichlet_right_neumann;
+  app_segment._boundary_conditions_types_and_values             = segment_0x1::function_0_bc_left_neumann_right_dirichlet;
   
   segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
   app_segment._assemble_function_for_rhs   = & app_segment_function_zero_on_boundary_1;

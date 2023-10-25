@@ -73,7 +73,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob,
 
 // SQUARE - BEGIN
 
-namespace square_01_by_01 {
+namespace Domain_square_01by01 {
 
   
 bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
@@ -145,7 +145,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 // SEMICIRCLE - BEGIN
 
 
-namespace semicircle {
+namespace semicircle_centered_at_0_by_0 {
 
 bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
     
@@ -178,7 +178,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 // QUARTER CIRCLE - BEGIN
 
 
-namespace quarter_circle {
+namespace quarter_circle_centered_at_0_by_0 {
 
 
 bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
@@ -222,7 +222,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 // ANNULUS - BEGIN
 
 
-namespace annulus {
+namespace annulus_centered_at_0_by_0 {
  
  
 bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
@@ -254,7 +254,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
 
 // SEMIANNULUS - BEGIN
 
-namespace semiannulus {
+namespace semiannulus_centered_at_0_by_0_cut_along_y {
  
  bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
@@ -631,9 +631,9 @@ int main(int argc, char** args) {
   app_square._mesh_files.push_back("square_0-1x0-1_divisions_1x1.med");
   app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/");
   
-  app_square._boundary_conditions_types_and_values             = square_01_by_01::bc_all_dirichlet_homogeneous;
+  app_square._boundary_conditions_types_and_values             = Domain_square_01by01::bc_all_dirichlet_homogeneous;
 
-  square_01_by_01::Function_Zero_on_boundary_1<>   app_square_function_zero_on_boundary_1;
+  Domain_square_01by01::Function_Zero_on_boundary_1<>   app_square_function_zero_on_boundary_1;
   app_square._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_1;
   app_square._true_solution_function           = & app_square_function_zero_on_boundary_1;
  //assignment_square - END
@@ -647,9 +647,9 @@ int main(int argc, char** args) {
   app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
   app_semicircle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_semi/");
   
-  app_semicircle._boundary_conditions_types_and_values             = semicircle::bc_all_dirichlet_homogeneous;
+  app_semicircle._boundary_conditions_types_and_values             = semicircle_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  semicircle::Function_Zero_on_boundary_1<>     app_semicircle_function_zero_on_boundary_1;
+  semicircle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_semicircle_function_zero_on_boundary_1;
   app_semicircle._assemble_function_for_rhs = & app_semicircle_function_zero_on_boundary_1;
   app_semicircle._true_solution_function    = & app_semicircle_function_zero_on_boundary_1;
   //assignment_semicircle - END
@@ -664,9 +664,9 @@ int main(int argc, char** args) {
   app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   
-  app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle::bc_all_dirichlet_homogeneous;
+  app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  quarter_circle::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
+  quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
   app_quarter_circle._assemble_function_for_rhs = & app_quarter_circle_function_zero_on_boundary_1;
   app_quarter_circle._true_solution_function    = & app_quarter_circle_function_zero_on_boundary_1;
   //assignment_quarter_circle - END
@@ -680,9 +680,9 @@ int main(int argc, char** args) {
   app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
   app_annulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus/");
   
-  app_annulus._boundary_conditions_types_and_values             = annulus::bc_all_dirichlet_homogeneous;
+  app_annulus._boundary_conditions_types_and_values             = annulus_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  annulus::Function_Zero_on_boundary_1<>     app_annulus_function_zero_on_boundary_1;
+  annulus_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_annulus_function_zero_on_boundary_1;
   app_annulus._assemble_function_for_rhs = & app_annulus_function_zero_on_boundary_1;
   app_annulus._true_solution_function    = & app_annulus_function_zero_on_boundary_1;
   //assignment_annulus - END
@@ -697,9 +697,9 @@ int main(int argc, char** args) {
   app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
   app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
   
-  app_semiannulus._boundary_conditions_types_and_values             = semiannulus::bc_all_dirichlet_homogeneous;
+  app_semiannulus._boundary_conditions_types_and_values             = semiannulus_centered_at_0_by_0_cut_along_y::bc_all_dirichlet_homogeneous;
 
-  semiannulus::Function_Zero_on_boundary_1<>     app_semiannulus_function_zero_on_boundary_1;
+  semiannulus_centered_at_0_by_0_cut_along_y::Function_Zero_on_boundary_1<>     app_semiannulus_function_zero_on_boundary_1;
   app_semiannulus._assemble_function_for_rhs = & app_semiannulus_function_zero_on_boundary_1;
   app_semiannulus._true_solution_function    = & app_semiannulus_function_zero_on_boundary_1;
   //assignment_semiannulus - END

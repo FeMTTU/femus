@@ -91,47 +91,6 @@ public:
 
 
 // Functions for 2D domains - BEGIN ===============================
-namespace square_01_by_01 {
-
-
-template < class type = double >
-class Function_Zero_on_boundary_1 : public Math::Function< type > {
-
-
-
-public:
-
-    type value(const std::vector < type >& x) const {
-        
-    return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
-        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-        
-    return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-    }
-
-    
-    
-};
-
-
-
-}
-
-
 
 namespace  Domain_square_01by01  {
     
@@ -173,23 +132,26 @@ public:
 };
 
 
+
 template < class type = double >
 class Function_Zero_on_boundary_1 : public Math::Function< type > {
+
+
 
 public:
 
     type value(const std::vector < type >& x) const {
         
-        return + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
     }
 
 
     std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
-        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
-        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
+        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
 
         return solGrad;
     }
@@ -197,16 +159,13 @@ public:
 
     type laplacian(const std::vector < type >& x) const {
         
-        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
     }
 
-
-
-  private: 
     
-   static constexpr double pi = acos(-1.);
-      
+    
 };
+
 
 
 //this solution shows SUPERCONVERGENCE for SERENDIPITY FE, and it is like SUPER PERFECT for BIQUADRATIC FE... it is because of the MESH!
@@ -276,6 +235,40 @@ public:
 };
 
 
+template < class type = double >
+class Function_Zero_on_boundary_4 : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
+};
 
 
 
@@ -522,8 +515,8 @@ public:
 }
 
 
-namespace circle {
 ///@todo
+namespace circle {
 
 
 template < class type = double >
@@ -564,7 +557,7 @@ public:
 }
 
 
-namespace semicircle {
+namespace semicircle_centered_at_0_by_0 {
 
 
 template < class type = double >
@@ -610,7 +603,7 @@ public:
 }
 
 
-namespace quarter_circle {
+namespace quarter_circle_centered_at_0_by_0 {
 
 
 template < class type = double >
@@ -662,7 +655,7 @@ public:
 }
 
 
-namespace annulus {
+namespace annulus_centered_at_0_by_0 {
 
 
 template < class type = double >
@@ -712,7 +705,7 @@ public:
 
 
 
-namespace semiannulus {
+namespace semiannulus_centered_at_0_by_0_cut_along_y {
 
 
 template < class type = double >
@@ -858,8 +851,8 @@ public:
 }
 
 
-namespace semicylinder {
 ///@todo
+namespace semicylinder {
 
 
 template < class type = double >
