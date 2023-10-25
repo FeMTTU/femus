@@ -334,7 +334,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
 //         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
 //         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);
 //
-//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+//         std::vector < std::vector <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
 //         for ( int k = 0; k < dim; k++ ) {
 //           faceCoordinates[k].resize (faceDofs);
 //         }
@@ -346,7 +346,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
 //         }
 //         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][soluType]->GetGaussPointNumber(); ig++ ) {
 //             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh.
-//           vector < double> normal;
+//           std::vector < double> normal;
 //           msh->_finiteElement[faceGeom][soluType]->JacobianSur ( faceCoordinates, ig, weight, phi, phi_x, normal );
 //
 //           adept::adouble solu_gss = 0;
@@ -380,7 +380,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
         adept::adouble solk_gss = 0.; ;
         adept::adouble solu_gss = 0.;
-        vector < adept::adouble > gradSolu_gss (dim, 0.);
+        std::vector < adept::adouble > gradSolu_gss (dim, 0.);
 
         for (unsigned i = 0; i < nDofu; i++) {
           solk_gss += phi[i] * solk[j][i];

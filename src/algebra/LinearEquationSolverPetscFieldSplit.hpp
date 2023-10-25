@@ -47,7 +47,7 @@ namespace femus {
       void SetFieldSplitTree(FieldSplitTree* fieldSplitTree);
 
       /** To be Added */
-      void BuildBdcIndex(const vector <unsigned>& variable_to_be_solved);
+      void BuildBdcIndex(const std::vector <unsigned>& variable_to_be_solved);
 
       void SetPreconditioner(KSP& subksp, PC& subpc);
 

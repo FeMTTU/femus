@@ -41,7 +41,7 @@ static void natural_loop_1d(const MultiLevelProblem *    ml_prob,
 
        geom_element.set_elem_center_bdry_3d();
 
-       std::vector  <  double > xx_face_elem_center(3, 0.);
+       std::vector <  double > xx_face_elem_center(3, 0.);
           xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
 
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
@@ -114,8 +114,8 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
   double weight_iqp_bdry = 0.;
 // ---
   //boundary state shape functions
-  vector <double> phi_u_bdry;
-  vector <double> phi_u_x_bdry;
+  std::vector <double> phi_u_bdry;
+  std::vector <double> phi_u_x_bdry;
 
   phi_u_bdry.reserve(max_size);
   phi_u_x_bdry.reserve(max_size * space_dim);
@@ -409,7 +409,7 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
  /// In other words,
  ///         (x_qp) = summation of (x_nodes) * (shape function of that node, evaluated at qp)
  ///
- ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes)
+ ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  std::vector < vector >,  where the outer index is the dimension and the inner index ranges over the nodes)
  ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
 
 
@@ -446,7 +446,7 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
  /// In other words,
  ///         (x_qp) = summation of (x_nodes) * (shape function of that node, evaluated at qp)
  ///
- ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes)
+ ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  std::vector < vector >,  where the outer index is the dimension and the inner index ranges over the nodes)
  ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
 
  std::vector<double> x_qp(dim, 0.);

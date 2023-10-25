@@ -123,7 +123,7 @@ double GetExactSolutionValue(const std::vector < double >& x)
   return cos(pi * x[0]) * cos(pi * x[1]);
 };
 
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad)
+void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad)
 {
   double pi = acos(-1.);
   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
@@ -189,33 +189,33 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob)
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution
+  std::vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
 
-  vector < vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for(unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
 
-  vector< adept::adouble > aRes; // local redidual vector
+  std::vector < adept::adouble > aRes; // local redidual vector
   aRes.reserve(maxSize);
 
-  vector< int > l2GMap; // local to global mapping
+  std::vector < int > l2GMap; // local to global mapping
   l2GMap.reserve(maxSize);
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(maxSize);
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -265,8 +265,8 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob)
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solu_gss = 0;
-      vector < adept::adouble > gradSolu_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
+      std::vector < adept::adouble > gradSolu_gss(dim, 0.);
+      std::vector < double > x_gss(dim, 0.);
 
       for(unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];

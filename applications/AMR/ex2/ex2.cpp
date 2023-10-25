@@ -207,8 +207,8 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
   unsigned solUPdeIndex;
   solUPdeIndex = mlPdeSys->GetSolPdeIndex ("U");   // get the position of "U" in the pdeSys object = 0
 
-  vector < adept::adouble >  solU; // local solution
-  vector< adept::adouble > aResU; // local redidual vector
+  std::vector < adept::adouble >  solU; // local solution
+  std::vector < adept::adouble > aResU; // local redidual vector
 
   unsigned solVIndex;
   solVIndex = mlSol->GetIndex ("V");
@@ -217,10 +217,10 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
   unsigned solVPdeIndex;
   solVPdeIndex = mlPdeSys->GetSolPdeIndex ("V");
 
-  vector < adept::adouble >  solV; // local solution
-  vector< adept::adouble > aResV; // local redidual vector
+  std::vector < adept::adouble >  solV; // local solution
+  std::vector < adept::adouble > aResV; // local redidual vector
 
-  vector < vector < double > > crdX (dim);   // local coordinates
+  std::vector < std::vector < double > > crdX (dim);   // local coordinates
   unsigned crdXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   solU.reserve (maxSize);
@@ -233,17 +233,17 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
     crdX[k].reserve (maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
 
   phi.reserve (maxSize);
   phi_x.reserve (maxSize * dim);
   phi_xx.reserve (maxSize * dim2);
 
-  vector <double> phiV;  // local test function
-  vector <double> phiV_x; // local test function first order partial derivatives
-  vector <double> phiV_xx; // local test function second order partial derivatives
+  std::vector <double> phiV;  // local test function
+  std::vector <double> phiV_x; // local test function first order partial derivatives
+  std::vector <double> phiV_xx; // local test function second order partial derivatives
 
   phiV.reserve (maxSize);
   phiV_x.reserve (maxSize * dim);
@@ -251,13 +251,13 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
 
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve (2 * maxSize);
 
-  vector< double > Res; // local residual vector
+  std::vector < double > Res; // local residual vector
   Res.reserve (2 * maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve (4 * maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -314,7 +314,7 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solVType]->Jacobian (crdX, ig, weight, phiV, phiV_x, phiV_xx);
 
       adept::adouble solUig = 0; // solution U in the gauss point
-      vector < adept::adouble > gradSolUig (dim, 0.); // gradient of solution U in the gauss point
+      std::vector < adept::adouble > gradSolUig (dim, 0.); // gradient of solution U in the gauss point
 
       for (unsigned i = 0; i < nDofsU; i++) {
         solUig += phi[i] * solU[i];
@@ -325,7 +325,7 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
       }
 
       adept::adouble solVig = 0; // solution V in the gauss point
-      vector < adept::adouble > gradSolVig (dim, 0.); // gradient of solution U in the gauss point
+      std::vector < adept::adouble > gradSolVig (dim, 0.); // gradient of solution U in the gauss point
 
       for (unsigned i = 0; i < nDofsV; i++) {
         solVig += phiV[i] * solV[i];

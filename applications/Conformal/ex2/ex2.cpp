@@ -324,11 +324,11 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  vector< double > Res;
+  std::vector < double > Res;
   std::vector < std::vector< adept::adouble > > aResDx (dim);
 
   // Local Jacobian matrix (ordered by column).
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Zero all the entries of the Global Matrix
   RES->zero(); // Zero all the entries of the Global Residual
@@ -691,10 +691,10 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
 
   std::vector< int > SYSDOF; // local to global pdeSys dofs
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   std::vector< adept::adouble > aResDx[dim]; // local redidual vector
 
-  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
+  std::vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
 
   KK->zero();  // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual

@@ -323,9 +323,9 @@ void StoreOldDispcacement(MultiLevelSolution& mlSol){
   const unsigned dim = msh->GetDimension();
   const char varname[6][4] = {"DX", "DY", "DZ", "DX2", "DY2", "DZ2"};
 
-  vector <unsigned> indexVAR(2 * dim);
-  vector <unsigned> indVAR(2 * dim);
-  vector <unsigned> SolType(2 * dim);
+  std::vector <unsigned> indexVAR(2 * dim);
+  std::vector <unsigned> indVAR(2 * dim);
+  std::vector <unsigned> SolType(2 * dim);
 
   for (unsigned ivar = 0; ivar < 2 * dim; ivar++) {
       indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
@@ -503,11 +503,11 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes)
   const unsigned dim = msh->GetDimension();
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
-  vector< vector < double> >  sol(dim);
-  vector< vector < double> > x(dim);
+  std::vector < std::vector < double> >  sol(dim);
+  std::vector < std::vector < double> > x(dim);
  
   const char varname[6][3] = {"U", "V", "W","DX", "DY", "DZ"};
-  vector <unsigned> indVar(2 * dim);
+  std::vector <unsigned> indVar(2 * dim);
   unsigned solType;
 
   for (unsigned ivar = 0; ivar < dim; ivar++) {
@@ -524,7 +524,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes)
    double weight;
   
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    vector < double> normal(dim, 0);
+    std::vector < double> normal(dim, 0);
     
     // loop on faces
     for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {

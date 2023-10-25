@@ -80,9 +80,9 @@ int main(int argc, char** args) {
 //
 //   unsigned dim = mlMsh.GetDimension();
 //   unsigned maxNumberOfMeshes = 5;
-//   //vector < vector < double > > l2Norm;
+//   //vector < std::vector < double > > l2Norm;
 //   //l2Norm.resize (maxNumberOfMeshes);
-//   //vector < vector < double > > semiNorm;
+//   //vector < std::vector < double > > semiNorm;
 //   //semiNorm.resize (maxNumberOfMeshes);
 //   unsigned numberOfUniformLevels = 1;
 //   unsigned numberOfSelectiveLevels = 0;

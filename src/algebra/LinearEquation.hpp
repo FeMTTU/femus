@@ -20,8 +20,10 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Mesh.hpp"
-#include "petscmat.h"
 #include "ParallelObject.hpp"
+
+
+#include "petscmat.h"
 
 
 namespace femus {
@@ -50,9 +52,9 @@ public:
   ~LinearEquation();
 
   /** To be Added */
-  void InitPde(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,
-               const vector <char*> &SolName, vector <NumericVector*> *Bdc_other,
-               const unsigned &other_gridn, vector < bool > &SparsityPattern_other);
+  void InitPde(const std::vector <unsigned> &_SolPdeIndex,const  std::vector <int> &SolType,
+               const std::vector <char*> &SolName, std::vector <NumericVector*> *Bdc_other,
+               const unsigned &other_gridn, std::vector < bool > &SparsityPattern_other);
 
   void GetSparsityPatternSize();
 
@@ -70,7 +72,7 @@ public:
 		        const Mesh* mshc) const;
 			
   unsigned GetSystemDof(const unsigned &soltype, const unsigned &kkindex_sol,
-			const unsigned &i, const unsigned &iel, const vector < vector <unsigned> > &otherKKoffset) const;
+			const unsigned &i, const unsigned &iel, const std::vector < std::vector <unsigned> > &otherKKoffset) const;
 
             
   /** Sparsity pattern: print number of nonzeros per row */

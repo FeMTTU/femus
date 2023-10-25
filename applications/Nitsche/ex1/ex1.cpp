@@ -163,27 +163,27 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
   unsigned solu2PdeIndex;
   solu2PdeIndex = mlPdeSys->GetSolPdeIndex ("u2");   // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu1; // local solution
-  vector < adept::adouble >  solu2; // local solution
+  std::vector < adept::adouble >  solu1; // local solution
+  std::vector < adept::adouble >  solu2; // local solution
 
   unsigned eflagIndex = mlSol->GetIndex ("eflag");
   unsigned nflagIndex = mlSol->GetIndex ("nflag");
 
-  vector < unsigned >  nodeFlag; // local solution
+  std::vector < unsigned >  nodeFlag; // local solution
 
-  vector < vector < double > > x (dim);   // local coordinates. x is now dim x m matrix.
+  std::vector < std::vector < double > > x (dim);   // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
   double weight; // gauss point weight
 
-  vector< adept::adouble > aResu1; // local redidual vector
-  vector< adept::adouble > aResu2; // local redidual vector
+  std::vector < adept::adouble > aResu1; // local redidual vector
+  std::vector < adept::adouble > aResu2; // local redidual vector
 
-  vector< unsigned > l2GMap; // local to global mapping
-  vector< double > Res; // local redidual vector
-  vector < double > Jac;
+  std::vector < unsigned > l2GMap; // local to global mapping
+  std::vector < double > Res; // local redidual vector
+  std::vector < double > Jac;
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual
@@ -241,8 +241,8 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
         msh->_finiteElement[ielGeom][soluType]->Jacobian (x, ig, weight, phi, phi_x);
 
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        vector < adept::adouble > gradSolu1g (dim, 0.);
-        vector < adept::adouble > gradSolu2g (dim, 0.);
+        std::vector < adept::adouble > gradSolu1g (dim, 0.);
+        std::vector < adept::adouble > gradSolu2g (dim, 0.);
 
         for (unsigned i = 0; i < nDofu; i++) {
           for (unsigned k = 0; k < dim; k++) {
@@ -350,7 +350,7 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
         weight = gpBulk.GetGaussWeight (ig) * Area / Area0;
 
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        vector < adept::adouble > gradSolu1g (dim, 0.);
+        std::vector < adept::adouble > gradSolu1g (dim, 0.);
         for (unsigned i = 0; i < nDofu; i++) {
           for (unsigned k = 0; k < dim; k++) {
             gradSolu1g[k] += phi_x[i * dim + k] * solu1[i];
@@ -460,7 +460,7 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
         }
         weight = gpBulk.GetGaussWeight (ig) * Area / Area0;
 
-        vector < adept::adouble > gradSolu2g (dim, 0.);
+        std::vector < adept::adouble > gradSolu2g (dim, 0.);
         for (unsigned i = 0; i < nDofu; i++) {
           for (unsigned k = 0; k < dim; k++) {
             gradSolu2g[k] += phi_x[i * dim + k] * solu2[i];

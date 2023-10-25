@@ -414,7 +414,7 @@ namespace femus {
       void Advection (const unsigned & n, const double & T, Solution * sol);
 
       void updateVelocity (std::vector< std::vector <double> > & V,
-                           const vector < unsigned > &solVIndex, const unsigned & solVType,
+                           const std::vector < unsigned > &solVIndex, const unsigned & solVType,
                            std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
                            const bool & pcElemUpdate, Solution * sol);
 

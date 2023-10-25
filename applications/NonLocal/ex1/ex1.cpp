@@ -342,14 +342,14 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
       short unsigned ielGeom = msh->GetElementType (iel);
       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
 
-      vector < vector < double > > x1 (dim);
+      std::vector < std::vector < double > > x1 (dim);
 
       for (int i = 0; i < dim; i++) {
         x1[i].resize (nDofu);
       }
 
-      vector < double >  soluNonLoc (nDofu);
-      vector < double >  soluLoc (nDofu);
+      std::vector < double >  soluNonLoc (nDofu);
+      std::vector < double >  soluLoc (nDofu);
 
       for (unsigned i = 0; i < nDofu; i++) {
         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
@@ -365,8 +365,8 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
         }
       }
 
-      vector <double> phi;  // local test function
-      vector <double> phi_x; // local test function first order partial derivatives
+      std::vector <double> phi;  // local test function
+      std::vector <double> phi_x; // local test function first order partial derivatives
       double weight; // gauss point weight
 
       // *** Gauss point loop ***
@@ -506,7 +506,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
       short unsigned ielFineGeom = mshFine->GetElementType (ielFine);
       unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);
 
-      vector < double >  soluNonLocFine (nDofFine);
+      std::vector < double >  soluNonLocFine (nDofFine);
 
       std::vector < std::vector <double> > xFine (dim);
 
@@ -527,8 +527,8 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
         }
       }
 
-      vector <double> phi;  // local test function
-      vector <double> phi_x; // local test function first order partial derivatives
+      std::vector <double> phi;  // local test function
+      std::vector <double> phi_x; // local test function first order partial derivatives
       double weight; // gauss point weight
 
       // *** Gauss point loop ***
@@ -560,7 +560,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
             short unsigned ielGeomCoarse = msh->GetElementType (ielCoarse);
             unsigned nDofCoarse  = msh->GetElementDofNumber (ielCoarse, soluType);
 
-            vector < double >  soluNonLocCoarse (nDofCoarse);
+            std::vector < double >  soluNonLocCoarse (nDofCoarse);
 
             std::vector < std::vector <double> > xCoarse (dim);
 
@@ -589,8 +589,8 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
 //           std::cout << "=====-------------------==== x_gss_fine_Local[0] = " << x_gss_fine_Local[0] << std::endl;
 
-              vector <double> phi2;  // local test function
-              vector <double> phi_x2; // local test function first order partial derivatives
+              std::vector <double> phi2;  // local test function
+              std::vector <double> phi_x2; // local test function first order partial derivatives
               double weight2; // gauss point weight
               msh->_finiteElement[ielGeomCoarse][soluType]->Jacobian (xCoarse, x_gss_fine_Local, weight2, phi2, phi_x2);
 //           femQuadrature->Jacobian (xCoarse, x_gss_fine_Local, weight2, phi2, phi_x2);
@@ -968,7 +968,7 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
 
 
       std::vector < std::vector <double> > xLocal (dim);
-      vector < double >  soluLocLocal (nDofLocal);
+      std::vector < double >  soluLocLocal (nDofLocal);
 
       for (int k = 0; k < dim; k++) {
         xLocal[k].resize (nDofLocal);
@@ -1012,7 +1012,7 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
         short unsigned ielFineGeom = mshFine->GetElementType (ielFine);
         unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);
 
-        vector < double >  soluNonLocFine (nDofFine);
+        std::vector < double >  soluNonLocFine (nDofFine);
 
         std::vector < std::vector <double> > xFine (dim);
 
@@ -1029,8 +1029,8 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
           }
         }
 
-        vector <double> phi;  // local test function
-        vector <double> phi_x; // local test function first order partial derivatives
+        std::vector <double> phi;  // local test function
+        std::vector <double> phi_x; // local test function first order partial derivatives
         double weight; // gauss point weight
 
         unsigned igNumberFine = mshFine->_finiteElement[ielFineGeom][soluType]->GetGaussPointNumber();
@@ -1068,8 +1068,8 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
               x_gss_fine_Local[ii] = - 1. + 2. * (x_gss_fine[ii] - xLocal[ii][ii]) / (xLocal[ii][ii + 1] - xLocal[ii][ii]);
             }
 
-            vector <double> phi2;  // local test function
-            vector <double> phi_x2; // local test function first order partial derivatives
+            std::vector <double> phi2;  // local test function
+            std::vector <double> phi_x2; // local test function first order partial derivatives
             double weight2; // gauss point weight
             msh->_finiteElement[ielGeomLocal][soluType]->Jacobian (xLocal, x_gss_fine_Local, weight2, phi2, phi_x2);
 //           femQuadrature->Jacobian (xLocal, x_gss_fine_Local, weight2, phi2, phi_x2);

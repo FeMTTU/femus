@@ -129,71 +129,71 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
   unsigned solmuExtra3PdeIndex;
   solmuExtra3PdeIndex = mlPdeSys->GetSolPdeIndex ("muExtra3");
 
-  vector < double >  solu1_1; // local solution for u1 for the nonlocal assembly
-  vector < double >  solu1_2; // local solution for u1 for the nonlocal assembly
+  std::vector < double >  solu1_1; // local solution for u1 for the nonlocal assembly
+  std::vector < double >  solu1_2; // local solution for u1 for the nonlocal assembly
   solu1_1.reserve (maxSize);
   solu1_2.reserve (maxSize);
 
-  vector < double >  solu2_1;
-  vector < double >  solu2_2;
+  std::vector < double >  solu2_1;
+  std::vector < double >  solu2_2;
   solu2_1.reserve (maxSize);
   solu2_2.reserve (maxSize);
 
-  vector < double >  solu3_1;
-  vector < double >  solu3_2;
+  std::vector < double >  solu3_1;
+  std::vector < double >  solu3_2;
   solu3_1.reserve (maxSize);
   solu3_2.reserve (maxSize);
 
-  vector < double >  solu4_1;
-  vector < double >  solu4_2;
+  std::vector < double >  solu4_1;
+  std::vector < double >  solu4_2;
   solu4_1.reserve (maxSize);
   solu4_2.reserve (maxSize);
 
-  vector < double >  solmu_1;
-  vector < double >  solmu_2;
+  std::vector < double >  solmu_1;
+  std::vector < double >  solmu_2;
   solmu_1.reserve (maxSize);
   solmu_2.reserve (maxSize);
 
-  vector < double >  solmuExtra_1;
-  vector < double >  solmuExtra_2;
+  std::vector < double >  solmuExtra_1;
+  std::vector < double >  solmuExtra_2;
   solmuExtra_1.reserve (maxSize);
   solmuExtra_2.reserve (maxSize);
 
-  vector < double >  solmuExtra2_1;
-  vector < double >  solmuExtra2_2;
+  std::vector < double >  solmuExtra2_1;
+  std::vector < double >  solmuExtra2_2;
   solmuExtra2_1.reserve (maxSize);
   solmuExtra2_2.reserve (maxSize);
 
-  vector < double >  solmuExtra3_1;
-  vector < double >  solmuExtra3_2;
+  std::vector < double >  solmuExtra3_1;
+  std::vector < double >  solmuExtra3_2;
   solmuExtra3_1.reserve (maxSize);
   solmuExtra3_2.reserve (maxSize);
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector < double > > x1 (dim);
-  vector < vector < double > > x2 (dim);
+  std::vector < std::vector < double > > x1 (dim);
+  std::vector < std::vector < double > > x2 (dim);
 
-  vector < vector < double > > x1Temp (dim);
-  vector < vector < double > > x2Temp (dim);
+  std::vector < std::vector < double > > x1Temp (dim);
+  std::vector < std::vector < double > > x2Temp (dim);
 
-  vector < vector < double > > x1Tempp (dim);
-  vector < vector < double > > x2Tempp (dim);
+  std::vector < std::vector < double > > x1Tempp (dim);
+  std::vector < std::vector < double > > x2Tempp (dim);
 
-  vector < vector < double > > x1Tem3p (dim);
-  vector < vector < double > > x2Tem3p (dim);
+  std::vector < std::vector < double > > x1Tem3p (dim);
+  std::vector < std::vector < double > > x2Tem3p (dim);
 
-  vector < vector < double > > x1Tem4p (dim);
-  vector < vector < double > > x2Tem4p (dim);
+  std::vector < std::vector < double > > x1Tem4p (dim);
+  std::vector < std::vector < double > > x2Tem4p (dim);
 
-  vector < vector < double > > x1Tem5p (dim);
-  vector < vector < double > > x2Tem5p (dim);
+  std::vector < std::vector < double > > x1Tem5p (dim);
+  std::vector < std::vector < double > > x2Tem5p (dim);
 
-  vector < vector < double > > x1Tem6p (dim);
-  vector < vector < double > > x2Tem6p (dim);
+  std::vector < std::vector < double > > x1Tem6p (dim);
+  std::vector < std::vector < double > > x2Tem6p (dim);
 
-  vector < vector < double > > x1Tem7p (dim);
-  vector < vector < double > > x2Tem7p (dim);
+  std::vector < std::vector < double > > x1Tem7p (dim);
+  std::vector < std::vector < double > > x2Tem7p (dim);
 
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
@@ -221,150 +221,150 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
     x2Tem7p[k].reserve (maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   phi.reserve (maxSize);
   phi_x.reserve (maxSize * dim);
   phi_xx.reserve (maxSize * dim2);
 
-  vector< int > l2GMapu1_1; // local to global mapping for u1
-  vector< int > l2GMapu1_2; // local to global mapping for u1
+  std::vector < int > l2GMapu1_1; // local to global mapping for u1
+  std::vector < int > l2GMapu1_2; // local to global mapping for u1
   l2GMapu1_1.reserve (maxSize);
   l2GMapu1_2.reserve (maxSize);
 
-  vector< int > l2GMapu2_1;
-  vector< int > l2GMapu2_2;
+  std::vector < int > l2GMapu2_1;
+  std::vector < int > l2GMapu2_2;
   l2GMapu2_1.reserve (maxSize);
   l2GMapu2_2.reserve (maxSize);
 
-  vector< int > l2GMapu3_1;
-  vector< int > l2GMapu3_2;
+  std::vector < int > l2GMapu3_1;
+  std::vector < int > l2GMapu3_2;
   l2GMapu3_1.reserve (maxSize);
   l2GMapu3_2.reserve (maxSize);
 
-  vector< int > l2GMapu4_1;
-  vector< int > l2GMapu4_2;
+  std::vector < int > l2GMapu4_1;
+  std::vector < int > l2GMapu4_2;
   l2GMapu4_1.reserve (maxSize);
   l2GMapu4_2.reserve (maxSize);
 
-  vector< int > l2GMapmu_1;
-  vector< int > l2GMapmu_2;
+  std::vector < int > l2GMapmu_1;
+  std::vector < int > l2GMapmu_2;
   l2GMapmu_1.reserve (maxSize);
   l2GMapmu_2.reserve (maxSize);
 
-  vector< int > l2GMapmuExtra_1;
-  vector< int > l2GMapmuExtra_2;
+  std::vector < int > l2GMapmuExtra_1;
+  std::vector < int > l2GMapmuExtra_2;
   l2GMapmuExtra_1.reserve (maxSize);
   l2GMapmuExtra_2.reserve (maxSize);
 
-  vector< int > l2GMapmuExtra2_1;
-  vector< int > l2GMapmuExtra2_2;
+  std::vector < int > l2GMapmuExtra2_1;
+  std::vector < int > l2GMapmuExtra2_2;
   l2GMapmuExtra2_1.reserve (maxSize);
   l2GMapmuExtra2_2.reserve (maxSize);
 
-  vector< int > l2GMapmuExtra3_1;
-  vector< int > l2GMapmuExtra3_2;
+  std::vector < int > l2GMapmuExtra3_1;
+  std::vector < int > l2GMapmuExtra3_2;
   l2GMapmuExtra3_1.reserve (maxSize);
   l2GMapmuExtra3_2.reserve (maxSize);
 
-  vector< double > Resu1_1; // local redidual vector for u1
+  std::vector < double > Resu1_1; // local redidual vector for u1
   Resu1_1.reserve (maxSize);
-  vector< double > Resu1_2; // local redidual vector for u1
+  std::vector < double > Resu1_2; // local redidual vector for u1
   Resu1_2.reserve (maxSize);
 
-  vector< double > Resu2_1;
+  std::vector < double > Resu2_1;
   Resu2_1.reserve (maxSize);
-  vector< double > Resu2_2;
+  std::vector < double > Resu2_2;
   Resu2_2.reserve (maxSize);
 
-  vector< double > Resu3_1;
+  std::vector < double > Resu3_1;
   Resu3_1.reserve (maxSize);
-  vector< double > Resu3_2;
+  std::vector < double > Resu3_2;
   Resu3_2.reserve (maxSize);
 
-  vector< double > Resu4_1;
+  std::vector < double > Resu4_1;
   Resu4_1.reserve (maxSize);
-  vector< double > Resu4_2;
+  std::vector < double > Resu4_2;
   Resu4_2.reserve (maxSize);
 
-  vector< double > Resmu;
+  std::vector < double > Resmu;
   Resmu.reserve (maxSize);
 
-  vector< double > ResmuExtra;
+  std::vector < double > ResmuExtra;
   ResmuExtra.reserve (maxSize);
 
-  vector< double > ResmuExtra2;
+  std::vector < double > ResmuExtra2;
   ResmuExtra2.reserve (maxSize);
 
-  vector< double > ResmuExtra3;
+  std::vector < double > ResmuExtra3;
   ResmuExtra3.reserve (maxSize);
 
-  vector < double > Jacu1_11;  // stiffness matrix for u1
+  std::vector < double > Jacu1_11;  // stiffness matrix for u1
   Jacu1_11.reserve (maxSize * maxSize);
-  vector < double > Jacu1_12;
+  std::vector < double > Jacu1_12;
   Jacu1_12.reserve (maxSize * maxSize);
-  vector < double > Jacu1_21;
+  std::vector < double > Jacu1_21;
   Jacu1_21.reserve (maxSize * maxSize);
-  vector < double > Jacu1_22;
+  std::vector < double > Jacu1_22;
   Jacu1_22.reserve (maxSize * maxSize);
 
-  vector < double > Jacu2_11;  // stiffness matrix for u2
+  std::vector < double > Jacu2_11;  // stiffness matrix for u2
   Jacu2_11.reserve (maxSize * maxSize);
-  vector < double > Jacu2_12;
+  std::vector < double > Jacu2_12;
   Jacu2_12.reserve (maxSize * maxSize);
-  vector < double > Jacu2_21;
+  std::vector < double > Jacu2_21;
   Jacu2_21.reserve (maxSize * maxSize);
-  vector < double > Jacu2_22;
+  std::vector < double > Jacu2_22;
   Jacu2_22.reserve (maxSize * maxSize);
 
-  vector < double > Jacu3_11;  // stiffness matrix for u3
+  std::vector < double > Jacu3_11;  // stiffness matrix for u3
   Jacu3_11.reserve (maxSize * maxSize);
-  vector < double > Jacu3_12;
+  std::vector < double > Jacu3_12;
   Jacu3_12.reserve (maxSize * maxSize);
-  vector < double > Jacu3_21;
+  std::vector < double > Jacu3_21;
   Jacu3_21.reserve (maxSize * maxSize);
-  vector < double > Jacu3_22;
+  std::vector < double > Jacu3_22;
   Jacu3_22.reserve (maxSize * maxSize);
 
-  vector < double > Jacu4_11;  // stiffness matrix for u4
+  std::vector < double > Jacu4_11;  // stiffness matrix for u4
   Jacu4_11.reserve (maxSize * maxSize);
-  vector < double > Jacu4_12;
+  std::vector < double > Jacu4_12;
   Jacu4_12.reserve (maxSize * maxSize);
-  vector < double > Jacu4_21;
+  std::vector < double > Jacu4_21;
   Jacu4_21.reserve (maxSize * maxSize);
-  vector < double > Jacu4_22;
+  std::vector < double > Jacu4_22;
   Jacu4_22.reserve (maxSize * maxSize);
 
-  vector < double > Jacmu;  // diag block for mu
+  std::vector < double > Jacmu;  // diag block for mu
   Jacmu.reserve (maxSize * maxSize);
-  vector < double > JacmuExtra;  // diag block for muExtra
+  std::vector < double > JacmuExtra;  // diag block for muExtra
   JacmuExtra.reserve (maxSize * maxSize);
-  vector < double > JacmuExtra2;  // diag block for muExtra2
+  std::vector < double > JacmuExtra2;  // diag block for muExtra2
   JacmuExtra2.reserve (maxSize * maxSize);
-  vector < double > JacmuExtra3;  // diag block for muExtra3
+  std::vector < double > JacmuExtra3;  // diag block for muExtra3
   JacmuExtra3.reserve (maxSize * maxSize);
-  vector < double > M1;
+  std::vector < double > M1;
   M1.reserve (maxSize * maxSize);
-  vector < double > M2;
+  std::vector < double > M2;
   M2.reserve (maxSize * maxSize);
-  vector < double > M3;
+  std::vector < double > M3;
   M3.reserve (maxSize * maxSize);
-  vector < double > M4;
+  std::vector < double > M4;
   M4.reserve (maxSize * maxSize);
-  vector < double > M1Extra;
+  std::vector < double > M1Extra;
   M1Extra.reserve (maxSize * maxSize);
-  vector < double > M3Extra;
+  std::vector < double > M3Extra;
   M3Extra.reserve (maxSize * maxSize);
-  vector < double > M3Extra2;
+  std::vector < double > M3Extra2;
   M3Extra2.reserve (maxSize * maxSize);
-  vector < double > M4Extra2;
+  std::vector < double > M4Extra2;
   M4Extra2.reserve (maxSize * maxSize);
-  vector < double > M1Extra3;
+  std::vector < double > M1Extra3;
   M1Extra3.reserve (maxSize * maxSize);
-  vector < double > M2Extra3;
+  std::vector < double > M2Extra3;
   M2Extra3.reserve (maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -795,9 +795,9 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
         double sideLength = fabs (x1[0][0] - x1[0][1]);
 
         unsigned igNumber = (midpointQuadrature) ? 4 : msh->_finiteElement[ielGeom][solu1Type]->GetGaussPointNumber();
-        vector < vector < double > > xg1 (igNumber);
-        vector <double> weight1 (igNumber);
-        vector < vector <double> > phi1x (igNumber);
+        std::vector < std::vector < double > > xg1 (igNumber);
+        std::vector <double> weight1 (igNumber);
+        std::vector < std::vector <double> > phi1x (igNumber);
 
         if (midpointQuadrature) {
 
@@ -960,7 +960,7 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
 
               for (unsigned jg = 0; jg < jgNumber; jg++) {
 
-                vector <double>  phi2y;
+                std::vector <double>  phi2y;
                 double weight2;
 
                 msh->_finiteElement[jelGeom][solu1Type]->Jacobian (x2New, jg, weight2, phi2y, phi_x);
@@ -1261,54 +1261,54 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u");   // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
+  std::vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
   solu.reserve (maxSize);
 
-  vector < double >  solu1; // local solution for the nonlocal assembly
-  vector < double >  solu2; // local solution for the nonlocal assembly
+  std::vector < double >  solu1; // local solution for the nonlocal assembly
+  std::vector < double >  solu2; // local solution for the nonlocal assembly
   solu1.reserve (maxSize);
   solu2.reserve (maxSize);
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector < double > > x1 (dim);
-  vector < vector < double > > x2 (dim);
+  std::vector < std::vector < double > > x1 (dim);
+  std::vector < std::vector < double > > x2 (dim);
 
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
     x2[k].reserve (maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   phi.reserve (maxSize);
   phi_x.reserve (maxSize * dim);
   phi_xx.reserve (maxSize * dim2);
 
-  vector< adept::adouble > aRes; // local redidual vector
+  std::vector < adept::adouble > aRes; // local redidual vector
   aRes.reserve (maxSize);
 
-  vector< int > l2GMap1; // local to global mapping
-  vector< int > l2GMap2; // local to global mapping
+  std::vector < int > l2GMap1; // local to global mapping
+  std::vector < int > l2GMap2; // local to global mapping
   l2GMap1.reserve (maxSize);
   l2GMap2.reserve (maxSize);
 
-  vector< double > Res1; // local redidual vector
+  std::vector < double > Res1; // local redidual vector
   Res1.reserve (maxSize);
-  vector< double > Res2; // local redidual vector
+  std::vector < double > Res2; // local redidual vector
   Res2.reserve (maxSize);
 
-  vector < double > Jac11;
+  std::vector < double > Jac11;
   Jac11.reserve (maxSize * maxSize);
-  vector < double > Jac12;
+  std::vector < double > Jac12;
   Jac12.reserve (maxSize * maxSize);
 
-  vector < double > Jac21;
+  std::vector < double > Jac21;
   Jac21.reserve (maxSize * maxSize);
-  vector < double > Jac22;
+  std::vector < double > Jac22;
   Jac22.reserve (maxSize * maxSize);
 
 
@@ -1404,9 +1404,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         double rightBoundInterface = sideLength;
 
         unsigned igNumber = (midpointQuadrature) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
-        vector < vector < double > > xg1 (igNumber);
-        vector <double> weight1 (igNumber);
-        vector < vector <double> > phi1x (igNumber);
+        std::vector < std::vector < double > > xg1 (igNumber);
+        std::vector <double> weight1 (igNumber);
+        std::vector < std::vector <double> > phi1x (igNumber);
 
         if (midpointQuadrature) {
 
@@ -1500,7 +1500,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
               for (unsigned jg = 0; jg < jgNumber; jg++) {
 
-                vector <double>  phi2y;
+                std::vector <double>  phi2y;
                 double weight2;
 
                 msh->_finiteElement[jelGeom][soluType]->Jacobian (x2New, jg, weight2, phi2y, phi_x);

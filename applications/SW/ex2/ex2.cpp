@@ -225,7 +225,7 @@ void ETD(MultiLevelProblem& ml_prob)
   std::vector < unsigned > solIndexv(NLayers);
   std::vector < unsigned > solPdeIndexv(NLayers);
 
-  vector< int > l2GMap; // local to global mapping
+  std::vector < int > l2GMap; // local to global mapping
 
   for(unsigned i = 0; i < NLayers; i++) {
     char name[10];
@@ -241,17 +241,17 @@ void ETD(MultiLevelProblem& ml_prob)
   unsigned solTypeh = mlSol->GetSolutionType(solIndexh[0]);    // get the finite element type for "hi"
   unsigned solTypev = mlSol->GetSolutionType(solIndexv[0]);    // get the finite element type for "vi"
   
-  vector < double > x;    // local coordinates
-  vector< vector < adept::adouble > > solh(NLayers);    // local coordinates
-  vector< vector < adept::adouble > > solv(NLayers);    // local coordinates
+  std::vector < double > x;    // local coordinates
+  std::vector < std::vector < adept::adouble > > solh(NLayers);    // local coordinates
+  std::vector < std::vector < adept::adouble > > solv(NLayers);    // local coordinates
   
-  vector< vector < bool > > bdch(NLayers);    // local coordinates
-  vector< vector < bool > > bdcv(NLayers);    // local coordinates
+  std::vector < std::vector < bool > > bdch(NLayers);    // local coordinates
+  std::vector < std::vector < bool > > bdcv(NLayers);    // local coordinates
   
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector< adept::adouble > > aResh(NLayers);
-  vector < vector< adept::adouble > > aResv(NLayers);
+  std::vector < std::vector < adept::adouble > > aResh(NLayers);
+  std::vector < std::vector < adept::adouble > > aResv(NLayers);
   
   KK->zero();
   RES->zero();
@@ -359,7 +359,7 @@ void ETD(MultiLevelProblem& ml_prob)
     }
 
 
-    vector< double > Res(NLayers * nDofs); // local redidual vector
+    std::vector < double > Res(NLayers * nDofs); // local redidual vector
 
 
     unsigned counter = 0;
@@ -388,7 +388,7 @@ void ETD(MultiLevelProblem& ml_prob)
     }
 
     // get the jacobian matrix (ordered by row major )
-    vector < double > Jac(NLayers * nDofs * NLayers * nDofs);
+    std::vector < double > Jac(NLayers * nDofs * NLayers * nDofs);
     s.jacobian(&Jac[0], true);
 
     //store K in the global matrix KK

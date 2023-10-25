@@ -62,7 +62,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
-// vector <double> GetExactSolutionValue(const std::vector < double >& x);
+// std::vector <double> GetExactSolutionValue(const std::vector < double >& x);
 int main(int argc, char** args)
 {
 
@@ -256,8 +256,8 @@ int main(int argc, char** args)
   return 0;
 }
 
-void GetExactSolutionValue(const std::vector < double >& x, vector < double >& U,
-                           double &P, vector < double >& B)
+void GetExactSolutionValue(const std::vector < double >& x, std::vector < double >& U,
+                           double &P, std::vector < double >& B)
 {
   U[0] = x[0] * x[0] * (x[0] - 1.0) * (x[0] - 1.0) * x[1] * (x[1] - 1.) * (2 * x[1] - 1.);
   U[1] = - x[0] * (x[0] - 1.0) * (2 * x[0] - 1) * x[1] * x[1] * (x[1] - 1.) * (x[1] - 1.);
@@ -266,8 +266,8 @@ void GetExactSolutionValue(const std::vector < double >& x, vector < double >& U
   B[1] = -sin(pi * x[1]) * cos(pi * x[0]);
 }
 
-void GetGradExactSolutionValue(const std::vector < double >& x, vector < double >& GradU, vector < double >& GradV,
-                               vector < double >& GradB1, vector < double >& GradB2)
+void GetGradExactSolutionValue(const std::vector < double >& x, std::vector < double >& GradU, std::vector < double >& GradV,
+                               std::vector < double >& GradB1, std::vector < double >& GradB2)
 {
   GradU [0] = 2. * x[0] * (x[0] - 1.) * (2 * x[0] - 1.) * x[1] * (x[1] - 1.) * (2. * x[1] - 1.);
   GradU [1] = x[0] * x[0] * (x[0] - 1.) * (x[0] - 1.) * (6. * x[1] * x[1] - 6. * x[1] + 1.);
@@ -343,7 +343,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //solution variable
-  vector < unsigned > solBIndex(dim);
+  std::vector < unsigned > solBIndex(dim);
   solBIndex[0] = mlSol->GetIndex("B1");
   solBIndex[1] = mlSol->GetIndex("B2");
   unsigned solBType = mlSol -> GetSolutionType(solBIndex[0]);
@@ -352,7 +352,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   solRIndex = mlSol->GetIndex("R");
   unsigned solRType = mlSol->GetSolutionType(solRIndex);
 
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
@@ -361,24 +361,24 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
-  vector < unsigned > solBPdeIndex(dim);
+  std::vector < unsigned > solBPdeIndex(dim);
   solBPdeIndex[0] = mlPdeSys->GetSolPdeIndex("B1");    // get the position of "B1" in the pdeSys object
   solBPdeIndex[1] = mlPdeSys->GetSolPdeIndex("B2");    // get the position of "B2" in the pdeSys object
   unsigned solRPdeIndex;
   solRPdeIndex = mlPdeSys->GetSolPdeIndex("R");    // get the position of "R" in the pdeSys object
 
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector <vector <double> > solB(dim); // local solution for B1, B2
-  vector <double> solR; // local solution for langrange for r
-  vector < vector < double > >  solV(dim);    // local solution for U, V
-  vector < double >  solP; // local solution for P
+  std::vector < std::vector <double> > solB(dim); // local solution for B1, B2
+  std::vector <double> solR; // local solution for langrange for r
+  std::vector < std::vector < double > >  solV(dim);    // local solution for U, V
+  std::vector < double >  solP; // local solution for P
 
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for(unsigned  k = 0; k < dim; k++) {
@@ -392,18 +392,18 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   }
   solP.reserve(maxSize);
 
-  vector <double> phiB;  // local test function
-  vector <double> phiB_x; // local test function first order partial derivatives
-  vector <double> phiB_xx; // local test function second order partial derivatives
+  std::vector <double> phiB;  // local test function
+  std::vector <double> phiB_x; // local test function first order partial derivatives
+  std::vector <double> phiB_xx; // local test function second order partial derivatives
 
   phiB.reserve(maxSize);
   phiB_x.reserve(maxSize * dim);
   phiB_xx.reserve(maxSize * dim2);
   double* phiR;
 
-  vector <double> phiV;  // local test function
-  vector <double> phiV_x; // local test function first order partial derivatives
-  vector <double> phiV_xx; // local test function second order partial derivatives
+  std::vector <double> phiV;  // local test function
+  std::vector <double> phiV_x; // local test function first order partial derivatives
+  std::vector <double> phiV_xx; // local test function second order partial derivatives
 
   phiV.reserve(maxSize);
   phiV_x.reserve(maxSize * dim);
@@ -412,13 +412,13 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   double* phiP;
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve((dim * 2 + 2) *maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve((dim * 2 + 2) *maxSize);
 
-  vector < double > Jac; //local Jacobian
+  std::vector < double > Jac; //local Jacobian
   Jac.reserve((dim * 2 + 2) *maxSize * (dim * 2 + 2) *maxSize);
 
   if(assembleMatrix)
@@ -508,8 +508,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      vector <double> solB_gss(dim, 0);
-      vector <vector <double> > gradSolB_gss(dim);
+      std::vector <double> solB_gss(dim, 0);
+      std::vector < std::vector <double> > gradSolB_gss(dim);
       for(unsigned j = 0; j < dim; j ++) {
         gradSolB_gss[j].resize(dim);
         std::fill(gradSolB_gss[j].begin(), gradSolB_gss[j].end(), 0.0);
@@ -532,8 +532,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
         solR_gss += phiR[i] * solR[i];
       }
 
-      vector < double > solV_gss(dim, 0);
-      vector < vector < double > > gradSolV_gss(dim);
+      std::vector < double > solV_gss(dim, 0);
+      std::vector < std::vector < double > > gradSolV_gss(dim);
       for(unsigned j = 0; j < dim; j++) {
         gradSolV_gss[j].resize(dim);
         std::fill(gradSolV_gss[j].begin(), gradSolV_gss[j].end(), 0.0);
@@ -556,7 +556,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
         solP_gss += phiP[i] * solP[i];
       }
 
-      vector <double> x_gss(dim, 0);
+      std::vector <double> x_gss(dim, 0);
       for(unsigned i = 0; i < nDofsV; i++) {
         for(unsigned j = 0; j < dim; j ++) {
           x_gss[j] += phiV[i] *  coordX[j][i];

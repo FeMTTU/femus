@@ -411,7 +411,7 @@ namespace femus {
   {
 
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
-      vector<int> cols(_nc);
+      std::vector<int> cols(_nc);
 
       for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -431,7 +431,7 @@ namespace femus {
       }
     }
     else {
-      vector <int> jcol(1);
+      std::vector <int> jcol(1);
       double one = 1.;
 
       for(int i = 0; i < _nc; i++) {
@@ -453,8 +453,8 @@ namespace femus {
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
       //BEGIN project nodeSolidMark
-      vector < double > fineNodeSolidMark(_nf, 0);
-      vector < bool > coarseNodeSolidMark(_nc, 0);
+      std::vector < double > fineNodeSolidMark(_nf, 0);
+      std::vector < bool > coarseNodeSolidMark(_nc, 0);
 
       if(_SolType == 2) {
         for(unsigned j = 0; j < _nc; j++) {
@@ -474,8 +474,8 @@ namespace femus {
 
       //END project nodeSolidMark
 
-      vector <int> cols(_nc);
-      vector <double> copy_prol_val;
+      std::vector <int> cols(_nc);
+      std::vector <double> copy_prol_val;
       copy_prol_val.reserve(_nc);
 
       for(int i = 0; i < _nf; i++) {
@@ -508,7 +508,7 @@ namespace femus {
       }
     }
     else {
-      vector <int> jcol(1);
+      std::vector <int> jcol(1);
       double one = 1.;
 
       for(int i = 0; i < _nc; i++) {
@@ -586,7 +586,7 @@ namespace femus {
       
       if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
-      vector<int> jcols(_nc);
+      std::vector<int> jcols(_nc);
 
       for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -605,7 +605,7 @@ namespace femus {
       }
     }
     else { // coarse2coarse prolongation
-      vector <int> jcol(1);
+      std::vector <int> jcol(1);
       double one = 1.;
 
       for(int i = 0; i < _nc; i++) {
@@ -656,8 +656,8 @@ namespace femus {
   void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
   {
       
-    vector<int> cols(_nc);
-    vector<double> value(_nc);
+    std::vector<int> cols(_nc);
+    std::vector<double> value(_nc);
     bool identity = (_nlag[itype] <= _nc) ? true : false;
     
     for(int i = 0; i < _nlag[itype]; i++) {
@@ -1955,12 +1955,13 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 //---------------------------------------------------------------------------------------------------------
 //Compute volume jacobian and evaluate volume shape functions and derivatives at REAL boundary quadrature points
 
-  void elem_type_2D::fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, 
-                                           const vector < vector < double> > & vt_bdry,  
+  void elem_type_2D::fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(
+                                           const std::vector < std::vector < double > >& vt_vol, 
+                                           const std::vector < std::vector < double> > & vt_bdry,  
                                            const unsigned& jface, 
                                            const unsigned& ig_bdry, 
-                                           vector < double >& phi, 
-                                           vector < double >& gradphi) const {
+                                           std::vector < double >& phi, 
+                                           std::vector < double >& gradphi) const {
                                        
 
     fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*vt_bdry,*/ jface);
@@ -2012,12 +2013,12 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 
 //---------------------------------------------------------------------------------------------------------
 
-  void elem_type_3D::fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, 
-                                           const vector < vector < double> > & vt_bdry,  
+  void elem_type_3D::fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const std::vector < std::vector < double > >& vt_vol, 
+                                           const std::vector < std::vector < double> > & vt_bdry,  
                                            const unsigned& jface, 
                                            const unsigned& ig_bdry, 
-                                           vector < double >& phi, 
-                                           vector < double >& gradphi) const {
+                                           std::vector < double >& phi, 
+                                           std::vector < double >& gradphi) const {
                                        
 
 //********* EVALUATION STAGE **********************

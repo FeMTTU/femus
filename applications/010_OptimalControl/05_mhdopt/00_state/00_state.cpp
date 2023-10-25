@@ -230,13 +230,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   
   
   //solution variable
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
    for (unsigned int d = 0; d < dim; d++) {
       const std::string  unknown_name =  concatenate("U", d);
   solVIndex[d] = mlSol->GetIndex(unknown_name.c_str());  // get the position of "U" in the ml_sol object
   }
 
-  vector < unsigned > solMagIndex(aux_mag_length);
+  std::vector < unsigned > solMagIndex(aux_mag_length);
    for (unsigned int d = 0; d < solMagIndex.size(); d++) {
       const std::string  unknown_name =  concatenate("B", d);
   solMagIndex[d] = mlSol->GetIndex(unknown_name.c_str());  // get the position of "U" in the ml_sol object
@@ -244,7 +244,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   
 
    //all unknowns ==========================
-  vector < unsigned > solIndex_all(aux_ns_length + aux_mag_length);
+  std::vector < unsigned > solIndex_all(aux_ns_length + aux_mag_length);
   
   solIndex_all[0] = mlSol->GetIndex("U_0");
   solIndex_all[1] = mlSol->GetIndex("U_1");
@@ -255,7 +255,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   if (dim == 3) { std::cout << "Change variable inputs above"; abort(); } 
   
-  vector < unsigned > solType_all(aux_ns_length + aux_mag_length);
+  std::vector < unsigned > solType_all(aux_ns_length + aux_mag_length);
   
    for (unsigned int d = 0; d < solType_all.size(); d++) {
        
@@ -278,7 +278,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   
   
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   for (unsigned int d = 0; d < dim; d++) {
       const std::string  unknown_name =  concatenate("U", d);
   solVPdeIndex[d] = mlPdeSys->GetSolPdeIndex(unknown_name.c_str());
@@ -287,7 +287,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-   vector < unsigned > solMagPdeIndex(aux_mag_length);
+   std::vector < unsigned > solMagPdeIndex(aux_mag_length);
    for (unsigned int d = 0; d < solMagPdeIndex.size(); d++) {
       const std::string  unknown_name =  concatenate("B", d);
       solMagPdeIndex[d] = mlPdeSys->GetSolPdeIndex(unknown_name.c_str());
@@ -295,20 +295,20 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   
   
   
-  vector < vector < adept::adouble > >  solV(dim);
-  vector < adept::adouble >  solP;
+  std::vector < std::vector < adept::adouble > >  solV(dim);
+  std::vector < adept::adouble >  solP;
 
-  vector < vector < adept::adouble > >  solMag(aux_mag_length);
-
-  
-  vector< vector < adept::adouble > > aResV(dim);    
-  vector< adept::adouble > aResP;
+  std::vector < std::vector < adept::adouble > >  solMag(aux_mag_length);
 
   
-  vector< vector < adept::adouble > > aResMag(aux_mag_length);    // local redidual vector
+  std::vector < std::vector < adept::adouble > > aResV(dim);    
+  std::vector < adept::adouble > aResP;
+
+  
+  std::vector < std::vector < adept::adouble > > aResMag(aux_mag_length);    // local redidual vector
   
   
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned  k = 0; k < dim; k++) {
@@ -328,9 +328,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   aResP.reserve(maxSize);
 
 
-  vector <double> phiV;  // local test function
-  vector <double> phiV_x; // local test function first order partial derivatives
-  vector <double> phiV_xx; // local test function second order partial derivatives
+  std::vector <double> phiV;  // local test function
+  std::vector <double> phiV_x; // local test function first order partial derivatives
+  std::vector <double> phiV_xx; // local test function second order partial derivatives
 
   phiV.reserve(maxSize);
   phiV_x.reserve(maxSize * dim);
@@ -339,8 +339,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   double* phiP;
   
   
-  vector< vector <double> > phiMag(aux_mag_length);  // local test function
-  vector< vector <double> > phiMag_x(aux_mag_length); // local test function first order partial derivatives
+  std::vector < std::vector <double> > phiMag(aux_mag_length);  // local test function
+  std::vector < std::vector <double> > phiMag_x(aux_mag_length); // local test function first order partial derivatives
     for (unsigned  k = 0; k < aux_mag_length; k++) {
        phiMag[k].reserve(maxSize);
        phiMag_x[k].reserve(maxSize * dim);
@@ -350,13 +350,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve(2 * aux_mag_length * maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(2 * aux_mag_length  * maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve(2 * aux_mag_length * maxSize * 2 * aux_mag_length * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -488,8 +488,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
       
     
-      vector < adept::adouble > solV_gss(dim, 0.);
-      vector < vector < adept::adouble > > gradSolV_gss(dim);
+      std::vector < adept::adouble > solV_gss(dim, 0.);
+      std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
@@ -515,7 +515,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
 
       
-        vector < adept::adouble > solMag_qp(aux_mag_length, 0.);
+        std::vector < adept::adouble > solMag_qp(aux_mag_length, 0.);
       for (unsigned  k = 0; k < aux_mag_length; k++) {
           solMag_qp[k] = 0.;
         for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
@@ -528,7 +528,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
-        vector < adept::adouble > NSV(dim, 0.);
+        std::vector < adept::adouble > NSV(dim, 0.);
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {

@@ -35,7 +35,7 @@ public:
 
 static  void  convergence_study(MultiLevelProblem & ml_prob,
                           MultiLevelMesh & ml_mesh,
-                          MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental,   //auxiliary
+                          MultiLevelMesh * ml_mesh_all_levels_needed_for_incremental,   //auxiliary
                           const unsigned max_number_of_meshes,
                           const std::vector < bool > convergence_rate_computation_method_Flag,
                           const std::vector < bool > volume_or_boundary_Flag,
@@ -62,7 +62,7 @@ static       const std::vector< std::string > convergence_computation_names;
 static       const std::vector< std::string > volume_or_boundary_names;
 
 
-static   const MultiLevelSolution  initialize_convergence_study(MultiLevelProblem & ml_prob,
+static   const MultiLevelSolution  initialize_convergence_study(const MultiLevelProblem & ml_prob,
                                                                 const std::vector< Unknown > &  unknowns,  
                                                                 const std::vector< Math::Function< double > * >  & exact_sol,
                                                                 MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental, 
@@ -138,7 +138,7 @@ template < class real_num>
 template < class real_num>
 /*static*/  void  FE_convergence< real_num >::convergence_study(MultiLevelProblem & ml_prob,
                                                   MultiLevelMesh & ml_mesh,
-                                                  MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental,
+                                                  MultiLevelMesh * ml_mesh_all_levels_needed_for_incremental,
                                                   const unsigned max_number_of_meshes,
                                                   const std::vector < bool > convergence_rate_computation_method_Flag,
                                                   const std::vector < bool > volume_or_boundary_Flag,
@@ -154,6 +154,9 @@ template < class real_num>
       // Controls - BEGIN 
       if ( main_in_has_equation_solve == true &&  SetBoundaryCondition == NULL)  { std::cout << "Must provide a BC function" << std::endl; abort(); }
       
+       if (convergence_rate_computation_method_Flag[0] == true &&  ml_mesh_all_levels_needed_for_incremental == NULL)  {
+         std::cout << "Incremental method requires auxiliary mesh for all levels" << std::endl; abort(); }
+         
        if (convergence_rate_computation_method_Flag[1] == true && exact_sol.size() == 0)  { std::cout << "Must provide exact sol" << std::endl; abort(); }
 
     
@@ -197,22 +200,33 @@ template < class real_num>
     // ================= initialize norms - END
      
     
+    // ================= initialize convergence study, ONLY FOR INCREMENTAL - BEGIN 
      MultiLevelSolution         ml_sol_all_levels_needed_for_incremental = FE_convergence::initialize_convergence_study(ml_prob,
                                                                                                  unknowns,
                                                                                                  exact_sol,
-                                                                                                 ml_mesh_all_levels_needed_for_incremental, 
+                                                                                                 *ml_mesh_all_levels_needed_for_incremental, 
                                                                                                  max_number_of_meshes, 
                                                                                                  SetInitialCondition, 
                                                                                                  SetBoundaryCondition,
                                                                                                  main_in_has_equation_solve);
-    
+    // ================= initialize convergence study, ONLY FOR INCREMENTAL - END
+
+
+    // ================= Error computation at all levels - BEGIN =============
+
+     
+    // ================= FE Evaluations at Quadrature - BEGIN 
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
+    // ================= FE Evaluations at Quadrature - END
+  
+  
             
        for (int lev = 0; lev < max_number_of_meshes; lev++) {
          
                   
+    // ================= Compute solution - BEGIN 
             const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(ml_prob,
                                                                                        ml_mesh,
                                                                                        lev,
@@ -222,9 +236,10 @@ template < class real_num>
                                                                                        SetBoundaryCondition,
                                                                                        main_in_has_equation_solve
                                                                                       );
+    // ================= Compute solution - END
             
             
-    // ================= - BEGIN 
+    // ================= Compute error - BEGIN 
       for (unsigned convergence_rate_computation_method = 0; 
                     convergence_rate_computation_method < convergence_rate_computation_method_Flag.size();
                     convergence_rate_computation_method++) {
@@ -256,14 +271,15 @@ template < class real_num>
            }}
         }}
        }}
-    // ================= - END 
+    // ================= Compute error - END 
         
         
       }
       
+    // ================= Error computation at all levels - END =============
       
    
-    // ================= - BEGIN 
+    // ================= Error output - BEGIN 
       for (unsigned convergence_rate_computation_method = 0; 
                     convergence_rate_computation_method < convergence_rate_computation_method_Flag.size();
                     convergence_rate_computation_method++) {
@@ -280,12 +296,16 @@ template < class real_num>
                          sobolev_norms++) {
           if( sobolev_norms_Flag[sobolev_norms] ) {
                      
-       FE_convergence::output_convergence_order_all(unknowns, norms[convergence_rate_computation_method][volume_or_boundary][sobolev_norms], sobolev_norms, volume_or_boundary, convergence_rate_computation_method);
+       FE_convergence::output_convergence_order_all(unknowns,
+                                                    norms[convergence_rate_computation_method][volume_or_boundary][sobolev_norms],
+                                                    sobolev_norms,
+                                                    volume_or_boundary,
+                                                    convergence_rate_computation_method);
        
              }}
           }}
         }}
-    // ================= - END 
+    // ================= Error output - END 
  
  
 }
@@ -294,7 +314,7 @@ template < class real_num>
     
    
 template < class real_num>
-/*static*/   const MultiLevelSolution  FE_convergence< real_num >::initialize_convergence_study(MultiLevelProblem & ml_prob, 
+/*static*/   const MultiLevelSolution  FE_convergence< real_num >::initialize_convergence_study(const MultiLevelProblem & ml_prob, 
                                                                                             const std::vector< Unknown > &  unknowns,
                                                                                             const std::vector< Math::Function< double > * > &  exact_sol,
                                                                                             MultiLevelMesh & ml_mesh_all_levels_needed_for_incremental,
@@ -317,8 +337,8 @@ template < class real_num>
 
  
  //Solution - BEGIN ==================
-//         std::vector < MultiLevelSolution * >   ml_sol_all_levels_needed_for_incremental(unknowns.size());
-//                ml_sol_all_levels_needed_for_incremental[u] = new MultiLevelSolution (& ml_mesh_all_levels_needed_for_incremental);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+// MultiLevelSolution *   ml_sol_all_levels_needed_for_incremental = new MultiLevelSolution (& ml_mesh_all_levels_needed_for_incremental);  
+          //with the declaration outside and a "new" inside it persists outside the loop scopes
                MultiLevelSolution ml_sol_all_levels_needed_for_incremental(& ml_mesh_all_levels_needed_for_incremental);
  //Solution - END ==================
 
@@ -529,14 +549,14 @@ template < class real_num>
 
   
 //-----------------  VOLUME, common to both - BEGIN
-  vector < real_num >  sol_u;                               sol_u.reserve(max_size);
-  vector < real_num >  sol_u_exact_at_dofs;   sol_u_exact_at_dofs.reserve(max_size);
-  vector < real_num >  sol_u_inexact_prolongated_from_coarser_level;     sol_u_inexact_prolongated_from_coarser_level.reserve(max_size);
+  std::vector < real_num >  sol_u;                               sol_u.reserve(max_size);
+  std::vector < real_num >  sol_u_exact_at_dofs;   sol_u_exact_at_dofs.reserve(max_size);
+  std::vector < real_num >  sol_u_inexact_prolongated_from_coarser_level;     sol_u_inexact_prolongated_from_coarser_level.reserve(max_size);
 
   
   
   unsigned solType_coords = BIQUADR_FE;
-  vector < vector < real_num > > x(dim_offset_grad);    // local coordinates
+  std::vector < std::vector < real_num > > x(dim_offset_grad);    // local coordinates
   for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
 
 //-----------------  VOLUME, common to both - END
@@ -555,16 +575,16 @@ template < class real_num>
  //***************************************************  
 
 
-  vector < real_num > phi;
-  vector < real_num > phi_x;
+  std::vector < real_num > phi;
+  std::vector < real_num > phi_x;
   
   phi.reserve(max_size);
   phi_x.reserve(max_size * dim_offset_grad);
   
   
   
-  vector < real_num > phi_coords;
-  vector < real_num > phi_coords_x;
+  std::vector < real_num > phi_coords;
+  std::vector < real_num > phi_coords_x;
 
   phi_coords.reserve(max_size);
   phi_coords_x.reserve(max_size * dim_offset_grad);
@@ -596,8 +616,8 @@ template < class real_num>
   phi_u_x_bdry.reserve(max_size * dim_offset_grad);
   
   
-  vector < real_num > phi_coords_bdry;
-  vector < real_num > phi_coords_x_bdry;
+  std::vector < real_num > phi_coords_bdry;
+  std::vector < real_num > phi_coords_x_bdry;
 
   phi_coords_bdry.reserve(max_size);
   phi_coords_x_bdry.reserve(max_size * dim_offset_grad);
@@ -1182,7 +1202,7 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
  /// In other words, 
  ///         (x_qp) = summation of (x_nodes) * (shape function of that node, evaluated at qp)
  /// 
- ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  vector< vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
+ ///   (x_nodes) are obtained from   geom_element.get_coords_at_dofs_3d()  (this is a  std::vector < vector >,  where the outer index is the dimension and the inner index ranges over the nodes) 
  ///   (shape function of that node, evaluated at qp)  is obtained from phi_u  (this is a vector, whose index ranges over the nodes)
  
  std::vector<double> x_qp(dim, 0.);
@@ -1276,13 +1296,13 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
   unsigned soluIndex = ml_sol->GetIndex( solution_name.c_str() );    // get the position of "u" in the ml_sol object
   unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
-  vector < double >  solu; // local solution
+  std::vector < double >  solu; // local solution
 
-  vector < vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
 
   double weight; // gauss point weight
 
@@ -1338,8 +1358,8 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double solu_gss = 0;
-      vector < double > gradSolu_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
+      std::vector < double > gradSolu_gss(dim, 0.);
+      std::vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
@@ -1350,7 +1370,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
         }
       }
 
-      vector <double> exactGradSol(dim);
+      std::vector <double> exactGradSol(dim);
       function_gradient(x_gss, exactGradSol);
 
       for (unsigned j = 0; j < dim ; j++) {
@@ -1419,13 +1439,13 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
   unsigned soluIndex = ml_sol->GetIndex( unknowns_vec[0]._name.c_str() );    // get the position of "u" in the ml_sol object
   unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
-  vector < double >  solu; // local solution
+  std::vector < double >  solu; // local solution
 
-  vector < vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
 
   double weight; // gauss point weight
 
@@ -1433,9 +1453,9 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
   solu.reserve(maxSize);
 
-  vector < double >  solu_finer;   solu_finer.reserve(maxSize);
+  std::vector < double >  solu_finer;   solu_finer.reserve(maxSize);
   
-  vector < double >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
+  std::vector < double >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
 
   for (unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
@@ -1479,7 +1499,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
     
     const double weird_multigrid_factor = 0.25;  //don't know!
     
-         vector<double> x_at_node(dim,0.);
+         std::vector <double> x_at_node(dim,0.);
       for (unsigned i = 0; i < nDofu; i++) {
          for (unsigned jdim = 0; jdim < dim; jdim++) {
              x_at_node[jdim] = x[jdim][i];
@@ -1507,10 +1527,10 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
       double solu_gss = 0.;
       double solu_finer_gss = 0.;
       double exactSol_from_dofs_gss = 0.;
-      vector < double > gradSolu_gss(dim, 0.);
-      vector < double > gradSolu_exact_at_dofs_gss(dim, 0.);
-      vector < double > gradSolu_finer_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
+      std::vector < double > gradSolu_gss(dim, 0.);
+      std::vector < double > gradSolu_exact_at_dofs_gss(dim, 0.);
+      std::vector < double > gradSolu_finer_gss(dim, 0.);
+      std::vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss       += phi[i] * solu[i];
@@ -1525,7 +1545,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
         }
       }
 
-      vector <double> exactGradSol(dim);
+      std::vector <double> exactGradSol(dim);
       function_gradient(x_gss, exactGradSol);
 
       for (unsigned j = 0; j < dim ; j++) {

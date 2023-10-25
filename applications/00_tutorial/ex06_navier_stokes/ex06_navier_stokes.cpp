@@ -171,7 +171,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //solution variable
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
 
@@ -183,7 +183,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
 
@@ -192,13 +192,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-  vector < adept::adouble >  solP; // local solution
+  std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
+  std::vector < adept::adouble >  solP; // local solution
 
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
-  vector< adept::adouble > aResP; // local redidual vector
+  std::vector < std::vector < adept::adouble > > aResV(dim);    // local redidual vector
+  std::vector < adept::adouble > aResP; // local redidual vector
 
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned  k = 0; k < dim; k++) {
@@ -211,8 +211,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   aResP.reserve(maxSize);
 
 
-  vector <double> phiV;  // local test function for velocity
-  vector <double> phiV_x; // local test function first order partial derivatives
+  std::vector <double> phiV;  // local test function for velocity
+  std::vector <double> phiV_x; // local test function first order partial derivatives
 
   phiV.reserve(maxSize);
   phiV_x.reserve(maxSize * dim);
@@ -220,13 +220,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   double* phiP; // local test function for the pressure
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve((dim + 1) * maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve((dim + 1) * maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve((dim + 1) * maxSize * (dim + 1) * maxSize);
 
   RES->zero(); // Set to zero all the entries of the Global Residual vector
@@ -288,8 +288,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x);
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
-      vector < adept::adouble > solV_gss(dim, 0);
-      vector < vector < adept::adouble > > gradSolV_gss(dim);
+      std::vector < adept::adouble > solV_gss(dim, 0);
+      std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].assign(dim,0.);
@@ -315,7 +315,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
-        vector < adept::adouble > NSV(dim, 0.);
+        std::vector < adept::adouble > NSV(dim, 0.);
         
         for (unsigned  k = 0; k < dim; k++) { //momentum equation in k 
           for (unsigned j = 0; j < dim; j++) { // second index j in each equation

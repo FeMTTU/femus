@@ -414,62 +414,62 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
   const unsigned max_size = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) );
 
   // local objects
-  vector<adept::adouble> SolVAR ( dim + 1 );
-  vector<vector<adept::adouble> > GradSolVAR ( dim + 1 );
-  vector<vector<adept::adouble> > NablaSolVAR ( dim + 1 );
+  std::vector <adept::adouble> SolVAR ( dim + 1 );
+  std::vector <std::vector <adept::adouble> > GradSolVAR ( dim + 1 );
+  std::vector <std::vector <adept::adouble> > NablaSolVAR ( dim + 1 );
 
   for ( int i = 0; i < dim + 1; i++ ) {
     GradSolVAR[i].resize ( dim );
     NablaSolVAR[i].resize ( nabla_dim );
   }
 
-  vector <double > phi;
-  vector <adept::adouble> gradphi;
-  vector <adept::adouble> nablaphi;
+  std::vector <double > phi;
+  std::vector <adept::adouble> gradphi;
+  std::vector <adept::adouble> nablaphi;
   adept::adouble Weight;
 
   phi.reserve ( max_size );
   gradphi.reserve ( max_size * dim );
   nablaphi.reserve ( max_size * nabla_dim );
 
-  vector <double > phi1;
-  vector <adept::adouble> gradphi1;
-  vector <adept::adouble> nablaphi1;
+  std::vector <double > phi1;
+  std::vector <adept::adouble> gradphi1;
+  std::vector <adept::adouble> nablaphi1;
   adept::adouble Weight1;
 
   phi1.reserve ( max_size );
   gradphi1.reserve ( max_size * dim );
   nablaphi1.reserve ( max_size * nabla_dim );
 
-  vector <vector < adept::adouble> > vx ( dim );
-  vector <vector < adept::adouble> > vx_face ( dim );
+  std::vector <std::vector < adept::adouble> > vx ( dim );
+  std::vector <std::vector < adept::adouble> > vx_face ( dim );
 
   for ( int i = 0; i < dim; i++ ) {
     vx[i].reserve ( max_size );
     vx_face[i].resize ( 9 );
   }
 
-  vector< vector< adept::adouble > > Soli ( dim + 1 );
-  vector< vector< int > > dofsVAR ( dim + 1 );
+  std::vector < std::vector < adept::adouble > > Soli ( dim + 1 );
+  std::vector < std::vector < int > > dofsVAR ( dim + 1 );
   for ( int i = 0; i < dim + 1; i++ ) {
     Soli[i].reserve ( max_size );
     dofsVAR[i].reserve ( max_size );
   }
 
-  vector< vector< double > > Rhs ( dim + 1 );
-  vector< vector< adept::adouble > > aRhs ( dim + 1 );
+  std::vector < std::vector < double > > Rhs ( dim + 1 );
+  std::vector < std::vector < adept::adouble > > aRhs ( dim + 1 );
   for ( int i = 0; i < dim + 1; i++ ) {
     aRhs[i].reserve ( max_size );
     Rhs[i].reserve ( max_size );
   }
 
-  vector < int > dofsAll;
+  std::vector < int > dofsAll;
   dofsAll.reserve ( max_size * ( dim + 1 ) );
 
-  vector < double > KKloc;
+  std::vector < double > KKloc;
   KKloc.reserve ( dim * max_size * ( dim + 1 ) *dim * max_size * ( dim + 1 ) );
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve ( dim * max_size * ( dim + 1 ) *dim * max_size * ( dim + 1 ) );
 
   // ------------------------------------------------------------------------
@@ -504,9 +504,9 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
   //----------------------------------------------------------------------------------
   //variable-name handling
   const char varname[4][3] = {"U", "V", "W", "P"};
-  vector <unsigned> indexVAR ( dim + 1 );
-  vector <unsigned> indVAR ( dim + 1 );
-  vector <unsigned> SolType ( dim + 1 );
+  std::vector <unsigned> indexVAR ( dim + 1 );
+  std::vector <unsigned> indVAR ( dim + 1 );
+  std::vector <unsigned> SolType ( dim + 1 );
 
   for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
     indVAR[ivar] = ml_sol->GetIndex ( &varname[ivar][0] );
@@ -664,7 +664,7 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
           // Computer Methods in Applied Mechanics and Engineering 95 (1992) 221-242 North-Holland
           // *************************************************************************************
           // velocity
-          vector < adept::adouble > u ( dim );
+          std::vector < adept::adouble > u ( dim );
           for ( int ivar = 0; ivar < dim; ivar++ ) {
             u[ivar] = SolVAR[ivar];
           }
@@ -679,7 +679,7 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
           adept::adouble tauPspg = 0.;
           if ( uL2Norm / ( 2.*IRe ) > 1.0e-10 ) {
             // velocity direction s = u/|u|
-            vector < adept::adouble > s ( dim );
+            std::vector < adept::adouble > s ( dim );
             for ( int ivar = 0; ivar < dim; ivar++ )
               s[ivar] = u[ivar] / uL2Norm;
 
@@ -714,7 +714,7 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
 
           //BEGIN FLUID ASSEMBLY
           {
-            vector < adept::adouble > Res ( dim, 0. );
+            std::vector < adept::adouble > Res ( dim, 0. );
             for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
               Res[ivar] += 0. - GradSolVAR[dim][ivar];
               for ( unsigned jvar = 0; jvar < dim; jvar++ ) {
@@ -781,7 +781,7 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
           // velocity
           // double Ck[6][3]={{1.,1.,1.},{1.,1.,1.},{1.,1.,1.},{0.5, 11./270., 11./270.},{0.,1./42.,1./42.},{1.,1.,1.}};
 
-          vector < adept::adouble > a ( dim );
+          std::vector < adept::adouble > a ( dim );
           for ( int ivar = 0; ivar < dim; ivar++ ) {
             a[ivar] = SolVAR[ivar];
           }
@@ -819,7 +819,7 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
 
           //BEGIN FLUID ASSEMBLY ============
           {
-            vector < adept::adouble > Res ( dim, 0. );
+            std::vector < adept::adouble > Res ( dim, 0. );
             for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
               Res[ivar] += 0. - GradSolVAR[dim][ivar];
               for ( unsigned jvar = 0; jvar < dim; jvar++ ) {
@@ -989,40 +989,40 @@ void SetLambda ( MultiLevelSolution &mlSol, const unsigned &level, const  FEOrde
   unsigned varDim = geoDim * elasticity + diffusion;
 
   // local objects
-  vector<vector<adept::adouble> > GradSolVAR ( varDim );
-  vector<vector<adept::adouble> > NablaSolVAR ( varDim );
+  std::vector <std::vector <adept::adouble> > GradSolVAR ( varDim );
+  std::vector <std::vector <adept::adouble> > NablaSolVAR ( varDim );
 
   for ( int ivar = 0; ivar < varDim; ivar++ ) {
     GradSolVAR[ivar].resize ( geoDim );
     NablaSolVAR[ivar].resize ( nablaGoeDim );
   }
 
-  vector <double > phi;
-  vector <adept::adouble> gradphi;
-  vector <adept::adouble> nablaphi;
+  std::vector <double > phi;
+  std::vector <adept::adouble> gradphi;
+  std::vector <adept::adouble> nablaphi;
   adept::adouble Weight;
 
   phi.reserve ( max_size );
   gradphi.reserve ( max_size * geoDim );
   nablaphi.reserve ( max_size * nablaGoeDim );
 
-  vector <vector < adept::adouble> > vx ( geoDim );
+  std::vector <std::vector < adept::adouble> > vx ( geoDim );
   for ( int ivar = 0; ivar < geoDim; ivar++ ) {
     vx[ivar].reserve ( max_size );
   }
   unsigned SolTypeVx = 2.;
 
-  vector< vector< adept::adouble > > Soli ( varDim );
-  vector< vector< adept::adouble > > aRhs ( varDim );
-  vector< vector< adept::adouble > > aLhs ( varDim );
+  std::vector < std::vector < adept::adouble > > Soli ( varDim );
+  std::vector < std::vector < adept::adouble > > aRhs ( varDim );
+  std::vector < std::vector < adept::adouble > > aLhs ( varDim );
   for ( int ivar = 0; ivar < varDim; ivar++ ) {
     Soli[ivar].reserve ( max_size );
     aRhs[ivar].reserve ( max_size );
     aLhs[ivar].reserve ( max_size );
   }
-  vector < double > K;
+  std::vector < double > K;
   K.reserve ( ( max_size * varDim ) * ( max_size * varDim ) );
-  vector < double > M;
+  std::vector < double > M;
   M.reserve ( ( max_size * varDim ) * ( max_size * varDim ) );
 
   // mesh and procs
@@ -1104,7 +1104,7 @@ void SetLambda ( MultiLevelSolution &mlSol, const unsigned &level, const  FEOrde
       }
 
 
-      vector < adept::adouble > divGradSol ( varDim, 0. );
+      std::vector < adept::adouble > divGradSol ( varDim, 0. );
       for ( unsigned ivar = 0; ivar < varDim; ivar++ ) {
         for ( unsigned jvar = 0; jvar < geoDim; jvar++ ) {
           if ( diffusion ) {
@@ -1208,8 +1208,8 @@ void SetLambda ( MultiLevelSolution &mlSol, const unsigned &level, const  FEOrde
       // x = y
 
 
-      vector < double > x ( matSize, 1. );
-      vector < double > y ( matSize );
+      std::vector < double > x ( matSize, 1. );
+      std::vector < double > y ( matSize );
 
       double phik = x[0] + x[1];
       lambdak = 1.;
@@ -1307,23 +1307,23 @@ void AssembleMatrixResT ( MultiLevelProblem &ml_prob ) {
   //unsigned end_ind   = order_ind;
 
   //coordinates
-  vector< vector < double> > coordinates ( dim );
+  std::vector < std::vector < double> > coordinates ( dim );
   //const char coordinate_name[3][2] = {"X","Y","Z"};
-  //vector < unsigned > coordinate_Index(dim);
+  //std::vector < unsigned > coordinate_Index(dim);
 //   for(unsigned ivar=0; ivar<dim; ivar++) {
 //     coordinate_Index[ivar]=ivar;//ml_prob.GetIndex(coordinate_name[ivar]);
 //   }
 
   // declare
-  vector< int > metis_node;
-  vector< int > KK_dof;
-  vector <double> phi;
-  vector <double> gradphi;
-  vector <double> nablaphi;
+  std::vector < int > metis_node;
+  std::vector < int > KK_dof;
+  std::vector <double> phi;
+  std::vector <double> gradphi;
+  std::vector <double> nablaphi;
 
   double weight;
-  vector< double > F;
-  vector< double > B;
+  std::vector < double > F;
+  std::vector < double > B;
 
   // reserve
   const unsigned max_size = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) );
@@ -1383,12 +1383,12 @@ void AssembleMatrixResT ( MultiLevelProblem &ml_prob ) {
         ml_prob._ml_msh->_finiteElement[kelt][order_ind]->Jacobian ( coordinates, ig, weight, phi, gradphi, nablaphi );
         //Temperature and velocity current solution
         double SolT = 0;
-        vector < double > gradSolT ( dim, 0. );
+        std::vector < double > gradSolT ( dim, 0. );
         for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
           gradSolT[ivar] = 0;
         }
-        vector < double > SolU ( dim, 0. );
-        vector < unsigned > SolIndexU ( dim );
+        std::vector < double > SolU ( dim, 0. );
+        std::vector < unsigned > SolIndexU ( dim );
         SolIndexU[0] = ml_sol->GetIndex ( "U" );
         SolIndexU[1] = ml_sol->GetIndex ( "V" );
         if ( dim == 3 ) SolIndexU[2] = ml_sol->GetIndex ( "W" );

@@ -309,7 +309,7 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
   std::string  solPName = "P";
 
   //solution variable
-  vector < unsigned > solVIndex (dim),solDIndex (dim);
+  std::vector < unsigned > solVIndex (dim),solDIndex (dim);
   for(unsigned k = 0;k<dim; k++){
     solVIndex[k] = mlSol->GetIndex (solVName[k].c_str());
     solDIndex[k] = mlSol->GetIndex (solDName[k].c_str());
@@ -634,11 +634,11 @@ double GetSolutionFluxes (MultiLevelSolution& mlSol) {
   const unsigned dim = msh->GetDimension();
   const unsigned max_size = static_cast< unsigned > (ceil (pow (3, dim)));
 
-  vector< vector < double> >  sol (dim);
-  vector< vector < double> > x (dim);
+  std::vector < std::vector < double> >  sol (dim);
+  std::vector < std::vector < double> > x (dim);
 
   const char varname[6][3] = {"U", "V", "W", "DX", "DY", "DZ"};
-  vector <unsigned> indVar (2 * dim);
+  std::vector <unsigned> indVar (2 * dim);
   unsigned solType;
 
   for (unsigned ivar = 0; ivar < dim; ivar++) {
@@ -661,7 +661,7 @@ double GetSolutionFluxes (MultiLevelSolution& mlSol) {
       // look for boundary faces
       if (faceNumber == 3) {
 
-        vector < double> normal (dim, 0);
+        std::vector < double> normal (dim, 0);
 
         unsigned nve = msh->GetElementFaceDofNumber (iel, jface, solType);
         const unsigned felt = msh->GetElementFaceType (iel, jface);

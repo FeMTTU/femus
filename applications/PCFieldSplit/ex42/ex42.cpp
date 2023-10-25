@@ -193,8 +193,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   unsigned solUPdeIndex;
   solUPdeIndex = mlPdeSys->GetSolPdeIndex("U");    // get the position of "T" in the pdeSys object
   
-  vector < double >  solU; // local solution
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < double >  solU; // local solution
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   
   solU.reserve(maxSize);
@@ -203,12 +203,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
 
   //RHS vectors
-  vector < double >  fU; // local solution
+  std::vector < double >  fU; // local solution
   fU.reserve(maxSize);
   
-  vector <double> phiU;  // local test function
-  vector <double> phiU_x; // local test function first order partial derivatives
-  vector <double> phiU_xx; // local test function second order partial derivatives
+  std::vector <double> phiU;  // local test function
+  std::vector <double> phiU_x; // local test function first order partial derivatives
+  std::vector <double> phiU_xx; // local test function second order partial derivatives
 
   phiU.reserve(maxSize);
   phiU_x.reserve(maxSize * dim);
@@ -216,13 +216,13 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve((dim + 2) *maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve((dim + 2) *maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
   
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
@@ -273,8 +273,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double solU_gss = 0;
-      vector < double > gradSolU_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
+      std::vector < double > gradSolU_gss(dim, 0.);
+      std::vector < double > x_gss(dim, 0.);
       
       for(unsigned i = 0; i < nDofsU; i++) {
         solU_gss += phiU[i] * solU[i];

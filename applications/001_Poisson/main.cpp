@@ -310,20 +310,20 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   //solution order
   unsigned order_ind = ml_sol->GetSolutionType(SolIndex);
   //coordinates
-  vector< vector < double> > coordinates(dim);
+  std::vector < std::vector < double> > coordinates(dim);
 
   // declare
-  vector< int > metis_node;
-  vector< int > KK_dof;
-  vector <double> phi;
-  vector <double> gradphi;
-  vector <double> nablaphi;
+  std::vector < int > metis_node;
+  std::vector < int > KK_dof;
+  std::vector <double> phi;
+  std::vector <double> gradphi;
+  std::vector <double> nablaphi;
   double weight;
-  vector< double > F;
-  vector< double > B;
-  vector<double> normal(3.0);
+  std::vector < double > F;
+  std::vector < double > B;
+  std::vector <double> normal(3.0);
   double src_term = 0.;
-  vector<double> xyzt(4, 0.);
+  std::vector <double> xyzt(4, 0.);
   ParsedFunction* bdcfunc = NULL;
 
   // reserve
@@ -433,8 +433,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
       mymsh->_finiteElement[ielt][order_ind]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
       //current solution
       double SolT = 0;
-      vector < double > gradSolT(dim, 0.);
-      vector < double > NablaSolT(dim, 0.);
+      std::vector < double > gradSolT(dim, 0.);
+      std::vector < double > NablaSolT(dim, 0.);
 
       xyzt.assign(4, 0.);
       unsigned SolType = ml_sol->GetSolutionType("Sol");
@@ -556,7 +556,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
     else {
       double tau = 0.;
       std::vector< double > xx(dim, 0.);
-      vector < double > normal(dim, 0);
+      std::vector < double > normal(dim, 0);
 
       // loop on faces
       for (unsigned jface = 0; jface < mymsh->GetElementFaceNumber(iel); jface++) {

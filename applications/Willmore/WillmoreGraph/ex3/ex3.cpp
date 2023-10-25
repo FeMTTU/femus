@@ -116,10 +116,10 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
   maxNumberOfMeshes = 5;
 
-  vector < vector < double > > l2Norm;
+  std::vector < std::vector < double > > l2Norm;
   l2Norm.resize(maxNumberOfMeshes);
 
-  vector < vector < double > > semiNorm;
+  std::vector < std::vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
 
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
@@ -332,7 +332,7 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution
+  std::vector < adept::adouble >  solu; // local solution
 
   unsigned solWIndex;
   solWIndex = mlSol->GetIndex("W");    // get the position of "v" in the ml_sol object
@@ -341,22 +341,22 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
   unsigned solWPdeIndex;
   solWPdeIndex = mlPdeSys->GetSolPdeIndex("W");    // get the position of "v" in the pdeSys object
 
-  vector < adept::adouble >  solW; // local solution
+  std::vector < adept::adouble >  solW; // local solution
 
 
 
-  vector < vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector< int > sysDof; // local to global pdeSys dofs
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector < int > sysDof; // local to global pdeSys dofs
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
-  vector< double > Res; // local redidual vector
-  vector< adept::adouble > aResu; // local redidual vector
-  vector< adept::adouble > aResW; // local redidual vector
+  std::vector < double > Res; // local redidual vector
+  std::vector < adept::adouble > aResu; // local redidual vector
+  std::vector < adept::adouble > aResW; // local redidual vector
 
 
   // reserve memory for the local standar vectors
@@ -377,7 +377,7 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
   aResu.reserve(maxSize);
   aResW.reserve(maxSize);
 
-  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
+  std::vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
   Jac.reserve(4 * maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -433,12 +433,12 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble soluGauss = 0;
-      vector < adept::adouble > soluGauss_x(dim, 0.);
+      std::vector < adept::adouble > soluGauss_x(dim, 0.);
 
       adept::adouble solWGauss = 0;
-      vector < adept::adouble > solWGauss_x(dim, 0.);
+      std::vector < adept::adouble > solWGauss_x(dim, 0.);
 
-      vector < double > xGauss(dim, 0.);
+      std::vector < double > xGauss(dim, 0.);
 
       for (unsigned i = 0; i < nDofs; i++) {
         soluGauss += phi[i] * solu[i];
@@ -454,7 +454,7 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
       double c = 0.;
       double Id[2][2] = {{1., 0.}, {0., 1.}};
       adept::adouble A2 = 1.;
-      vector < vector < adept::adouble> > B(dim);
+      std::vector < std::vector < adept::adouble> > B(dim);
 
       for (unsigned idim = 0; idim < dim; idim++) {
         B[idim].resize(dim);
@@ -532,7 +532,7 @@ double GetExactSolutionValueSphere(const std::vector < double >& x) {
   return sqrt(1. / (cos(thetaSphere) * cos(thetaSphere)) - x[0] * x[0] - x[1] * x[1]);
 };
 
-void GetExactSolutionGradientSphere(const std::vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradientSphere(const std::vector < double >& x, std::vector < double >& solGrad) {
   double pi = acos(-1.);
   solGrad[0]  = -x[0] / sqrt(1. / (cos(thetaSphere) * cos(thetaSphere)) - x[0] * x[0] - x[1] * x[1]);
   solGrad[1]  = -x[1] / sqrt(1. / (cos(thetaSphere) * cos(thetaSphere)) - x[0] * x[0] - x[1] * x[1]);
@@ -545,7 +545,7 @@ double GetExactSolutionValueCatenoid(const std::vector < double >& x) {
 
 };
 
-void GetExactSolutionGradientCatenoid(const std::vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradientCatenoid(const std::vector < double >& x, std::vector < double >& solGrad) {
 
   double r = sqrt(x[0] * x[0] + x[1] * x[1]);
   
@@ -572,14 +572,14 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
-  vector < double >  solu; // local solution
+  std::vector < double >  solu; // local solution
 
-  vector < vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   // reserve memory for the local standar vectors
@@ -634,8 +634,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double soluGauss = 0;
-      vector < double > soluGauss_x(dim, 0.);
-      vector < double > xGauss(dim, 0.);
+      std::vector < double > soluGauss_x(dim, 0.);
+      std::vector < double > xGauss(dim, 0.);
 
       for (unsigned i = 0; i < nDofs; i++) {
         soluGauss += phi[i] * solu[i];
@@ -647,7 +647,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
       }
 
       double exactSol;
-      vector <double> solGrad(dim);
+      std::vector <double> solGrad(dim);
 
       if (simulation == 1) {
         exactSol = GetExactSolutionValueSphere(xGauss);

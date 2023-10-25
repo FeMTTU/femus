@@ -347,16 +347,16 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
   solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
   unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
 
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
 
   unsigned solTPdeIndex;
   solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
 
-  vector < adept::adouble >  solT; // local solution
+  std::vector < adept::adouble >  solT; // local solution
 
-  vector< adept::adouble > aResT; // local redidual vector
+  std::vector < adept::adouble > aResT; // local redidual vector
 
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   solT.reserve(maxSize);
@@ -366,9 +366,9 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
     coordX[k].reserve(maxSize);
   }
 
-  vector <double> phiT;  // local test function
-  vector <double> phiT_x; // local test function first order partial derivatives
-  vector <double> phiT_xx; // local test function second order partial derivatives
+  std::vector <double> phiT;  // local test function
+  std::vector <double> phiT_x; // local test function first order partial derivatives
+  std::vector <double> phiT_xx; // local test function second order partial derivatives
 
   phiT.reserve(maxSize);
   phiT_x.reserve(maxSize * dim);
@@ -376,13 +376,13 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
 
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve(maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve(maxSize * maxSize);
 
   if(assembleMatrix)
@@ -433,7 +433,7 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solT_gss = 0;
-      vector < adept::adouble > gradSolT_gss(dim, 0.);
+      std::vector < adept::adouble > gradSolT_gss(dim, 0.);
 
       for(unsigned i = 0; i < nDofsT; i++) {
         solT_gss += phiT[i] * solT[i];

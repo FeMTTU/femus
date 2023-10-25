@@ -269,10 +269,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 
   // solution and coordinate variables
   const char Solname[4][2] = {"U","V","W","P"};
-  vector < unsigned > SolPdeIndex(dim+1);
-  vector < unsigned > SolIndex(dim+1);
+  std::vector < unsigned > SolPdeIndex(dim+1);
+  std::vector < unsigned > SolIndex(dim+1);
 
-  vector< vector < double> > coordinates(dim);
+  std::vector< std::vector < double> > coordinates(dim);
 
   for(unsigned ivar=0; ivar<dim; ivar++) {
     SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
@@ -285,17 +285,17 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   unsigned order_ind1 = ml_sol->GetSolutionType(SolIndex[dim]);
 
   // declare
-  vector < int > metis_node2;
-  vector < int > node1;
-  vector< vector< int > > KK_dof(dim+1);
-  vector <double> phi2;
-  vector <double> gradphi2;
-   vector <double> nablaphi2;
+  std::vector < int > metis_node2;
+  std::vector < int > node1;
+  std::vector< std::vector< int > > KK_dof(dim+1);
+  std::vector <double> phi2;
+  std::vector <double> gradphi2;
+   std::vector <double> nablaphi2;
   const double *phi1;
   double Weight2;
   double normal[3];
-  vector< vector< double > > F(dim+1);
-  vector< vector< vector< double > > > B(dim+1);
+  std::vector< std::vector< double > > F(dim+1);
+  std::vector< std::vector< std::vector< double > > > B(dim+1);
 
   // reserve
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -322,14 +322,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   }
 
 
-  vector < double > Sol(dim+1);
-  vector < vector < double > > gradSol(dim);
+  std::vector < double > Sol(dim+1);
+  std::vector < std::vector < double > > gradSol(dim);
   for(int i=0;i<dim;i++) {
     gradSol[i].resize(dim);
   }
 
-  vector < double > SolOld(dim+1);
-  vector < vector < double > > gradSolOld(dim);
+  std::vector < double > SolOld(dim+1);
+  std::vector < std::vector < double > > gradSolOld(dim);
   for(int i=0;i<dim;i++) {
     gradSolOld[i].resize(dim);
   }

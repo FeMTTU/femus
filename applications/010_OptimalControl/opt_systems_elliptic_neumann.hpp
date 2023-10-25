@@ -46,8 +46,8 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 
  //*************************************************** 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  vector < vector < double > > x(dim);
-  vector < vector < double> >  x_bdry(dim);
+  std::vector < std::vector < double > > x(dim);
+  std::vector < std::vector < double> >  x_bdry(dim);
   for (unsigned i = 0; i < dim; i++) {
          x[i].reserve(maxSize);
 	 x_bdry[i].reserve(maxSize);
@@ -62,9 +62,9 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 
  //******************** state ************************ 
  //*************************************************** 
-  vector <double> phi_u;  // local test function
-  vector <double> phi_u_x; // local test function first order partial derivatives
-  vector <double> phi_u_xx; // local test function second order partial derivatives
+  std::vector <double> phi_u;  // local test function
+  std::vector <double> phi_u_x; // local test function first order partial derivatives
+  std::vector <double> phi_u_xx; // local test function second order partial derivatives
 
   phi_u.reserve(maxSize);
   phi_u_x.reserve(maxSize * dim);
@@ -74,17 +74,17 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   unsigned solType_u     = ml_sol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
   unsigned solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
 
-  vector < double >  sol_u;     sol_u.reserve(maxSize);
-  vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
+  std::vector < double >  sol_u;     sol_u.reserve(maxSize);
+  std::vector < int > l2GMap_u;    l2GMap_u.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
   
  //********************* adjoint *********************
  //*************************************************** 
-  vector <double> phi_adj;  // local test function
-  vector <double> phi_adj_x; // local test function first order partial derivatives
-  vector <double> phi_adj_xx; // local test function second order partial derivatives
+  std::vector <double> phi_adj;  // local test function
+  std::vector <double> phi_adj_x; // local test function first order partial derivatives
+  std::vector <double> phi_adj_xx; // local test function second order partial derivatives
 
   phi_adj.reserve(maxSize);
   phi_adj_x.reserve(maxSize * dim);
@@ -94,12 +94,12 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   unsigned solType_adj     = ml_sol->GetSolutionType(solIndex_adj);    // get the finite element type for "state"
   unsigned solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "state" in the pdeSys object
 
-  vector < double >  sol_adj;   sol_adj.reserve(maxSize);
-  vector < int > l2GMap_adj; l2GMap_adj.reserve(maxSize);
+  std::vector < double >  sol_adj;   sol_adj.reserve(maxSize);
+  std::vector < int > l2GMap_adj; l2GMap_adj.reserve(maxSize);
 
   //boundary adjoint shape functions  
-  vector <double> phi_adj_bdry;  
-  vector <double> phi_adj_x_bdry; 
+  std::vector <double> phi_adj_bdry;  
+  std::vector <double> phi_adj_x_bdry; 
 
   phi_adj_bdry.reserve(maxSize);
   phi_adj_x_bdry.reserve(maxSize * dim);
@@ -110,8 +110,8 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   
  //********************* bdry cont *******************
  //*************************************************** 
-  vector <double> phi_ctrl_bdry;  
-  vector <double> phi_ctrl_x_bdry; 
+  std::vector <double> phi_ctrl_bdry;  
+  std::vector <double> phi_ctrl_x_bdry; 
 
   phi_ctrl_bdry.reserve(maxSize);
   phi_ctrl_x_bdry.reserve(maxSize * dim);
@@ -123,8 +123,8 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 
   std::string ctrl_name = "control";
   
- vector < double >  sol_ctrl;   sol_ctrl.reserve(maxSize);
- vector< int > l2GMap_ctrl;   l2GMap_ctrl.reserve(maxSize);
+ std::vector < double >  sol_ctrl;   sol_ctrl.reserve(maxSize);
+ std::vector < int > l2GMap_ctrl;   l2GMap_ctrl.reserve(maxSize);
  //*************************************************** 
  //*************************************************** 
   
@@ -141,8 +141,8 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   
   unsigned solType_mu = ml_sol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
-  vector < double >  sol_mu;   sol_mu.reserve(maxSize);
-  vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
+  std::vector < double >  sol_mu;   sol_mu.reserve(maxSize);
+  std::vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   
   //************** act flag **************************** 
@@ -156,9 +156,9 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
   const double c_compl = C_COMPL;
-  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
-  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
-  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
+  std::vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  std::vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  std::vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
   //***************************************************  
 
  
@@ -168,13 +168,13 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 
   const int n_unknowns = 4;
  
-  vector< int > l2GMap_AllVars; // local to global mapping
+  std::vector < int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_unknowns*maxSize);
   
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(n_unknowns*maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
  //*************************************************** 
 
@@ -210,7 +210,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
     }
 
    // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {
@@ -313,7 +313,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 	if (control_el_flag == 1) {
 	  
 	  double tau=0.;
-	  vector<double> normal(dim,0);
+	  std::vector <double> normal(dim,0);
 	       
 	  // loop on faces of the current element
 
@@ -793,8 +793,8 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
  //***************************************************  
-  vector < vector < double > > x(dim);    // local coordinates
-  vector < vector < double> >  x_bdry(dim);
+  std::vector < std::vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double> >  x_bdry(dim);
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   for (unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
@@ -808,9 +808,9 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 
  //********************* state *********************** 
  //***************************************************  
-  vector <double> phi_u;  // local test function
-  vector <double> phi_u_x; // local test function first order partial derivatives
-  vector <double> phi_u_xx; // local test function second order partial derivatives
+  std::vector <double> phi_u;  // local test function
+  std::vector <double> phi_u_x; // local test function first order partial derivatives
+  std::vector <double> phi_u_xx; // local test function second order partial derivatives
 
   phi_u.reserve(maxSize);
   phi_u_x.reserve(maxSize * dim);
@@ -824,9 +824,9 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   unsigned solPdeIndexThom;
   solPdeIndexThom = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
 
-  vector < double >  sol_u; // local solution
+  std::vector < double >  sol_u; // local solution
   sol_u.reserve(maxSize);
-  vector< int > l2GMap_u;
+  std::vector < int > l2GMap_u;
   l2GMap_u.reserve(maxSize);
  //***************************************************  
  //***************************************************  
@@ -834,9 +834,9 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   
  //******************** control ********************** 
  //***************************************************   
-  vector <double> phi_ctrl;  // local test function
-  vector <double> phi_ctrl_x; // local test function first order partial derivatives
-  vector <double> phi_ctrl_xx; // local test function second order partial derivatives
+  std::vector <double> phi_ctrl;  // local test function
+  std::vector <double> phi_ctrl_x; // local test function first order partial derivatives
+  std::vector <double> phi_ctrl_xx; // local test function second order partial derivatives
 
   phi_ctrl.reserve(maxSize);
   phi_ctrl_x.reserve(maxSize * dim);
@@ -849,23 +849,23 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   unsigned solPdeIndex_ctrl;
   solPdeIndex_ctrl = mlPdeSys->GetSolPdeIndex("control");
 
-  vector < double >  sol_ctrl; // local solution
+  std::vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(maxSize);
-  vector< int > l2GMap_ctrl;
+  std::vector < int > l2GMap_ctrl;
   l2GMap_ctrl.reserve(maxSize);
  
   std::string ctrl_name = "control";
   
  //*************************************************** 
 
-  vector <double> sol_ctrl_x_vol_at_bdry_gss;
+  std::vector <double> sol_ctrl_x_vol_at_bdry_gss;
   sol_ctrl_x_vol_at_bdry_gss.reserve(dim);
  //*************************************************** 
    
-  vector <double> phi_ctrl_vol_at_bdry;  // local test function
+  std::vector <double> phi_ctrl_vol_at_bdry;  // local test function
   phi_ctrl_vol_at_bdry.reserve(maxSize);
   
-  vector <double> phi_ctrl_x_vol_at_bdry; // local test function first order partial derivatives
+  std::vector <double> phi_ctrl_x_vol_at_bdry; // local test function first order partial derivatives
   phi_ctrl_x_vol_at_bdry.reserve(maxSize * dim);
 
  
@@ -875,9 +875,9 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   
  //********************* adjoint ********************* 
  //***************************************************  
-  vector <double> phi_adj;  // local test function
-  vector <double> phi_adj_x; // local test function first order partial derivatives
-  vector <double> phi_adj_xx; // local test function second order partial derivatives
+  std::vector <double> phi_adj;  // local test function
+  std::vector <double> phi_adj_x; // local test function first order partial derivatives
+  std::vector <double> phi_adj_xx; // local test function second order partial derivatives
 
   phi_adj.reserve(maxSize);
   phi_adj_x.reserve(maxSize * dim);
@@ -891,19 +891,19 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "state" in the pdeSys object
 
    //boundary adjoint shape functions  
-  vector <double> phi_adj_bdry;  
-  vector <double> phi_adj_x_bdry; 
+  std::vector <double> phi_adj_bdry;  
+  std::vector <double> phi_adj_x_bdry; 
 
   phi_adj_bdry.reserve(maxSize);
   phi_adj_x_bdry.reserve(maxSize * dim);
   
   //***************************************************  
-vector < double >  sol_adj; // local solution
+  std::vector < double >  sol_adj; // local solution
     sol_adj.reserve(maxSize);
-  vector< int > l2GMap_adj;
+  std::vector < int > l2GMap_adj;
     l2GMap_adj.reserve(maxSize);
     
-    vector < double > sol_adj_bdry;
+    std::vector < double > sol_adj_bdry;
      sol_adj.reserve(maxSize);
  //***************************************************  
  //***************************************************  
@@ -918,13 +918,13 @@ vector < double >  sol_adj; // local solution
 
   const int n_vars = 3;
  
-  vector< int > l2GMap_AllVars; // local to global mapping
+  std::vector < int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_vars*maxSize);
   
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(n_vars*maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve( n_vars*maxSize * n_vars*maxSize);
  //***************************************************  
 
@@ -959,7 +959,7 @@ vector < double >  sol_adj; // local solution
     }
 
    // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {
@@ -1053,7 +1053,7 @@ vector < double >  sol_adj; // local solution
   if (control_el_flag == 1) {
 	  
 	  double tau=0.;
-	  vector<double> normal(dim,0);
+	  std::vector <double> normal(dim,0);
 // 	  double normal_fixed[3] = {0.,1.,0};
 	       
 	  // loop on faces of the current element

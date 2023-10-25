@@ -235,8 +235,8 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
   std::vector < unsigned > solIndexT ( NLayers );
 
-  vector< int > l2GMapRow; // local to global mapping
-  vector< int > l2GMapColumn; // local to global mapping
+  std::vector < int > l2GMapRow; // local to global mapping
+  std::vector < int > l2GMapColumn; // local to global mapping
 
   for ( unsigned i = 0; i < NLayers; i++ ) {
     char name[10];
@@ -283,19 +283,19 @@ void ETD ( MultiLevelProblem& ml_prob ) {
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
 
-    vector < double > solhm ( NLayers );
-    vector < double > solh ( NLayers ); // local coordinates
-    vector < double > solhp ( NLayers );
-    vector < double > solvm ( NLayers ); // local coordinates
-    vector < double > solvp ( NLayers ); // local coordinates
-    vector < adept::adouble > solHTm ( NLayers ); // local coordinates
-    vector < adept::adouble > solHT ( NLayers ); // local coordinates
-    vector < adept::adouble > solHTp ( NLayers ); // local coordinates
+    std::vector < double > solhm ( NLayers );
+    std::vector < double > solh ( NLayers ); // local coordinates
+    std::vector < double > solhp ( NLayers );
+    std::vector < double > solvm ( NLayers ); // local coordinates
+    std::vector < double > solvp ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solHTm ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solHT ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solHTp ( NLayers ); // local coordinates
 
-    vector < adept::adouble > solHTmm ( NLayers ); // local coordinates
-    vector < adept::adouble > solHTpp ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solHTmm ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solHTpp ( NLayers ); // local coordinates
 
-    vector< adept::adouble > aResHT ( NLayers );
+    std::vector < adept::adouble > aResHT ( NLayers );
 
     unsigned bc1 = ( i == start ) ? 0 : 1;
     unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
@@ -349,7 +349,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
     if ( assembly ) s.new_recording();
 
-    vector < double > x ( 2 ); // local coordinates
+    std::vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
       unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
       x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
@@ -486,8 +486,8 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
     }
 
-    vector< double > Res ( NLayers ); // local redidual vector
-    vector< double > solht ( NLayers ); // local redidual vector
+    std::vector < double > Res ( NLayers ); // local redidual vector
+    std::vector < double > solht ( NLayers ); // local redidual vector
     for ( unsigned k = 0; k < NLayers; k++ ) {
       Res[k] =  aResHT[k].value();
       solht[k] = solHT[k].value();
@@ -514,7 +514,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
         } */
 
       // get the jacobian matrix (ordered by row major )
-      vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
+      std::vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
       s.jacobian ( &Jac[0], true );
 
       //store K in the global matrix KK
@@ -581,19 +581,19 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
     for ( unsigned i =  start; i <  end; i++ ) {
 
-      vector < double > solhm ( NLayers );
-      vector < double > solh ( NLayers ); // local coordinates
-      vector < double > solhp ( NLayers );
-      vector < double > solvm ( NLayers ); // local coordinates
-      vector < double > solvp ( NLayers ); // local coordinates
-      vector < double > solHTm ( NLayers ); // local coordinates
-      vector < double > solHT ( NLayers ); // local coordinates
-      vector < double > solHTp ( NLayers ); // local coordinates
+      std::vector < double > solhm ( NLayers );
+      std::vector < double > solh ( NLayers ); // local coordinates
+      std::vector < double > solhp ( NLayers );
+      std::vector < double > solvm ( NLayers ); // local coordinates
+      std::vector < double > solvp ( NLayers ); // local coordinates
+      std::vector < double > solHTm ( NLayers ); // local coordinates
+      std::vector < double > solHT ( NLayers ); // local coordinates
+      std::vector < double > solHTp ( NLayers ); // local coordinates
 
-      vector < double > solHTmm ( NLayers ); // local coordinates
-      vector < double > solHTpp ( NLayers ); // local coordinates
+      std::vector < double > solHTmm ( NLayers ); // local coordinates
+      std::vector < double > solHTpp ( NLayers ); // local coordinates
 
-      vector< double > aResHT ( NLayers, 0. );
+      std::vector < double > aResHT ( NLayers, 0. );
 
       unsigned bc1 = ( i == start ) ? 0 : 1;
       unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
@@ -648,7 +648,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
       // s.new_recording();
 
-      vector < double > x ( 2 ); // local coordinates
+      std::vector < double > x ( 2 ); // local coordinates
       for ( unsigned j = 0; j < 2; j++ ) {
         unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
         x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
@@ -903,8 +903,8 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
   std::vector < unsigned > solIndexT ( NLayers );
 
-  vector< int > l2GMapRow; // local to global mapping
-  vector< int > l2GMapColumn; // local to global mapping
+  std::vector < int > l2GMapRow; // local to global mapping
+  std::vector < int > l2GMapColumn; // local to global mapping
 
   for ( unsigned i = 0; i < NLayers; i++ ) {
     char name[10];
@@ -946,19 +946,19 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
 
-    vector < double > solhm ( NLayers );
-    vector < double > solh ( NLayers ); // local coordinates
-    vector < double > solhp ( NLayers );
-    vector < double > solvm ( NLayers ); // local coordinates
-    vector < double > solvp ( NLayers ); // local coordinates
-    vector < double > solHTm ( NLayers ); // local coordinates
-    vector < double > solHT ( NLayers ); // local coordinates
-    vector < double > solHTp ( NLayers ); // local coordinates
+    std::vector < double > solhm ( NLayers );
+    std::vector < double > solh ( NLayers ); // local coordinates
+    std::vector < double > solhp ( NLayers );
+    std::vector < double > solvm ( NLayers ); // local coordinates
+    std::vector < double > solvp ( NLayers ); // local coordinates
+    std::vector < double > solHTm ( NLayers ); // local coordinates
+    std::vector < double > solHT ( NLayers ); // local coordinates
+    std::vector < double > solHTp ( NLayers ); // local coordinates
 
-    vector < adept::adouble > solHTmm ( NLayers ); // local coordinates
-    vector < adept::adouble > solHTpp ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solHTmm ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solHTpp ( NLayers ); // local coordinates
 
-    vector< adept::adouble > aResHT ( NLayers );
+    std::vector < adept::adouble > aResHT ( NLayers );
 
     unsigned bc1 = ( i == start ) ? 0 : 1;
     unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
@@ -1012,7 +1012,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
 //   s.new_recording();
 
-    vector < double > x ( 2 ); // local coordinates
+    std::vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
       unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
       x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates

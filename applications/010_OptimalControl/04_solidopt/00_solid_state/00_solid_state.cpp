@@ -235,7 +235,7 @@ int main(int argc, char** args) {
    
     FE_convergence<>::convergence_study(ml_prob,
                                      ml_mesh, 
-                                     ml_mesh_all_levels,
+                                     & ml_mesh_all_levels,
                                      max_number_of_meshes,
                                      convergence_rate_computation_method_Flag,
                                      volume_or_boundary_Flag,
@@ -313,8 +313,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     
   //=============== Geometry ========================================
   // at dofs --------------------------------
-  vector< vector < real_num_mov > >   coords(dim);
-  vector  < vector  < double > >  coords_hat(dim);
+  std::vector < std::vector < real_num_mov > >   coords(dim);
+  std::vector < std::vector < double > >  coords_hat(dim);
   unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i = 0; i < dim; i++) {   
            coords[i].reserve(max_size_elem_dofs); 
@@ -322,12 +322,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
  }
  
  //************** geometry phi **************************
-  vector < vector < double > > phi_dof_qp_domain(dim);
-  vector < vector < real_num_mov > > phi_x_dof_qp_domain(dim);
-  vector < vector < real_num_mov > > phi_xx_dof_qp_domain(dim);
-  vector < vector < double > > phi_dof_qp_domain_hat(dim);
-  vector < vector < double > > phi_x_dof_qp_domain_hat(dim);
-  vector < vector < double > > phi_xx_dof_qp_domain_hat(dim);
+  std::vector < std::vector < double > > phi_dof_qp_domain(dim);
+  std::vector < std::vector < real_num_mov > > phi_x_dof_qp_domain(dim);
+  std::vector < std::vector < real_num_mov > > phi_xx_dof_qp_domain(dim);
+  std::vector < std::vector < double > > phi_dof_qp_domain_hat(dim);
+  std::vector < std::vector < double > > phi_x_dof_qp_domain_hat(dim);
+  std::vector < std::vector < double > > phi_xx_dof_qp_domain_hat(dim);
  
   for(int fe = 0; fe < dim; fe++) {
         phi_dof_qp_domain[fe].reserve(max_size_elem_dofs);
@@ -347,10 +347,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   constexpr int sol_pde_index_displ = 1;
   const     int sol_pde_index_press = 0;
 
-  vector < std::string >      Solname(n_unknowns);
-  vector < unsigned int >    SolIndex(n_unknowns);  
-  vector < unsigned int > SolPdeIndex(n_unknowns);
-  vector < unsigned int >   SolFEType(n_unknowns);  
+  std::vector < std::string >      Solname(n_unknowns);
+  std::vector < unsigned int >    SolIndex(n_unknowns);  
+  std::vector < unsigned int > SolPdeIndex(n_unknowns);
+  std::vector < unsigned int >   SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -363,16 +363,16 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   
   constexpr int solFEType_max = BIQUADR_FE;  //biquadratic, this is the highest-order FE 
 
-   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
+   std::vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
   //----------- of dofs and at quadrature points ------------------------------
-  vector < vector < double > > phi_dof_qp(n_unknowns);
-  vector < vector < real_num_mov > > phi_x_dof_qp(n_unknowns);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
-  vector < vector < real_num_mov > > phi_xx_dof_qp(n_unknowns);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
+  std::vector < std::vector < double > > phi_dof_qp(n_unknowns);
+  std::vector < std::vector < real_num_mov > > phi_x_dof_qp(n_unknowns);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
+  std::vector < std::vector < real_num_mov > > phi_xx_dof_qp(n_unknowns);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
   
-  vector < vector < double > > phi_hat_dof_qp(n_unknowns);
-  vector < vector < double > > phi_x_hat_dof_qp(n_unknowns);
-  vector < vector < double > > phi_xx_hat_dof_qp(n_unknowns);
+  std::vector < std::vector < double > > phi_hat_dof_qp(n_unknowns);
+  std::vector < std::vector < double > > phi_x_hat_dof_qp(n_unknowns);
+  std::vector < std::vector < double > > phi_xx_hat_dof_qp(n_unknowns);
 
   for(int fe=0; fe < n_unknowns; fe++) {  
         phi_dof_qp[fe].reserve(max_size_elem_dofs);
@@ -384,17 +384,17 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    }
    
   //----------- at dofs ------------------------------
-  vector < double >   Jac;   Jac.reserve( n_unknowns * max_size_elem_dofs * n_unknowns * max_size_elem_dofs);
-  vector < real_num > Res;   Res.reserve( n_unknowns * max_size_elem_dofs);
-           vector < int >       L2G_dofmap_AllVars;   L2G_dofmap_AllVars.reserve( n_unknowns *max_size_elem_dofs);
-  vector < vector < int > >         L2G_dofmap(n_unknowns);  for(int i = 0; i < n_unknowns; i++) {    L2G_dofmap[i].reserve(max_size_elem_dofs); }
-  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);  for(int k = 0; k < n_unknowns; k++) { SolVAR_eldofs[k].reserve(max_size_elem_dofs); }
+  std::vector < double >   Jac;   Jac.reserve( n_unknowns * max_size_elem_dofs * n_unknowns * max_size_elem_dofs);
+  std::vector < real_num > Res;   Res.reserve( n_unknowns * max_size_elem_dofs);
+           std::vector < int >       L2G_dofmap_AllVars;   L2G_dofmap_AllVars.reserve( n_unknowns *max_size_elem_dofs);
+  std::vector < std::vector < int > >         L2G_dofmap(n_unknowns);  for(int i = 0; i < n_unknowns; i++) {    L2G_dofmap[i].reserve(max_size_elem_dofs); }
+  std::vector < std::vector < real_num > > SolVAR_eldofs(n_unknowns);  for(int k = 0; k < n_unknowns; k++) { SolVAR_eldofs[k].reserve(max_size_elem_dofs); }
   
 
   //----------- at quadrature points ------------------------------
-    vector < real_num > SolVAR_qp(n_unknowns);
-    vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
-    vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
+    std::vector < real_num > SolVAR_qp(n_unknowns);
+    std::vector < std::vector < real_num > > gradSolVAR_qp(n_unknowns);
+    std::vector < std::vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
     for(int k = 0; k < n_unknowns; k++) { 
           gradSolVAR_qp[k].resize(dim);
       gradSolVAR_hat_qp[k].resize(dim);
@@ -520,7 +520,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
  
 
  //*******************************************************************************************************
-   vector < vector < real_num_mov > > Cauchy(3); for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
+   std::vector < std::vector < real_num_mov > > Cauchy(3); for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
    

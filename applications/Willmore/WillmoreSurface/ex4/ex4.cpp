@@ -384,12 +384,12 @@ void AssembleBloodCell (MultiLevelProblem& ml_prob) {
   std::vector< unsigned > SYSDOF;
 
   // Define local residual vectors.
-  vector < double > Res;
+  std::vector < double > Res;
   std::vector< adept::adouble > aResx[3];
   std::vector< adept::adouble > aResY[3];
 
   // Local (column-ordered) Jacobian matrix
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   //MatSetOption ( ( static_cast<PetscMatrix*> ( KK ) )->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE );
 

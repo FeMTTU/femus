@@ -445,8 +445,8 @@ _analytical_function.resize(new_size);
    * Update _Sol, _Res and _Eps based on EPS and RES
    **/
 // //--------------------------------------------------------------------------------
-//   void Solution::UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS,  NumericVector* _RES,
-//                                  const vector <vector <unsigned> > &KKoffset) {
+//   void Solution::UpdateSolAndRes(const std::vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS,  NumericVector* _RES,
+//                                  const std::vector < std::vector <unsigned> > &KKoffset) {
 // 
 //     PetscScalar zero = 0.;
 // 
@@ -458,15 +458,15 @@ _analytical_function.resize(new_size);
 // 
 //       int glob_offset_eps = _msh->_dofOffset[soltype][processor_id()];
 // 
-//       vector <int> index(_msh->_ownSize[soltype][processor_id()]);
+//       std::vector <int> index(_msh->_ownSize[soltype][processor_id()]);
 // 
 //       for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
 //         index[i] = loc_offset_EPS + i;
 //       }
 // 
-//       vector <double> valueEPS(_msh->_ownSize[soltype][processor_id()]);
+//       std::vector <double> valueEPS(_msh->_ownSize[soltype][processor_id()]);
 //       _EPS->get(index, valueEPS);
-//       vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
+//       std::vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
 //       _RES->get(index, valueRES);
 // 
 //       for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
@@ -498,7 +498,7 @@ _analytical_function.resize(new_size);
    * Update _Sol: the solution is updated by adding to itself the Eps
    **/
 
-  void Solution::UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS, const vector <vector <unsigned> > &KKoffset) {
+  void Solution::UpdateSol(const std::vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS, const std::vector < std::vector <unsigned> > &KKoffset) {
 
     PetscScalar zero = 0.;
 
@@ -510,13 +510,13 @@ _analytical_function.resize(new_size);
 
       int glob_offset_eps = _msh->dofmap_get_dof_offset(soltype, processor_id());
 
-      vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
+      std::vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
 
       for(int i = 0; i < index.size(); i++) {
         index[i] = loc_offset_EPS + i;
       }
 
-      vector <double> valueEPS(_msh->dofmap_get_own_size(soltype, processor_id()));
+      std::vector <double> valueEPS(_msh->dofmap_get_own_size(soltype, processor_id()));
       _EPS->get(index, valueEPS);
       //vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
       //_RES->get(index,valueRES);
@@ -550,7 +550,7 @@ _analytical_function.resize(new_size);
    * Update _Res: the residual is updated
    **/
 //--------------------------------------------------------------------------------
-  void Solution::UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset) {
+  void Solution::UpdateRes(const std::vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const std::vector < std::vector <unsigned> > &KKoffset) {
 
     PetscScalar zero = 0.;
 
@@ -562,13 +562,13 @@ _analytical_function.resize(new_size);
 
       int glob_offset_res = _msh->dofmap_get_dof_offset(soltype, processor_id());
 
-      vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
+      std::vector <int> index(_msh->dofmap_get_own_size(soltype, processor_id()));
 
       for(int i = 0; i < index.size(); i++) {
         index[i] = loc_offset_RES + i;
       }
 
-      vector <double> valueRES(_msh->dofmap_get_own_size(soltype, processor_id()));
+      std::vector <double> valueRES(_msh->dofmap_get_own_size(soltype, processor_id()));
       _RES->get(index, valueRES);
 
       for(int i = 0; i < valueRES.size(); i++) {
@@ -585,7 +585,7 @@ _analytical_function.resize(new_size);
 
   }
 
-  bool Solution::FlagAMRRegionBasedOnErroNorm(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType) {
+  bool Solution::FlagAMRRegionBasedOnErroNorm(const std::vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType) {
 
     unsigned    iproc = _msh->processor_id(); // get the process_id (for parallel computation)
     const unsigned  dim = _msh->GetDimension();
@@ -606,15 +606,15 @@ _analytical_function.resize(new_size);
 
     for(unsigned k = 0; k < solIndex.size(); k++) {
 
-      vector < double >  sol; // local solution
+      std::vector < double >  sol; // local solution
       unsigned solType = _SolType[solIndex[k]];;    // get the finite element type for "u"
 
-      vector < vector < double > > x(dim);    // local coordinates
+      std::vector < std::vector < double > > x(dim);    // local coordinates
       unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-      vector <double> phi;  // local test function
-      vector <double> phi_x; // local test function first order partial derivatives
-      vector <double> phi_xx; // local test function second order partial derivatives
+      std::vector <double> phi;  // local test function
+      std::vector <double> phi_x; // local test function first order partial derivatives
+      std::vector <double> phi_xx; // local test function second order partial derivatives
       double weight; // gauss point weight
 
       // reserve memory for the local standar vectors
@@ -798,7 +798,7 @@ _analytical_function.resize(new_size);
 
 
 
-  bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, 
+  bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const std::vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, 
 						      const unsigned& normType, const double &neighborThresholdValue) {
 
     const double scale2[3][2] = {{0.111111, 1.}, {0.0204081632653, 0.111111}, {0.0204081632653, 0.111111} };
@@ -819,15 +819,15 @@ _analytical_function.resize(new_size);
 
     for(unsigned k = 0; k < solIndex.size(); k++) {
 
-      vector < double >  sol; // local solution
+      std::vector < double >  sol; // local solution
       unsigned solType = _SolType[solIndex[k]];;    // get the finite element type for "u"
 
-      vector < vector < double > > x(dim);    // local coordinates
+      std::vector < std::vector < double > > x(dim);    // local coordinates
       unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-      vector <double> phi;  // local test function
-      vector <double> phi_x; // local test function first order partial derivatives
-      vector <double> phi_xx; // local test function second order partial derivatives
+      std::vector <double> phi;  // local test function
+      std::vector <double> phi_x; // local test function first order partial derivatives
+      std::vector <double> phi_xx; // local test function second order partial derivatives
       double weight; // gauss point weight
 
       // reserve memory for the local standar vectors
@@ -1058,11 +1058,11 @@ _analytical_function.resize(new_size);
     return test;
   }
 
-// bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const double &AMRthreshold){
+// bool Solution::FlagAMRRegionBasedOnl2(const std::vector <unsigned> &SolIndex,const double &AMRthreshold){
 //
-//   vector <double> SolMax(SolIndex.size());
-//   vector <unsigned> SolType(SolIndex.size());
-//   vector <unsigned> SolEndInd(SolIndex.size());
+//   std::vector <double> SolMax(SolIndex.size());
+//   std::vector <unsigned> SolType(SolIndex.size());
+//   std::vector <unsigned> SolEndInd(SolIndex.size());
 //
 //   unsigned END_IND[5]= {0,1,1,4,5};
 //
@@ -1123,11 +1123,11 @@ _analytical_function.resize(new_size);
 
 
 
-//   bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex, const double & AMRthreshold) {
+//   bool Solution::FlagAMRRegionBasedOnSemiNorm(const std::vector <unsigned> &SolIndex, const double & AMRthreshold) {
 //
-//     vector <double> GradSolMax(SolIndex.size());
-//     vector <unsigned> SolType(SolIndex.size());
-//     vector <unsigned> SolEndInd(SolIndex.size());
+//     std::vector <double> GradSolMax(SolIndex.size());
+//     std::vector <unsigned> SolType(SolIndex.size());
+//     std::vector <unsigned> SolEndInd(SolIndex.size());
 //     unsigned dim = _msh->GetDimension();
 //
 //     unsigned nel = _msh->GetNumberOfElements();
@@ -1233,14 +1233,14 @@ _analytical_function.resize(new_size);
         _GradMat[SolType][i]->init(nr, nc, nr_loc, nc_loc, 27, 27);
       }
 
-      vector< vector < double> > coordinates(dim);
-      vector< int > column_dofs;
-      vector< int > row_dof;
-      vector <double> phi;
-      vector <double> gradphi;
-      vector <double> nablaphi;
+      std::vector< std::vector < double> > coordinates(dim);
+      std::vector< int > column_dofs;
+      std::vector< int > row_dof;
+      std::vector <double> phi;
+      std::vector <double> gradphi;
+      std::vector <double> nablaphi;
       double weight;
-      vector< vector< double> > B(dim);
+      std::vector< std::vector< double> > B(dim);
 
 
       const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));

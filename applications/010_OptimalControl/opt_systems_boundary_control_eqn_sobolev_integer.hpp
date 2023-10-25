@@ -37,18 +37,18 @@ public:
                         const unsigned int space_dim,
                         //----- Mat ------
                         const unsigned int n_unknowns,
-                        const    vector < std::string > & Solname_Mat,
-                        const    vector < unsigned > & SolFEType_Mat,
-                        const vector < unsigned > & SolIndex_Mat,
-                        const vector < unsigned > & SolPdeIndex,
-                        vector < unsigned > & Sol_n_el_dofs_Mat, 
-                        vector < vector < double > > & sol_eldofs_Mat,  
-                        vector < vector < int > > & L2G_dofmap_Mat,
+                        const    std::vector < std::string > & Solname_Mat,
+                        const    std::vector < unsigned > & SolFEType_Mat,
+                        const std::vector < unsigned > & SolIndex_Mat,
+                        const std::vector < unsigned > & SolPdeIndex,
+                        std::vector < unsigned > & Sol_n_el_dofs_Mat, 
+                        std::vector < std::vector < double > > & sol_eldofs_Mat,  
+                        std::vector < std::vector < int > > & L2G_dofmap_Mat,
                         //--- Equation, local --------
                         const unsigned max_size,
                         //----- Sol ------
                         const unsigned int n_quantities,
-                        vector < unsigned > SolFEType_quantities,
+                        std::vector < unsigned > SolFEType_quantities,
                         //---- Quadrature - FE Evaluations -------
                         std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
                         //---- Quadrature, Geometry ------
@@ -57,8 +57,8 @@ public:
                         double detJac_iel_bdry_iqp_bdry,
                         double weight_iqp_bdry,
                         //---- Quadrature, Control ------
-                        vector <double> phi_ctrl_iel_bdry_iqp_bdry,
-                        vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
+                        std::vector <double> phi_ctrl_iel_bdry_iqp_bdry,
+                        std::vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
                         //---- Control -------
                         const unsigned int n_components_ctrl,
                         const unsigned int pos_mat_ctrl,

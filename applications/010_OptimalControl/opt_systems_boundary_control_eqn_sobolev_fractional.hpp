@@ -274,7 +274,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               if(is_face_bdry_bdry) {
                   
               // delta coords - BEGIN
-              vector  < vector  <  double> > radius_centered_at_x_qp_of_iface_bdry_bdry(dim);    // A matrix holding the face coordinates rowwise.
+              std::vector < std::vector <  double> > radius_centered_at_x_qp_of_iface_bdry_bdry(dim);    // A matrix holding the face coordinates rowwise.
               for(int k = 0; k < dim; k++) {
                 radius_centered_at_x_qp_of_iface_bdry_bdry[k].resize(jel_n_dofs_bdry_bdry);
               }
@@ -294,7 +294,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               // delta coords - END
                 
               // delta coords - refinement - BEGIN -----
-              vector  < vector  <  double > > radius_centered_at_x_qp_of_iface_bdry_bdry_refined(dim);
+              std::vector < std::vector <  double > > radius_centered_at_x_qp_of_iface_bdry_bdry_refined(dim);
               for(int k = 0; k < dim; k++) {
                 radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k].resize(n_divisions_face_of_face + 1);
               }
@@ -352,7 +352,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               // theta's - END -----
 
                // distance |x - y| at midpoint - BEGIN -----
-               vector <double> mid_point(dim, 0.);
+               std::vector <double> mid_point(dim, 0.);
                 for(unsigned k = 0; k < dim; k++) {
                   mid_point[k] = (radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n + 1] + radius_centered_at_x_qp_of_iface_bdry_bdry_refined[k][n]) * 0.5;
                 }
@@ -515,17 +515,17 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                         const unsigned int dim_bdry,
                         //-----------
                         const unsigned int n_unknowns,
-                        const    vector < std::string > & Solname_Mat,
-                        const    vector < unsigned > & SolFEType_Mat,
-                        const vector < unsigned > & SolIndex_Mat,
-                        const vector < unsigned > & SolPdeIndex,
-                        vector < unsigned > & Sol_n_el_dofs_Mat, 
-                        vector < vector < double > > & sol_eldofs_Mat,  
-                        vector < vector < int > > & L2G_dofmap_Mat,
+                        const    std::vector < std::string > & Solname_Mat,
+                        const    std::vector < unsigned > & SolFEType_Mat,
+                        const std::vector < unsigned > & SolIndex_Mat,
+                        const std::vector < unsigned > & SolPdeIndex,
+                        std::vector < unsigned > & Sol_n_el_dofs_Mat, 
+                        std::vector < std::vector < double > > & sol_eldofs_Mat,  
+                        std::vector < std::vector < int > > & L2G_dofmap_Mat,
                         const unsigned int max_size,
                         //-----------
                          const unsigned int n_quantities,
-                        vector < unsigned > SolFEType_quantities,
+                        std::vector < unsigned > SolFEType_quantities,
                         //-----------
                         std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
                         //-----------
@@ -533,8 +533,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
                         std::vector < std::vector < double > >  JacI_iel_bdry_qp_of_iface,
                         double detJac_iel_bdry_qp_of_iface,
                         double weight_qp_of_iface,
-                        vector <double> phi_ctrl_iel_bdry_qp_of_iface,
-                        vector <double> phi_ctrl_x_iel_bdry_qp_of_iface, 
+                        std::vector <double> phi_ctrl_iel_bdry_qp_of_iface,
+                        std::vector <double> phi_ctrl_x_iel_bdry_qp_of_iface, 
                         //---- Control unknown -------
                         const unsigned int n_components_ctrl,
                         const unsigned int pos_mat_ctrl,
@@ -621,43 +621,43 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
  
   //-------- local to global mappings - BEGIN --------------
-  vector< vector< int > > l2gMap_iel(n_components_ctrl); 
-  vector< vector< int > > l2gMap_jel(n_components_ctrl);
+  std::vector < std::vector < int > > l2gMap_iel(n_components_ctrl); 
+  std::vector < std::vector < int > > l2gMap_jel(n_components_ctrl);
 
     for (unsigned c = 0; c < n_components_ctrl; c++) {
         l2gMap_iel[c].reserve(max_size);
         l2gMap_jel[c].reserve(max_size);
     }
   
-  vector< int > l2gMap_iel_vec;  l2gMap_iel_vec.reserve(elem_dof_size_max);
-  vector< int > l2gMap_jel_vec;  l2gMap_jel_vec.reserve(elem_dof_size_max);
+  std::vector < int > l2gMap_iel_vec;  l2gMap_iel_vec.reserve(elem_dof_size_max);
+  std::vector < int > l2gMap_jel_vec;  l2gMap_jel_vec.reserve(elem_dof_size_max);
   //-------- local to global mappings - END --------------
 
 
   //-------- Local matrices and rhs - BEGIN --------------
-  vector < double > Res_local_iel_integer_operators; Res_local_iel_integer_operators.reserve(elem_dof_size_max);
-  vector < double > KK_local_iel_integer_operators;  KK_local_iel_integer_operators.reserve(elem_dof_size_max * elem_dof_size_max);
+  std::vector < double > Res_local_iel_integer_operators; Res_local_iel_integer_operators.reserve(elem_dof_size_max);
+  std::vector < double > KK_local_iel_integer_operators;  KK_local_iel_integer_operators.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   Local matrices and rhs for adaptive quadrature (iel == jel)
-  vector < double > Res_local_iel_only_refined; Res_local_iel_only_refined.reserve(elem_dof_size_max);
-  vector < double > KK_local_iel_only_refined;   KK_local_iel_only_refined.reserve(elem_dof_size_max * elem_dof_size_max);
+  std::vector < double > Res_local_iel_only_refined; Res_local_iel_only_refined.reserve(elem_dof_size_max);
+  std::vector < double > KK_local_iel_only_refined;   KK_local_iel_only_refined.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   (both adaptive and non-adaptive)
-  vector < double > Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref; Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.reserve(elem_dof_size_max);
-  vector < double > KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref;  KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.reserve(elem_dof_size_max * elem_dof_size_max);
+  std::vector < double > Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref; Res_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.reserve(elem_dof_size_max);
+  std::vector < double > KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref;  KK_local_iel_unbounded_integral_analytical_both_ref_and_non_ref.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   Local matrices and rhs for the mixed internal-external integral term (both adaptive and non-adaptive)
-  vector < double > Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref;  Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.reserve(elem_dof_size_max);
-  vector < double > KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref;   KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.reserve(elem_dof_size_max * elem_dof_size_max);
+  std::vector < double > Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref;  Res_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.reserve(elem_dof_size_max);
+  std::vector < double > KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref;   KK_nonlocal_iel_unbounded_integral_numerical_both_ref_and_non_ref.reserve(elem_dof_size_max * elem_dof_size_max);
 
 //   Non local matrices and vectors for H^s laplacian operator
-  vector< double >         Res_nonlocal_iel_bounded_integral;  Res_nonlocal_iel_bounded_integral.reserve(elem_dof_size_max);
-  vector< double >         Res_nonlocal_jel_bounded_integral;  Res_nonlocal_jel_bounded_integral.reserve(elem_dof_size_max);
+  std::vector < double >         Res_nonlocal_iel_bounded_integral;  Res_nonlocal_iel_bounded_integral.reserve(elem_dof_size_max);
+  std::vector < double >         Res_nonlocal_jel_bounded_integral;  Res_nonlocal_jel_bounded_integral.reserve(elem_dof_size_max);
 
-  vector < double > KK_nonlocal_iel_iel_bounded_integral;  KK_nonlocal_iel_iel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
-  vector < double > KK_nonlocal_iel_jel_bounded_integral;  KK_nonlocal_iel_jel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
-  vector < double > KK_nonlocal_jel_iel_bounded_integral;  KK_nonlocal_jel_iel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
-  vector < double > KK_nonlocal_jel_jel_bounded_integral;  KK_nonlocal_jel_jel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max); 
+  std::vector < double > KK_nonlocal_iel_iel_bounded_integral;  KK_nonlocal_iel_iel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
+  std::vector < double > KK_nonlocal_iel_jel_bounded_integral;  KK_nonlocal_iel_jel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
+  std::vector < double > KK_nonlocal_jel_iel_bounded_integral;  KK_nonlocal_jel_iel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max);
+  std::vector < double > KK_nonlocal_jel_jel_bounded_integral;  KK_nonlocal_jel_jel_bounded_integral.reserve(elem_dof_size_max * elem_dof_size_max); 
   //-------- Local matrices and rhs - END --------------
 
   
@@ -668,7 +668,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
   
 //   phi_x_placeholder_unused as unused input of certain functions
-  vector < double > phi_x_placeholder_unused;
+  std::vector < double > phi_x_placeholder_unused;
   phi_x_placeholder_unused.reserve(max_size * dim);
   
  
@@ -791,7 +791,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // ***************************************
 
 // --- 2 - solution - BEGIN -----------------
-      vector< unsigned > nDof_jel(n_components_ctrl);
+      std::vector < unsigned > nDof_jel(n_components_ctrl);
 
       if(jproc == iproc) {
         for (unsigned c = 0; c < n_components_ctrl; c++) {
@@ -1071,7 +1071,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
         
       
 // --- l2GMap - BEGIN
-        vector< unsigned > nDof_iel(n_components_ctrl);
+        std::vector < unsigned > nDof_iel(n_components_ctrl);
         
        for (unsigned c = 0; c < n_components_ctrl; c++) {
          nDof_iel[c]  = msh->GetElementDofNumber(iel, solType_ctrl[c]);
@@ -1180,13 +1180,13 @@ unsigned nDof_iel_vec = 0;
      std::vector < std::vector < double > >  Jac_kel_bdry_kqp_bdry;
      std::vector < std::vector < double > >  JacI_kel_bdry_kqp_bdry;
      double detJac_kel_bdry_kqp_bdry;
-      vector < double >  x_kqp_bdry;
+      std::vector < double >  x_kqp_bdry;
       double  weight_kqp_bdry;
-      vector < double >  phi_coords_kel_bdry_kqp_bdry;
-      vector < double >  phi_coords_x_kel_bdry_kqp_bdry;
+      std::vector < double >  phi_coords_kel_bdry_kqp_bdry;
+      std::vector < double >  phi_coords_x_kel_bdry_kqp_bdry;
       
-      vector < double >  phi_ctrl_kel_bdry_kqp_bdry; /// @todo assume all ctrl components have the same FE family
-      vector < double >  phi_ctrl_x_kel_bdry_kqp_bdry;
+      std::vector < double >  phi_ctrl_kel_bdry_kqp_bdry; /// @todo assume all ctrl components have the same FE family
+      std::vector < double >  phi_ctrl_x_kel_bdry_kqp_bdry;
       
        std::vector< double > sol_ctrl_kqp_bdry(n_components_ctrl);
             
@@ -1195,7 +1195,7 @@ unsigned nDof_iel_vec = 0;
 
       
 //         double weight3;
-//         vector < double > phi3;
+//         std::vector < double > phi3;
 
 //        Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
        std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][DIM==3][N_DOFS]
@@ -1492,7 +1492,7 @@ unsigned nDof_iel_vec = 0;
 //                 elem_all[qrule_k][kelGeom_bdry][solType_coords] ->shape_funcs_current_elem(k_qp_bdry, JacI_kel_bdry_kqp_bdry, phi_coords_kel_bdry_kqp_bdry, phi_coords_x_kel_bdry_kqp_bdry, boost::none, space_dim);
 
 //--- geom - BEGIN
-                vector < double > x_kqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
+                std::vector < double > x_kqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
 
                 for(unsigned d = 0; d < x_kqp_bdry.size(); d++) {
                   for (int k_bdry = 0; k_bdry < /*geom_element_iel.get_coords_at_dofs_bdry_3d()[d].size()*/phi_coords_kel_bdry_kqp_bdry.size(); k_bdry++)  {
@@ -1522,7 +1522,7 @@ unsigned nDof_iel_vec = 0;
 // // // 
 // // //                     msh->_finiteElement[ielGeom][solType]->Jacobian(x3[r], k_qp_bdry, weight_kqp_bdry, phi3, phi_x_placeholder_unused);
 // // // 
-// // //                     vector < double > xg3(dim, 0.);
+// // //                     std::vector < double > xg3(dim, 0.);
 // // // 
 // // //                     for(unsigned d = 0; d < dim; d++) {
 // // //                       for(unsigned i = 0; i < nDof_iel; i++) {

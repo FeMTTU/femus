@@ -2493,7 +2493,7 @@ void GenCase::ReadMatrix(const  std::string& namefile, SystemTwo * mysys) {
 void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
 
   
-    vector < SparseMatrix* > &_PP = mysys->GetProjectionMatrix(); //added by Eugenio TO BE TESTED
+    std::vector < SparseMatrix* > &_PP = mysys->GetProjectionMatrix(); //added by Eugenio TO BE TESTED
     
     for (uint Level = 1; Level< mysys->GetGridn(); Level++) {
   
@@ -2735,7 +2735,7 @@ void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
     //perche' sono legati ai DOF (devi pensare che la questione del mesh e' gia' risolta)
 void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
  
-  vector < SparseMatrix* > &_RR = mysys->GetRestrictionMatrix(); //added by Eugenio TO BE TESTED
+  std::vector < SparseMatrix* > &_RR = mysys->GetRestrictionMatrix(); //added by Eugenio TO BE TESTED
   
   for (uint Level = 0; Level< mysys->GetGridn() - 1; Level++) {
     

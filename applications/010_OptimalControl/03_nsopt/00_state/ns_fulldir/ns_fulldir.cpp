@@ -317,7 +317,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 // #endif  
 
   //solution variable
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
 
@@ -326,7 +326,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
 
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys.GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys.GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
 
@@ -346,7 +346,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   const int press_type_pos = dim;
   const int state_pos_begin = 0;
   
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
+  std::vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
   Solname              [state_pos_begin+0] =                "U";
   Solname              [state_pos_begin+1] =                "V";
   if (dim == 3) Solname[state_pos_begin+2] =                "W";
@@ -354,9 +354,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   Solname              [state_pos_begin + press_type_pos] = "P";
 // #endif  
   
-  vector < unsigned > SolPdeIndex(n_unknowns);
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  std::vector < unsigned > SolPdeIndex(n_unknowns);
+  std::vector < unsigned > SolIndex(n_unknowns);  
+  std::vector < unsigned > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -367,10 +367,10 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   
 
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
+  std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
+  std::vector < std::vector < adept::adouble > > aResV(dim);    // local redidual vector
 
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned  k = 0; k < dim; k++) {
@@ -380,8 +380,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   }
 
 // #if PRESS == 1
-  vector < adept::adouble >  solP; // local solution
-  vector< adept::adouble > aResP; // local redidual vector
+  std::vector < adept::adouble >  solP; // local solution
+  std::vector < adept::adouble > aResP; // local redidual vector
   solP.reserve(maxSize);
   aResP.reserve(maxSize);
 // #endif
@@ -389,9 +389,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   double weight; // gauss point weight
   
-  vector <double> phiV;  // local test function
-  vector <double> phiV_x; // local test function first order partial derivatives
-  vector <double> phiV_xx; // local test function second order partial derivatives
+  std::vector <double> phiV;  // local test function
+  std::vector <double> phiV_x; // local test function first order partial derivatives
+  std::vector <double> phiV_xx; // local test function second order partial derivatives
 
   phiV.reserve(maxSize);
   phiV_x.reserve(maxSize * dim);
@@ -405,13 +405,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   //Nondimensional values ******************
   
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve( n_unknowns *maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve( n_unknowns *maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
 
   RES->zero(); // Set to zero all the entries of the Global Matrix
@@ -502,9 +502,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 // #endif
       
-      vector < adept::adouble > solV_gss(dim, 0);
-      vector < vector < adept::adouble > > gradSolV_gss(dim);
-      vector < double > coordX_gss(dim, 0.);
+      std::vector < adept::adouble > solV_gss(dim, 0);
+      std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
+      std::vector < double > coordX_gss(dim, 0.);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
@@ -534,18 +534,18 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
 
 //computation of RHS force using MMS - BEGIN =============================================== 
-vector <double>  exact_Vel(dim,0.);
+std::vector <double>  exact_Vel(dim,0.);
    mms_lid_driven::value_stateVel(coordX_gss,exact_Vel);
-vector < vector < double > > exact_grad_Vel(dim);
+std::vector < std::vector < double > > exact_grad_Vel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_Vel[k].resize(dim);
     std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);
 }
    mms_lid_driven::gradient_stateVel(coordX_gss,exact_grad_Vel);
-vector <double>  exact_lap_Vel(dim,0.);
+std::vector <double>  exact_lap_Vel(dim,0.);
    mms_lid_driven::laplace_stateVel(coordX_gss, exact_lap_Vel);
-vector <double>  exact_conv_Vel(dim,0.);
-vector <double> exact_grad_Press(dim,0.);
+std::vector <double>  exact_conv_Vel(dim,0.);
+std::vector <double> exact_grad_Press(dim,0.);
    mms_lid_driven::gradient_statePress(coordX_gss, exact_grad_Press);
 
 for (unsigned k = 0; k < dim; k++){
@@ -555,7 +555,7 @@ for (unsigned k = 0; k < dim; k++){
 }
 
 
-vector <double> exactForce(dim,0.);
+std::vector <double> exactForce(dim,0.);
 for (unsigned k = 0; k < dim; k++){
     exactForce[k] =  - IRe * exact_lap_Vel[k] + advection_flag * exact_conv_Vel[k] + exact_grad_Press[k] ;
 }
@@ -564,7 +564,7 @@ for (unsigned k = 0; k < dim; k++){
 
         // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
-        vector < adept::adouble > NSV(dim, 0.);
+        std::vector < adept::adouble > NSV(dim, 0.);
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
@@ -699,7 +699,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim)));
 
   // geometry *******************************************
-  vector< vector < double> > coordX(dim);	//local coordinates
+  std::vector < std::vector < double> > coordX(dim);	//local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i=0;i<dim;i++) {   
        coordX[i].reserve(maxSize); 
@@ -718,7 +718,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   const int press_type_pos = dim;
   const int state_pos_begin = 0;
   
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
+  std::vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
   Solname              [state_pos_begin+0] =                "U";
   Solname              [state_pos_begin+1] =                "V";
   if (dim == 3) Solname[state_pos_begin+2] =                "W";
@@ -726,9 +726,9 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   Solname              [state_pos_begin + press_type_pos] = "P";
 // #endif  
   
-  vector < unsigned > SolPdeIndex(n_unknowns);
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  std::vector < unsigned > SolPdeIndex(n_unknowns);
+  std::vector < unsigned > SolIndex(n_unknowns);  
+  std::vector < unsigned > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -737,13 +737,13 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
     SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
   }
 
-  vector < double > Sol_n_el_dofs(n_unknowns);
+  std::vector < double > Sol_n_el_dofs(n_unknowns);
   
   //==========================================================================================
   // velocity ************************************
-  vector < vector < double > > phi_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_xx_gss_fe(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(maxSize);
@@ -758,9 +758,9 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   
   
   // equation ***********************************
-  vector < vector < int > > JACDof(n_unknowns); 
-  vector < vector < double > > Res(n_unknowns); /*was F*/
-  vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
+  std::vector < std::vector < int > > JACDof(n_unknowns); 
+  std::vector < std::vector < double > > Res(n_unknowns); /*was F*/
+  std::vector < std::vector < std::vector < double > > > Jac(n_unknowns); /*was B*/
  
   for(int i = 0; i < n_unknowns; i++) {     
     JACDof[i].reserve(maxSize);
@@ -777,8 +777,8 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   }
   
   //----------- dofs ------------------------------
-  vector < vector < double > > SolVAR_eldofs(n_unknowns);
-  vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
+  std::vector < std::vector < double > > SolVAR_eldofs(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_eldofs(n_unknowns);
   
   for(int k=0; k<n_unknowns; k++) {
     SolVAR_eldofs[k].reserve(maxSize);
@@ -786,8 +786,8 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   }
 
   //------------ at quadrature points ---------------------
-  vector < double > SolVAR_qp(n_unknowns);
-    vector < vector < double > > gradSolVAR_qp(n_unknowns);
+  std::vector < double > SolVAR_qp(n_unknowns);
+    std::vector < std::vector < double > > gradSolVAR_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim);  }
       
     
@@ -825,7 +825,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
     }
 
      // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
@@ -894,7 +894,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
   	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,iqp,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
 
-      vector < double > coordX_gss(dim, 0.);
+      std::vector < double > coordX_gss(dim, 0.);
  	for(unsigned k = 0; k <  dim; k++) {
 	  for(unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
          coordX_gss[k] += coordX[k][i] * phi_gss_fe[ SolFEType[k] ][i];
@@ -988,18 +988,18 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 
 
 //computation of RHS force using MMS - BEGIN =============================================== 
-vector <double>  exact_Vel(dim,0.);
+std::vector <double>  exact_Vel(dim,0.);
    mms_lid_driven::value_stateVel(coordX_gss,exact_Vel);
-vector < vector < double > > exact_grad_Vel(dim);
+std::vector < std::vector < double > > exact_grad_Vel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_Vel[k].resize(dim);
     std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);
 }
    mms_lid_driven::gradient_stateVel(coordX_gss,exact_grad_Vel);
-vector <double>  exact_lap_Vel(dim,0.);
+std::vector <double>  exact_lap_Vel(dim,0.);
    mms_lid_driven::laplace_stateVel(coordX_gss, exact_lap_Vel);
-vector <double>  exact_conv_Vel(dim,0.);
-vector <double> exact_grad_Press(dim,0.);
+std::vector <double>  exact_conv_Vel(dim,0.);
+std::vector <double> exact_grad_Press(dim,0.);
    mms_lid_driven::gradient_statePress(coordX_gss, exact_grad_Press);
 
 for (unsigned k = 0; k < dim; k++){
@@ -1009,7 +1009,7 @@ for (unsigned k = 0; k < dim; k++){
 }
 
 
-vector <double> exactForce(dim,0.);
+std::vector <double> exactForce(dim,0.);
 for (unsigned k = 0; k < dim; k++){
     exactForce[k] =  - IRe * exact_lap_Vel[k] + advection_flag * exact_conv_Vel[k] + exact_grad_Press[k] ;
 }
@@ -1042,7 +1042,7 @@ for (unsigned k = 0; k < dim; k++){
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
 	for (unsigned j = 0; j < nDofsV; j++) {
 		      double lap_jac_du_u = 0.;
-		      vector < double > adv_uold_nablaunew(dim,0.);
+		      std::vector < double > adv_uold_nablaunew(dim,0.);
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		    lap_jac_du_u += phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim];
 		for (unsigned  jdim = 0; jdim < dim; jdim++) { 
@@ -1146,7 +1146,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //geometry *******************************
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
 
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
 
@@ -1166,7 +1166,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
   const int press_type_pos = dim;
   const int state_pos_begin = 0;
   
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
+  std::vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
   Solname              [state_pos_begin+0] =                "U";
   Solname              [state_pos_begin+1] =                "V";
   if (dim == 3) Solname[state_pos_begin+2] =                "W";
@@ -1174,8 +1174,8 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
   Solname              [state_pos_begin + press_type_pos] = "P";
 // #endif  
   
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  std::vector < unsigned > SolIndex(n_unknowns);  
+  std::vector < unsigned > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -1183,13 +1183,13 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
     SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
   }
 
-  vector < double > Sol_n_el_dofs(n_unknowns);
+  std::vector < double > Sol_n_el_dofs(n_unknowns);
   
   //==========================================================================================
   // velocity ************************************
-  vector < vector < double > > phi_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_xx_gss_fe(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(maxSize);
@@ -1204,11 +1204,11 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
   
  
   //----------- dofs ------------------------------
-  vector < vector < double > > SolVAR_eldofs(n_unknowns);
-  vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
+  std::vector < std::vector < double > > SolVAR_eldofs(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_eldofs(n_unknowns);
   
-  vector < vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
-  vector < vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
+  std::vector < std::vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
 
 
   for(int k = 0; k < n_unknowns; k++) {
@@ -1220,16 +1220,16 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
   }
 
   //------------ at quadrature points ---------------------
-  vector < double > SolVAR_qp(n_unknowns);
-  vector < double > SolVAR_coarser_prol_qp(n_unknowns);
-  vector < vector < double > > gradSolVAR_qp(n_unknowns);
-  vector < vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
+  std::vector < double > SolVAR_qp(n_unknowns);
+  std::vector < double > SolVAR_coarser_prol_qp(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_qp(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
   for(int k = 0; k < n_unknowns; k++) {
       gradSolVAR_qp[k].reserve(maxSize);  
       gradSolVAR_coarser_prol_qp[k].reserve(maxSize);  
   }
       
-  vector  < double > l2norm (ns_state_only::no_of_norms,0.);
+  std::vector < double > l2norm (ns_state_only::no_of_norms,0.);
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1251,7 +1251,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
     }
     
       // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
@@ -1315,7 +1315,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
 	  }
     }
 	  
-      vector < double > coordX_gss(dim, 0.);
+      std::vector < double > coordX_gss(dim, 0.);
  	for(unsigned k = 0; k <  dim; k++) {
 	  for(unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
          coordX_gss[k] += coordX[k][i] * phi_gss_fe[ SolFEType[k] ][i];
@@ -1339,7 +1339,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
 vector <double>  exact_Vel(dim,0.);
 value_Vel(coordX_gss,exact_Vel);
 double exact_Press = value_Press(coordX_gss);
-vector < vector < double > > exact_grad_Vel(dim);
+vector < std::vector < double > > exact_grad_Vel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_Vel[k].resize(dim);
     std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);

@@ -33,8 +33,6 @@
 namespace femus
 {
 
-  using std::cout;
-  using std::endl;
 
   /**
    * This constructor allocates the memory for the \textit{coarsest elem}
@@ -560,7 +558,7 @@ namespace femus
       index = 5;
     }
     else {
-      cout << "error! invalid Element Shape in elem::GetIndex(...)" << endl;
+      std::cout << "error! invalid Element Shape in elem::GetIndex(...)" << std::endl;
       exit(0);
     }
     return index;

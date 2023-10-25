@@ -96,7 +96,7 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::SetSparsityPattern(vector< bool > other_sparcity_pattern) {
+  void LinearImplicitSystem::SetSparsityPattern(std::vector< bool > other_sparcity_pattern) {
     unsigned SolPdeSize2 = _SolSystemPdeIndex.size() * _SolSystemPdeIndex.size();
 
     if(other_sparcity_pattern.size() != SolPdeSize2) {
@@ -698,8 +698,8 @@ namespace femus {
     NNZ_o->close();
 
     unsigned offset = LinSolf->KKoffset[0][iproc];
-    vector <int> nnz_d(nf_loc);
-    vector <int> nnz_o(nf_loc);
+    std::vector <int> nnz_d(nf_loc);
+    std::vector <int> nnz_o(nf_loc);
 
     for(int i = 0; i < nf_loc; i++) {
       nnz_d[i] = static_cast <int>((*NNZ_d)(offset + i));
@@ -783,8 +783,8 @@ namespace femus {
     NNZ_o->close();
 
     unsigned offset = LinSol->KKoffset[0][iproc];
-    vector <int> nnz_d(n_loc);
-    vector <int> nnz_o(n_loc);
+    std::vector <int> nnz_d(n_loc);
+    std::vector <int> nnz_o(n_loc);
 
     for(int i = 0; i < n_loc; i++) {
       nnz_d[i] = static_cast <int>((*NNZ_d)(offset + i));

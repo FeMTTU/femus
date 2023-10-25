@@ -65,12 +65,12 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
 
   std::vector< int > SYSDOF; // local to global pdeSys dofs
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   std::vector< adept::adouble > aResNDx[3]; // local redidual vector
   std::vector< adept::adouble > aResL; // local redidual vector
 
 
-  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
+  std::vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
 
   KK->zero();  // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual
@@ -418,12 +418,12 @@ void AssembleSphereConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  vector< double > Res;
+  std::vector < double > Res;
   std::vector< adept::adouble > aResNDx[3];
   std::vector< adept::adouble > aResL;
 
   // Local Jacobian matrix (ordered by column).
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Zero all the entries of the Global Matrix
   RES->zero(); // Zero all the entries of the Global Residual
@@ -881,12 +881,12 @@ void AssembleO2ConformalMinimizationEA (MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  vector< double > Res;
+  std::vector < double > Res;
   std::vector< adept::adouble > aResNDx[3];
   std::vector< adept::adouble > aResL;
 
   // Local Jacobian matrix (ordered by column).
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Zero all the entries of the Global Matrix
   RES->zero(); // Zero all the entries of the Global Residual
@@ -1348,12 +1348,12 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  vector< double > Res;
+  std::vector < double > Res;
   std::vector< adept::adouble > aResNDx[3];
   std::vector< adept::adouble > aResL;
 
   // Local Jacobian matrix (ordered by column).
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Zero all the entries of the Global Matrix
   RES->zero(); // Zero all the entries of the Global Residual
@@ -1902,12 +1902,12 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
   std::vector< unsigned > SYSDOF;
 
   // Define local residual vectors.
-  vector< double > Res;
+  std::vector < double > Res;
   std::vector< adept::adouble > aResY[3];
   std::vector< adept::adouble > aResW[3];
 
   // Local (column-ordered) Jacobian matrix.
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   // Zero all entries of global matrix and residual vectors.
   KK->zero();
@@ -2321,12 +2321,12 @@ void AssembleConformalO1Minimization (MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  vector< double > Res;
+  std::vector < double > Res;
   std::vector< adept::adouble > aResNDx[3];
   std::vector< adept::adouble > aResL;
 
   // Local Jacobian matrix (ordered by column).
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Zero all the entries of the Global Matrix
   RES->zero(); // Zero all the entries of the Global Residual

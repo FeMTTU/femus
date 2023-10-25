@@ -29,7 +29,7 @@ namespace femus {
     _fieldSplitTree = fieldSplitTree;
   }
 
-  void LinearEquationSolverPetscFieldSplit::BuildBdcIndex(const vector <unsigned>& variable_to_be_solved) {
+  void LinearEquationSolverPetscFieldSplit::BuildBdcIndex(const std::vector <unsigned>& variable_to_be_solved) {
     if(_fieldSplitTree != NULL) _fieldSplitTree->BuildIndexSet(KKoffset, _iproc, _nprocs, _msh->GetLevel(), this);
     else FielSlipTreeIsNotDefined();
     LinearEquationSolverPetsc::BuildBdcIndex(variable_to_be_solved);

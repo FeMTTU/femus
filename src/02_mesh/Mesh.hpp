@@ -247,7 +247,7 @@ public:
 // === PARTITIONING - END =================
 
 // =========================
-// === MESH REFINEMENT- BEGIN  =================
+// === REFINEMENT- BEGIN  =================
 // =========================
 public:
 
@@ -301,7 +301,7 @@ private:
     /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
     static unsigned _face_index;
 
-// === MESH REFINEMENT- END  =================
+// === REFINEMENT- END  =================
 
 
 /// =========================
@@ -366,7 +366,7 @@ public:
     unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 
     /** FE: DofMap: Here is where the element and node global orderings are changed based on the partitioning */
-    void FillISvector(vector < unsigned > &partition);
+    void FillISvector(std::vector < unsigned > &partition);
 
     void FillISvectorElemOffsets(std::vector < unsigned >& partition);
   
@@ -505,7 +505,7 @@ private:
 
 
 // =========================
-// === AMR - BEGIN =================
+// === REFINEMENT, AMR - BEGIN =================
 // =========================
 public:
     
@@ -543,7 +543,7 @@ private:
     /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
-// === AMR - END =================
+// === REFINEMENT, AMR - END =================
 
     
 };

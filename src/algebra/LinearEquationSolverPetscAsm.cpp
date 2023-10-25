@@ -83,7 +83,7 @@ namespace femus {
 
   // ==============================================
 
-  void LinearEquationSolverPetscAsm::BuildAMSIndex(const vector <unsigned>& variable_to_be_solved) {
+  void LinearEquationSolverPetscAsm::BuildAMSIndex(const std::vector <unsigned>& variable_to_be_solved) {
 
     unsigned nel = _msh->GetNumberOfElements();
 
@@ -97,26 +97,26 @@ namespace femus {
 
     unsigned DofOffset = KKoffset[0][iproc];
     unsigned DofOffsetSize = KKoffset[KKIndex.size() - 1][iproc] - KKoffset[0][iproc];
-    vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
-    vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
+    std::vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
+    std::vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
 
-    vector <bool> owned(DofOffsetSize, false);
+    std::vector <bool> owned(DofOffsetSize, false);
 
     map<int, bool> mymap;
 
     unsigned ElemOffset   = _msh->_dofOffset[3][iproc];
     unsigned ElemOffsetp1 = _msh->_dofOffset[3][iproc + 1];
     unsigned ElemOffsetSize = ElemOffsetp1 - ElemOffset;
-    vector <PetscInt> indexci(ElemOffsetSize);
-    vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
+    std::vector <PetscInt> indexci(ElemOffsetSize);
+    std::vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
 
-    vector < vector < unsigned > > block_elements;
+    std::vector < std::vector < unsigned > > block_elements;
 
     MeshASMPartitioning meshasmpartitioning(*_msh);
 
     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
 
-    vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
+    std::vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
 
     for(unsigned iind = variable_to_be_solved.size() - _NSchurVar; iind < variable_to_be_solved.size(); iind++) {
       unsigned PdeIndexSol = variable_to_be_solved[iind];

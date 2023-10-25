@@ -72,10 +72,10 @@ namespace femus {
                            + _mesh.el->GetElementNumber("Wedge") * NVE[2][2]    + _mesh.el->GetElementNumber("Quad") * NVE[3][2]
                            + _mesh.el->GetElementNumber("Triangle") * NVE[4][2] + _mesh.el->GetElementNumber("Line") * NVE[5][2];
 
-      vector < idx_t > eptr(nelem + 1);
-      vector < idx_t > eind(eind_size);
+      std::vector < idx_t > eptr(nelem + 1);
+      std::vector < idx_t > eind(eind_size);
 
-      vector < int > npart(nnodes);
+      std::vector < int > npart(nnodes);
 
       idx_t objval;
       idx_t options[METIS_NOPTIONS];

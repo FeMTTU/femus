@@ -201,7 +201,7 @@ namespace femus {
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
   void MED_IO::read(const std::string& name, 
-                    vector < vector < double> >& coords, 
+                    std::vector < std::vector < double> >& coords, 
                     const double Lref, 
                     std::vector<bool>& type_elem_flag, 
                     const bool read_domain_groups_flag, 
@@ -661,7 +661,7 @@ namespace femus {
   
   
   //the node global ordering is given by the mesh file, as well as the element global ordering
-  void MED_IO::node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  vector < TYPE_FOR_REAL_DATASET >  & node_group_map) {
+  void MED_IO::node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  std::vector < TYPE_FOR_REAL_DATASET >  & node_group_map) {
 
     
     std::string node_group_dataset = get_node_info_H5Group(mesh_menu) + group_fam + "/";
@@ -1019,7 +1019,7 @@ namespace femus {
 
 
   //the node global ordering is given by the mesh file, as well as the element global ordering
-  void MED_IO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> > & coords, const double Lref) {
+  void MED_IO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, std::vector < std::vector < double> > & coords, const double Lref) {
 
     Mesh& mesh = GetMesh();
 

@@ -303,20 +303,8 @@ int main(int argc, char** args) {
     std::ostringstream mystream; mystream << "./"  << input_file;
     const std::string infile = mystream.str();
 
-    const double Lref = 1.;
-  const bool read_groups = true;
-  const bool read_boundary_groups = true;
-    
   
-  ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
-    
-  ml_mesh.GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
- 
-
-  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
-  
-  ml_mesh.PrepareNewLevelsForRefinement();
-
+    ml_mesh.ReadCoarseMesh(infile);
     // ======= Mesh, Coarse - END ========================
 
 
@@ -332,48 +320,47 @@ int main(int argc, char** args) {
 
 
     
-    // ======= Unknowns - BEGIN ========================
-    std::vector< Unknown > unknowns = systems__generate_list_of_scalar_unknowns_for_each_FE_family_lagrangian();
-    // ======= Unknowns - END ========================
-
-
-
-    // ======= Normal run (without convergence study) ========================
-    Solution_generation_1< double  /*adept::adouble*/ > my_solution_generation;
-//     const unsigned int n_levels = 3;
-//     my_solution_generation.run_on_single_level( ... );
-
-
-
     
     // ======= Convergence study - BEGIN ========================
     
-    // Auxiliary mesh, all levels - BEGIN  ================
+    // )======= Mesh, Number of refinements - BEGIN ========================
     unsigned max_number_of_meshes = 6;
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 5;
+    // )======= Mesh, Number of refinements - END ========================
 
+    // )Auxiliary mesh, all levels - BEGIN  ================
     ///set coarse storage mesh
     ///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
     // If you try to use the default copy constructor it doesn't work.
-    // In fact, the copy constructor will copy ALL THE POINTERS, and if there are pointers that were dynamically allocated with new, and destroyed with delete,
+    // In fact, the copy constructor will copy ALL THE POINTERS,
+    // and if there are pointers that were dynamically allocated with new, and destroyed with delete in the destructor,
     //     new will be called only once but delete will be called twice...
-//     MultiLevelMesh ml_mesh_all_levels_needed_for_incremental( ml_mesh);
-    MultiLevelMesh ml_mesh_all_levels_needed_for_incremental;
+//     MultiLevelMesh ml_mesh_all_levels_Needed_for_incremental( ml_mesh);
+    MultiLevelMesh ml_mesh_all_levels_Needed_for_incremental;
 
-    ml_mesh_all_levels_needed_for_incremental.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
-    // Auxiliary mesh, all levels - END  ================
+    ml_mesh_all_levels_Needed_for_incremental.ReadCoarseMesh(infile);
+    // )Auxiliary mesh, all levels - END  ================
 
 
     
-     // Convergence ================
+    // )======= Solution generation class - BEGIN ========================
+    Solution_generation_1< double  /*adept::adouble*/ > my_solution_generation;
+    // )======= Solution generation class - END ========================
+
     
     
-     // 5) Solve Equation or only Approximation Theory - BEGIN   ==============
+     // )======= Solution generation class - Solve Equation or only Approximation Theory - BEGIN   ==============
        const bool my_solution_generation_has_equation_solve = true/*false*/; 
-     // 5) Solve Equation or only Approximation Theory  - END   ==============
+     // )======= Solution generation class - Solve Equation or only Approximation Theory - END   ==============
 
 
-    // 1) Which exact solution - BEGIN ================
+    // ======= Unknowns - BEGIN ========================
+    std::vector< Unknown > unknowns = systems__generate_list_of_scalar_unknowns_for_each_FE_family_lagrangian();
+    // ======= Unknowns - END ========================
+    
+    
+
+    //  ======= Unknowns, ) exact solution (optional) - BEGIN ================
     std::vector< Math::Function< double > * > unknowns_analytical_functions_Needed_for_absolute( unknowns.size() );         ///@todo you have to switch it below too, or maybe pass it to MultiLevelProblem  provide exact solution, if available =
 
 //     Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
@@ -390,19 +377,21 @@ int main(int argc, char** args) {
     for (unsigned int u = 0; u < unknowns_analytical_functions_Needed_for_absolute.size(); u++) {
     unknowns_analytical_functions_Needed_for_absolute[u] =  & analytical_function_1;
     }
-    // 1) Which exact solution - END ================
+    //  ======= Unknowns, ) exact solution (optional)  - END ================
 
      
+    
     // Various choices - BEGIN ================
-    std::vector < bool > convergence_rate_computation_method_Flag = {true, true};
+    std::vector < bool > convergence_rate_computation_method_Flag = {false, true};
     std::vector < bool > volume_or_boundary_Flag                  = {true, true};
     std::vector < bool > sobolev_norms_Flag                       = {true, true};
     // Various choices - END ================
     
 
+    // ======= Convergence study ========================
     FE_convergence<>::convergence_study(ml_prob, 
                                      ml_mesh, 
-                                     ml_mesh_all_levels_needed_for_incremental, 
+                                     & ml_mesh_all_levels_Needed_for_incremental/*NULL*/, 
                                      max_number_of_meshes, 
                                      convergence_rate_computation_method_Flag,
                                      volume_or_boundary_Flag,
@@ -410,12 +399,22 @@ int main(int argc, char** args) {
                                      my_solution_generation_has_equation_solve,
                                      my_solution_generation, 
                                      unknowns,
-                                     unknowns_analytical_functions_Needed_for_absolute,
+                                     unknowns_analytical_functions_Needed_for_absolute/* std::vector< Math::Function< double > * > () */,
                                      Solution_set_initial_conditions_with_analytical_sol,
                                      Solution_set_boundary_conditions_all_dirichlet_nonhomogeneous
                                     );
 
       
+    // // // // ======= Normal run (without convergence study) ========================
+    // // // my_solution_generation.run_on_single_level(ml_prob,
+    // // //                                            ml_mesh,
+    // // //                                            max_number_of_meshes,
+    // // //                                            unknowns,
+    // // //                                            unknowns_analytical_functions_Needed_for_absolute,
+    // // //                                            Solution_set_initial_conditions_with_analytical_sol,
+    // // //                                            Solution_set_boundary_conditions_all_dirichlet_nonhomogeneous,
+    // // //                                            my_solution_generation_has_equation_solve);
+    
     // ======= Convergence study - END ========================
 
     

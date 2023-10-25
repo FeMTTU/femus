@@ -1650,7 +1650,7 @@ namespace femus
 
     //BEGIN  Initialize the parameters for all processors, to be used when awake
 
-    vector < unsigned > solVIndex(_dim);
+    std::vector < unsigned > solVIndex(_dim);
     solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
     solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
     if (_dim == 3) solVIndex[2] = sol->GetIndex("W");      // get the position of "V" in the ml_sol object
@@ -1901,8 +1901,8 @@ namespace femus
       }
     }
 
-    vector < vector < double > >  solV(_dim);    // local solution
-    vector < vector < double > >  solVold(_dim);    // local solution
+    std::vector < std::vector < double > >  solV(_dim);    // local solution
+    std::vector < std::vector < double > >  solVold(_dim);    // local solution
 
     for (unsigned  k = 0; k < _dim; k++) {
       solV[k].resize(nDofsV);
@@ -1933,7 +1933,7 @@ namespace femus
 
 
   void Marker::updateVelocity(std::vector< std::vector <double> > & V,
-                              const vector < unsigned > &solVIndex, const unsigned & solVType,
+                              const std::vector < unsigned > &solVIndex, const unsigned & solVType,
                               std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
                               const bool & pcElemUpdate, Solution* sol)
   {

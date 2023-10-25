@@ -116,11 +116,11 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
 
 
 
-  vector <double> phi_u;     phi_u.reserve(max_size);
-  vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
-//   vector <double> phi_u_xx;  phi_u_xx.reserve(max_size * dim2);
+  std::vector <double> phi_u;     phi_u.reserve(max_size);
+  std::vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
+//   std::vector <double> phi_u_xx;  phi_u_xx.reserve(max_size * dim2);
  
-  vector < double >  sol_u;
+  std::vector < double >  sol_u;
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
@@ -133,8 +133,8 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
  //***************************************************
   const unsigned n_components_ctrl = ctrl_vars.size();
   
-  vector <double> phi_ctrl_bdry;  
-  vector <double> phi_ctrl_x_bdry; 
+  std::vector <double> phi_ctrl_bdry;  
+  std::vector <double> phi_ctrl_x_bdry; 
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
@@ -149,21 +149,21 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
   }
   
 
-   vector < double >  sol_ctrl;   sol_ctrl.reserve(max_size);
+   std::vector < double >  sol_ctrl;   sol_ctrl.reserve(max_size);
  //***************************************************
  //*************************************************** 
   
   
  //************** desired ****************************
  //***************************************************
-  vector <double> phi_udes;
-  vector <double> phi_udes_x;
+  std::vector <double> phi_udes;
+  std::vector <double> phi_udes_x;
 
     phi_udes.reserve(max_size);
     phi_udes_x.reserve(max_size * space_dim);
  
 
-  vector < double >  sol_udes;
+  std::vector < double >  sol_udes;
   sol_udes.reserve(max_size);
 
   double udes_gss = 0.;
@@ -435,9 +435,9 @@ static void compute_cost_functional_regularization_lifting_internal(const MultiL
  //*************************************************** 
   const unsigned n_components_state = state_vars.size();
 
-  vector <double> phi_u;
-  vector <double> phi_u_x;
-  vector <double> phi_u_xx;
+  std::vector <double> phi_u;
+  std::vector <double> phi_u_x;
+  std::vector <double> phi_u_xx;
 
   phi_u.reserve(max_size);
   phi_u_x.reserve(max_size * dim);
@@ -452,7 +452,7 @@ static void compute_cost_functional_regularization_lifting_internal(const MultiL
      solType_u[c]  = ml_sol->GetSolutionType(solIndex_u[c]);
    }
 
-  vector < double >  sol_u; // local solution
+  std::vector < double >  sol_u; // local solution
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
@@ -463,9 +463,9 @@ double u_x_gss = 0.;
  //*************************************************** 
   const unsigned n_components_ctrl = ctrl_vars.size();
 
-  vector <double> phi_ctrl;
-  vector <double> phi_ctrl_x;
-  vector <double> phi_ctrl_xx;
+  std::vector <double> phi_ctrl;
+  std::vector <double> phi_ctrl_x;
+  std::vector <double> phi_ctrl_xx;
 
   phi_ctrl.reserve(max_size);
   phi_ctrl_x.reserve(max_size * dim);
@@ -479,7 +479,7 @@ double u_x_gss = 0.;
   solType_ctrl[c] = ml_sol->GetSolutionType(solIndex_ctrl[c]);
   }
   
-  vector < double >  sol_ctrl; // local solution
+  std::vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(max_size);
   
   double ctrl_gss = 0.;
@@ -490,9 +490,9 @@ double u_x_gss = 0.;
   
  //********************* desired ********************* 
  //*************************************************** 
-  vector <double> phi_udes;
-  vector <double> phi_udes_x;
-  vector <double> phi_udes_xx;
+  std::vector <double> phi_udes;
+  std::vector <double> phi_udes_x;
+  std::vector <double> phi_udes_xx;
 
   phi_udes.reserve(max_size);
   phi_udes_x.reserve(max_size * dim);
@@ -503,7 +503,7 @@ double u_x_gss = 0.;
 //   solIndex_udes = ml_sol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
 //   unsigned solType_udes = ml_sol->GetSolutionType(solIndex_udes);    // get the finite element type for "state"
 
-  vector < double >  sol_udes; // local solution
+  std::vector < double >  sol_udes; // local solution
   sol_udes.reserve(max_size);
 
   double udes_gss = 0.;
@@ -694,7 +694,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
     const unsigned         iproc = msh->processor_id();                         // get the process_id (for parallel computation)
 
 //***************************************************
-    vector < vector < double > > coords_at_dofs(dim);   // local coordinates
+    std::vector < std::vector < double > > coords_at_dofs(dim);   // local coordinates
     unsigned solType_coords  = BIQUADR_FE;  // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
     for (unsigned i = 0; i < dim; i++) {
         coords_at_dofs[i].reserve(max_size);
@@ -710,9 +710,9 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 
 //******************** state ************************
 //***************************************************
-    vector <double> phi_u;    // local test function
-    vector <double> phi_u_x;  // local test function first order partial derivatives
-    vector <double> phi_u_xx; // local test function second order partial derivatives
+    std::vector <double> phi_u;    // local test function
+    std::vector <double> phi_u_x;  // local test function first order partial derivatives
+    std::vector <double> phi_u_xx; // local test function second order partial derivatives
 
     phi_u.reserve(max_size);
     phi_u_x.reserve(max_size * dim);
@@ -723,7 +723,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
     solIndex_u = ml_sol->GetIndex("state");                    // get the position of "state" in the ml_sol object
     unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);  // get the finite element type for "state"
 
-    vector < double >  sol_u; // local solution
+    std::vector < double >  sol_u; // local solution
     sol_u.reserve(max_size);
 
     double u_gss = 0.;
@@ -732,9 +732,9 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 
 //******************** control **********************
 //***************************************************
-    vector <double> phi_ctrl;    // local test function
-    vector <double> phi_ctrl_x;  // local test function first order partial derivatives
-    vector <double> phi_ctrl_xx; // local test function second order partial derivatives
+    std::vector <double> phi_ctrl;    // local test function
+    std::vector <double> phi_ctrl_x;  // local test function first order partial derivatives
+    std::vector <double> phi_ctrl_xx; // local test function second order partial derivatives
 
     phi_ctrl.reserve(max_size);
     phi_ctrl_x.reserve(max_size * dim);
@@ -744,7 +744,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
     solIndex_ctrl = ml_sol->GetIndex("control");
     unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
 
-    vector < double >  sol_ctrl; // local solution
+    std::vector < double >  sol_ctrl; // local solution
     sol_ctrl.reserve(max_size);
 
     double ctrl_gss = 0.;
@@ -755,15 +755,15 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 
 //********************* desired *********************
 //***************************************************
-    vector <double> phi_udes;    // local test function
-    vector <double> phi_udes_x;  // local test function first order partial derivatives
-    vector <double> phi_udes_xx; // local test function second order partial derivatives
+    std::vector <double> phi_udes;    // local test function
+    std::vector <double> phi_udes_x;  // local test function first order partial derivatives
+    std::vector <double> phi_udes_xx; // local test function second order partial derivatives
 
     phi_udes.reserve(max_size);
     phi_udes_x.reserve(max_size * dim);
     phi_udes_xx.reserve(max_size * dim2);
 
-    vector < double >  sol_udes; // local solution
+    std::vector < double >  sol_udes; // local solution
     sol_udes.reserve(max_size);
 
     double udes_gss = 0.;
@@ -798,7 +798,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
         }
 
         // elem average point
-        vector < double > elem_center(dim);
+        std::vector < double > elem_center(dim);
         for (unsigned j = 0; j < dim; j++) {
             elem_center[j] = 0.;
         }
@@ -961,8 +961,8 @@ static void compute_cost_functional_regularization_bdry_vec(const MultiLevelProb
  
   std::vector<double> normal_iqp(dim_offset_grad /*space_dim*/, 0.);
 
-  vector < vector < double > > coordX(dim);    // local coordinates
-  vector< vector < double> > coordX_bd(dim);
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
+  std::vector< std::vector < double> > coordX_bd(dim);
 
   for (unsigned  k = 0; k < dim; k++) { 
         coordX[k].reserve(max_size);
@@ -977,7 +977,7 @@ static void compute_cost_functional_regularization_bdry_vec(const MultiLevelProb
 
 //STATE######################################################################
   //velocity *******************************
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = ml_sol->GetIndex("u_0");
   solVIndex[1] = ml_sol->GetIndex("u_1");
 
@@ -985,16 +985,16 @@ static void compute_cost_functional_regularization_bdry_vec(const MultiLevelProb
 
   unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   
-  vector < vector < double > >  solV(dim);    // local solution
-  vector <double >  V_gss(dim, 0.);    //  solution
+  std::vector < std::vector < double > >  solV(dim);    // local solution
+  std::vector <double >  V_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(max_size);
   }
 
   
-  vector <double> phiV_gss;  // local test function
-  vector <double> phiV_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiV_gss;  // local test function
+  std::vector <double> phiV_x_gss; // local test function first order partial derivatives
 
   phiV_gss.reserve(max_size);
   phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
@@ -1003,23 +1003,23 @@ static void compute_cost_functional_regularization_bdry_vec(const MultiLevelProb
   
 
 //CONTROL_@bdry######################################################################
-  vector < unsigned > solVctrlIndex(dim);
+  std::vector < unsigned > solVctrlIndex(dim);
   solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
   solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
   if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
   
-  vector < vector < double > >  solVctrl(dim);    // local solution
-  vector < double >   Vctrl_gss(dim, 0.);    //  solution
+  std::vector < std::vector < double > >  solVctrl(dim);    // local solution
+  std::vector < double >   Vctrl_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
     solVctrl[k].reserve(max_size);
   }
 
   
-  vector <double> phiVctrl_gss_bd;  // local test function
-  vector <double> phiVctrl_x_gss_bd; // local test function first order partial derivatives
+  std::vector <double> phiVctrl_gss_bd;  // local test function
+  std::vector <double> phiVctrl_x_gss_bd; // local test function first order partial derivatives
 
   phiVctrl_gss_bd.reserve(max_size);
   phiVctrl_x_gss_bd.reserve(max_size * dim_offset_grad );
@@ -1039,15 +1039,15 @@ static void compute_cost_functional_regularization_bdry_vec(const MultiLevelProb
 
 
 // Vel_desired##################################################################
-  vector <double> phiVdes_gss;  // local test function
-  vector <double> phiVdes_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiVdes_gss;  // local test function
+  std::vector <double> phiVdes_x_gss; // local test function first order partial derivatives
 
   phiVdes_gss.reserve(max_size);
   phiVdes_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
 
-//   vector< vector < double > >  solVdes(dim);    // local solution
-  vector <double>  solVdes(dim,0.);
-  vector<double> Vdes_gss(dim, 0.);  
+//   std::vector< std::vector < double > >  solVdes(dim);    // local solution
+  std::vector <double>  solVdes(dim,0.);
+  std::vector<double> Vdes_gss(dim, 0.);  
   
 //  for (unsigned  k = 0; k < dim; k++) {
 //     solVdes[k].reserve(max_size);
@@ -1058,7 +1058,7 @@ static void compute_cost_functional_regularization_bdry_vec(const MultiLevelProb
 // Vel_desired##################################################################
 
   
-vector<double> integral(dim);
+std::vector<double> integral(dim);
 
 double  integral_target_alpha = 0.;
 
@@ -1170,7 +1170,7 @@ double integral_g_dot_n = 0.;
 // // // 	if ( femus::ctrl::Gamma_control::volume_elem_contains_a_Gamma_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
         
-    vector<double> normal_iqp(dim_offset_grad /*space_dim*/, 0.);
+    std::vector<double> normal_iqp(dim_offset_grad /*space_dim*/, 0.);
 	  
     for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
 
@@ -1190,8 +1190,8 @@ double integral_g_dot_n = 0.;
 //=================================================== 
 		
 //========= initialize gauss quantities on the boundary ============================================
-    vector < double >   Vctrl_bd_qp(dim, 0.);    //  solution@bdry
-    vector < vector < double > > gradVctrl_bd_qp(dim);
+    std::vector < double >   Vctrl_bd_qp(dim, 0.);    //  solution@bdry
+    std::vector < std::vector < double > > gradVctrl_bd_qp(dim);
       for (unsigned  k = 0; k < dim; k++) {
           gradVctrl_bd_qp[k].resize(dim_offset_grad /*space_dim*/);
           std::fill(gradVctrl_bd_qp[k].begin(), gradVctrl_bd_qp[k].end(), 0);
@@ -1348,7 +1348,7 @@ static void compute_cost_functional_regularization_lifting_internal_vec(
   constexpr unsigned int space_dim = 3;
   const unsigned int dim_offset_grad = /*dim*/  3  /*2*/    ;
  
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
 
   for (unsigned  k = 0; k < dim; k++) { 
     coordX[k].reserve(max_size);
@@ -1360,7 +1360,7 @@ static void compute_cost_functional_regularization_lifting_internal_vec(
   //geometry *******************************
 
 //STATE######################################################################
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = ml_sol->GetIndex("u_0");
   solVIndex[1] = ml_sol->GetIndex("u_1");
 
@@ -1368,16 +1368,16 @@ static void compute_cost_functional_regularization_lifting_internal_vec(
 
   unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   
-  vector < vector < double > >  solV(dim);    // local solution
-  vector <double >  V_gss(dim, 0.);    //  solution
+  std::vector < std::vector < double > >  solV(dim);    // local solution
+  std::vector <double >  V_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(max_size);
   }
 
   
-  vector <double> phiV_gss;  // local test function
-  vector <double> phiV_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiV_gss;  // local test function
+  std::vector <double> phiV_x_gss; // local test function first order partial derivatives
 
   phiV_gss.reserve(max_size);
   phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
@@ -1386,7 +1386,7 @@ static void compute_cost_functional_regularization_lifting_internal_vec(
   
 
 //CONTROL######################################################################
-  vector < unsigned > solVctrlIndex(dim);
+  std::vector < unsigned > solVctrlIndex(dim);
   solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
   solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
 
@@ -1394,16 +1394,16 @@ static void compute_cost_functional_regularization_lifting_internal_vec(
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);
   
-  vector < vector < double > >  solVctrl(dim);    // local solution
-  vector < double >   Vctrl_gss(dim, 0.);    //  solution
+  std::vector < std::vector < double > >  solVctrl(dim);    // local solution
+  std::vector < double >   Vctrl_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
     solVctrl[k].reserve(max_size);
   }
 
   
-  vector <double> phiVctrl_gss;  // local test function
-  vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiVctrl_gss;  // local test function
+  std::vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
 
   phiVctrl_gss.reserve(max_size);
   phiVctrl_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
@@ -1411,14 +1411,14 @@ static void compute_cost_functional_regularization_lifting_internal_vec(
 //CONTROL######################################################################
 
 // Vel_desired##################################################################
-  vector <double> phiVdes_gss;  // local test function
-  vector <double> phiVdes_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiVdes_gss;  // local test function
+  std::vector <double> phiVdes_x_gss; // local test function first order partial derivatives
 
   phiVdes_gss.reserve(max_size);
   phiVdes_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
 
-  vector <double>  solVdes(dim,0.);
-  vector<double> Vdes_gss(dim, 0.);  
+  std::vector <double>  solVdes(dim,0.);
+  std::vector<double> Vdes_gss(dim, 0.);  
   
 // Vel_desired##################################################################
 
@@ -1532,7 +1532,7 @@ double  integral_div_ctrl = 0.;
     elem_all[ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(ig, JacI_iqp, phiVdes_gss, phiVdes_x_gss,  boost::none, space_dim);
 
 	
-	  vector < vector < double > > gradVctrl_gss(dim);
+	  std::vector < std::vector < double > > gradVctrl_gss(dim);
       for (unsigned  k = 0; k < dim; k++) {
           gradVctrl_gss[k].resize(dim_offset_grad /*space_dim*/);
           std::fill(gradVctrl_gss[k].begin(), gradVctrl_gss[k].end(), 0);

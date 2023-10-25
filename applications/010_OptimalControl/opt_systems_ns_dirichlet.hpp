@@ -216,10 +216,10 @@ static void assemble_ns_dirichlet_control_pure_boundary(MultiLevelProblem& ml_pr
   constexpr unsigned int space_dim = 3;
   const unsigned int dim_offset_grad = /*dim*/  3  /*2*/    ;
  
-  vector< vector < double> > coordX(dim);
+  std::vector < std::vector < double> > coordX(dim);
   for(int i = 0; i < dim; i++) {   coordX[i].reserve(max_size);   }
   
-  vector< vector < double> > coordX_bd(/*space_*/dim);
+  std::vector < std::vector < double> > coordX_bd(/*space_*/dim);
   for(int i = 0; i < dim; i++) { coordX_bd[i].reserve(max_size);  }
  
   const unsigned dim_bdry = dim - 1;
@@ -260,10 +260,10 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   const int n_unknowns = unknowns.size();
     
 
-  vector < std::string > Solname_Mat(n_unknowns);  
-  vector < unsigned > SolPdeIndex(n_unknowns);
-  vector < unsigned > SolIndex_Mat(n_unknowns);  
-  vector < unsigned > SolFEType_Mat(n_unknowns);  
+  std::vector < std::string > Solname_Mat(n_unknowns);  
+  std::vector < unsigned > SolPdeIndex(n_unknowns);
+  std::vector < unsigned > SolIndex_Mat(n_unknowns);  
+  std::vector < unsigned > SolFEType_Mat(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -273,7 +273,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
     SolFEType_Mat[ivar]	= ml_sol->GetSolutionType(SolIndex_Mat[ivar]);
   }
 
-  vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
+  std::vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
   
 
   const double cost_functional_coeff = COST_FUNCTIONAL_COEFF;
@@ -287,16 +287,16 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   const unsigned int n_quantities = ml_sol->GetSolutionSize();
   
  //***************************************************
-    vector < std::string > Solname_quantities(n_quantities);
+    std::vector < std::string > Solname_quantities(n_quantities);
     
         for(unsigned ivar=0; ivar < Solname_quantities.size(); ivar++) {
             Solname_quantities[ivar] = ml_sol->GetSolutionName(ivar);
         }
  //***************************************************
  
-    vector < unsigned > SolIndex_quantities(n_quantities);      //should have Sol order
-    vector < unsigned > SolFEType_quantities(n_quantities);     //should have Sol order
-    vector < unsigned > Sol_n_el_dofs_quantities(n_quantities); //should have Sol order
+    std::vector < unsigned > SolIndex_quantities(n_quantities);      //should have Sol order
+    std::vector < unsigned > SolFEType_quantities(n_quantities);     //should have Sol order
+    std::vector < unsigned > Sol_n_el_dofs_quantities(n_quantities); //should have Sol order
     
     for(unsigned ivar=0; ivar < n_quantities; ivar++) {
         SolIndex_quantities[ivar]    = ml_sol->GetIndex        (Solname_quantities[ivar].c_str());
@@ -315,9 +315,9 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
   const int ineq_flag = INEQ_FLAG;
   const double c_compl = C_COMPL;
-  vector < vector < double/*int*/ > > sol_actflag(n_components_ctrl);   
-  vector < vector < double > > ctrl_lower(n_components_ctrl);           
-  vector < vector < double > > ctrl_upper(n_components_ctrl);           
+  std::vector < std::vector < double/*int*/ > > sol_actflag(n_components_ctrl);   
+  std::vector < std::vector < double > > ctrl_lower(n_components_ctrl);           
+  std::vector < std::vector < double > > ctrl_upper(n_components_ctrl);           
 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
       sol_actflag[c].reserve(max_size);
       ctrl_lower[c].reserve(max_size);
@@ -341,8 +341,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
   
   // ======= Solutions, Unknowns at dofs - BEGIN =======
-  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
-  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > Sol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
   for(int k = 0; k < n_unknowns; k++) {
     Sol_eldofs_Mat[k].reserve(max_size);
@@ -358,16 +358,16 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
 
   // ======= Solutions, Unknowns at quadrature points - BEGIN =======
-    vector < double > SolVAR_qp(n_unknowns);   //sol_V,P_gss_of_st,adj,ctrl_ie@quadraturepoints
-    vector < vector < double > > gradSolVAR_qp(n_unknowns);
+    std::vector < double > SolVAR_qp(n_unknowns);   //sol_V,P_gss_of_st,adj,ctrl_ie@quadraturepoints
+    std::vector < std::vector < double > > gradSolVAR_qp(n_unknowns);
     for(int k = 0; k < n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim_offset_grad /*space_dim*/);  }
 
 
-  vector < vector < double > >  sol_adj_x_vol_at_bdry_gss(dim);
+  std::vector < std::vector < double > >  sol_adj_x_vol_at_bdry_gss(dim);
   for (int ldim =0; ldim < dim; ldim++) sol_adj_x_vol_at_bdry_gss[ldim].reserve(max_size);
   
-  vector < double > grad_adj_dot_n_res_qp;
-  vector < double > grad_adj_dot_n_jac_qp;
+  std::vector < double > grad_adj_dot_n_res_qp;
+  std::vector < double > grad_adj_dot_n_jac_qp;
   grad_adj_dot_n_res_qp.reserve(max_size);
   grad_adj_dot_n_jac_qp.reserve(max_size);
   // ======= Solutions, Unknowns at quadrature points - END =======
@@ -400,8 +400,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   ml_prob.get_all_abstract_fe_multiple(elem_all);
   
   //==========================================================================================
-  vector < vector < double > > phi_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_gss_fe(NFE_FAMS);
   
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(max_size);
@@ -410,8 +410,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
    
    
   //boundary adjoint & ctrl shape functions  
-  vector < vector < double > > phi_bd_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_x_bd_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_bd_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_bd_gss_fe(NFE_FAMS);
 
     for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_bd_gss_fe[fe].reserve(max_size);
@@ -421,8 +421,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
     
     
   //bdry vol adj  evaluated at bdry points
-   vector < vector < double > > phi_vol_at_bdry_fe(NFE_FAMS);
-   vector < vector < double > > phi_x_vol_at_bdry_fe(NFE_FAMS);
+   std::vector < std::vector < double > > phi_vol_at_bdry_fe(NFE_FAMS);
+   std::vector < std::vector < double > > phi_x_vol_at_bdry_fe(NFE_FAMS);
 
     for(int fe=0; fe < NFE_FAMS; fe++) {  
          phi_vol_at_bdry_fe[fe].reserve(max_size);
@@ -432,8 +432,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
  //********************* bdry cont *******************
  //*************************************************** 
-  vector <double> phi_ctrl_bdry;  
-  vector <double> phi_ctrl_x_bdry; 
+  std::vector <double> phi_ctrl_bdry;  
+  std::vector <double> phi_ctrl_x_bdry; 
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
@@ -442,9 +442,9 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
     
   
   // ======= Equation, local - BEGIN =======
-  vector < vector < int > > L2G_dofmap_Mat(n_unknowns); 
-  vector < vector < double > > Res(n_unknowns);
-  vector < vector < vector < double > > > Jac(n_unknowns);
+  std::vector < std::vector < int > > L2G_dofmap_Mat(n_unknowns); 
+  std::vector < std::vector < double > > Res(n_unknowns);
+  std::vector < std::vector < std::vector < double > > > Jac(n_unknowns);
   
   for(int i = 0; i < n_unknowns; i++) {     
     L2G_dofmap_Mat[i].reserve(max_size);
@@ -462,8 +462,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 
   }
   
-  vector < vector < double > > Jac_outer(dim);
-  vector < double > Res_outer(1);
+  std::vector < std::vector < double > > Jac_outer(dim);
+  std::vector < double > Res_outer(1);
 
          for(int i = 0; i < dim; i++) {  Jac_outer[i].reserve(max_size); }
   // ======= Equation, local - END =======
@@ -757,7 +757,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
   if (does_iel_contain_a_bdry_control_face == 1) {
 	  
       double tau = 0.;
-      vector<double> normal_iqp(dim_offset_grad, 0);
+      std::vector <double> normal_iqp(dim_offset_grad, 0);
 	       
 	  // loop on faces of the current element
 
@@ -789,8 +789,8 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
 	  
 	
 //========= initialize gauss quantities on the boundary ============================================
-		vector < double >                      SolVAR_bd_qp(n_unknowns);
-		vector < vector < double > >       gradSolVAR_bd_qp(n_unknowns);
+	 std::vector < double >                      SolVAR_bd_qp(n_unknowns);
+	 std::vector < std::vector < double > >       gradSolVAR_bd_qp(n_unknowns);
 		for(int k=0; k<n_unknowns; k++) {  gradSolVAR_bd_qp[k].resize(dim_offset_grad /*space_dim*/);  }
 
 //========= gauss_loop boundary===============================================================
@@ -1047,7 +1047,7 @@ for(unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNum
  
  
 //geometry eval at gauss points - BEGIN ********************************
- vector < double > coordX_gss(dim, 0.);
+ std::vector < double > coordX_gss(dim, 0.);
  	for(unsigned k = 0; k <  dim; k++) {
 	  for(unsigned i = 0; i < geom_element_iel.get_coords_at_dofs_3d()[k].size(); i++) { 
          coordX_gss[k] += geom_element_iel.get_coords_at_dofs_3d()[k][i] * phi_gss_fe[ solType_coords ][i];
@@ -1079,7 +1079,7 @@ vector <double>  exact_stateVel(dim);
   mms_lid_driven::value_stateVel(coordX_gss, exact_stateVel);
 vector <double>  exact_lap_stateVel(dim);
   mms_lid_driven::laplace_stateVel(coordX_gss, exact_lap_stateVel);
-vector < vector < double > > exact_grad_stateVel(dim);
+vector < std::vector < double > > exact_grad_stateVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_stateVel[k].resize(dim);
     std::fill(exact_grad_stateVel[k].begin(), exact_grad_stateVel[k].end(), 0.);
@@ -1091,7 +1091,7 @@ vector <double>  exact_adjVel(dim);
   mms_lid_driven::value_adjVel(coordX_gss, exact_adjVel);
 vector <double>  exact_lap_adjVel(dim);
   mms_lid_driven::laplace_adjVel(coordX_gss, exact_lap_adjVel);
-vector < vector < double > > exact_grad_adjVel(dim);
+vector < std::vector < double > > exact_grad_adjVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_adjVel[k].resize(dim);
     std::fill(exact_grad_adjVel[k].begin(), exact_grad_adjVel[k].end(), 0.);
@@ -1159,8 +1159,8 @@ for (unsigned k = 0; k < dim; k++){
 	}	    
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
 	for (unsigned j = 0; j < nDofsV; j++) {
-		      vector < double > lap_jac_du_u(dim,0.);
-		      vector < double > adv_uold_nablaunew(dim,0.);
+		      std::vector < double > lap_jac_du_u(dim,0.);
+		      std::vector < double > adv_uold_nablaunew(dim,0.);
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
             for (unsigned  jdim = 0; jdim < dim_offset_grad /*space_dim*/; jdim++) { 
 		    lap_jac_du_u[kdim] += phi_x_gss_fe[SolFEType_Mat[kdim]][i * dim_offset_grad /*space_dim*/ + jdim]*phi_x_gss_fe[SolFEType_Mat[kdim]][j * dim_offset_grad/*space_dim*/ + jdim];
@@ -1254,8 +1254,8 @@ for (unsigned k = 0; k < dim; k++){
 
 //DIAG BLOCK delta_adjoint - adjoint---------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsVadj; j++) {
-		    vector < double > lap_jac_dadj_adj(dim,0.);
-		    vector < double > adv_uold_nablaphiadj_uadjnew(dim, 0.);
+		    std::vector < double > lap_jac_dadj_adj(dim,0.);
+		    std::vector < double > adv_uold_nablaphiadj_uadjnew(dim, 0.);
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
             for (unsigned  jdim = 0; jdim < dim_offset_grad /*space_dim*/; jdim++) { 
 		  lap_jac_dadj_adj[kdim] += phi_x_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][i * dim_offset_grad /*space_dim*/ + jdim] * phi_x_gss_fe[SolFEType_Mat[kdim + adj_pos_begin]][j * dim_offset_grad /*space_dim*/ + jdim];
@@ -1587,7 +1587,7 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //geometry *******************************
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
 
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
 
@@ -1606,7 +1606,7 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
   const int ctrl_pos_begin   = 2*(dim+1);
   const int theta_index = press_type_pos + ctrl_pos_begin;
   
-  vector < std::string > Solname_Mat(n_unknowns);  // const char Solname_Mat[4][8] = {"u_0","u_1","u_2","u_p"};
+  std::vector < std::string > Solname_Mat(n_unknowns);  // const char Solname_Mat[4][8] = {"u_0","u_1","u_2","u_p"};
   Solname_Mat              [state_pos_begin+0] =                "u_0";
   Solname_Mat              [state_pos_begin+1] =                "u_1";
   if (dim == 3) Solname_Mat[state_pos_begin+2] =                "u_2";
@@ -1622,8 +1622,8 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
   if (dim == 3) Solname_Mat[ctrl_pos_begin + 2] =              "ctrl_2";
   Solname_Mat              [ctrl_pos_begin + press_type_pos] = "theta";
   
-  vector < unsigned > SolIndex_Mat(n_unknowns);  
-  vector < unsigned > SolFEType_Mat(n_unknowns);  
+  std::vector < unsigned > SolIndex_Mat(n_unknowns);  
+  std::vector < unsigned > SolFEType_Mat(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -1631,13 +1631,13 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
     SolFEType_Mat[ivar]	= ml_sol->GetSolutionType(SolIndex_Mat[ivar]);
   }
 
-  vector < double > Sol_n_el_dofs(n_unknowns);
+  std::vector < double > Sol_n_el_dofs(n_unknowns);
   
   //==========================================================================================
   // velocity ************************************
-  vector < vector < double > > phi_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_xx_gss_fe(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(max_size);
@@ -1652,11 +1652,11 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
   
   
   //----------- dofs ------------------------------
-  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
-  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > Sol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
-  vector < vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
-  vector < vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
+  std::vector < std::vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
 
 
   for(int k = 0; k < n_unknowns; k++) {
@@ -1668,17 +1668,17 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
   }
 
   //------------ at quadrature points ---------------------
-  vector < double > SolVAR_qp(n_unknowns);
-  vector < double > SolVAR_coarser_prol_qp(n_unknowns);
-  vector < vector < double > > gradSolVAR_qp(n_unknowns);
-  vector < vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
+  std::vector < double > SolVAR_qp(n_unknowns);
+  std::vector < double > SolVAR_coarser_prol_qp(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_qp(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
   for(int k = 0; k < n_unknowns; k++) {
       gradSolVAR_qp[k].reserve(max_size);  
       gradSolVAR_coarser_prol_qp[k].reserve(max_size);  
   }
       
-   vector  < double > l2norm ( pure_boundary_norms::no_of_l2_norms ,0.);
-  vector  < double > seminorm ( pure_boundary_norms::no_of_h1_norms ,0.);
+   std::vector < double > l2norm ( pure_boundary_norms::no_of_l2_norms ,0.);
+  std::vector < double > seminorm ( pure_boundary_norms::no_of_h1_norms ,0.);
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1700,7 +1700,7 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
     }
     
       // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
@@ -2023,7 +2023,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   constexpr unsigned int space_dim = 3;
   const unsigned int dim_offset_grad = dim  /*3*/  /*2*/    ;
  
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
 
   for (unsigned  k = 0; k < dim; k++) { 
     coordX[k].reserve(max_size);
@@ -2032,21 +2032,21 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
 
 //STATE######################################################################
   //velocity *******************************
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = ml_sol->GetIndex("u_0");
   solVIndex[1] = ml_sol->GetIndex("u_1");
 
   if (dim == 3) solVIndex[2] = ml_sol->GetIndex("u_2");
 
   unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("u_0");
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("u_1");
 
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("u_2");
   
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-   vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
+  std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
+   std::vector < std::vector < adept::adouble > > aResV(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(max_size);
@@ -2054,9 +2054,9 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   }
 
   
-  vector <double> phiV_gss;  // local test function
-  vector <double> phiV_x_gss; // local test function first order partial derivatives
-  vector <double> phiV_xx_gss; // local test function second order partial derivatives
+  std::vector <double> phiV_gss;  // local test function
+  std::vector <double> phiV_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiV_xx_gss; // local test function second order partial derivatives
 
   phiV_gss.reserve(max_size);
   phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
@@ -2073,8 +2073,8 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("p_u");    // get the position of "p_u" in the pdeSys object
 
-  vector < adept::adouble >  solP; // local solution
-  vector< adept::adouble > aResP; // local redidual vector
+  std::vector < adept::adouble >  solP; // local solution
+  std::vector < adept::adouble > aResP; // local redidual vector
   
   solP.reserve(max_size);
   aResP.reserve(max_size);
@@ -2085,21 +2085,21 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   
 //ADJOINT######################################################################
   //velocity *******************************
-  vector < unsigned > solVadjIndex(dim);
+  std::vector < unsigned > solVadjIndex(dim);
   solVadjIndex[0] = ml_sol->GetIndex("adj_0");
   solVadjIndex[1] = ml_sol->GetIndex("adj_1");
 
   if (dim == 3) solVadjIndex[2] = ml_sol->GetIndex("adj_2");
 
   unsigned solVadjType = ml_sol->GetSolutionType(solVadjIndex[0]);
- vector < unsigned > solVPdeadjIndex(dim);
+ std::vector < unsigned > solVPdeadjIndex(dim);
   solVPdeadjIndex[0] = mlPdeSys->GetSolPdeIndex("adj_0");
   solVPdeadjIndex[1] = mlPdeSys->GetSolPdeIndex("adj_1");
 
   if (dim == 3) solVPdeadjIndex[2] = mlPdeSys->GetSolPdeIndex("adj_2");
   
-  vector < vector < adept::adouble > >  solVadj(dim);
-   vector< vector < adept::adouble > > aResVadj(dim);
+  std::vector < std::vector < adept::adouble > >  solVadj(dim);
+   std::vector < std::vector < adept::adouble > > aResVadj(dim);
    
  for (unsigned  k = 0; k < dim; k++) {
     solVadj[k].reserve(max_size);
@@ -2107,9 +2107,9 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   }
 
   
-  vector <double> phiVadj_gss;  // local test function
-  vector <double> phiVadj_x_gss; // local test function first order partial derivatives
-  vector <double> phiVadj_xx_gss; // local test function second order partial derivatives
+  std::vector <double> phiVadj_gss;  // local test function
+  std::vector <double> phiVadj_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiVadj_xx_gss; // local test function second order partial derivatives
 
   phiVadj_gss.reserve(max_size);
   phiVadj_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
@@ -2125,8 +2125,8 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   unsigned solPPdeadjIndex;
   solPPdeadjIndex = mlPdeSys->GetSolPdeIndex("p_adj");    // get the position of "p_adj" in the pdeSys object
 
-  vector < adept::adouble >  solPadj; // local solution
-  vector< adept::adouble > aResPadj; // local redidual vector
+  std::vector < adept::adouble >  solPadj; // local solution
+  std::vector < adept::adouble > aResPadj; // local redidual vector
   
   solPadj.reserve(max_size);
   aResPadj.reserve(max_size);
@@ -2138,21 +2138,21 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   
 //CONTROL######################################################################
   //velocity *******************************
-  vector < unsigned > solVctrlIndex(dim);
+  std::vector < unsigned > solVctrlIndex(dim);
   solVctrlIndex[0] = ml_sol->GetIndex("ctrl_0");
   solVctrlIndex[1] = ml_sol->GetIndex("ctrl_1");
 
   if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("ctrl_2");
 
   unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);
- vector < unsigned > solVPdectrlIndex(dim);
+ std::vector < unsigned > solVPdectrlIndex(dim);
  
   solVPdectrlIndex[0] = mlPdeSys->GetSolPdeIndex("ctrl_0");
   solVPdectrlIndex[1] = mlPdeSys->GetSolPdeIndex("ctrl_1");
   if (dim == 3) solVPdectrlIndex[2] = mlPdeSys->GetSolPdeIndex("ctrl_2");
   
-  vector < vector < adept::adouble > >  solVctrl(dim);    // local solution
-   vector< vector < adept::adouble > > aResVctrl(dim);    // local redidual vector
+  std::vector < std::vector < adept::adouble > >  solVctrl(dim);    // local solution
+   std::vector < std::vector < adept::adouble > > aResVctrl(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
     solVctrl[k].reserve(max_size);
@@ -2160,9 +2160,9 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   }
 
   
-  vector <double> phiVctrl_gss;  // local test function
-  vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
-  vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
+  std::vector <double> phiVctrl_gss;  // local test function
+  std::vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
+  std::vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
 
   phiVctrl_gss.reserve(max_size);
   phiVctrl_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
@@ -2179,8 +2179,8 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   unsigned solPPdectrlIndex;
   solPPdectrlIndex = mlPdeSys->GetSolPdeIndex("p_ctrl");    // get the position of "p_ctrl" in the pdeSys object
 
-  vector < adept::adouble >  solPctrl; // local solution
-  vector< adept::adouble > aResPctrl; // local redidual vector
+  std::vector < adept::adouble >  solPctrl; // local solution
+  std::vector < adept::adouble > aResPctrl; // local redidual vector
   
   solPctrl.reserve(max_size);
   aResPctrl.reserve(max_size);
@@ -2198,13 +2198,13 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   
   
   
-  vector< int > L2G_dofmap_Mat; // local to global pdeSys dofs
+  std::vector < int > L2G_dofmap_Mat; // local to global pdeSys dofs
   L2G_dofmap_Mat.reserve(3 *(dim + 1) *max_size);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(3 *(dim + 1) *max_size);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve(3* (dim + 1) *max_size * 3*(dim + 1) *max_size);
 
   JAC->zero(); // Set to zero all the entries of the Global Matrix
@@ -2375,9 +2375,9 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
         phiP_gss = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
 	
-        vector < adept::adouble > solV_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolV_gss(dim);
-        vector < double > coordX_gss(dim, 0.);
+        std::vector < adept::adouble > solV_gss(dim, 0);
+        std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
+        std::vector < double > coordX_gss(dim, 0.);
 
         for (unsigned  k = 0; k < dim; k++) {
           gradSolV_gss[k].resize(dim_offset_grad);
@@ -2419,8 +2419,8 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
         phiPadj_gss = msh->_finiteElement[ielGeom][solPadjType]->GetPhi(ig);
 
 	
-        vector < adept::adouble > solVadj_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolVadj_gss(dim);
+        std::vector < adept::adouble > solVadj_gss(dim, 0);
+        std::vector < std::vector < adept::adouble > > gradSolVadj_gss(dim);
 
         for (unsigned  k = 0; k < dim; k++) {
           gradSolVadj_gss[k].resize(dim_offset_grad /*space_dim*/);
@@ -2456,8 +2456,8 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
         phiPctrl_gss = msh->_finiteElement[ielGeom][solPctrlType]->GetPhi(ig);
 
 	
-        vector < adept::adouble > solVctrl_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolVctrl_gss(dim);
+        std::vector < adept::adouble > solVctrl_gss(dim, 0);
+        std::vector < std::vector < adept::adouble > > gradSolVctrl_gss(dim);
 
         for (unsigned  k = 0; k < dim; k++) {
           gradSolVctrl_gss[k].resize(dim_offset_grad /*space_dim*/);
@@ -2489,7 +2489,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
 //state values--------------------
 vector <double>  exact_stateVel(dim, 0.);
    mms_state_control::value_stateVel(coordX_gss, exact_stateVel);
-vector < vector < double > > exact_grad_stateVel(dim);
+vector < std::vector < double > > exact_grad_stateVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_stateVel[k].resize(dim);
     std::fill(exact_grad_stateVel[k].begin(), exact_grad_stateVel[k].end(), 0.);
@@ -2503,7 +2503,7 @@ vector <double> exact_grad_statePress(dim, 0.);
 //control values-------------------------------
 vector <double>  exact_ctrlVel(dim);
    mms_state_control::value_ctrlVel(coordX_gss, exact_ctrlVel);
-vector < vector < double > > exact_grad_ctrlVel(dim);
+vector < std::vector < double > > exact_grad_ctrlVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_ctrlVel[k].resize(dim);
     std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
@@ -2561,9 +2561,9 @@ for (unsigned k = 0; k < dim; k++){
 
         // *** phiV_i loop ***
         for (unsigned i = 0; i < nDofsV; i++) {
-          vector < adept::adouble > NSV_gss(dim, 0.);
-	  vector < adept::adouble > NSVadj_gss(dim, 0.);
-	  vector < adept::adouble > NSVctrl_gss(dim, 0.);
+          std::vector < adept::adouble > NSV_gss(dim, 0.);
+	  std::vector < adept::adouble > NSVadj_gss(dim, 0.);
+	  std::vector < adept::adouble > NSVctrl_gss(dim, 0.);
 	  
           for (unsigned  kdim = 0; kdim < dim; kdim++) {
 	      
@@ -2747,7 +2747,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_nonAD(MultiLevelProbl
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
-  vector< vector < double> > coordX(dim);
+  std::vector < std::vector < double> > coordX(dim);
   for(int i = 0; i < dim; i++) { coordX[i].reserve(max_size);  }
 
   constexpr unsigned int space_dim = 3;
@@ -2774,9 +2774,9 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
   const int n_unknowns = unknowns.size();
  
   
-  vector < unsigned > SolPdeIndex(n_unknowns);
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  std::vector < unsigned > SolPdeIndex(n_unknowns);
+  std::vector < unsigned > SolIndex(n_unknowns);  
+  std::vector < unsigned > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -2785,7 +2785,7 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-  vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
+  std::vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
   
   
       const unsigned int n_components_ctrl = dim;
@@ -2805,9 +2805,9 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
 
   const int ineq_flag = INEQ_FLAG;
   const double c_compl = C_COMPL;
-  vector < vector < double/*int*/ > > sol_actflag(n_components_ctrl);   
-  vector < vector < double > > ctrl_lower(n_components_ctrl);           
-  vector < vector < double > > ctrl_upper(n_components_ctrl);           
+  std::vector < std::vector < double/*int*/ > > sol_actflag(n_components_ctrl);   
+  std::vector < std::vector < double > > ctrl_lower(n_components_ctrl);           
+  std::vector < std::vector < double > > ctrl_upper(n_components_ctrl);           
 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
       sol_actflag[c].reserve(max_size);
       ctrl_lower[c].reserve(max_size);
@@ -2828,8 +2828,8 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
   
   
   // ======= Solutions, Unknowns at dofs - BEGIN =======
-  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
-  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > Sol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
   for(int k=0; k<n_unknowns; k++) {
     Sol_eldofs_Mat[k].reserve(max_size);
@@ -2838,8 +2838,8 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
   // ======= Solutions, Unknowns at dofs - END =======
 
   // ======= Solutions, Unknowns at quadrature points - BEGIN =======
-  vector < double > SolVAR_qp(n_unknowns);
-    vector < vector < double > > gradSolVAR_qp(n_unknowns);
+  std::vector < double > SolVAR_qp(n_unknowns);
+    std::vector < std::vector < double > > gradSolVAR_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim_offset_grad /*space_dim*/);  }
   // ======= Solutions, Unknowns at quadrature points - END =======
       
@@ -2860,8 +2860,8 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
   ml_prob.get_all_abstract_fe(elem_all);
   
   //==========================================================================================
-  vector < vector < double > > phi_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_gss_fe(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(max_size);
@@ -2872,9 +2872,9 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
 
   
   // ======= Equation, local - BEGIN =======
-  vector < vector < int > > L2G_dofmap_Mat(n_unknowns); 
-  vector < vector < double > > Res(n_unknowns);
-  vector < vector < vector < double > > > Jac(n_unknowns);
+  std::vector < std::vector < int > > L2G_dofmap_Mat(n_unknowns); 
+  std::vector < std::vector < double > > Res(n_unknowns);
+  std::vector < std::vector < std::vector < double > > > Jac(n_unknowns);
  
   for(int i = 0; i < n_unknowns; i++) {     
     L2G_dofmap_Mat[i].reserve(max_size);
@@ -3036,7 +3036,7 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
 	}  
  //end unknowns eval at gauss points ********************************
 	
-      vector < double > coordX_gss(dim, 0.);
+      std::vector < double > coordX_gss(dim, 0.);
  	for(unsigned k = 0; k <  dim; k++) {
 	  for(unsigned i = 0; i < Sol_n_el_dofs_Mat_vol[k]; i++) {
          coordX_gss[k] += coordX[k][i] * phi_gss_fe[ SolFEType[k] ][i];
@@ -3068,7 +3068,7 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
 //state values--------------------
 vector <double>  exact_stateVel(dim, 0.);
    mms_state_control::value_stateVel(coordX_gss, exact_stateVel);
-vector < vector < double > > exact_grad_stateVel(dim);
+vector < std::vector < double > > exact_grad_stateVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_stateVel[k].resize(dim);
     std::fill(exact_grad_stateVel[k].begin(), exact_grad_stateVel[k].end(), 0.);
@@ -3082,7 +3082,7 @@ vector <double> exact_grad_statePress(dim, 0.);
 //control values-------------------------------
 vector <double>  exact_ctrlVel(dim);
    mms_state_control::value_ctrlVel(coordX_gss, exact_ctrlVel);
-vector < vector < double > > exact_grad_ctrlVel(dim);
+vector < std::vector < double > > exact_grad_ctrlVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_ctrlVel[k].resize(dim);
     std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
@@ -3894,7 +3894,7 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //geometry *******************************
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
 
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
 
@@ -3913,7 +3913,7 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
   const int adj_pos_begin   = dim+1;
   const int ctrl_pos_begin   = 2*(dim+1);
   
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"u_0","u_1","u_2","p_u"};
+  std::vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"u_0","u_1","u_2","p_u"};
   Solname              [state_pos_begin+0] =                "u_0";
   Solname              [state_pos_begin+1] =                "u_1";
   if (dim == 3) Solname[state_pos_begin+2] =                "u_2";
@@ -3929,8 +3929,8 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
   if (dim == 3) Solname[ctrl_pos_begin + 2] =              "ctrl_2";
   Solname              [ctrl_pos_begin + press_type_pos] = "p_ctrl";
   
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  std::vector < unsigned > SolIndex(n_unknowns);  
+  std::vector < unsigned > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -3938,12 +3938,12 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-  vector < double > Sol_n_el_dofs_Mat_vol(n_unknowns);
+  std::vector < double > Sol_n_el_dofs_Mat_vol(n_unknowns);
   
   //==========================================================================================
   // velocity ************************************
-  vector < vector < double > > phi_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_gss_fe(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_gss_fe(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(max_size);
@@ -3957,11 +3957,11 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
   
   
   //----------- dofs ------------------------------
-  vector < vector < double > > Sol_eldofs_Mat(n_unknowns);
-  vector < vector < double > > gradSol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > Sol_eldofs_Mat(n_unknowns);
+  std::vector < std::vector < double > > gradSol_eldofs_Mat(n_unknowns);
   
-  vector < vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
-  vector < vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
+  std::vector < std::vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
 
 
   for(int k = 0; k < n_unknowns; k++) {
@@ -3973,17 +3973,17 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
   }
 
   //------------ at quadrature points ---------------------
-  vector < double > SolVAR_qp(n_unknowns);
-  vector < double > SolVAR_coarser_prol_qp(n_unknowns);
-  vector < vector < double > > gradSolVAR_qp(n_unknowns);
-  vector < vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
+  std::vector < double > SolVAR_qp(n_unknowns);
+  std::vector < double > SolVAR_coarser_prol_qp(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_qp(n_unknowns);
+  std::vector < std::vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
   for(int k = 0; k < n_unknowns; k++) {
       gradSolVAR_qp[k].reserve(max_size);  
       gradSolVAR_coarser_prol_qp[k].reserve(max_size);  
   }
       
-  vector  < double > l2norm ( lifting_internal_norms::no_of_l2_norms ,0.);
-  vector  < double > seminorm ( lifting_internal_norms::no_of_h1_norms ,0.);
+  std::vector < double > l2norm ( lifting_internal_norms::no_of_l2_norms ,0.);
+  std::vector < double > seminorm ( lifting_internal_norms::no_of_h1_norms ,0.);
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -4005,7 +4005,7 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
     }
     
       // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {

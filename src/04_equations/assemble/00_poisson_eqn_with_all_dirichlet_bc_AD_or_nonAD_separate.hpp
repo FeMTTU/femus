@@ -70,21 +70,21 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
 
   unsigned soluPdeIndex = mlPdeSys->GetSolPdeIndex(  unknowns[0]._name.c_str() );    // get the position of "u" in the pdeSys object
 
-  vector < double >  solu; // local solution
+  std::vector < double >  solu; // local solution
   solu.reserve(maxSize);
 
-  vector < double >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(maxSize);
+  std::vector < double >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(maxSize);
 
   
-  vector < vector < double > > x (dim);    // local coordinates
+  std::vector < std::vector < double > > x (dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BI/TRIQUADRATIC)
 
   for (unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
   
   double weight = 0.; // gauss point weight
 
@@ -92,13 +92,13 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
   phi_x.reserve(maxSize * dim);
   
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(maxSize);
 
-  vector < double > Jac; //local Jacobian matrix
+  std::vector < double > Jac; //local Jacobian matrix
   Jac.reserve(maxSize * maxSize);
   
-  vector< int > l2GMap; // local to global mapping
+  std::vector < int > l2GMap; // local to global mapping
   l2GMap.reserve(maxSize);
   
 
@@ -161,9 +161,9 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
       
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
     
-      vector < double > gradSolu_gss(dim, 0.);
-      vector < double > gradSolu_exact_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
+      std::vector < double > gradSolu_gss(dim, 0.);
+      std::vector < double > gradSolu_exact_gss(dim, 0.);
+      std::vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
        
@@ -297,33 +297,33 @@ void AssemblePoissonProblem_old_fe_quadrature_AD(MultiLevelProblem& ml_prob,
 
   unsigned soluPdeIndex = mlPdeSys->GetSolPdeIndex(  unknowns[0]._name.c_str() );    // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution
+  std::vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
-  vector < double >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(maxSize);
+  std::vector < double >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(maxSize);
 
-  vector < vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
 
   double weight = 0.; // gauss point weight
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
 
-  vector< adept::adouble > aRes; // local redidual vector
+  std::vector < adept::adouble > aRes; // local redidual vector
   aRes.reserve(maxSize);
 
-  vector< int > l2GMap; // local to global mapping
+  std::vector < int > l2GMap; // local to global mapping
   l2GMap.reserve(maxSize);
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(maxSize);
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve(maxSize * maxSize);
 
   RES->zero(); // Set to zero all the entries of the Global Residual Vector
@@ -383,10 +383,10 @@ void AssemblePoissonProblem_old_fe_quadrature_AD(MultiLevelProblem& ml_prob,
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      vector < adept::adouble > gradSolu_gss(dim, 0.);
-      vector < adept::adouble > gradSolu_exact_gss(dim, 0.);
+      std::vector < adept::adouble > gradSolu_gss(dim, 0.);
+      std::vector < adept::adouble > gradSolu_exact_gss(dim, 0.);
       
-      vector < double > x_gss(dim, 0.);
+      std::vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
 

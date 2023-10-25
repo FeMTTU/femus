@@ -80,7 +80,7 @@ namespace femus {
   }
 
   unsigned LinearEquation::GetSystemDof(const unsigned &soltype, const unsigned &kkindex_sol,
-                                        const unsigned &i, const unsigned &iel, const vector < vector <unsigned> > &otherKKoffset) const {
+                                        const unsigned &i, const unsigned &iel, const std::vector < std::vector <unsigned> > &otherKKoffset) const {
 
     //unsigned soltype =  _SolType[index_sol];
     unsigned idof = _msh->GetSolutionDof(i, iel, soltype);
@@ -188,9 +188,9 @@ namespace femus {
   
   
 //--------------------------------------------------------------------------------
-  void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,
-                               const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other,
-                               const unsigned &other_gridn, vector <bool> &SparsityPattern_other) {
+  void LinearEquation::InitPde(const std::vector <unsigned> &SolPdeIndex_other, const  std::vector <int> &SolType_other,
+                               const std::vector <char*> &SolName_other, std::vector <NumericVector*> *Bdc_other,
+                               const unsigned &other_gridn, std::vector <bool> &SparsityPattern_other) {
       
     _SolPdeIndex = SolPdeIndex_other;
     _gridn = other_gridn;
@@ -416,7 +416,7 @@ namespace femus {
 
     const int max_size = static_cast< int >(ceil(pow(3, dim)));
 
-    vector < vector < int > > dofsVAR(_SolPdeIndex.size());
+    std::vector < std::vector < int > > dofsVAR(_SolPdeIndex.size());
 
     for(int i = 0; i < _SolPdeIndex.size(); i++) {
       dofsVAR[i].reserve(max_size);
@@ -434,15 +434,15 @@ namespace femus {
     int IndexEnd  = KKoffset[KKIndex.size() - 1][this_proc];
     int owned_dofs    = IndexEnd - IndexStart;  //all dofs of all vars of this_proc
 
-    vector < std::map < int, bool > > BlgToMe_d(owned_dofs); //belong to me
-    vector < std::map < int, bool > > BlgToMe_o(owned_dofs); //belong to me
+    std::vector < std::map < int, bool > > BlgToMe_d(owned_dofs); //belong to me
+    std::vector < std::map < int, bool > > BlgToMe_o(owned_dofs); //belong to me
     std::map < int, std::map <int, bool > > DnBlgToMe_o;     //don't belong to me 
     std::map < int, std::map <int, bool > > DnBlgToMe_d;     //don't belong to me
 
     for(int kel = _msh->_elementOffset[this_proc]; kel < _msh->_elementOffset[this_proc + 1]; kel++) {
 
       short int kelt = _msh->GetElementType(kel);
-      vector < int > nve(_SolPdeIndex.size());
+      std::vector < int > nve(_SolPdeIndex.size());
       
       for(int i = 0; i < _SolPdeIndex.size(); i++) {
         nve[i] = _msh->GetElementDofNumber(kel, _SolType[_SolPdeIndex[i]]);

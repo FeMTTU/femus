@@ -406,21 +406,21 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
   unsigned eflagIndex = mlSol->GetIndex("eflag");
   unsigned nflagIndex = mlSol->GetIndex("nflag");
 
-  vector < unsigned >  nodeFlag; // local solution
+  std::vector < unsigned >  nodeFlag; // local solution
 
-  vector < vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
+  std::vector < std::vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
   double weight; // gauss point weight
 
   std::vector< std::vector< adept::adouble > > aResD1(dim); // local redidual vector
   std::vector< std::vector< adept::adouble > > aResD2(dim); // local redidual vector
 
-  vector< unsigned > l2GMap; // local to global mapping
-  vector< double > Res; // local redidual vector
-  vector < double > Jac;
+  std::vector < unsigned > l2GMap; // local to global mapping
+  std::vector < double > Res; // local redidual vector
+  std::vector < double > Jac;
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual
@@ -898,8 +898,8 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   std::vector < std::vector<double> >  x(dim);
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
   double weight; // gauss point weight
 
   std::vector < std::vector < std::vector <double > > > aP(3);

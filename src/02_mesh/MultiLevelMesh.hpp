@@ -89,6 +89,10 @@ public:
     /** Read the coarse-mesh from an input file (call the right reader from the extension) */
     void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
     
+    void ReadCoarseMesh(const std::string mesh_file);
+
+    void ReadCoarseMesh(const std::string mesh_file, const double Lref, const bool read_groups, const bool read_boundary_groups);
+
     void ReadCoarseMeshFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
 
     void ReadCoarseMeshOnlyFileReading(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
@@ -103,9 +107,11 @@ public:
                                const ElemType type,
                                const char GaussOrder[]
                              );
+    
+//==== Coarse level - END  ======== 
    
 //====================
-//==== Coarse level, Geom Elem ======== 
+//==== Coarse level, Geom Elem - BEGIN ======== 
 //====================
 private:
     
@@ -113,8 +119,29 @@ private:
   
     /** Flag to denote what Geometric Elements are in the given Mesh */
     std::vector <bool> _finiteElementGeometryFlag;
+//==== Coarse level, Geom Elem - END ========
     
-//==== Coarse level - END  ======== 
+//====================
+//==== Coarse level, Group Info - BEGIN  ======== 
+public:
+    
+  std::vector< std::vector< GroupInfo > >  _group_info_all_meshes;
+  
+  void  set_group_info(const std::string relative_path_to_input_folder);
+//==== Coarse level, Group Info - END ======== 
+  
+  
+//====================
+//==== Coarse level, File input - BEGIN  ======== 
+//====================
+public:
+    
+    
+    std::string  _mesh_filename; //
+
+    
+//==== Coarse level, File input - END  ======== 
+
     
     
 //====================
@@ -188,6 +215,30 @@ private:
 
 //==== Multilevel - END ======== 
     
+
+//====================
+//==== Multilevel - File output - BEGIN  ======== 
+//====================
+public:
+
+    /** Writer */
+    Writer* GetWriter() const {return _writer; }
+
+    /**  Writer */
+    void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
+    
+private:
+    
+    void InitializeWriter();
+    
+    void DeleteWriter();
+    
+    /** MultilevelMesh  writer */
+    Writer* _writer;
+    
+//==== Multilevel - File output - END  ======== 
+    
+    
 //============
 //==== FE - BEGIN ======== 
 //============
@@ -213,50 +264,8 @@ private:
   
 //==== FE - END ======== 
   
-//====================
-//==== Mesh Group Info - BEGIN  ======== 
-public:
-    
-  std::vector< std::vector< GroupInfo > >  _group_info_all_meshes;
-  
-  void  set_group_info(const std::string relative_path_to_input_folder);
-//==== Mesh Group Info - END ======== 
-  
-  
-//====================
-//==== File input - BEGIN  ======== 
-//====================
-public:
     
     
-    std::string  _mesh_filename; //
-
-    
-//==== File input - END  ======== 
-
-    
-    
-//====================
-//==== File output - BEGIN  ======== 
-//====================
-public:
-
-    /** Writer */
-    Writer* GetWriter() const {return _writer; }
-
-    /**  Writer */
-    void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
-    
-private:
-    
-    void InitializeWriter();
-    
-    void DeleteWriter();
-    
-    /** MultilevelMesh  writer */
-    Writer* _writer;
-    
-//==== File output - END  ======== 
     
 //============================
 //==== Domain (optional) - BEGIN ======== 

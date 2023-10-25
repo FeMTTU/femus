@@ -605,7 +605,7 @@ void DenseMatrix::_multiply_blas(const DenseMatrixBase& other,
   // scalar multiplying C, which is the original matrix.
   double beta  = 0.;
   // Storage for the result
-  std::vector  <double> result (result_size);
+  std::vector <double> result (result_size);
   // Finally ready to call the BLAS
   BLASgemm_(transa, transb, &M, &N, &K, &alpha, &(A->_val[0]), &LDA, &(B->_val[0]), &LDB, &beta, &result[0], &LDC);
 

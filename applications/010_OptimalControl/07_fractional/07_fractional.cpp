@@ -354,47 +354,47 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector < double > > x1(dim);    // local coordinates
-  vector < vector < double > > x2(dim);    // local coordinates
+  std::vector < std::vector < double > > x1(dim);    // local coordinates
+  std::vector < std::vector < double > > x2(dim);    // local coordinates
   for(unsigned k = 0; k < dim; k++) {
     x1[k].reserve(maxSize);
     x2[k].reserve(maxSize);
   }
 
-  vector < double > phi;
-  vector < double > phi_x;
+  std::vector < double > phi;
+  std::vector < double > phi_x;
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
 
-  vector< int > l2GMap1; // local to global mapping
-  vector< int > l2GMap2; // local to global mapping
+  std::vector < int > l2GMap1; // local to global mapping
+  std::vector < int > l2GMap2; // local to global mapping
   l2GMap1.reserve(maxSize);
   l2GMap2.reserve(maxSize);
 
 //   Local matrices and rhs for laplacian and mass matrix
-  vector < double > KK_local;  KK_local.reserve(maxSize * maxSize);
-  vector < double > Res_local; Res_local.reserve(maxSize);
+  std::vector < double > KK_local;  KK_local.reserve(maxSize * maxSize);
+  std::vector < double > Res_local; Res_local.reserve(maxSize);
 
 //   Local matrices and rhs for adaptive quadrature
-  vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
-  vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
+  std::vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
+  std::vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
 
-  vector < double > KK_local_mixed_num;   KK_local_mixed_num.reserve(maxSize * maxSize);
-  vector < double > Res_local_mixed_num;  Res_local_mixed_num.reserve(maxSize);
+  std::vector < double > KK_local_mixed_num;   KK_local_mixed_num.reserve(maxSize * maxSize);
+  std::vector < double > Res_local_mixed_num;  Res_local_mixed_num.reserve(maxSize);
 
 //   Non local matrices and vectors for H^s laplacian operator
-//   vector< double >         Res_nonlocal;
+//   std::vector < double >         Res_nonlocal;
 //   Res_nonlocal.reserve(maxSize);  // local residual vector
-  vector< double >         Res_nonlocalI;  Res_nonlocalI.reserve(maxSize);
-  vector< double >         Res_nonlocalJ;  Res_nonlocalJ.reserve(maxSize);
-//   vector < double > CClocal;
+  std::vector < double >         Res_nonlocalI;  Res_nonlocalI.reserve(maxSize);
+  std::vector < double >         Res_nonlocalJ;  Res_nonlocalJ.reserve(maxSize);
+//   std::vector < double > CClocal;
 //   CClocal.reserve(maxSize * maxSize);
 
-  vector < double > CC_nonlocal_II;  CC_nonlocal_II.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_IJ;  CC_nonlocal_IJ.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_JI;  CC_nonlocal_JI.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_JJ;  CC_nonlocal_JJ.reserve(maxSize * maxSize);
+  std::vector < double > CC_nonlocal_II;  CC_nonlocal_II.reserve(maxSize * maxSize);
+  std::vector < double > CC_nonlocal_IJ;  CC_nonlocal_IJ.reserve(maxSize * maxSize);
+  std::vector < double > CC_nonlocal_JI;  CC_nonlocal_JI.reserve(maxSize * maxSize);
+  std::vector < double > CC_nonlocal_JJ;  CC_nonlocal_JJ.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero();
@@ -493,9 +493,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
       const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
 
-      vector < vector < double > > xg2(jgNumber);
-      vector <double> weight2(jgNumber);
-      vector < vector <double> > phi2(jgNumber);  // local test function
+      std::vector < std::vector < double > > xg2(jgNumber);
+      std::vector <double> weight2(jgNumber);
+      std::vector < std::vector <double> > phi2(jgNumber);  // local test function
       std::vector< double > solY(jgNumber, 0.);
 
 // ---- jg stored computations ---- 
@@ -529,7 +529,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       std::vector <int> bd_face(0);
       unsigned nFaces;
       //std::vector <unsigned> faceDofs(n_face, 0);
-      //vector < vector <unsigned> > inode(n_face);
+      //vector < std::vector <unsigned> > inode(n_face);
       if(iproc == kproc) {
         for(unsigned jface = 0; jface < msh->GetElementFaceNumber(jel); jface++) {
           int faceIndex = el->GetBoundaryIndex(jel, jface);
@@ -633,7 +633,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         
         // *** ig initialization - BEGIN  ***
         double weight1;
-        vector < double > phi1;  // local test function
+        std::vector < double > phi1;  // local test function
 
         double solX = 0.;
         std::vector<double> sol_u_x(space_dim);
@@ -643,7 +643,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
      //**** Adaptive preparation - BEGIN ********  
         double weight3;
-        vector < double > phi3;
+        std::vector < double > phi3;
 
         std::vector < std::vector < std::vector <double > > > aP(3);
         if(Nsplit > 0) {
@@ -661,7 +661,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
 
           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-          vector < double > xg1(dim, 0.);
+          std::vector < double > xg1(dim, 0.);
           solX = 0.;
 
           for(unsigned i = 0; i < nDof1; i++) {
@@ -801,7 +801,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
 
-                    vector < double > xg3(dim, 0.);
+                    std::vector < double > xg3(dim, 0.);
 
                     for(unsigned i = 0; i < nDof1; i++) {
                       for(unsigned k = 0; k < dim; k++) {
@@ -880,7 +880,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
 
 
-                    vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
+                    std::vector < std::vector <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
                     for(int k = 0; k < dim; k++) {
                       faceCoordinates[k].resize(faceDofs);
                     }
@@ -891,7 +891,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                       }
                     }
                     const unsigned div = N_DIV_FACE_OF_FACE_FOR_UNBOUNDED_INTEGRAL;
-                    vector  < vector  <  double> > interpCoordinates(dim);
+                    std::vector < std::vector <  double> > interpCoordinates(dim);
                     for(int k = 0; k < dim; k++) {
                       interpCoordinates[k].resize(div + 1); // set "4" as a parameter
                     }
@@ -909,7 +909,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                       double delta_teta = teta2 - teta1;
 
 
-                      vector <double> mid_point;
+                      std::vector <double> mid_point;
                       mid_point.resize(dim);
                       for(unsigned k = 0; k < dim; k++) {
                         mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
@@ -984,7 +984,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
               unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
 
-              vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
+              std::vector < std::vector <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
               for(int k = 0; k < dim; k++) {
                 faceCoordinates[k].resize(faceDofs);
               }
@@ -996,7 +996,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               }
               
               const unsigned div = N_DIV_FACE_OF_FACE_FOR_UNBOUNDED_INTEGRAL;
-              vector  < vector  <  double> > interpCoordinates(dim);
+              std::vector < std::vector <  double> > interpCoordinates(dim);
               for(int k = 0; k < dim; k++) {
                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter
               }
@@ -1013,7 +1013,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                 double delta_teta = teta2 - teta1;
 
-                vector <double> mid_point;
+                std::vector <double> mid_point;
                 mid_point.resize(dim);
                 for(unsigned k = 0; k < dim; k++) {
                   mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
@@ -1216,15 +1216,15 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector < double > > x1(dim);    // local coordinates
-  vector < vector < double > > x2(dim);    // local coordinates
+  std::vector < std::vector < double > > x1(dim);    // local coordinates
+  std::vector < std::vector < double > > x2(dim);    // local coordinates
   for(unsigned k = 0; k < dim; k++) {
     x1[k].reserve(maxSize);
     x2[k].reserve(maxSize);
   }
 
-  vector < double > phi;
-  vector < double > phi_x;
+  std::vector < double > phi;
+  std::vector < double > phi_x;
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
@@ -1370,9 +1370,9 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
       const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
 
-      vector < vector < double > > xg2(jgNumber);
-      vector <double> weight2(jgNumber);
-      vector < vector <double> > phi2(jgNumber);  // local test function
+      std::vector < std::vector < double > > xg2(jgNumber);
+      std::vector <double> weight2(jgNumber);
+      std::vector < std::vector <double> > phi2(jgNumber);  // local test function
       std::vector< double > solY(jgNumber, 0.);
 
       for(unsigned jg = 0; jg < jgNumber; jg++) {
@@ -1429,7 +1429,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 //         const unsigned igNumber = ml_prob.GetQuadratureRule(ielGeom1).GetGaussPointsNumber();
 
         double weight1;
-        vector < double > phi1;  // local test function
+        std::vector < double > phi1;  // local test function
         double  solX = 0.;
 
         for(unsigned ig = 0; ig < igNumber; ig++) {
@@ -1437,7 +1437,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
 
           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-          vector < double > xg1(dim, 0.);
+          std::vector < double > xg1(dim, 0.);
           solX = 0.;
 
           for(unsigned i = 0; i < nDof1; i++) {

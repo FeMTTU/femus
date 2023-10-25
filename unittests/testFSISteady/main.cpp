@@ -375,37 +375,37 @@ void AssembleMatrixResFSI(MultiLevelProblem& ml_prob) {
   elem*		myel		=  mymsh->el;
   SparseMatrix*	myKK		=  myLinEqSolver->_KK;
   NumericVector* myRES		=  myLinEqSolver->_RES;
-  vector <int>&	myKKIndex	=  myLinEqSolver->KKIndex;
+  std::vector <int>&	myKKIndex	=  myLinEqSolver->KKIndex;
 
   const unsigned dim = mymsh->GetDimension();
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
   // local objects
-  vector<double> SolVAR(2 * dim + 1);
-  vector<vector<double> > GradSolVAR(2 * dim);
+  std::vector <double> SolVAR(2 * dim + 1);
+  std::vector < std::vector <double> > GradSolVAR(2 * dim);
 
   for (int i = 0; i < 2 * dim; i++) {
     GradSolVAR[i].resize(dim);
   }
 
-  vector<vector<double> > GradSolhatVAR(dim);
+  std::vector < std::vector <double> > GradSolhatVAR(dim);
 
   for (int i = 0; i < dim; i++) {
     GradSolhatVAR[i].resize(dim);
   }
 
-  vector <int> metis_node1;
-  vector <int> metis_node2;
-  vector <bool> solidmark;
+  std::vector <int> metis_node1;
+  std::vector <int> metis_node2;
+  std::vector <bool> solidmark;
 
-  vector <double > phi;
-  vector <double > phi_hat;
+  std::vector <double > phi;
+  std::vector <double > phi_hat;
 
-  vector <double> gradphi;
-  vector <double> gradphi_hat;
+  std::vector <double> gradphi;
+  std::vector <double> gradphi_hat;
 
-  vector <double> nablaphi;
-  vector <double> nablaphi_hat;
+  std::vector <double> nablaphi;
+  std::vector <double> nablaphi_hat;
 
   metis_node1.reserve(max_size);
   metis_node2.reserve(max_size);
@@ -425,22 +425,22 @@ void AssembleMatrixResFSI(MultiLevelProblem& ml_prob) {
   double Weight_nojac = 0.;
   double Weight_hat = 0.;
 
-  vector <vector < double> > vx(dim);
-  vector <vector < double> > vx_hat(dim);
+  std::vector < std::vector < double> > vx(dim);
+  std::vector < std::vector < double> > vx_hat(dim);
 
   for (int i = 0; i < dim; i++) {
     vx[i].reserve(max_size);
     vx_hat[i].reserve(max_size);
   }
 
-  vector< vector< double > > Rhs(2 * dim + 1);
-  vector< vector< vector< double > > > B(2 * dim + 1);
+  std::vector < std::vector < double > > Rhs(2 * dim + 1);
+  std::vector < std::vector < std::vector < double > > > B(2 * dim + 1);
 
   for (int i = 0; i < 2 * dim + 1; i++) {
     B[i].resize(2 * dim + 1);
   }
 
-  vector< vector< int > > dofsVAR(2 * dim + 1);
+  std::vector < std::vector < int > > dofsVAR(2 * dim + 1);
 
   // ------------------------------------------------------------------------
   // Physical parameters
@@ -500,9 +500,9 @@ void AssembleMatrixResFSI(MultiLevelProblem& ml_prob) {
   //----------------------------------------------------------------------------------
   //variable-name handling
   const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "P"};
-  vector <unsigned> indexVAR(2 * dim + 1);
-  vector <unsigned> indVAR(2 * dim + 1);
-  vector <unsigned> SolType(2 * dim + 1);
+  std::vector <unsigned> indexVAR(2 * dim + 1);
+  std::vector <unsigned> indVAR(2 * dim + 1);
+  std::vector <unsigned> SolType(2 * dim + 1);
 
   for (unsigned ivar = 0; ivar < dim; ivar++) {
     indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);

@@ -19,9 +19,9 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  0.;
         solGrad[1]  =  0.;
@@ -107,9 +107,9 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -180,9 +180,9 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
         solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
@@ -214,9 +214,9 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
         solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
@@ -248,7 +248,7 @@ public:
 
     std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -303,10 +303,10 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 //   std::cout << "Redo calc"; @todo
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -358,11 +358,11 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
   std::cout << "Redo calc";
   
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
         solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
         solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
    
@@ -398,10 +398,10 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 //   std::cout << "Redo calc";  @todo
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
@@ -444,9 +444,9 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
         solGrad[1]  = -pi * cos(pi * x[0]) * sin(pi * x[1]);
@@ -487,9 +487,9 @@ public:
     }
 
 
-    vector < type >  gradient(const std::vector < type >& x) const {
+    std::vector < type >  gradient(const std::vector < type >& x) const {
 
-        vector < type > solGrad(x.size(), 0.);
+        std::vector < type > solGrad(x.size(), 0.);
 
         solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
         solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );

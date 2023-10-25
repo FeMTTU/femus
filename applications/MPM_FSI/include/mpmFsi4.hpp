@@ -69,31 +69,31 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   // data
   unsigned iproc  = msh->processor_id();
 
-  vector< vector< adept::adouble > > solD(dim);      // local solution (displacement)
-  vector< vector< adept::adouble > > solV(dim);      // local solution (velocity)
-  vector< adept::adouble > solP;     // local solution (velocity)
+  std::vector < std::vector < adept::adouble > > solD(dim);      // local solution (displacement)
+  std::vector < std::vector < adept::adouble > > solV(dim);      // local solution (velocity)
+  std::vector < adept::adouble > solP;     // local solution (velocity)
 
-  vector< vector< double > > solDOld(dim);      // local solution (displacement)
-  vector< vector< double > > solVOld(dim);
+  std::vector < std::vector < double > > solDOld(dim);      // local solution (displacement)
+  std::vector < std::vector < double > > solVOld(dim);
 
-  vector< double > rhs;    // local redidual vector
-  vector< vector< adept::adouble > > aRhsD(dim);     // local redidual vector
-  vector< vector< adept::adouble > > aRhsV(dim);     // local redidual vector
-  vector< adept::adouble > aRhsP;    // local redidual vector
-  vector < double > Jac;
+  std::vector < double > rhs;    // local redidual vector
+  std::vector < std::vector < adept::adouble > > aRhsD(dim);     // local redidual vector
+  std::vector < std::vector < adept::adouble > > aRhsV(dim);     // local redidual vector
+  std::vector < adept::adouble > aRhsP;    // local redidual vector
+  std::vector < double > Jac;
 
   std::vector <unsigned> sysDofsAll;
 
-  vector < bool > solidFlag;
-  vector < bool > solidFlag1;
-  vector < double > phi;
-  vector < double > phiHat;
-  vector < double > phiP;
-  vector < adept::adouble> gradPhi;
-  vector < double > gradPhiHat;
+  std::vector < bool > solidFlag;
+  std::vector < bool > solidFlag1;
+  std::vector < double > phi;
+  std::vector < double > phiHat;
+  std::vector < double > phiP;
+  std::vector < adept::adouble> gradPhi;
+  std::vector < double > gradPhiHat;
 
-  vector <vector < adept::adouble> > vx(dim);   //vx is coordX in assembly of ex30
-  vector <vector < double> > vxHat(dim);
+  std::vector < std::vector < adept::adouble> > vx(dim);   //vx is coordX in assembly of ex30
+  std::vector < std::vector < double> > vxHat(dim);
 
   adept::adouble weight;
   double weightHat;
@@ -118,10 +118,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   //variable-name handling
   const char varname[10][5] = {"DX", "DY", "DZ", "VX", "VY", "VZ"};
 
-  vector <unsigned> indexSolD(dim);
-  vector <unsigned> indexSolV(dim);
-  vector <unsigned> indexPdeD(dim);
-  vector <unsigned> indexPdeV(dim);
+  std::vector <unsigned> indexSolD(dim);
+  std::vector <unsigned> indexSolV(dim);
+  std::vector <unsigned> indexPdeD(dim);
+  std::vector <unsigned> indexPdeV(dim);
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = mlSol->GetIndex(&varname[ivar][0]);
     indexSolV[ivar] = mlSol->GetIndex(&varname[ivar + 3][0]);
@@ -236,14 +236,14 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielt][solType]->Jacobian(vxHat, ig, weightHat, phiHat, gradPhiHat);
       msh->_finiteElement[ielt][solType]->Jacobian(vx, ig, weight, phi, gradPhi);
 
-      vector < adept::adouble > solVg(dim, 0.);
-      vector < adept::adouble > solVgOld(dim, 0.);
+      std::vector < adept::adouble > solVg(dim, 0.);
+      std::vector < adept::adouble > solVgOld(dim, 0.);
 
-      vector < adept::adouble > solDg(dim, 0.);
-      vector < adept::adouble > solDgOld(dim, 0.);
+      std::vector < adept::adouble > solDg(dim, 0.);
+      std::vector < adept::adouble > solDgOld(dim, 0.);
 
-      vector < vector < adept::adouble > > gradSolDgHat(dim);
-      vector < vector < adept::adouble > > gradSolVg(dim);
+      std::vector < std::vector < adept::adouble > > gradSolDgHat(dim);
+      std::vector < std::vector < adept::adouble > > gradSolVg(dim);
 
       for(unsigned  k = 0; k < dim; k++) {
         gradSolDgHat[k].assign(dim, 0);
@@ -351,8 +351,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
         // displacement and velocity
         //BEGIN evaluates SolDp at the particle iSmarker
-        vector<adept::adouble> SolDp(dim, 0.);
-        vector<vector < adept::adouble > > gradSolDpHat(dim);
+        std::vector <adept::adouble> SolDp(dim, 0.);
+        std::vector < std::vector < adept::adouble > > gradSolDpHat(dim);
         for(int k = 0; k < dim; k++) {
           gradSolDpHat[k].assign(dim, 0.);
         }
@@ -438,7 +438,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
 //         if(MPMmaterial < nDofs) {
 // 
-//           vector<vector < adept::adouble > > gradSolVp(dim);
+//           std::vector < std::vector < adept::adouble > > gradSolVp(dim);
 //           for(int j = 0; j < dim; j++) {
 //             gradSolVp[j].assign(dim, 0.);
 //             for(unsigned i = 0; i < nDofs; i++) {
@@ -481,14 +481,14 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
         msh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradPhi);
         //BEGIN evaluates SolDp at the particle iFmarker
-        vector<adept::adouble> solDp(dim, 0.);
-        vector<double> solDpOld(dim, 0.);
-        vector<adept::adouble> solVp(dim, 0.);
-        vector<double> solVpOld(dim, 0.);
+        std::vector <adept::adouble> solDp(dim, 0.);
+        std::vector <double> solDpOld(dim, 0.);
+        std::vector <adept::adouble> solVp(dim, 0.);
+        std::vector <double> solVpOld(dim, 0.);
 
 
-        vector<vector < adept::adouble > > gradSolVp(dim);
-        vector<vector < adept::adouble > > gradSolDp(dim);
+        std::vector < std::vector < adept::adouble > > gradSolVp(dim);
+        std::vector < std::vector < adept::adouble > > gradSolDp(dim);
 
         for(int j = 0; j < dim; j++) {
           gradSolVp[j].assign(dim, 0.);
@@ -564,8 +564,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 //
 //
 //
-//         vector<vector < adept::adouble > > gradSolVp (dim);
-//         vector<vector < adept::adouble > > gradSolDpHat (dim);
+//         std::vector < std::vector < adept::adouble > > gradSolVp (dim);
+//         std::vector < std::vector < adept::adouble > > gradSolDpHat (dim);
 //
 //         for (int j = 0; j < dim; j++) {
 //           gradSolVp[j].assign (dim, 0.);
@@ -780,24 +780,24 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & solidLine, Li
   unsigned iproc  = msh->processor_id();
 
   // local objects
-  vector< vector < double > > solD(dim);
-  vector< vector < double > > solDOld(dim);
-  vector< vector < double > > gradSolDHat(dim);
+  std::vector < std::vector < double > > solD(dim);
+  std::vector < std::vector < double > > solDOld(dim);
+  std::vector < std::vector < double > > gradSolDHat(dim);
 
   for(int k = 0; k < dim; k++) {
     gradSolDHat[k].resize(dim);
   }
 
-  vector < double > phiHat;
-  vector < double > gradPhiHat;
+  std::vector < double > phiHat;
+  std::vector < double > gradPhiHat;
 
-  vector <vector < double> > vxHat(dim);   //vx is coordX in assembly of ex30
+  std::vector < std::vector < double> > vxHat(dim);   //vx is coordX in assembly of ex30
 
   double weightHat;
 
   //variable-name handling
   const char varname[9][3] = {"DX", "DY", "DZ"};
-  vector <unsigned> indexSolD(dim);
+  std::vector <unsigned> indexSolD(dim);
   unsigned solType = mlSol->GetSolutionType(&varname[0][0]);
 
   for(unsigned k = 0; k < dim; k++) {
@@ -1125,8 +1125,8 @@ void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line &
 
   //BEGIN loop on solid particles
 
-  vector <vector < double> > vxHat(dim);
-  vector < unsigned > idof;
+  std::vector < std::vector < double> > vxHat(dim);
+  std::vector < unsigned > idof;
 
   std::vector<Marker*> particlesSolid = solidLine.GetParticles();
   std::vector<unsigned> markerOffset = solidLine.GetMarkerOffset();
@@ -1320,22 +1320,22 @@ void ProjectGridVelocity(MultiLevelSolution &mlSol) {
   unsigned iproc  = msh->processor_id();
   unsigned nprocs = msh->n_processors();
 
-  vector< vector< double > > solV(dim);      // local solution (velocity)
+  std::vector < std::vector < double > > solV(dim);      // local solution (velocity)
 
-  vector< bool > nodeFlag;     // local solution (velocity)
-  vector< unsigned > idof;     // local solution (velocity)
+  std::vector < bool > nodeFlag;     // local solution (velocity)
+  std::vector < unsigned > idof;     // local solution (velocity)
 
-  vector < double > phi;
-  vector <vector < double> > vx(dim);   //vx is coordX in assembly of ex30
-  vector <vector < double> > xp;
+  std::vector < double > phi;
+  std::vector < std::vector < double> > vx(dim);   //vx is coordX in assembly of ex30
+  std::vector < std::vector < double> > xp;
 
 
   //variable-name handling
   const char varname[10][5] = {"DX", "DY", "DZ", "VX", "VY", "VZ"};
 
 
-  vector <unsigned> indexSolD(dim);
-  vector <unsigned> indexSolV(dim);
+  std::vector <unsigned> indexSolD(dim);
+  std::vector <unsigned> indexSolV(dim);
 
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = mlSol.GetIndex(&varname[ivar][0]);
@@ -1477,7 +1477,7 @@ void ProjectGridVelocity(MultiLevelSolution &mlSol) {
   std::cout << "COUNTER = " << counterAll << " " << msh->GetTotalNumberOfDofs(solType) << std::endl;
 
   idof.resize(c0);
-  vector< double > xp0(c0 * dim);
+  std::vector < double > xp0(c0 * dim);
 
   unsigned c1 = 0;
   for(unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
@@ -1491,7 +1491,7 @@ void ProjectGridVelocity(MultiLevelSolution &mlSol) {
     }
   }
 
-  vector< double > xp1;
+  std::vector < double > xp1;
   for(unsigned jproc = 0; jproc < nprocs; jproc++) {
     c1 = c0;
     MPI_Bcast(&c1, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);

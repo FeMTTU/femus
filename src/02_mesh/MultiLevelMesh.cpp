@@ -33,6 +33,7 @@
 namespace femus {
 
 
+//==== Constr/Destr - BEGIN ======== 
 
 MultiLevelMesh::~MultiLevelMesh() {  
     ///@todo these delete's should not be in the Destructor, because the new's are not in the constructor, 
@@ -64,6 +65,404 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
 
 }
 
+
+
+//---------------------------------------------------------------------------------------------------
+MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,
+                               const unsigned short &igridr,
+                               const char mesh_file[], 
+                               const char GaussOrder[], 
+                               const double Lref,
+                               bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) )  :
+    _gridn0(igridn)
+    {
+        
+
+    InitializeGeomElemFlag();
+  
+    InitializeFETypes();
+  
+    InitializeWriter();
+    
+
+    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
+
+    std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
+    
+    _level0[0]->ReadCoarseMesh(mesh_file, Lref, _finiteElementGeometryFlag);
+
+    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
+
+    
+    //finer meshes **************
+    RefineMesh(igridn, igridr, SetRefinementFlag);
+  
+
+}
+
+
+//==== Constr/Destr - END ======== 
+
+
+
+
+//==== Basic - BEGIN  ========
+
+
+/** Get the dimension of the problem (1D, 2D, 3D) from one Mesh (level 0 always exists, after initialization) */
+const unsigned MultiLevelMesh::GetDimension() const {
+      return _level0[LEVEL_AT_WHICH_YOU_PICK_THE_DIM]->GetDimension();
+    }
+    
+    
+//---------------------------------------------------------------------------------------------
+
+void MultiLevelMesh::PrintInfo() {
+    
+    std::cout << " Number of uniform mesh refinement: " << _gridn << std::endl;
+    for(int i = 0; i < _gridn; i++) {
+      _level[i]->PrintInfo();
+    }
+    
+}
+
+
+
+//==== Basic - END  ========
+
+
+
+//==== Coarse level - BEGIN  ========
+
+
+void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref)
+{
+    
+  const bool read_groups = true; //by default groups are read
+  const bool read_boundary_groups = true; //by default boundary groups are read
+  
+    ReadCoarseMesh(mesh_file, GaussOrder, Lref, read_groups, read_boundary_groups);
+   
+}
+
+void MultiLevelMesh::ReadCoarseMeshFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
+{
+    
+    _gridn0 = 1;
+
+    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
+    
+    std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
+    
+    _level0[0]->ReadCoarseMeshBeforePartitioning(mesh_file, Lref, _finiteElementGeometryFlag, read_groups, read_boundary_groups);
+
+}
+
+void MultiLevelMesh::ReadCoarseMeshOnlyFileReading(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
+{
+    
+    _gridn0 = 1;
+
+    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
+    
+    std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
+    
+    _level0[0]->ReadCoarseMesh(mesh_file, Lref, _finiteElementGeometryFlag, read_groups, read_boundary_groups);
+
+}
+
+
+void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups)
+{
+    
+   ReadCoarseMeshOnlyFileReading(mesh_file, Lref, read_groups, read_boundary_groups);
+
+    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
+
+    PrepareNewLevelsForRefinement();
+    
+}
+
+
+void MultiLevelMesh::ReadCoarseMesh(const std::string mesh_file, const double Lref, const bool read_groups, const bool read_boundary_groups) {
+  
+  ReadCoarseMeshFileReadingBeforePartitioning(mesh_file.c_str(), Lref, read_groups, read_boundary_groups);
+    
+  GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
+ 
+  BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+  
+  PrepareNewLevelsForRefinement();
+
+  }
+  
+
+void MultiLevelMesh::ReadCoarseMesh(const std::string mesh_file) {
+
+  const double Lref = 1.; //by default we do not scale the coordinates
+  const bool read_groups = true; //by default groups are read
+  const bool read_boundary_groups = true; //by default boundary groups are read
+
+  ReadCoarseMesh(mesh_file, Lref, read_groups, read_boundary_groups);
+
+}
+
+
+
+void MultiLevelMesh::GenerateCoarseBoxMesh(
+        const unsigned int nx, const unsigned int ny, const unsigned int nz,
+        const double xmin, const double xmax,
+        const double ymin, const double ymax,
+        const double zmin, const double zmax,
+        const ElemType type, const char GaussOrder[])
+{
+    
+    _gridn0 = 1;
+
+    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
+    
+    std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
+
+    _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type, _finiteElementGeometryFlag);
+
+    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
+
+    PrepareNewLevelsForRefinement();
+    
+}
+
+
+//==== Coarse level - END  ========
+
+
+//==== Coarse level, Geom Elem - BEGIN ========
+
+ void MultiLevelMesh::InitializeGeomElemFlag() {
+     
+    _finiteElementGeometryFlag.resize(N_GEOM_ELS, false);
+     
+ }
+ 
+
+//==== Coarse level, Geom Elem - END ======== 
+
+
+
+//==== Coarse level, Group Info - BEGIN  ========
+
+   void  MultiLevelMesh::set_group_info(const std::string relative_path_to_input_folder) {
+      
+  
+  MED_IO  med_io(*GetLevel(0)/* coarse or whatever?*/);
+  
+  const std::string mesh_file_location = Files::get_input_file_with_prefix(_mesh_filename, relative_path_to_input_folder)/*relative_path_to_input_folder + DEFAULT_INPUTDIR + ml_sol->_mlMesh->_mesh_filename*/;
+  ;
+  
+    hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
+
+    const std::vector< std::string > mesh_menus = med_io.get_mesh_names(file_id);
+         
+    
+        std::vector< std::vector< GroupInfo > >  group_info_all_meshes(mesh_menus.size());  
+
+    for (unsigned m = 0; m < group_info_all_meshes.size(); m++)   {
+        
+            group_info_all_meshes[m] = med_io.get_all_groups_per_mesh(file_id, mesh_menus[m]);
+     }    
+ 
+     _group_info_all_meshes = group_info_all_meshes;
+ 
+  }
+
+//==== Coarse level, Group Info - END  ========
+
+
+
+//==== Multilevel - BEGIN ======== 
+
+
+void MultiLevelMesh::RefineMesh( const unsigned short &igridn, 
+                                 const unsigned short &igridr,
+                                 bool (* SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) )
+{
+
+    _gridn0 = igridn;
+
+    _level0.resize(_gridn0);
+
+    //totally refined meshes **************
+    RefineMeshesTotally(igridr);
+
+    
+    //partially refined meshes **************
+    RefineMeshesPartially(igridr, SetRefinementFlag);
+    
+
+   // copy _level0 into the new levels _level **************
+    CopyLevelsZeroIntoNewLevels();
+
+}
+
+  
+  
+  void MultiLevelMesh::RefineMeshesTotally(const unsigned short &igridr) {
+      
+    for (unsigned i = 1; i < igridr; i++) {
+      MeshRefinement meshcoarser(*_level0[i-1u]);
+      meshcoarser.FlagAllElementsToBeRefined();
+
+      _level0[i] = new Mesh();
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i, _level0[i-1], _finiteElement);
+    }
+      
+      
+  }
+  
+
+   void MultiLevelMesh::RefineMeshesPartially(const unsigned short &igridr,
+                                              bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) ) {
+       
+ 
+      if(SetRefinementFlag == NULL) {
+
+    }
+    else{
+      Mesh::_SetRefinementFlag = SetRefinementFlag;
+      Mesh::_IsUserRefinementFunctionDefined = true;
+    }
+    
+    //Here there are two alternatives:
+    //When igridn is STRICTLY LARGER THAN igridr, one must provide a refinement flag function, ... 
+    //When igridn is SMALLER THAN OR EQUAL igridr, this loop is ignored
+    for (unsigned i = igridr; i < _gridn0; i++) {
+        
+      if(Mesh::_IsUserRefinementFunctionDefined == false) {
+        std::cout << "Set Refinement Region flag is not defined! " << std::endl;
+        exit(1);
+      }
+      else {
+	MeshRefinement meshcoarser(*_level0[i-1u]);
+        meshcoarser.FlagElementsToBeRefined();
+	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
+      }
+      
+      _level0[i] = new Mesh();
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+    
+    }
+    
+    
+
+   }
+   
+   
+   void MultiLevelMesh::CopyLevelsZeroIntoNewLevels() {
+       
+   _gridn = _gridn0;
+    _level.resize(_gridn);
+    for(int i = 0; i < _gridn; i++) {
+        _level[i] = _level0[i];
+     }
+    
+   }
+   
+   
+   
+    void MultiLevelMesh::InitializeLevelsZeroAndAllocateCoarse(const unsigned short gridn) {
+  
+    _level0.resize(gridn);
+
+    //coarse mesh
+    _level0[0] = new Mesh();
+        
+    }
+    
+    
+    
+   void MultiLevelMesh::DeleteLevelsZero() {
+       
+    for (unsigned i = 0; i < _level0.size(); i++) {
+        if(_level0[i] != NULL)  delete _level0[i];
+    }
+    
+   }
+
+   
+
+  
+  
+void MultiLevelMesh::PrepareNewLevelsForRefinement() {
+    
+    _gridn = _gridn0;
+    _level.resize(_gridn);
+    _level[0] = _level0[0];
+
+}
+
+//---------------------------------------------------------------------------------------------
+
+void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased) {
+    
+    _gridn -= levels_to_be_erased;
+    
+    for(int i=0; i<_gridn; i++) {
+      _level[i]=_level0[i+levels_to_be_erased];
+      _level[i]->SetLevel(i);
+    }
+    
+}
+
+
+
+void MultiLevelMesh::AddAMRMeshLevel()
+{
+
+  //AMR refine mesh
+   _level0.resize(_gridn0+1u);
+
+  MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
+  meshcoarser.FlagElementsToBeRefined();
+
+  _level0[_gridn0] = new Mesh();
+  MeshRefinement meshfiner(*_level0[_gridn0]);
+  meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
+
+  _level.resize(_gridn+1u);
+  _level[_gridn]=_level0[_gridn0];
+
+  _gridn0++;
+  _gridn++;
+}
+
+
+//==== Multilevel - END ======== 
+
+
+
+//==== Multilevel - File output - BEGIN  ========
+
+ void MultiLevelMesh::InitializeWriter() {
+     
+   _writer = NULL;
+    
+ }
+
+ 
+ void MultiLevelMesh::DeleteWriter() {
+     
+       if(_writer != NULL) delete _writer;
+    
+ } 
+
+//==== Multilevel - File output - END ========
+
+
+
+//==== FE - BEGIN ======== 
+
+
  void MultiLevelMesh::InitializeFETypes() {
      
    for(int i = 0; i < N_GEOM_ELS; i++) {
@@ -75,12 +474,6 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
  }
  
 
- void MultiLevelMesh::InitializeGeomElemFlag() {
-     
-    _finiteElementGeometryFlag.resize(N_GEOM_ELS, false);
-     
- }
- 
 
  void MultiLevelMesh::DeleteFETypesForExistingGeomElements() {
      
@@ -97,18 +490,6 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
  }
 
 
- void MultiLevelMesh::InitializeWriter() {
-     
-   _writer = NULL;
-    
- }
-
- 
- void MultiLevelMesh::DeleteWriter() {
-     
-       if(_writer != NULL) delete _writer;
-    
- } 
  
  
   void MultiLevelMesh::BuildFETypesBasedOnExistingCoarseMeshGeomElements(const char GaussOrder[]) {
@@ -267,280 +648,15 @@ MultiLevelMesh::MultiLevelMesh() : _gridn0(0)
     
   }
   
-  void MultiLevelMesh::RefineMeshesTotally(const unsigned short &igridr) {
-      
-    for (unsigned i = 1; i < igridr; i++) {
-      MeshRefinement meshcoarser(*_level0[i-1u]);
-      meshcoarser.FlagAllElementsToBeRefined();
 
-      _level0[i] = new Mesh();
-      MeshRefinement meshfiner(*_level0[i]);
-      meshfiner.RefineMesh(i, _level0[i-1], _finiteElement);
-    }
-      
-      
-  }
+  
+//==== FE - END ======== 
+
+  
   
 
-   void MultiLevelMesh::RefineMeshesPartially(const unsigned short &igridr,
-                                              bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) ) {
-       
- 
-      if(SetRefinementFlag == NULL) {
+//==== Domain (optional) - BEGIN ======== 
 
-    }
-    else{
-      Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_IsUserRefinementFunctionDefined = true;
-    }
-    
-    //Here there are two alternatives:
-    //When igridn is STRICTLY LARGER THAN igridr, one must provide a refinement flag function, ... 
-    //When igridn is SMALLER THAN OR EQUAL igridr, this loop is ignored
-    for (unsigned i = igridr; i < _gridn0; i++) {
-        
-      if(Mesh::_IsUserRefinementFunctionDefined == false) {
-        std::cout << "Set Refinement Region flag is not defined! " << std::endl;
-        exit(1);
-      }
-      else {
-	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefined();
-	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
-      }
-      
-      _level0[i] = new Mesh();
-      MeshRefinement meshfiner(*_level0[i]);
-      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-    
-    }
-    
-    
-
-   }
-   
-   
-   void MultiLevelMesh::CopyLevelsZeroIntoNewLevels() {
-       
-   _gridn = _gridn0;
-    _level.resize(_gridn);
-    for(int i = 0; i < _gridn; i++) {
-        _level[i] = _level0[i];
-     }
-    
-   }
-   
-   
-   
-    void MultiLevelMesh::InitializeLevelsZeroAndAllocateCoarse(const unsigned short gridn) {
-  
-    _level0.resize(gridn);
-
-    //coarse mesh
-    _level0[0] = new Mesh();
-        
-    }
-    
-    
-    
-   void MultiLevelMesh::DeleteLevelsZero() {
-       
-    for (unsigned i = 0; i < _level0.size(); i++) {
-        if(_level0[i] != NULL)  delete _level0[i];
-    }
-    
-   }
-
-   
-//---------------------------------------------------------------------------------------------------
-MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,
-                               const unsigned short &igridr,
-                               const char mesh_file[], 
-                               const char GaussOrder[], 
-                               const double Lref,
-                               bool (* SetRefinementFlag)(const std::vector < double > &x, const int &ElemGroupNumber,const int &level) )  :
-    _gridn0(igridn)
-    {
-        
-
-    InitializeGeomElemFlag();
-  
-    InitializeFETypes();
-  
-    InitializeWriter();
-    
-
-    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
-
-    std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
-    
-    _level0[0]->ReadCoarseMesh(mesh_file, Lref, _finiteElementGeometryFlag);
-
-    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
-
-    
-    //finer meshes **************
-    RefineMesh(igridn, igridr, SetRefinementFlag);
-  
-
-}
-
-
-void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref)
-{
-    
-  const bool read_groups = true; //by default groups are read
-  const bool read_boundary_groups = true; //by default boundary groups are read
-  
-    ReadCoarseMesh(mesh_file, GaussOrder, Lref, read_groups, read_boundary_groups);
-   
-}
-
-void MultiLevelMesh::ReadCoarseMeshFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
-{
-    
-    _gridn0 = 1;
-
-    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
-    
-    std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
-    
-    _level0[0]->ReadCoarseMeshBeforePartitioning(mesh_file, Lref, _finiteElementGeometryFlag, read_groups, read_boundary_groups);
-
-}
-
-void MultiLevelMesh::ReadCoarseMeshOnlyFileReading(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
-{
-    
-    _gridn0 = 1;
-
-    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
-    
-    std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
-    
-    _level0[0]->ReadCoarseMesh(mesh_file, Lref, _finiteElementGeometryFlag, read_groups, read_boundary_groups);
-
-}
-
-
-void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups)
-{
-    
-   ReadCoarseMeshOnlyFileReading(mesh_file, Lref, read_groups, read_boundary_groups);
-
-    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
-
-    PrepareNewLevelsForRefinement();
-    
-}
-
-
-
-void MultiLevelMesh::PrepareNewLevelsForRefinement() {
-    
-    _gridn = _gridn0;
-    _level.resize(_gridn);
-    _level[0] = _level0[0];
-
-}
-
-//---------------------------------------------------------------------------------------------
-
-void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased) {
-    
-    _gridn -= levels_to_be_erased;
-    
-    for(int i=0; i<_gridn; i++) {
-      _level[i]=_level0[i+levels_to_be_erased];
-      _level[i]->SetLevel(i);
-    }
-    
-}
-
-//---------------------------------------------------------------------------------------------
-
-void MultiLevelMesh::PrintInfo() {
-    
-    std::cout << " Number of uniform mesh refinement: " << _gridn << std::endl;
-    for(int i = 0; i < _gridn; i++) {
-      _level[i]->PrintInfo();
-    }
-    
-}
-
-
-void MultiLevelMesh::GenerateCoarseBoxMesh(
-        const unsigned int nx, const unsigned int ny, const unsigned int nz,
-        const double xmin, const double xmax,
-        const double ymin, const double ymax,
-        const double zmin, const double zmax,
-        const ElemType type, const char GaussOrder[])
-{
-    
-    _gridn0 = 1;
-
-    InitializeLevelsZeroAndAllocateCoarse(_gridn0);
-    
-    std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
-
-    _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type, _finiteElementGeometryFlag);
-
-    BuildFETypesBasedOnExistingCoarseMeshGeomElements(GaussOrder);
-
-    PrepareNewLevelsForRefinement();
-    
-}
-
-
-void MultiLevelMesh::RefineMesh( const unsigned short &igridn, 
-                                 const unsigned short &igridr,
-                                 bool (* SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) )
-{
-
-    _gridn0 = igridn;
-
-    _level0.resize(_gridn0);
-
-    //totally refined meshes **************
-    RefineMeshesTotally(igridr);
-
-    
-    //partially refined meshes **************
-    RefineMeshesPartially(igridr, SetRefinementFlag);
-    
-
-   // copy _level0 into the new levels _level **************
-    CopyLevelsZeroIntoNewLevels();
-
-}
-
-
-
-void MultiLevelMesh::AddAMRMeshLevel()
-{
-
-  //AMR refine mesh
-   _level0.resize(_gridn0+1u);
-
-  MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
-  meshcoarser.FlagElementsToBeRefined();
-
-  _level0[_gridn0] = new Mesh();
-  MeshRefinement meshfiner(*_level0[_gridn0]);
-  meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
-
-  _level.resize(_gridn+1u);
-  _level[_gridn]=_level0[_gridn0];
-
-  _gridn0++;
-  _gridn++;
-}
-
-
-    /** Get the dimension of the problem (1D, 2D, 3D) from one Mesh (level 0 always exists, after initialization) */
-    const unsigned MultiLevelMesh::GetDimension() const {
-      return _level0[LEVEL_AT_WHICH_YOU_PICK_THE_DIM]->GetDimension();
-    }
 
 // ========================================================
   void MultiLevelMesh::SetDomain(Domain* domain_in)  {
@@ -557,32 +673,10 @@ void MultiLevelMesh::AddAMRMeshLevel()
 
   }
 
-  
-   void  MultiLevelMesh::set_group_info(const std::string relative_path_to_input_folder) {
-      
-  
-  MED_IO  med_io(*GetLevel(0)/* coarse or whatever?*/);
-  
-  const std::string mesh_file_location = Files::get_input_file_with_prefix(_mesh_filename, relative_path_to_input_folder)/*relative_path_to_input_folder + DEFAULT_INPUTDIR + ml_sol->_mlMesh->_mesh_filename*/;
-  ;
-  
-    hid_t  file_id = med_io.open_mesh_file( mesh_file_location );
+//==== Domain (optional) - END ======== 
 
-    const std::vector< std::string > mesh_menus = med_io.get_mesh_names(file_id);
-         
-    
-        std::vector< std::vector< GroupInfo > >  group_info_all_meshes(mesh_menus.size());  
 
-    for (unsigned m = 0; m < group_info_all_meshes.size(); m++)   {
-        
-            group_info_all_meshes[m] = med_io.get_all_groups_per_mesh(file_id, mesh_menus[m]);
-     }    
- 
-     _group_info_all_meshes = group_info_all_meshes;
- 
-  }
-  
-  
+
 } //end namespace femus
 
 

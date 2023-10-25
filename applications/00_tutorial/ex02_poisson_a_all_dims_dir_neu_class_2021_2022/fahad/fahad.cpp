@@ -90,7 +90,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
        
        geom_element.set_elem_center_bdry_3d();
        
-       std::vector  <  double > xx_face_elem_center(3, 0.); 
+       std::vector <  double > xx_face_elem_center(3, 0.); 
           xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
         
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
@@ -159,8 +159,8 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
   double weight_iqp_bdry = 0.;
 // ---
   //boundary state shape functions
-  vector <double> phi_u_bdry;  
-  vector <double> phi_u_x_bdry; 
+  std::vector <double> phi_u_bdry;  
+  std::vector <double> phi_u_x_bdry; 
 
   phi_u_bdry.reserve(max_size);
   phi_u_x_bdry.reserve(max_size * space_dim);
@@ -180,7 +180,7 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
        
        
-       std::vector  <  double > xx_face_elem_center(3, 0.); 
+       std::vector <  double > xx_face_elem_center(3, 0.); 
           xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
         
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
@@ -239,7 +239,7 @@ double GetExactSolutionValue(const std::vector < double >& x) {
     return 0.;
 }
 
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
   
 }
 
@@ -414,7 +414,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   const unsigned  dim = msh->GetDimension();
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));
-std::vector < vector < double > > x (dim);
+std::vector < std::vector < double > > x (dim);
   unsigned    iproc = msh->processor_id();
 
   for (unsigned i = 0; i < dim; i++) {

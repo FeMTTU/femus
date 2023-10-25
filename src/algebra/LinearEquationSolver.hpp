@@ -19,10 +19,6 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <vector>
-#include <memory>
-#include <cstdio>
-
 #include "FemusConfig.hpp"
 #include "SolverPackageEnum.hpp"
 #include "PrecondtypeEnum.hpp"
@@ -34,10 +30,14 @@
 
 #include <petscksp.h>
 
+#include <vector>
+#include <memory>
+#include <cstdio>
+
+
 namespace femus {
 
 
-  using std::vector;
 
 //------------------------------------------------------------------------------
 // Forward declarations
@@ -90,7 +90,7 @@ namespace femus {
       };
 
       virtual void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &levelMax,
-                              const vector <unsigned> &variable_to_be_solved,
+                              const std::vector <unsigned> &variable_to_be_solved,
                               SparseMatrix* PP, SparseMatrix* RR,
                               const unsigned &npre, const unsigned &npost
                               ) = 0;
@@ -156,7 +156,7 @@ namespace femus {
       };
 
       /** Call the smoother-solver using the PetscLibrary. */
-      virtual void Solve(const vector <unsigned> &VariableTobeSolved, const bool &ksp_clean) = 0;
+      virtual void Solve(const std::vector <unsigned> &VariableTobeSolved, const bool &ksp_clean) = 0;
 
 
       /** @deprecated Old solver with algebra objects passed as arguments TODO think of removing */

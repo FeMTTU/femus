@@ -69,11 +69,11 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
   std::vector< unsigned > SYSDOF;
 
   // Define local residual vectors.
-  vector < double > Res;
+  std::vector < double > Res;
   std::vector< double > aResY[3];
 
   // Local (column-ordered) Jacobian matrix
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual
@@ -414,11 +414,11 @@ void AssembleSystemW (MultiLevelProblem& ml_prob) {
   std::vector< unsigned > SYSDOF;
 
   // Define local residual vectors.
-  vector < double > Res;
+  std::vector < double > Res;
   std::vector< double > aResW[3];
 
   // Local (column-ordered) Jacobian matrix
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual

@@ -80,10 +80,10 @@ int main (int argc, char** args) {
   unsigned maxNumberOfMeshes = 6;
 
 
-  vector < vector < double > > l2Norm;
+  std::vector < std::vector < double > > l2Norm;
   l2Norm.resize (maxNumberOfMeshes);
 
-  vector < vector < double > > H1norm;
+  std::vector < std::vector < double > > H1norm;
   H1norm.resize (maxNumberOfMeshes);
 
 //   unsigned numberOfUniformLevels = 3;
@@ -244,7 +244,7 @@ double GetExactSolutionValue (const std::vector < double >& x) {
   return cos (pi * x[0]) * cos (pi * x[1]);
 };
 
-void GetExactSolutionGradient (const std::vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradient (const std::vector < double >& x, std::vector < double >& solGrad) {
   double pi = acos (-1.);
   solGrad[0]  = - pi * sin (pi * x[0]) * cos (pi * x[1]);
   solGrad[1]  = - pi * cos (pi * x[0]) * sin (pi * x[1]);
@@ -300,10 +300,10 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
   std::cout << solUIndex << " " << solUPdeIndex << std::endl;
 
 
-  vector < adept::adouble >  solU; // local solution
-  vector< adept::adouble > aResU; // local redidual vector
+  std::vector < adept::adouble >  solU; // local solution
+  std::vector < adept::adouble > aResU; // local redidual vector
 
-  vector < vector < double > > crdX (dim);   // local coordinates
+  std::vector < std::vector < double > > crdX (dim);   // local coordinates
   unsigned crdXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   solU.reserve (maxSize);
@@ -315,9 +315,9 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
     crdX[k].reserve (maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
 
   phi.reserve (maxSize);
   phi_x.reserve (maxSize * dim);
@@ -325,13 +325,13 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
 
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve (maxSize);
 
-  vector< double > ResU; // local residual vector
+  std::vector < double > ResU; // local residual vector
   ResU.reserve (maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve (maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -378,9 +378,9 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solUType]->Jacobian (crdX, ig, weight, phi, phi_x, phi_xx);
 
       //adept::adouble solUig = 0; // solution U in the gauss point
-      vector < adept::adouble > gradSolUig (dim, 0.); // gradient of solution U in the gauss point
+      std::vector < adept::adouble > gradSolUig (dim, 0.); // gradient of solution U in the gauss point
 
-      vector < double > x_gss (dim, 0.);
+      std::vector < double > x_gss (dim, 0.);
 
       for (unsigned i = 0; i < nDofsU; i++) {
         //solUig += phi[i] * solU[i];
@@ -463,14 +463,14 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
 
   unsigned solFlagIndex = mlSol->GetIndex ("Flag");
 
-  vector < double >  solU; // local solution
+  std::vector < double >  solU; // local solution
 
-  vector < vector < double > > crdX (dim);   // local coordinates
+  std::vector < std::vector < double > > crdX (dim);   // local coordinates
   unsigned crdXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   // reserve memory for the local standar vectors
@@ -527,8 +527,8 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double solUig = 0;
-      vector < double > gradSolUig (dim, 0.);
-      vector < double > x_gss (dim, 0.);
+      std::vector < double > gradSolUig (dim, 0.);
+      std::vector < double > x_gss (dim, 0.);
 
       for (unsigned i = 0; i < nDofsU; i++) {
         solUig += phi[i] * solU[i];
@@ -539,7 +539,7 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
         }
       }
 
-      vector <double> solGrad (dim);
+      std::vector <double> solGrad (dim);
       GetExactSolutionGradient (x_gss, solGrad);
 
       for (unsigned j = 0; j < dim ; j++) {

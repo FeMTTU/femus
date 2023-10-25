@@ -75,7 +75,7 @@ class MED_IO : public MeshInput<Mesh>
   /**
    * Reads in a mesh in the  *.med format
    */
-  virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups);
+  virtual void read (const std::string& name, std::vector < std::vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
   void boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user);
 
@@ -85,7 +85,7 @@ class MED_IO : public MeshInput<Mesh>
   
  private:
      
-  void node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  vector < TYPE_FOR_REAL_DATASET >  & node_group_map);
+  void node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  std::vector < TYPE_FOR_REAL_DATASET >  & node_group_map);
   
  public:
   hid_t open_mesh_file(const std::string& name);
@@ -145,7 +145,7 @@ class MED_IO : public MeshInput<Mesh>
                                             const std::vector< unsigned > & face_nodes_from_vol_connectivity, 
                                             const std::vector< unsigned > & face_nodes_from_bdry_group);
   
-  void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
+  void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, std::vector < std::vector < double> >& coords, const double Lref);
 
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names, const std::string  geom_elem_type) const;
    

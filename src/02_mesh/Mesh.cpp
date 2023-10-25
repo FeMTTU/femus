@@ -642,7 +642,7 @@ namespace femus {
 
     //reorder coordinate vector at coarse level ----
     if(GetLevel() == 0) {
-      vector <double> coords_temp;
+      std::vector <double> coords_temp;
 
       for(int i = 0; i < 3; i++) {
         coords_temp = _coords[i];
@@ -1066,8 +1066,8 @@ namespace femus {
 
     unsigned offset = _dofOffset[itype][_iproc];
 
-    vector < int > nnz_d(ni_loc);
-    vector < int > nnz_o(ni_loc);
+    std::vector < int > nnz_d(ni_loc);
+    std::vector < int > nnz_o(ni_loc);
 
     for(unsigned i = 0; i < ni_loc; i++) {
       nnz_d[i] = static_cast < int >((*NNZ_d)(offset + i));
@@ -1168,8 +1168,8 @@ namespace femus {
       NNZ_o->close();
 
       unsigned offset = _dofOffset[solType][_iproc];
-      vector <int> nnz_d(nf_loc);
-      vector <int> nnz_o(nf_loc);
+      std::vector <int> nnz_d(nf_loc);
+      std::vector <int> nnz_o(nf_loc);
 
       for(int i = 0; i < nf_loc; i++) {
         nnz_d[i] = static_cast <int>(floor((*NNZ_d)(offset + i) + 0.5));

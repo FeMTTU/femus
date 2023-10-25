@@ -656,8 +656,8 @@ inline void broadcast(std::vector<T> &data, const unsigned int root_id=0);
 //// ------------// ------------// ------------// ------------// -----------------------
 // Parallel members
 
-// Internal helper function to create vector<something_useable> from
-// vector<bool> for compatibility with MPI bitwise operations
+// Internal helper function to create std::vector <something_useable> from
+// std::vector <bool> for compatibility with MPI bitwise operations
 template <typename T>
 inline void pack_vector_bool(const std::vector<bool> &in,
                              std::vector<T> &out) {
@@ -673,8 +673,8 @@ inline void pack_vector_bool(const std::vector<bool> &in,
     }
 }
 
-// Internal helper function to create vector<something_useable> from
-// vector<bool> for compatibility with MPI byte operations
+// Internal helper function to create std::vector <something_useable> from
+// std::vector <bool> for compatibility with MPI byte operations
 template <typename T>
 inline void unpack_vector_bool(const std::vector<T> &in,
                                std::vector<bool> &out) {

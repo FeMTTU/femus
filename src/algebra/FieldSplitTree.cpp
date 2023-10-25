@@ -595,20 +595,20 @@ namespace femus {
     unsigned DofOffset = _MatrixOffset[level][0][iproc];
     unsigned DofOffsetSize = _MatrixOffset[level][_solutionType.size()][iproc] - DofOffset;
 
-    vector < unsigned > indexa (DofOffsetSize, DofOffsetSize);
-    vector < unsigned > indexb (DofOffsetSize, DofOffsetSize);
+    std::vector < unsigned > indexa (DofOffsetSize, DofOffsetSize);
+    std::vector < unsigned > indexb (DofOffsetSize, DofOffsetSize);
 
-    vector <bool> owned (DofOffsetSize, false);
+    std::vector <bool> owned (DofOffsetSize, false);
 
     std::map<int, bool> mymap;
 
     unsigned ElemOffset   = msh->_dofOffset[3][iproc];
     unsigned ElemOffsetp1 = msh->_dofOffset[3][iproc + 1];
     unsigned ElemOffsetSize = ElemOffsetp1 - ElemOffset;
-    vector <PetscInt> indexci (ElemOffsetSize);
-    vector < unsigned > indexc (ElemOffsetSize, ElemOffsetSize);
+    std::vector <PetscInt> indexci (ElemOffsetSize);
+    std::vector < unsigned > indexc (ElemOffsetSize, ElemOffsetSize);
 
-    vector < vector < unsigned > > block_elements;
+    std::vector < std::vector < unsigned > > block_elements;
 
     unsigned base = pow (2, msh->GetDimension());
     unsigned elementBlockNumber[2];
@@ -626,7 +626,7 @@ namespace femus {
 
     meshasmpartitioning.DoPartitionOld (elementBlockNumber, block_elements, _asmBlockMaterialRange[level]);
 
-    vector <bool> ThisVaribaleIsNonSchur (_solutionType.size(), true);
+    std::vector <bool> ThisVaribaleIsNonSchur (_solutionType.size(), true);
 
     for (unsigned i = _solutionType.size() - _asmSchurVariableNumber; i < _solutionType.size(); i++) {
       ThisVaribaleIsNonSchur[i] = false;

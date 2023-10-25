@@ -235,20 +235,20 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
 
  //************** geometry (at dofs) *************************************  
-  vector < vector < double > > coords_at_dofs(dim);
-  vector < unsigned int >      SolFEType_domain(dim);
+  std::vector < std::vector < double > > coords_at_dofs(dim);
+  std::vector < unsigned int >      SolFEType_domain(dim);
     for (unsigned  d = 0; d < dim; d++) SolFEType_domain[d] = BIQUADR_FE;
     
     for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
  //************** geometry (at quadrature points) *************************************  
-  vector < double > coord_at_qp(dim);
+  std::vector < double > coord_at_qp(dim);
   
 
  //************** geometry phi **************************
-  vector < vector < double > > phi_fe_qp_domain(dim);
-  vector < vector < double > > phi_x_fe_qp_domain(dim);
-  vector < vector < double > > phi_xx_fe_qp_domain(dim);
+  std::vector < std::vector < double > > phi_fe_qp_domain(dim);
+  std::vector < std::vector < double > > phi_x_fe_qp_domain(dim);
+  std::vector < std::vector < double > > phi_xx_fe_qp_domain(dim);
  
   for(int fe = 0; fe < dim; fe++) {
         phi_fe_qp_domain[fe].reserve(max_size);
@@ -285,17 +285,17 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   
   const int solFEType_max = BIQUADR_FE;  //biquadratic
 
-  vector < std::string > Solname(n_unknowns);
+  std::vector < std::string > Solname(n_unknowns);
   Solname[pos_state] = "state";
   Solname[pos_ctrl]  = "control";
   Solname[pos_adj]   = "adjoint";
   Solname[pos_mu]    = "mu";
   
   //***************************************************  
-  vector < unsigned int > SolPdeIndex(n_unknowns);  //index as in the row/column of the matrix (diagonal blocks are square)
-  vector < unsigned int > SolIndex(n_unknowns);     //index as in the MultilevelSolution vector
-  vector < unsigned int > SolFEType(n_unknowns);    //FEtype of each MultilevelSolution       
-  vector < unsigned int > Sol_n_el_dofs(n_unknowns); //number of element dofs
+  std::vector < unsigned int > SolPdeIndex(n_unknowns);  //index as in the row/column of the matrix (diagonal blocks are square)
+  std::vector < unsigned int > SolIndex(n_unknowns);     //index as in the MultilevelSolution vector
+  std::vector < unsigned int > SolFEType(n_unknowns);    //FEtype of each MultilevelSolution       
+  std::vector < unsigned int > Sol_n_el_dofs(n_unknowns); //number of element dofs
   std::fill(Sol_n_el_dofs.begin(), Sol_n_el_dofs.end(), 0);
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -308,10 +308,10 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //************* shape functions (at dofs and quadrature points) **************************************  
   double weight_qp;
   
-  vector < vector < double > > phi_fe_qp(n_unknowns);
-  vector < vector < double > > phi_x_fe_qp(n_unknowns);
-  vector < vector < double > > phi_xx_fe_qp(n_unknowns);
-  vector < vector < vector < double > > > phi_x_fe_qp_vec(n_unknowns);
+  std::vector < std::vector < double > > phi_fe_qp(n_unknowns);
+  std::vector < std::vector < double > > phi_x_fe_qp(n_unknowns);
+  std::vector < std::vector < double > > phi_xx_fe_qp(n_unknowns);
+  std::vector < std::vector < std::vector < double > > > phi_x_fe_qp_vec(n_unknowns);
  
   for(int fe = 0; fe < n_unknowns; fe++) {
         phi_fe_qp[fe].reserve(max_size);
@@ -327,7 +327,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  
    
   //----------- quantities (at dof objects) ------------------------------
-  vector < vector < double > >     sol_eldofs(n_unknowns);
+  std::vector < std::vector < double > >     sol_eldofs(n_unknowns);
   for(int k=0; k<n_unknowns; k++)  sol_eldofs[k].reserve(max_size);
   
 //************** act flag (at dof objects) **************************** 
@@ -341,13 +341,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   //********* variables for ineq constraints (at dof objects) *****************
   const int ineq_flag = INEQ_FLAG;
   const double c_compl = C_COMPL;
-  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(max_size); //flag for active set
-  vector < double >          ctrl_lower;    ctrl_lower.reserve(max_size);
-  vector < double >          ctrl_upper;    ctrl_upper.reserve(max_size);
+  std::vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(max_size); //flag for active set
+  std::vector < double >          ctrl_lower;    ctrl_lower.reserve(max_size);
+  std::vector < double >          ctrl_upper;    ctrl_upper.reserve(max_size);
       
   //------------ quantities (at quadrature points) ---------------------
-            vector<double>        sol_qp(n_unknowns);
-    vector< vector<double> > sol_grad_qp(n_unknowns);
+            std::vector <double>        sol_qp(n_unknowns);
+    std::vector < std::vector <double> > sol_grad_qp(n_unknowns);
     
       std::fill(sol_qp.begin(), sol_qp.end(), 0.);
     for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -380,10 +380,10 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
      m_b_f[pos_mu][pos_mu]     = 1; //nonzero
  
   //***************************************************  
-  vector < vector < int > > L2G_dofmap(n_unknowns);     for(int i = 0; i < n_unknowns; i++) { L2G_dofmap[i].reserve(max_size); }
-            vector< int >   L2G_dofmap_AllVars; L2G_dofmap_AllVars.reserve( n_unknowns*max_size );
-            vector< double >         Res;                      Res.reserve( n_unknowns*max_size );
-            vector< double >         Jac;                      Jac.reserve( n_unknowns*max_size * n_unknowns*max_size);
+  std::vector < std::vector < int > > L2G_dofmap(n_unknowns);     for(int i = 0; i < n_unknowns; i++) { L2G_dofmap[i].reserve(max_size); }
+            std::vector < int >   L2G_dofmap_AllVars; L2G_dofmap_AllVars.reserve( n_unknowns*max_size );
+            std::vector < double >         Res;                      Res.reserve( n_unknowns*max_size );
+            std::vector < double >         Jac;                      Jac.reserve( n_unknowns*max_size * n_unknowns*max_size);
   //***************************************************  
     
     
@@ -413,7 +413,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     }
 
    // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < coords_at_dofs[j].size(); i++) {
@@ -733,19 +733,19 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   const unsigned   iproc = msh->processor_id(); 
   
  //************** geometry (at dofs and quadrature points) *************************************  
-  vector < vector < double > > coords_at_dofs(dim);
+  std::vector < std::vector < double > > coords_at_dofs(dim);
   unsigned SolFEType_domain = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
   for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
-  vector < double > coord_at_qp(dim);
+  std::vector < double > coord_at_qp(dim);
  //*************************************************** 
 
  //************* shape functions (at dofs and quadrature points) **************************************  
   double weight_qp; // gauss point weight
    
-  vector < vector < double > > phi_fe_qp(NFE_FAMS);
-  vector < vector < double > > phi_x_fe_qp(NFE_FAMS);
-  vector < vector < double > > phi_xx_fe_qp(NFE_FAMS);
+  std::vector < std::vector < double > > phi_fe_qp(NFE_FAMS);
+  std::vector < std::vector < double > > phi_x_fe_qp(NFE_FAMS);
+  std::vector < std::vector < double > > phi_xx_fe_qp(NFE_FAMS);
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_fe_qp[fe].reserve(max_size);
@@ -757,16 +757,16 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //*************************************************** 
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   enum Sol_pos{pos_state = 0, pos_ctrl, pos_adj, pos_mu};  //these are known at compile-time 
-  vector < std::string > Solname(n_unknowns);
+  std::vector < std::string > Solname(n_unknowns);
   Solname[pos_state] = "state";
   Solname[pos_ctrl]  = "control";
   Solname[pos_adj]   = "adjoint";
   Solname[pos_mu]    = "mu";
 
   //***************************************************  
-  vector < unsigned int > SolIndex(n_unknowns);     //index as in the MultilevelSolution vector
-  vector < unsigned int > SolFEType(n_unknowns);    //FEtype of each MultilevelSolution       
-  vector < unsigned int > Sol_n_el_dofs(n_unknowns); //number of element dofs
+  std::vector < unsigned int > SolIndex(n_unknowns);     //index as in the MultilevelSolution vector
+  std::vector < unsigned int > SolFEType(n_unknowns);    //FEtype of each MultilevelSolution       
+  std::vector < unsigned int > Sol_n_el_dofs(n_unknowns); //number of element dofs
   std::fill(Sol_n_el_dofs.begin(), Sol_n_el_dofs.end(), 0);
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -775,12 +775,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   }
   
   //----------- quantities (at dof objects) ------------------------------
-  vector < vector < double > >     sol_eldofs(n_unknowns);
+  std::vector < std::vector < double > >     sol_eldofs(n_unknowns);
   for(int k=0; k<n_unknowns; k++)  sol_eldofs[k].reserve(max_size);
   
   //------------ quantities (at quadrature points) ---------------------
-            vector<double>        sol_qp(n_unknowns);
-    vector< vector<double> > sol_grad_qp(n_unknowns);
+            std::vector <double>        sol_qp(n_unknowns);
+    std::vector < std::vector <double> > sol_grad_qp(n_unknowns);
     
       std::fill(sol_qp.begin(), sol_qp.end(), 0.);
     for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -794,9 +794,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
  //******************** state ************************ 
  //*************************************************** 
-  vector <double> phi_u;
-  vector <double> phi_u_x; 
-  vector <double> phi_u_xx;
+  std::vector <double> phi_u;
+  std::vector <double> phi_u_x; 
+  std::vector <double> phi_u_xx;
 
   phi_u.reserve(max_size);
   phi_u_x.reserve(max_size * dim);
@@ -806,7 +806,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   unsigned solIndex_u = ml_sol->GetIndex("state");    // get the position of "state" in the ml_sol object
   unsigned solType_u  = ml_sol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
 
-  vector < double >  sol_u; // local solution
+  std::vector < double >  sol_u; // local solution
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
@@ -815,9 +815,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
  //******************** control ********************** 
  //*************************************************** 
-  vector <double> phi_ctrl;
-  vector <double> phi_ctrl_x;
-  vector <double> phi_ctrl_xx;
+  std::vector <double> phi_ctrl;
+  std::vector <double> phi_ctrl_x;
+  std::vector <double> phi_ctrl_xx;
 
   phi_ctrl.reserve(max_size);
   phi_ctrl_x.reserve(max_size * dim);
@@ -826,7 +826,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   unsigned solIndex_ctrl = ml_sol->GetIndex("control");
   unsigned solType_ctrl  = ml_sol->GetSolutionType(solIndex_ctrl);
 
-  vector < double >  sol_ctrl;
+  std::vector < double >  sol_ctrl;
   sol_ctrl.reserve(max_size);
   
   double ctrl_grad_squared_gss = 0.;
@@ -836,15 +836,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  //********************* desired ********************* 
  //*************************************************** 
-  vector <double> phi_udes;
-  vector <double> phi_udes_x;
-  vector <double> phi_udes_xx;
+  std::vector <double> phi_udes;
+  std::vector <double> phi_udes_x;
+  std::vector <double> phi_udes_xx;
 
     phi_udes.reserve(max_size);
     phi_udes_x.reserve(max_size * dim);
     phi_udes_xx.reserve(max_size * dim2);
  
-  vector < double >  sol_udes; // local solution
+  std::vector < double >  sol_udes; // local solution
   sol_udes.reserve(max_size);
   
    double udes_gss = 0.;
@@ -879,7 +879,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     }
 
    // elem average point 
-    vector < double > elem_center(dim);   
+    std::vector < double > elem_center(dim);   
    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
    for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {

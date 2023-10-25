@@ -59,8 +59,8 @@ double InitalValueT(const std::vector < double >& x) {
 void PrintConvergenceInfo(unsigned n_timesteps, char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void PrintNonlinearTime(unsigned n_timesteps,char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
-std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);
-std::pair< double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlSol);// obtain the Knetc energy evlolution;
+std::pair < std::vector <double>, std::vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);
+std::pair< double, std::vector <double> >GetKineandPointValue(MultiLevelSolution* mlSol);// obtain the Knetc energy evlolution;
 enum PrecType {
   FS_VTp = 1,
   FS_TVp,
@@ -287,10 +287,10 @@ int main(int argc, char** args) {
   strcpy(out_file5,"Energy.dat");
   ofstream outfile5(out_file5,ios::out|ios::trunc|ios::binary);
 
-  vector <double> solV_pt(2);
-  vector <double> solPT_pt(2);
-  vector <double> ptCoord(2);
-  std::pair < vector <double>, vector <double> > out_value;
+  std::vector <double> solV_pt(2);
+  std::vector <double> solPT_pt(2);
+  std::vector <double> ptCoord(2);
+  std::pair < std::vector <double>, std::vector <double> > out_value;
 
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
  
@@ -307,7 +307,7 @@ int main(int argc, char** args) {
      outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
      outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
 
-	std::pair < double, vector <double> > out_value1 = GetKineandPointValue(&mlSol) ;
+	std::pair < double, std::vector <double> > out_value1 = GetKineandPointValue(&mlSol) ;
     kineticEnergy = out_value1.first;
 	ptCoord = out_value1.second;
 	outfile5 << (time_step + 1) * dt <<"  "<< sqrt(kineticEnergy/2.0/8.0) << std::endl; 
@@ -371,7 +371,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
   unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
 
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
 
@@ -389,7 +389,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   // std::cout << solTIndex <<" "<<solTPdeIndex<<std::endl;
 
 
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
 
@@ -398,19 +398,19 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector < adept::adouble >  solT; // local solution
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-  vector < adept::adouble >  solP; // local solution
+  std::vector < adept::adouble >  solT; // local solution
+  std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
+  std::vector < adept::adouble >  solP; // local solution
 
-  vector < double >  solTold; // local solution
-  vector < vector < double > >  solVold(dim);    // local solution
-  vector < double >  solPold; // local solution
+  std::vector < double >  solTold; // local solution
+  std::vector < std::vector < double > >  solVold(dim);    // local solution
+  std::vector < double >  solPold; // local solution
 
-  vector< adept::adouble > aResT; // local redidual vector
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
-  vector< adept::adouble > aResP; // local redidual vector
+  std::vector < adept::adouble > aResT; // local redidual vector
+  std::vector < std::vector < adept::adouble > > aResV(dim);    // local redidual vector
+  std::vector < adept::adouble > aResP; // local redidual vector
 
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   solT.reserve(maxSize);
@@ -429,17 +429,17 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   aResP.reserve(maxSize);
 
 
-  vector <double> phiV;  // local test function
-  vector <double> phiV_x; // local test function first order partial derivatives
-  vector <double> phiV_xx; // local test function second order partial derivatives
+  std::vector <double> phiV;  // local test function
+  std::vector <double> phiV_x; // local test function first order partial derivatives
+  std::vector <double> phiV_xx; // local test function second order partial derivatives
 
   phiV.reserve(maxSize);
   phiV_x.reserve(maxSize * dim);
   phiV_xx.reserve(maxSize * dim2);
 
-  vector <double> phiT;  // local test function
-  vector <double> phiT_x; // local test function first order partial derivatives
-  vector <double> phiT_xx; // local test function second order partial derivatives
+  std::vector <double> phiT;  // local test function
+  std::vector <double> phiT_x; // local test function first order partial derivatives
+  std::vector <double> phiT_xx; // local test function second order partial derivatives
 
   phiT.reserve(maxSize);
   phiT_x.reserve(maxSize * dim);
@@ -448,13 +448,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   double* phiP;
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve((dim + 2) *maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve((dim + 2) *maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
   if(assembleMatrix)
@@ -547,8 +547,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solT_gss = 0;
       double solTold_gss = 0;
-      vector < adept::adouble > gradSolT_gss(dim, 0.);
-      vector < double > gradSolTold_gss(dim, 0.);
+      std::vector < adept::adouble > gradSolT_gss(dim, 0.);
+      std::vector < double > gradSolTold_gss(dim, 0.);
 
       for(unsigned i = 0; i < nDofsT; i++) {
         solT_gss += phiT[i] * solT[i];
@@ -560,10 +560,10 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         }
       }
 
-      vector < adept::adouble > solV_gss(dim, 0);
-      vector < double > solVold_gss(dim, 0);
-      vector < vector < adept::adouble > > gradSolV_gss(dim);
-      vector < vector < double > > gradSolVold_gss(dim);
+      std::vector < adept::adouble > solV_gss(dim, 0);
+      std::vector < double > solVold_gss(dim, 0);
+      std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
+      std::vector < std::vector < double > > gradSolVold_gss(dim);
 
       for(unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
@@ -622,8 +622,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       // *** phiV_i loop ***
       for(unsigned i = 0; i < nDofsV; i++) {
-        vector < adept::adouble > NSV(dim, 0.);
-        vector < double > NSVold(dim, 0.);
+        std::vector < adept::adouble > NSV(dim, 0.);
+        std::vector < double > NSVold(dim, 0.);
 
         for(unsigned j = 0; j < dim; j++) {
           for(unsigned  k = 0; k < dim; k++) {
@@ -735,7 +735,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 //   unsigned solTIndex;
 //   solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
 //   unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
-//   vector < double >  solT; // local solution
+//   std::vector < double >  solT; // local solution
 // 
 //   //BEGIN local dof number extraction
 //   unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
@@ -759,7 +759,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 //   return solTXi;
 // }
 
-std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi) {
+std::pair < std::vector <double>, std::vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi) {
 
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -775,19 +775,19 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   unsigned solTIndex;
   solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
   unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
-  vector < double >  solT; // local solution
+  std::vector < double >  solT; // local solution
   
-  vector <unsigned> solVIndex(dim);
+  std::vector <unsigned> solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");
   solVIndex[1] = mlSol->GetIndex("V");
   if (dim==3) solVIndex[2] = mlSol->GetIndex("W");
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);
-  vector < vector <double> > solV(dim);
+  std::vector < std::vector <double> > solV(dim);
   
   unsigned solPIndex;
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "P"
-  vector < double >  solP; // local solution
+  std::vector < double >  solP; // local solution
   
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
   MyVector <double> solTXi(1, 0.);
@@ -855,19 +855,19 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
     }
   }
   
-  std::pair <vector <double>, vector <double> > out_value;
+  std::pair < std::vector <double>, std::vector <double> > out_value;
   unsigned mproc = msh->IsdomBisectionSearch(elem , 3);
   solUXi.broadcast(mproc);
   solVXi.broadcast(mproc);
   solPXi.broadcast(mproc);
   solTXi.broadcast(mproc);
   
-  vector <double> solV_pt(dim);
+  std::vector <double> solV_pt(dim);
   solV_pt[0] = solUXi[mproc];
   solV_pt[1] = solVXi[mproc];
   out_value.first = solV_pt;
   
-  vector <double> solPT_pt(2);
+  std::vector <double> solPT_pt(2);
   solPT_pt[0] = solPXi[mproc];
   solPT_pt[1] = solTXi[mproc];
   out_value.second = solPT_pt;
@@ -930,7 +930,7 @@ void PrintNonlinearTime(unsigned n_timesteps, char *stdOutfile, char* outfile, c
   inf.close();
 }
 
-std::pair <double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlSol){
+std::pair <double, std::vector <double> >GetKineandPointValue(MultiLevelSolution* mlSol){
 
   unsigned level = mlSol -> _mlMesh->GetNumberOfLevels()-1u;
   //  extract pointers to the several objects that we are going to use
@@ -945,14 +945,14 @@ std::pair <double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlS
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
   if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");	// get the position of "W" in the ml_sol object
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);	// get the finite element type for "U"
 
-  vector < vector < double > >  solV(dim);    // local solution
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > >  solV(dim);    // local solution
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for(unsigned  k = 0; k < dim; k++) {
@@ -960,9 +960,9 @@ std::pair <double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlS
     coordX[k].reserve(maxSize);
   }
 
-  vector <double> phiV;  // local test function
-  vector <double> phiV_x; // local test function first order partial derivatives
-  vector <double> phiV_xx; // local test function second order partial derivatives
+  std::vector <double> phiV;  // local test function
+  std::vector <double> phiV_x; // local test function first order partial derivatives
+  std::vector <double> phiV_xx; // local test function second order partial derivatives
 
   phiV.reserve(maxSize);
   phiV_x.reserve(maxSize * dim);
@@ -1024,8 +1024,8 @@ std::pair <double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlS
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      vector < double > solV_gss(dim, 0);
-      vector < vector < double > > gradSolV_gss(dim);
+      std::vector < double > solV_gss(dim, 0);
+      std::vector < std::vector < double > > gradSolV_gss(dim);
 /*
 	  if (iel ==1846){
 		std :: cout<<"11111" <<"   "<< ig <<"   "<<weight <<"   "<< phiV[1] << 
@@ -1080,10 +1080,10 @@ std::pair <double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlS
   if (fabs (ptCoord2) > 1.0e-6) ptVCoord = ptCoord2;
   delete out_vec;
   
-  std::pair < double, vector <double> > out_value;
+  std::pair < double, std::vector <double> > out_value;
   out_value.first = kineticEnergy;
   
-  vector <double> ptCoord(2);
+  std::vector <double> ptCoord(2);
   ptCoord[0] = ptUCoord;
   ptCoord[1] = ptVCoord; 
   out_value.second = ptCoord; 

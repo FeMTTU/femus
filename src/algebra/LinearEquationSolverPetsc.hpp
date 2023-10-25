@@ -58,12 +58,12 @@ namespace femus {
 
       void Init (Mat& Amat, Mat &Pmat);
 
-      void Solve (const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
+      void Solve (const std::vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
 
       void MGInit (const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType);
 
       void MGSetLevel (LinearEquationSolver *LinSolver, const unsigned &maxlevel,
-                       const vector <unsigned> &variable_to_be_solved,
+                       const std::vector <unsigned> &variable_to_be_solved,
                        SparseMatrix* PP, SparseMatrix* RR,
                        const unsigned &npre, const unsigned &npost);
 
@@ -76,7 +76,7 @@ namespace femus {
         _richardsonScaleFactor = richardsonScaleFactor;
       }
 
-      virtual void BuildBdcIndex (const vector <unsigned> &variable_to_be_solved);
+      virtual void BuildBdcIndex (const std::vector <unsigned> &variable_to_be_solved);
       virtual void SetPreconditioner (KSP& subksp, PC& subpc);
 
       void MGSolve (const bool ksp_clean);
@@ -114,7 +114,7 @@ namespace femus {
       PetscInt  _maxits;
       PetscInt  _restart;
 
-      vector <PetscInt> _bdcIndex;
+      std::vector <PetscInt> _bdcIndex;
       bool _bdcIndexIsInitialized;
 
       double _richardsonScaleFactor;

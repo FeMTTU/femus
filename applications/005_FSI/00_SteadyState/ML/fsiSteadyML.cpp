@@ -16,20 +16,20 @@ double scale=1000.;
 using namespace std;
 using namespace femus;
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector< double > &x, const char name[],
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double > &x, const char name[],
 						double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_2D_FSI(const vector< double > &x, const char name[],
+bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double > &x, const char name[],
 				      double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector< double > &x, const char name[],
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double > &x, const char name[],
 						double &value, const int facename, const double time);
 
-bool SetBoundaryConditionBathe_3D_solid(const vector< double > &x, const char name[],
+bool SetBoundaryConditionBathe_3D_solid(const std::vector < double > &x, const char name[],
 					double &value, const int facename, const double time);
-bool SetBoundaryConditionComsol_2D_FSI(const vector< double > &x, const char name[],
+bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double > &x, const char name[],
 				       double &value, const int FaceName, const double = 0.);
 
 
-bool SetRefinementFlag(const vector< double > &x, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double > &x, const int &ElemGroupNumber,const int &level);
 
 //------------------------------------------------------------------------------------------------------------------
 
@@ -358,7 +358,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumb
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double > &xx,const char name[], double &value, const int facename, const double time) {
   double x=xx[0];
   double y=xx[1];
   double z=xx[2];
@@ -480,7 +480,7 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector< double > &xx,const
   return test;
 }
 
-bool SetBoundaryConditionBathe_2D_FSI(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double > &xx,const char name[], double &value, const int facename, const double time) {
   double x=xx[0];
   double y=xx[1];
   double z=xx[2];
@@ -603,7 +603,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const vector< double > &xx,const char name
 
 
 
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double > &xx,const char name[], double &value, const int facename, const double time) {
   double x=xx[0];
   double y=xx[1];
   double z=xx[2];
@@ -745,7 +745,7 @@ bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector< double > &xx,const
   return test;
 }
 
-bool SetBoundaryConditionBathe_3D_solid(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_solid(const std::vector < double > &xx,const char name[], double &value, const int facename, const double time) {
   double x=xx[0];
   double y=xx[1];
   double z=xx[2];
@@ -858,7 +858,7 @@ bool SetBoundaryConditionBathe_3D_solid(const vector< double > &xx,const char na
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionComsol_2D_FSI(const vector< double > &xx,const char name[], double &value, const int FaceName, const double time) {
+bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double > &xx,const char name[], double &value, const int FaceName, const double time) {
   double x=xx[0];
   double y=xx[1];
   double z=xx[2];

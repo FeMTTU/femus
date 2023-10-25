@@ -70,21 +70,21 @@ namespace femus {
     const unsigned max_size = static_cast< unsigned > (ceil (pow (3, dim)));
 
     // local objects
-    vector<adept::adouble> SolVAR (nBlocks * dim + nP);
-    vector<double> SolVAROld (nBlocks * dim);
-    vector<adept::adouble> SolVARNew (nBlocks * dim);
+    std::vector<adept::adouble> SolVAR (nBlocks * dim + nP);
+    std::vector<double> SolVAROld (nBlocks * dim);
+    std::vector<adept::adouble> SolVARNew (nBlocks * dim);
 
-    vector < double > vxOld_ig (dim);
-    vector < adept::adouble > vxNew_ig (dim);
-    vector < adept::adouble > vx_ig (dim);
+    std::vector < double > vxOld_ig (dim);
+    std::vector < adept::adouble > vxNew_ig (dim);
+    std::vector < adept::adouble > vx_ig (dim);
 
-    vector<vector < adept::adouble > > GradSolVAR (nBlocks * dim);
-    vector<vector < adept::adouble > > GradSolhatVAR (dim);
-    vector<vector<adept::adouble> > NablaSolVAR (nBlocks * dim);
+    std::vector< std::vector < adept::adouble > > GradSolVAR (nBlocks * dim);
+    std::vector< std::vector < adept::adouble > > GradSolhatVAR (dim);
+    std::vector< std::vector < adept::adouble> > NablaSolVAR (nBlocks * dim);
 
-    vector<double> meshVelOld (dim);
-    vector<double> VelOldest (dim);
-    vector < adept::adouble > meshVel (dim);
+    std::vector< double > meshVelOld (dim);
+    std::vector< double > VelOldest (dim);
+    std::vector < adept::adouble > meshVel (dim);
 
     for (int i = 0; i < nBlocks * dim; i++) {
       GradSolVAR[i].resize (dim);
@@ -92,13 +92,13 @@ namespace femus {
       NablaSolVAR[i].resize (nabla_dim);
     }
 
-    vector < bool> solidmark;
-    vector < double > phi;
-    vector < double > phi_hat;
-    vector < adept::adouble> gradphi;
-    vector < double > gradphi_hat;
-    vector < adept::adouble> nablaphi;
-    vector < double > nablaphi_hat;
+    std::vector < bool> solidmark;
+    std::vector < double > phi;
+    std::vector < double > phi_hat;
+    std::vector < adept::adouble> gradphi;
+    std::vector < double > gradphi_hat;
+    std::vector < adept::adouble> nablaphi;
+    std::vector < double > nablaphi_hat;
 
     //vector < double > *nullDoublePointer = NULL;
     //vector < adept::adouble > *nullAdoublePointer = NULL;
@@ -107,22 +107,22 @@ namespace femus {
     adept::adouble Weight = 0.;
     double Weight_hat = 0.;
 
-    vector <vector < double> > vx_hat (dim);
-    vector <vector < double> > vxOld (dim);
-    vector <vector < adept::adouble> > vxNew (dim);
-    vector <vector < adept::adouble> > vx (dim);
-    vector <vector < adept::adouble > > vx_face (dim);
+    std::vector < std::vector < double> > vx_hat (dim);
+    std::vector < std::vector < double> > vxOld (dim);
+    std::vector < std::vector < adept::adouble> > vxNew (dim);
+    std::vector < std::vector < adept::adouble> > vx (dim);
+    std::vector < std::vector < adept::adouble > > vx_face (dim);
 
-    vector< vector< adept::adouble > > Soli (nBlocks * dim + nP);
-    vector< vector< double > > Soli_old (nBlocks * dim);
-    vector< vector< int > > dofsVAR (nBlocks * dim + nP);
-    vector< vector< double > > meshVelOldNode (dim);
+    std::vector < std::vector < adept::adouble > > Soli (nBlocks * dim + nP);
+    std::vector < std::vector < double > > Soli_old (nBlocks * dim);
+    std::vector < std::vector < int > > dofsVAR (nBlocks * dim + nP);
+    std::vector < std::vector < double > > meshVelOldNode (dim);
 
-    vector< vector< double > > Rhs (nBlocks * dim + nP);
-    vector< vector< adept::adouble > > aRhs (nBlocks * dim + nP);
+    std::vector < std::vector < double > > Rhs (nBlocks * dim + nP);
+    std::vector < std::vector < adept::adouble > > aRhs (nBlocks * dim + nP);
 
-    vector < int > dofsAll;
-    vector < double > Jac;
+    std::vector < int > dofsAll;
+    std::vector < double > Jac;
 
     // ------------------------------------------------------------------------
     // Physical parameters
@@ -177,11 +177,11 @@ namespace femus {
     const char varname[8][3] = {"DX", "DY", "DZ", "U", "V", "W", "PS", "PF"};
     const char varname2[10][4] = {"Um", "Vm", "Wm"};
 
-    vector <unsigned> indexVAR (nBlocks * dim + nP);
-    vector <unsigned> indVAR (nBlocks * dim + nP);
-    vector <unsigned> SolType (nBlocks * dim + nP);
+    std::vector <unsigned> indexVAR (nBlocks * dim + nP);
+    std::vector <unsigned> indVAR (nBlocks * dim + nP);
+    std::vector <unsigned> SolType (nBlocks * dim + nP);
 
-    vector <unsigned> indVAR2 (dim);
+    std::vector <unsigned> indVAR2 (dim);
 
     for (unsigned ivar = 0; ivar < dim; ivar++) {
       for (unsigned k = 0; k < nBlocks; k++) {
@@ -292,7 +292,7 @@ namespace femus {
 
       //Boundary integral
       {
-        vector < adept::adouble> normal (dim, 0);
+        std::vector < adept::adouble> normal (dim, 0);
 
         // loop on faces
         for (unsigned jface = 0; jface < mymsh->GetElementFaceNumber (iel); jface++) {
@@ -312,7 +312,7 @@ namespace femus {
                 unsigned nve = mymsh->GetElementFaceDofNumber (iel, jface, SolType2);
                 const unsigned felt = mymsh->GetElementFaceType (iel, jface);
 
-                vector <vector < adept::adouble > > sol_face (dim);
+                std::vector < std::vector < adept::adouble > > sol_face (dim);
                 for (unsigned idim = 0; idim < dim; idim++) {
                   vx_face[idim].resize (nve);
                   sol_face[idim].resize (nve);
@@ -335,7 +335,7 @@ namespace femus {
                 for (unsigned igs = 0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
                   mymsh->_finiteElement[felt][SolType2]->JacobianSur (vx_face, igs, Weight, phi, gradphi, normal);
 
-                  vector < adept::adouble > solVAR_face (dim);
+                  std::vector < adept::adouble > solVAR_face (dim);
                   for (unsigned idim = 0; idim < dim; idim++) {
                     solVAR_face[idim] = 0.;
                     for (unsigned i = 0; i < nve; i++) {
@@ -554,7 +554,7 @@ namespace femus {
           //BEGIN FLUID and POROUS MEDIA ASSEMBLY ============
           if (flag_mat != 4) {
             if (middle) {
-              vector < adept::adouble > gradPf (dim, 0.);
+              std::vector < adept::adouble > gradPf (dim, 0.);
               std::vector <std::vector <adept::adouble> > jacobianMatrix;
               mymsh->_finiteElement[ielt][SolType2]->GetJacobian (vx, ig, Weight, jacobianMatrix);
 
@@ -613,7 +613,7 @@ namespace femus {
               }
 
               //tauSupg=0;
-              vector < adept::adouble > phiSupg (nve, 0.);
+              std::vector < adept::adouble > phiSupg (nve, 0.);
 
               for (unsigned i = 0; i < nve; i++) {
                 for (unsigned j = 0; j < dim; j++) {
@@ -968,7 +968,7 @@ namespace femus {
 
 
     const char varname[3][4] = {"DX", "DY", "DZ"};
-    vector <unsigned> indVAR (geoDim);
+    std::vector <unsigned> indVAR (geoDim);
 
     for (unsigned ivar = 0; ivar < geoDim; ivar++) {
       indVAR[ivar] = mlSol.GetIndex (&varname[ivar][0]);
@@ -995,24 +995,24 @@ namespace femus {
     unsigned varDim = geoDim * elasticity + diffusion;
 
     // local objects
-    vector<vector<adept::adouble> > GradSolVAR (varDim);
-    vector<vector<adept::adouble> > NablaSolVAR (varDim);
+    std::vector < std::vector <adept::adouble> > GradSolVAR (varDim);
+    std::vector < std::vector <adept::adouble> > NablaSolVAR (varDim);
 
     for (int ivar = 0; ivar < varDim; ivar++) {
       GradSolVAR[ivar].resize (geoDim);
       NablaSolVAR[ivar].resize (nablaGoeDim);
     }
 
-    vector <double > phi;
-    vector <adept::adouble> gradphi;
-    vector <adept::adouble> nablaphi;
+    std::vector <double > phi;
+    std::vector <adept::adouble> gradphi;
+    std::vector <adept::adouble> nablaphi;
     adept::adouble Weight;
 
     phi.reserve (max_size);
     gradphi.reserve (max_size * geoDim);
     nablaphi.reserve (max_size * nablaGoeDim);
 
-    vector <vector < adept::adouble> > vx (geoDim);
+    std::vector < std::vector < adept::adouble> > vx (geoDim);
 
     for (int ivar = 0; ivar < geoDim; ivar++) {
       vx[ivar].reserve (max_size);
@@ -1020,9 +1020,9 @@ namespace femus {
 
     unsigned SolTypeVx = 2.;
 
-    vector< vector< adept::adouble > > Soli (varDim);
-    vector< vector< adept::adouble > > aRhs (varDim);
-    vector< vector< adept::adouble > > aLhs (varDim);
+    std::vector < std::vector < adept::adouble > > Soli (varDim);
+    std::vector < std::vector < adept::adouble > > aRhs (varDim);
+    std::vector < std::vector < adept::adouble > > aLhs (varDim);
 
     for (int ivar = 0; ivar < varDim; ivar++) {
       Soli[ivar].reserve (max_size);
@@ -1030,9 +1030,9 @@ namespace femus {
       aLhs[ivar].reserve (max_size);
     }
 
-    vector < double > K;
+    std::vector < double > K;
     K.reserve ( (max_size * varDim) * (max_size * varDim));
-    vector < double > M;
+    std::vector < double > M;
     M.reserve ( (max_size * varDim) * (max_size * varDim));
 
     // mesh and procs
@@ -1126,7 +1126,7 @@ namespace femus {
         }
 
 
-        vector < adept::adouble > divGradSol (varDim, 0.);
+        std::vector < adept::adouble > divGradSol (varDim, 0.);
 
         for (unsigned ivar = 0; ivar < varDim; ivar++) {
           for (unsigned jvar = 0; jvar < geoDim; jvar++) {
@@ -1241,8 +1241,8 @@ namespace femus {
         // x = y
 
 
-        vector < double > x (matSize, 1.);
-        vector < double > y (matSize);
+        std::vector < double > x (matSize, 1.);
+        std::vector < double > y (matSize);
 
         double phik = x[0] + x[1];
         lambdak = 1.;
@@ -1333,7 +1333,7 @@ namespace femus {
     const unsigned dim = msh->GetDimension();
     const char varname[9][4] = {"DX", "U", "Um", "DY", "V", "Vm", "DZ", "W", "Wm"};
 
-    vector <unsigned> indVAR (3 * dim);
+    std::vector <unsigned> indVAR (3 * dim);
 
     for (unsigned ivar = 0; ivar < 3 * dim; ivar++) {
       indVAR[ivar] = ml_sol->GetIndex (&varname[ivar][0]);

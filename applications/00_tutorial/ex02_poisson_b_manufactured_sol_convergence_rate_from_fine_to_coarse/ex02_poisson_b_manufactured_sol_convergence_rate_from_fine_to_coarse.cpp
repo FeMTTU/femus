@@ -42,7 +42,7 @@ double GetExactSolutionValue(const std::vector < double >& x) {
 }
 
 
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
   double pi = acos(-1.);
   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
@@ -121,10 +121,10 @@ int main(int argc, char** args) {
 
   const unsigned gap = 1;
 
-  vector < vector < double > > l2Norm;
+  std::vector < std::vector < double > > l2Norm;
   l2Norm.resize(maxNumberOfMeshes + 1 - gap);
 
-  vector < vector < double > > semiNorm;
+  std::vector < std::vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes + 1 - gap);
 
   

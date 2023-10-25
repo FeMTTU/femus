@@ -220,8 +220,8 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u");   // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution
-  vector < double >  soluOld; // local solution
+  std::vector < adept::adouble >  solu; // local solution
+  std::vector < double >  soluOld; // local solution
 
   unsigned solHIndex;
   solHIndex = mlSol->GetIndex ("H");   // get the position of "v" in the ml_sol object
@@ -231,7 +231,7 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
   solHPdeIndex = mlPdeSys->GetSolPdeIndex ("H");   // get the position of "v" in the pdeSys object
 
 
-  vector < adept::adouble >  solH; // local solution
+  std::vector < adept::adouble >  solH; // local solution
 
 
   unsigned solWIndex;
@@ -241,22 +241,22 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
   unsigned solWPdeIndex;
   solWPdeIndex = mlPdeSys->GetSolPdeIndex ("W");   // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solW; // local solution
+  std::vector < adept::adouble >  solW; // local solution
 
 
-  vector < vector < double > > x (dim);   // local coordinates
+  std::vector < std::vector < double > > x (dim);   // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
 
-  vector< int > sysDof; // local to global pdeSys dofs
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector < int > sysDof; // local to global pdeSys dofs
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
 
   double weight; // gauss point weight
 
-  vector< double > Res; // local redidual vector
-  vector< adept::adouble > aResu; // local redidual vector
-  vector< adept::adouble > aResH; // local redidual vector
-  vector< adept::adouble > aResW; // local redidual vector
+  std::vector < double > Res; // local redidual vector
+  std::vector < adept::adouble > aResu; // local redidual vector
+  std::vector < adept::adouble > aResH; // local redidual vector
+  std::vector < adept::adouble > aResW; // local redidual vector
 
 
   // reserve memory for the local standar vectors
@@ -280,7 +280,7 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
   aResH.reserve (maxSize);
   aResW.reserve (maxSize);
 
-  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
+  std::vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
   Jac.reserve (9 * maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -344,10 +344,10 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       //adept::adouble soluGauss = 0;
 
-      vector < adept::adouble > u_x (dim, 0.);
+      std::vector < adept::adouble > u_x (dim, 0.);
 
       adept::adouble W = 0;
-      vector < adept::adouble > W_x (dim, 0.);
+      std::vector < adept::adouble > W_x (dim, 0.);
 
       adept::adouble H = 0;
 
@@ -382,7 +382,7 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
       HPintegralLocal += pow( H.value(), P) * A.value() * weight;
 
       double Id[2][2] = {{1., 0.}, {0., 1.}};
-      vector < vector < adept::adouble> > B (dim);
+      std::vector < std::vector < adept::adouble> > B (dim);
 
       for (unsigned idim = 0; idim < dim; idim++) {
         B[idim].resize (dim);
@@ -492,13 +492,13 @@ void AssembleInitialPWillmore (MultiLevelProblem& ml_prob) {
   unsigned soluType = mlSol->GetSolutionType (soluIndex);   // get the finite element type for "u"
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u");   // get the position of "u" in the pdeSys object
-  vector < adept::adouble >  solu; // local solution
+  std::vector < adept::adouble >  solu; // local solution
 
 
   unsigned solHIndex;
   solHIndex = mlSol->GetIndex ("H");   // get the position of "v" in the ml_sol object
   unsigned solHType = mlSol->GetSolutionType (solHIndex);   // get the finite element type for "v"
-  vector < double >  solH; // local solution
+  std::vector < double >  solH; // local solution
 
 
   unsigned solWIndex;
@@ -506,21 +506,21 @@ void AssembleInitialPWillmore (MultiLevelProblem& ml_prob) {
   unsigned solWType = mlSol->GetSolutionType (solWIndex);   // get the finite element type for "u"
   unsigned solWPdeIndex;
   solWPdeIndex = mlPdeSys->GetSolPdeIndex ("W");   // get the position of "u" in the pdeSys object
-  vector < adept::adouble >  solW; // local solution
+  std::vector < adept::adouble >  solW; // local solution
 
 
-  vector < vector < double > > x (dim);   // local coordinates
+  std::vector < std::vector < double > > x (dim);   // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
 
-  vector< int > sysDof; // local to global pdeSys dofs
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector < int > sysDof; // local to global pdeSys dofs
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
 
   double weight; // gauss point weight
 
-  vector< double > Res; // local redidual vector
-  vector< adept::adouble > aResu; // local redidual vector
-  vector< adept::adouble > aResW; // local redidual vector
+  std::vector < double > Res; // local redidual vector
+  std::vector < adept::adouble > aResu; // local redidual vector
+  std::vector < adept::adouble > aResW; // local redidual vector
 
 
   // reserve memory for the local standar vectors
@@ -541,7 +541,7 @@ void AssembleInitialPWillmore (MultiLevelProblem& ml_prob) {
   aResu.reserve (maxSize);
   aResW.reserve (maxSize);
 
-  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
+  std::vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
   Jac.reserve (4 * maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -597,7 +597,7 @@ void AssembleInitialPWillmore (MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       //adept::adouble soluGauss = 0;
 
-      vector < adept::adouble > u_x (dim, 0.);
+      std::vector < adept::adouble > u_x (dim, 0.);
 
       adept::adouble W = 0;
 
@@ -625,7 +625,7 @@ void AssembleInitialPWillmore (MultiLevelProblem& ml_prob) {
       adept::adouble A2 = A * A;
 
       double Id[2][2] = {{1., 0.}, {0., 1.}};
-      vector < vector < adept::adouble> > B (dim);
+      std::vector < std::vector < adept::adouble> > B (dim);
 
       for (unsigned idim = 0; idim < dim; idim++) {
         B[idim].resize (dim);
@@ -723,19 +723,19 @@ void AssembleInitialM1 (MultiLevelProblem& ml_prob) {
   unsigned soluType = mlSol->GetSolutionType (soluIndex);   // get the finite element type for "u"
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u");   // get the position of "u" in the pdeSys object
-  vector < adept::adouble >  solu; // local solution
+  std::vector < adept::adouble >  solu; // local solution
 
-  vector < vector < double > > x (dim);   // local coordinates
+  std::vector < std::vector < double > > x (dim);   // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
 
-  vector< int > sysDof; // local to global pdeSys dofs
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector < int > sysDof; // local to global pdeSys dofs
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
 
   double weight; // gauss point weight
 
-  vector< double > Res; // local redidual vector
-  vector< adept::adouble > aResu; // local redidual vector
+  std::vector < double > Res; // local redidual vector
+  std::vector < adept::adouble > aResu; // local redidual vector
 
 
   // reserve memory for the local standar vectors
@@ -754,7 +754,7 @@ void AssembleInitialM1 (MultiLevelProblem& ml_prob) {
   Res.reserve ( maxSize);
   aResu.reserve (maxSize);
 
-  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
+  std::vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
   Jac.reserve (maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -804,7 +804,7 @@ void AssembleInitialM1 (MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       //adept::adouble soluGauss = 0;
 
-      vector < adept::adouble > u_x (dim, 0.);
+      std::vector < adept::adouble > u_x (dim, 0.);
 
       for (unsigned i = 0; i < nDofs; i++) {
         for (unsigned idim = 0; idim < dim; idim++) {

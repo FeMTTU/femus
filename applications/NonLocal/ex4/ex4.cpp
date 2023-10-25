@@ -349,17 +349,17 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolGlobal) {
     unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
     unsigned nDofx = msh->GetElementDofNumber (iel, xType);
 
-    vector < vector < double > > x1 (dim);
+    std::vector < std::vector < double > > x1 (dim);
 
     for (int i = 0; i < dim; i++) {
       x1[i].resize (nDofx);
     }
 
-    vector < double >  solu (nDofu);
-    vector < double >  solu1 (nDofu);
-    vector < double >  solu2 (nDofu);
-    vector < double >  solu3 (nDofu);
-    vector < double >  solu4 (nDofu);
+    std::vector < double >  solu (nDofu);
+    std::vector < double >  solu1 (nDofu);
+    std::vector < double >  solu2 (nDofu);
+    std::vector < double >  solu3 (nDofu);
+    std::vector < double >  solu4 (nDofu);
 
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDofu = msh->GetSolutionDof (i, iel, soluType);
@@ -382,8 +382,8 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolGlobal) {
       }
     }
 
-    vector <double> phi;
-    vector <double> phi_x;
+    std::vector <double> phi;
+    std::vector <double> phi_x;
     double weight;
 
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {

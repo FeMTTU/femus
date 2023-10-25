@@ -105,21 +105,21 @@ void AssembleSysSG (MultiLevelProblem& ml_prob) {
     eigfIndex[i] = mlSol->GetIndex (name);   // get the position of "u" in the ml_sol object
   }
 
-  vector < double > KLexpansion; // local solution
+  std::vector < double > KLexpansion; // local solution
 
-  vector < vector < double > >  solu (Jp.size());   // local solution
+  std::vector < std::vector < double > >  solu (Jp.size());   // local solution
 
-  vector < vector < double > > x (dim);   // local coordinates
+  std::vector < std::vector < double > > x (dim);   // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx;
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx;
   double weight; // gauss point weight
 
-  vector< int > l2GMap; // local to global mapping
-  vector< double > Res; // local redidual vector
-  vector < double > Jac;
+  std::vector < int > l2GMap; // local to global mapping
+  std::vector < double > Res; // local redidual vector
+  std::vector < double > Jac;
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
@@ -180,7 +180,7 @@ void AssembleSysSG (MultiLevelProblem& ml_prob) {
       }
 
 
-      vector< double > aStochastic (Jq.size());
+      std::vector < double > aStochastic (Jq.size());
 
 //BEGIN coefficient obtained projecting the exponential of the KL
       for (unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
@@ -263,7 +263,7 @@ void AssembleSysSG (MultiLevelProblem& ml_prob) {
 //             }
 //END coefficient without KL, not a field, just dependent on y
 
-      vector < vector < double > > laplace (nDofu);
+      std::vector < std::vector < double > > laplace (nDofu);
 
       for (unsigned i = 0; i < nDofu; i++) {
         laplace[i].assign (nDofu, 0.);

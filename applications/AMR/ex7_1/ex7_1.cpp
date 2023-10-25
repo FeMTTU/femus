@@ -147,9 +147,9 @@ int main(int argc, char** argv) {
 //     exit(1);
 //   }
 
-//     vector < double >  l2error;
+//     std::vector < double >  l2error;
 //     l2error.resize (3);
-//     vector < double >  H1error;
+//     std::vector < double >  H1error;
 //     H1error.resize (3);
   double l2error[2][2][3];
   double H1error[2][2][3];
@@ -594,20 +594,20 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
 
   //coordinates
-  vector< vector < double> > coordinates(dim);
+  std::vector < std::vector < double> > coordinates(dim);
 
   // declare
-  vector< int > metis_node;
-  vector< int > KK_dof;
-  vector <double> phi;
-  vector <double> gradphi;
-  vector <double> nablaphi;
+  std::vector < int > metis_node;
+  std::vector < int > KK_dof;
+  std::vector <double> phi;
+  std::vector <double> gradphi;
+  std::vector <double> nablaphi;
   double weight;
-  vector< double > F;
-  vector< double > B;
-  vector<double> normal(3.0);
+  std::vector < double > F;
+  std::vector < double > B;
+  std::vector <double> normal(3.0);
   double src_term = 0.;
-  vector<double> xyzt(4, 0.);
+  std::vector <double> xyzt(4, 0.);
   ParsedFunction* bdcfunc = NULL;
 
   // reserve
@@ -670,7 +670,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
       ml_prob._ml_msh->_finiteElement[ielt][order_ind]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
       //current solution
       double SolT = 0;
-      vector < double > gradSolT(dim, 0.);
+      std::vector < double > gradSolT(dim, 0.);
 
       for(unsigned ivar = 0; ivar < dim; ivar++) {
         gradSolT[ivar] = 0;
@@ -840,13 +840,13 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
 
 
     const unsigned	dim	= msh->GetDimension();
-    vector< vector < double> > coordinates(dim);
+    std::vector < std::vector < double> > coordinates(dim);
 
-    vector< int > metis_node;
+    std::vector < int > metis_node;
 
-    vector <double> phi;
-    vector <double> gradphi;
-    vector <double> nablaphi;
+    std::vector <double> phi;
+    std::vector <double> gradphi;
+    std::vector <double> nablaphi;
 
     double weight;
 
@@ -896,7 +896,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
         ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
         //current solution
         double SolT = 0;
-        vector < double > gradSolT(dim, 0.);
+        std::vector < double > gradSolT(dim, 0.);
 
         for(unsigned ivar = 0; ivar < dim; ivar++) {
           gradSolT[ivar] = 0;

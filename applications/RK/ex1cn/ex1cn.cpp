@@ -187,35 +187,35 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution
+  std::vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
 
-  vector < double >  soluOld; // local solution
+  std::vector < double >  soluOld; // local solution
   soluOld.reserve(maxSize);
 
   
-  vector < vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
+  std::vector < std::vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned k = 0; k < dim; k++) { 
     x[k].reserve(maxSize); // dim x maxsize is reserved for x.  
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
   
   double weight; // gauss point weight
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim); // This is probably gradient but he is doing the life difficult for me!
   
-  vector< adept::adouble > aRes; // local redidual vector
+  std::vector < adept::adouble > aRes; // local redidual vector
   aRes.reserve(maxSize);
 
-  vector< int > l2GMap; // local to global mapping
+  std::vector < int > l2GMap; // local to global mapping
   l2GMap.reserve(maxSize);
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve(maxSize);
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -273,7 +273,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 //         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
 //         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);
 //                     
-//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+//         std::vector < std::vector <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
 //         for ( int k = 0; k < dim; k++ ) {
 //           faceCoordinates[k].resize (faceDofs);
 //         }
@@ -285,7 +285,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 //         }
 //         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][soluType]->GetGaussPointNumber(); ig++ ) { 
 //             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
-//           vector < double> normal;
+//           std::vector < double> normal;
 //           msh->_finiteElement[faceGeom][soluType]->JacobianSur ( faceCoordinates, ig, weight, phi, phi_x, normal );
 //             
 //           adept::adouble solu_gss = 0;
@@ -316,10 +316,10 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solu_gss = 0;
-      vector < adept::adouble > gradSolu_gss(dim, 0.);
+      std::vector < adept::adouble > gradSolu_gss(dim, 0.);
       
       double soluOld_gss = 0;
-      vector < double > gradSoluOld_gss(dim, 0.);
+      std::vector < double > gradSoluOld_gss(dim, 0.);
             
 
       for (unsigned i = 0; i < nDofu; i++) {

@@ -89,19 +89,19 @@ inline static unsigned int compute_sum_n_dofs(const std::vector < unsigned int >
       return sum_Sol_n_el_dofs;
 }
 
-   inline vector < int >      & dof_map() { return loc_to_glob_map_all_vars; }
+   inline std::vector < int >      & dof_map() { return loc_to_glob_map_all_vars; }
     
-   inline vector < real_num > & res() { return Res; }
+   inline std::vector < real_num > & res() { return Res; }
     
-   inline vector < double >   & jac() { return Jac; }                         
+   inline std::vector < double >   & jac() { return Jac; }                         
    
    
 private:
     
-  vector < int >      loc_to_glob_map_all_vars;  
-  vector < vector < int > >     loc_to_glob_map;  
-  vector < real_num >  Res;                         
-  vector < double >    Jac;
+  std::vector < int >      loc_to_glob_map_all_vars;  
+  std::vector < std::vector < int > >     loc_to_glob_map;  
+  std::vector < real_num >  Res;                         
+  std::vector < double >    Jac;
   const std::vector< UnknownLocal < real_num > > & unknowns;   
   const unsigned int n_unknowns;
     

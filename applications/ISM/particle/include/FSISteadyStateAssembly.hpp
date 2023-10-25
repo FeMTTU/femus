@@ -34,12 +34,12 @@ namespace femus {
     const unsigned max_size = static_cast < unsigned >(ceil(pow(3, dim)));
 
     // local objects
-    vector < adept::adouble> SolVAR(2 * dim + 1);
-    vector < vector < adept::adouble> > GradSolVAR(2 * dim);
-    vector < vector < adept::adouble> > GradSolhatVAR(2 * dim);
+    std::vector < adept::adouble> SolVAR(2 * dim + 1);
+    std::vector < std::vector < adept::adouble> > GradSolVAR(2 * dim);
+    std::vector < std::vector < adept::adouble> > GradSolhatVAR(2 * dim);
 
-    vector < vector < adept::adouble> > NablaSolVAR(2 * dim);
-    vector < vector < adept::adouble> > NablaSolhatVAR(2 * dim);
+    std::vector < std::vector < adept::adouble> > NablaSolVAR(2 * dim);
+    std::vector < std::vector < adept::adouble> > NablaSolhatVAR(2 * dim);
 
     for(int i = 0; i < 2 * dim; i++) {
       GradSolVAR[i].resize(dim);
@@ -49,13 +49,13 @@ namespace femus {
       NablaSolhatVAR[i].resize(3 * (dim - 1));
     }
 
-    vector  < bool> solidmark;
-    vector  < double > phi;
-    vector  < double > phi_hat;
-    vector  < adept::adouble> gradphi;
-    vector  < double> gradphi_hat;
-    vector  < adept::adouble> nablaphi;
-    vector  < double> nablaphi_hat;
+    std::vector < bool> solidmark;
+    std::vector < double > phi;
+    std::vector < double > phi_hat;
+    std::vector < adept::adouble> gradphi;
+    std::vector < double> gradphi_hat;
+    std::vector < adept::adouble> nablaphi;
+    std::vector < double> nablaphi_hat;
 
     phi.reserve(max_size);
     solidmark.reserve(max_size);
@@ -71,9 +71,9 @@ namespace femus {
     double jacobianOverArea = 0.;
     double jacobian_hat = 0.;
 
-    vector  < vector  <  adept::adouble> > vx(dim);
-    vector  < vector  <  adept::adouble> > vx_face(dim);
-    vector  < vector  <  double> > vx_hat(dim);
+    std::vector < std::vector <  adept::adouble> > vx(dim);
+    std::vector < std::vector <  adept::adouble> > vx_face(dim);
+    std::vector < std::vector <  double> > vx_hat(dim);
 
     for(int i = 0; i < dim; i++) {
       vx[i].reserve(max_size);
@@ -81,26 +81,26 @@ namespace femus {
       vx_hat[i].reserve(max_size);
     }
 
-    vector <  vector <  adept::adouble > > Soli(2 * dim + 1);
-    vector <  vector <  int > > dofsVAR(2 * dim + 1);
+    std::vector <  std::vector <  adept::adouble > > Soli(2 * dim + 1);
+    std::vector <  std::vector <  int > > dofsVAR(2 * dim + 1);
 
     for(int i = 0; i < 2 * dim + 1; i++) {
       Soli[i].reserve(max_size);
       dofsVAR[i].reserve(max_size);
     }
 
-    vector <  vector <  double > > Rhs(2 * dim + 1);
-    vector <  vector <  adept::adouble > > aRhs(2 * dim + 1);
+    std::vector <  std::vector <  double > > Rhs(2 * dim + 1);
+    std::vector <  std::vector <  adept::adouble > > aRhs(2 * dim + 1);
 
     for(int i = 0; i < 2 * dim + 1; i++) {
       aRhs[i].reserve(max_size);
       Rhs[i].reserve(max_size);
     }
 
-    vector  <  int > dofsAll;
+    std::vector <  int > dofsAll;
     dofsAll.reserve(max_size * (2 + dim + 1));
 
-    vector  <  double > Jac;
+    std::vector <  double > Jac;
     Jac.reserve(dim * max_size * (2 * dim + 1)*dim * max_size * (2 * dim + 1));
 
     // ------------------------------------------------------------------------
@@ -135,9 +135,9 @@ namespace femus {
     //----------------------------------------------------------------------------------
     //variable-name handling
     const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "P"};
-    vector  < unsigned> indexVAR(2 * dim + 1);
-    vector  < unsigned> indVAR(2 * dim + 1);
-    vector  < unsigned> SolType(2 * dim + 1);
+    std::vector < unsigned> indexVAR(2 * dim + 1);
+    std::vector < unsigned> indVAR(2 * dim + 1);
+    std::vector < unsigned> SolType(2 * dim + 1);
 
     for(unsigned ivar = 0; ivar < dim; ivar++) {
       indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
@@ -255,11 +255,11 @@ namespace femus {
       // Boundary integral
       {
         double tau = 0.;
-        vector < adept::adouble> normal(dim, 0);
+        std::vector < adept::adouble> normal(dim, 0);
 
         // loop on faces
         for(unsigned jface = 0; jface < mymsh->GetElementFaceNumber(iel); jface++) {
-          std::vector  <  double > xx(3, 0.);
+          std::vector <  double > xx(3, 0.);
 
           // look for boundary faces
           if(myel->GetFaceElementIndex(iel, jface) < 0) {
@@ -734,12 +734,12 @@ namespace femus {
     const unsigned max_size = static_cast < unsigned >(ceil(pow(3, dim)));
 
     // local objects
-    vector < adept::adouble> SolVAR(2 * dim + 1);
-    vector < vector < adept::adouble> > GradSolVAR(2 * dim);
-    vector < vector < adept::adouble> > GradSolhatVAR(2 * dim);
+    std::vector < adept::adouble> SolVAR(2 * dim + 1);
+    std::vector < std::vector < adept::adouble> > GradSolVAR(2 * dim);
+    std::vector < std::vector < adept::adouble> > GradSolhatVAR(2 * dim);
 
-    vector < vector < adept::adouble> > NablaSolVAR(2 * dim);
-    vector < vector < adept::adouble> > NablaSolhatVAR(2 * dim);
+    std::vector < std::vector < adept::adouble> > NablaSolVAR(2 * dim);
+    std::vector < std::vector < adept::adouble> > NablaSolhatVAR(2 * dim);
 
     for(int i = 0; i < 2 * dim; i++) {
       GradSolVAR[i].resize(dim);
@@ -749,13 +749,13 @@ namespace femus {
       NablaSolhatVAR[i].resize(3 * (dim - 1));
     }
 
-    vector  < bool> solidmark;
-    vector  < double > phi;
-    vector  < double > phi_hat;
-    vector  < adept::adouble> gradphi;
-    vector  < double> gradphi_hat;
-    vector  < adept::adouble> nablaphi;
-    vector  < double> nablaphi_hat;
+    std::vector < bool> solidmark;
+    std::vector < double > phi;
+    std::vector < double > phi_hat;
+    std::vector < adept::adouble> gradphi;
+    std::vector < double> gradphi_hat;
+    std::vector < adept::adouble> nablaphi;
+    std::vector < double> nablaphi_hat;
 
     phi.reserve(max_size);
     solidmark.reserve(max_size);
@@ -771,9 +771,9 @@ namespace femus {
     double jacobianOverArea = 0.;
     double jacobian_hat = 0.;
 
-    vector  < vector  <  adept::adouble> > vx(dim);
-    vector  < vector  <  adept::adouble> > vx_face(dim);
-    vector  < vector  <  double> > vx_hat(dim);
+    std::vector < std::vector <  adept::adouble> > vx(dim);
+    std::vector < std::vector <  adept::adouble> > vx_face(dim);
+    std::vector < std::vector <  double> > vx_hat(dim);
 
     for(int i = 0; i < dim; i++) {
       vx[i].reserve(max_size);
@@ -781,26 +781,26 @@ namespace femus {
       vx_hat[i].reserve(max_size);
     }
 
-    vector <  vector <  adept::adouble > > Soli(2 * dim + 1);
-    vector <  vector <  int > > dofsVAR(2 * dim + 1);
+    std::vector <  std::vector <  adept::adouble > > Soli(2 * dim + 1);
+    std::vector <  std::vector <  int > > dofsVAR(2 * dim + 1);
 
     for(int i = 0; i < 2 * dim + 1; i++) {
       Soli[i].reserve(max_size);
       dofsVAR[i].reserve(max_size);
     }
 
-    vector <  vector <  double > > Rhs(2 * dim + 1);
-    vector <  vector <  adept::adouble > > aRhs(2 * dim + 1);
+    std::vector <  std::vector <  double > > Rhs(2 * dim + 1);
+    std::vector <  std::vector <  adept::adouble > > aRhs(2 * dim + 1);
 
     for(int i = 0; i < 2 * dim + 1; i++) {
       aRhs[i].reserve(max_size);
       Rhs[i].reserve(max_size);
     }
 
-    vector  <  int > dofsAll;
+    std::vector <  int > dofsAll;
     dofsAll.reserve(max_size * (2 + dim + 1));
 
-    vector  <  double > Jac;
+    std::vector <  double > Jac;
     Jac.reserve(dim * max_size * (2 * dim + 1)*dim * max_size * (2 * dim + 1));
 
     // ------------------------------------------------------------------------
@@ -833,9 +833,9 @@ namespace femus {
     //----------------------------------------------------------------------------------
     //variable-name handling
     const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "P"};
-    vector  < unsigned> indexVAR(2 * dim + 1);
-    vector  < unsigned> indVAR(2 * dim + 1);
-    vector  < unsigned> SolType(2 * dim + 1);
+    std::vector < unsigned> indexVAR(2 * dim + 1);
+    std::vector < unsigned> indVAR(2 * dim + 1);
+    std::vector < unsigned> SolType(2 * dim + 1);
 
     for(unsigned ivar = 0; ivar < dim; ivar++) {
       indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
@@ -953,11 +953,11 @@ namespace femus {
       // Boundary integral
       {
         double tau = 0.;
-        vector < adept::adouble> normal(dim, 0);
+        std::vector < adept::adouble> normal(dim, 0);
 
         // loop on faces
         for(unsigned jface = 0; jface < mymsh->GetElementFaceNumber(iel); jface++) {
-          std::vector  <  double > xx(3, 0.);
+          std::vector <  double > xx(3, 0.);
 
           // look for boundary faces
           if(myel->GetFaceElementIndex(iel, jface) < 0) {

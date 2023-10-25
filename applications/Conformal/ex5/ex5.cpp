@@ -254,11 +254,11 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  vector< double > Res;
+  std::vector < double > Res;
   std::vector < std::vector< adept::adouble > > aResDx (dim);
 
   // Local Jacobian matrix (ordered by column).
-  vector < double > Jac;
+  std::vector < double > Jac;
 
   KK->zero();  // Zero all the entries of the Global Matrix
   RES->zero(); // Zero all the entries of the Global Residual

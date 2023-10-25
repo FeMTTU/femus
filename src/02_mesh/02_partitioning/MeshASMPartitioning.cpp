@@ -19,7 +19,6 @@
 #include "MeshASMPartitioning.hpp"
 #include "Mesh.hpp"
 
-//C++ include
 
 
 
@@ -31,8 +30,8 @@ MeshASMPartitioning::MeshASMPartitioning(Mesh& mesh) : MeshPartitioning(mesh) {
 }
 
 //----------------------------------------------------------------------------------------------------------------
-void MeshASMPartitioning::DoPartitionOld( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
-					 vector <unsigned> &block_type_range){
+void MeshASMPartitioning::DoPartitionOld( const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements,
+					 std::vector <unsigned> &block_type_range){
 
   unsigned iproc=processor_id();
   unsigned ElemOffset    = _mesh._elementOffset[iproc];
@@ -86,8 +85,8 @@ void MeshASMPartitioning::DoPartitionOld( const unsigned *block_size, vector < v
 
 }
 
-void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
-                                         vector <unsigned> &block_type_range){
+void MeshASMPartitioning::DoPartition( const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements,
+                                         std::vector <unsigned> &block_type_range){
 
     unsigned iproc = processor_id();
     unsigned ElemOffset    = _mesh._elementOffset[iproc];

@@ -63,54 +63,54 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u");   // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
+  std::vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
   solu.reserve (maxSize);
 
-  vector < double >  solu1; // local solution for the nonlocal assembly
-  vector < double >  solu2; // local solution for the nonlocal assembly
+  std::vector < double >  solu1; // local solution for the nonlocal assembly
+  std::vector < double >  solu2; // local solution for the nonlocal assembly
   solu1.reserve (maxSize);
   solu2.reserve (maxSize);
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector < double > > x1 (dim);
-  vector < vector < double > > x2 (dim);
+  std::vector < std::vector < double > > x1 (dim);
+  std::vector < std::vector < double > > x2 (dim);
 
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
     x2[k].reserve (maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   phi.reserve (maxSize);
   phi_x.reserve (maxSize * dim);
   phi_xx.reserve (maxSize * dim2);
 
-  vector< adept::adouble > aRes; // local redidual vector
+  std::vector < adept::adouble > aRes; // local redidual vector
   aRes.reserve (maxSize);
 
-  vector< int > l2GMap1; // local to global mapping
-  vector< int > l2GMap2; // local to global mapping
+  std::vector < int > l2GMap1; // local to global mapping
+  std::vector < int > l2GMap2; // local to global mapping
   l2GMap1.reserve (maxSize);
   l2GMap2.reserve (maxSize);
 
-  vector< double > Res1; // local redidual vector
+  std::vector < double > Res1; // local redidual vector
   Res1.reserve (maxSize);
-  vector< double > Res2; // local redidual vector
+  std::vector < double > Res2; // local redidual vector
   Res2.reserve (maxSize);
 
-  vector < double > Jac11;
+  std::vector < double > Jac11;
   Jac11.reserve (maxSize * maxSize);
-  vector < double > Jac12;
+  std::vector < double > Jac12;
   Jac12.reserve (maxSize * maxSize);
 
-  vector < double > Jac21;
+  std::vector < double > Jac21;
   Jac21.reserve (maxSize * maxSize);
-  vector < double > Jac22;
+  std::vector < double > Jac22;
   Jac22.reserve (maxSize * maxSize);
 
 
@@ -206,9 +206,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         double rightBoundInterface = sideLength;
 
         unsigned igNumber = (midpointQuadrature) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
-        vector < vector < double > > xg1 (igNumber);
-        vector <double> weight1 (igNumber);
-        vector < vector <double> > phi1x (igNumber);
+        std::vector < std::vector < double > > xg1 (igNumber);
+        std::vector <double> weight1 (igNumber);
+        std::vector < std::vector <double> > phi1x (igNumber);
 
         if (midpointQuadrature) {
 
@@ -302,7 +302,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
               for (unsigned jg = 0; jg < jgNumber; jg++) {
 
-                vector <double>  phi2y;
+                std::vector <double>  phi2y;
                 double weight2;
 
                 msh->_finiteElement[jelGeom][soluType]->Jacobian (x2New, jg, weight2, phi2y, phi_x);
@@ -421,36 +421,36 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u_local");   // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
+  std::vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
   solu.reserve (maxSize);
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector < double > > x1 (dim);
+  std::vector < std::vector < double > > x1 (dim);
 
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   phi.reserve (maxSize);
   phi_x.reserve (maxSize * dim);
   phi_xx.reserve (maxSize * dim2);
 
-  vector< adept::adouble > aRes; // local redidual vector
+  std::vector < adept::adouble > aRes; // local redidual vector
   aRes.reserve (maxSize);
 
-  vector< int > l2GMap1; // local to global mapping
+  std::vector < int > l2GMap1; // local to global mapping
   l2GMap1.reserve (maxSize);
 
-  vector< double > Res1; // local redidual vector
+  std::vector < double > Res1; // local redidual vector
   Res1.reserve (maxSize);
 
-  vector < double > Jac11;
+  std::vector < double > Jac11;
   Jac11.reserve (maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -533,8 +533,8 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 
-      vector < adept::adouble > gradSolu_gss (dim, 0.);
-      vector < double > x_gss (dim, 0.);
+      std::vector < adept::adouble > gradSolu_gss (dim, 0.);
+      std::vector < double > x_gss (dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         for (unsigned jdim = 0; jdim < dim; jdim++) {
@@ -647,54 +647,54 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u_fine");   // get the position of "u" in the pdeSys object
 
-  vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
+  std::vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
   solu.reserve (maxSize);
 
-  vector < double >  solu1; // local solution for the nonlocal assembly
-  vector < double >  solu2; // local solution for the nonlocal assembly
+  std::vector < double >  solu1; // local solution for the nonlocal assembly
+  std::vector < double >  solu2; // local solution for the nonlocal assembly
   solu1.reserve (maxSize);
   solu2.reserve (maxSize);
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector < vector < double > > x1 (dim);
-  vector < vector < double > > x2 (dim);
+  std::vector < std::vector < double > > x1 (dim);
+  std::vector < std::vector < double > > x2 (dim);
 
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
     x2[k].reserve (maxSize);
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   phi.reserve (maxSize);
   phi_x.reserve (maxSize * dim);
   phi_xx.reserve (maxSize * dim2);
 
-  vector< adept::adouble > aRes; // local redidual vector
+  std::vector < adept::adouble > aRes; // local redidual vector
   aRes.reserve (maxSize);
 
-  vector< int > l2GMap1; // local to global mapping
-  vector< int > l2GMap2; // local to global mapping
+  std::vector < int > l2GMap1; // local to global mapping
+  std::vector < int > l2GMap2; // local to global mapping
   l2GMap1.reserve (maxSize);
   l2GMap2.reserve (maxSize);
 
-  vector< double > Res1; // local redidual vector
+  std::vector < double > Res1; // local redidual vector
   Res1.reserve (maxSize);
-  vector< double > Res2; // local redidual vector
+  std::vector < double > Res2; // local redidual vector
   Res1.reserve (maxSize);
 
-  vector < double > Jac11;
+  std::vector < double > Jac11;
   Jac11.reserve (maxSize * maxSize);
-  vector < double > Jac12;
+  std::vector < double > Jac12;
   Jac12.reserve (maxSize * maxSize);
 
-  vector < double > Jac21;
+  std::vector < double > Jac21;
   Jac21.reserve (maxSize * maxSize);
-  vector < double > Jac22;
+  std::vector < double > Jac22;
   Jac22.reserve (maxSize * maxSize);
 
 
@@ -790,9 +790,9 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
         double rightBoundInterface = sideLength;
 
         unsigned igNumber = (midpointQuadrature) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
-        vector < vector < double > > xg1 (igNumber);
-        vector <double> weight1 (igNumber);
-        vector < vector <double> > phi1x (igNumber);
+        std::vector < std::vector < double > > xg1 (igNumber);
+        std::vector <double> weight1 (igNumber);
+        std::vector < std::vector <double> > phi1x (igNumber);
 
         if (midpointQuadrature) {
 
@@ -886,7 +886,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
 
               for (unsigned jg = 0; jg < jgNumber; jg++) {
 
-                vector <double>  phi2y;
+                std::vector <double>  phi2y;
                 double weight2;
 
                 msh->_finiteElement[jelGeom][soluType]->Jacobian (x2New, jg, weight2, phi2y, phi_x);

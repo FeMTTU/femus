@@ -63,9 +63,9 @@ namespace femus {
       };
 
       /** To be Added */
-      void BuildAMSIndex(const vector <unsigned> &variable_to_be_solved);
+      void BuildAMSIndex(const std::vector <unsigned> &variable_to_be_solved);
 
-      void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved) {
+      void BuildBdcIndex(const std::vector <unsigned> &variable_to_be_solved) {
         if(!_standardASM){
           BuildAMSIndex(variable_to_be_solved);
         }
@@ -79,16 +79,16 @@ namespace femus {
       unsigned _elementBlockNumber[3];
       unsigned short _NSchurVar;
 
-      vector< vector <PetscInt> > _overlappingIsIndex;
-      vector< vector <PetscInt> > _localIsIndex;
-      vector <IS> _overlappingIs;
-      vector <IS> _localIs;
+      std::vector< std::vector <PetscInt> > _overlappingIsIndex;
+      std::vector< std::vector <PetscInt> > _localIsIndex;
+      std::vector <IS> _overlappingIs;
+      std::vector <IS> _localIs;
 
       PetscInt  _nlocal, _first;
       bool _standardASM;
       unsigned _overlap;
 
-      vector <unsigned> _blockTypeRange;
+      std::vector <unsigned> _blockTypeRange;
 
   };
 

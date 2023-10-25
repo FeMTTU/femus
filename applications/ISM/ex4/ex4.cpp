@@ -344,7 +344,7 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
   if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
@@ -355,7 +355,7 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
@@ -363,13 +363,13 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-  vector < adept::adouble >  solP; // local solution
+  std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
+  std::vector < adept::adouble >  solP; // local solution
 
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
-  vector< adept::adouble > aResP; // local redidual vector
+  std::vector < std::vector < adept::adouble > > aResV(dim);    // local redidual vector
+  std::vector < adept::adouble > aResP; // local redidual vector
 
-  vector < vector < double > > coordX(dim);    // local coordinates
+  std::vector < std::vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned  k = 0; k < dim; k++) {
@@ -382,9 +382,9 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
   aResP.reserve(maxSize);
 
 
-  vector <double> phiV;  // local test function
-  vector <double> gradPhiV; // local test function first order partial derivatives
-  vector <double> nablaPhiV; // local test function second order partial derivatives
+  std::vector <double> phiV;  // local test function
+  std::vector <double> gradPhiV; // local test function first order partial derivatives
+  std::vector <double> nablaPhiV; // local test function second order partial derivatives
 
   phiV.reserve(maxSize);
   gradPhiV.reserve(maxSize * dim);
@@ -393,13 +393,13 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
   double* phiP;
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve((dim + 1) *maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve((dim + 1) *maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
 
   if (assembleMatrix) KK->zero();
@@ -461,8 +461,8 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
 
       // evaluate the solution, the solution derivatives and the coordinates in the Gauss point
 
-      vector < adept::adouble > solVig(dim, 0);
-      vector < vector < adept::adouble > > gradSolVig(dim);
+      std::vector < adept::adouble > solVig(dim, 0);
+      std::vector < std::vector < adept::adouble > > gradSolVig(dim);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolVig[k].assign(dim, 0);
@@ -489,7 +489,7 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
       //BEGIN phiV loop (momentum)
       double nu = 0.1;
       for (unsigned i = 0; i < nDofsV; i++) {
-        vector < adept::adouble > NSV(dim, 0.);
+        std::vector < adept::adouble > NSV(dim, 0.);
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {

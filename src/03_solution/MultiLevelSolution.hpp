@@ -123,7 +123,7 @@ public:
 private:
     
     /** Vector size: number of added solutions. */
-    vector < char* >                    _solName;
+    std::vector < char* >                    _solName;
 
 // === NAME & INDEX  - END =================
 
@@ -158,7 +158,7 @@ public:
 private:
     
     /** Vector size: number of levels */
-    vector < Solution* >  _solution;
+    std::vector < Solution* >  _solution;
     
     /** Number of levels */
     unsigned short  _gridn;
@@ -207,11 +207,11 @@ public:
 private:
     
     /** Vector size: number of added solutions. Tells the FE index */
-    vector < int >                      _solType;
+    std::vector < int >                      _solType;
     /** Vector size: number of added solutions. */
-    vector < FEFamily >                 _family;
+    std::vector < FEFamily >                 _family;
     /** Vector size: number of added solutions. */
-    vector < FEOrder >                  _order;
+    std::vector < FEOrder >                  _order;
     
 // === SPACE DISCRETIZATION (FE) - END =================
 
@@ -231,7 +231,7 @@ public:
 private:
     
     /** Vector size: number of added solutions. 0 = steady, 2 = time-dependent */
-    vector < int >                      _solTimeOrder;
+    std::vector < int >                      _solTimeOrder;
 // === TIME EVOLUTION (NOT DISCRETIZATION) - END =================
 
 // === INITIALIZATION (Initial Conditions) - BEGIN ===============
@@ -402,14 +402,14 @@ private:
     bool Ishomogeneous(const unsigned int var, const unsigned int facename) const;
 
     /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
-    vector < vector <BDCType> >         _boundaryConditions;
+    std::vector < std::vector <BDCType> >         _boundaryConditions;
     /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary. Says if the Boundary Condition is homogeneous */
-    vector < vector <bool> >            _isHomogeneous;
+    std::vector < std::vector <bool> >            _isHomogeneous;
     /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
-    vector < vector <FunctionBase *> >  _nonHomogeneousBCFunction;
+    std::vector < std::vector <FunctionBase *> >  _nonHomogeneousBCFunction;
     
     /** Vector size: number of added solutions. */
-    vector < char* >                    _bdcType;
+    std::vector < char* >                    _bdcType;
     
     /** boundary condition function pointer */
     BoundaryFunc _SetBoundaryConditionFunction;
@@ -437,7 +437,7 @@ private:
 private:
     
     /** Vector size: number of added solutions. Tells whether the Solution is an unknown of a PDE or not */
-    vector < bool >                     _pdeType;
+    std::vector < bool >                     _pdeType;
 // === Solution as Unknown of System - END =================
 
    
@@ -460,11 +460,11 @@ public:
 
 private:
     /** Vector size: number of added solutions. */
-    vector < bool >                     _testIfPressure;
+    std::vector < bool >                     _testIfPressure;
     /** Vector size: number of added solutions. */
-    vector < bool >                     _fixSolutionAtOnePoint;
+    std::vector < bool >                     _fixSolutionAtOnePoint;
     /** Vector size: number of added solutions. */
-    vector < bool >                     _addAMRPressureStability;
+    std::vector < bool >                     _addAMRPressureStability;
 
 
 // === NULL SPACE (of what here? for pressure variable, when you pinpoint it) - END =================
@@ -505,8 +505,8 @@ private:
     bool _FSI;
 
     /** Vector size: number of added solutions. */
-    vector <unsigned>                   _solPairIndex;
-    vector <unsigned>                   _solPairInverseIndex;
+    std::vector <unsigned>                   _solPairIndex;
+    std::vector <unsigned>                   _solPairInverseIndex;
     
 // === FSI - END =================
 

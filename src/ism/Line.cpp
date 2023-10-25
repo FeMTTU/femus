@@ -916,7 +916,7 @@ namespace femus {
     double s;
     double PI = acos (-1.);
     std::vector <double> Fm (3, 0);  // magnetic force initialization
-    vector < unsigned > solVIndex (_dim);
+    std::vector < unsigned > solVIndex (_dim);
     solVIndex[0] = _sol->GetIndex ("U");   // get the position of "U" in the ml_sol object
     solVIndex[1] = _sol->GetIndex ("V");   // get the position of "V" in the ml_sol object
 

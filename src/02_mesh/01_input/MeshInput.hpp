@@ -65,7 +65,7 @@ class MeshInput
   /**
    * This method implements reading a mesh from a specified file.
    */
-  virtual void read (const std::string& name, vector < vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups) = 0;
+  virtual void read (const std::string& name, std::vector < std::vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups) = 0;
 
 
  protected:

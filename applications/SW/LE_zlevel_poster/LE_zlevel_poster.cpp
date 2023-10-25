@@ -239,8 +239,8 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
 
   std::vector < unsigned > solIndexT ( NLayers );
 
-  vector< int > l2GMapRow; // local to global mapping
-  vector< int > l2GMapColumn; // local to global mapping
+  std::vector < int > l2GMapRow; // local to global mapping
+  std::vector < int > l2GMapColumn; // local to global mapping
 
   for ( unsigned i = 0; i < NLayers; i++ ) {
     char name[10];
@@ -270,14 +270,14 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
   unsigned end = msh->_dofOffset[solTypeh][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
 
-    vector < adept::adouble > solhm ( NLayers );
-    vector < adept::adouble > solh ( NLayers ); // local coordinates
-    vector < adept::adouble > solhp ( NLayers );
-    vector < adept::adouble > solvm ( NLayers ); // local coordinates
-    vector < adept::adouble > solvp ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solhm ( NLayers );
+    std::vector < adept::adouble > solh ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solhp ( NLayers );
+    std::vector < adept::adouble > solvm ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solvp ( NLayers ); // local coordinates
 
-    vector< adept::adouble > aResh ( NLayers );
-    vector< adept::adouble > aResv ( NLayers );
+    std::vector < adept::adouble > aResh ( NLayers );
+    std::vector < adept::adouble > aResv ( NLayers );
 
     unsigned bc1 = ( i == start ) ? 0 : 1;
     unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
@@ -312,7 +312,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
     }
     s.new_recording();
 
-    vector < double > x ( 2 ); // local coordinates
+    std::vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
       unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
       x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
@@ -381,7 +381,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
 
     }
 
-    vector< double > Res ( NLayers ); // local redidual vector
+    std::vector < double > Res ( NLayers ); // local redidual vector
     for ( unsigned k = 0; k < NLayers; k++ ) {
       Res[k] =  aResh[k].value();
     }
@@ -402,7 +402,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
     }
 
     // get the jacobian matrix (ordered by row major )
-    vector < double > Jac ( NLayers * NLayers * ( 3 + bc1 + bc2 ) );
+    std::vector < double > Jac ( NLayers * NLayers * ( 3 + bc1 + bc2 ) );
     s.jacobian ( &Jac[0], true );
 
     //store K in the global matrix KK
@@ -418,15 +418,15 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
   end = msh->_dofOffset[solTypev][iproc + 1] - 1;
   for ( unsigned i =  start; i <  end; i++ ) {
 
-    vector < adept::adouble > solhm ( NLayers );
-    vector < adept::adouble > solhp ( NLayers );
-    vector < adept::adouble > solvm ( NLayers ); // local coordinates
-    vector < adept::adouble > solv ( NLayers ); // local coordinates
-    vector < adept::adouble > solvp ( NLayers ); // local coordinates
-    vector < double > solTm ( NLayers ); // local coordinates
-    vector < double > solTp ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solhm ( NLayers );
+    std::vector < adept::adouble > solhp ( NLayers );
+    std::vector < adept::adouble > solvm ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solv ( NLayers ); // local coordinates
+    std::vector < adept::adouble > solvp ( NLayers ); // local coordinates
+    std::vector < double > solTm ( NLayers ); // local coordinates
+    std::vector < double > solTp ( NLayers ); // local coordinates
 
-    vector< adept::adouble > aResv ( NLayers );
+    std::vector < adept::adouble > aResv ( NLayers );
 
 
     l2GMapRow.resize ( NLayers );
@@ -610,7 +610,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
       aResv[k] += ni_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
     }
 
-    vector< double > Res ( NLayers ); // local redidual vector
+    std::vector < double > Res ( NLayers ); // local redidual vector
     for ( unsigned k = 0; k < NLayers; k++ ) {
       Res[k] =  aResv[k].value();
       //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
@@ -628,7 +628,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
     s.independent ( &solhp[0], NLayers );
 
     // get the jacobian matrix (ordered by row major )
-    vector < double > Jac ( NLayers * NLayers * 5 );
+    std::vector < double > Jac ( NLayers * NLayers * 5 );
     s.jacobian ( &Jac[0], true );
 
     //store K in the global matrix KK
@@ -745,8 +745,8 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
   std::vector < unsigned > solIndexT ( NLayers );
 
-  vector< int > l2GMapRow; // local to global mapping
-  vector< int > l2GMapColumn; // local to global mapping
+  std::vector < int > l2GMapRow; // local to global mapping
+  std::vector < int > l2GMapColumn; // local to global mapping
 
   for ( unsigned i = 0; i < NLayers; i++ ) {
     char name[10];
@@ -790,19 +790,19 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
 
-    vector < double > solhm ( NLayers, 0. );
-    vector < double > solh ( NLayers, 0. ); // local coordinates
-    vector < double > solhp ( NLayers, 0. );
-    vector < double > solvm ( NLayers, 0. ); // local coordinates
-    vector < double > solvp ( NLayers, 0. ); // local coordinates
-    vector < adept::adouble > solHTm ( NLayers, 0. ); // local coordinates
-    vector < adept::adouble > solHT ( NLayers, 0. ); // local coordinates
-    vector < adept::adouble > solHTp ( NLayers, 0. ); // local coordinates
+    std::vector < double > solhm ( NLayers, 0. );
+    std::vector < double > solh ( NLayers, 0. ); // local coordinates
+    std::vector < double > solhp ( NLayers, 0. );
+    std::vector < double > solvm ( NLayers, 0. ); // local coordinates
+    std::vector < double > solvp ( NLayers, 0. ); // local coordinates
+    std::vector < adept::adouble > solHTm ( NLayers, 0. ); // local coordinates
+    std::vector < adept::adouble > solHT ( NLayers, 0. ); // local coordinates
+    std::vector < adept::adouble > solHTp ( NLayers, 0. ); // local coordinates
 
-    vector < adept::adouble > solHTmm ( NLayers, 0. ); // local coordinates
-    vector < adept::adouble > solHTpp ( NLayers, 0. ); // local coordinates
+    std::vector < adept::adouble > solHTmm ( NLayers, 0. ); // local coordinates
+    std::vector < adept::adouble > solHTpp ( NLayers, 0. ); // local coordinates
 
-    vector< adept::adouble > aResHT ( NLayers );
+    std::vector < adept::adouble > aResHT ( NLayers );
 
     unsigned bc1 = ( i == start ) ? 0 : 1;
     unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
@@ -860,7 +860,7 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
     if ( assembly ) s.new_recording();
 
-    vector < double > x ( 2 ); // local coordinates
+    std::vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
       unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
       x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
@@ -1038,7 +1038,7 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
     }
 
-    vector< double > Res ( NLayers ); // local redidual vector
+    std::vector < double > Res ( NLayers ); // local redidual vector
     for ( unsigned k = 0; k < NLayers; k++ ) {
       //Res[k] =  aResh[k].value();
       Res[k] =  aResHT[k].value();
@@ -1068,7 +1068,7 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
       // get the jacobian matrix (ordered by row major )
       //vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
-      vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 + bc4 ) );
+      std::vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 + bc4 ) );
       s.jacobian ( &Jac[0], true );
 
       //store K in the global matrix KK
@@ -1129,19 +1129,19 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
     for ( unsigned i =  start; i <  end; i++ ) {
 
-      vector < double > solhm ( NLayers );
-      vector < double > solh ( NLayers ); // local coordinates
-      vector < double > solhp ( NLayers );
-      vector < double > solvm ( NLayers ); // local coordinates
-      vector < double > solvp ( NLayers ); // local coordinates
-      vector < double > solHTm ( NLayers ); // local coordinates
-      vector < double > solHT ( NLayers ); // local coordinates
-      vector < double > solHTp ( NLayers ); // local coordinates
+      std::vector < double > solhm ( NLayers );
+      std::vector < double > solh ( NLayers ); // local coordinates
+      std::vector < double > solhp ( NLayers );
+      std::vector < double > solvm ( NLayers ); // local coordinates
+      std::vector < double > solvp ( NLayers ); // local coordinates
+      std::vector < double > solHTm ( NLayers ); // local coordinates
+      std::vector < double > solHT ( NLayers ); // local coordinates
+      std::vector < double > solHTp ( NLayers ); // local coordinates
 
-      vector < double > solHTmm ( NLayers ); // local coordinates
-      vector < double > solHTpp ( NLayers ); // local coordinates
+      std::vector < double > solHTmm ( NLayers ); // local coordinates
+      std::vector < double > solHTpp ( NLayers ); // local coordinates
 
-      vector< double > aResHT ( NLayers, 0. );
+      std::vector < double > aResHT ( NLayers, 0. );
 
       unsigned bc1 = ( i == start ) ? 0 : 1;
       unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
@@ -1197,7 +1197,7 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
       // s.new_recording();
 
-      vector < double > x ( 2 ); // local coordinates
+      std::vector < double > x ( 2 ); // local coordinates
       for ( unsigned j = 0; j < 2; j++ ) {
         unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
         x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
@@ -1442,8 +1442,8 @@ void RK4t ( MultiLevelProblem& ml_prob ) {
 
   std::vector < unsigned > solIndexT ( NLayers );
 
-  vector< int > l2GMapRow; // local to global mapping
-  vector< int > l2GMapColumn; // local to global mapping
+  std::vector < int > l2GMapRow; // local to global mapping
+  std::vector < int > l2GMapColumn; // local to global mapping
 
   for ( unsigned i = 0; i < NLayers; i++ ) {
     char name[10];
@@ -1482,17 +1482,17 @@ void RK4t ( MultiLevelProblem& ml_prob ) {
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
 
-    vector < double > solhm ( NLayers );
-    vector < double > solh ( NLayers ); // local coordinates
-    vector < double > solhp ( NLayers );
-    vector < double > solvm ( NLayers ); // local coordinates
-    vector < double > solvp ( NLayers ); // local coordinates
-    vector < double > solHTm ( NLayers ); // local coordinates
-    vector < double > solHT ( NLayers ); // local coordinates
-    vector < double > solHTp ( NLayers ); // local coordinates
+    std::vector < double > solhm ( NLayers );
+    std::vector < double > solh ( NLayers ); // local coordinates
+    std::vector < double > solhp ( NLayers );
+    std::vector < double > solvm ( NLayers ); // local coordinates
+    std::vector < double > solvp ( NLayers ); // local coordinates
+    std::vector < double > solHTm ( NLayers ); // local coordinates
+    std::vector < double > solHT ( NLayers ); // local coordinates
+    std::vector < double > solHTp ( NLayers ); // local coordinates
 
-    vector < double > solHTmm ( NLayers ); // local coordinates
-    vector < double > solHTpp ( NLayers ); // local coordinates
+    std::vector < double > solHTmm ( NLayers ); // local coordinates
+    std::vector < double > solHTpp ( NLayers ); // local coordinates
 
     //vector< adept::adouble > aResHT ( NLayers );
 
@@ -1549,7 +1549,7 @@ void RK4t ( MultiLevelProblem& ml_prob ) {
 
 //   s.new_recording();
 
-    vector < double > x ( 2 ); // local coordinates
+    std::vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
       unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
       x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates

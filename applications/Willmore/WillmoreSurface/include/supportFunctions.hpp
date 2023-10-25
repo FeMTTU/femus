@@ -43,12 +43,12 @@ void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward) {
   Mesh* msh = mlSol._mlMesh->GetLevel (level);
 
   unsigned DIM = 3u;
-  vector < unsigned > solDxIndex (DIM);
+  std::vector < unsigned > solDxIndex (DIM);
   solDxIndex[0] = mlSol.GetIndex ("Dx1");
   solDxIndex[1] = mlSol.GetIndex ("Dx2");
   solDxIndex[2] = mlSol.GetIndex ("Dx3");
 
-  vector < unsigned > solNDxIndex (DIM);
+  std::vector < unsigned > solNDxIndex (DIM);
   solNDxIndex[0] = mlSol.GetIndex ("nDx1");
   solNDxIndex[1] = mlSol.GetIndex ("nDx2");
   solNDxIndex[2] = mlSol.GetIndex ("nDx3");

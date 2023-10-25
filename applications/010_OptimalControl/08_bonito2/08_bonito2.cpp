@@ -252,18 +252,18 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   std::vector < std::vector < adept::adouble > >  aResw(N); // local solution
   std::vector< adept::adouble > aResu; // local redidual vector
 
-  vector < vector < double > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
 
-  vector< unsigned > l2GMap; // local to global mapping
-  vector< double > Res; // local redidual vector
-  vector< double > Jac;
+  std::vector < unsigned > l2GMap; // local to global mapping
+  std::vector < double > Res; // local redidual vector
+  std::vector < double > Jac;
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Matrix

@@ -984,10 +984,10 @@ void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::ve
 
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
-  vector< double > solP;
-  vector< vector < double> >  solV(dim);
-  vector< vector < double> > x0(dim);
-  vector< vector < double> > x(dim);
+  std::vector < double > solP;
+  std::vector < std::vector < double> >  solV(dim);
+  std::vector < std::vector < double> > x0(dim);
+  std::vector < std::vector < double> > x(dim);
 
   solP.reserve(max_size);
   for (unsigned d = 0; d < dim; d++) {
@@ -998,9 +998,9 @@ void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::ve
   double weight;
   double weight0;
 
-  vector <double> phiV;
-  vector <double> gradphiV;
-  vector <double> nablaphiV;
+  std::vector <double> phiV;
+  std::vector <double> gradphiV;
+  std::vector <double> nablaphiV;
 
   double *phiP;
 
@@ -1008,14 +1008,14 @@ void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::ve
   gradphiV.reserve(max_size * dim);
   nablaphiV.reserve(max_size * (3 * (dim - 1) + !(dim - 1)));
 
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
   if (dim == 3) solVIndex[2] = mlSol.GetIndex("W");      // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
-  vector < unsigned > solDIndex(dim);
+  std::vector < unsigned > solDIndex(dim);
   solDIndex[0] = mlSol.GetIndex("DX");    // get the position of "U" in the ml_sol object
   solDIndex[1] = mlSol.GetIndex("DY");    // get the position of "V" in the ml_sol object
   if (dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");      // get the position of "V" in the ml_sol object
@@ -1146,7 +1146,7 @@ void UpdateMeshCoordinates(MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol)
   const unsigned dim = msh->GetDimension();
 
   const char varname[3][3] = {"DX", "DY", "DZ"};
-  vector <unsigned> indVAR(dim);
+  std::vector <unsigned> indVAR(dim);
 
   for (unsigned k = 0; k < dim; k++) {
     indVAR[k] = mlSol.GetIndex(&varname[k][0]);

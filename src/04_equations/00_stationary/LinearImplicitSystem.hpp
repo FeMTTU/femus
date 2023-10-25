@@ -74,7 +74,7 @@ namespace femus {
       * details of interfacing with various linear algebra packages
       * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
       */
-      vector < LinearEquationSolver*> _LinSolver;   /* vector of number of levels */
+      std::vector < LinearEquationSolver*> _LinSolver;   /* vector of number of levels */
 
       void SetNumberOfGlobalVariables (const unsigned &numberOfGlobalVariables) {
         _numberOfGlobalVariables = numberOfGlobalVariables;
@@ -217,7 +217,7 @@ namespace femus {
       void GetSystemInfo();
 
       /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
-      void SetSparsityPattern (vector < bool > other_sparcity_pattern);
+      void SetSparsityPattern (std::vector < bool > other_sparcity_pattern);
 
       void SetSparsityPatternMinimumSize (const unsigned &minimumSize, const std::string variableName = "All");
 
@@ -225,11 +225,11 @@ namespace femus {
         return _assembleMatrix;
       }
 
-      vector < SparseMatrix* > &GetProjectionMatrix() {
+      std::vector < SparseMatrix* > &GetProjectionMatrix() {
         return _PP;
       }
 
-      vector < SparseMatrix* > &GetRestrictionMatrix() {
+      std::vector < SparseMatrix* > &GetRestrictionMatrix() {
         return _RR;
       }
      
@@ -238,8 +238,8 @@ namespace femus {
       
     protected:
 
-      vector < SparseMatrix* > _PP, _RR;
-      vector < SparseMatrix* > _PPamr, _RRamr;
+      std::vector < SparseMatrix* > _PP, _RR;
+      std::vector < SparseMatrix* > _PPamr, _RRamr;
 
       bool _printSolverInfo;
       bool _assembleMatrix;
@@ -296,7 +296,7 @@ namespace femus {
       bool _MGmatrixCoarseReuse;
 
       /** To be Added */
-      vector <unsigned> _VariablesToBeSolvedIndex;
+      std::vector <unsigned> _VariablesToBeSolvedIndex;
 
       SolverType _finegridsolvertype;
       unsigned int _DirichletBCsHandlingMode;
@@ -317,7 +317,7 @@ namespace femus {
       double _AMReighborThresholdValue;
       std::vector <double> _AMRthreshold;
 
-      vector <bool> _SparsityPattern;
+      std::vector <bool> _SparsityPattern;
 
       double _richardsonScaleFactor;
       double _richardsonScaleFactorDecrease;

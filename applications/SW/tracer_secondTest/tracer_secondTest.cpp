@@ -723,8 +723,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
   std::vector < unsigned > solIndexT (NLayers);
 
-  vector< int > l2GMapRow; // local to global mapping
-  vector< int > l2GMapColumn; // local to global mapping
+  std::vector < int > l2GMapRow; // local to global mapping
+  std::vector < int > l2GMapColumn; // local to global mapping
 
   for (unsigned i = 0; i < NLayers; i++) {
     char name[10];
@@ -778,19 +778,19 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
   for (unsigned i =  start; i <  end; i++) {
     //EPS->zero();
 
-    vector < double > solhm (NLayers);
-    vector < double > solh (NLayers);   // local coordinates
-    vector < double > solhp (NLayers);
-    vector < double > solvm (NLayers);   // local coordinates
-    vector < double > solvp (NLayers);   // local coordinates
-    vector < adept::adouble > solHTm (NLayers);   // local coordinates
-    vector < adept::adouble > solHT (NLayers);   // local coordinates
-    vector < adept::adouble > solHTp (NLayers);   // local coordinates
+    std::vector < double > solhm (NLayers);
+    std::vector < double > solh (NLayers);   // local coordinates
+    std::vector < double > solhp (NLayers);
+    std::vector < double > solvm (NLayers);   // local coordinates
+    std::vector < double > solvp (NLayers);   // local coordinates
+    std::vector < adept::adouble > solHTm (NLayers);   // local coordinates
+    std::vector < adept::adouble > solHT (NLayers);   // local coordinates
+    std::vector < adept::adouble > solHTp (NLayers);   // local coordinates
 
-    vector < adept::adouble > solHTmm (NLayers);   // local coordinates
-    vector < adept::adouble > solHTpp (NLayers);   // local coordinates
+    std::vector < adept::adouble > solHTmm (NLayers);   // local coordinates
+    std::vector < adept::adouble > solHTpp (NLayers);   // local coordinates
 
-    vector< adept::adouble > aResHT (NLayers);
+    std::vector < adept::adouble > aResHT (NLayers);
 
     unsigned bc1 = (i == start) ? 0 : 1;
     unsigned bc2 = (i == end - 1) ? 0 : 1;
@@ -846,7 +846,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       s.new_recording();
     }
 
-    vector < double > x (2);   // local coordinates
+    std::vector < double > x (2);   // local coordinates
 
     for (unsigned j = 0; j < 2; j++) {
       unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof
@@ -1070,8 +1070,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
     }
 
-    vector< double > Res (NLayers);   // local redidual vector
-    vector< double > solht (NLayers);   // local redidual vector
+    std::vector < double > Res (NLayers);   // local redidual vector
+    std::vector < double > solht (NLayers);   // local redidual vector
 
     for (unsigned k = 0; k < NLayers; k++) {
       Res[k] =  aResHT[k].value();
@@ -1102,7 +1102,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
           s.independent ( &solHTpp[0], NLayers );
         } */
         // get the jacobian matrix (ordered by row major )
-        vector < double > Jac (NLayers * NLayers * (1 + bc1 + bc2));
+        std::vector < double > Jac (NLayers * NLayers * (1 + bc1 + bc2));
         s.jacobian (&Jac[0], true);
 
         //store K in the global matrix KK
@@ -1111,7 +1111,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       }
 
       else {
-        vector < double > Jac (NLayers * NLayers);
+        std::vector < double > Jac (NLayers * NLayers);
         s.jacobian (&Jac[0], true);
 
         //store K in the global matrix KK
@@ -1274,19 +1274,19 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
     for (unsigned i =  start; i <  end; i++) {
 
-      vector < double > solhm (NLayers);
-      vector < double > solh (NLayers);   // local coordinates
-      vector < double > solhp (NLayers);
-      vector < double > solvm (NLayers);   // local coordinates
-      vector < double > solvp (NLayers);   // local coordinates
-      vector < double > solHTm (NLayers);   // local coordinates
-      vector < double > solHT (NLayers);   // local coordinates
-      vector < double > solHTp (NLayers);   // local coordinates
+      std::vector < double > solhm (NLayers);
+      std::vector < double > solh (NLayers);   // local coordinates
+      std::vector < double > solhp (NLayers);
+      std::vector < double > solvm (NLayers);   // local coordinates
+      std::vector < double > solvp (NLayers);   // local coordinates
+      std::vector < double > solHTm (NLayers);   // local coordinates
+      std::vector < double > solHT (NLayers);   // local coordinates
+      std::vector < double > solHTp (NLayers);   // local coordinates
 
-      vector < double > solHTmm (NLayers);   // local coordinates
-      vector < double > solHTpp (NLayers);   // local coordinates
+      std::vector < double > solHTmm (NLayers);   // local coordinates
+      std::vector < double > solHTpp (NLayers);   // local coordinates
 
-      vector< double > aResHT (NLayers, 0.);
+      std::vector < double > aResHT (NLayers, 0.);
 
       unsigned bc1 = (i == start) ? 0 : 1;
       unsigned bc2 = (i == end - 1) ? 0 : 1;
@@ -1341,7 +1341,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       // s.new_recording();
 
-      vector < double > x (2);   // local coordinates
+      std::vector < double > x (2);   // local coordinates
 
       for (unsigned j = 0; j < 2; j++) {
         unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof
@@ -1649,8 +1649,8 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
 
   std::vector < unsigned > solIndexT (NLayers);
 
-  vector< int > l2GMapRow; // local to global mapping
-  vector< int > l2GMapColumn; // local to global mapping
+  std::vector < int > l2GMapRow; // local to global mapping
+  std::vector < int > l2GMapColumn; // local to global mapping
 
   for (unsigned i = 0; i < NLayers; i++) {
     char name[10];
@@ -1695,17 +1695,17 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
 
   for (unsigned i =  start; i <  end; i++) {
 
-    vector < double > solhm (NLayers);
-    vector < double > solh (NLayers);   // local coordinates
-    vector < double > solhp (NLayers);
-    vector < double > solvm (NLayers);   // local coordinates
-    vector < double > solvp (NLayers);   // local coordinates
-    vector < double > solHTm (NLayers);   // local coordinates
-    vector < double > solHT (NLayers);   // local coordinates
-    vector < double > solHTp (NLayers);   // local coordinates
+    std::vector < double > solhm (NLayers);
+    std::vector < double > solh (NLayers);   // local coordinates
+    std::vector < double > solhp (NLayers);
+    std::vector < double > solvm (NLayers);   // local coordinates
+    std::vector < double > solvp (NLayers);   // local coordinates
+    std::vector < double > solHTm (NLayers);   // local coordinates
+    std::vector < double > solHT (NLayers);   // local coordinates
+    std::vector < double > solHTp (NLayers);   // local coordinates
 
-    vector < double > solHTmm (NLayers);   // local coordinates
-    vector < double > solHTpp (NLayers);   // local coordinates
+    std::vector < double > solHTmm (NLayers);   // local coordinates
+    std::vector < double > solHTpp (NLayers);   // local coordinates
 
     //vector< adept::adouble > aResHT ( NLayers );
 
@@ -1761,7 +1761,7 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
 
 //   s.new_recording();
 
-    vector < double > x (2);   // local coordinates
+    std::vector < double > x (2);   // local coordinates
 
     for (unsigned j = 0; j < 2; j++) {
       unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof
@@ -2290,49 +2290,49 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     //BEGIN i loop
     for (unsigned i =  start; i <  end; i++) {
 
-      vector < double > solhm (NLayers);
-      vector < double > solh (NLayers);   // local coordinates
-      vector < double > solhp (NLayers);
-      vector < double > solvm (NLayers);   // local coordinates
-      vector < double > solvp (NLayers);   // local coordinates
-      vector < double > solTm (NLayers);   // local coordinates
-      vector < double > solT (NLayers);   // local coordinates
-      vector < double > solTp (NLayers);   // local coordinates
+      std::vector < double > solhm (NLayers);
+      std::vector < double > solh (NLayers);   // local coordinates
+      std::vector < double > solhp (NLayers);
+      std::vector < double > solvm (NLayers);   // local coordinates
+      std::vector < double > solvp (NLayers);   // local coordinates
+      std::vector < double > solTm (NLayers);   // local coordinates
+      std::vector < double > solT (NLayers);   // local coordinates
+      std::vector < double > solTp (NLayers);   // local coordinates
 
-      vector < double > solTmm (NLayers);   // local coordinates
-      vector < double > solTpp (NLayers);   // local coordinates
-      vector < double > solhmm (NLayers);   // local coordinates
-      vector < double > solhpp (NLayers);   // local coordinates
+      std::vector < double > solTmm (NLayers);   // local coordinates
+      std::vector < double > solTpp (NLayers);   // local coordinates
+      std::vector < double > solhmm (NLayers);   // local coordinates
+      std::vector < double > solhpp (NLayers);   // local coordinates
 
-      vector < double > solK1 (NLayers);   // local coordinates
-      vector < double > solK1p (NLayers);   // local coordinates
-      vector < double > solK1m (NLayers);   // local coordinates
-      vector < double > solK1pp (NLayers);   // local coordinates
-      vector < double > solK1mm (NLayers);   // local coordinates
+      std::vector < double > solK1 (NLayers);   // local coordinates
+      std::vector < double > solK1p (NLayers);   // local coordinates
+      std::vector < double > solK1m (NLayers);   // local coordinates
+      std::vector < double > solK1pp (NLayers);   // local coordinates
+      std::vector < double > solK1mm (NLayers);   // local coordinates
 
-      vector < double > solK2 (NLayers);   // local coordinates
-      vector < double > solK2p (NLayers);   // local coordinates
-      vector < double > solK2m (NLayers);   // local coordinates
-      vector < double > solK2pp (NLayers);   // local coordinates
-      vector < double > solK2mm (NLayers);   // local coordinates
+      std::vector < double > solK2 (NLayers);   // local coordinates
+      std::vector < double > solK2p (NLayers);   // local coordinates
+      std::vector < double > solK2m (NLayers);   // local coordinates
+      std::vector < double > solK2pp (NLayers);   // local coordinates
+      std::vector < double > solK2mm (NLayers);   // local coordinates
 
-      vector < double > solK3 (NLayers);   // local coordinates
-      vector < double > solK3p (NLayers);   // local coordinates
-      vector < double > solK3m (NLayers);   // local coordinates
-      vector < double > solK3pp (NLayers);   // local coordinates
-      vector < double > solK3mm (NLayers);   // local coordinates
+      std::vector < double > solK3 (NLayers);   // local coordinates
+      std::vector < double > solK3p (NLayers);   // local coordinates
+      std::vector < double > solK3m (NLayers);   // local coordinates
+      std::vector < double > solK3pp (NLayers);   // local coordinates
+      std::vector < double > solK3mm (NLayers);   // local coordinates
 
-      vector < double > solK4 (NLayers);   // local coordinates
-      vector < double > solK4p (NLayers);   // local coordinates
-      vector < double > solK4m (NLayers);   // local coordinates
-      vector < double > solK4pp (NLayers);   // local coordinates
-      vector < double > solK4mm (NLayers);   // local coordinates
+      std::vector < double > solK4 (NLayers);   // local coordinates
+      std::vector < double > solK4p (NLayers);   // local coordinates
+      std::vector < double > solK4m (NLayers);   // local coordinates
+      std::vector < double > solK4pp (NLayers);   // local coordinates
+      std::vector < double > solK4mm (NLayers);   // local coordinates
 
-//        vector < double > solHTmm ( NLayers ); // local coordinates
-//        vector < double > solHTpp ( NLayers ); // local coordinates
-//        vector < double > solHT ( NLayers ); // local coordinates
-//        vector < double > solHTp ( NLayers ); // local coordinates
-//        vector < double > solHTm ( NLayers ); // local coordinates
+//        std::vector < double > solHTmm ( NLayers ); // local coordinates
+//        std::vector < double > solHTpp ( NLayers ); // local coordinates
+//        std::vector < double > solHT ( NLayers ); // local coordinates
+//        std::vector < double > solHTp ( NLayers ); // local coordinates
+//        std::vector < double > solHTm ( NLayers ); // local coordinates
 
       unsigned bc1 = (i == start) ? 0 : 1;
       unsigned bc2 = (i == end - 1) ? 0 : 1;
@@ -2444,7 +2444,7 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       }
 
-      vector < double > x (2);   // local coordinates
+      std::vector < double > x (2);   // local coordinates
 
       for (unsigned j = 0; j < 2; j++) {
         unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof
@@ -2945,25 +2945,25 @@ void RKe (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     //BEGIN i loop
     for (unsigned i =  start; i <  end; i++) {
 
-      vector < double > solhm (NLayers);
-      vector < double > solh (NLayers);   // local coordinates
-      vector < double > solhp (NLayers);
-      vector < double > solvm (NLayers);   // local coordinates
-      vector < double > solvp (NLayers);   // local coordinates
-      vector < double > solTm (NLayers);   // local coordinates
-      vector < double > solT (NLayers);   // local coordinates
-      vector < double > solTp (NLayers);   // local coordinates
+      std::vector < double > solhm (NLayers);
+      std::vector < double > solh (NLayers);   // local coordinates
+      std::vector < double > solhp (NLayers);
+      std::vector < double > solvm (NLayers);   // local coordinates
+      std::vector < double > solvp (NLayers);   // local coordinates
+      std::vector < double > solTm (NLayers);   // local coordinates
+      std::vector < double > solT (NLayers);   // local coordinates
+      std::vector < double > solTp (NLayers);   // local coordinates
 
-      vector < double > solTmm (NLayers);   // local coordinates
-      vector < double > solTpp (NLayers);   // local coordinates
-      vector < double > solhmm (NLayers);   // local coordinates
-      vector < double > solhpp (NLayers);   // local coordinates
+      std::vector < double > solTmm (NLayers);   // local coordinates
+      std::vector < double > solTpp (NLayers);   // local coordinates
+      std::vector < double > solhmm (NLayers);   // local coordinates
+      std::vector < double > solhpp (NLayers);   // local coordinates
 
-      vector < vector < double > > solK(RK_step);   // local coordinates
-      vector < vector < double > > solKp(RK_step);   // local coordinates
-      vector < vector < double > > solKm(RK_step);   // local coordinates
-      vector < vector < double > > solKpp(RK_step);   // local coordinates
-      vector < vector < double > > solKmm(RK_step);   // local coordinates
+      std::vector < std::vector < double > > solK(RK_step);   // local coordinates
+      std::vector < std::vector < double > > solKp(RK_step);   // local coordinates
+      std::vector < std::vector < double > > solKm(RK_step);   // local coordinates
+      std::vector < std::vector < double > > solKpp(RK_step);   // local coordinates
+      std::vector < std::vector < double > > solKmm(RK_step);   // local coordinates
       
       for(unsigned j = 0; j < RK_step; j++){
         solK[j].resize(NLayers);  
@@ -3009,7 +3009,7 @@ void RKe (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         }
       }
 
-      vector < double > x (2);   // local coordinates
+      std::vector < double > x (2);   // local coordinates
 
       for (unsigned j = 0; j < 2; j++) {
         unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof

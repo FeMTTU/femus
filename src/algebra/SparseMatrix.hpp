@@ -19,14 +19,16 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <memory>
-#include <iostream>
-#include <vector>
 
 // configure files ----------------
 #include "FemusConfig.hpp"
 #include "SolverPackageEnum.hpp"
 #include "Graph.hpp"
+
+
+#include <memory>
+#include <iostream>
+#include <vector>
 
 
 namespace femus {
@@ -38,7 +40,6 @@ namespace femus {
   class DenseMatrix;
   class NumericVector;
 
-  using std::vector;
 
   /**
    *             Generic sparse matrix.

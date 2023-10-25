@@ -417,12 +417,12 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 
   // solution and coordinate variables
   const char Solname[4][2] = {"U","V","W","P"};
-  vector < unsigned > SolPdeIndex(dim+1);
-  vector < unsigned > SolIndex(dim+1);
+  std::vector < unsigned > SolPdeIndex(dim+1);
+  std::vector < unsigned > SolIndex(dim+1);
 
   //const char coordinate_name[3][2] = {"X","Y","Z"};
   //vector < unsigned > coordinate_Index(dim);
-  vector< vector < double> > coordinates(dim);
+  std::vector< std::vector < double> > coordinates(dim);
 
   for(unsigned ivar=0; ivar<dim; ivar++) {
     SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
@@ -436,17 +436,17 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   unsigned order_ind1 = ml_sol->GetSolutionType(SolIndex[dim]);
 
   // declare
-  vector < int > metis_node2;
-  vector < int > node1;
-  vector< vector< int > > KK_dof(dim+1);
-  vector <double> phi2;
-  vector <double> gradphi2;
-  vector <double> nablaphi2;
+  std::vector < int > metis_node2;
+  std::vector < int > node1;
+  std::vector< std::vector< int > > KK_dof(dim+1);
+  std::vector <double> phi2;
+  std::vector <double> gradphi2;
+  std::vector <double> nablaphi2;
   const double *phi1;
   double Weight2;
   double normal[3];
-  vector< vector< double > > F(dim+1);
-  vector< vector< vector< double > > > B(dim+1);
+  std::vector< std::vector< double > > F(dim+1);
+  std::vector< std::vector< std::vector< double > > > B(dim+1);
 
   // reserve
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -473,8 +473,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
     }
   }
 
-  vector < double > SolVAR(dim+1);
-  vector < vector < double > > gradSolVAR(dim);
+  std::vector < double > SolVAR(dim+1);
+  std::vector < std::vector < double > > gradSolVAR(dim);
   for(int i=0;i<dim;i++) {
     gradSolVAR[i].resize(dim);
   }
@@ -742,7 +742,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
   //unsigned end_ind   = mymsh->GetEndIndex(order_ind);
 
   //coordinates
-  vector< vector < double> > coordinates(dim);
+  std::vector< std::vector < double> > coordinates(dim);
   //const char coordinate_name[3][2] = {"X","Y","Z"};
   //vector < unsigned > coordinate_Index(dim);
 //   for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -750,14 +750,14 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
 //   }
 
   // declare
-  vector< int > metis_node;
-  vector< int > KK_dof;
-  vector <double> phi;
-  vector <double> gradphi;
-  vector <double> nablaphi;
+  std::vector< int > metis_node;
+  std::vector< int > KK_dof;
+  std::vector <double> phi;
+  std::vector <double> gradphi;
+  std::vector <double> nablaphi;
   double weight;
-  vector< double > F;
-  vector< double > B;
+  std::vector< double > F;
+  std::vector< double > B;
 
   // reserve
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -817,12 +817,12 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
 	ml_prob._ml_msh->_finiteElement[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
 	//Temperature and velocity current solution
 	double SolT=0;
-	vector < double > gradSolT(dim,0.);
+	std::vector < double > gradSolT(dim,0.);
 	for(unsigned ivar=0; ivar<dim; ivar++){
 	  gradSolT[ivar]=0;
 	}
-	vector < double > SolU(dim,0.);
-	vector < unsigned > SolIndexU(dim);
+	std::vector < double > SolU(dim,0.);
+	std::vector < unsigned > SolIndexU(dim);
 	SolIndexU[0]=ml_sol->GetIndex("U");
 	SolIndexU[1]=ml_sol->GetIndex("V");
 	if(dim==3) SolIndexU[2]=ml_sol->GetIndex("W");

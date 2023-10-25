@@ -1127,8 +1127,8 @@ public:
 
  //********************* state *********************** 
  //***************************************************  
-  vector <double> phi_u; 
-  vector <double> phi_u_x;
+  std::vector <double> phi_u; 
+  std::vector <double> phi_u_x;
 
   phi_u.reserve(max_size);
   phi_u_x.reserve(max_size * dim);
@@ -1139,9 +1139,9 @@ public:
 
   unsigned solPdeIndex_u  =  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");
 
-  vector < double >  sol_u;
+  std::vector < double >  sol_u;
   sol_u.reserve(max_size);
-  vector< int > l2GMap_u;
+  std::vector < int > l2GMap_u;
   l2GMap_u.reserve(max_size);
  //***************************************************  
  //***************************************************  
@@ -1149,8 +1149,8 @@ public:
   
  //******************** control ********************** 
  //***************************************************   
-  vector <double> phi_ctrl;
-  vector <double> phi_ctrl_x;
+  std::vector <double> phi_ctrl;
+  std::vector <double> phi_ctrl_x;
 
   phi_ctrl.reserve(max_size);
   phi_ctrl_x.reserve(max_size * dim);
@@ -1162,9 +1162,9 @@ public:
   unsigned solPdeIndex_ctrl;
   solPdeIndex_ctrl = mlPdeSys->GetSolPdeIndex("control");
 
-  vector < double >  sol_ctrl;
+  std::vector < double >  sol_ctrl;
   sol_ctrl.reserve(max_size);
-  vector< int > l2GMap_ctrl;
+  std::vector < int > l2GMap_ctrl;
   l2GMap_ctrl.reserve(max_size);
  //***************************************************  
  //***************************************************  
@@ -1172,8 +1172,8 @@ public:
   
  //********************* adjoint ********************* 
  //***************************************************  
-  vector <double> phi_adj;
-  vector <double> phi_adj_x;
+  std::vector <double> phi_adj;
+  std::vector <double> phi_adj_x;
 
   phi_adj.reserve(max_size);
   phi_adj_x.reserve(max_size * dim);
@@ -1186,17 +1186,17 @@ public:
   unsigned solPdeIndex_adj;
   solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");
 
-  vector < double >  sol_adj;
+  std::vector < double >  sol_adj;
     sol_adj.reserve(max_size);
-  vector< int > l2GMap_adj;
+  std::vector < int > l2GMap_adj;
     l2GMap_adj.reserve(max_size);
  //***************************************************  
  //***************************************************  
 
  //****************** mu ******************************  
  //***************************************************  
-  vector <double> phi_mu;
-  vector <double> phi_mu_x;
+  std::vector <double> phi_mu;
+  std::vector <double> phi_mu_x;
 
   phi_mu.reserve(max_size);
   phi_mu_x.reserve(max_size * dim);
@@ -1209,8 +1209,8 @@ public:
   solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   
   unsigned solType_mu = ml_sol->GetSolutionType(solIndex_mu);
-  vector < double >  sol_mu;   sol_mu.reserve(max_size);
-  vector < int > l2GMap_mu;   l2GMap_mu.reserve(max_size);
+  std::vector < double >  sol_mu;   sol_mu.reserve(max_size);
+  std::vector < int > l2GMap_mu;   l2GMap_mu.reserve(max_size);
 
   
     const unsigned int n_components_ctrl = 1;
@@ -1243,13 +1243,13 @@ public:
 
   const int n_unknowns =  mlPdeSys->GetSolPdeIndex().size();
  
-  vector< int > l2GMap_AllVars;
+  std::vector < int > l2GMap_AllVars;
   l2GMap_AllVars.reserve(n_unknowns*max_size);
   
-  vector< double > Res;
+  std::vector < double > Res;
   Res.reserve(n_unknowns*max_size);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve( n_unknowns*max_size * n_unknowns*max_size);
   
 
@@ -1268,7 +1268,7 @@ public:
     
     //***************************************************
 
-  vector < std::string > Solname(n_unknowns);
+  std::vector < std::string > Solname(n_unknowns);
   Solname[0] = "state";
   Solname[1] = "control";
   Solname[2] = "adjoint";
@@ -1284,9 +1284,9 @@ public:
   
 
 
-  vector < unsigned > SolPdeIndex(n_unknowns);
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  std::vector < unsigned > SolPdeIndex(n_unknowns);
+  std::vector < unsigned > SolIndex(n_unknowns);  
+  std::vector < unsigned > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -1295,18 +1295,18 @@ public:
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-    vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
+    std::vector < unsigned > Sol_n_el_dofs_Mat_vol(n_unknowns);
  //***************************************************  
 
 //***************************************************
-    vector < vector < double > >  sol_eldofs_Mat(n_unknowns);  //should have Mat order
+    std::vector < std::vector < double > >  sol_eldofs_Mat(n_unknowns);  //should have Mat order
     for(int k = 0; k < n_unknowns; k++) {        sol_eldofs_Mat[k].reserve(max_size);    }
 
 
     //----------- quantities (at dof objects) ------------------------------
     std::vector< int >       L2G_dofmap_Mat_AllVars;
     L2G_dofmap_Mat_AllVars.reserve( n_unknowns * max_size );
-    vector < vector < int > >     L2G_dofmap_Mat(n_unknowns);     //should have Mat order
+    std::vector < std::vector < int > >     L2G_dofmap_Mat(n_unknowns);     //should have Mat order
     for(int i = 0; i < n_unknowns; i++) {
         L2G_dofmap_Mat[i].reserve(max_size);
     }
@@ -2027,24 +2027,24 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     const int solType_coords = BIQUADR_FE;  //biquadratic
 
 //************** geometry (at dofs) *************************************
-    vector < vector < double > > coords_at_dofs(dim);
-    vector < vector < double > > coords_at_dofs_bdry(dim);
+    std::vector < std::vector < double > > coords_at_dofs(dim);
+    std::vector < std::vector < double > > coords_at_dofs_bdry(dim);
     for (unsigned idim = 0; idim < dim; idim++) {
         coords_at_dofs[idim].reserve(max_size);
         coords_at_dofs_bdry[idim].reserve(max_size);
     }
 
 //************** geometry (at quadrature points) *************************************
-    vector < double > coord_at_qp(dim);
+    std::vector < double > coord_at_qp(dim);
 
 
 //************* shape functions (at dofs and quadrature points) **************************************
     double weight_qp = 0.;      // gauss point weight
     double weight_qp_bdry = 0.; // gauss point weight on the boundary
 
-    vector < vector < double > > phi_fe_qp(NFE_FAMS);
-    vector < vector < double > > phi_x_fe_qp(NFE_FAMS);
-    vector < vector < double > > phi_xx_fe_qp(NFE_FAMS);
+    std::vector < std::vector < double > > phi_fe_qp(NFE_FAMS);
+    std::vector < std::vector < double > > phi_x_fe_qp(NFE_FAMS);
+    std::vector < std::vector < double > > phi_xx_fe_qp(NFE_FAMS);
 
     for(int fe=0; fe < NFE_FAMS; fe++) {
         phi_fe_qp[fe].reserve(max_size);
@@ -2053,8 +2053,8 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     }
 
 //************* bdry shape functions (at dofs and quadrature points) **************************************
-    vector < vector < double > > phi_fe_qp_bdry(NFE_FAMS);
-    vector < vector < double > > phi_x_fe_qp_bdry(NFE_FAMS);
+    std::vector < std::vector < double > > phi_fe_qp_bdry(NFE_FAMS);
+    std::vector < std::vector < double > > phi_x_fe_qp_bdry(NFE_FAMS);
 
     for(int fe=0; fe < NFE_FAMS; fe++) {
         phi_fe_qp_bdry[fe].reserve(max_size);
@@ -2062,19 +2062,19 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     }
 
 //********************* vol-at-bdry adjoint *******************
-    vector <double> phi_adj_vol_at_bdry;
+    std::vector <double> phi_adj_vol_at_bdry;
     phi_adj_vol_at_bdry.reserve(max_size);
-    vector <double> phi_adj_x_vol_at_bdry;
+    std::vector <double> phi_adj_x_vol_at_bdry;
     phi_adj_x_vol_at_bdry.reserve(max_size * dim);
-    vector <double> sol_adj_x_vol_at_bdry_gss(dim);
+    std::vector <double> sol_adj_x_vol_at_bdry_gss(dim);
 //***************************************************
     
 //********************* vol-at-bdry adjoint_ext *******************
-    vector <double> phi_adj_ext_vol_at_bdry;
+    std::vector <double> phi_adj_ext_vol_at_bdry;
     phi_adj_ext_vol_at_bdry.reserve(max_size);
-    vector <double> phi_adj_ext_x_vol_at_bdry;
+    std::vector <double> phi_adj_ext_x_vol_at_bdry;
     phi_adj_ext_x_vol_at_bdry.reserve(max_size * dim);
-    vector <double> sol_adj_ext_x_vol_at_bdry_gss(dim);
+    std::vector <double> sol_adj_ext_x_vol_at_bdry_gss(dim);
 //***************************************************
 
     const unsigned int n_components_ctrl = 1;
@@ -2133,16 +2133,16 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
     assert(pos_mu      == mlPdeSys->GetSolPdeIndex("mu"));
 
 
-    vector < std::string > Solname(n_unknowns);
+    std::vector < std::string > Solname(n_unknowns);
     Solname[0] = "state";
     Solname[1] = "control";
     Solname[2] = "adjoint";
     Solname[3] = "adjoint_ext";
     Solname[4] = "mu";
 
-    vector < unsigned > SolPdeIndex(n_unknowns);
-    vector < unsigned > SolIndex(n_unknowns);
-    vector < unsigned > SolFEType(n_unknowns);
+    std::vector < unsigned > SolPdeIndex(n_unknowns);
+    std::vector < unsigned > SolIndex(n_unknowns);
+    std::vector < unsigned > SolFEType(n_unknowns);
 
 
     for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
@@ -2151,29 +2151,29 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
         SolFEType[ivar]   = ml_sol->GetSolutionType(SolIndex[ivar]);
     }
 
-    vector < unsigned int > Sol_n_el_dofs_Mat_vol(n_unknowns);
+    std::vector < unsigned int > Sol_n_el_dofs_Mat_vol(n_unknowns);
 
 //***************************************************
     //----------- quantities (at dof objects) ------------------------------
-    vector< int >       L2G_dofmap_Mat_AllVars;
+    std::vector < int >       L2G_dofmap_Mat_AllVars;
     L2G_dofmap_Mat_AllVars.reserve( n_unknowns * max_size );
-    vector < vector < int > >     L2G_dofmap_Mat(n_unknowns);
+    std::vector < std::vector < int > >     L2G_dofmap_Mat(n_unknowns);
     for(int i = 0; i < n_unknowns; i++) {
         L2G_dofmap_Mat[i].reserve(max_size);
     }
     
-    vector < vector < double > >  sol_eldofs_Mat(n_unknowns);
+    std::vector < std::vector < double > >  sol_eldofs_Mat(n_unknowns);
     for(int k = 0; k < n_unknowns; k++) {        sol_eldofs_Mat[k].reserve(max_size);    }
     
-    vector< double > Res;
+    std::vector < double > Res;
     Res.reserve( n_unknowns * max_size);
-    vector < double > Jac;
+    std::vector < double > Jac;
     Jac.reserve( n_unknowns * max_size * n_unknowns * max_size);
 
 //***************************************************
     //------------ quantities (at quadrature points) ---------------------
-    vector<double>        sol_qp(n_unknowns);
-    vector< vector<double> > sol_grad_qp(n_unknowns);
+    std::vector <double>        sol_qp(n_unknowns);
+    std::vector < std::vector <double> > sol_grad_qp(n_unknowns);
 
     std::fill(sol_qp.begin(), sol_qp.end(), 0.);
     for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -2220,7 +2220,7 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
         }
 
         // elem average point
-        vector < double > elem_center(dim);
+        std::vector < double > elem_center(dim);
         for (unsigned j = 0; j < dim; j++) {
             elem_center[j] = 0.;
         }

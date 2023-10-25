@@ -58,7 +58,7 @@ namespace femus {
     
     std::string _SolName;
     
-    vector< int > _dofSOL;
+    std::vector< int > _dofSOL;
     unsigned _indexSOL;
     unsigned _indSOL;
     unsigned _SolTypeSOL;

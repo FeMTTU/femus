@@ -123,7 +123,7 @@ namespace femus
    //1: bottom  //2: right  //3: top  //4: left (in 2d)  
   */
       void BuildBox(Mesh& mesh,
-                    vector < vector < double> >& vt,
+                    std::vector < std::vector < double> >& vt,
                     const unsigned int nx,
                     const unsigned int ny,
                     const unsigned int nz,
@@ -139,7 +139,7 @@ namespace femus
         // Clear the mesh and start from scratch
         //mesh.clear(); // to be added
 
-//   vector <vector <double> > vt;
+//   std::vector < std::vector <double> > vt;
 //   vt.resize(3);
 
 //   mesh.SetGridNumber(0);

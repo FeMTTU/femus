@@ -48,14 +48,14 @@ namespace femus {
 
   // ================================================
 
-  void LinearEquationSolverPetsc::BuildBdcIndex (const vector <unsigned>& variable_to_be_solved) {
+  void LinearEquationSolverPetsc::BuildBdcIndex (const std::vector <unsigned>& variable_to_be_solved) {
 
     _bdcIndexIsInitialized = 1;
 
     unsigned BDCIndexSize = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
     _bdcIndex.resize (BDCIndexSize);
 
-    vector <bool> ThisSolutionIsIncluded (_SolPdeIndex.size(), false);
+    std::vector <bool> ThisSolutionIsIncluded (_SolPdeIndex.size(), false);
 
     for (unsigned iind = 0; iind < variable_to_be_solved.size(); iind++) {
       unsigned PdeIndexSol = variable_to_be_solved[iind];
@@ -89,7 +89,7 @@ namespace femus {
 
   // ================================================
 
-  void LinearEquationSolverPetsc::Solve (const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
+  void LinearEquationSolverPetsc::Solve (const std::vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
 
     PetscLogDouble t1;
     PetscTime (&t1);
@@ -216,7 +216,7 @@ namespace femus {
 
   void LinearEquationSolverPetsc::MGSetLevel (
     LinearEquationSolver* LinSolver, const unsigned& levelMax,
-    const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
+    const std::vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
 
     unsigned level = _msh->GetLevel();

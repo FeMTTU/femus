@@ -25,8 +25,8 @@ namespace femus {
 void el_dofs_quantities_vol(const Solution*                sol,
                         const Mesh * msh,
                         const unsigned int iel,
-                        const    vector < unsigned > & SolFEType,
-                        vector < unsigned > & Sol_n_el_dofs 
+                        const    std::vector < unsigned > & SolFEType,
+                        std::vector < unsigned > & Sol_n_el_dofs 
      ) {
     
         for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
@@ -42,12 +42,12 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       const Mesh * msh,
                       const  LinearEquationSolver* pdeSys,
                       const unsigned int iel,
-                      const    vector < unsigned > & SolFEType,
-                      const vector < unsigned > & SolIndex,
-                      const vector < unsigned > & SolPdeIndex,
-                      vector < unsigned > & Sol_n_el_dofs, 
-                      vector < vector < double > > & sol_eldofs,  
-                      vector < vector < int > > & L2G_dofmap ) {
+                      const    std::vector < unsigned > & SolFEType,
+                      const std::vector < unsigned > & SolIndex,
+                      const std::vector < unsigned > & SolPdeIndex,
+                      std::vector < unsigned > & Sol_n_el_dofs, 
+                      std::vector < std::vector < double > > & sol_eldofs,  
+                      std::vector < std::vector < int > > & L2G_dofmap ) {
     
     assert(Sol_n_el_dofs.size() == sol_eldofs.size());
     

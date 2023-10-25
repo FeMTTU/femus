@@ -831,7 +831,7 @@ void UpdateMeshCoordinates ( MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol
   const unsigned dim = msh->GetDimension();
 
   const char varname[3][3] = {"DX", "DY", "DZ"};
-  vector <unsigned> indVAR ( dim );
+  std::vector <unsigned> indVAR ( dim );
 
   for ( unsigned k = 0; k < dim; k++ ) {
     indVAR[k] = mlSol.GetIndex ( &varname[k][0] );

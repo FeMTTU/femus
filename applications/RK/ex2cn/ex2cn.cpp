@@ -225,13 +225,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   double dt = GetTimeStep(0.);
   
   //solution variable
-  vector < unsigned > solVIndex(dim);
+  std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
   if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
   
   //solution variable
-  vector < unsigned > solDIndex(dim);
+  std::vector < unsigned > solDIndex(dim);
   solDIndex[0] = mlSol->GetIndex("DX");    // get the position of "U" in the ml_sol object
   solDIndex[1] = mlSol->GetIndex("DY");    // get the position of "V" in the ml_sol object
   if (dim == 3) solDIndex[2] = mlSol->GetIndex("DZ");      // get the position of "V" in the ml_sol object
@@ -242,12 +242,12 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
-  vector < unsigned > solVPdeIndex(dim);
+  std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
 
-  vector < unsigned > solDPdeIndex(dim);
+  std::vector < unsigned > solDPdeIndex(dim);
   solDPdeIndex[0] = mlPdeSys->GetSolPdeIndex("DX");    // get the position of "U" in the pdeSys object
   solDPdeIndex[1] = mlPdeSys->GetSolPdeIndex("DY");    // get the position of "V" in the pdeSys object
   if (dim == 3) solDPdeIndex[2] = mlPdeSys->GetSolPdeIndex("DZ");
@@ -255,20 +255,20 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-  vector < vector < double > >  solVOld(dim);    // local solution
+  std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
+  std::vector < std::vector < double > >  solVOld(dim);    // local solution
   
-  vector < vector < adept::adouble > >  solD(dim);    // local solution
-  vector < vector < double > >  solDOld(dim);    // local solution
+  std::vector < std::vector < adept::adouble > >  solD(dim);    // local solution
+  std::vector < std::vector < double > >  solDOld(dim);    // local solution
   
-  vector < adept::adouble >  solP; // local solution
+  std::vector < adept::adouble >  solP; // local solution
 
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
-  vector< vector < adept::adouble > > aResD(dim);    // local redidual vector
-  vector< adept::adouble > aResP; // local redidual vector
+  std::vector < std::vector < adept::adouble > > aResV(dim);    // local redidual vector
+  std::vector < std::vector < adept::adouble > > aResD(dim);    // local redidual vector
+  std::vector < adept::adouble > aResP; // local redidual vector
 
-  vector < vector < adept::adouble > > x(dim);    // local coordinates
-  vector < vector < double > > xHat(dim);    // local coordinates
+  std::vector < std::vector < adept::adouble > > x(dim);    // local coordinates
+  std::vector < std::vector < double > > xHat(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned  k = 0; k < dim; k++) {
@@ -286,11 +286,11 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   aResP.reserve(maxSize);
 
   
-  vector <double> phiHat;  // local test function for velocity
-  vector <double> phiHat_x; // local test function first order partial derivatives
+  std::vector <double> phiHat;  // local test function for velocity
+  std::vector <double> phiHat_x; // local test function first order partial derivatives
 
-  vector <double> phi;  // local test function for velocity
-  vector <adept::adouble> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function for velocity
+  std::vector <adept::adouble> phi_x; // local test function first order partial derivatives
 
   phiHat.reserve(maxSize);
   phiHat_x.reserve(maxSize * dim);
@@ -302,13 +302,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   adept::adouble weight; // gauss point weight
   double weightHat; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
+  std::vector < int > sysDof; // local to global pdeSys dofs
   sysDof.reserve((2 * dim + 1) * maxSize);
 
-  vector< double > Res; // local redidual vector
+  std::vector < double > Res; // local redidual vector
   Res.reserve((2 * dim + 1) * maxSize);
 
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve((2 * dim + 1) * maxSize * (2 * dim + 1) * maxSize);
 
   RES->zero(); // Set to zero all the entries of the Global Residual vector
@@ -393,7 +393,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 //         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
 //         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, solVType);
 //                     
-//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+//         std::vector < std::vector <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
 //         for ( int k = 0; k < dim; k++ ) {
 //           faceCoordinates[k].resize (faceDofs);
 //         }
@@ -405,10 +405,10 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 //         }
 //         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][solVType]->GetGaussPointNumber(); ig++ ) { 
 //             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
-//           vector < double> normal;
+//           std::vector < double> normal;
 //           msh->_finiteElement[faceGeom][solVType]->JacobianSur ( faceCoordinates, ig, weight, phiV, phiV_x, normal );
 //             
-//           vector< double > xg(dim,0.);
+//           std::vector < double > xg(dim,0.);
 //           for ( unsigned i = 0; i < faceDofs; i++ ) {
 //             for( unsigned k=0; k<dim; k++){
 //               xg[k] += phiV[i] * faceCoordinates[k][i]; // xg(ig)= \sum_{i=0}^faceDofs phi[i](xig) facecoordinates[i]     
@@ -435,14 +435,14 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
-      vector < adept::adouble > solV_gss(dim, 0);
-      vector < double > solVOld_gss(dim, 0);
-      vector < vector < adept::adouble > > gradSolV_gss(dim);
-      vector < vector < adept::adouble > > gradSolVOld_gss(dim);
+      std::vector < adept::adouble > solV_gss(dim, 0);
+      std::vector < double > solVOld_gss(dim, 0);
+      std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
+      std::vector < std::vector < adept::adouble > > gradSolVOld_gss(dim);
       
-      vector < adept::adouble > solD_gss(dim, 0);
-      vector < double > solDOld_gss(dim, 0);
-      vector < vector < adept::adouble > > gradSolDHat_gss(dim);
+      std::vector < adept::adouble > solD_gss(dim, 0);
+      std::vector < double > solDOld_gss(dim, 0);
+      std::vector < std::vector < adept::adouble > > gradSolDHat_gss(dim);
 
       
 
@@ -477,8 +477,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
-        vector < adept::adouble > NSV(dim, 0.);
-        vector < adept::adouble > DISP(dim, 0.);
+        std::vector < adept::adouble > NSV(dim, 0.);
+        std::vector < adept::adouble > DISP(dim, 0.);
         
         for (unsigned  k = 0; k < dim; k++) { //momentum equation in k 
           for (unsigned j = 0; j < dim; j++) { // second index j in each equation
@@ -581,11 +581,11 @@ double GetSolutionFluxes(MultiLevelSolution& mlSol){
   const unsigned dim = msh->GetDimension();
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
-  vector< vector < double> >  sol(dim);
-  vector< vector < double> > x(dim);
+  std::vector < std::vector < double> >  sol(dim);
+  std::vector < std::vector < double> > x(dim);
  
   const char varname[6][3] = {"U", "V", "W","DX", "DY", "DZ"};
-  vector <unsigned> indVar(2 * dim);
+  std::vector <unsigned> indVar(2 * dim);
   unsigned solType;
 
   for (unsigned ivar = 0; ivar < dim; ivar++) {
@@ -608,7 +608,7 @@ double GetSolutionFluxes(MultiLevelSolution& mlSol){
       // look for boundary faces
       if ( faceNumber == 3 ) {
           
-        vector < double> normal(dim, 0);  
+        std::vector < double> normal(dim, 0);  
        
         unsigned nve = msh->GetElementFaceDofNumber(iel, jface, solType);
         const unsigned felt = msh->GetElementFaceType(iel, jface);

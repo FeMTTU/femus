@@ -33,7 +33,7 @@ namespace femus {
 class System;
 class MultiLevelProblem;
 class MultiLevelMesh;
-class String;
+// class String;
 class Unknown;
 
 /**
@@ -97,11 +97,11 @@ public:
     /** Get the index of the Solution "solname" for this system */
     const unsigned GetSolPdeIndex(const char solname[]) const;
 
-    vector <unsigned> & GetSolPdeIndex() {
+    std::vector <unsigned> & GetSolPdeIndex() {
       return _SolSystemPdeIndex;
     }
 
-    const vector <unsigned> & GetSolPdeIndex() const {
+    const std::vector <unsigned> & GetSolPdeIndex() const {
       return _SolSystemPdeIndex;
     }
 
