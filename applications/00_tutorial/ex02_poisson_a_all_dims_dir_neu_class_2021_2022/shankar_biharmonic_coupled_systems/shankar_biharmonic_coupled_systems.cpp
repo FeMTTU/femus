@@ -34,7 +34,7 @@ double GetExactSolutionValue(const std::vector < double >& x) {
 };
 
 
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
   double pi = acos(-1.);
   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
@@ -180,6 +180,12 @@ void LaplaceGetExactSolutionGradient(const std::vector < double >& x, std::vecto
   solGrad[0]  =  -8* pi * pi * pi * cos(2*pi * x[0]);
   //solGrad[1] =  2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
 };
+
+double LaplaceGetExactSolutionLaplacian(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return  16. * pi * pi * pi  * pi * sin(2*pi * x[0]);
+  //solGrad[1] =  2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
+};
 // for v - END ----
 
 //1_D_PROBLEM-END
@@ -241,7 +247,7 @@ int main(int argc, char** args) {
 
   //const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med"; //Orginal
 
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/zzz_embedded_in_3d/segment/0-1/Mesh_1_y_all_dir.med";
+  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/segment_1_all_dir.med";
 
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
 
@@ -262,7 +268,7 @@ int main(int argc, char** args) {
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     unsigned numberOfUniformLevels = i + 1;
-    unsigned numberOfSelectiveLevels = 1;
+    unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
     // erase all the coarse mesh levels
@@ -586,7 +592,7 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
         double pi = acos(-1.);
         aResv[i] += (solvGauss * phi[i] -  Laplace_u) * weight;
         //aResu[i] += ( (36*x[0] + 36*x[1] - 24) * phi[i] -  Laplace_v) * weight;
-        aResu[i] += (16.*pi * pi * pi * pi * exactSolValue * phi[i] -  Laplace_v) * weight; //Orginal
+        aResu[i] += (LaplaceGetExactSolutionLaplacian(xGauss) * phi[i] -  Laplace_v) * weight; //Orginal
       } // end phi_i loop
     } // end gauss point loop
 
