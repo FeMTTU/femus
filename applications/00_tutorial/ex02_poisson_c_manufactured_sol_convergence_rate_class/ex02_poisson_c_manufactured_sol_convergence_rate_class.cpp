@@ -159,6 +159,8 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
     ml_mesh_single_level.EraseCoarseLevels(numberOfUniformLevels - 1);
 
     ml_mesh_single_level.PrintInfo();
+    
+    if (ml_mesh_single_level.GetNumberOfLevels() != 1) abort();
     //Mesh - END   ==================
 
 

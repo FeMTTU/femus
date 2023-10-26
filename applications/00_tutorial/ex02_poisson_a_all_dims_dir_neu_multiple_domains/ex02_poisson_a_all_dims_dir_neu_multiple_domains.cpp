@@ -513,10 +513,14 @@ namespace prism_annular_base_along_z_with_base_centered_at_0_by_0 {
 
 
  //Unknown initial condition - BEGIN  ==================
-double InitialValueU(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
-    
-  return 0.;
-  
+double Solution_set_initial_conditions_with_analytical_sol(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
+
+Math::Function< double > *  exact_sol =  ml_prob->get_ml_solution()->get_analytical_function(name);
+
+double value = exact_sol->value(x);
+
+   return value;   
+
 }
  //Unknown initial condition - END  ==================
 
@@ -864,12 +868,16 @@ int main(int argc, char** args) {
 
  // ======= Solution: Initial Conditions - BEGIN ==================
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
-      ml_sol.Initialize(unknowns[u]._name.c_str(), InitialValueU, & ml_prob);
+     ml_sol.set_analytical_function(unknowns[u]._name.c_str(), my_specifics[app]._true_solution_function);   
+     ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions_with_analytical_sol, & ml_prob);
   }
  // ======= Solution: Initial Conditions  - END ==================
   
   
+  const bool my_solution_generation_has_equation_solve = false;
   
+         if (my_solution_generation_has_equation_solve)  {
+
   // ======= Solution: Boundary Conditions - BEGIN ==================
   ml_sol.AttachSetBoundaryConditionFunction(my_specifics[app]._boundary_conditions_types_and_values);
    for (unsigned int u = 0; u < unknowns.size(); u++)  { 
@@ -904,7 +912,9 @@ int main(int argc, char** args) {
   system.MGsolve();
     // ======= Problem, System - END ========================
 
-  
+         }
+         
+         
     // ======= Error - BEGIN ========================
   
   compute_L2_norm_of_errors_of_unknowns_with_analytical_sol<double>(ml_prob, ml_mesh.GetNumberOfLevels() - 1 /*system.GetLevelToAssemble()*/, unknowns.size() );
