@@ -230,6 +230,8 @@ OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
 
 OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
 
+OPTION(BUILD_ZZZ_SANDBOX "Build the sandbox apps for playing around" ON)
+
 #############################################################################################
 ### Build options - END
 #############################################################################################
