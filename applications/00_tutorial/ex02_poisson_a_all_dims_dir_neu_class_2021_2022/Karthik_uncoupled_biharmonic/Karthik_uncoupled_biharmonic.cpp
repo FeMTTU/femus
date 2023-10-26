@@ -28,6 +28,41 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+
+// // // -----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// // // bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+// // //   bool dirichlet = true; //dirichlet
+// // //
+// // //   if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense.
+// // //     value = 0.;
+// // //     if (facename == 1) {
+// // //       if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
+// // //     }
+// // //   }
+// // //   else if (!strcmp(SolName, "V")) {
+// // //     value = 0.;
+// // //     //if (facename == 1) {
+// // //      // if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
+// // //     //}
+// // //   }
+// // //   else if (!strcmp(SolName, "W")) {
+// // //     value = 0.;
+// // //   }
+// // //   else if (!strcmp(SolName, "P")) {
+// // //     value = 0.;
+// // //     dirichlet = false;
+// // //   }
+// // //
+// // //   return dirichlet;
+// // // }
+
+
+
+// // // -----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 void AssembleU_AD(MultiLevelProblem& ml_prob);
 void AssembleV_AD(MultiLevelProblem& ml_prob);
 
@@ -188,23 +223,75 @@ int main(int argc, char** args) {
 }
 
 
+
+// // // // ======= Solution_Set - BEGIN  ========================
+// // //
+// // // double GetExactSolutionValue(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return cos(pi * x[0]) * cos(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+// // //   double pi = acos(-1.);
+// // //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+// // //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // double GetExactSolutionLaplace(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // };
+// // //
+// // //
+// // // // ======= Solution_Set - END  ========================
+
+// ======= Solution_Set - BEGIN  ========================
+
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
+  return sin(pi * x[0]) * cos(pi * x[1]);
 };
 
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+  solGrad[0]  = pi * cos(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] = -pi * sin(pi * x[0]) * sin(pi * x[1]);
 };
 
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+  return -2.*pi * pi * sin(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
 };
+
+
+// ======= Solution_Set - END  ========================
+
+
+// // // // ======= Solution_Set - BEGIN  ========================
+// // //
+// // // double GetExactSolutionValue(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return sin(pi * x[0]) * cos(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+// // //   double pi = acos(-1.);
+// // //   solGrad[0]  = pi * cos(pi * x[0]) * cos(pi * x[1]);
+// // //   solGrad[1] = -pi * sin(pi * x[0]) * sin(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // double GetExactSolutionLaplace(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return -2.*pi * pi * sin(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // };
+// // //
+// // // // ======= Solution_Set - END  ========================
 
 
 /**
