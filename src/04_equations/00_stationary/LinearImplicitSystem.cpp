@@ -52,6 +52,7 @@ namespace femus {
     _printSolverInfo(false),
     _assembleMatrix(true),
     _numberOfGlobalVariables(0u) {
+      
     _SparsityPattern.resize(0);
     _mgOuterSolver = GMRES;
     _totalAssemblyTime = 0.;

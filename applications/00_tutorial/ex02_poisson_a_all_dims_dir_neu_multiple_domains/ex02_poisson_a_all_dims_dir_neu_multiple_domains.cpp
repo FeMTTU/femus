@@ -894,8 +894,9 @@ int main(int argc, char** args) {
   
   system.SetDebugNonlinear(true);
  
-       // ======= System Unknowns ========================
+       // ======= System Unknowns - BEGIN ======================
   for (unsigned int u = 0; u < unknowns.size(); u++)  system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  
+       // ======= System Unknowns - END ========================
  
   // attach the assembling function to system
   system.SetAssembleFunction( my_specifics[app]._assemble_function );

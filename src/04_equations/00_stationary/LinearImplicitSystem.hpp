@@ -299,7 +299,7 @@ namespace femus {
       std::vector <unsigned> _VariablesToBeSolvedIndex;
 
       SolverType _finegridsolvertype;
-      unsigned int _DirichletBCsHandlingMode;
+      unsigned int _DirichletBCsHandlingMode;   ///@todo it is not used anywhere
       double _rtol, _atol, _divtol, _maxits, _restart;
       PreconditionerType _finegridpreconditioner;
 

@@ -46,6 +46,8 @@ namespace femus {
   MultiLevelSolution::MultiLevelSolution(MultiLevelMesh* ml_msh) :
     _gridn(ml_msh->GetNumberOfLevels()),
     _mlMesh(ml_msh) {
+      
+      
     _solution.resize(_gridn);
 
     for(unsigned i = 0; i < _gridn; i++) {

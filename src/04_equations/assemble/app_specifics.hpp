@@ -40,9 +40,9 @@ class app_specifics {
    std::vector< std::string >   _mesh_files_path_relative_to_executable;  //same domain, only potentially multiple mesh discretizations 
    //mesh files - END
  
-   //System - BEGIN
+   //System name - BEGIN
    std::string  _system_name;  //for now we only accept 1 System in a certain App. This name is needed to retrieve the equation from the Problem
-   //System - END
+   //System name - END
    
    //func pointer of EQUATION - BEGIN
    /// @todo this should be templated

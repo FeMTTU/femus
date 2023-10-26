@@ -44,17 +44,40 @@ class System {
 
 protected:
 
+//==== Constr/Destr - BEGIN ======== 
 public:
-
-    /** Function pointer type, easiest way to declare function pointer instantiations */
-    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob);//, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-
+  
     /** Constructor.  Optionally initializes required data structures. */
     System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type);
 
     /** destructor */
     virtual ~System();
 
+  
+//==== Constr/Destr - END ======== 
+  
+  
+public:
+  
+//==== Assemble function - BEGIN ======== 
+
+    /** Function pointer type, easiest way to declare function pointer instantiations */
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob);//, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+    
+    /** Register a user function to use in assembling the system matrix and RHS. */
+    void SetAssembleFunction (AssembleFunctionType );
+
+    AssembleFunctionType  GetAssembleFunction();
+    
+protected:
+  
+    /** Function that assembles the system. */
+    AssembleFunctionType _assemble_system_function;
+
+//==== Assemble function - END ======== 
+
+public:
+  
     /** To be Added */
     unsigned int number() const;
 
@@ -76,10 +99,6 @@ public:
     /** Associate the solution variables to the system PDE */
     virtual void AddSolutionToSystemPDE(const char solname[]);
 
-    /** Register a user function to use in assembling the system matrix and RHS. */
-    void SetAssembleFunction (AssembleFunctionType );
-
-    AssembleFunctionType  GetAssembleFunction();
 
     virtual void SetOuterSolver (const SolverType & mgOuterSolver) {};
     
@@ -154,9 +173,6 @@ protected:
     unsigned _levelToAssemble;
 
     //virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
-
-    /** Function that assembles the system. */
-    AssembleFunctionType _assemble_system_function;
 
     /** The number associated with this system */
     const unsigned int _sys_number;
