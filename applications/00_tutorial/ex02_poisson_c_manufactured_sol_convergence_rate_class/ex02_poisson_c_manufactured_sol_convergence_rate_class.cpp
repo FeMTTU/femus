@@ -151,6 +151,11 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
 ) const {
 
+   //only one Problem,
+    //only one Mesh per level,
+    //only one Solution per level,
+    // a separate System for each unknown (I want to do like this to see how to handle multiple coupled systems later on)
+
 
     //Mesh - BEGIN   ==================
     unsigned numberOfUniformLevels = lev + 1;
@@ -160,7 +165,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
     ml_mesh_single_level.PrintInfo();
     
-    if (ml_mesh_single_level.GetNumberOfLevels() != 1) abort();
+    if (ml_mesh_single_level.GetNumberOfLevels() != 1) { std::cout << "Need single level here" << std::endl; abort(); }
     //Mesh - END   ==================
 
 
@@ -174,24 +179,25 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
     ml_prob.SetMultiLevelMeshAndSolution(& ml_sol_single_level);
     //Solution - END  ==================
     
-    ml_prob.get_systems_map().clear();  //at every lev we'll have a different map of systems
 
-    //only one Problem,
-    //only one Mesh per level,
-    //only one Solution per level,
-    // a separate System for each unknown (I want to do like this to see how to handle multiple coupled systems later on)
-
+         // ======= Solution, Initialize, II - BEGIN ==================
+// // If you just want an interpolation study, without equation, just initialize every Solution with some function      
     for (unsigned int u = 0; u < unknowns.size(); u++) {
 
-        // ======= Solution, Initialize, II - BEGIN ==================
         ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
         ml_sol_single_level.set_analytical_function(unknowns[u]._name.c_str(), exact_sol[u]);   
         ml_sol_single_level.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob);
+    }
+// // If you just want an interpolation study, without equation, just initialize every Solution with some function      
         // ======= Solution, Initialize, II - END ==================
-
-        
-// // If you just want an interpolation study, without equation, just initialize every Solution with some function - BEGIN      
+    
+    
        if (my_solution_generation_has_equation_solve)  {
+           
+    ml_prob.get_systems_map().clear();  //at every lev we'll have a different map of systems
+           
+    for (unsigned int u = 0; u < unknowns.size(); u++) {
+        
        
 
         // ======= Solution, Boundary Conditions - BEGIN ==================
@@ -235,15 +241,18 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
 
        }
        
-// // If you just want an interpolation study, without equation, just initialize every Solution with some function  - END      
+
+    }
+    
 
         // ======= Print - BEGIN  ========================
+    for (unsigned int u = 0; u < unknowns.size(); u++) {
         std::vector < std::string > variablesToBePrinted;
         variablesToBePrinted.push_back(unknowns[u]._name);
         ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, ml_prob.GetFilesHandler()->GetOutputPath(), "biquadratic", variablesToBePrinted, lev);
-        // ======= Print - END  ========================
 
     }
+        // ======= Print - END  ========================
 
 
     return ml_sol_single_level;
