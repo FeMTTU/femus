@@ -24,40 +24,154 @@ using namespace femus;
 
 
 
+// // // // ======= Solution_Set - BEGIN  ========================
+// // //
+// // // double GetExactSolutionValue(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return cos(pi * x[0]) * cos(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+// // //   double pi = acos(-1.);
+// // //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+// // //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // double GetExactSolutionLaplace(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // };
+// // //
+// // //
+// // //
+// // // // for v - BEGIN ----
+// // // double LaplaceGetExactSolutionValue(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // };
+// // //
+// // // void LaplaceGetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+// // //   double pi = acos(-1.);
+// // //   solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
+// // //   solGrad[1] =  2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
+// // // };
+// // // // for v - END ----
+// // //
+// // //
+// // // // ======= Solution_Set - END  ========================
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
-};
 
 
-void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
+// // // // ======= Solution_Set - BEGIN  ========================
+// // //
+// // // double GetExactSolutionValue(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return sin(pi * x[0]) * cos(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+// // //   double pi = acos(-1.);
+// // //   solGrad[0]  = pi * cos(pi * x[0]) * cos(pi * x[1]);
+// // //   solGrad[1] = -pi * sin(pi * x[0]) * sin(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // double GetExactSolutionLaplace(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return -2.*pi * pi * sin(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // };
+// // //
+// // //
+// // //
+// // // // for v - BEGIN ----
+// // // double LaplaceGetExactSolutionValue(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return -2.* pi * pi * sin(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // };
+// // //
+// // // void LaplaceGetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+// // //   double pi = acos(-1.);
+// // //   solGrad[0]  = -2. * pi * pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+// // //   solGrad[1] =  2. * pi * pi * pi * sin(pi * x[0]) * sin(pi * x[1]);
+// // // };
+// // // // for v - END ----
+// // //
+// // //
+// // // // ======= Solution_Set - END  ========================
 
 
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
-};
+
+// // // // ======= Solution_Set - BEGIN  ========================
+// // //
+// // // double GetExactSolutionValue(const std::vector<double>& x) {
+// // //     double pi = acos(-1.);
+// // //     return sin(2 * pi * x[0]) * sin(2 * pi * x[1]);
+// // // }
+// // //
+// // // void GetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad) {
+// // //     double pi = acos(-1.);
+// // //     solGrad[0] = 2 * pi * cos(2 * pi * x[0]) * sin(2 * pi * x[1]);
+// // //     solGrad[1] = 2 * pi * sin(2 * pi * x[0]) * cos(2 * pi * x[1]);
+// // // }
+// // //
+// // // double GetExactSolutionLaplace(const std::vector<double>& x) {
+// // //     double pi = acos(-1.);
+// // //     return -8 * pi * pi * sin(2 * pi * x[0]) * sin(2 * pi * x[1]);
+// // // }
+// // //
+// // // // for v - BEGIN ----
+// // // double LaplaceGetExactSolutionValue(const std::vector<double>& x) {
+// // //     double pi = acos(-1.);
+// // //     return -8 * pi * pi * sin(2 * pi * x[0]) * sin(2 * pi * x[1]);
+// // // }
+// // //
+// // // void LaplaceGetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad) {
+// // //     double pi = acos(-1.);
+// // //     solGrad[0] = -16 * pi * pi * pi * cos(2 * pi * x[0]) * sin(2 * pi * x[1]);
+// // //     solGrad[1] = -16 * pi * pi * pi*  sin(2 * pi * x[0]) * cos(2 * pi * x[1]);
+// // // }
+// // // // for v - END ----
+// // //
+// // // // ======= Solution_Set - END  ========================
 
 
+
+// ======= Solution_Set - BEGIN  ========================
+
+double GetExactSolutionValue(const std::vector<double>& x) {
+    double pi = acos(-1.);
+    return sin(2 * pi * x[0]);
+}
+
+void GetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad) {
+    double pi = acos(-1.);
+    solGrad[0] = 2 * pi * cos(2 * pi * x[0]);
+    solGrad[1] = 0.;
+}
+
+double GetExactSolutionLaplace(const std::vector<double>& x) {
+    double pi = acos(-1.);
+    return -4 * pi * pi * sin(2 * pi * x[0]);
+}
 
 // for v - BEGIN ----
-double LaplaceGetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
-};
+double LaplaceGetExactSolutionValue(const std::vector<double>& x) {
+    double pi = acos(-1.);
+    return -4 * pi * pi * sin(2 * pi * x[0]);
+}
 
-void LaplaceGetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] =  2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
+
+void LaplaceGetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad) {
+    double pi = acos(-1.);
+    solGrad[0] = -8 * pi * pi * pi * cos(2 * pi * x[0]) ;
+    solGrad[1] = 0.;
+}
 // for v - END ----
 
+// ======= Solution_Set - END  ========================
 
 
 
@@ -69,9 +183,39 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
+// // // -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+// // // bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+// // //   bool dirichlet = true; //dirichlet
+// // //
+// // //   if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense.
+// // //     value = 0.;
+// // //     if (facename == 1) {
+// // //       if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
+// // //     }
+// // //   }
+// // //   else if (!strcmp(SolName, "V")) {
+// // //     value = 0.;
+// // //     //if (facename == 1) {
+// // //      // if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
+// // //     //}
+// // //   }
+// // //   else if (!strcmp(SolName, "W")) {
+// // //     value = 0.;
+// // //   }
+// // //   else if (!strcmp(SolName, "P")) {
+// // //     value = 0.;
+// // //     dirichlet = false;
+// // //   }
+// // //
+// // //   return dirichlet;
+// // // }
 
+
+// // // -----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// ======= AssembleBilaplaceProblem_AD - BEGIN  ========================
 
 void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob);
 
@@ -94,7 +238,12 @@ int main(int argc, char** args) {
 //   const std::string relative_path_to_build_directory =  "../../../";
   const std::string relative_path_to_build_directory =  "../../../../";
 
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
+// // //    const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
+
+
+  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/segment_1_all_dir.med";
+
+
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   // mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
@@ -114,7 +263,7 @@ int main(int argc, char** args) {
     
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-    unsigned numberOfUniformLevels = i + 1;
+    unsigned numberOfUniformLevels = i + 2;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
@@ -247,7 +396,7 @@ int main(int argc, char** args) {
 
 
 
-
+// ======= AssembleBilaplaceProblem_AD - END  ========================
 
 
 
@@ -274,6 +423,7 @@ int main(int argc, char** args) {
  **/
 
 
+// ======= AssembleBilaplaceProblem_AD - BEGIN  ========================
 
 void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -433,7 +583,7 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
 
         double pi = acos(-1.);
         aResv[i] += (solvGauss * phi[i] -  Laplace_u) * weight;
-        aResu[i] += (4.*pi * pi * pi * pi * exactSolValue * phi[i] -  Laplace_v) * weight;
+        aResu[i] += (16.*pi * pi * pi * pi * exactSolValue * phi[i] -  Laplace_v) * weight;
       } // end phi_i loop
     } // end gauss point loop
 
@@ -606,3 +756,5 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, const std::
   return norm;
 
 }
+
+// ======= AssembleBilaplaceProblem_AD - END  ========================
