@@ -111,8 +111,17 @@ namespace femus {
 //==== Unknowns - BEGIN ========
     public:
       
+      /** Add the variable solname to the variable set to be solved by using the Vanka smoother  ? Is it only for Vanka or for all?  */
+      void AddVariableToBeSolved (const char solname[]);
+
+      /** Clear the Vanka index ? Is it only for Vanka or for all? */
+      void ClearVariablesToBeSolved();
+
     protected:
       
+      /** To be Added */
+      std::vector <unsigned> _VariablesToBeSolvedIndex;
+
       
 //==== Unknowns - END ========
 
@@ -223,19 +232,6 @@ namespace femus {
       /** Set the multigrid smoother, gmres or Vanka (in future AMS (additive schwartz preconditioner))*/
       void SetLinearEquationSolverType (const LinearEquationSolverType LinearEquationSolverType, const CoarseLevelInclude &includeCoarseLevel = INCLUDE_COARSE_LEVEL_FALSE);
 
-      /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
-      void SetSolverCoarseGrid (const SolverType &solvertype);
-
-      /** Set the preconditioner for the Ksp smoother solver on the fine grids */
-      void SetPreconditionerCoarseGrid (const PreconditionerType &preconditioner_type);
-
-
-      /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
-      void SetSolverFineGrids (const SolverType &solvertype);
-
-      /** Set the preconditioner for the Ksp smoother solver on the fine grids */
-      void SetPreconditionerFineGrids (const PreconditionerType &preconditioner_type);
-
 
     protected:
 
@@ -286,6 +282,19 @@ namespace femus {
 //==== Solver, Multigrid, Smoothing - BEGIN ========
     public:
       
+      /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
+      void SetSolverCoarseGrid (const SolverType &solvertype);
+
+      /** Set the preconditioner for the Ksp smoother solver on the fine grids */
+      void SetPreconditionerCoarseGrid (const PreconditionerType &preconditioner_type);
+
+
+      /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
+      void SetSolverFineGrids (const SolverType &solvertype);
+
+      /** Set the preconditioner for the Ksp smoother solver on the fine grids */
+      void SetPreconditionerFineGrids (const PreconditionerType &preconditioner_type);
+
       /** Set the number of pre-smoothing step of a Multigrid cycle */
       void SetNumberPreSmoothingStep (const unsigned &npre) {
         _npre = npre;
@@ -304,6 +313,10 @@ namespace femus {
       
     protected:
       
+      SolverType _finegridsolvertype;
+
+      PreconditionerType _finegridpreconditioner;
+
       /** To be Added */
       LinearEquationSolverType _smootherType;
       CoarseLevelInclude _includeCoarseLevelSmoother;
@@ -396,12 +409,6 @@ namespace femus {
       
 
 
-      /** Add the variable solname to the variable set to be solved by using the Vanka smoother */
-      void AddVariableToBeSolved (const char solname[]);
-
-      /** Clear the Vanka index */
-      void ClearVariablesToBeSolved();
-
       /** Set the tolerances for the ksp solver on fine grids: rtol, atol, divtol, maxits */
       void SetTolerances (const double &rtol, const double &atol,
                           const double &divtol, const unsigned &maxits,
@@ -444,15 +451,8 @@ namespace femus {
       
 
 
-      /** To be Added */
-      std::vector <unsigned> _VariablesToBeSolvedIndex;
-
       double _rtol, _atol, _divtol, _maxits, _restart;
       
-      SolverType _finegridsolvertype;
-
-      PreconditionerType _finegridpreconditioner;
-
       bool _numblock_test;
       unsigned _num_block;
 
