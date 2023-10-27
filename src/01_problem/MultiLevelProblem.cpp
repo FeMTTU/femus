@@ -93,15 +93,6 @@ System & MultiLevelProblem::add_system (const std::string& sys_type,
 //   else if (sys_type == "Newmark")
 //     this->add_system<NewmarkSystem> (name);
 
-  // Build an Explicit system
-  else if ((sys_type == "Explicit"))
-    this->add_system<ExplicitSystem> (name);
-
-  // Build an Implicit system
-  else if ((sys_type == "Implicit") ||
-	   (sys_type == "Steady"  ))
-    this->add_system<ImplicitSystem> (name);
-
   // build a transient implicit linear system
   else if ((sys_type == "Transient") ||
 	   (sys_type == "TransientImplicit") ||
@@ -111,10 +102,6 @@ System & MultiLevelProblem::add_system (const std::string& sys_type,
   // build a transient implicit nonlinear system
   else if (sys_type == "TransientNonlinearImplicit")
     this->add_system<TransientNonlinearImplicitSystem> (name);
-
-  // build a transient explicit system
-  else if (sys_type == "TransientExplicit")
-    this->add_system<TransientExplicitSystem> (name);
 
   // build a linear implicit system
   else if (sys_type == "LinearImplicit")

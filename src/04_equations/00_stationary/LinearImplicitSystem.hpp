@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "ImplicitSystem.hpp"
+#include "System.hpp"
 #include "LinearEquationSolver.hpp"
 #include "MgTypeEnum.hpp"
 #include "DirichletBCTypeEnum.hpp"
@@ -35,7 +35,7 @@ namespace femus {
 // Forward declarations
 //------------------------------------------------------------------------------
 
-  class LinearImplicitSystem : public ImplicitSystem {
+  class LinearImplicitSystem : public System {
 
     public:
 
@@ -46,7 +46,7 @@ namespace femus {
       virtual ~LinearImplicitSystem();
 
       /** The type of the parent. */
-      typedef ImplicitSystem Parent;
+      typedef System Parent;
 
       /** Init the system PDE structures */
       virtual void init();

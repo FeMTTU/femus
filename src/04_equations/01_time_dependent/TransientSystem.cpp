@@ -148,11 +148,10 @@ void TransientSystem<Base>::AttachGetTimeIntervalFunction (double (* get_time_in
 
 // ------------------------------------------------------------
 // TransientSystem forward instantiations
+template class TransientSystem<System>;
 template class TransientSystem<LinearImplicitSystem>;
 template class TransientSystem<NonLinearImplicitSystem>;
 template class TransientSystem<MonolithicFSINonLinearImplicitSystem>;
-template class TransientSystem<ExplicitSystem>;
-template class TransientSystem<System>;
 
 } //end namespace femus
 

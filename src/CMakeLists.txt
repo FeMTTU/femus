@@ -47,8 +47,6 @@ SET(femus_src
 03_solution/01_output/VTKWriter.cpp
 03_solution/01_output/GMVWriter.cpp
 03_solution/01_output/XDMFWriter.cpp
-04_equations/00_stationary/ExplicitSystem.cpp
-04_equations/00_stationary/ImplicitSystem.cpp
 04_equations/00_stationary/LinearImplicitSystem.cpp
 04_equations/00_stationary/MonolithicFSINonLinearImplicitSystem.cpp
 04_equations/00_stationary/NonLinearImplicitSystem.cpp
