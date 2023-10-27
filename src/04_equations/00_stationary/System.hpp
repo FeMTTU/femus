@@ -33,7 +33,6 @@ namespace femus {
 class System;
 class MultiLevelProblem;
 class MultiLevelMesh;
-// class String;
 class Unknown;
 
 /**

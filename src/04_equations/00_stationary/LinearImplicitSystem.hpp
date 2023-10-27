@@ -39,27 +39,18 @@ namespace femus {
 
     public:
 
+//==== Constr/Destr - BEGIN ========
       /** Constructor.  Optionally initializes required data structures. */
       LinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type);
 
       /** Destructor */
       virtual ~LinearImplicitSystem();
+//==== Constr/Destr - END ========
 
-      /** The type of the parent. */
-      typedef System Parent;
+      
+//==== Basic - BEGIN ========
+    public:
 
-      /** Init the system PDE structures */
-      virtual void init();
-
-      /** @deprecated Multigrid routine */
-      void MGSolve (double Eps, int MaxIter, const uint Gamma = DEFAULT_MG_GAMMA, const uint Nc_pre = DEFAULT_NC_PRE, const uint Nc_coarse = DEFAULT_NC_COARSE, const uint Nc_post = DEFAULT_NC_POST);
-
-      /** @deprecated Multigrid step routine */
-      double MGStep (int Level, double Eps1, int MaxIter, const uint Gamma, const uint Nc_pre, const uint Nc_coarse, const uint Nc_post);
-
-
-      /** Add a system level */
-      void AddSystemLevel();
       /**
        * @returns \p "LinearImplicit".  Helps in identifying
        * the system type in an equation system file.
@@ -67,6 +58,74 @@ namespace femus {
       virtual std::string system_type() const {
         return "LinearImplicit";
       }
+      
+      /** The type of the parent. */
+      typedef System Parent;
+
+      /** Init the system PDE structures */
+      virtual void init();
+      
+      void GetSystemInfo();
+//==== Basic - END ========
+
+
+//==== Assemble - BEGIN ========
+    public:
+
+      bool GetAssembleMatrix() {
+        return _assembleMatrix;
+      }
+
+      
+    protected:
+      
+      bool _assembleMatrix;
+      
+//==== Assemble - END ========
+      
+//==== Solver - BEGIN ========
+    public:
+
+      /** @deprecated Multigrid routine */
+      void MGSolve (double Eps, int MaxIter, const uint Gamma = DEFAULT_MG_GAMMA, const uint Nc_pre = DEFAULT_NC_PRE, const uint Nc_coarse = DEFAULT_NC_COARSE, const uint Nc_post = DEFAULT_NC_POST);
+
+      /** @deprecated Multigrid step routine */
+      double MGStep (int Level, double Eps1, int MaxIter, const uint Gamma, const uint Nc_pre, const uint Nc_coarse, const uint Nc_post);
+
+      /** Solves the system. */
+      virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+
+//==== Solver - END ========
+      
+//==== Solver, Debug - BEGIN ========
+    public:
+      
+      /** Flag to print fields to file after each linear iteration */
+      void SetDebugLinear(const bool my_value); 
+
+    protected:
+
+      /** Flag for printing fields at each linear iteration */
+      bool _debug_linear;
+      
+//==== Solver, Debug - END ========
+
+
+//==== Boundary Conditions - BEGIN ========
+    public:
+
+      /** Set the modality of handling the BC boundary condition (penalty or elimination)*/
+      void SetDirichletBCsHandling (const DirichletBCType DirichletMode);
+      
+    protected:
+
+      unsigned int _DirichletBCsHandlingMode;   ///@todo it is not used anywhere
+//==== Boundary Conditions - END ========
+
+    public:
+      
+      /** Add a system level */
+      void AddSystemLevel();
 
       /**
       * The \p LinearSolver defines the default interface used to
@@ -90,11 +149,8 @@ namespace femus {
         return _final_linear_residual;
       };
 
-      /** Flag to print fields to file after each linear iteration */
-      void SetDebugLinear(const bool my_value); 
-
       /** Get the absolute convergence tolerance for the linear problem Ax=b*/
-      double GetAbsoluteConvergenceTolerance() const {
+      double GetAbsoluteLinearConvergenceTolerance() const {
         return _linearAbsoluteConvergenceTolerance;
       };
 
@@ -110,9 +166,6 @@ namespace femus {
       void SetMgType (const MgType mgtype) {
         _mg_type = mgtype;
       };
-
-      /** Set the modality of handling the BC boundary condition (penalty or elimination)*/
-      void SetDirichletBCsHandling (const DirichletBCType DirichletMode);
 
       /** Add the variable solname to the variable set to be solved by using the Vanka smoother */
       void AddVariableToBeSolved (const char solname[]);
@@ -214,16 +267,10 @@ namespace femus {
         _npost = npost;
       };
       
-      void GetSystemInfo();
-
       /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
       void SetSparsityPattern (std::vector < bool > other_sparcity_pattern);
 
       void SetSparsityPatternMinimumSize (const unsigned &minimumSize, const std::string variableName = "All");
-
-      bool GetAssembleMatrix() {
-        return _assembleMatrix;
-      }
 
       std::vector < SparseMatrix* > &GetProjectionMatrix() {
         return _PP;
@@ -233,16 +280,15 @@ namespace femus {
         return _RR;
       }
      
-      /** Solves the system. */
-      virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
       
     protected:
 
+      
       std::vector < SparseMatrix* > _PP, _RR;
       std::vector < SparseMatrix* > _PPamr, _RRamr;
 
       bool _printSolverInfo;
-      bool _assembleMatrix;
+      
       void AddAMRLevel (unsigned &AMRCounter);
 
       bool Vcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
@@ -265,9 +311,6 @@ namespace femus {
       // member data
       /** The number of linear iterations required to solve the linear system Ax=b. */
       //unsigned int _n_linear_iterations;
-
-      /** Flag for printing fields at each linear iteration */
-      bool _debug_linear;
 
       /** The final residual for the linear system Ax=b. */
       double _final_linear_residual;
@@ -299,7 +342,7 @@ namespace femus {
       std::vector <unsigned> _VariablesToBeSolvedIndex;
 
       SolverType _finegridsolvertype;
-      unsigned int _DirichletBCsHandlingMode;   ///@todo it is not used anywhere
+
       double _rtol, _atol, _divtol, _maxits, _restart;
       PreconditionerType _finegridpreconditioner;
 
