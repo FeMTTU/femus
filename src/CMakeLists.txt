@@ -11,6 +11,8 @@ SET(femus_src
 00_utils/01_application_file_handling/Files.cpp
 00_utils/input_parser/InputParser.cpp
 00_utils/input_parser/JsonInputParser.cpp
+00_utils/function_parser/FunctionBase.cpp
+00_utils/function_parser/ParsedFunction.cpp
 00_utils/parallel/MyMatrix.cpp
 00_utils/parallel/MyVector.cpp
 01_problem/MultiLevelProblem.cpp
@@ -78,8 +80,6 @@ algebra/PetscPreconditioner.cpp
 algebra/PetscVector.cpp
 algebra/Preconditioner.cpp
 algebra/SparseMatrix.cpp
-algebra/FunctionBase.cpp
-algebra/ParsedFunction.cpp
 algebra/SlepcSVD.cpp
 fe/ElemType.cpp
 fe/Hexaedron.cpp

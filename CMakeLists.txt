@@ -364,6 +364,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/00_application_initializati
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/01_application_file_handling/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/data_types/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/input_parser/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/function_parser/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/math/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/parallel)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/01_problem)
