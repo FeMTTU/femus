@@ -24,6 +24,7 @@
 namespace femus {
 
 
+//==== Constr/Destr - BEGIN ========
 
   /** Constructor.  Optionally initializes required data structures. */
   System::System (MultiLevelProblem& ml_probl, const std::string& name_in, const unsigned int number_in, const LinearEquationSolverType & smoother_type) :
@@ -47,9 +48,20 @@ namespace femus {
 System::~System() {
 }
 
+//==== Constr/Destr - END ========
+
+
+
+//==== Basic - BEGIN ========
+
 void System::init() {
 
 }
+
+//==== Basic - END ========
+
+
+//==== Assemble function (Residual and Jacobian) - BEGIN ========
 
    System::AssembleFunctionType  System::GetAssembleFunction() {
   return _assemble_system_function;
@@ -62,6 +74,22 @@ void System::SetAssembleFunction(void fptr(MultiLevelProblem &ml_prob))
   _assemble_system_function = fptr;
 }
 
+
+ void System::assemble_call_before_boundary_conditions(const unsigned int n_times)  {
+     
+     _levelToAssemble = 0;  //because of this, this function cannot be const
+     
+   for (unsigned it = 0; it < n_times; it++) {
+
+            _assemble_system_function (_equation_systems);
+   }
+   
+ }
+
+//==== Assemble function (Residual and Jacobian) - END ========
+
+
+//==== Unknowns - BEGIN ========
 void System::AddSolutionToSystemPDEVector(const unsigned n_components, const std::string name) {
 
     for (unsigned i=0; i<n_components; i++) {
@@ -120,16 +148,8 @@ const unsigned System::GetSolPdeIndex(const char solname[]) const {
         return  _unknown_list_for_assembly; 
     }
     
- void System::assemble_call_before_boundary_conditions(const unsigned int n_times)  {
-     
-     _levelToAssemble = 0;  //because of this, this function cannot be const
-     
-   for (unsigned it = 0; it < n_times; it++) {
-
-            _assemble_system_function (_equation_systems);
-   }
-   
- }
+//==== Unknowns - END ========
+    
 
  
 } //end namespace femus

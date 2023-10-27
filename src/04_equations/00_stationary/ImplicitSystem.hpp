@@ -56,10 +56,8 @@ public:
         return "Implicit";
     }
 
-    // the sparse matrix must be putted here A, now is in linsysPDE
+    // the sparse matrix must be put here A, now is in linsysPDE
 
-    /** Set a parameter option for the SparseMatrix A */
-    virtual void SetMatrixOption(MatOption op, bool flag) {};
 
 protected:
 
