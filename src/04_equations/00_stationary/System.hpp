@@ -30,7 +30,6 @@ namespace femus {
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class System;
 class MultiLevelProblem;
 class MultiLevelMesh;
 class Unknown;

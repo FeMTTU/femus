@@ -35,7 +35,6 @@ namespace femus {
     System(ml_probl, name_in, number_in, smoother_type),
     _debug_linear(false),
     _n_max_linear_iterations(3),
-    _final_linear_residual(1.e20),
     _linearAbsoluteConvergenceTolerance(1.e-08),
     _mg_type(F_CYCLE),
     _npre(1u),
@@ -200,7 +199,7 @@ namespace femus {
       }
       
     } //end at least one dense variable
-//****** init: Sparsity Pattern, preparation for dense variables - END *******************
+ //****** init: Sparsity Pattern, preparation for dense variables - END *******************
   
 
  //****** init:  Sparsity Pattern, conclusion - BEGIN *******************
@@ -252,12 +251,12 @@ namespace femus {
  //****** init: MG part - END *******************
 
 
- //****** init: DD part (I think) *******************
+ //****** init: DD part (I think) - BEGIN *******************
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
     _richardsonScaleFactorIsSet = false;
- //****** init: DD part (I think) *******************
+ //****** init: DD part (I think) - END *******************
 
     
     
@@ -837,6 +836,8 @@ namespace femus {
     _PPamr[level]->close();
     _PPamr[level]->get_transpose(*_PPamr[level]);
   }
+  
+  
 
   void LinearImplicitSystem::ZeroInterpolatorDirichletNodes(const unsigned & level) {
 

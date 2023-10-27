@@ -1,15 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
   
 
-  ADD_SUBDIRECTORY(./aderezende/)
-  ADD_SUBDIRECTORY(./arani/)
-  ADD_SUBDIRECTORY(./ayillah/)
-  ADD_SUBDIRECTORY(./fahad/)
-  ADD_SUBDIRECTORY(./GayaniBalasuriya/)
-  ADD_SUBDIRECTORY(./hdongamm/)
-  ADD_SUBDIRECTORY(./joloftin/)
-  ADD_SUBDIRECTORY(./rifat/)
-  ADD_SUBDIRECTORY(./shaflynn/)
+  ADD_SUBDIRECTORY(./class_2021_2022/)
+  
 
   ADD_SUBDIRECTORY(./karthik_poisson/)
   ADD_SUBDIRECTORY(./Karthik_coupled_biharmonic/)

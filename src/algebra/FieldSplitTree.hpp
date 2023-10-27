@@ -16,12 +16,6 @@
 #ifndef __femus_enums_FieldSplitTree_hpp__
 #define __femus_enums_FieldSplitTree_hpp__
 
-#include <cstdlib>
-#include <iostream>
-
-#include <vector>
-#include <map>
-#include <string>
 
 #include "SolvertypeEnum.hpp"
 #include "PrecondtypeEnum.hpp"
@@ -32,6 +26,16 @@
 #include "SchurPreType.hpp"
 
 #include "Mesh.hpp"
+
+
+#include <cstdlib>
+#include <iostream>
+
+#include <vector>
+#include <map>
+#include <string>
+
+
 
 namespace femus {
 
