@@ -20,10 +20,10 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Elem.hpp"
-#include "Solution.hpp"
 #include "ElemType.hpp"
 #include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include "Solution.hpp"
 
 #include <cassert>
 #include <vector>
