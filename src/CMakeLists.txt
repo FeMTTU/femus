@@ -43,6 +43,16 @@ SET(femus_src
 02_mesh/Elem.cpp
 02_mesh/Mesh.cpp
 02_mesh/MultiLevelMesh.cpp
+02b_geom_elements_fe/ElemType.cpp
+02b_geom_elements_fe/Hexaedron.cpp
+02b_geom_elements_fe/Line.cpp
+02b_geom_elements_fe/Quadrilateral.cpp
+02b_geom_elements_fe/Tetrahedron.cpp
+02b_geom_elements_fe/Triangle.cpp
+02b_geom_elements_fe/Wedge.cpp
+02c_geom_elements_quadrature/GaussPoints.cpp
+02d_fe_evaluations_at_quadrature/ElemType_template.cpp
+02d_fe_evaluations_at_quadrature/ElemType_template_base.cpp
 03_solution/MultiLevelSolution.cpp
 03_solution/Solution.cpp
 03_solution/01_output/Writer.cpp
@@ -81,16 +91,6 @@ algebra/LinearEquationSolverPetsc.cpp
 algebra/LinearEquationSolverPetscAsm.cpp
 algebra/LinearEquationSolverPetscFieldSplit.cpp
 algebra/SlepcSVD.cpp
-fe/ElemType.cpp
-fe/Hexaedron.cpp
-fe/Line.cpp
-fe/Quadrilateral.cpp
-fe/Tetrahedral.cpp
-fe/Triangle.cpp
-fe/Wedge.cpp
-fe_quadrature/ElemType_template.cpp
-fe_quadrature/ElemType_template_base.cpp
-geom_quadrature/GaussPoints.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp
@@ -137,6 +137,7 @@ ADD_LIBRARY(${PROJECT_NAME} SHARED ${femus_src})
 
 
 IF(APPLE)
+
 target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libhdf5.dylib)
 target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libmpi.dylib)
 target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libpetsc.dylib)

@@ -305,7 +305,7 @@ private:
 
 
 /// =========================
-/// === FE for single elem - BEGIN =================
+/// === FE for single geometric element - BEGIN =================
 /// =========================
 public:
 
@@ -325,7 +325,7 @@ public:
 
 
     
-/// === FE for single elem - END =================
+/// === FE for single geometric element - END =================
     
 
 
