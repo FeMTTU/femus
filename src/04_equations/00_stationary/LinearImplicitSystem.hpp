@@ -107,6 +107,23 @@ namespace femus {
       std::vector < unsigned > _sparsityPatternMinimumSize;
 
 //==== Matrix, Unknown types & Sparsity Pattern - END ========
+
+
+//==== Matrix, Boundary Conditions - BEGIN ========
+    public:
+
+      /** Set the modality of handling the BC boundary condition (penalty or elimination)*/
+      void SetDirichletBCsHandling (const DirichletBCType DirichletMode);
+      
+    protected:
+
+      unsigned int _DirichletBCsHandlingMode;   ///@todo it is not used anywhere
+      
+      void ZeroInterpolatorDirichletNodes (const unsigned &level);
+
+//==== Matrix, Boundary Conditions - END ========
+
+
       
 //==== Unknowns - BEGIN ========
     public:
@@ -124,6 +141,8 @@ namespace femus {
 
       
 //==== Unknowns - END ========
+
+      
 
 //==== Solver - BEGIN ========
     public:
@@ -220,6 +239,11 @@ namespace femus {
       */
       std::vector < LinearEquationSolver*> _LinSolver;   /* vector of number of levels */
 
+      /** Set the tolerances for the ksp solver on each grid: rtol, atol, divtol, maxits */
+      void SetTolerances (const double &rtol, const double &atol,
+                          const double &divtol, const unsigned &maxits,
+                          const unsigned &restart = 30);
+      
       void SetOuterSolver (const SolverType & mgOuterSolver) {
         _mgOuterSolver = mgOuterSolver;
       };
@@ -235,6 +259,9 @@ namespace femus {
 
     protected:
 
+
+      double _rtol, _atol, _divtol, _maxits, _restart;
+      
       /** The ksp outer solver*/
       SolverType _mgOuterSolver;
 
@@ -390,29 +417,10 @@ namespace femus {
 //==== Solver, Preconditioner - END ========
 
 
-
-//==== Boundary Conditions - BEGIN ========
-    public:
-
-      /** Set the modality of handling the BC boundary condition (penalty or elimination)*/
-      void SetDirichletBCsHandling (const DirichletBCType DirichletMode);
       
-    protected:
-
-      unsigned int _DirichletBCsHandlingMode;   ///@todo it is not used anywhere
-      
-      void ZeroInterpolatorDirichletNodes (const unsigned &level);
-
-//==== Boundary Conditions - END ========
-
+//==== ASM - BEGIN ========
     public:
       
-
-
-      /** Set the tolerances for the ksp solver on fine grids: rtol, atol, divtol, maxits */
-      void SetTolerances (const double &rtol, const double &atol,
-                          const double &divtol, const unsigned &maxits,
-                          const unsigned &restart = 30);
 
       /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
       void SetElementBlockNumber (unsigned const &dim_vanka_block);
@@ -420,6 +428,28 @@ namespace femus {
       /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
       void SetElementBlockNumber (const char all[], const unsigned & overlap = 1);
 
+      /** Set the options of the Schur-Vanka smoother */
+      //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
+      void SetNumberOfSchurVariables (const unsigned short &NSchurVar);
+      
+    protected:
+      
+      
+      bool _numblock_test;
+      unsigned _num_block;
+
+      bool _numblock_all_test;
+      bool _overlap;
+
+      bool _NSchurVar_test;
+      unsigned short _NSchurVar;
+      
+//==== ASM - END ========
+
+
+//==== Richardson - BEGIN ========
+    public:
+      
       void SetRichardsonScaleFactor (const double &richardsonScaleFactor) {
         _richardsonScaleFactor = richardsonScaleFactor;
         _richardsonScaleFactorDecrease = 0;
@@ -438,33 +468,15 @@ namespace femus {
           _LinSolver[i]->SetRichardsonScaleFactor (_richardsonScaleFactor + _richardsonScaleFactorDecrease * (i - 1));
         }
       }
-
-
-      /** Set the options of the Schur-Vanka smoother */
-      //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
-      void SetNumberOfSchurVariables (const unsigned short &NSchurVar);
-
-
       
     protected:
 
-      
-
-
-      double _rtol, _atol, _divtol, _maxits, _restart;
-      
-      bool _numblock_test;
-      unsigned _num_block;
-
-      bool _numblock_all_test;
-      bool _overlap;
-
-      bool _NSchurVar_test;
-      unsigned short _NSchurVar;
-      
       double _richardsonScaleFactor;
       double _richardsonScaleFactorDecrease;
       bool _richardsonScaleFactorIsSet;
+      
+//==== Richardson - END ========
+      
 
   };
 

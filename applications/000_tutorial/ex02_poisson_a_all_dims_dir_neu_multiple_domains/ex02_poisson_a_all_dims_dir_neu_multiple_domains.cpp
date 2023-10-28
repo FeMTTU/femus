@@ -9,7 +9,7 @@
 #include "MultiLevelSolution.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
-#include "app_specifics.hpp"
+#include "00_system_specifics.hpp"
 
 #include "00_poisson_eqn_with_dirichlet_or_neumann_bc.hpp"
 
@@ -594,22 +594,22 @@ int main(int argc, char** args) {
   
     // ======= App Specifics - BEGIN  ==================
   std::string system_common_name = "Laplace";
-  std::vector< app_specifics >   my_specifics;
+  std::vector< system_specifics >   my_specifics;
   
-  app_specifics  app_segment;   //me
+  system_specifics  app_segment;   //me
 
-  app_specifics  app_square;   //me
-//   app_specifics  app_circle;   //Gayani
-  app_specifics  app_semicircle;   //Himali
-  app_specifics  app_quarter_circle;      //Max
-  app_specifics  app_annulus;       //Jon
-  app_specifics  app_semiannulus;        //Fahad
+  system_specifics  app_square;   //me
+//   system_specifics  app_circle;   //Gayani
+  system_specifics  app_semicircle;   //Himali
+  system_specifics  app_quarter_circle;      //Max
+  system_specifics  app_annulus;       //Jon
+  system_specifics  app_semiannulus;        //Fahad
 
-  app_specifics  app_cube;   //me
-  app_specifics  app_cylinder;            //Aman
-//   app_specifics  app_semicylinder;   //Rifat
-  app_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
-  app_specifics  app_prism_annular_base;  //Abu
+  system_specifics  app_cube;   //me
+  system_specifics  app_cylinder;            //Aman
+//   system_specifics  app_semicylinder;   //Rifat
+  system_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
+  system_specifics  app_prism_annular_base;  //Abu
  
   const std::string relative_path_to_build_directory =  "../../../";
   

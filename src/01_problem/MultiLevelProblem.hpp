@@ -28,7 +28,7 @@
 #include "Files.hpp"
 #include "System.hpp"
 #include "ElemType_template.hpp"
-#include "app_specifics.hpp"
+#include "00_system_specifics.hpp"
 
 #include <vector>
 #include <map>
@@ -73,6 +73,42 @@ public:
 
 // ===  Constr/Destr - END =================
 
+
+// ===  Mesh - BEGIN =================
+public:
+    
+    /** Multilevel mesh pointer */
+    MultiLevelMesh *_ml_msh;
+
+    /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
+    const unsigned GetNumberOfLevels() const {
+        return _gridn;
+    };
+
+    /** Increase of one the number of levels */
+    void AddLevel(){
+        _gridn++;
+    };
+
+    /**  New get/set for new data */
+  inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
+
+  inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
+
+  inline const  MultiLevelMesh * GetMLMesh() const { return  _ml_msh; }
+
+  inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
+
+
+protected:
+
+    unsigned short _gridn;
+    
+    const MultiLevelMeshTwo               * _mesh;
+    
+// ===  Mesh - END =================
+
+
 // ===  Solution - BEGIN =================
 public:
     /** Multilevel solution pointer */
@@ -108,40 +144,6 @@ protected:
 
     
 // ===  Solution, QuantityMap - END =================
-
-// ===  Mesh - BEGIN =================
-public:
-    
-    /** Multilevel mesh pointer */
-    MultiLevelMesh *_ml_msh;
-
-    /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
-    const unsigned GetNumberOfLevels() const {
-        return _gridn;
-    };
-
-    /** Increase of one the number of levels */
-    void AddLevel(){
-        _gridn++;
-    };
-
-    /**  New get/set for new data */
-  inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
-
-  inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
-
-  inline const  MultiLevelMesh * GetMLMesh() const { return  _ml_msh; }
-
-  inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
-
-
-protected:
-
-    unsigned short _gridn;
-    
-    const MultiLevelMeshTwo               * _mesh;
-    
-// ===  Mesh - END =================
 
 // ===  Systems - BEGIN =================
 public:
@@ -256,22 +258,22 @@ protected:
 // ===  Systems - END =================
 
 
-// ===  App Specifics - BEGIN =================
+// ===  System Specifics - BEGIN =================
 public:
 
     /** App Specifics Pointer */
-  void set_app_specs_pointer(const app_specifics * ptr_in) { _app_specs_ptr = ptr_in; return; }
+  void set_app_specs_pointer(const system_specifics * ptr_in) { _app_specs_ptr = ptr_in; return; }
   
-  inline const app_specifics * get_app_specs_pointer() const { return  _app_specs_ptr; }
+  inline const system_specifics * get_app_specs_pointer() const { return  _app_specs_ptr; }
  
  
 protected:
 
-    const app_specifics *  _app_specs_ptr;
+    const system_specifics *  _app_specs_ptr;
 
 
     
-// ===  App Specifics - END =================
+// ===  System Specifics - END =================
 
 
 // ===  Quadrature - BEGIN =================

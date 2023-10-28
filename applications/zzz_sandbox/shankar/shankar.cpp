@@ -130,7 +130,7 @@ int main(int argc, char** args) {
   // ======= Problem, Quad Rule - END  ========================
 
     // ======= App Specifics - BEGIN  ==================
-  app_specifics  app_segment;   //me
+  system_specifics  app_segment;   //me
 
   //segment_dir_neu_fine
   app_segment._system_name = "Equation";
