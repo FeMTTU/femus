@@ -51,8 +51,8 @@ SET(femus_src
 02b_geom_elements_fe/Triangle.cpp
 02b_geom_elements_fe/Wedge.cpp
 02c_geom_elements_quadrature/GaussPoints.cpp
-02d_fe_evaluations_at_quadrature/ElemType_template.cpp
-02d_fe_evaluations_at_quadrature/ElemType_template_base.cpp
+02d_geom_elements_fe_evaluations_at_quadrature/ElemType_template.cpp
+02d_geom_elements_fe_evaluations_at_quadrature/ElemType_template_base.cpp
 03_solution/MultiLevelSolution.cpp
 03_solution/Solution.cpp
 03_solution/01_output/Writer.cpp
