@@ -34,6 +34,9 @@
 
 namespace femus {
 
+  
+bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) = NULL; 
+
 
   bool Mesh::_IsUserRefinementFunctionDefined = false;
 

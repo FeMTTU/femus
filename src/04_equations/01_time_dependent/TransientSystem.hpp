@@ -16,10 +16,10 @@
 #ifndef __femus_equations_TransientSystem_hpp__
 #define __femus_equations_TransientSystem_hpp__
 
-#include <string>
-
 #include "LinearEquationSolverEnum.hpp"
 #include "MgTypeEnum.hpp"
+
+#include <string>
 
 namespace femus {
 

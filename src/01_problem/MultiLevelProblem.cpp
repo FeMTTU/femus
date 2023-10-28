@@ -22,8 +22,6 @@
 #include "ImplicitRungeKuttaSystem.hpp"
 #include "TransientSystem.hpp"
 #include "FemusConfig.hpp"
-#include "Parameter.hpp"
-#include "MultiLevelMeshTwo.hpp"
 #include "GeomElTypeEnum.hpp"
 
 #include <iostream>
@@ -32,8 +30,6 @@
 namespace femus {
 
 
-bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) = NULL; 
-///@todo without this there is no linking!!! But does it have to be here?!? No, I'd rather put it in Mesh.cpp, there seems to be no reason why it should be in the MultiLevelProblem file
 
 
 MultiLevelProblem::MultiLevelProblem():

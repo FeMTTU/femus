@@ -20,15 +20,17 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelMesh.hpp"
-#include "Parameters.hpp"
-#include "ParallelObject.hpp"
-#include "LinearEquationSolverEnum.hpp"
 #include "GaussPoints.hpp"
+#include "ElemType_template.hpp"
+
+#include "System.hpp"
+#include "00_system_specifics.hpp"
+#include "LinearEquationSolverEnum.hpp"
+
+#include "Parameters.hpp"
 #include "FemusInputParser.hpp"
 #include "Files.hpp"
-#include "System.hpp"
-#include "ElemType_template.hpp"
-#include "00_system_specifics.hpp"
+
 
 #include <vector>
 #include <map>
@@ -41,6 +43,7 @@ namespace femus {
 // Forward declarations
 //------------------------------------------------------------------------------
 class MultiLevelSolution;
+
 class MultiLevelMeshTwo;
 class elem_type;
 class QuantityMap;
@@ -107,6 +110,121 @@ protected:
     const MultiLevelMeshTwo               * _mesh;
     
 // ===  Mesh - END =================
+
+// ===  Quadrature - BEGIN =================
+public:
+
+  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule[0]; }  ///@todo obsolete
+  
+  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[0][geom_elem_type]; }  ///@todo obsolete
+  
+  inline const Gauss & GetQuadratureRuleMultiple(const unsigned qrule_pos, const unsigned geom_elem_type) const { return _qrule[qrule_pos][geom_elem_type]; }
+
+  void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);
+  
+  void SetQuadratureRuleAllGeomElemsMultiple(const std::vector<std::string> quadr_order_in_vec);
+
+protected:
+    
+  std::vector< std::vector< Gauss > >    _qrule;            //[QRULES][Geom Elems][FE]
+// ===  Quadrature - END =================
+  
+// ===  FE Evaluations at Quadrature - BEGIN =================
+public:
+    
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd[0]; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad[0]; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa[0]; }
+
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd[0]; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad[0]; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa[0]; }
+
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd; }
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa; }
+
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
+  
+  
+  void set_all_abstract_fe_AD_or_not() {
+      
+      const unsigned n_qrules = _qrule.size();
+      
+      _elem_all_dd.resize(n_qrules);  //derivative of unknowns by hand, fixed domain
+      _elem_all_ad.resize(n_qrules);  //derivative of unknowns with Automatic Differentiation, fixed domain
+      _elem_all_aa.resize(n_qrules);  //derivative of unknowns with Automatic Differentiation, moving domain
+          
+  for (int q = 0; q < n_qrules; q++) {
+       set_all_abstract_fe<double, double>(q, _elem_all_dd[q]);
+       set_all_abstract_fe<adept::adouble, double>(q, _elem_all_ad[q]);
+       set_all_abstract_fe<adept::adouble, adept::adouble>(q, _elem_all_aa[q]);
+  }
+  
+}  
+  
+ template <class type, class type_mov>
+  void set_all_abstract_fe(const unsigned qrule, std::vector < std::vector < /*const*/ elem_type_templ_base<type, type_mov> *  > > & elem_all_in) const {
+
+//this function performs the initialization of all abstract FE families on all abstract Geometric Elements      
+      
+//     clock_t start_evals = clock();
+  
+  //prepare Abstract quantities for all fe fams for all geom elems: perform all quadrature evaluations beforehand
+        elem_all_in.resize( femus::geom_elems.size() );
+  
+         for (unsigned int g = 0; g < femus::geom_elems.size(); g++) {
+             elem_all_in[g].resize(femus::fe_fams.size());
+             const std::string quad_order = this->GetQuadratureRuleMultiple(qrule, g).GetGaussOrderString();  ///@todo what if you choose different quadrature orders on different geom elems?
+
+         for (unsigned int fe = 0; fe < femus::fe_fams.size(); fe++) {
+            elem_all_in[g][fe] = elem_type_templ_base<type, type_mov>::build(femus::geom_elems[g], femus::fe_fams[fe], quad_order.c_str(), 3);          
+           }
+       }
+       
+//   clock_t end_evals = clock();
+//    std::cout << " FE Evals time " << static_cast<double>(end_evals - start_evals) / CLOCKS_PER_SEC << std::endl;
+
+   
+   }
+
+   
+protected:
+    
+    
+    /**  attempt to handle templated classes from non-templated class */
+    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > > >                    _elem_all_dd;  //[QRULES][Geom Elems][FE]
+    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > > >            _elem_all_ad;  //[QRULES][Geom Elems][FE]
+    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > > >    _elem_all_aa;  //[QRULES][Geom Elems][FE]
+
+// ===  FE Evaluations at Quadrature - END =================
+
+
+// ===  ElemType ///@deprecated - BEGIN =================
+public:
+    
+    /** ElemType and Quadrature rule */
+  inline const std::vector<const elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
+
+  inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
+
+  
+protected:
+
+    std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
+
+// ===  ElemType - END =================
 
 
 // ===  Solution - BEGIN =================
@@ -275,121 +393,6 @@ protected:
     
 // ===  System Specifics - END =================
 
-
-// ===  Quadrature - BEGIN =================
-public:
-
-  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule[0]; }  ///@todo obsolete
-  
-  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[0][geom_elem_type]; }  ///@todo obsolete
-  
-  inline const Gauss & GetQuadratureRuleMultiple(const unsigned qrule_pos, const unsigned geom_elem_type) const { return _qrule[qrule_pos][geom_elem_type]; }
-
-  void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);
-  
-  void SetQuadratureRuleAllGeomElemsMultiple(const std::vector<std::string> quadr_order_in_vec);
-
-protected:
-    
-  std::vector< std::vector< Gauss > >    _qrule;            //[QRULES][Geom Elems][FE]
-// ===  Quadrature - END =================
-  
-// ===  FE - BEGIN =================
-public:
-    
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd[0]; }
-  
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad[0]; }
-  
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa[0]; }
-
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd[0]; }
-  
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad[0]; }
-  
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa[0]; }
-
-  
-  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd; }
-  
-  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad; }
-  
-  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa; }
-
-  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
-  
-  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
-  
-  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
-  
-  
-  void set_all_abstract_fe_AD_or_not() {
-      
-      const unsigned n_qrules = _qrule.size();
-      
-      _elem_all_dd.resize(n_qrules);  //derivative of unknowns by hand, fixed domain
-      _elem_all_ad.resize(n_qrules);  //derivative of unknowns with Automatic Differentiation, fixed domain
-      _elem_all_aa.resize(n_qrules);  //derivative of unknowns with Automatic Differentiation, moving domain
-          
-  for (int q = 0; q < n_qrules; q++) {
-       set_all_abstract_fe<double, double>(q, _elem_all_dd[q]);
-       set_all_abstract_fe<adept::adouble, double>(q, _elem_all_ad[q]);
-       set_all_abstract_fe<adept::adouble, adept::adouble>(q, _elem_all_aa[q]);
-  }
-  
-}  
-  
- template <class type, class type_mov>
-  void set_all_abstract_fe(const unsigned qrule, std::vector < std::vector < /*const*/ elem_type_templ_base<type, type_mov> *  > > & elem_all_in) const {
-
-//this function performs the initialization of all abstract FE families on all abstract Geometric Elements      
-      
-//     clock_t start_evals = clock();
-  
-  //prepare Abstract quantities for all fe fams for all geom elems: perform all quadrature evaluations beforehand
-        elem_all_in.resize( femus::geom_elems.size() );
-  
-         for (unsigned int g = 0; g < femus::geom_elems.size(); g++) {
-             elem_all_in[g].resize(femus::fe_fams.size());
-             const std::string quad_order = this->GetQuadratureRuleMultiple(qrule, g).GetGaussOrderString();  ///@todo what if you choose different quadrature orders on different geom elems?
-
-         for (unsigned int fe = 0; fe < femus::fe_fams.size(); fe++) {
-            elem_all_in[g][fe] = elem_type_templ_base<type, type_mov>::build(femus::geom_elems[g], femus::fe_fams[fe], quad_order.c_str(), 3);          
-           }
-       }
-       
-//   clock_t end_evals = clock();
-//    std::cout << " FE Evals time " << static_cast<double>(end_evals - start_evals) / CLOCKS_PER_SEC << std::endl;
-
-   
-   }
-
-   
-protected:
-    
-    
-    /**  attempt to handle templated classes from non-templated class */
-    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > > >                    _elem_all_dd;  //[QRULES][Geom Elems][FE]
-    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > > >            _elem_all_ad;  //[QRULES][Geom Elems][FE]
-    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > > >    _elem_all_aa;  //[QRULES][Geom Elems][FE]
-
-// ===  FE - END =================
-
-
-// ===  ElemType - BEGIN =================
-public:
-    
-    /** ElemType and Quadrature rule */
-  inline const std::vector<const elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
-
-  inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
-
-  
-protected:
-
-    std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
-
-// ===  ElemType - END =================
 
 
 // ===  Parameters - BEGIN =================

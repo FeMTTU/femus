@@ -22,7 +22,7 @@
 #include "TransientSystem.hpp"
 #include <string>
 #include <vector>
-#include "assert.h"
+#include <cassert>
 
 #include "ImplicitRKEnum.hpp"
 
