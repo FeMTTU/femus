@@ -19,11 +19,16 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "Elem.hpp"
-#include "ElemType.hpp"
-#include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include "Elem.hpp"
+
+#include "ElemTypeEnum.hpp"
+
+#include "ElemType.hpp"
+#include "FETypeEnum.hpp"
+
 #include "Solution.hpp"
+
 
 #include <cassert>
 #include <vector>
@@ -228,7 +233,7 @@ private:
     
     
     /** Weights used to build the baricentric coordinate to compute the missing biquadratic nodes **/
-    static const double _baricentricWeight[N_GEOM_ELS][5][18];
+    static const double _baricentricWeight[N_GEOM_ELS][NFE_FAMS][18];
     
     static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
     
@@ -314,11 +319,11 @@ public:
     }
     
     /** To be Added */
-    void SetFiniteElementPtr(/*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][5]);
+    void SetFiniteElementPtr(/*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][NFE_FAMS]);
     
     
     /** FE: Finite Element families, for each Geometric Element @todo this one day should be private */
-    const elem_type *_finiteElement[N_GEOM_ELS][5];
+    const elem_type *_finiteElement[N_GEOM_ELS][NFE_FAMS];
     
     
     basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
@@ -396,15 +401,15 @@ public:
     std::vector < int > dofmap_get_ghost_dofs(const unsigned soltype, const unsigned proc_id) const { return  _ghostDofs[soltype][proc_id]; }
 
     /** FE: DofMap: Number of dofs per FE family and per processor (incremental count) @todo this should be private */
-    std::vector < unsigned > _dofOffset[5];
+    std::vector < unsigned > _dofOffset[NFE_FAMS];
     
 private:
 
     
     /** FE: DofMap: Number of owned dofs per FE family and per processor (count, non-incremental) */
-    std::vector < unsigned > _ownSize[5];
+    std::vector < unsigned > _ownSize[NFE_FAMS];
     /** FE: DofMap: Number of ghost dofs per FE family and per processor (count, non-incremental) */
-    std::vector< std::vector < int > > _ghostDofs[5];
+    std::vector< std::vector < int > > _ghostDofs[NFE_FAMS];
     
     /** FE: DofMap  k = 0, 1 */
     std::map < unsigned, unsigned > _ownedGhostMap[2];
@@ -431,7 +436,7 @@ private:
     void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
     
     /** FE: The coarse to the fine projection matrix */
-    SparseMatrix* _ProjCoarseToFine[5];
+    SparseMatrix* _ProjCoarseToFine[NFE_FAMS];
 
     
 // === FE DOFMAP & REFINEMENT - END =================

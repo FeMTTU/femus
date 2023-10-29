@@ -49,7 +49,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     _coarseMsh = NULL;
 
-    for(int i = 0; i < 5; i++) {
+    for(int i = 0; i < NFE_FAMS; i++) {
       _ProjCoarseToFine[i] = NULL;
     }
 
@@ -77,7 +77,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       }
     }
 
-    for(unsigned i = 0; i < 5; i++) {
+    for(unsigned i = 0; i < NFE_FAMS; i++) {
       if(_ProjCoarseToFine[i]) {
         delete _ProjCoarseToFine[i];
         _ProjCoarseToFine[i] = NULL;
@@ -117,7 +117,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
   
   const unsigned Mesh::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0, 5, 3, 0, 1, 0};
-  const double Mesh::_baricentricWeight[N_GEOM_ELS][5][18] = {
+  const double Mesh::_baricentricWeight[N_GEOM_ELS][NFE_FAMS][18] = {
     {},
     {
       { -1. / 9., -1. / 9., -1. / 9.,  0    , 4. / 9., 4. / 9., 4. / 9., 0.   , 0.   , 0.   },
@@ -411,10 +411,10 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
 
   
-  void Mesh::SetFiniteElementPtr(/*const*/ elem_type* OtherFiniteElement[N_GEOM_ELS][5]) {
+  void Mesh::SetFiniteElementPtr(/*const*/ elem_type* OtherFiniteElement[N_GEOM_ELS][NFE_FAMS]) {
       
     for(int i = 0; i < N_GEOM_ELS; i++)
-      for(int j = 0; j < 5; j++)
+      for(int j = 0; j < NFE_FAMS; j++)
         _finiteElement[i][j] = OtherFiniteElement[i][j];
       
   }
@@ -480,12 +480,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   void Mesh::dofmap_all_fe_families_initialize() {
       
     //BEGIN Initialization for k = 0,1,2,3,4
-    for(int k = 0; k < 5; k++) {
+    for(int k = 0; k < NFE_FAMS; k++) {
       _dofOffset[k].resize(_nprocs + 1);
       _dofOffset[k][0] = 0;
     }
     
-    for(int k = 0; k < 5; k++) {
+    for(int k = 0; k < NFE_FAMS; k++) {
               _ownSize[k].assign(_nprocs, 0); 
             _ghostDofs[k].resize(_nprocs);
     }
@@ -750,7 +750,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     //delete ghost dof list all but _iproc
     for(int isdom = 0; isdom < _nprocs; isdom++) {
       if(isdom != _iproc)
-        for(int k = 0; k < 5; k++) {
+        for(int k = 0; k < NFE_FAMS; k++) {
           _ghostDofs[k][isdom].resize(0);
         }
     }
@@ -1091,7 +1091,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   SparseMatrix* Mesh::GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType) {
 
-    if(solType >= 5) {
+    if(solType >= NFE_FAMS) {
       std::cout << "Wrong argument range in function \"GetCoarseToFineProjection\": "
                 << "solType is greater then SolTypeMax" << std::endl;
       abort();
@@ -1106,7 +1106,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType) {
 
-    if(solType >= 5) {
+    if(solType >= NFE_FAMS) {
       std::cout << "Wrong argument range in function \"GetCoarseToFineProjection\": "
                 << "solType is greater then SolTypeMax" << std::endl;
       abort();
@@ -1224,7 +1224,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   /** Only for parallel */
   const unsigned Mesh::GetElementFaceType(const unsigned& kel, const unsigned& jface) const {
     unsigned kelt = GetElementType(kel);
-    const unsigned FELT[6][2] = {{3, 3}, {4, 4}, {3, 4}, {5, 5}, {5, 5}, {6, 6}};
+    const unsigned FELT[N_GEOM_ELS][2] = {{3, 3}, {4, 4}, {3, 4}, {5, 5}, {5, 5}, {6, 6}};
     const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel, 0)];
     return felt;
   }
