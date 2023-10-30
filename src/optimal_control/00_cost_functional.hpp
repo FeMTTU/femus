@@ -5,7 +5,7 @@
 
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 #include "paral.hpp"
 
 #include "opt_common.hpp"

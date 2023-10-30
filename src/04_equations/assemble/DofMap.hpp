@@ -21,7 +21,7 @@
 
 
 
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "VBTypeEnum.hpp"
 #include "Typedefs.hpp"
 #include "MultiLevelMeshTwo.hpp"

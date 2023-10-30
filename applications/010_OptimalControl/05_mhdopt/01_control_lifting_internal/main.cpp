@@ -15,7 +15,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "GenCase.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"

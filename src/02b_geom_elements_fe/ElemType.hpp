@@ -22,7 +22,7 @@
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
 #include "GaussPoints.hpp"
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 #include "GeomElTypeEnum.hpp"
 
 #include "adept.h"

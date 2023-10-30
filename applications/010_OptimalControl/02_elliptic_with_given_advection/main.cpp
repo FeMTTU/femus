@@ -11,7 +11,7 @@
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "GenCase.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "GaussPoints.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"

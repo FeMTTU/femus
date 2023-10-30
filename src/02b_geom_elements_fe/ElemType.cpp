@@ -19,7 +19,7 @@
 
 #include "ElemType.hpp"
 #include "GaussPoints.hpp"
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 #include "Elem.hpp"
 #include "NumericVector.hpp"
 

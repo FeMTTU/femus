@@ -14,7 +14,7 @@
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "GenCase.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "TimeLoop.hpp"

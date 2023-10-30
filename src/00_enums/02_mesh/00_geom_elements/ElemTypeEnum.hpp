@@ -1,7 +1,7 @@
 #ifndef __femus_enums_ElemTypeEnum_hpp__
 #define __femus_enums_ElemTypeEnum_hpp__
 
-/** Defines an \p enum for geometric element types. */
+/** Defines an \p enum for geometric element types, with specification of the number of nodes */
 
 enum ElemType {
     EDGE2=0,    // 0

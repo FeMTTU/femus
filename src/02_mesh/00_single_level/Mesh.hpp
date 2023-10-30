@@ -25,7 +25,7 @@
 #include "ElemTypeEnum.hpp"
 
 #include "ElemType.hpp"
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 
 #include "Solution.hpp"
 
@@ -456,7 +456,7 @@ private:
     void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
 
     /** FE: The projection matrix between Lagrange FEM at the same level mesh */
-    SparseMatrix* _ProjQitoQj[NFE_FAMS_C0_LAGRANGE][NFE_FAMS_C0_LAGRANGE];
+    SparseMatrix* _ProjQitoQj[NFE_FAMS_C_ZERO_LAGRANGE][NFE_FAMS_C_ZERO_LAGRANGE];
 
    
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - END =================

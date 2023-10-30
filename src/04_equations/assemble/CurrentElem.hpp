@@ -17,7 +17,7 @@
 #define __femus_equations_CurrentElem_hpp__
 
 
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "NumericVector.hpp"
 #include "DenseVector.hpp"

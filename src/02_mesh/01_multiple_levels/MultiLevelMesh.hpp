@@ -19,7 +19,7 @@ PURPOSE.  See the above copyright notice for more information.
 
 
 #include "ElemTypeEnum.hpp"
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "WriterEnum.hpp"
 #include "Writer.hpp"

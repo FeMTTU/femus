@@ -1,13 +1,10 @@
 #include "GeomElemBase.hpp"
 
-#include <iostream>
-#include <cstdlib>
-#include <cstring>
 
 #include "Files.hpp"
 
 #include "GeomElTypeEnum.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "GeomElemQuad4.hpp"
 #include "GeomElemQuad9.hpp"
 #include "GeomElemHex8.hpp"
@@ -19,6 +16,9 @@
 #include "GeomElemEdge2.hpp"
 #include "GeomElemEdge3.hpp"
 
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
 
 
 namespace femus {
@@ -40,7 +40,7 @@ namespace femus {
 
   GeomElemBase* GeomElemBase::build (const std::string geomel_id_in, const uint fe_family_in) {
 
-    if (fe_family_in != QQ && fe_family_in != LL && fe_family_in != KK) {
+    if (fe_family_in >= NFE_FAMS_C_ZERO_LAGRANGE) {
       std::cout << "FE::FE: FE family " << fe_family_in << " not supported" << std::endl;
       abort();
     }
@@ -49,12 +49,12 @@ namespace femus {
     if (!strcmp (geomel_id_in.c_str(), "hex")) {
 
       switch (fe_family_in) {
-        case (QQ) :
-          return new  GeomElemHex27()  ;
-        case (LL) :
+        case (0) :
           return new  GeomElemHex8()  ;
-        case (KK) :
-          abort()  ;
+        case (1) :
+          abort();
+        case (2) :
+          return new  GeomElemHex27()  ;
       }
 
     }
@@ -62,12 +62,12 @@ namespace femus {
     else if (!strcmp (geomel_id_in.c_str(), "tet")) {
 
       switch (fe_family_in) {
-        case (QQ) :
-          return new  GeomElemTet10()  ;
-        case (LL) :
+        case (0) :
           return new  GeomElemTet4()  ;
-        case (KK) :
-          abort() ;
+        case (1) :
+          abort();
+        case (2) :
+          return new  GeomElemTet10() ;
       }
 
 
@@ -81,24 +81,24 @@ namespace femus {
     else if (!strcmp (geomel_id_in.c_str(), "quad")) {
 
       switch (fe_family_in) {
-        case (QQ) :
-          return new  GeomElemQuad9()  ;
-        case (LL) :
+        case (0) :
           return new  GeomElemQuad4()  ;
-        case (KK) :
-          abort()  ;
+        case (1) :
+          abort();
+        case (2) :
+          return new  GeomElemQuad9() ;
       }
     }
 
     else if (!strcmp (geomel_id_in.c_str(), "tri")) {
 
       switch (fe_family_in) {
-        case (QQ) :
-          return new  GeomElemTri6()  ;
-        case (LL) :
-          return new  GeomElemTri3()  ;
-        case (KK) :
-          abort() ;
+        case (0) :
+          return new GeomElemTri3();
+        case (1) :
+          abort();
+        case (2) :
+          return new  GeomElemTri6();
       }
 
     }
@@ -106,12 +106,12 @@ namespace femus {
     else if (!strcmp (geomel_id_in.c_str(), "line")) {
 
       switch (fe_family_in) {
-        case (QQ) :
-          return new  GeomElemEdge3()  ;
-        case (LL) :
-          return new  GeomElemEdge2()  ;
-        case (KK) :
-          abort()  ;
+        case (0) :
+          return new GeomElemEdge2();
+        case (1) :
+          abort();
+        case (2) :
+          return new GeomElemEdge3();
       }
 
     }

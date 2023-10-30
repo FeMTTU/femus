@@ -325,7 +325,7 @@ CONFIGURE_FILE(
 ### Mesh files - BEGIN
 #############################################################################################
 
-FILE(COPY           ${PROJECT_SOURCE_DIR}/src/02_mesh/01_input/00_mesh_files/ DESTINATION ${PROJECT_BINARY_DIR}/src/02_mesh/01_input/00_mesh_files/)
+FILE(COPY           ${PROJECT_SOURCE_DIR}/src/02_mesh/00_single_level/01_input/00_mesh_files/ DESTINATION ${PROJECT_BINARY_DIR}/src/02_mesh/00_single_level/01_input/00_mesh_files/)
 
 #############################################################################################
 ### Mesh files - END
@@ -366,11 +366,11 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/parallel/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/01_problem/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00_geom_elements/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00b_single_level/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00c_multiple_levels/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/01_input/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/02_partitioning/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/03_refinement/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00_single_level/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00_single_level/01_input/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00_single_level/02_partitioning/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00_single_level/03_refinement/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/01_multiple_levels/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/gencase/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02b_geom_elements_fe/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02c_geom_elements_quadrature/)
@@ -379,7 +379,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/00_single_level/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/01_multiple_levels/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/01_multiple_levels/01_output/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/02_FE_convergence/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/01_multiple_levels/02_FE_convergence/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations/00_stationary/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations/01_time_dependent/)

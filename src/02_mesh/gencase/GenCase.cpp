@@ -38,9 +38,12 @@ GenCase::GenCase(const unsigned nolevels, const unsigned dim, const GeomElType g
      : MultiLevelMeshTwo(nolevels,dim,geomel_type,mesh_file_in)
 {
 
-   _feelems.resize(QL);
-  for (int fe=0; fe<QL; fe++) _feelems[fe] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(),fe);
+   _feelems.resize(QL_NODES);
+   
+  _feelems[0] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(), 2);
+  _feelems[1] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(), 0);
  
+  // This one is missing the KK part!!!
 }
 
 GenCase::~GenCase() {

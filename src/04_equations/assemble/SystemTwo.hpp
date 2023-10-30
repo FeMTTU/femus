@@ -25,7 +25,6 @@
 #include "FemusDefault.hpp"
 #include "FemusConfig.hpp"
 #include "Typedefs.hpp"
-#include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "DofMap.hpp"
 #include "BoundaryConditions.hpp"

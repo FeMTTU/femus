@@ -22,7 +22,7 @@
 #include "MultiLevelMesh.hpp"
 #include "GaussPoints.hpp"
 #include "ElemType_template.hpp"
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 
 #include "System.hpp"
 #include "00_system_specifics.hpp"

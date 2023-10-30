@@ -72,7 +72,8 @@ namespace femus {
     unsigned nel;
 
     mesh.SetLevel(0);
-    // read control data ******************** A
+    
+    // read control data - BEGIN ******************** A
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " can not read parameters\n";
@@ -93,8 +94,9 @@ namespace femus {
     }
 //   std::cout << "***************" << _dimension << std::endl;
     inf.close();
-    // end read control data **************** A
-    // read ELEMENT/cell ******************** B
+    // end read control data - END **************** A
+    
+    // read ELEMENT/cell  - BEGIN ******************** B
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " cannot read elements\n";
@@ -166,9 +168,9 @@ namespace femus {
     }
     inf.close();
 
-    // end read  ELEMENT/CELL **************** B
+    // end read  ELEMENT/CELL - END **************** B
 
-    // read NODAL COORDINATES **************** C
+    // read NODAL COORDINATES - BEGIN  **************** C
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " cannot read nodes\n";
@@ -212,9 +214,9 @@ namespace femus {
     
     
     inf.close();
-    // end read NODAL COORDINATES ************* C
+    // end read NODAL COORDINATES - END ************* C
 
-    // read GROUP **************** E
+    // read GROUP - BEGIN  **************** E
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " cannot read group\n";
@@ -245,9 +247,9 @@ namespace femus {
     }
     mesh.el->SetMaterialElementCounter(materialElementCounter);
     inf.close();
-    // end read GROUP **************** E
+    // end read GROUP - END **************** E
 
-    // read boundary **************** D
+    // read boundary - BEGIN  **************** D
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " cannot read boudary\n";
@@ -274,7 +276,7 @@ namespace femus {
       }
     }
     inf.close();
-    // end read boundary **************** D
+    // end read boundary - END **************** D
 
   };
   

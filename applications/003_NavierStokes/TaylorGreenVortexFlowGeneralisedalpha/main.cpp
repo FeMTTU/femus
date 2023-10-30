@@ -1,4 +1,3 @@
-#include "ElemTypeEnum.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelMesh.hpp"

@@ -38,7 +38,7 @@
 #include "SystemTwo.hpp"
 #include "NumericVector.hpp"
 #include "GeomElemBase.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "paral.hpp"
 
 namespace femus {
@@ -945,9 +945,12 @@ namespace femus {
 // This prints All Variables of One Equation
   void XDMFWriter::write( const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn ) {
 
-    std::vector<GeomElemBase*> fe_in( QL );
-    for( int fe = 0; fe < QL; fe++ )    fe_in[fe] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), fe );
+    std::vector<GeomElemBase*> fe_in( QL_NODES );
+    
+  fe_in[0] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 2);
+  fe_in[1] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 0);
 
+  // This one is missing the KK part!!!
 
     hid_t file_id = H5Fopen( namefile.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
 
@@ -1278,9 +1281,12 @@ namespace femus {
 
   void XDMFWriter::write_bc( const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
 
-    std::vector<GeomElemBase*> fe_in( QL );
-    for( int fe = 0; fe < QL; fe++ )    fe_in[fe] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), fe );
+    std::vector<GeomElemBase*> fe_in( QL_NODES );
 
+  fe_in[0] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 2);
+  fe_in[1] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 0);
+
+  
     hid_t file_id = H5Fopen( namefile.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
 
     std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;

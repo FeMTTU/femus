@@ -18,6 +18,7 @@
 
 
 #include "GeomElTypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
 #include "Basis.hpp"
@@ -40,6 +41,7 @@ namespace femus {
   class elem {
 
 
+// === CONSTR-DESTR - BEGIN =================
     public:
 
       /** constructors */
@@ -50,6 +52,11 @@ namespace femus {
 
       /** destructor */
       ~elem();
+// === CONSTR-DESTR - END =================
+      
+      
+    public:
+
 
       void ShrinkToFit();
 
@@ -95,18 +102,6 @@ namespace femus {
 
       /** To be Added */
       void SetElementGroup(const unsigned& iel, const short unsigned& value);
-
-      /** To be Added */
-      void SetElementMaterial(const unsigned& iel, const short unsigned& value);
-
-      /** To be Added */
-      short unsigned GetElementMaterial(const unsigned& iel);
-
-      /** To be Added */
-      unsigned GetElementGroupNumber() const;
-
-      /** To be Added */
-      void SetElementGroupNumber(const unsigned& value);
 
       /** To be Added */
       int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
@@ -244,6 +239,29 @@ namespace femus {
 
       void GetAMRRestriction(Mesh *msh);
       
+
+// === Dimension - BEGIN =================
+  public:
+      /** To be Added */
+      unsigned GetDimension() const { return _dim; }
+      
+  private:
+
+      /** Dimension of the underlying Mesh */
+      unsigned _dim;
+// === Dimension - END =================
+
+      
+// === Elements, Materials - BEGIN =================
+
+  public:
+      
+      /** To be Added */
+      void SetElementMaterial(const unsigned& iel, const short unsigned& value);
+
+      /** To be Added */
+      short unsigned GetElementMaterial(const unsigned& iel);
+
       void SetMaterialElementCounter( std::vector<unsigned> materialElementCounter){
         _materialElementCounter = materialElementCounter;
       }
@@ -251,11 +269,33 @@ namespace femus {
       std::vector<unsigned> GetMaterialElementCounter(){
         return _materialElementCounter;
       }
-      
-      /** To be Added */
-      unsigned GetDimension() const { return _dim; }
 
+  private:
+    
+      MyVector< short unsigned> _elementMaterial;
+      /** Volume elements, 3 types of material */
+      std::vector<unsigned> _materialElementCounter;
+    
+// === Elements, Materials - END =================
       
+      
+// === Number of groups of elements - BEGIN =================
+
+  public:
+
+      /** To be Added */
+      unsigned GetElementGroupNumber() const;
+
+      /** To be Added */
+      void SetElementGroupNumber(const unsigned& value);
+      
+  private:
+
+      /** @todo number of groups of elements - in Gambit it is explicit at the top of the file */
+      unsigned _ngroup;
+      
+// === Number of groups of elements - END =================
+
     private:
 
       unsigned _iproc;
@@ -263,21 +303,26 @@ namespace femus {
 
       /** Pointer to the list of coarser elements */
       elem* _coarseElem;
+      
       /** level of refinement of this list of elements */
       unsigned _level;
             
-      /** Dimension of the underlying Mesh */
-      unsigned _dim;
+      
+// === Nodes - BEGIN =================
       /** Number of nodes of the Mesh */
       unsigned _nvt;
+// === Nodes - END =================
+
+
+// === Elements - BEGIN =================
+      
       /** Number of elements of the Mesh */
       unsigned _nel;
       /** Number of elements of the Mesh for each Geometric type */
       unsigned _nelt[N_GEOM_ELS];
       /** Number of refined elements */
       unsigned _nelr;
-      /** @todo group of all elements - seems to be unused */
-      unsigned _ngroup;
+// === Elements - END =================
 
       /** @todo Same as in Mesh, see if we can avoid duplication */
       std::vector < unsigned > _elementOffset;
@@ -286,9 +331,7 @@ namespace femus {
       MyVector< short unsigned> _elementLevel;
       MyVector< short unsigned> _elementType;
       MyVector< short unsigned> _elementGroup;
-      MyVector< short unsigned> _elementMaterial;
-      /** Volume elements, 3 types of material */
-      std::vector<unsigned> _materialElementCounter;
+      
 
       /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
@@ -311,7 +354,7 @@ namespace femus {
   
 
 //linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
-  const unsigned NVE[N_GEOM_ELS][5] = {
+  const unsigned NVE[N_GEOM_ELS][NFE_FAMS] = {
     {8, 20, 27, 1, 4}, //hex
     {4, 10, 15, 1, 4}, //tet
     {6, 15, 21, 1, 4}, //wedge

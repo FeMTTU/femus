@@ -31,7 +31,7 @@
 #include "FemusInputParser.hpp"
 #include "ElemSto.hpp"
 #include "VBTypeEnum.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "GeomElTypeEnum.hpp"
 
 namespace femus {

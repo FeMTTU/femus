@@ -11,7 +11,7 @@
 #include "Operations.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "NormTangEnum.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "Quantity.hpp"

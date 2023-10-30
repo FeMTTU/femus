@@ -23,7 +23,7 @@
 #include "NumericVector.hpp"
 
 #include "GeomElTypeEnum.hpp"
-#include "FETypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
 
 
 namespace femus {

@@ -11,7 +11,7 @@
 #include "FemusConfig.hpp"
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "FemusInputParser.hpp"
 #include "ElemSto.hpp"
 #include "MultiLevelMeshTwo.hpp"

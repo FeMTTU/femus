@@ -21,7 +21,7 @@
 #include "Elem.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "VBTypeEnum.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 
 #include "paral.hpp"
 

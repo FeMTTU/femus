@@ -9,7 +9,7 @@
 #include "MultiLevelMeshTwo.hpp"
 #include "Domain.hpp"
 #include "MultiLevelProblem.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"

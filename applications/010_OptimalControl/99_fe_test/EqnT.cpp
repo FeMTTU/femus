@@ -9,7 +9,7 @@
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "SystemTwo.hpp"
-#include "FETypeEnum.hpp"
+#include "FETypeEnum_deprecated.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "GeomElTypeEnum.hpp"

@@ -20,18 +20,17 @@ PURPOSE.  See the above copyright notice for more information.
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <memory>
-#include <string>
-#include <iostream>
-#include <cstdlib>
 #include "ElemTypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
 #include "MgTypeEnum.hpp"
 #include "BDCTypeEnum.hpp"
 
-//------------------------------------------------------------------------------
-// Forward declarations
-//------------------------------------------------------------------------------
+#include <memory>
+#include <string>
+#include <iostream>
+#include <cstdlib>
+
+
 
 namespace femus {
 

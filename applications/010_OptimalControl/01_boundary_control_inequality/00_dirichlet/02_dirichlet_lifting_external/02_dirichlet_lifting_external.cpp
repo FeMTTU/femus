@@ -124,7 +124,8 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-    std::string mesh_file = "../../../../../src/02_mesh/01_input/00_mesh_files/00_salome/02_2d/rectangle_extended/extended_box_coarse.med";  ///@todo rewrite this path
+    std::ostringstream  mesh_file_stream; mesh_file_stream << "../../../../../"  <<  DEFAULT_MESH_FILES_PATH << "00_salome/02_2d/rectangle_extended/extended_box_coarse.med";
+    const std::string mesh_file =  mesh_file_stream.str();  ///@todo rewrite this path
 //     std::string mesh_file = "./input/extended_box.med";
 
     const double Lref = 1.;
