@@ -1413,6 +1413,12 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSo
                                                                       
                                                                     }
 
+                                                                    
+// std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSolution* ml_sol, 
+//                                                                     std::string solution_name,
+//                                                                     Math::Function exact_sol_in
+//                                                                     ){
+// }
 
 
 // ||u_i - u_h||/||u_i-u_(h/2)|| = 2^alpha, alpha is order of conv 

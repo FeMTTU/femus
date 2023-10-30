@@ -270,8 +270,76 @@ public:
       
 };
 
+template < class type = double >
+class Function_Zero_on_boundary_5 : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return  cos(pi * x[0]) * cos(pi * x[1]);
+    }
 
 
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = - pi * sin(pi * x[0]) * cos(pi * x[1]);
+        solGrad[1]  = - pi * cos(pi * x[0]) * sin(pi * x[1]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return  -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
+};
+
+
+template < class type = double >
+class Function_Zero_on_boundary_5_Laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return  -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
+        solGrad[1]  = 2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return  4. * pi * pi * pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
+};
 
 
 
