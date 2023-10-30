@@ -22,7 +22,7 @@
 #define __femus_fe_Basis_hpp__
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
 #include <cassert>
 

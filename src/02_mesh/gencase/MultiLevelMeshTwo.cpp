@@ -15,10 +15,6 @@
 
 #include "MultiLevelMeshTwo.hpp"
 
-#include <sstream>
-#include <vector>
-#include <algorithm>
-
 #include "Domain.hpp"
 #include "Typedefs.hpp"
 #include "XDMFWriter.hpp"
@@ -28,6 +24,12 @@
 #include "FETypeEnum.hpp"
 
 #include "paral.hpp"
+
+
+#include <sstream>
+#include <vector>
+#include <algorithm>
+
 
 
 namespace femus {

@@ -20,7 +20,10 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "ParallelObject.hpp"
+#include "NumericVector.hpp"
+
 #include "GeomElTypeEnum.hpp"
+#include "FETypeEnum.hpp"
 
 
 namespace femus {
@@ -47,7 +50,7 @@ public:
     /** Refinement functions */
 
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
-    void RefineMesh(const unsigned &igrid, Mesh *mshc, /*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][5]);
+    void RefineMesh(const unsigned &igrid, Mesh *mshc, /*const*/ elem_type* otheFiniteElement[N_GEOM_ELS][NFE_FAMS]);
 
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();

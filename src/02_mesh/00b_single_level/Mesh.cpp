@@ -44,6 +44,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   unsigned Mesh::_ref_index = 4; // 8*DIM[2]+4*DIM[1]+2*DIM[0];
   unsigned Mesh::_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
+
+// === CONSTR-DESTR - BEGIN =================
+
 //------------------------------------------------------------------------------------------------------
   Mesh::Mesh() {
 
@@ -53,8 +56,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       _ProjCoarseToFine[i] = NULL;
     }
 
-    for(int itype = 0; itype < 3; itype++) {
-      for(int jtype = 0; jtype < 3; jtype++) {
+    for(int itype = 0; itype < NFE_FAMS_C0_LAGRANGE; itype++) {
+      for(int jtype = 0; jtype < NFE_FAMS_C0_LAGRANGE; jtype++) {
         _ProjQitoQj[itype][jtype] = NULL;
       }
     }
@@ -68,8 +71,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     _topology->FreeSolutionVectors();
     delete _topology;
 
-    for(int itype = 0; itype < 3; itype++) {
-      for(int jtype = 0; jtype < 3; jtype++) {
+    for(int itype = 0; itype < NFE_FAMS_C0_LAGRANGE; itype++) {
+      for(int jtype = 0; jtype < NFE_FAMS_C0_LAGRANGE; jtype++) {
         if(_ProjQitoQj[itype][jtype]) {
           delete _ProjQitoQj[itype][jtype];
           _ProjQitoQj[itype][jtype] = NULL;
@@ -85,6 +88,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     }
     
   }
+
+
+// === CONSTR-DESTR - END =================
   
   
 
@@ -117,7 +123,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
   
   const unsigned Mesh::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0, 5, 3, 0, 1, 0};
-  const double Mesh::_baricentricWeight[N_GEOM_ELS][NFE_FAMS][18] = {
+  const double Mesh::_baricentricWeight[N_GEOM_ELS][NFE_FAMS][MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES] = {
     {},
     {
       { -1. / 9., -1. / 9., -1. / 9.,  0    , 4. / 9., 4. / 9., 4. / 9., 0.   , 0.   , 0.   },
@@ -270,7 +276,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     Topology_InitializeAMR();
     Topology_InitializeAndFillSolidNodeFlag();
 
-    _amrRestriction.resize(3); /* 3 Lagrange continuous families (linear, quadr, biquadr) */
+    _amrRestriction.resize(NFE_FAMS_C0_LAGRANGE); /* 3 Lagrange continuous families (linear, quadr, biquadr) */
 
 
   }
@@ -430,7 +436,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
      std::vector<unsigned>  partition(GetNumberOfNodes(), _nprocs);
     std::vector <unsigned>  mapping_from_mesh_file_to_femus(GetNumberOfNodes(), 0);
 
-    for(unsigned k = 0; k < 3; k++) {
+    for(unsigned k = 0; k < NFE_FAMS_C0_LAGRANGE; k++) {
       _ownSize[k].assign(_nprocs, 0);
     }
 
@@ -438,7 +444,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     for(int isdom = 0; isdom < _nprocs; isdom++) {
         
-      for(unsigned k = 0; k < 3; k++) {
+      for(unsigned k = 0; k < NFE_FAMS_C0_LAGRANGE; k++) {
         for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
           unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
           unsigned nodeEnd = el->GetElementDofNumber(iel, k);
@@ -451,7 +457,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
               mapping_from_mesh_file_to_femus[ii] = counter;
               counter++;
 
-              for(int j = k; j < 3; j++) {
+              for(int j = k; j < NFE_FAMS_C0_LAGRANGE; j++) {
                 _ownSize[j][isdom]++;
               }
             }
@@ -658,7 +664,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     void Mesh::dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic() {
  
-    for(int k = 0; k < 3; k++) {
+    for(int k = 0; k < NFE_FAMS_C0_LAGRANGE; k++) {
       _ghostDofs[k].resize(_nprocs);
 
       for(int isdom = 0; isdom < _nprocs; isdom++) {
@@ -1015,7 +1021,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
       
-    if(itype < 3 && jtype < 3) {
+    if(itype < NFE_FAMS_C0_LAGRANGE && jtype < NFE_FAMS_C0_LAGRANGE) {
       if(!_ProjQitoQj[itype][jtype]) {
         BuildQitoQjProjection(itype, jtype);
       }
@@ -1141,7 +1147,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         NNZ_d->init(nf, nf_loc, false, SERIAL);
       }
       else { // IF PARALLEL
-        if(solType < 3) {  // GHOST nodes only for Lagrange FE families
+        if(solType < NFE_FAMS_C0_LAGRANGE) {  // GHOST nodes only for Lagrange FE families
           NNZ_d->init(nf, nf_loc, _ghostDofs[solType][processor_id()], false, GHOSTED);
         }
         else { //piecewise discontinuous variables have no ghost nodes
@@ -1242,7 +1248,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   /** Only for parallel */
   unsigned Mesh::GetElementFaceDofNumber(const unsigned& iel, const unsigned jface, const unsigned& type) const {
-    assert(type < 3);   ///@todo relax this
+    assert(type < NFE_FAMS_C0_LAGRANGE);   ///@todo relax this
     return el->GetNFACENODES(GetElementType(iel), jface, type);
   }
 

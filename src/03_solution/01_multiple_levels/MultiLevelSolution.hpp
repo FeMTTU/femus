@@ -285,7 +285,7 @@ public:
   
 // === INITIALIZATION FUNCTION - END =================
     
-// === Writer - BEGIN =============
+// === FILE OUTPUT - BEGIN =============
 public:
 
     /** To be Added */
@@ -304,7 +304,7 @@ private:
     /** Multilevel solution writer */
     Writer* _writer;
 
-// === Writer - END ===============
+// === FILE OUTPUT - END ===============
     
 
 // === RESTART - BEGIN =============

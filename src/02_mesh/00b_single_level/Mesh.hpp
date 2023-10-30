@@ -233,7 +233,7 @@ private:
     
     
     /** Weights used to build the baricentric coordinate to compute the missing biquadratic nodes **/
-    static const double _baricentricWeight[N_GEOM_ELS][NFE_FAMS][18];
+    static const double _baricentricWeight[N_GEOM_ELS][NFE_FAMS][MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES];
     
     static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
     
@@ -295,7 +295,7 @@ private:
     
     void PrintInfoLevel() const;
     
-    /** MESH: level of mesh in the multilevel hierarchy */
+    /** MESH: level of mesh in the multi-level hierarchy */
     unsigned _level;
     
     /** Pointer to the coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
@@ -456,7 +456,7 @@ private:
     void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
 
     /** FE: The projection matrix between Lagrange FEM at the same level mesh */
-    SparseMatrix* _ProjQitoQj[3][3];
+    SparseMatrix* _ProjQitoQj[NFE_FAMS_C0_LAGRANGE][NFE_FAMS_C0_LAGRANGE];
 
    
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - END =================

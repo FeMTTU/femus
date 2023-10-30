@@ -338,39 +338,36 @@ FILE(COPY           ${PROJECT_SOURCE_DIR}/src/02_mesh/01_input/00_mesh_files/ DE
 ### Include files - BEGIN
 #############################################################################################
 
-# Include petsc files
-INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
-ADD_DEFINITIONS(${PETSC_DEFINITIONS})
-
-# Include slepc files
-IF(SLEPC_FOUND)
- INCLUDE_DIRECTORIES(${SLEPC_INCLUDE_DIRS})
-ENDIF(SLEPC_FOUND)
-
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_mesh/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_mesh/00_geom_elements/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02b_geom_elements_fe/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/03_solution/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/03_solution/01_output/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/03_solution/01_multiple_levels/01_output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/04_equations/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/04_equations/01_time_dependent/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/04_equations/boundary_conditions/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/algebra/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/algebra/01_matrices/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/algebra/02_preconditioners/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/algebra/03_solvers_with_preconditioner/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/fe/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/ism/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/uq/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/00_application_initialization/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/01_application_file_handling/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/data_types/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/input_parser/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/function_parser/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/math/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/parallel)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/01_problem)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_utils/parallel/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/01_problem/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00_geom_elements/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00b_single_level/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/00c_multiple_levels/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/01_input/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/02_partitioning/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/03_refinement/)
@@ -378,8 +375,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_mesh/gencase/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02b_geom_elements_fe/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02c_geom_elements_quadrature/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02d_geom_elements_fe_evaluations_at_quadrature/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/01_output/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/00_single_level/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/01_multiple_levels/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/01_multiple_levels/01_output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_solution/02_FE_convergence/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/04_equations/00_stationary/)
@@ -396,9 +395,20 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uq/)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/)
 
+
 # HPCC TTU
 INCLUDE_DIRECTORIES(/opt/ohpc/pub/mpi/openmpi-gnu/1.10.6/include/)
 INCLUDE_DIRECTORIES(/opt/ohpc/pub/libs/gnu/openmpi/boost/1.63.0/include/)
+
+
+# Include petsc files
+INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
+ADD_DEFINITIONS(${PETSC_DEFINITIONS})
+
+# Include slepc files
+IF(SLEPC_FOUND)
+ INCLUDE_DIRECTORIES(${SLEPC_INCLUDE_DIRS})
+ENDIF(SLEPC_FOUND)
 
 # Include Fparser files
 IF(FPARSER_FOUND)

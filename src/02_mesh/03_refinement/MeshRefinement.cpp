@@ -17,11 +17,10 @@
 // includes :
 //----------------------------------------------------------------------------
 
+#include "MeshRefinement.hpp"
 #include "Mesh.hpp"
 #include "MeshMetisPartitioning.hpp"
-#include "MeshRefinement.hpp"
-#include "NumericVector.hpp"
-#include "GeomElTypeEnum.hpp"
+
 
 namespace femus {
 
@@ -185,7 +184,7 @@ namespace femus {
 
 //---------------------------------------------------------------------------------------------------------------
 /// 
-void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ elem_type* otherFiniteElement[N_GEOM_ELS][5]) {
+void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ elem_type* otherFiniteElement[N_GEOM_ELS][NFE_FAMS]) {
 
 //====================================
 //==== Equivalent of: ReadCoarseMeshBeforePartitioning ======== 

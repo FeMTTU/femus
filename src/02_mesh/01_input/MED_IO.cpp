@@ -1199,7 +1199,7 @@ namespace femus {
     
     
     if(mesh_menus.size() > 1) {
-      std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl;
+      std::cout << "Review the code because there is only one Mesh object and most likely things don't work" << std::endl;
       abort();
     }
     
