@@ -86,7 +86,7 @@ namespace femus
 
       
 // =========================================
-// ===   FE (without evaluations) - BEGIN =================
+// ===   FE (without Quadrature evaluations) - BEGIN =================
 // =========================================
     public:
         
@@ -116,7 +116,7 @@ namespace femus
       /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
       const int** _IND;
 // =========================================
-// ===   FE (without evaluations) - END =================
+// ===   FE (without Quadrature evaluations) - END =================
 // =========================================
 
 
@@ -185,41 +185,36 @@ namespace femus
 
 
 // =========================================
-// ===  Quadrature, only on GEOM ELEM, without FE evaluations - BEGIN =================
+// ===  Quadrature, without FE evaluations - BEGIN =================
 // =========================================
   public:
       
       /** To be Added */
-      inline const Gauss GetGaussRule() const {
-        return *_gauss;
-      }
-
-      /** To be Added */
-      inline const Gauss* GetGaussRule_bdry() const {
-        return _gauss_bdry;
+      inline const Gauss* GetGaussRule() const {
+        return _gauss;
       }
 
       /** To be Added */
       inline double  GetGaussWeight(const unsigned ig) const {
-        return _gauss->GetGaussWeightsPointer()[ig];
+        return GetGaussRule()->GetGaussWeightsPointer()[ig];
       }
 
       /** To be Added */
       inline unsigned GetGaussPointNumber() const {
-        return _gauss->GetGaussPointsNumber();
+        return GetGaussRule()->GetGaussPointsNumber();
       }
       
   protected:
       
       void initialize_quadrature_all(const char* geom_elem, const char* order_gauss);
      
-      void initialize_quadrature(const char* geom_elem, const char* order_gauss);
-      
-      void initialize_quadrature_boundary(const char* geom_elem, const char* order_gauss);
-      
       void deallocate_quadrature_all();
       
+      void initialize_quadrature(const char* geom_elem, const char* order_gauss);
+      
       void deallocate_quadrature();
+      
+      void initialize_quadrature_boundary(const char* geom_elem, const char* order_gauss);
       
       void deallocate_quadrature_boundary();
       
@@ -227,7 +222,7 @@ namespace femus
       ///@todo this must become a std::vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
       Gauss * _gauss_bdry; 
 // =========================================
-// ===  Quadrature, only on GEOM ELEM, without FE evaluations - END =================
+// ===  Quadrature, without FE evaluations - END =================
 // =========================================
 
       
@@ -322,6 +317,7 @@ namespace femus
       
      virtual  void initialize_quadrature_with_fe_evals_from_child(const char* geom_elem, const char* order_gauss) = 0;
       
+     
    protected:
        
        
@@ -378,12 +374,43 @@ namespace femus
                                   const unsigned& kkindex_sol) const;
 
       /** @todo move away from here */
+      void GetSparsityPatternSize(const Mesh& meshf,
+                                  const Mesh& meshc,
+                                  const int& ielc,
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const char el_dofs[]) const;
+
+      /** for solution printing @todo move away from here */
+      void GetSparsityPatternSize(const Mesh& Mesh,
+                                  const int& iel, 
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const unsigned& itype) const;
+
+        
+      /** @todo move away from here */
       void BuildProlongation(const LinearEquation& lspdef,
                              const LinearEquation& lspdec,
                              const int& ielc, 
                              SparseMatrix* Projmat,
                              const unsigned& index_sol, 
                              const unsigned& kkindex_sol) const;
+
+      /** @todo move away from here */
+      void BuildProlongation(const Mesh& meshf,
+                             const Mesh& meshc,
+                             const int& ielc,
+                             SparseMatrix* Projmat, 
+                             const char el_dofs[]) const;
+                             
+      /** for solution printing @todo move away from here */
+      void BuildProlongation(const Mesh& mesh,
+                             const int& iel,
+                             SparseMatrix* Projmat,
+                             NumericVector* NNZ_d,
+                             NumericVector* NNZ_o,
+                             const unsigned& itype) const;
 
       /** @todo move away from here */
       void BuildRestrictionTranspose(const LinearEquation& lspdef,
@@ -395,37 +422,6 @@ namespace femus
                                      const unsigned& index_pair_sol,
                                      const unsigned& kkindex_pair_sol) const;
                                      
-      /** @todo move away from here */
-      void GetSparsityPatternSize(const Mesh& meshf,
-                                  const Mesh& meshc,
-                                  const int& ielc,
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const char el_dofs[]) const;
-
-      /** @todo move away from here */
-      void BuildProlongation(const Mesh& meshf,
-                             const Mesh& meshc,
-                             const int& ielc,
-                             SparseMatrix* Projmat, 
-                             const char el_dofs[]) const;
-                             
-      /** for solution printing @todo move away from here */
-      void GetSparsityPatternSize(const Mesh& Mesh,
-                                  const int& iel, 
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const unsigned& itype) const;
-
-        
-      /** for solution printing @todo move away from here */
-      void BuildProlongation(const Mesh& mymesh,
-                             const int& iel,
-                             SparseMatrix* Projmat,
-                             NumericVector* NNZ_d,
-                             NumericVector* NNZ_o,
-                             const unsigned& itype) const;
-
 // =========================================
 // ===  Equation, Sparsity pattern and Multigrid - END =================
 // =========================================
@@ -453,12 +449,12 @@ namespace femus
 // ===  Constr/Destr - END =================
 
 // =========================================
-// ===   FE (without evaluations) - BEGIN =================
+// ===   FE (without Quadrature evaluations) - BEGIN =================
 // =========================================
   protected:
       
       const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
-// ===   FE (without evaluations) - END =================
+// ===   FE (without Quadrature evaluations) - END =================
       
                             
 // =========================================
@@ -648,12 +644,12 @@ namespace femus
 
       
 // =========================================
-// ===   FE (without evaluations) - BEGIN =================
+// ===   FE (without Quadrature evaluations) - BEGIN =================
 // =========================================
     protected:
       
     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
-// ===   FE (without evaluations) - END =================
+// ===   FE (without Quadrature evaluations) - END =================
 
 // =========================================
 // ===  Quadrature, with FE evaluations - BEGIN =================
@@ -818,12 +814,12 @@ namespace femus
 // ===  Constr/Destr - END =================
       
 // =========================================
-// ===   FE (without evaluations) - BEGIN =================
+// ===   FE (without Quadrature evaluations) - BEGIN =================
 // =========================================
     protected:
      
      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
-// ===   FE (without evaluations) - END =================
+// ===   FE (without Quadrature evaluations) - END =================
      
       
 // =========================================
