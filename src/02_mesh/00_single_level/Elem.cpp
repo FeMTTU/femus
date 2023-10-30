@@ -116,10 +116,14 @@ namespace femus
   }
 
   
-  void elem::ShrinkToFit()
-  {
-
+  void elem::ShrinkToFitElementDof() {
+    
     _elementDof.shrinkToFit(UINT_MAX);
+    
+  }
+  
+  void elem::ShrinkToFitElementNearFace() {
+    
 
     MyVector <unsigned> rowSize(_nel);
     for (unsigned iel = 0; iel < _nel; iel++) {
@@ -127,9 +131,8 @@ namespace femus
       rowSize[iel] = NFC[ielType][1];
     }
     _elementNearFace.shrinkToFit(rowSize);
-
+    
   }
-  
   
   
   
@@ -271,7 +274,7 @@ namespace femus
   }
 
   /**
-   * Return the total number of elements
+   * Return the total number of elements, where the shape can be specified as an input string
    **/
   unsigned elem::GetElementNumber(const char* name) const
   {

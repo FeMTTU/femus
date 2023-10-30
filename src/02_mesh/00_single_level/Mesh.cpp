@@ -232,7 +232,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     AddBiquadraticNodesNotInMeshFile();
 
-    el->ShrinkToFit();
+    el->ShrinkToFitElementDof();
+    el->ShrinkToFitElementNearFace();
 
     //el->SetNodeNumber(_nnodes);
 
@@ -367,7 +368,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     AddBiquadraticNodesNotInMeshFile();
 
-    el->ShrinkToFit();
+    el->ShrinkToFitElementDof();
+    el->ShrinkToFitElementNearFace();
 
     el->SetNodeNumber(_nnodes);  ///@todo are we sure we need it here? On the other ReadCoarse it is commented
 

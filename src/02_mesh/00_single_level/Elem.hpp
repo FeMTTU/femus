@@ -58,12 +58,12 @@ namespace femus {
     public:
 
 
-      void ShrinkToFit();
-
+      void ShrinkToFitElementNearFace();
       void ScatterElementNearFace();
       void LocalizeElementNearFace(const unsigned& jproc);
       void FreeLocalizedElementNearFace();
 
+      void ShrinkToFitElementDof();
       void ScatterElementDof();
       void LocalizeElementDof(const unsigned &jproc);
       void FreeLocalizedElementDof();
@@ -86,22 +86,7 @@ namespace femus {
       /** To be Added */
       unsigned GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode);
 
-      /** To be Added */
-      short unsigned GetElementType(const unsigned& iel);
-
-      /** To be Added */
-      MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
-      
       MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; } 
-    
-      /** To be Added */
-      void SetElementType(const unsigned& iel, const short unsigned& value);
-
-      /** To be Added */
-      short unsigned GetElementGroup(const unsigned& iel);
-
-      /** To be Added */
-      void SetElementGroup(const unsigned& iel, const short unsigned& value);
 
       /** To be Added */
       int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
@@ -112,32 +97,10 @@ namespace femus {
       void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
 
       /** To be Added */
-      unsigned GetIndex(const char name[]) const;
-
-      /** To be Added */
-      unsigned GetElementNumber(const char* name = "All") const;
-
-      /** To be Added */
       void AddToElementNumber(const unsigned& value, const char name[]);
 
       /** To be Added */
       void AddToElementNumber(const unsigned& value, short unsigned ielt);
-
-      /** To be Added */
-      unsigned GetRefinedElementNumber() const {
-        return _nelr;
-      };
-
-      /** To be Added */
-      void SetRefinedElementNumber(const unsigned& value) {
-        _nelr = value;
-      };
-
-      /** To be Added */
-      unsigned GetNodeNumber()const;
-
-      /** To be Added */
-      void SetNodeNumber(const unsigned& value);
 
       /** To be Added */
       unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1);
@@ -175,33 +138,25 @@ namespace femus {
 
 
       //BEGIN _ElementLevel functions
-      void SetElementLevel(const unsigned& iel, const short unsigned& level) {
-        _elementLevel[iel] = level;
-      }
-      
-      short unsigned GetElementLevel(const unsigned &jel) {
-        return _elementLevel[jel];
-      }
-      
       void ScatterElementQuantities() {
         _elementLevel.scatter(_elementOffset);
         _elementType.scatter(_elementOffset);
-        _elementMaterial.scatter(_elementOffset);
         _elementGroup.scatter(_elementOffset);
+        _elementMaterial.scatter(_elementOffset);
       }
       
       void LocalizeElementQuantities(const unsigned &lproc) {
         _elementLevel.broadcast(lproc);
         _elementType.broadcast(lproc);
-        _elementMaterial.broadcast(lproc);
         _elementGroup.broadcast(lproc);
+        _elementMaterial.broadcast(lproc);
       }
       
       void FreeLocalizedElementQuantities() {
         _elementLevel.clearBroadcast();
         _elementType.clearBroadcast();
-        _elementMaterial.clearBroadcast();
         _elementGroup.clearBroadcast();
+        _elementMaterial.clearBroadcast();
       }
 
       bool GetIfElementCanBeRefined(const unsigned& iel) {
@@ -230,17 +185,31 @@ namespace femus {
 
       const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const;
 
+
+
+// === Mesh, Subdomains - BEGIN =================
+  public:
+    
       void SetElementOffsets(const std::vector < unsigned > & elementOffset, const unsigned &iproc, const unsigned &nprocs) {
         _elementOffset = elementOffset;
         _elementOwned = elementOffset[iproc + 1] - elementOffset[iproc];
         _iproc = iproc;
         _nprocs = nprocs;
       }
-
-      void GetAMRRestriction(Mesh *msh);
       
+    private:
 
-// === Dimension - BEGIN =================
+      unsigned _iproc;
+      unsigned _nprocs;
+      
+      /** @todo Same as in Mesh, see if we can avoid duplication */
+      std::vector < unsigned > _elementOffset;
+      unsigned _elementOwned;
+
+// === Mesh, Subdomains - END =================
+
+
+// === Basic, Dimension - BEGIN =================
   public:
       /** To be Added */
       unsigned GetDimension() const { return _dim; }
@@ -249,9 +218,118 @@ namespace femus {
 
       /** Dimension of the underlying Mesh */
       unsigned _dim;
-// === Dimension - END =================
+// === Basic, Dimension - END =================
+
+// === Basic, Level - BEGIN =================
+  public:
+     
+      
+  private:
+
+      /** Pointer to the list of coarser elements */
+      elem* _coarseElem;
+      
+      /** level of refinement of this list of elements */
+      unsigned _level;
+           
+      
+// === Basic, Level - END =================
+
+
+// === Elements, Numbers - BEGIN =================
+    public:
+  
+      /**    Return the number of elements of a certain shape, specified as an input string. Otherwise return the number of all elements */
+      unsigned GetElementNumber(const char* name = "All") const;
+
+      /** To be Added */
+      unsigned GetRefinedElementNumber() const {
+        return _nelr;
+      };
+
+      /** To be Added */
+      void SetRefinedElementNumber(const unsigned& value) {
+        _nelr = value;
+      };
+
+    private:
+      
+      /** Number of elements of the Mesh */
+      unsigned _nel;
+      /** Number of elements of the Mesh for each Geometric type */
+      unsigned _nelt[N_GEOM_ELS];
+      /** Number of refined elements */
+      unsigned _nelr;
+// === Elements, Numbers - END =================
+
+
+// === Elements, Type - BEGIN =================
+  public:
+    
+      /** To be Added */
+      unsigned GetIndex(const char name[]) const;
+
+      /** To be Added */
+      short unsigned GetElementType(const unsigned& iel);
+
+      /** To be Added */
+      MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
+      
+      /** To be Added */
+      void SetElementType(const unsigned& iel, const short unsigned& value);
+      
+    
+  private:
+    
+      MyVector< short unsigned> _elementType;
+    
+// === Elements, Type - END =================
 
       
+// === Elements, Level - BEGIN =================
+  public:
+      void SetElementLevel(const unsigned& iel, const short unsigned& level) {
+        _elementLevel[iel] = level;
+      }
+      
+      short unsigned GetElementLevel(const unsigned &jel) {
+        return _elementLevel[jel];
+      }
+      
+    
+  private:
+    
+      MyVector< short unsigned> _elementLevel;
+      
+// === Elements, Level - END =================
+
+      
+// === Elements, Groups - BEGIN =================
+
+  public:
+
+      /** To be Added */
+      short unsigned GetElementGroup(const unsigned& iel);
+
+      /** To be Added */
+      void SetElementGroup(const unsigned& iel, const short unsigned& value);
+
+      /** Number of groups  */
+      unsigned GetElementGroupNumber() const;
+
+      /** Number of groups  */
+      void SetElementGroupNumber(const unsigned& value);
+      
+  private:
+
+      /** @todo Number of groups of elements - in Gambit it is explicit at the top of the file */
+      unsigned _ngroup;
+      
+      MyVector< short unsigned> _elementGroup;
+      
+// === Elements, Groups - END =================
+
+
 // === Elements, Materials - BEGIN =================
 
   public:
@@ -279,61 +357,27 @@ namespace femus {
 // === Elements, Materials - END =================
       
       
-// === Number of groups of elements - BEGIN =================
-
+// === Nodes - BEGIN =================
   public:
 
       /** To be Added */
-      unsigned GetElementGroupNumber() const;
+      unsigned GetNodeNumber()const;
 
       /** To be Added */
-      void SetElementGroupNumber(const unsigned& value);
-      
+      void SetNodeNumber(const unsigned& value);
+
+  
   private:
-
-      /** @todo number of groups of elements - in Gambit it is explicit at the top of the file */
-      unsigned _ngroup;
       
-// === Number of groups of elements - END =================
-
-    private:
-
-      unsigned _iproc;
-      unsigned _nprocs;
-
-      /** Pointer to the list of coarser elements */
-      elem* _coarseElem;
-      
-      /** level of refinement of this list of elements */
-      unsigned _level;
-            
-      
-// === Nodes - BEGIN =================
       /** Number of nodes of the Mesh */
       unsigned _nvt;
 // === Nodes - END =================
 
 
-// === Elements - BEGIN =================
-      
-      /** Number of elements of the Mesh */
-      unsigned _nel;
-      /** Number of elements of the Mesh for each Geometric type */
-      unsigned _nelt[N_GEOM_ELS];
-      /** Number of refined elements */
-      unsigned _nelr;
-// === Elements - END =================
 
-      /** @todo Same as in Mesh, see if we can avoid duplication */
-      std::vector < unsigned > _elementOffset;
-      unsigned _elementOwned;
-
-      MyVector< short unsigned> _elementLevel;
-      MyVector< short unsigned> _elementType;
-      MyVector< short unsigned> _elementGroup;
-      
-
-      /** For each element, gives the conversion from local node index to global node index */
+   private:
+     
+     /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
       /** @todo this is about the elements attached to each face. It is used for BCs as well */
       MyMatrix <int> _elementNearFace;
@@ -349,6 +393,14 @@ namespace femus {
       /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
         @todo I think this should be scattered, or maybe not, if it is only used temporarily */
       MyMatrix <unsigned> _elementNearElement;
+
+      
+// === Refinement - NOT USED - BEGIN =================
+    public:
+      
+      void GetAMRRestriction(Mesh *msh);
+// === Refinement - NOT USED - END =================
+      
 
   };
   
