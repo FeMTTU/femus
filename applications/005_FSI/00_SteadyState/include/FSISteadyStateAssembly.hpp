@@ -1378,7 +1378,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
         int increment = 1;
       
         if (static_cast < short unsigned >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
-          increment = NRE[elType];
+          increment = ml_msh.GetLevel(0)->GetMeshElements()->GetNRE(elType);
         }
         
         for (unsigned j = 0; j < increment; j++) {

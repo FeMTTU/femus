@@ -78,9 +78,9 @@
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
-          XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(files.GetOutputPath(),mesh); 
-	  XDMFWriter::PrintMeshXDMF(files.GetOutputPath(),mesh,BIQUADR_FE);
-          XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
+          // XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(files.GetOutputPath(),mesh); 
+	      // XDMFWriter::PrintMeshXDMF(files.GetOutputPath(),mesh,BIQUADR_FE);
+          // XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
 
 	  
   // ===== QuantityMap =========================================

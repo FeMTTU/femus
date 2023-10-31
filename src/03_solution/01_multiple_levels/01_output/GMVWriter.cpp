@@ -181,12 +181,13 @@ namespace femus {
               sprintf( buffer, "line" );
           }
           fout.write( ( char* ) buffer, sizeof( char ) * 8 );
-          fout.write( ( char* ) &NVE[ielt][index], sizeof( unsigned ) );
-          for( unsigned j = 0; j < NVE[ielt][index]; j++ ) {
+          const unsigned nvertices = mesh->GetMeshElements()->GetNVE(ielt, index); 
+          fout.write( ( char* ) &  nvertices, sizeof( unsigned ) );
+          for( unsigned j = 0; j < nvertices; j++ ) {
             unsigned jnode_Metis = mesh->GetSolutionDof( j, ii, index );
             topology[j] = jnode_Metis + 1;
           }
-          fout.write( ( char* ) topology, sizeof( unsigned ) *NVE[ielt][index] );
+          fout.write( ( char* ) topology, sizeof( unsigned ) *  nvertices  );
         }
       }
       mesh->el->FreeLocalizedElementDof();

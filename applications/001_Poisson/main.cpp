@@ -412,8 +412,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
     for (int i = 0; i < dim; i++) {
       vL2Norm2 += V[i] * V[i];
-      unsigned ip = referenceElementDirection[ielt][i][1];
-      unsigned im = referenceElementDirection[ielt][i][0];
+      unsigned ip = myel->GetReferenceElementDirection(ielt, i, 1);
+      unsigned im = myel->GetReferenceElementDirection(ielt, i, 0);
       double VxiHxi = 0.;
 
       for (int j = 0; j < dim; j++) {

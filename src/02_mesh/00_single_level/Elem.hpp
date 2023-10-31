@@ -179,6 +179,11 @@ namespace femus {
 
       const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const;
       
+      const unsigned GetNRE(const unsigned& elementType) const { return NRE[elementType]; }
+      
+      const unsigned GetReferenceElementDirection(const unsigned& elementType, const unsigned dir, const unsigned node) const { 
+        return referenceElementDirection[elementType][dir][node]; }
+      
   private:
 
   /**
@@ -231,6 +236,36 @@ namespace femus {
       {1}
     }
   };
+  
+  /**
+   * Number of elements obtained with one refinement
+  **/
+  const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
+
+  
+  const unsigned referenceElementDirection[N_GEOM_ELS][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
+  {
+    {23, 21}, {20, 22}, {24, 25}
+  },
+  {
+    {0, 1}, {0, 2}, {0, 3}
+  },
+  {
+    {12, 13}, {12, 14}, {0, 3}
+  },
+  {
+    {7, 5}, {4, 6}
+  },
+  {
+    {0, 1}, {0, 2}
+  },
+  {
+    {0, 1}
+  }
+};
+
+// const unsigned referenceElementPoint[6]={26,0,12,8,0,2};
+
 // === Geometric Element, Single - END =================
     
     
@@ -242,6 +277,40 @@ namespace femus {
       
       const unsigned GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const;
       
+  private:
+    
+  const unsigned NFACENODES[ N_GEOM_ELS ][ MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL ][ NFE_FAMS_C_ZERO_LAGRANGE ] = {
+    { {4, 8, 9}, // Hex
+      {4, 8, 9},
+      {4, 8, 9},
+      {4, 8, 9},
+      {4, 8, 9},
+      {4, 8, 9}
+    },
+    { {3, 6, 7}, // Tet
+      {3, 6, 7},
+      {3, 6, 7},
+      {3, 6, 7}
+    },
+    { {4, 8, 9}, // Wedge
+      {4, 8, 9},
+      {4, 8, 9},
+      {3, 6, 7},
+      {3, 6, 7}
+    },
+    { {2, 3, 3},
+      {2, 3, 3}, // Quad
+      {2, 3, 3},
+      {2, 3, 3}
+    },
+    { {2, 3, 3}, // Tri
+      {2, 3, 3},
+      {2, 3, 3}
+    },
+    { {1, 1, 1}, // Line
+      {1, 1, 1}
+    }
+  };
     
 // === Geometric Element, FE, Single - END =================
 
@@ -486,72 +555,14 @@ namespace femus {
     {2, 3, 3, 1, 2}  //line
   };
 
-  /**
-   * Number of elements obtained with one refinement
-  **/
-  const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
 
 
-
-  const unsigned NFACENODES[ N_GEOM_ELS ][ MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL ][ NFE_FAMS_C_ZERO_LAGRANGE ] = {
-    { {4, 8, 9}, // Hex
-      {4, 8, 9},
-      {4, 8, 9},
-      {4, 8, 9},
-      {4, 8, 9},
-      {4, 8, 9}
-    },
-    { {3, 6, 7}, // Tet
-      {3, 6, 7},
-      {3, 6, 7},
-      {3, 6, 7}
-    },
-    { {4, 8, 9}, // Wedge
-      {4, 8, 9},
-      {4, 8, 9},
-      {3, 6, 7},
-      {3, 6, 7}
-    },
-    { {2, 3, 3},
-      {2, 3, 3}, // Quad
-      {2, 3, 3},
-      {2, 3, 3}
-    },
-    { {2, 3, 3}, // Tri
-      {2, 3, 3},
-      {2, 3, 3}
-    },
-    { {1, 1, 1}, // Line
-      {1, 1, 1}
-    }
-  };
 
 
 } //end namespace femus
 
 
-const unsigned referenceElementDirection[N_GEOM_ELS][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
-  {
-    {23, 21}, {20, 22}, {24, 25}
-  },
-  {
-    {0, 1}, {0, 2}, {0, 3}
-  },
-  {
-    {12, 13}, {12, 14}, {0, 3}
-  },
-  {
-    {7, 5}, {4, 6}
-  },
-  {
-    {0, 1}, {0, 2}
-  },
-  {
-    {0, 1}
-  }
-};
 
-// const unsigned referenceElementPoint[6]={26,0,12,8,0,2};
 
 #endif
 

@@ -967,7 +967,7 @@ namespace femus {
       int NGeomObjOnWhichToPrint[QL];
       NGeomObjOnWhichToPrint[QQ] = mesh->_NoNodesXLev[Level];
       NGeomObjOnWhichToPrint[LL] = mesh->_NoNodesXLev[Level];
-      NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level] * NRE[mesh->_eltype_flag[VV]];
+      // // // NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level] * GetNRE(mesh->_eltype_flag[VV]);   ///@todo
 
       const uint n_nodes_lev = mesh->_NoNodesXLev[Level];
       double* sol_on_Qnodes  = new double[n_nodes_lev];  //TODO VALGRIND //this is QUADRATIC because it has to hold  either quadratic or linear variables and print them on a QUADRATIC mesh
@@ -1126,9 +1126,9 @@ namespace femus {
                - mesh->_off_el[VV][off_proc + Level]; iel++ ) {
             int elem_lev = iel + sum_elems_prev_sd_at_lev;
             int dof_pos_lev = dofmap->GetDof( Level, KK, ivar, elem_lev );
-            for( uint is = 0; is < NRE[mesh->_eltype_flag[VV]]; is++ ) {
-              sol_on_cells[cel * NRE[mesh->_eltype_flag[VV]] + is] = ( * eqn->_LinSolver[Level]->_EPSC )( dof_pos_lev ) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
-            }
+            // // // for( uint is = 0; is < GetNRE(mesh->_eltype_flag[VV]); is++ ) {  ///@todo
+            // // //   sol_on_cells[cel * GetNRE(mesh->_eltype_flag[VV]) + is] = ( * eqn->_LinSolver[Level]->_EPSC )( dof_pos_lev ) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
+            // // // }
             cel++;
           }
         }
@@ -1188,7 +1188,7 @@ namespace femus {
       // storing  ivar variables (in parallell)
       for( int iel = 0; iel <  mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels]
            - mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1]; iel++ ) {
-        uint elem_gidx = ( iel + mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1] ) * NVE[ mesh->_geomelem_flag[mesh->get_dim() - 1] ][BIQUADR_FE];
+        uint elem_gidx = ( iel + mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1] ) * _ml_mesh->GetLevel(0)->GetMeshElements()->GetNVE( mesh->_geomelem_flag[mesh->get_dim() - 1] , BIQUADR_FE);
         for( uint i = 0; i < el_nds; i++ ) {  // linear and quad
           int k = mesh->_el_map[VV][elem_gidx + i]; // the global node
           eqn->_LinSolver[mesh->_NoLevels - 1]->_EPS->set( dofmap->GetDof( mesh->_NoLevels - 1, QQ, ivar, k ), sol[k]*Irefval );   // set the field
@@ -1304,7 +1304,7 @@ namespace femus {
       int NGeomObjOnWhichToPrint[QL];
       NGeomObjOnWhichToPrint[QQ] = mesh->_NoNodesXLev[Level];
       NGeomObjOnWhichToPrint[LL] = mesh->_NoNodesXLev[Level];
-      NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level] * NRE[mesh->_eltype_flag[VV]];
+      // // // NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level] * GetNRE(mesh->_eltype_flag[VV]);  ///@todo
 
       const uint n_nodes_lev = mesh->_NoNodesXLev[Level];
       int* sol_on_Qnodes = new int[n_nodes_lev];  //this vector will contain the values of ONE variable on ALL the QUADRATIC nodes
@@ -1419,9 +1419,9 @@ namespace femus {
           for( int iel = 0;
                iel <    mesh->_off_el[VV][off_proc + Level + 1]
                - mesh->_off_el[VV][off_proc + Level]; iel++ ) {
-            for( uint is = 0; is < NRE[mesh->_eltype_flag[VV]]; is++ ) {
-              sol_on_cells[cel * NRE[mesh->_eltype_flag[VV]] + is] = bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar * mesh->_n_elements_vb_lev[VV][Level]]; //this depends on level!
-            }
+            // // // for( uint is = 0; is < GetNRE(mesh->_eltype_flag[VV]); is++ ) { ///@todo
+            // // //   sol_on_cells[cel * GetNRE(mesh->_eltype_flag[VV]) + is] = bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar * mesh->_n_elements_vb_lev[VV][Level]]; //this depends on level!
+            // // // }
             cel++;
           }
         }
@@ -1511,7 +1511,7 @@ namespace femus {
           n_children = 1;
         }
         else if( order_fe == LINEAR_FE ) {
-          n_children = NRE[mesh._eltype_flag[vb]];
+          // // // n_children = GetNRE(mesh._eltype_flag[vb]);  ///@todo
         }
 
 
@@ -1556,7 +1556,7 @@ namespace femus {
       n_children = 1;
     }
     else if( order_fe == LINEAR_FE ) {
-      n_children = NRE[mesh._eltype_flag[vb]];
+          // // // n_children = GetNRE(mesh._eltype_flag[vb]);  ///@todo
     }
     else {
       std::cout << "Mesh Not supported" << std::endl;
@@ -1571,7 +1571,7 @@ namespace femus {
     std::ostringstream coord_lev;
     coord_lev << "_L" << Level;
 
-    PrintXDMFTopology( out, top_file.str(), hdf_field.str(), type_el[order_fe][mesh._eltype_flag[vb]], nel * n_children, nel * n_children, NVE[mesh._eltype_flag[vb]][order_fe] );
+    PrintXDMFTopology( out, top_file.str(), hdf_field.str(), type_el[order_fe][mesh._eltype_flag[vb]], nel * n_children, nel * n_children, /*_ml_mesh->GetLevel(0)->GetMeshElements()->GetNVE(mesh._eltype_flag[vb] , order_fe)*/ NVE[ mesh._eltype_flag[vb] ][ order_fe ] );
 
     PrintXDMFGeometry( out, geom_file.str(), _nodes_name + "/COORD/X", coord_lev.str(), "X_Y_Z", "Double", mesh._NoNodesXLev[Level], 1 );
 
@@ -1611,7 +1611,10 @@ namespace femus {
 
       uint n_children;
       if( order == BIQUADR_FE )      n_children = 1;
-      else if( order == LINEAR_FE ) n_children = NRE[mesh._eltype_flag[vb]];
+      else if( order == LINEAR_FE ) 
+      {
+          // // // n_children = GetNRE(mesh._eltype_flag[vb]);  ///@todo
+      }
       else {
         std::cout << "Mesh Not supported" << std::endl;
         abort();
@@ -2288,7 +2291,7 @@ namespace femus {
 // ===========================================
     mesh._el_map = new uint*[VB];
     for( int vb = 0; vb < VB; vb++ )    {
-      mesh._el_map[vb] = new uint [mesh._off_el[vb][mesh._NoSubdom * mesh._NoLevels]*NVE[ mesh._geomelem_flag[mesh._dim - 1 - vb] ][BIQUADR_FE]];
+      mesh._el_map[vb] = new uint [mesh._off_el[vb][mesh._NoSubdom * mesh._NoLevels] * NVE[ mesh._geomelem_flag[mesh._dim - 1 - vb] ][BIQUADR_FE]];
       std::ostringstream elName;
       elName << "/ELEMS/VB" << vb  << "/CONN";
       XDMFWriter::read_UIhdf5( file_id, elName.str().c_str(), mesh._el_map[vb] );
@@ -2801,7 +2804,7 @@ namespace femus {
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = ml_prob.GetMeshTwo()._n_elements_vb_lev[VV][l] * NRE[ml_prob.GetMeshTwo()._eltype_flag[VV]];
+        // // // NGeomObjOnWhichToPrint[KK] = ml_prob.GetMeshTwo()._n_elements_vb_lev[VV][l] * GetNRE(ml_prob.GetMeshTwo()._eltype_flag[VV]);  ///@todo
 
         out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -2975,7 +2978,7 @@ namespace femus {
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = ml_prob.GetMeshTwo()._n_elements_vb_lev[VV][l] * NRE[ml_prob.GetMeshTwo()._eltype_flag[VV]];
+        // // // NGeomObjOnWhichToPrint[KK] = ml_prob.GetMeshTwo()._n_elements_vb_lev[VV][l] * GetNRE(ml_prob.GetMeshTwo()._eltype_flag[VV]);  ///@todo
 
         out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
