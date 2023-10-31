@@ -446,7 +446,8 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 //at the end of the optimization step, see the result for DIRECT and ADJOINT and CONTROL equations
 //now we are printing OUTSIDE the nonlinear loop, so we do not print the nonlinear steps
 const uint delta_opt_step = opt_step - _t_idx_in;
-     if (delta_opt_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),opt_step,pseudo_opttimeval,e_map_in);   //print sol.N.h5 and sol.N.xmf
+
+     // if (delta_opt_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),opt_step,pseudo_opttimeval,e_map_in);   //print sol.N.h5 and sol.N.xmf
 
 
      delete _x_tmp2;  //delete vector

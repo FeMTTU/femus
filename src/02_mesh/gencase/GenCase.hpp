@@ -16,6 +16,7 @@
 #include "ElemSto.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "SystemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 
 // libmesh
 #ifdef HAVE_LIBMESH
@@ -33,7 +34,8 @@ class GenCase : public MultiLevelMeshTwo {
 
 public:
 
-     GenCase(const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file);
+     GenCase(const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file,
+                                    const MultiLevelProblem& ml_prob);
     ~GenCase();                 
     
     void ElemChildToFather();
@@ -52,11 +54,11 @@ public:
     static void ReadProl(const std::string& name, SystemTwo * mysys);   
     static void ReadRest(const std::string& name, SystemTwo * mysys);
     
-    void CreateMeshStructuresLevSubd(const std::string output_path);
+    void CreateMeshStructuresLevSubd(const std::string output_path, const MultiLevelProblem & ml_prob);
     void Delete();
 
 //functions using libmesh
-    void GenerateCase(const std::string output_path);
+    void GenerateCase(const std::string output_path, const MultiLevelProblem & ml_prob);
     void GenerateCoarseMesh() const;
     void RefineMesh() const;
     void GenerateBoundaryMesh() const;

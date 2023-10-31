@@ -62,7 +62,8 @@
   const unsigned dim = 2;
   const GeomElType geomel_type = QUAD;
 
-  GenCase mesh(NoLevels,dim,geomel_type,"");
+  MultiLevelProblem ml_prob_temp;
+  GenCase mesh(NoLevels,dim,geomel_type,"", ml_prob_temp);
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -73,7 +74,7 @@
 
           mesh.SetDomain(&mybox);    
 	  
-          mesh.GenerateCase(files.GetOutputPath());
+          mesh.GenerateCase(files.GetOutputPath(), ml_prob_temp);
 
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());

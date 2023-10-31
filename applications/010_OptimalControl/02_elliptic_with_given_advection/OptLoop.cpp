@@ -49,7 +49,7 @@ namespace femus {
 #endif
 
       // print solution
-      if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,ml_prob);   //print sol.N.h5 and sol.N.xmf
+      // if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,ml_prob);   //print sol.N.h5 and sol.N.xmf
 
 
 #if DEFAULT_PRINT_TIME==1

@@ -640,7 +640,8 @@ namespace femus {
                                        std::string attr_center,
                                        std::string data_type,
                                        int data_dim_row,
-                                       int data_dim_col
+                                       int data_dim_col, 
+                                       const MultiLevelProblem & ml_prob
                                      ) {
 
     outstream << "<Attribute Name=\"" << attr_name << "\" "
@@ -663,7 +664,8 @@ namespace femus {
                                       std::string top_type,
                                       int top_dim,
                                       int datadim_n_elems,
-                                      int datadim_el_nodes
+                                      int datadim_el_nodes, 
+                                       const MultiLevelProblem & ml_prob
                                     ) {
 
     outfstream << "<Topology Type="
@@ -686,7 +688,8 @@ namespace femus {
                                       std::string geom_type,
                                       std::string data_type,
                                       int data_dim_one,
-                                      int data_dim_two ) {
+                                      int data_dim_two, 
+                                       const MultiLevelProblem & ml_prob ) {
 
     outfstream << "<Geometry Type=\"" << geom_type << "\"> \n";
     for( uint ix = 1; ix < 4; ix++ ) {
@@ -1460,7 +1463,8 @@ namespace femus {
 //but if you put ALL THE DATA in THE SAME FOLDER as the READER(s)
 //then they are always independent and the data will always be readable
 
-  void XDMFWriter::PrintMeshXDMF( const std::string output_path, const MultiLevelMeshTwo& mesh, const uint order_fe ) {
+  void XDMFWriter::PrintMeshXDMF( const std::string output_path, const MultiLevelMeshTwo& mesh, const uint order_fe,
+                                    const MultiLevelProblem& ml_prob ) {
 
     if( mesh._iproc == 0 ) {
 
@@ -1519,11 +1523,11 @@ namespace femus {
 
           out << "<Grid Name=\"" << meshname[vb].c_str() << "_L" << l << "\"> \n";
 
-          PrintXDMFTopGeom( out, top_file, geom_file, l, vb, mesh, order_fe );
+          PrintXDMFTopGeom( out, top_file, geom_file, l, vb, mesh, order_fe, ml_prob );
 
           std::ostringstream  pid_field;
           pid_field << "/PID/PID_VB" << vb << "_L" << l;
-          PrintXDMFAttribute( out, top_file.str(), pid_field.str(), "PID", "Scalar", "Cell", "Int", mesh._n_elements_vb_lev[vb][l]*n_children, 1 );
+          PrintXDMFAttribute( out, top_file.str(), pid_field.str(), "PID", "Scalar", "Cell", "Int", mesh._n_elements_vb_lev[vb][l]*n_children, 1, ml_prob );
 
           out << "</Grid> \n";
 
@@ -1547,7 +1551,9 @@ namespace femus {
 //print topology and geometry, useful for both case.xmf and sol.xmf
   void XDMFWriter::PrintXDMFTopGeom( std::ofstream& out,
                                      std::ostringstream& top_file,
-                                     std::ostringstream& geom_file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh, const uint order_fe ) {
+                                     std::ostringstream& geom_file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh,
+                                     const uint order_fe,
+                                    const MultiLevelProblem& ml_prob ) {
 
 #ifdef HAVE_HDF5
 
@@ -1571,9 +1577,9 @@ namespace femus {
     std::ostringstream coord_lev;
     coord_lev << "_L" << Level;
 
-    PrintXDMFTopology( out, top_file.str(), hdf_field.str(), type_el[order_fe][mesh._eltype_flag[vb]], nel * n_children, nel * n_children, /*_ml_mesh->GetLevel(0)->GetMeshElements()->GetNVE(mesh._eltype_flag[vb] , order_fe)*/ NVE[ mesh._eltype_flag[vb] ][ order_fe ] );
+    PrintXDMFTopology( out, top_file.str(), hdf_field.str(), type_el[order_fe][mesh._eltype_flag[vb]], nel * n_children, nel * n_children, ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE(mesh._eltype_flag[vb] , order_fe) , ml_prob );
 
-    PrintXDMFGeometry( out, geom_file.str(), _nodes_name + "/COORD/X", coord_lev.str(), "X_Y_Z", "Double", mesh._NoNodesXLev[Level], 1 );
+    PrintXDMFGeometry( out, geom_file.str(), _nodes_name + "/COORD/X", coord_lev.str(), "X_Y_Z", "Double", mesh._NoNodesXLev[Level], 1, ml_prob );
 
 #endif
 
@@ -1653,12 +1659,14 @@ namespace femus {
 
 // ========================================================
 /// It manages the printing in Xdmf format
-  void XDMFWriter::PrintMeshLinear( const std::string output_path, const MultiLevelMeshTwo& mesh ) {
+  void XDMFWriter::PrintMeshLinear( const std::string output_path,
+                                    const MultiLevelMeshTwo& mesh,
+                                    const MultiLevelProblem& ml_prob ) {
 
     const uint iproc = mesh._iproc;
     if( iproc == 0 ) {
-      PrintConnAllLEVAllVBLinearHDF5( output_path, mesh );
-      PrintMeshXDMF( output_path, mesh, LINEAR_FE );
+      PrintConnAllLEVAllVBLinearHDF5( output_path, mesh, ml_prob );
+      PrintMeshXDMF( output_path, mesh, LINEAR_FE, ml_prob );
     }
 
     return;
@@ -1668,7 +1676,8 @@ namespace femus {
 
 // ========================================================
 /// It prints the connectivity in hdf5 format
-  void XDMFWriter::PrintConnAllLEVAllVBLinearHDF5( const std::string output_path, const MultiLevelMeshTwo& mesh ) {
+  void XDMFWriter::PrintConnAllLEVAllVBLinearHDF5( const std::string output_path, const MultiLevelMeshTwo& mesh,
+                                    const MultiLevelProblem& ml_prob  ) {
 
     std::string auxvb[VB];
     auxvb[0] = "0";
@@ -1694,7 +1703,7 @@ namespace femus {
 
       hid_t subgroup_id = H5Gcreate( file, elems_fem_vb.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
 
-      for( uint l = 0; l < mesh._NoLevels; l++ )   PrintConnLinearHDF5( file, l, vb, mesh );
+      for( uint l = 0; l < mesh._NoLevels; l++ )   PrintConnLinearHDF5( file, l, vb, mesh, ml_prob );
 
       H5Gclose( subgroup_id );
 
@@ -1712,13 +1721,14 @@ namespace femus {
 
 
 
-  void XDMFWriter::PrintConnLinearHDF5( hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh ) {
+  void XDMFWriter::PrintConnLinearHDF5( hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh,
+                                    const MultiLevelProblem& ml_prob  ) {
 
     int conn[8][8];  //TODO this is the largest dimension, bad programming
     uint* gl_conn;
 
     uint icount = 0;
-    uint mode = NVE[ mesh._geomelem_flag[mesh._dim - 1 - vb] ][BIQUADR_FE];
+    uint mode = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , BIQUADR_FE );
     uint n_elements = mesh._n_elements_vb_lev[vb][Level];
     uint nsubel, nnodes;
 
@@ -2109,7 +2119,8 @@ namespace femus {
 // or only for PROC==0? Seems to be for all processors
 // TODO do we need the leading "/" for opening a dataset?
 // This routine reads the mesh file and also makes it NONDIMENSIONAL, so that everything is solved on a nondimensional mesh
-  void XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5( const std::string output_path, MultiLevelMeshTwo& mesh )   {
+  void XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5( const std::string output_path, MultiLevelMeshTwo& mesh,
+                                    const MultiLevelProblem& ml_prob  )   {
 
     std::string    basemesh = DEFAULT_BASEMESH;
     std::string      ext_h5 = DEFAULT_EXT_H5;
@@ -2170,7 +2181,9 @@ namespace femus {
     XDMFWriter::read_UIhdf5( file_id, "/ELNODES_VB", &mesh._type_FEM[0] );
 
     for( int vb = 0; vb < VB; vb++ ) {
-      if( mesh._type_FEM[vb] !=  NVE[ mesh._geomelem_flag[mesh._dim - 1 - vb] ][BIQUADR_FE] )  {
+      if( mesh._type_FEM[vb] !=  
+        ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , BIQUADR_FE)  
+        )  {
         std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the element type of the mesh is" <<
                   "different from the element type as given by the GeomEl" << std::endl;
         abort();
@@ -2291,7 +2304,7 @@ namespace femus {
 // ===========================================
     mesh._el_map = new uint*[VB];
     for( int vb = 0; vb < VB; vb++ )    {
-      mesh._el_map[vb] = new uint [mesh._off_el[vb][mesh._NoSubdom * mesh._NoLevels] * NVE[ mesh._geomelem_flag[mesh._dim - 1 - vb] ][BIQUADR_FE]];
+      mesh._el_map[vb] = new uint [ mesh._off_el[vb][mesh._NoSubdom * mesh._NoLevels] * ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , BIQUADR_FE) ];
       std::ostringstream elName;
       elName << "/ELEMS/VB" << vb  << "/CONN";
       XDMFWriter::read_UIhdf5( file_id, elName.str().c_str(), mesh._el_map[vb] );
@@ -2319,7 +2332,8 @@ namespace femus {
 
 
 // ===============================================================
-  void XDMFWriter::PrintMeshBiquadraticHDF5( const std::string output_path, const MultiLevelMeshTwo& mesh )  {
+  void XDMFWriter::PrintMeshBiquadraticHDF5( const std::string output_path, const MultiLevelMeshTwo& mesh,
+                                    const MultiLevelProblem& ml_prob )  {
 
     std::ostringstream name;
 
@@ -2356,7 +2370,7 @@ namespace femus {
     int* ttype_FEM;
     ttype_FEM = new int[VB];
 
-    for( uint vb = 0; vb < VB; vb++ )   ttype_FEM[vb] = NVE[ mesh._geomelem_flag[mesh.get_dim() - 1 - vb] ][BIQUADR_FE];
+    for( uint vb = 0; vb < VB; vb++ )   ttype_FEM[vb] = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh.get_dim() - 1 - vb] , BIQUADR_FE );
 
     dimsf[0] = VB;
     dimsf[1] = 1;
@@ -2810,7 +2824,7 @@ namespace femus {
 
         out << "<Time Value =\"" << curr_time << "\" /> \n";
 
-        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), LINEAR_FE );
+        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), LINEAR_FE, ml_prob );
 
         MultiLevelProblem::const_system_iterator pos1   = ml_prob.begin();
         MultiLevelProblem::const_system_iterator pos1_e = ml_prob.end();
@@ -2824,7 +2838,7 @@ namespace femus {
             for( uint ivar = 0; ivar < mgsol->_dofmap._nvars[fe]; ivar++ )   {
               std::ostringstream var_name;
               var_name << mgsol->_var_names[ OffVarNames[fe] + ivar] << "_LEVEL" << l;
-              PrintXDMFAttribute( out, hdf_file.str(), var_name.str(), var_name.str(), "Scalar", DofType[fe], "Double", NGeomObjOnWhichToPrint[fe], 1 );
+              PrintXDMFAttribute( out, hdf_file.str(), var_name.str(), var_name.str(), "Scalar", DofType[fe], "Double", NGeomObjOnWhichToPrint[fe], 1, ml_prob );
             }
           } // end fe
         }
@@ -2983,7 +2997,7 @@ namespace femus {
         out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
         // TOPOLOGY GEOMETRY ===========
-        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), LINEAR_FE );
+        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), LINEAR_FE , ml_prob);
 
         // ATTRIBUTES FOR EACH SYSTEM ===========
         MultiLevelProblem::const_system_iterator pos1 = ml_prob.begin();
@@ -3003,7 +3017,7 @@ namespace femus {
               var_name[BB] = var_name[VV] + bdry_suffix;
               var_type[BB] = "Int";
               for( int vb = 0; vb < VB; vb++ ) {
-                PrintXDMFAttribute( out, hdf_file.str(), var_name[vb], var_name[vb], "Scalar", DofType[fe], var_type[vb], NGeomObjOnWhichToPrint[fe], 1 );
+                PrintXDMFAttribute( out, hdf_file.str(), var_name[vb], var_name[vb], "Scalar", DofType[fe], var_type[vb], NGeomObjOnWhichToPrint[fe], 1, ml_prob );
               }
             }
           } //end fe

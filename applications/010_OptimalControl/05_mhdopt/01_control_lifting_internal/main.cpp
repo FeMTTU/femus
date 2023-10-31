@@ -87,7 +87,10 @@ int main(int argc, char** argv) {
   const unsigned NoLevels = 1;
   const unsigned dim = 3;
   const GeomElType geomel_type = HEX;
-    GenCase mesh(NoLevels,dim,geomel_type,"");
+
+  MultiLevelProblem ml_prob_temp;
+  
+    GenCase mesh(NoLevels,dim,geomel_type,"", ml_prob_temp);
           mesh.SetLref(1.);
 
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -97,14 +100,14 @@ int main(int argc, char** argv) {
 
           mesh.SetDomain(&mybox);
 
-          mesh.GenerateCase(files.GetOutputPath());
+          mesh.GenerateCase(files.GetOutputPath(), ml_prob_temp);
 
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 
-          XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(files.GetOutputPath(),mesh);
-	  XDMFWriter::PrintMeshXDMF(files.GetOutputPath(),mesh,BIQUADR_FE);
-          XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
+   //        XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(files.GetOutputPath(),mesh);
+	  // XDMFWriter::PrintMeshXDMF(files.GetOutputPath(),mesh,BIQUADR_FE);
+   //        XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
 
   // ===== QuantityMap =========================================
   QuantityMap  qty_map;

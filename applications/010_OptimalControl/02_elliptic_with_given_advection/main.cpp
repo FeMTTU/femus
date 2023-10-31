@@ -70,7 +70,10 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   const unsigned NoLevels = 3;
   const unsigned dim = 2;
   const GeomElType geomel_type = QUAD;
-  GenCase mesh(NoLevels,dim,geomel_type,"inclQ2D2x2.gam");
+
+  MultiLevelProblem ml_prob_temp;
+
+  GenCase mesh(NoLevels,dim,geomel_type,"inclQ2D2x2.gam", ml_prob_temp);
           mesh.SetLref(1.);
 
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -80,14 +83,14 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
 
           mesh.SetDomain(&mybox);
 
-          mesh.GenerateCase(files.GetOutputPath());
+          mesh.GenerateCase(files.GetOutputPath(), ml_prob_temp);
 
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 
-          XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(files.GetOutputPath(),mesh);
-	  XDMFWriter::PrintMeshXDMF(files.GetOutputPath(),mesh,BIQUADR_FE);
-          XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
+          // XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(files.GetOutputPath(),mesh);
+	  // XDMFWriter::PrintMeshXDMF(files.GetOutputPath(),mesh,BIQUADR_FE);
+          // XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
 
   //gencase is dimensionalized, meshtwo is nondimensionalized
   //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh

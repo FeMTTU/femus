@@ -39,7 +39,7 @@ namespace femus {
 
 class Files;
 class Domain;
-
+class MultiLevelProblem;
 
   
 class MultiLevelMeshTwo  {
@@ -48,7 +48,8 @@ public:
 
 //===== Constructors/ Destructor ===========
      MultiLevelMeshTwo () : _dim(0) { };
-     MultiLevelMeshTwo (const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in);
+     MultiLevelMeshTwo (const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in,
+                                    const MultiLevelProblem& ml_prob);
     void clear ();
 
     //======= mesh generation functions ====

@@ -16,6 +16,7 @@
 #include "Files.hpp"
 #include "XDMFWriter.hpp"
 #include "GeomElemBase.hpp"
+#include "MultiLevelProblem.hpp"
 
 // LibMesh
 #ifdef HAVE_LIBMESH
@@ -34,8 +35,9 @@ using namespace libMesh;
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in)
-     : MultiLevelMeshTwo(nolevels,dim,geomel_type,mesh_file_in)
+GenCase::GenCase(const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in,
+                                    const MultiLevelProblem& ml_prob)
+     : MultiLevelMeshTwo(nolevels,dim,geomel_type,mesh_file_in, ml_prob)
 {
 
    _feelems.resize(QL_NODES);
@@ -67,7 +69,7 @@ GenCase::~GenCase() {
 
 
 // =======================================================
-void GenCase::GenerateCase(const std::string output_path)   {
+void GenCase::GenerateCase(const std::string output_path, const MultiLevelProblem & ml_prob)   {
 #ifdef HAVE_LIBMESH //i am putting this inside because there are no libmesh dependent arguments
   
   
@@ -97,7 +99,7 @@ void GenCase::GenerateCase(const std::string output_path)   {
     delete _msh_all_levs;
     delete _msh_coarse;
 
-    CreateMeshStructuresLevSubd(output_path);    //only proc==0
+    CreateMeshStructuresLevSubd(output_path, ml_prob);    //only proc==0
     
     ComputeAndPrintMGOperators(output_path);    //only proc==0
 
@@ -577,7 +579,7 @@ void  GenCase::GrabMeshinfoFromLibmesh() {
 //==============================================================================
 //=============== CREATE FEMUS MESH, MAT, PROL, REST (only proc0) ==============
 //==============================================================================
-void GenCase::CreateMeshStructuresLevSubd(const std::string output_path) {
+void GenCase::CreateMeshStructuresLevSubd(const std::string output_path, const MultiLevelProblem & ml_prob) {
 
     if (_iproc == 0)   {  //serial function
 //================================================
@@ -612,7 +614,7 @@ void GenCase::CreateMeshStructuresLevSubd(const std::string output_path) {
 
         ComputeNodeMapExtLevels();
 
-        XDMFWriter::PrintMeshBiquadraticHDF5(output_path,*this);
+        XDMFWriter::PrintMeshBiquadraticHDF5(output_path,*this, ml_prob);
 
 // delete the boundary part, no more needed
         for (int i=0;i<_n_elements_sum_levs[BB];i++)      delete  _el_sto_b[i];
