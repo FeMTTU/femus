@@ -404,10 +404,10 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
       if(flag_mat == 4) { ///@todo Where on Earth do we say that 4 is a special flag for the solid
         unsigned elementType = GetElementType(iel);
-        unsigned nve = el->GetNVE(elementType, 2);
+        unsigned nve = el->GetNVE(elementType, BIQUADR_FE);
 
         for(unsigned i = 0; i < nve; i++) {
-          unsigned inode = GetSolutionDof(i, iel, 2);
+          unsigned inode = GetSolutionDof(i, iel, BIQUADR_FE);
           NodeMaterial.set(inode, 1);
         }
       }

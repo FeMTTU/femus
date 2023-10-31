@@ -279,6 +279,21 @@ namespace femus {
       
   private:
     
+    
+  /**
+   * Number of degrees of freedom per geometric element per FE family:
+   * linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
+  **/
+  const unsigned NVE[N_GEOM_ELS][NFE_FAMS] = {
+    {8, 20, 27, 1, 4}, //hex
+    {4, 10, 15, 1, 4}, //tet
+    {6, 15, 21, 1, 4}, //wedge
+    {4, 8, 9, 1, 3}, //quad
+    {3, 6, 7, 1, 3}, //tri
+    {2, 3, 3, 1, 2}  //line
+  };
+  
+    
   const unsigned NFACENODES[ N_GEOM_ELS ][ MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL ][ NFE_FAMS_C_ZERO_LAGRANGE ] = {
     { {4, 8, 9}, // Hex
       {4, 8, 9},
@@ -542,18 +557,6 @@ namespace femus {
   };
   
 
-  /**
-   * Number of degrees of freedom per geometric element per FE family:
-   * linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
-  **/
-  const unsigned NVE[N_GEOM_ELS][NFE_FAMS] = {
-    {8, 20, 27, 1, 4}, //hex
-    {4, 10, 15, 1, 4}, //tet
-    {6, 15, 21, 1, 4}, //wedge
-    {4, 8, 9, 1, 3}, //quad
-    {3, 6, 7, 1, 3}, //tri
-    {2, 3, 3, 1, 2}  //line
-  };
 
 
 

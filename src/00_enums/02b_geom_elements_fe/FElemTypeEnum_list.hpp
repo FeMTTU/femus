@@ -17,10 +17,12 @@ namespace femus {
 #define NFE_FAMS 5
 #define NFE_FAMS_C_ZERO_LAGRANGE  3  
 
-#define LINEAR_FE    0
-#define BIQUADR_FE   2
 
-
+enum FEFamiliesAsAList {
+    LINEAR_FE      = 0,
+    SERENDIPITY_FE,
+    BIQUADR_FE     
+};
 
 
 
