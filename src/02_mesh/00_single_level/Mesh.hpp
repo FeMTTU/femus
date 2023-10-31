@@ -233,7 +233,7 @@ private:
     
     
     /** Weights used to build the baricentric coordinate to compute the missing biquadratic nodes **/
-    static const double _baricentricWeight[N_GEOM_ELS][NFE_FAMS][MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES];
+    static const double _baricentricWeight[N_GEOM_ELS][NFE_FAMS][MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES_TO_USE_IN_WEIGHTING];
     
     static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
     

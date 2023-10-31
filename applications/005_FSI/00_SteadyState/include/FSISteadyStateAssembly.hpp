@@ -1350,7 +1350,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
  void allocate_element_faces(  std::vector< MyMatrix <int> > & _element_faces, /*const*/ MultiLevelMesh & ml_msh) {
 
-  _element_faces[0].resize( ml_msh.GetLevel(0)->GetNumberOfElements(), NFC[0][1], -1);  /*NFC[0][1]: maximum possible number of faces*/
+  _element_faces[0].resize( ml_msh.GetLevel(0)->GetNumberOfElements(), ml_msh.GetLevel(0)->GetMeshElements()->GetNFC(0,1), -1);  /*NFC[0][1]: maximum possible number of faces*/
 
   
   for (unsigned lev = 1; lev < _element_faces.size(); lev++) {
@@ -1382,7 +1382,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
         }
         
         for (unsigned j = 0; j < increment; j++) {
-          rowSizeElNearFace[jel + j] += NFC[elType][1];
+          rowSizeElNearFace[jel + j] += ml_msh.GetLevel(0)->GetMeshElements()->GetNFC(elType,1);
         }
         
         jel += increment;

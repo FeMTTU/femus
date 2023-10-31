@@ -123,7 +123,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
   
   const unsigned Mesh::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0, 5, 3, 0, 1, 0};
-  const double Mesh::_baricentricWeight[N_GEOM_ELS][NFE_FAMS][MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES] = {
+  const double Mesh::_baricentricWeight[N_GEOM_ELS][NFE_FAMS][MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES_TO_USE_IN_WEIGHTING] = {
     {},
     {
       { -1. / 9., -1. / 9., -1. / 9.,  0    , 4. / 9., 4. / 9., 4. / 9., 0.   , 0.   , 0.   },

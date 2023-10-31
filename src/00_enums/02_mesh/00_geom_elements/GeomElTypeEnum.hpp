@@ -20,9 +20,13 @@ enum  GeomElType { HEX=0,
                  };
 
                  
-#define MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES   18
                 
 #define N_GEOM_ELS 6
+
+#define MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL   6
+#define MAXIMUM_NUMBER_OF_NODES_PER_FACE      9
+
+#define MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES_TO_USE_IN_WEIGHTING   18
 
 #define MAX_EL_N_NODES 27
 

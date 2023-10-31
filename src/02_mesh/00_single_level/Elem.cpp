@@ -567,7 +567,7 @@ namespace femus
     return index;
   }
 
-  void elem::AllocateChildrenElement(const unsigned& refindex, Mesh* msh)
+  void elem::AllocateChildrenElement(const unsigned& refindex, const Mesh* msh)
   {
     MyVector <unsigned> rowSize(_elementOffset, 0);
     for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {

@@ -97,12 +97,6 @@ namespace femus {
       void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
 
       /** To be Added */
-      void AddToElementNumber(const unsigned& value, const char name[]);
-
-      /** To be Added */
-      void AddToElementNumber(const unsigned& value, short unsigned ielt);
-
-      /** To be Added */
       unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1);
 
       /** To be Added */
@@ -169,21 +163,89 @@ namespace femus {
 
 
       /** To be Added */
-      void AllocateChildrenElement(const unsigned& ref_index, Mesh* msh);
+      void AllocateChildrenElement(const unsigned int& refindex, const Mesh* msh);
 
       /** To be Added */
       void SetChildElement(const unsigned& iel, const unsigned& json, const unsigned& value);
 
       /** To be Added */
       unsigned GetChildElement(const unsigned& iel, const unsigned& json);
+      
 
-      const unsigned GetNVE(const unsigned& elementType, const unsigned& doftype) const;
-
-      const unsigned GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const;
-
+// === Geometric Element, Single - BEGIN =================
+  public:
+    
       const unsigned GetNFC(const unsigned& elementType, const unsigned& type) const;
 
       const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const;
+      
+  private:
+
+  /**
+   * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
+   * The 1st number is the quadrilaterals
+   * The 2nd number is such that the different "2nd - 1st" is the number of triangular faces
+   **/
+  const unsigned NFC[N_GEOM_ELS][2] = {
+    {6, 6},
+    {0, 4},
+    {3, 5},
+    {0, 4},
+    {0, 3},
+    {0, 2}
+  };
+
+    
+  /**
+   * Node ordering for each element face(3D), edge(2D) or point-extrema(1D) position for each considered element
+   **/
+  const unsigned ig[ N_GEOM_ELS ][ MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL ][ MAXIMUM_NUMBER_OF_NODES_PER_FACE ] = {
+    { {0, 1, 5, 4, 8, 17, 12, 16, 20},
+      {1, 2, 6, 5, 9, 18, 13, 17, 21},
+      {2, 3, 7, 6, 10, 19, 14, 18, 22},
+      {3, 0, 4, 7, 11, 16, 15, 19, 23},
+      {0, 3, 2, 1, 11, 10, 9, 8, 24},
+      {4, 5, 6, 7, 12, 13, 14, 15, 25}
+    },
+    { {0, 2, 1, 6, 5, 4, 10},
+      {0, 1, 3, 4, 8, 7, 11},
+      {1, 2, 3, 5, 9, 8, 12},
+      {2, 0, 3, 6, 7, 9, 13}
+    },
+    { {0, 1, 4, 3, 6, 13, 9, 12, 15},
+      {1, 2, 5, 4, 7, 14, 10, 13, 16},
+      {2, 0, 3, 5, 8, 12, 11, 14, 17},
+      {0, 2, 1, 8, 7, 6, 18},
+      {3, 4, 5, 9, 10, 11, 19}
+    },
+    { {0, 1, 4},
+      {1, 2, 5},
+      {2, 3, 6},
+      {3, 0, 7}
+    },
+    { {0, 1, 3},
+      {1, 2, 4},
+      {2, 0, 5}
+    },
+    { {0},
+      {1}
+    }
+  };
+// === Geometric Element, Single - END =================
+    
+    
+    
+// === Geometric Element, FE, Single - BEGIN =================
+  public:
+
+      const unsigned GetNVE(const unsigned& elementType, const unsigned& doftype) const;
+      
+      const unsigned GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const;
+      
+    
+// === Geometric Element, FE, Single - END =================
+
+
 
 
 
@@ -251,6 +313,12 @@ namespace femus {
       void SetRefinedElementNumber(const unsigned& value) {
         _nelr = value;
       };
+
+      /** To be Added */
+      void AddToElementNumber(const unsigned& value, const char name[]);
+
+      /** To be Added */
+      void AddToElementNumber(const unsigned& value, short unsigned ielt);
 
     private:
       
@@ -395,17 +463,20 @@ namespace femus {
       MyMatrix <unsigned> _elementNearElement;
 
       
-// === Refinement - NOT USED - BEGIN =================
+// === Refinement, AMR - BEGIN =================
     public:
       
       void GetAMRRestriction(Mesh *msh);
-// === Refinement - NOT USED - END =================
+// === Refinement, AMR - END =================
       
 
   };
   
 
-//linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
+  /**
+   * Number of degrees of freedom per geometric element per FE family:
+   * linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
+  **/
   const unsigned NVE[N_GEOM_ELS][NFE_FAMS] = {
     {8, 20, 27, 1, 4}, //hex
     {4, 10, 15, 1, 4}, //tet
@@ -420,58 +491,9 @@ namespace femus {
   **/
   const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
 
-  /**
-   * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
-   * The 1st number is the quadrilaterals
-   * The 2nd number is such that the different "2nd - 1st" is the number of triangular faces
-   **/
-  const unsigned NFC[N_GEOM_ELS][2] = {
-    {6, 6},
-    {0, 4},
-    {3, 5},
-    {0, 4},
-    {0, 3},
-    {0, 2}
-  };
-
-  /**
-   * Node ordering for each element face(3D), edge(2D) or point-extrema(1D) position for each considered element
-   **/
-  const unsigned ig[N_GEOM_ELS][6][9] = {
-    { {0, 1, 5, 4, 8, 17, 12, 16, 20},
-      {1, 2, 6, 5, 9, 18, 13, 17, 21},
-      {2, 3, 7, 6, 10, 19, 14, 18, 22},
-      {3, 0, 4, 7, 11, 16, 15, 19, 23},
-      {0, 3, 2, 1, 11, 10, 9, 8, 24},
-      {4, 5, 6, 7, 12, 13, 14, 15, 25}
-    },
-    { {0, 2, 1, 6, 5, 4, 10},
-      {0, 1, 3, 4, 8, 7, 11},
-      {1, 2, 3, 5, 9, 8, 12},
-      {2, 0, 3, 6, 7, 9, 13}
-    },
-    { {0, 1, 4, 3, 6, 13, 9, 12, 15},
-      {1, 2, 5, 4, 7, 14, 10, 13, 16},
-      {2, 0, 3, 5, 8, 12, 11, 14, 17},
-      {0, 2, 1, 8, 7, 6, 18},
-      {3, 4, 5, 9, 10, 11, 19}
-    },
-    { {0, 1, 4},
-      {1, 2, 5},
-      {2, 3, 6},
-      {3, 0, 7}
-    },
-    { {0, 1, 3},
-      {1, 2, 4},
-      {2, 0, 5}
-    },
-    { {0},
-      {1}
-    }
-  };
 
 
-  const unsigned NFACENODES[N_GEOM_ELS][6][3] = {
+  const unsigned NFACENODES[ N_GEOM_ELS ][ MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL ][ NFE_FAMS_C_ZERO_LAGRANGE ] = {
     { {4, 8, 9}, // Hex
       {4, 8, 9},
       {4, 8, 9},
@@ -534,7 +556,7 @@ const unsigned referenceElementDirection[N_GEOM_ELS][3][2] = { //Endpoint1, Endp
 #endif
 
 
-// ********************  class solver**************************
+// ******************** GEOMETRIC ELEMENTS, NODE NUMBERING - BEGIN **************************
 
 /*
 
@@ -617,3 +639,4 @@ const unsigned referenceElementDirection[N_GEOM_ELS][3][2] = { //Endpoint1, Endp
 //	0-----2-----1
 //
 */
+// ******************** GEOMETRIC ELEMENTS, NODE NUMBERING - END **************************
