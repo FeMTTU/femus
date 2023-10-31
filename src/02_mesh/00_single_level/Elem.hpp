@@ -21,7 +21,6 @@
 #include "FElemTypeEnum_list.hpp"
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
-#include "Basis.hpp"
 #include "PolynomialBases.hpp"
 
 
@@ -32,7 +31,6 @@
 namespace femus {
 
   //Forward declarations  
-  class basis;
   class Mesh;
   /**
    * The elem class: it contains the list of all Mesh Geometric Elements, along with several Element-based and also Node-based properties
@@ -58,80 +56,43 @@ namespace femus {
     public:
 
 
-      void ShrinkToFitElementNearFace();
-      void ScatterElementNearFace();
-      void LocalizeElementNearFace(const unsigned& jproc);
-      void FreeLocalizedElementNearFace();
-
-      void ShrinkToFitElementDof();
-      void ScatterElementDof();
-      void LocalizeElementDof(const unsigned &jproc);
-      void FreeLocalizedElementDof();
-
       // reorder the element according to the new element mapping
       void ReorderMeshElements(const std::vector < unsigned >& elementMapping);
 
       // reorder the nodes according to the new node mapping
       void ReorderMeshNodes(const std::vector < unsigned >& nodeMapping);
+      
+      
 
-      /** To be Added */
-      unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type);
-
-      /** Return the local->global node number */
-      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode);
-
-      /** To be Added */
-      void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
-
-      /** To be Added */
-      unsigned GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode);
-
-      MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; } 
-
-      /** To be Added */
-      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
-
-      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface);
-
-      /** To be Added */
-      void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
+      
+      
+      
 
       /** To be Added */
       unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1);
 
-      /** To be Added */
-      void BuildElementNearVertex();
+      
+      
+      
 
-      /** To be Added */
-      void SetChildElementDof(elem* elf);
+      
+      
+      
+      
+      
 
-      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1);
-
-      void DeleteElementNearVertex();
-
-      /** To be Added */
-      unsigned GetElementNearVertexNumber(const unsigned& inode);
-
-      /** To be Added */
-      unsigned GetElementNearVertex(const unsigned& inode, const unsigned& jnode);
-
-      void BuildElementNearElement();
-
-      /** To be added */
-      void BuildElementNearFace();
 
       void BuildMeshElemStructures();
       
-      const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers)  {
-        return (layers == 0) ? 1 : _elementNearElement.end(iel);
-      };
-
-      const unsigned GetElementNearElement(const unsigned& iel, const unsigned &j)  {
-        return _elementNearElement[iel][j];
-      };
-
 
       //BEGIN _ElementLevel functions
+      void ResizeElementQuantities(const unsigned nel_in, const unsigned level_in) {
+       _elementLevel.resize(nel_in, level_in);
+       _elementType.resize(nel_in);
+       _elementGroup.resize(nel_in);
+       _elementMaterial.resize(nel_in);
+      }
+      
       void ScatterElementQuantities() {
         _elementLevel.scatter(_elementOffset);
         _elementType.scatter(_elementOffset);
@@ -162,6 +123,11 @@ namespace femus {
       //END _ElementLevel functions
 
 
+      /** To be Added */
+      void SetChildElementDof(elem* elf);
+
+      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1);
+      
       /** To be Added */
       void AllocateChildrenElement(const unsigned int& refindex, const Mesh* msh);
 
@@ -507,7 +473,69 @@ namespace femus {
       std::vector<unsigned> _materialElementCounter;
     
 // === Elements, Materials - END =================
+
+
+
+// === Elements, Elements with a common Face to the current element - BEGIN =================
+   public:
+     
+      /** To be Added */
+      void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
+
+      /** To be Added */
+      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
+
+      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface);
+     
+      /** To be added */
+      void BuildElementNearFace();
       
+      void ShrinkToFitElementNearFace();
+      void ScatterElementNearFace();
+      void LocalizeElementNearFace(const unsigned& jproc);
+      void FreeLocalizedElementNearFace();
+
+      MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; } 
+
+
+   private:
+     
+      /** For every element, it is initialized to -1, and if there is a near element attached to a face, it stores that value. It is used for BCs as well */
+      MyMatrix <int> _elementNearFace;
+
+// === Elements, Elements with a common Face to the current element - END =================
+ 
+
+// === Elements, all elements near the current element, including those with a common vertex - BEGIN =================
+  public:
+      
+      void BuildElementNearElement();
+
+      const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers)  {
+        return (layers == 0) ? 1 : _elementNearElement.end(iel);
+      };
+
+      const unsigned GetElementNearElement(const unsigned& iel, const unsigned &j)  {
+        return _elementNearElement[iel][j];
+      };
+
+      
+   private:
+     
+      /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
+        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
+      MyMatrix <unsigned> _elementNearElement;
+// === Elements, all elements near the current element, including those with a common vertex - END =================
+
+
+
+// === Elements, Refinement - BEGIN =================
+  public:
+      
+   private:
+// === Elements, Refinement - END =================
+
+
       
 // === Nodes - BEGIN =================
   public:
@@ -526,25 +554,61 @@ namespace femus {
 // === Nodes - END =================
 
 
+// === Nodes, Elements having that Node as a vertex - BEGIN =================
+  public:
+      
+      /** To be Added */
+      void BuildElementNearVertex();
+
+      void DeleteElementNearVertex();
+
+      /** To be Added */
+      unsigned GetElementNearVertexNumber(const unsigned& inode);
+
+      /** To be Added */
+      unsigned GetElementNearVertex(const unsigned& inode, const unsigned& jnode);
+
+   private:
+      
+      /** For each Node, it gives the list of elements having that Node as a vertex 
+        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
+      MyMatrix <unsigned> _elementNearVertex;
+      
+// === Nodes, Elements having that Node as a vertex - END =================      
+
+
+// === DOF, Local->Global (element-based) Dofmap for 1 scalar variable - BEGIN =================
+  public:
+      
+      /** To be Added */
+      unsigned GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode);
+
+      void ShrinkToFitElementDof();
+      void ScatterElementDof();
+      void LocalizeElementDof(const unsigned &jproc);
+      void FreeLocalizedElementDof();
+
+      /** To be Added */
+      unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type);
+
+      /** Return the local->global node number */
+      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode);
+
+      /** To be Added */
+      void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
+      
+  private:
+     /** For each element, gives the conversion from local node index to global node index */
+      MyMatrix <unsigned> _elementDof;
+// === DOF, Local->Global (element-based) Dofmap for 1 scalar variable - END =================
 
    private:
      
-     /** For each element, gives the conversion from local node index to global node index */
-      MyMatrix <unsigned> _elementDof;
-      /** @todo this is about the elements attached to each face. It is used for BCs as well */
-      MyMatrix <int> _elementNearFace;
-
       /** This is only going to all levels except the finest one  @todo I think it contains for each element the list of its child elements */
       MyMatrix <unsigned> _childElem;
       /** This is only going to all levels except the finest one */
       MyMatrix <unsigned> _childElemDof;
 
-      /** For each Node, it gives the list of elements having that Node as a vertex 
-        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
-      MyMatrix <unsigned> _elementNearVertex;
-      /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
-        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
-      MyMatrix <unsigned> _elementNearElement;
 
       
 // === Refinement, AMR - BEGIN =================

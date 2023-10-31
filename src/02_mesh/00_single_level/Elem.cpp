@@ -22,6 +22,8 @@
 #include "GeomElTypeEnum.hpp"
 #include "NumericVector.hpp"
 
+#include "Basis.hpp"
+
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -48,13 +50,13 @@ namespace femus
 
     _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
     _nel = other_nel;
+    
 
-    _elementType.resize(_nel);
-    _elementGroup.resize(_nel);
-    _elementMaterial.resize(_nel);
-    _elementLevel.resize(_nel, _level);
-
+    ResizeElementQuantities(_nel, _level);
+    
+    
     _elementDof.resize(_nel, NVE[0][2], UINT_MAX);
+    
     _elementNearFace.resize(_nel, NFC[0][1], -1);
 
 }
@@ -74,13 +76,13 @@ namespace femus
     _level = elc->_level + 1;
 
     _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
+    
     _nel = elc->GetRefinedElementNumber() * refindex; //refined
     _nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
+    
 
-    _elementType.resize(_nel);
-    _elementGroup.resize(_nel);
-    _elementMaterial.resize(_nel);
-    _elementLevel.resize(_nel, _level);
+    ResizeElementQuantities(_nel, _level);
+    
 
     //**************************
     MyVector <unsigned> rowSizeElDof(_nel);
@@ -102,7 +104,9 @@ namespace femus
       }
       elc->_elementType.clearBroadcast();
     }
+    
     _elementDof = MyMatrix <unsigned> (rowSizeElDof);
+    
     _elementNearFace = MyMatrix <int> (rowSizeElNearFace, -1);
 
     rowSizeElDof.clear();
@@ -460,6 +464,7 @@ namespace femus
       rowSize[iel] = elements.size();
     }
     _elementNearElement = MyMatrix <unsigned> (rowSize, UINT_MAX);
+    
     for (unsigned iel = _elementNearElement.begin(); iel < _elementNearElement.end(); iel++) {
       std::map< unsigned, bool> elements;
       _elementNearElement[iel][0] = iel;
