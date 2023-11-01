@@ -195,19 +195,19 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     _mesh.SetLevel(igrid);
     
     
-//info from the coarse mesh    
+//info from the coarse mesh - BEGIN   
     _mesh.SetCoarseMesh(mshc);
 
     elem* elc = mshc->el;
 
     _mesh.SetFiniteElementPtr(otherFiniteElement);
+//info from the coarse mesh - END
 
     
 //====== BEGIN ELEMENTS  ==============================
 
     // total number of elements on the fine level
-    int nelem = elc->GetRefinedElementNumber() * _mesh.GetRefIndex(); // refined
-    nelem += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // not-refined
+     int nelem = elem::InitializeNumberOfElementsFromCoarseList(elc, _mesh.GetRefIndex() );
 
     _mesh.SetNumberOfElements(nelem);
 
@@ -217,7 +217,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     std::vector < double > coarseLocalizedAmrVector;
     mshc->_topology->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
-    mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), mshc);
+    mshc->el->AllocateChildrenElementChildrenElementDof(_mesh.GetRefIndex(), mshc);
 
     _mesh.el = new elem(elc, mshc->GetDimension(), _mesh.GetRefIndex(), coarseLocalizedAmrVector);
 
@@ -235,7 +235,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
         
       elc->LocalizeElementDof(isdom);
       elc->LocalizeElementNearFace(isdom);
-      elc->LocalizeElementQuantities(isdom);
+      elc->LocalizeElement_Level_Type_Group_Material(isdom);
       
       for(unsigned iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           
@@ -323,7 +323,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
       
       elc->FreeLocalizedElementDof();
       elc->FreeLocalizedElementNearFace();
-      elc->FreeLocalizedElementQuantities();
+      elc->FreeLocalizedElement_Level_Type_Group_Material();
       
     }
     

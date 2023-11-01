@@ -14,6 +14,8 @@
 
 =========================================================================*/
 
+#include "MyMatrix.hpp"
+
 #include <string>
 #include <iostream>
 #include <vector>
@@ -22,7 +24,6 @@
 #include <mpi.h>
 #include <boost/mpi/datatype.hpp>
 
-#include "MyMatrix.hpp"
 
 namespace femus {
 
@@ -259,21 +260,23 @@ namespace femus {
     return (_matIsAllocated) ? _rowSize[i] : 0;
   }
 
+
   // ******************
-  template <class Type> unsigned MyMatrix<Type>::begin() {
+  template <class Type> const unsigned MyMatrix<Type>::begin() const {
     return _begin;
   }
 
-  template <class Type> unsigned MyMatrix<Type>::begin(const unsigned &i) {
+
+  template <class Type> const unsigned MyMatrix<Type>::begin(const unsigned &i) const {
     return 0;
   }
 
   // ******************
-  template <class Type> unsigned MyMatrix<Type>::end() {
+  template <class Type> const unsigned MyMatrix<Type>::end() const {
     return _end;
   }
 
-  template <class Type> unsigned MyMatrix<Type>::end(const unsigned &i) {
+  template <class Type> const unsigned MyMatrix<Type>::end(const unsigned &i) const {
     return (_matIsAllocated) ? _rowSize[i] : 0;
   }
 

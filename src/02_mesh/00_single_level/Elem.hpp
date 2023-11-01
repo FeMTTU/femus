@@ -57,10 +57,10 @@ namespace femus {
 
 
       // reorder the element according to the new element mapping
-      void ReorderMeshElements(const std::vector < unsigned >& elementMapping);
+      void ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(const std::vector < unsigned >& elementMapping);
 
       // reorder the nodes according to the new node mapping
-      void ReorderMeshNodes(const std::vector < unsigned >& nodeMapping);
+      void ReorderMeshNodes_ElementDof(const std::vector < unsigned >& nodeMapping);
       
       
 
@@ -71,58 +71,43 @@ namespace femus {
       void BuildMeshElemStructures();
       
 
-      //BEGIN _ElementLevel functions
-      void ResizeElementQuantities(const unsigned nel_in, const unsigned level_in) {
+  private:
+      
+      void ResizeElement_Level_Type_Group_Material(const unsigned nel_in, const unsigned level_in) {
        _elementLevel.resize(nel_in, level_in);
        _elementType.resize(nel_in);
        _elementGroup.resize(nel_in);
        _elementMaterial.resize(nel_in);
       }
       
-      void ScatterElementQuantities() {
+      void ScatterElement_Level_Type_Group_Material() {
         _elementLevel.scatter(_elementOffset);
         _elementType.scatter(_elementOffset);
         _elementGroup.scatter(_elementOffset);
         _elementMaterial.scatter(_elementOffset);
       }
       
-      void LocalizeElementQuantities(const unsigned &lproc) {
+  public:
+      
+      void LocalizeElement_Level_Type_Group_Material(const unsigned &lproc) {
         _elementLevel.broadcast(lproc);
         _elementType.broadcast(lproc);
         _elementGroup.broadcast(lproc);
         _elementMaterial.broadcast(lproc);
       }
       
-      void FreeLocalizedElementQuantities() {
+      void FreeLocalizedElement_Level_Type_Group_Material() {
         _elementLevel.clearBroadcast();
         _elementType.clearBroadcast();
         _elementGroup.clearBroadcast();
         _elementMaterial.clearBroadcast();
       }
 
-      bool GetIfElementCanBeRefined(const unsigned& iel) {
-        return (_elementLevel[iel] == _level) ? true : false;
-      }
-      bool GetIfFatherHasBeenRefined(const unsigned& iel) {
-        return GetIfElementCanBeRefined(iel);
-      }
-      //END _ElementLevel functions
 
 
       /** To be Added */
-      void SetChildElementDof(elem* elf);
+      void AllocateChildrenElementChildrenElementDof(const unsigned int& refindex, const Mesh* msh);
 
-      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1);
-      
-      /** To be Added */
-      void AllocateChildrenElement(const unsigned int& refindex, const Mesh* msh);
-
-      /** To be Added */
-      void SetChildElement(const unsigned& iel, const unsigned& json, const unsigned& value);
-
-      /** To be Added */
-      unsigned GetChildElement(const unsigned& iel, const unsigned& json);
-      
 
 // === Geometric Element, Single - BEGIN =================
   public:
@@ -223,91 +208,6 @@ namespace femus {
 
 // === Geometric Element, Single - END =================
     
-    
-    
-// === Geometric Element, FE, Single - BEGIN =================
-  public:
-
-      const unsigned GetNVE(const unsigned& elementType, const unsigned& doftype) const;
-      
-      const unsigned GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const;
-      
-  private:
-    
-    
-  /**
-   * Number of degrees of freedom per geometric element per FE family:
-   * linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
-  **/
-  const unsigned NVE[N_GEOM_ELS][NFE_FAMS] = {
-    {8, 20, 27, 1, 4}, //hex
-    {4, 10, 15, 1, 4}, //tet
-    {6, 15, 21, 1, 4}, //wedge
-    {4, 8, 9, 1, 3}, //quad
-    {3, 6, 7, 1, 3}, //tri
-    {2, 3, 3, 1, 2}  //line
-  };
-  
-    
-  const unsigned NFACENODES[ N_GEOM_ELS ][ MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL ][ NFE_FAMS_C_ZERO_LAGRANGE ] = {
-    { {4, 8, 9}, // Hex
-      {4, 8, 9},
-      {4, 8, 9},
-      {4, 8, 9},
-      {4, 8, 9},
-      {4, 8, 9}
-    },
-    { {3, 6, 7}, // Tet
-      {3, 6, 7},
-      {3, 6, 7},
-      {3, 6, 7}
-    },
-    { {4, 8, 9}, // Wedge
-      {4, 8, 9},
-      {4, 8, 9},
-      {3, 6, 7},
-      {3, 6, 7}
-    },
-    { {2, 3, 3},
-      {2, 3, 3}, // Quad
-      {2, 3, 3},
-      {2, 3, 3}
-    },
-    { {2, 3, 3}, // Tri
-      {2, 3, 3},
-      {2, 3, 3}
-    },
-    { {1, 1, 1}, // Line
-      {1, 1, 1}
-    }
-  };
-    
-// === Geometric Element, FE, Single - END =================
-
-
-
-
-
-// === Mesh, Subdomains - BEGIN =================
-  public:
-    
-      void SetElementOffsets(const std::vector < unsigned > & elementOffset, const unsigned &iproc, const unsigned &nprocs) {
-        _elementOffset = elementOffset;
-        _elementOwned = elementOffset[iproc + 1] - elementOffset[iproc];
-        _iproc = iproc;
-        _nprocs = nprocs;
-      }
-      
-    private:
-
-      unsigned _iproc;
-      unsigned _nprocs;
-      
-      /** @todo Same as in Mesh, see if we can avoid duplication */
-      std::vector < unsigned > _elementOffset;
-      unsigned _elementOwned;
-
-// === Mesh, Subdomains - END =================
 
 
 // === Basic, Dimension - BEGIN =================
@@ -320,21 +220,6 @@ namespace femus {
       /** Dimension of the underlying Mesh */
       unsigned _dim;
 // === Basic, Dimension - END =================
-
-// === Basic, Level - BEGIN =================
-  public:
-     
-      
-  private:
-
-      /** Pointer to the list of coarser elements */
-      elem* _coarseElem;
-      
-      /** level of refinement of this list of elements */
-      unsigned _level;
-           
-      
-// === Basic, Level - END =================
 
 
 // === Elements, Numbers - BEGIN =================
@@ -359,7 +244,13 @@ namespace femus {
       /** To be Added */
       void AddToElementNumber(const unsigned& value, short unsigned ielt);
 
+     static  unsigned int  InitializeNumberOfElementsFromCoarseList(elem* elc, const unsigned refindex);
+      
     private:
+      
+      void InitializeNumberOfElementsPerGeomType() {
+            for (unsigned g = 0; g < N_GEOM_ELS ; g++) { _nelt[g] = 0; }
+      }
       
       /** Number of elements of the Mesh */
       unsigned _nel;
@@ -377,7 +268,7 @@ namespace femus {
       unsigned GetIndex(const char name[]) const;
 
       /** To be Added */
-      short unsigned GetElementType(const unsigned& iel);
+      const short unsigned GetElementType(const unsigned& iel) const;
 
       /** To be Added */
       MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
@@ -392,6 +283,29 @@ namespace femus {
     
 // === Elements, Type - END =================
 
+
+// === Elements, Subdomains - BEGIN =================
+  public:
+    
+      void SetElementOffsets(const std::vector < unsigned > & elementOffset, const unsigned &iproc, const unsigned &nprocs) {
+        _elementOffset = elementOffset;
+        _elementOwned = elementOffset[iproc + 1] - elementOffset[iproc];
+        _iproc = iproc;
+        _nprocs = nprocs;
+      }
+      
+    private:
+
+      unsigned _iproc;
+      unsigned _nprocs;
+      
+      /** @todo Same as in Mesh, see if we can avoid duplication */
+      std::vector < unsigned > _elementOffset;
+      unsigned _elementOwned;
+
+// === Elements, Subdomains - END =================
+
+
       
 // === Elements, Level - BEGIN =================
   public:
@@ -399,14 +313,27 @@ namespace femus {
         _elementLevel[iel] = level;
       }
       
-      short unsigned GetElementLevel(const unsigned &jel) {
+      const short unsigned GetElementLevel(const unsigned &jel) const {
         return _elementLevel[jel];
       }
       
+      const bool GetIfElementCanBeRefined(const unsigned& iel) const {
+        return (_elementLevel[iel] == _level) ? true : false;
+      }
+      
+      const bool GetIfFatherHasBeenRefined(const unsigned& iel) const {
+        return GetIfElementCanBeRefined(iel);
+      }
     
   private:
     
       MyVector< short unsigned> _elementLevel;
+      
+      /** Pointer to the list of coarser elements */
+      elem* _coarseElem;
+      
+      /** level of refinement of this list of elements */
+      unsigned _level;
       
 // === Elements, Level - END =================
 
@@ -465,7 +392,7 @@ namespace femus {
 
 
 
-// === Elements, Elements with a common Face to the current element - BEGIN =================
+// === Elements, for Each Element give the Elements with a common Face to the current element - BEGIN =================
    public:
      
       /** To be Added */
@@ -476,11 +403,7 @@ namespace femus {
 
       int GetBoundaryIndex(const unsigned& iel, const unsigned& iface);
      
-      /** To be added */
-      void BuildElementNearFace();
-      
       void ShrinkToFitElementNearFace();
-      void ScatterElementNearFace();
       void LocalizeElementNearFace(const unsigned& jproc);
       void FreeLocalizedElementNearFace();
 
@@ -489,13 +412,18 @@ namespace femus {
 
    private:
      
+      void ScatterElementNearFace();
+      
+      /** To be added */
+      void BuildElementNearFace();
+      
       /** For every element, it is initialized to -1, and if there is a near element attached to a face, it stores that value. It is used for BCs as well */
       MyMatrix <int> _elementNearFace;
 
-// === Elements, Elements with a common Face to the current element - END =================
+// === Elements, for Each Element give the Elements with a common Face to the current element - END =================
  
 
-// === Elements, all elements near the current element, including those with a common vertex - BEGIN =================
+// === Elements, for Each Element give all elements near the current element, including those with a common vertex - BEGIN =================
   public:
       
       void BuildElementNearElement();
@@ -512,21 +440,32 @@ namespace femus {
    private:
      
       /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
-        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
+       * It is used for Domain Decomposition and for AMR
+        @todo why is this not scattered??? */
       MyMatrix <unsigned> _elementNearElement;
-// === Elements, all elements near the current element, including those with a common vertex - END =================
+// === Elements, for Each Element give all elements near the current element, including those with a common vertex - END =================
 
 
-
-// === Elements, Refinement - BEGIN =================
+// === Elements, for Each Element gives the children elements - BEGIN =================
   public:
+
+      /** To be Added */
+      void SetChildElement(const unsigned& iel, const unsigned& json, const unsigned& value);
+
+      /** To be Added */
+      unsigned GetChildElement(const unsigned& iel, const unsigned& json);
       
    private:
-// === Elements, Refinement - END =================
+     
+      /** This is only going to all levels except the finest one  
+       *  It contains for each element the list of its child elements */
+      MyMatrix <unsigned> _childElem;
+      
+// === Elements, for Each Element gives the children elements - END =================
 
 
       
-// === Nodes - BEGIN =================
+// === Nodes, Number - BEGIN =================
   public:
 
       /** To be Added */
@@ -540,16 +479,14 @@ namespace femus {
       
       /** Number of nodes of the Mesh */
       unsigned _nvt;
-// === Nodes - END =================
+// === Nodes, Number - END =================
 
 
-// === Nodes, Elements having that Node as a vertex - BEGIN =================
+// === Nodes, for Each Node give the Elements having that Node as a vertex (temporary then deleted) - BEGIN =================
   public:
       
       /** To be Added */
       void BuildElementNearVertex();
-
-      void DeleteElementNearVertex();
 
       /** To be Added */
       unsigned GetElementNearVertexNumber(const unsigned& inode);
@@ -559,26 +496,93 @@ namespace femus {
 
    private:
       
+      void DeleteElementNearVertex();
+
       /** For each Node, it gives the list of elements having that Node as a vertex 
-        @todo I think this should be scattered, or maybe not, if it is only used temporarily */
+        @todo It is used in mesh construction and then it is deleted, so beware of not using it afterwards */
       MyMatrix <unsigned> _elementNearVertex;
       
-// === Nodes, Elements having that Node as a vertex - END =================      
+// === Nodes, for Each Node give the Elements having that Node as a vertex (temporary then deleted) - END =================      
 
 
-// === DOF, Local->Global (element-based) Dofmap for 1 scalar variable - BEGIN =================
+      
+      
+      
+      
+    
+// === Geometric Element, FE, Single (Local) - BEGIN =================
+  public:
+
+      const unsigned GetNVE(const unsigned& elementType, const unsigned& doftype) const;
+      
+      const unsigned GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const;
+      
+      /** To be Added */
+      const unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type) const;
+      
+  private:
+    
+    
+  /**
+   * Number of degrees of freedom per geometric element per FE family:
+   * linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
+  **/
+  const unsigned NVE[N_GEOM_ELS][NFE_FAMS] = {
+    {8, 20, 27, 1, 4}, //hex
+    {4, 10, 15, 1, 4}, //tet
+    {6, 15, 21, 1, 4}, //wedge
+    {4, 8, 9, 1, 3}, //quad
+    {3, 6, 7, 1, 3}, //tri
+    {2, 3, 3, 1, 2}  //line
+  };
+  
+    
+  const unsigned NFACENODES[ N_GEOM_ELS ][ MAXIMUM_NUMBER_OF_FACES_PER_GEOM_EL ][ NFE_FAMS_C_ZERO_LAGRANGE ] = {
+    { {4, 8, 9}, // Hex
+      {4, 8, 9},
+      {4, 8, 9},
+      {4, 8, 9},
+      {4, 8, 9},
+      {4, 8, 9}
+    },
+    { {3, 6, 7}, // Tet
+      {3, 6, 7},
+      {3, 6, 7},
+      {3, 6, 7}
+    },
+    { {4, 8, 9}, // Wedge
+      {4, 8, 9},
+      {4, 8, 9},
+      {3, 6, 7},
+      {3, 6, 7}
+    },
+    { {2, 3, 3},
+      {2, 3, 3}, // Quad
+      {2, 3, 3},
+      {2, 3, 3}
+    },
+    { {2, 3, 3}, // Tri
+      {2, 3, 3},
+      {2, 3, 3}
+    },
+    { {1, 1, 1}, // Line
+      {1, 1, 1}
+    }
+  };
+    
+// === Geometric Element, FE, Single (Local) - END =================
+
+      
+
+// === DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - BEGIN =================
   public:
       
       /** To be Added */
       unsigned GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode);
 
       void ShrinkToFitElementDof();
-      void ScatterElementDof();
       void LocalizeElementDof(const unsigned &jproc);
       void FreeLocalizedElementDof();
-
-      /** To be Added */
-      unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type);
 
       /** Return the local->global node number */
       unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode);
@@ -587,23 +591,36 @@ namespace femus {
       void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
       
   private:
+    
+      void ScatterElementDof();
+      
      /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
-// === DOF, Local->Global (element-based) Dofmap for 1 scalar variable - END =================
+// === DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - END =================
 
+      
+// === DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - BEGIN =================
+  public:
+
+      /** To be Added */
+      void SetChildElementDof(elem* elf);
+
+      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1);
+      
    private:
      
-      /** This is only going to all levels except the finest one  @todo I think it contains for each element the list of its child elements */
-      MyMatrix <unsigned> _childElem;
       /** This is only going to all levels except the finest one */
       MyMatrix <unsigned> _childElemDof;
+// === DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - END =================
+
+      
 
 
       
 // === Refinement, AMR - BEGIN =================
     public:
       
-      void GetAMRRestriction(Mesh *msh);
+      void GetAMRRestriction(Mesh *msh) const;
 // === Refinement, AMR - END =================
       
 

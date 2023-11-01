@@ -119,16 +119,18 @@ namespace femus {
     return _size;
   }
 
+
   // ******************
-  template <class Type> unsigned MyVector<Type>::begin() {
+  template <class Type> const unsigned MyVector<Type>::begin() const {
     return _begin;
   }
 
+
   // ******************
-  template <class Type> unsigned MyVector<Type>::end() {
+  template <class Type> const unsigned MyVector<Type>::end() const {
     return _end;
   }
-
+  
   // ******************
   template <class Type> void MyVector<Type>::scatter(const std::vector < unsigned > &offset) {
 

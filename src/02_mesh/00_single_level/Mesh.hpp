@@ -66,15 +66,25 @@ public:
 
     
 // === CONSTR-DESTR - END =================
+
     
 // =========================
-// === BASIC - BEGIN =================
+// === BASIC, Debug - BEGIN =================
 // =========================
-public:
+ public:
     
     /** Print the mesh info for this level */
     void PrintInfo() const;
 
+private:
+    
+    void PrintInfoElements() const;
+// === BASIC, Debug - END =================
+
+
+// === BASIC, Dimension - BEGIN =================
+ public:
+   
     /** MESH: Get the dimension of the problem (1D, 2D, 3D) */
     const unsigned GetDimension() const {
       return Mesh::_dimension;
@@ -85,91 +95,13 @@ public:
       Mesh::_dimension = dim;
     }
 
-    /** Set the number of nodes */
-    void SetNumberOfNodes(const unsigned &nnodes) {
-      _nnodes = nnodes;
-    };
-
-    /** Get the number of nodes */
-    unsigned GetNumberOfNodes() const {
-      return _nnodes;
-    }
-
-    /** Set the number of element */
-    void SetNumberOfElements(const unsigned &nelem) {
-      _nelem = nelem;
-    }
-
-    /** Get the number of element */
-    unsigned GetNumberOfElements() const {
-      return _nelem;
-    }
-
-
-private:
-    
+ private:
+   
     /** MESH: dimension of the problem */
     static unsigned _dimension;
-    /** MESH: number of elements */
-    int _nelem;
-    /** MESH: number of nodes */
-    unsigned _nnodes;
+// === BASIC, Dimension - END =================
 
-    /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
-    std::vector < std::vector < double > > _coords;
 
-    void PrintInfoElements() const;
-    
-    
-// === BASIC - END =================
-
-// =========================
-// === BASIC, ELEM - BEGIN =================
-// =========================
-public:
-    
-    /** Also DOFMAP: Only for parallel */
-    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const;
-
-    /** Also DOFMAP: Only for parallel */
-    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
-
-    /** Get element group*/
-    short unsigned GetElementGroup(const unsigned &iel) const;
-    /** Get element material @todo this should be in a separate FSI environment */
-    short unsigned GetElementMaterial(const unsigned &iel) const;
-    
-    /** Get element type*/
-    short unsigned GetElementType(const unsigned &iel) const;
-    /** Only for parallel */
-    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
-    
-    /** Only for parallel */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
-
-    /**  */
-    unsigned GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const;
-
-    /** Only for parallel */
-    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type = 1) const;  ///@todo why is the default like this
-
-    unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = 1) const;
-    
-    /** MESH */
-    elem * GetMeshElements() const {
-      return el;
-    }
-    
-    /** MESH: list of all elements @todo should be private */
-    elem *el;
-    
-    /** MESH: Number of elements per processor (incremental count)  @todo should be private */
-    std::vector < unsigned > _elementOffset;
- 
-// === BASIC, ELEM - END =================
-  
-    
-// =========================
 // === BASIC, CharacteristicLength - BEGIN =================
 // =========================
 public:
@@ -194,6 +126,119 @@ private:
 
     
 // === BASIC, CharacteristicLength - END =================
+
+    
+
+// === Geometric Element, Single - BEGIN =================
+ public:
+   
+    /** */
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type = 1) const;
+
+    unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = 1) const;
+    
+    /**  */
+    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
+
+    /**  */
+    unsigned GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const;
+    
+    
+// === Geometric Element, Single - END =================
+
+    
+// === Elements, List - BEGIN =================
+ public:
+   
+    /** MESH */
+    inline elem * GetMeshElements() const {
+      return el;
+    }
+    
+    /** MESH: list of all elements @todo should be private */
+    elem *el;
+   
+// === Elements, List - END =================
+
+    
+// === Elements, Number - BEGIN =================
+ public:
+   
+    /** Set the number of element */
+    void SetNumberOfElements(const unsigned &nelem) {
+      _nelem = nelem;
+    }
+
+    /** Get the number of element */
+    unsigned GetNumberOfElements() const {
+      return _nelem;
+    }
+    
+ private:
+    
+    /** MESH: number of elements */
+    int _nelem;
+// === Elements, Number - END =================
+
+
+// === Elements, Type - BEGIN =================
+ public:
+    
+    /** Get element type*/
+    short unsigned GetElementType(const unsigned &iel) const;
+    /**  */
+    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
+    
+// === Elements, Type - END =================
+
+// === Elements, Subdomains - BEGIN =================
+ public:
+    
+    /** MESH: Number of elements per processor (incremental count)  @todo should be private */
+    std::vector < unsigned > _elementOffset;
+ 
+// === Elements, Subdomains - END =================
+   
+   
+// === Elements, Group - BEGIN =================
+ public:
+    
+    /** Get element group*/
+    short unsigned GetElementGroup(const unsigned &iel) const;
+    
+// === Elements, Group - END =================
+
+   
+// === Elements, Material - BEGIN =================
+ public:
+   
+    /** Get element material @todo this should be in a separate FSI environment */
+    short unsigned GetElementMaterial(const unsigned &iel) const;
+    
+// === Elements, Material - END =================
+    
+    
+// === Nodes - BEGIN =================
+ public:
+   
+    /** Set the number of nodes */
+    void SetNumberOfNodes(const unsigned &nnodes) {
+      _nnodes = nnodes;
+    };
+
+    /** Get the number of nodes */
+    unsigned GetNumberOfNodes() const {
+      return _nnodes;
+    }
+
+ private:
+   
+    /** MESH: number of nodes */
+    unsigned _nnodes;
+    
+    /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
+    std::vector < std::vector < double > > _coords;
+// === Nodes - END =================
     
 
     
@@ -309,11 +354,18 @@ private:
 // === REFINEMENT- END  =================
 
 
-/// =========================
-/// === FE for single geometric element - BEGIN =================
-/// =========================
-public:
 
+// === Geometric Element, FE, Single (FE for single geometric element) - BEGIN =================
+public:
+    
+    /** Also DOFMAP: Only for parallel */
+    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const;
+    
+    /** Also DOFMAP: Only for parallel */
+    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
+
+
+    
     const elem_type * GetFiniteElement(const unsigned geom_elem, const unsigned fe_soltype) const {
         return _finiteElement[geom_elem][fe_soltype];
     }
@@ -328,9 +380,7 @@ public:
     
     basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
 
-
-    
-/// === FE for single geometric element - END =================
+// === Geometric Element, FE, Single - END =================
     
 
 

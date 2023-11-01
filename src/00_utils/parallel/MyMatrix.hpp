@@ -74,14 +74,14 @@ namespace femus {
       unsigned size(const unsigned &i);
 
       // ******************
-      unsigned begin();
+      const unsigned begin() const;
 
-      unsigned begin(const unsigned &i);
+      const unsigned begin(const unsigned &i) const;
 
       // ******************
-      unsigned end();
+      const unsigned end() const;
 
-      unsigned end(const unsigned &i);
+      const unsigned end(const unsigned &i) const;
 
       // ******************
       void scatter(const std::vector < unsigned > &offset);
@@ -163,7 +163,7 @@ namespace femus {
       unsigned _size;
 
       std::vector< Type > _mat;
-      std::vector< Type > _mat2;
+      std::vector< Type > _mat2; /// needed for broadcast and scatter operations
 
       //only to be used when matrix status is parallel
       std::vector < unsigned > _offset;

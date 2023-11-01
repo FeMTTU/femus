@@ -153,7 +153,7 @@ namespace femus {
 
     for( unsigned isdom = 0; isdom < _nprocs; isdom++ ) {
       mesh->el->LocalizeElementDof( isdom );
-      mesh->el->LocalizeElementQuantities(isdom);
+      mesh->el->LocalizeElement_Level_Type_Group_Material(isdom);
       if( _iproc == 0 ) {
         for( unsigned ii = mesh->_elementOffset[isdom]; ii < mesh->_elementOffset[isdom + 1]; ii++ ) {
           //short unsigned ielt = static_cast < short unsigned >( vector1[ii] + 0.25 );
@@ -193,7 +193,7 @@ namespace femus {
         }
       }
       mesh->el->FreeLocalizedElementDof();
-      mesh->el->FreeLocalizedElementQuantities();
+      mesh->el->FreeLocalizedElement_Level_Type_Group_Material();
     }
 
     //END CONNETTIVITY

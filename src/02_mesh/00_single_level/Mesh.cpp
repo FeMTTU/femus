@@ -521,7 +521,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       }
     }
 
-    el->ReorderMeshElements(mapping);  ///this is needed because later there will be another reordering based on Group and Material
+    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(mapping);  ///this is needed because later there will be another reordering based on Group and Material
   
    }
    
@@ -594,7 +594,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     }
 
 
-    el->ReorderMeshElements(mapping);
+    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(mapping);
     
     //END building the  metis2mesh_file element list 
 
@@ -644,7 +644,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
    void Mesh::mesh_reorder_node_quantities(const std::vector <unsigned> & mapping)  {
        
      
-    el->ReorderMeshNodes(mapping);
+    el->ReorderMeshNodes_ElementDof(mapping);
 
     //reorder coordinate vector at coarse level ----
     if(GetLevel() == 0) {

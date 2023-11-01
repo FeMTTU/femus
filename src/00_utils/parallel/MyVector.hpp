@@ -61,10 +61,10 @@ namespace femus {
       unsigned size();
 
       // ******************
-      unsigned begin();
+      const unsigned begin() const;
 
       // ******************
-      unsigned end();
+      const unsigned end() const;
 
       // ******************
       void scatter(const std::vector < unsigned > &offset);
@@ -136,7 +136,7 @@ namespace femus {
       unsigned _size;
 
       std::vector< Type > _vec;
-      std::vector< Type > _vec2;
+      std::vector< Type > _vec2; /// needed for broadcast and scatter operations
       std::vector < unsigned > _offset;
 
       unsigned _lproc;

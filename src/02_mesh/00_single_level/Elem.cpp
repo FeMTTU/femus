@@ -48,11 +48,12 @@ namespace femus
 
     _level = 0;
 
-    _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
+    InitializeNumberOfElementsPerGeomType();
+    
     _nel = other_nel;
     
 
-    ResizeElementQuantities(_nel, _level);
+    ResizeElement_Level_Type_Group_Material(_nel, _level);
     
     
     _elementDof.resize(_nel, NVE[0][2], UINT_MAX);
@@ -75,13 +76,13 @@ namespace femus
 
     _level = elc->_level + 1;
 
-    _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
     
-    _nel = elc->GetRefinedElementNumber() * refindex; //refined
-    _nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
+    InitializeNumberOfElementsPerGeomType();
+    
+    _nel = InitializeNumberOfElementsFromCoarseList(elc, refindex);
     
 
-    ResizeElementQuantities(_nel, _level);
+    ResizeElement_Level_Type_Group_Material(_nel, _level);
     
 
     //**************************
@@ -120,6 +121,20 @@ namespace femus
   }
 
   
+
+   unsigned int  elem::InitializeNumberOfElementsFromCoarseList(elem* elc, const unsigned refindex)  {
+     
+     unsigned int nelem;
+     
+    nelem = elc->GetRefinedElementNumber() * refindex; //refined
+    nelem += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
+    
+    return nelem;
+    
+   }
+
+  
+  
   void elem::ShrinkToFitElementDof() {
     
     _elementDof.shrinkToFit(UINT_MAX);
@@ -140,7 +155,7 @@ namespace femus
   
   
   
-  void elem::ReorderMeshElements(const std::vector < unsigned >& elementMapping)
+  void elem::ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(const std::vector < unsigned >& elementMapping)
   {
 
     //BEGIN reordering _elementType
@@ -161,7 +176,7 @@ namespace femus
       }
       tempElementLevel.clear();
     }
-    //END reordering _elementCanBeRefined
+    //END reordering  _elementLevel
 
     //BEGIN reordering _elementGroup and _elementMaterial
 
@@ -223,7 +238,7 @@ namespace femus
   }
 
 
-  void elem::ReorderMeshNodes(const std::vector < unsigned >& nodeMapping)
+  void elem::ReorderMeshNodes_ElementDof(const std::vector < unsigned >& nodeMapping)
   {
     for (unsigned i = _elementDof.begin(); i < _elementDof.end(); i++) {
       for (unsigned j = _elementDof.begin(i); j < _elementDof.end(i); j++) {
@@ -240,7 +255,7 @@ namespace femus
   /**
    * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
    **/
-  unsigned elem::GetElementDofNumber(const unsigned& iel, const unsigned& type)
+  const unsigned elem::GetElementDofNumber(const unsigned& iel, const unsigned& type) const
   {
     return NVE[_elementType[iel]][type];
   }
@@ -334,7 +349,7 @@ namespace femus
   /**
    * Return element type: 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line
    **/
-  short unsigned elem::GetElementType(const unsigned& iel)
+  const short unsigned elem::GetElementType(const unsigned& iel) const
   {
     return _elementType[iel];
   }
@@ -465,6 +480,7 @@ namespace femus
       }
       rowSize[iel] = elements.size();
     }
+    
     _elementNearElement = MyMatrix <unsigned> (rowSize, UINT_MAX);
     
     for (unsigned iel = _elementNearElement.begin(); iel < _elementNearElement.end(); iel++) {
@@ -509,19 +525,24 @@ namespace femus
   
   
   void elem::BuildMeshElemStructures() {
+    
       
     BuildElementNearVertex();
 
+       BuildElementNearFace();     //needs ElementNearVertex
 
-    BuildElementNearFace();
-
-
-    BuildElementNearElement();
+       BuildElementNearElement();  //needs ElementNearVertex
+    
     DeleteElementNearVertex();
 
-    ScatterElementQuantities();
-    ScatterElementDof();
+
+    ScatterElement_Level_Type_Group_Material();
+    
     ScatterElementNearFace();
+    
+    
+    ScatterElementDof();
+    
     
   }
   
@@ -574,17 +595,18 @@ namespace femus
     return index;
   }
 
-  void elem::AllocateChildrenElement(const unsigned& refindex, const Mesh* msh)
+  void elem::AllocateChildrenElementChildrenElementDof(const unsigned& refindex, const Mesh* msh)
   {
     MyVector <unsigned> rowSize(_elementOffset, 0);
+    
     for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
-      rowSize[i] = (msh->GetRefinedElementIndex(i) == 1) ? refindex : 1;
+      rowSize[i] = (msh->GetRefinedElementIndex(i) == 1) ? refindex : 1; //for every element, establish if it is refined or not, and then return the number of children
     }
     _childElem = MyMatrix <unsigned> (rowSize, 0);
 
     for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
       unsigned elementType = msh->GetElementType(i);
-      rowSize[i] = (msh->GetRefinedElementIndex(i) == 1) ? refindex * NVE[elementType][2] : NVE[elementType][2];
+      rowSize[i] = (msh->GetRefinedElementIndex(i) == 1) ? refindex * NVE[elementType][2] : NVE[elementType][2];  //for every element, establish if it is refined or not, and return the number of DofCarriers of all its children
     }
     _childElemDof = MyMatrix <unsigned> (rowSize, 0);
   }
@@ -670,7 +692,7 @@ namespace femus
     _elementNearFace.clearBroadcast();
   }
 
-  void elem::GetAMRRestriction(Mesh *msh)
+  void elem::GetAMRRestriction(Mesh *msh) const
   {
 
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & restriction = msh->GetAmrRestrictionMap();

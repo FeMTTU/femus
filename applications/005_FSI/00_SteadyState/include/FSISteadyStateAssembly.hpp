@@ -1358,7 +1358,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
     std::vector < double > coarseLocalizedAmrVector;
     ml_msh.GetLevel(lev - 1)->_topology->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
-//     ml_msh.GetLevel(lev - 1)->el->AllocateChildrenElement(ml_msh.GetLevel(lev)->GetRefIndex(), ml_msh.GetLevel(lev - 1) );  //I believe this was already done
+//     ml_msh.GetLevel(lev - 1)->el->AllocateChildrenElementChildrenElementDof(ml_msh.GetLevel(lev)->GetRefIndex(), ml_msh.GetLevel(lev - 1) );  //I believe this was already done
 
     const unsigned n_elems = ml_msh.GetLevel(lev)->GetNumberOfElements();
        
