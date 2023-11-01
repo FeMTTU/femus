@@ -15,10 +15,9 @@
 =========================================================================*/
 
 #include <string>
-
 #include <iostream>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <mpi.h>
 #include <boost/mpi/datatype.hpp>
@@ -269,6 +268,11 @@ namespace femus {
 
   // ******************
   template <class Type> Type& MyVector<Type>::operator[](const unsigned &i) {
+    return _vec[i - _begin];
+  }
+  
+  // ******************
+  template <class Type> const Type& MyVector<Type>::operator[](const unsigned &i) const {
     return _vec[i - _begin];
   }
 

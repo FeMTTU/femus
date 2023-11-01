@@ -14,20 +14,22 @@
 
 =========================================================================*/
 
-#include <string>
 
 #ifndef __femus_mesh_MyMatrix_hpp__
 #define __femus_mesh_MyMatrix_hpp__
 
 
+#include "MyVector.hpp"
+
+
+#include <string>
 #include <iostream>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <mpi.h>
-#include <boost/mpi/datatype.hpp>
 
-#include "MyVector.hpp"
+
 
 namespace femus {
 
@@ -108,6 +110,8 @@ namespace femus {
       // ******************
 
       Type* operator[](const unsigned &i);
+
+      const Type* operator[](const unsigned &i) const;
 
       Type& operator()(const unsigned &i, const unsigned &j);
 

@@ -14,18 +14,17 @@
 
 =========================================================================*/
 
-#include <string>
 
 #ifndef __femus_mesh_MyVector_hpp__
 #define __femus_mesh_MyVector_hpp__
 
 
+#include <string>
 #include <iostream>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <mpi.h>
-#include <boost/mpi/datatype.hpp>
 
 
 
@@ -93,6 +92,9 @@ namespace femus {
 
       // ******************
       Type& operator[](const unsigned &i);
+
+      // ******************
+      const Type& operator[](const unsigned &i) const;
 
       // *****************
       friend std::ostream& operator<<(std::ostream& os, MyVector<Type>& vec) {

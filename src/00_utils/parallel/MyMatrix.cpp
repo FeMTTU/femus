@@ -15,10 +15,9 @@
 =========================================================================*/
 
 #include <string>
-
 #include <iostream>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <mpi.h>
 #include <boost/mpi/datatype.hpp>
@@ -240,6 +239,10 @@ namespace femus {
   }
 
   template <class Type> Type* MyMatrix<Type>::operator[](const unsigned &i) {
+    return &_mat[ _rowOffset[i]];
+  }
+
+  template <class Type> const Type* MyMatrix<Type>::operator[](const unsigned &i) const {
     return &_mat[ _rowOffset[i]];
   }
 

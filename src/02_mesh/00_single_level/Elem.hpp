@@ -66,20 +66,6 @@ namespace femus {
 
       
       
-      
-
-      /** To be Added */
-      unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1);
-
-      
-      
-      
-
-      
-      
-      
-      
-      
 
 
       void BuildMeshElemStructures();
@@ -141,6 +127,9 @@ namespace femus {
 // === Geometric Element, Single - BEGIN =================
   public:
     
+      /** To be Added */
+      const unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1) const;
+      
       const unsigned GetNFC(const unsigned& elementType, const unsigned& type) const;
 
       const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const;
@@ -155,7 +144,7 @@ namespace femus {
   /**
    * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
    * The 1st number is the quadrilaterals
-   * The 2nd number is such that the different "2nd - 1st" is the number of triangular faces
+   * The 2nd number is the total number of faces, such that the different "2nd - 1st" is the number of triangular faces
    **/
   const unsigned NFC[N_GEOM_ELS][2] = {
     {6, 6},

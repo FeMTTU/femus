@@ -299,11 +299,13 @@ namespace femus
     i = GetIndex(name);
     _nelt[i] += value;
   }
+  
   void elem::AddToElementNumber(const unsigned& value, short unsigned ielt)
   {
     _nelt[ielt] += value;
   }
-  unsigned elem::GetElementFaceNumber(const unsigned& iel, const unsigned& type)
+  
+  const unsigned elem::GetElementFaceNumber(const unsigned& iel, const unsigned& type) const
   {
     return NFC[ _elementType[iel] ][type];
   }
