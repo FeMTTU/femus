@@ -61,12 +61,13 @@ namespace femus {
 
       void ReorderElementNearFace_rows(const std::vector < unsigned >& elementMapping);
       
+      
+      void ReorderChildElement_columns(const std::vector < unsigned >& elementMapping);
+     
       void ReorderElementDof_rows(const std::vector < unsigned >& elementMapping);
       
       // reorder the nodes according to the new node mapping
       void ReorderMeshNodes_ElementDof(const std::vector < unsigned >& nodeMapping);
-      
-      
 
       
       
@@ -509,11 +510,14 @@ namespace femus {
 // === Nodes, for Each Node give the Elements having that Node as a vertex (temporary then deleted) - END =================      
 
 
-      
-      
-      
-      
-    
+
+
+// =========       
+// ========= Previously, it was all geometric info. From now on, there is also FE information ==========      
+// =========      
+
+
+
 // === Geometric Element, FE, Single (Local) - BEGIN =================
   public:
 

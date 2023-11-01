@@ -192,6 +192,21 @@ namespace femus
     //END reordering OF _elementDof (rows)
     
   }
+
+  
+  void elem::ReorderChildElement_columns(const std::vector < unsigned >& elementMapping) {
+    
+     //BEGIN reordering _childElementDof (columns) on coarse levels
+    if (_level != 0) {
+      for (unsigned i = _coarseElem->_childElem.begin(); i < _coarseElem->_childElem.end(); i++) {
+        for (unsigned j = _coarseElem->_childElem.begin(i); j < _coarseElem->_childElem.end(i); j++) {
+          _coarseElem->_childElem[i][j] =  elementMapping[ _coarseElem->_childElem[i][j]];
+        }
+      }
+    }
+    //END reordering _childElementDof (columns) on coarse levels
+ 
+  } 
   
   void elem::ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(const std::vector < unsigned >& elementMapping)
   {
@@ -240,15 +255,9 @@ namespace femus
     ReorderElementNearFace_rows(elementMapping);
     //END reordering _elementNearFace (rows)
 
-    //BEGIN reordering _childElementDof (columns) on coarse levels
-    if (_level != 0) {
-      for (unsigned i = _coarseElem->_childElem.begin(); i < _coarseElem->_childElem.end(); i++) {
-        for (unsigned j = _coarseElem->_childElem.begin(i); j < _coarseElem->_childElem.end(i); j++) {
-          _coarseElem->_childElem[i][j] =  elementMapping[ _coarseElem->_childElem[i][j]];
-        }
-      }
-    }
-    //END reordering _childElementDof (columns) on coarse levels
+    //BEGIN reordering _childElement (columns) on coarse levels
+    ReorderChildElement_columns(elementMapping);
+    //END reordering _childElement (columns) on coarse levels
     
   }
 

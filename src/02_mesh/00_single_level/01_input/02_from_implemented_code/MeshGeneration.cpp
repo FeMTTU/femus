@@ -22,7 +22,7 @@
 // #include <cstdlib>
 // #include <cmath>
 // #include <cstring>
-#include <assert.h>
+#include <cassert>
 #include "mpi.h"
 // #include <algorithm>
 #include "Mesh.hpp"
@@ -336,12 +336,12 @@ namespace femus
 
                       if(i == 0) {
                         mesh.el->SetFaceElementIndex(iel, 0, -2);
-                        mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "left"));
+                        mesh.SetBoundaryInfo(0, "left");
                       }
 
                       if(i == (nx - 1)) {
                         mesh.el->SetFaceElementIndex(iel, 1, -3);
-                        mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "right"));
+                        mesh.SetBoundaryInfo(1, "right");
                       }
 
 
@@ -632,22 +632,22 @@ namespace femus
 
                         if(j == 0) {
                           mesh.el->SetFaceElementIndex(iel, 0, -2);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "bottom"));
+                          mesh.SetBoundaryInfo(0, "bottom");
                         }
 
                         if(j == 2 * (ny - 1)) {
                           mesh.el->SetFaceElementIndex(iel, 2, -4);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(2, "top"));
+                          mesh.SetBoundaryInfo(2, "top");
                         }
 
                         if(i == 0) {
                           mesh.el->SetFaceElementIndex(iel, 3, -5);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(3, "left"));
+                          mesh.SetBoundaryInfo(3, "left");
                         }
 
                         if(i == 2 * (nx - 1)) {
                           mesh.el->SetFaceElementIndex(iel, 1, -3);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "right"));
+                          mesh.SetBoundaryInfo(1, "right");
                         }
 
                         iel++;
@@ -685,12 +685,12 @@ namespace femus
 
                         if(j == 0) {
                           mesh.el->SetFaceElementIndex(iel, 0, -2);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "bottom"));
+                          mesh.SetBoundaryInfo(0, "bottom");
                         }
 
                         if(i == 2 * (nx - 1)) {
                           mesh.el->SetFaceElementIndex(iel, 1, -3);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "right"));
+                          mesh.SetBoundaryInfo(1, "right");
                         }
 
                         iel++;
@@ -717,12 +717,12 @@ namespace femus
 
                         if(j == 2 * (ny - 1)) {
                           mesh.el->SetFaceElementIndex(iel, 1, -4);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(2, "top"));
+                          mesh.SetBoundaryInfo(2, "top");
                         }
 
                         if(i == 0) {
                           mesh.el->SetFaceElementIndex(iel, 2, -5);
-                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(3, "left"));
+                          mesh.SetBoundaryInfo(3, "left");
                         }
 
                         iel++;
@@ -1128,37 +1128,37 @@ namespace femus
 
                           if(k == 0) {
                             mesh.el->SetFaceElementIndex(iel, 4, -2);
-                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "bottom"));
+                            mesh.SetBoundaryInfo(0, "bottom");
                           }
 
 
                           if(k == 2 * (nz - 1)) {
                             mesh.el->SetFaceElementIndex(iel, 5, -7);
-                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(5, "top"));
+                            mesh.SetBoundaryInfo(5, "top");
                           }
 
 
                           if(j == 0) {
                             mesh.el->SetFaceElementIndex(iel, 0, -3);
-                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "front"));
+                            mesh.SetBoundaryInfo(1, "front");
                           }
 
 
                           if(j == 2 * (ny - 1)) {
                             mesh.el->SetFaceElementIndex(iel, 2, -5);
-                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(3, "behind"));
+                            mesh.SetBoundaryInfo(3, "behind");
                           }
 
 
                           if(i == 0) {
                             mesh.el->SetFaceElementIndex(iel, 3, -6);
-                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(4, "left"));
+                            mesh.SetBoundaryInfo(4, "left");
                           }
 
 
                           if(i == 2 * (nx - 1)) {
                             mesh.el->SetFaceElementIndex(iel, 1, -4);
-                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(2, "right"));
+                            mesh.SetBoundaryInfo(2, "right");
                           }
 
 

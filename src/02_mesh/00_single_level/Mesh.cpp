@@ -506,7 +506,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
    void Mesh::build_elem_offsets(const std::vector <unsigned> & partition)  {
        
           //BEGIN building the  metis2mesh_file element list 
-    std::vector <unsigned>  mapping(GetNumberOfElements());
+    std::vector <unsigned>  element_mapping(GetNumberOfElements());
 
     unsigned counter = 0;
 
@@ -514,14 +514,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
         if(partition[iel] == isdom) {
           //filling the Metis to Mesh element mapping
-          mapping[ iel ] = counter;
+          element_mapping[ iel ] = counter;
           counter++;
           _elementOffset[isdom + 1] = counter;
         }
       }
     }
 
-    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(mapping);  ///this is needed because later there will be another reordering based on Group and Material
+    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(element_mapping);  ///this is needed because later there will be another reordering based on Group and Material
   
    }
    

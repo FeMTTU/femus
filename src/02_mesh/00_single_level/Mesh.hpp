@@ -218,7 +218,7 @@ private:
 // === Elements, Material - END =================
     
     
-// === Nodes - BEGIN =================
+// === Nodes, number - BEGIN =================
  public:
    
     /** Set the number of nodes */
@@ -236,16 +236,26 @@ private:
     /** MESH: number of nodes */
     unsigned _nnodes;
     
+// === Nodes, number - END =================
+    
+    
+    
+    
+// === Nodes, coordinates read from coarse file (temporary, then use _topology) - BEGIN =================
+
+ private:
+   
     /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
     std::vector < std::vector < double > > _coords;
-// === Nodes - END =================
+// === Nodes, coordinates read from coarse file (temporary, then use _topology) - END =================
     
-
     
-// =========================
+    
 // === COARSE MESH GENERATION - BEGIN =================
-// =========================
-public:
+    
+// === COARSE MESH GENERATION, from FILEs - BEGIN =================
+
+ public:
 
     /** Only file reading */
     void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
@@ -258,6 +268,14 @@ public:
 
     void ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
+
+
+// === COARSE MESH GENERATION, from FILEs - END =================
+
+
+// === COARSE MESH GENERATION, from function - BEGIN =================
+ public:
+   
     /** This function generates a coarse box mesh */
     void GenerateCoarseBoxMesh(const unsigned int nx,
                                const unsigned int ny,
@@ -268,22 +286,40 @@ public:
                                const ElemType type, 
                                std::vector<bool> &type_elem_flag);
 
+ public:
+   
+  void SetBoundaryInfo(const unsigned int flag_int, const std::string flag_string) {   
+    _boundaryinfo.insert(std::pair<unsigned int, std::string>(flag_int, flag_string) );
+   }
+   
+  std::map<unsigned int, std::string> GetBoundaryInfo() const {   
+     return _boundaryinfo;
+   }
 
-    void AddBiquadraticNodesNotInMeshFile();
-    
-    /** Boundary names for faces, I think only used for Box mesh so far */
+ private:
+   
+    /** Boundary names for faces, this is only filled in the above function so far */
     std::map<unsigned int, std::string> _boundaryinfo;
-
-private:
     
+// === COARSE MESH GENERATION, from function - END =================
+
+
+// === COARSE MESH GENERATION, for all - BEGIN =================
+    
+ private:
+    
+    void AddBiquadraticNodesNotInMeshFile();
     
     /** Weights used to build the baricentric coordinate to compute the missing biquadratic nodes **/
     static const double _baricentricWeight[N_GEOM_ELS][NFE_FAMS][MAXIMUM_NUMBER_OF_NON_BIQUADRATIC_NODES_TO_USE_IN_WEIGHTING];
     
     static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
     
+// === COARSE MESH GENERATION, for all - END =================
+
 // === COARSE MESH GENERATION - END =================
-    
+
+
     
 // =========================
 // === PARTITIONING - BEGIN =================
@@ -380,7 +416,7 @@ public:
     
     basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
 
-// === Geometric Element, FE, Single - END =================
+// === Geometric Element, FE, Single (FE for single geometric element) - END =================
     
 
 

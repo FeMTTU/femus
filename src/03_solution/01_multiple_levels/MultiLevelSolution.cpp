@@ -530,7 +530,7 @@ namespace femus {
     _useParsedBCFunction = true;
 
     int nvars = _solType.size();
-    int nfaces = _mlMesh->GetLevel(0)->_boundaryinfo.size();
+    int nfaces = _mlMesh->GetLevel(0)->GetBoundaryInfo().size();
     _boundaryConditions.resize(nvars);
     _isHomogeneous.resize(nvars);
     _nonHomogeneousBCFunction.resize(nvars);
@@ -563,16 +563,16 @@ namespace femus {
     }
 
     std::map<unsigned int, std::string>::iterator iter;
-    iter = _mlMesh->GetLevel(0)->_boundaryinfo.begin();
+    iter = _mlMesh->GetLevel(0)->GetBoundaryInfo().begin();
 
-    for(iter = _mlMesh->GetLevel(0)->_boundaryinfo.begin(); iter != _mlMesh->GetLevel(0)->_boundaryinfo.end(); ++iter) {
+    for(iter = _mlMesh->GetLevel(0)->GetBoundaryInfo().begin(); iter != _mlMesh->GetLevel(0)->GetBoundaryInfo().end(); ++iter) {
       if(iter->second.compare(facename) == 0) {
         iface = iter->first;
         break;
       }
     }
 
-    if(iter == _mlMesh->GetLevel(0)->_boundaryinfo.end()) {
+    if(iter == _mlMesh->GetLevel(0)->GetBoundaryInfo().end()) {
       std::cout << " Error: the facename " << facename << " does not exist!" << std::endl;
       exit(1);
     }

@@ -158,8 +158,6 @@ namespace femus {
       }
     }
     
-    //GambitIO::AddBiquadraticNodesNotInMeshFile(mesh);
-    //nvt = mesh.GetNumberOfNodes();
        
     inf >> str2;
     if(str2.compare("ENDOFSECTION") != 0) {

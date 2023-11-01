@@ -30,9 +30,9 @@ SET(femus_src
 02_mesh/00_geom_elements/GeomElemEdge3.cpp
 02_mesh/00_single_level/Elem.cpp
 02_mesh/00_single_level/Mesh.cpp
-02_mesh/00_single_level/01_input/MeshGeneration.cpp
-02_mesh/00_single_level/01_input/GambitIO.cpp
-02_mesh/00_single_level/01_input/MED_IO.cpp
+02_mesh/00_single_level/01_input/01_from_external_file/GambitIO.cpp
+02_mesh/00_single_level/01_input/01_from_external_file/MED_IO.cpp
+02_mesh/00_single_level/01_input/02_from_implemented_code/MeshGeneration.cpp
 02_mesh/00_single_level/02_partitioning/MeshPartitioning.cpp
 02_mesh/00_single_level/02_partitioning/MeshMetisPartitioning.cpp
 02_mesh/00_single_level/02_partitioning/MeshASMPartitioning.cpp

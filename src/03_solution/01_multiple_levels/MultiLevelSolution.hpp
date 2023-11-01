@@ -19,13 +19,13 @@ PURPOSE.  See the above copyright notice for more information.
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "MultiLevelMesh.hpp"
-#include "Solution.hpp"
 #include "ParallelObject.hpp"
+#include "Solution.hpp"
+#include "MultiLevelMesh.hpp"
 #include "FElemTypeEnum.hpp"
 #include "BDCTypeEnum.hpp"
-#include "FunctionBase.hpp"
 #include "Writer.hpp"
+#include "FunctionBase.hpp"
 
 #include <vector>
 #include <memory>
@@ -343,8 +343,6 @@ public:
     /** To be Added */
     void GenerateBdc(const char name[], const char bdc_type[] = "Steady", const MultiLevelProblem * ml_prob = NULL);
 
-    /** To be Added */
-    void InitializeBdc();
 
     /** To be Added */
     void UpdateBdc(const double time);
@@ -364,7 +362,10 @@ public:
     /** To be Added */
     bool Ishomogeneous(const std::string varname, const unsigned int facename) const;
 
-    /** To be Added */
+    /** @deprecated */
+    void InitializeBdc();
+    
+    /** @deprecated */
     void SetBoundaryCondition_new(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET,
                               const bool istimedependent = false, FunctionBase* func = NULL);
 
