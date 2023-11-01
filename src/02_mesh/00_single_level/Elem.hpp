@@ -59,6 +59,10 @@ namespace femus {
       // reorder the element according to the new element mapping
       void ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(const std::vector < unsigned >& elementMapping);
 
+      void ReorderElementNearFace_rows(const std::vector < unsigned >& elementMapping);
+      
+      void ReorderElementDof_rows(const std::vector < unsigned >& elementMapping);
+      
       // reorder the nodes according to the new node mapping
       void ReorderMeshNodes_ElementDof(const std::vector < unsigned >& nodeMapping);
       

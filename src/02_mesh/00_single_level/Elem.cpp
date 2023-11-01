@@ -154,6 +154,44 @@ namespace femus
   }
   
   
+  void elem::ReorderElementNearFace_rows(const std::vector < unsigned >& elementMapping) {
+    
+    //BEGIN reordering _elementNearFace (rows)
+    MyVector <unsigned> rowSize(_nel, 0);
+    for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
+      rowSize[elementMapping[i]] = _elementNearFace.size(i);
+    }
+    MyMatrix <int> tmpElNearFace = _elementNearFace;
+    _elementNearFace = MyMatrix <int>(rowSize, 0);
+    for (unsigned i = tmpElNearFace.begin(); i < tmpElNearFace.end(); i++) {
+      for (unsigned j = tmpElNearFace.begin(i); j < tmpElNearFace.end(i); j++) {
+        _elementNearFace[elementMapping [i]][j] = tmpElNearFace[i][j];
+      }
+    }
+    tmpElNearFace.clear();
+    //END reordering _elementNearFace (rows)
+  }
+  
+  
+  void elem::ReorderElementDof_rows(const std::vector < unsigned >& elementMapping) {
+
+    //BEGIN reordering _elementDof (rows)
+    MyVector <unsigned> rowSize(_nel, 0);
+    for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
+      rowSize[elementMapping[i]] = _elementDof.size(i);
+    }
+
+    MyMatrix <unsigned> tmpElDof = _elementDof;
+    _elementDof = MyMatrix <unsigned>(rowSize, 0);
+    for (unsigned i = tmpElDof.begin(); i < tmpElDof.end(); i++) {
+      for (unsigned j = tmpElDof.begin(i); j < tmpElDof.end(i); j++) {
+        _elementDof[elementMapping [i]][j] = tmpElDof[i][j];
+      }
+    }
+    tmpElDof.clear();
+    //END reordering OF _elementDof (rows)
+    
+  }
   
   void elem::ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(const std::vector < unsigned >& elementMapping)
   {
@@ -194,38 +232,15 @@ namespace femus
 
     //END reordering _elementGroup and _elementMaterial
 
-
     //BEGIN reordering _elementDof (rows)
-    MyVector <unsigned> rowSize(_nel, 0);
-    for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
-      rowSize[elementMapping[i]] = _elementDof.size(i);
-    }
-
-    MyMatrix <unsigned> tmpElDof = _elementDof;
-    _elementDof = MyMatrix <unsigned>(rowSize, 0);
-    for (unsigned i = tmpElDof.begin(); i < tmpElDof.end(); i++) {
-      for (unsigned j = tmpElDof.begin(i); j < tmpElDof.end(i); j++) {
-        _elementDof[elementMapping [i]][j] = tmpElDof[i][j];
-      }
-    }
-    tmpElDof.clear();
-    //END reordering OF _elementDof
+    ReorderElementDof_rows(elementMapping);
+    //END reordering OF _elementDof (rows)
 
     //BEGIN reordering _elementNearFace (rows)
-    for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
-      rowSize[elementMapping[i]] = _elementNearFace.size(i);
-    }
-    MyMatrix <int> tmpElNearFace = _elementNearFace;
-    _elementNearFace = MyMatrix <int>(rowSize, 0);
-    for (unsigned i = tmpElNearFace.begin(); i < tmpElNearFace.end(); i++) {
-      for (unsigned j = tmpElNearFace.begin(i); j < tmpElNearFace.end(i); j++) {
-        _elementNearFace[elementMapping [i]][j] = tmpElNearFace[i][j];
-      }
-    }
-    tmpElNearFace.clear();
-    //END reordering _elementNearFace
+    ReorderElementNearFace_rows(elementMapping);
+    //END reordering _elementNearFace (rows)
 
-    //BEGIN reordering _childElementDof (columns) on coarse level
+    //BEGIN reordering _childElementDof (columns) on coarse levels
     if (_level != 0) {
       for (unsigned i = _coarseElem->_childElem.begin(); i < _coarseElem->_childElem.end(); i++) {
         for (unsigned j = _coarseElem->_childElem.begin(i); j < _coarseElem->_childElem.end(i); j++) {
@@ -233,7 +248,7 @@ namespace femus
         }
       }
     }
-    //END reordering _childElementDof
+    //END reordering _childElementDof (columns) on coarse levels
     
   }
 
