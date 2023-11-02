@@ -219,11 +219,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   void Mesh::ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool> & type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
-    SetIfHomogeneous(true);
-
+//==== Level - BEGIN ==============================
     SetLevel(0);
+//==== Level - END ==============================
 
+//==== AMR - BEGIN ==============================
+    SetIfHomogeneous(true);
+//==== AMR - END ==============================
+
+//==== Coords, coarse, then to topology - BEGIN ==============================
     _coords.resize(3);
+//==== Coords, coarse, then to topology - END ==============================
 
 
     ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
@@ -235,7 +241,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     el->ShrinkToFitElementDof();
     el->ShrinkToFitElementNearFace();
 
-    //el->SetNodeNumber(_nnodes);
 
   }  
   
@@ -262,8 +267,10 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     
     BuildTopologyStructures();  //needs dofmap
 
-    ComputeCharacteristicLength();  //doesn't need dofmap
+//====  CharacteristicLength ======== 
+    SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
 
+//====  Print Info ======== 
     PrintInfo();  //needs dofmap
 
   }
@@ -327,7 +334,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
 
   
-  void Mesh::ComputeCharacteristicLength() {
+  void Mesh::SetCharacteristicLengthOfCoarsestLevel() {
       
     //compute max and min coords -----------
     std::vector < double > xMax(3, 0.);
@@ -338,9 +345,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
       }
     }
+    //compute max and min coords - end -----------
     
     _cLength = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
-    //compute max and min coords - end -----------
     
   }
   
@@ -355,12 +362,19 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     const double ymin, const double ymax,
     const double zmin, const double zmax,
     const ElemType elemType, std::vector<bool>& type_elem_flag) {
+    
 
-    SetIfHomogeneous(true);
-
+//==== Level - BEGIN ==============================
     SetLevel(0);
+//==== Level - END ==============================
 
+//==== AMR - BEGIN ==============================
+    SetIfHomogeneous(true);
+//==== AMR - END ==============================
+
+//==== Coords, coarse, then to topology - BEGIN ==============================
     _coords.resize(3);
+//==== Coords, coarse, then to topology - END ==============================
     
 
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
@@ -371,12 +385,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     el->ShrinkToFitElementDof();
     el->ShrinkToFitElementNearFace();
 
-    el->SetNodeNumber(_nnodes);  ///@todo are we sure we need it here? On the other ReadCoarse it is commented
-
     
+//==== Material element counter is not in BuildBox - BEGIN ==============================
     std::vector < unsigned > materialElementCounter(3, 0);
     materialElementCounter[0] = GetNumberOfElements();
     el->SetMaterialElementCounter(materialElementCounter);
+//==== Material element counter is not in BuildBox - END ==============================
 
 
     Partition();

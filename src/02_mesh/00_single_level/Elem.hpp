@@ -111,8 +111,6 @@ namespace femus {
 
 
       /** To be Added */
-      void AllocateChildrenElementChildrenElementDof(const unsigned int& refindex, const Mesh* msh);
-
 
 // === Geometric Element, Single - BEGIN =================
   public:
@@ -454,6 +452,8 @@ namespace femus {
 // === Elements, for Each Element gives the children elements - BEGIN =================
   public:
 
+      void AllocateChildrenElement(const unsigned int& refindex, const Mesh* msh);
+
       /** To be Added */
       void SetChildElement(const unsigned& iel, const unsigned& json, const unsigned& value);
 
@@ -513,7 +513,7 @@ namespace femus {
 
 
 // =========       
-// ========= Previously, it was all geometric info. From now on, there is also FE information ==========      
+// ========= Previously, it was all info of geometric elements. From now on, there is also FE information ==========      
 // =========      
 
 
@@ -610,6 +610,8 @@ namespace femus {
 // === DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - BEGIN =================
   public:
 
+      void AllocateChildrenElementDof(const unsigned int& refindex, const Mesh* msh);
+      
       /** To be Added */
       void SetChildElementDof(elem* elf);
 

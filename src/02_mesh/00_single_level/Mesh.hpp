@@ -106,18 +106,16 @@ private:
 // =========================
 public:
     
-    /** MESH */
     void SetCharacteristicLength(const double & cLength){
       _cLength = cLength;
     }
     
-    /** MESH */
+    void SetCharacteristicLengthOfCoarsestLevel();
+    
     double GetCharacteristicLength(){
       return _cLength;
     };
 
-    void ComputeCharacteristicLength();
-    
     
 private:
 

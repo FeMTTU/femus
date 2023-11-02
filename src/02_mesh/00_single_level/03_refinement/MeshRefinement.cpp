@@ -190,18 +190,25 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //==== Equivalent of: ReadCoarseMeshBeforePartitioning ======== 
 //====================================
       
-    _mesh.SetIfHomogeneous(true);
-
+//==== Level - BEGIN ==============================
     _mesh.SetLevel(igrid);
+//==== Level - END ==============================
     
     
-//info from the coarse mesh - BEGIN   
+//==== AMR - BEGIN ==============================
+    _mesh.SetIfHomogeneous(true);
+//==== AMR - END ==============================
+
+    
+//==== info from the coarse mesh - BEGIN ==============================
+    
     _mesh.SetCoarseMesh(mshc);
 
     elem* elc = mshc->el;
 
     _mesh.SetFiniteElementPtr(otherFiniteElement);
-//info from the coarse mesh - END
+    
+//==== info from the coarse mesh - END ==============================
 
     
 //====== BEGIN ELEMENTS  ==============================
@@ -217,7 +224,8 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     std::vector < double > coarseLocalizedAmrVector;
     mshc->_topology->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
-    mshc->el->AllocateChildrenElementChildrenElementDof(_mesh.GetRefIndex(), mshc);
+    mshc->el->AllocateChildrenElement   (_mesh.GetRefIndex(), mshc);
+    mshc->el->AllocateChildrenElementDof(_mesh.GetRefIndex(), mshc);
 
     _mesh.el = new elem(elc, mshc->GetDimension(), _mesh.GetRefIndex(), coarseLocalizedAmrVector);
 
@@ -416,6 +424,8 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====== END NODES  ==============================
 
     
+//==== Partition: BEGIN ======== 
+    
 //====================================
 //==== Partition: PartitionForElements ======== 
 //====================================
@@ -438,6 +448,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     _mesh.FillISvector(partition);
     std::vector<unsigned> ().swap(partition);
 
+//==== Partition: END ======== 
     
     
     
@@ -459,7 +470,8 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //==== BEGIN BuildTopologyStructures ======== 
 //====================================
     
-    // build Mesh coordinates by projecting the coarse coordinats
+//====  Topology, Coordinates - BEGIN ======== 
+    // build Mesh coordinates by projecting the coarse coordinates
     _mesh._topology = new Solution(&_mesh);
     _mesh._topology->AddSolution("X", LAGRANGE, SECOND, 1, 0);
     _mesh._topology->AddSolution("Y", LAGRANGE, SECOND, 1, 0);
@@ -477,16 +489,28 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     _mesh._topology->_Sol[0]->close();
     _mesh._topology->_Sol[1]->close();
     _mesh._topology->_Sol[2]->close();
+//====  Topology, Coordinates - END ======== 
 
     
+//====  Topology, AMR - BEGIN ======== 
     _mesh._topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
     _mesh._topology->ResizeSolutionVector("AMR");
+//====  Topology, AMR - END ======== 
 
     
+//====  Topology, Solid Node Flag - BEGIN ======== 
     _mesh._topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
     _mesh.AllocateAndMarkStructureNode();
+//====  Topology, Solid Node Flag - END ======== 
+
+//====================================
+//==== END BuildTopologyStructures ======== 
+//====================================
     
+    
+//==== AMR (only uses Topology in one point, does not modify it) - BEGIN ======== 
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestrictionMap();
+    
     if(AMR) {
       _mesh.el->GetAMRRestriction(&_mesh);
 //       for(unsigned soltype = 0; soltype < 3; soltype++) {
@@ -504,17 +528,16 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     else{
       restriction.resize(3);
     }
-//====================================
-//==== END BuildTopologyStructures ======== 
-//====================================
-    
+//==== AMR (only uses Topology in one point, does not modify it) - END ======== 
     
     
 //====================================
-//====   ======== 
+//====  CharacteristicLength ======== 
 //====================================
     _mesh.SetCharacteristicLength( mshc->GetCharacteristicLength() );
+
     
+//====  Print Info ======== 
     _mesh.PrintInfo();
     
     

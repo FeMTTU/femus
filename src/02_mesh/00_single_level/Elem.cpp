@@ -618,22 +618,33 @@ namespace femus
     }
     return index;
   }
-
-  void elem::AllocateChildrenElementChildrenElementDof(const unsigned& refindex, const Mesh* msh)
-  {
+  
+  
+  void elem::AllocateChildrenElement(const unsigned& refindex, const Mesh* msh) {
+    
     MyVector <unsigned> rowSize(_elementOffset, 0);
     
     for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
       rowSize[i] = (msh->GetRefinedElementIndex(i) == 1) ? refindex : 1; //for every element, establish if it is refined or not, and then return the number of children
     }
     _childElem = MyMatrix <unsigned> (rowSize, 0);
+    
+  }
 
+  void elem::AllocateChildrenElementDof(const unsigned& refindex, const Mesh* msh) {
+
+    MyVector <unsigned> rowSize(_elementOffset, 0);
+    
     for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
       unsigned elementType = msh->GetElementType(i);
       rowSize[i] = (msh->GetRefinedElementIndex(i) == 1) ? refindex * NVE[elementType][2] : NVE[elementType][2];  //for every element, establish if it is refined or not, and return the number of DofCarriers of all its children
     }
     _childElemDof = MyMatrix <unsigned> (rowSize, 0);
+        
   }
+  
+  
+  
 
   void elem::SetChildElementDof(elem* elf)
   {
