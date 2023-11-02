@@ -22,7 +22,7 @@
 namespace femus {
 
   
-MeshPartitioning::MeshPartitioning(Mesh &mesh) : _mesh(mesh) {
+MeshPartitioning::MeshPartitioning(const Mesh &mesh) : _mesh(mesh) {
 
 }
 

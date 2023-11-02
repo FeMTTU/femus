@@ -32,7 +32,7 @@ namespace femus {
 
 
 
-  MeshMetisPartitioning::MeshMetisPartitioning(Mesh& mesh) : MeshPartitioning(mesh) {
+  MeshMetisPartitioning::MeshMetisPartitioning(const Mesh& mesh) : MeshPartitioning(mesh) {
 
   }
 

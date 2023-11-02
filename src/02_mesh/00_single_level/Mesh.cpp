@@ -145,14 +145,35 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   };
 
 
+  
+  std::vector < unsigned > Mesh::PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const {
+  
+    std::vector < unsigned > partition;
 
-  std::vector < unsigned >  Mesh::PartitionForElements() {
+    partition.resize(/*_mesh.*/GetNumberOfElements());
+
+    MeshMetisPartitioning meshMetisPartitioning(*this/*_mesh*/);
+
+    if(AMR == true) {
+      meshMetisPartitioning.DoPartition(partition, AMR);
+    }
+    else {
+      meshMetisPartitioning.DoPartition(partition, *mshc);
+    }
+  
+    return partition;
+
+  }
+  
+  
+
+  std::vector < unsigned >  Mesh::PartitionForElements() const {
 
     std::vector < unsigned > partition;
     
-    const bool flag_for_ncommon_in_metis = false;
-
     partition.resize(GetNumberOfElements());
+    
+    const bool flag_for_ncommon_in_metis = false;
     
     MeshMetisPartitioning meshMetisPartitioning(*this);
     
@@ -167,7 +188,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     std::vector < unsigned > partition = PartitionForElements();
     
-    FillISvector(partition);
+    FillISvectorDofMapAllFEFamilies(partition);
     
     std::vector<unsigned> ().swap(partition);
 
@@ -257,6 +278,13 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     BuildElementAndNodeStructures();
    
+//====  CharacteristicLength ======== 
+    SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
+
+//====  Print Info ======== 
+    PrintInfo();  //needs dofmap
+    
+    
   }
   
   
@@ -266,12 +294,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
     
     BuildTopologyStructures();  //needs dofmap
-
-//====  CharacteristicLength ======== 
-    SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
-
-//====  Print Info ======== 
-    PrintInfo();  //needs dofmap
 
   }
   
@@ -396,6 +418,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     Partition();
 
     BuildElementAndNodeStructures();
+    
+//====  CharacteristicLength ======== 
+    SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
+
+//====  Print Info ======== 
+    PrintInfo();  //needs dofmap
     
   }
   
@@ -546,26 +574,26 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
  
 
 
-    std::vector < unsigned > imapping(GetNumberOfElements());
+    std::vector < unsigned > inverse_element_mapping(GetNumberOfElements());
 
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
-      imapping[iel] = iel;
+      inverse_element_mapping[iel] = iel;
     }
 
     for(int isdom = 0; isdom < _nprocs; isdom++) {
 
 // Old, much slower (while below is better) **********
 //       for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
-//         unsigned iel = imapping[i];
+//         unsigned iel = inverse_element_mapping[i];
 //         unsigned ielMat = el->GetElementMaterial (iel);
 //         unsigned ielGroup = el->GetElementGroup (iel);
 //         for (unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
-//           unsigned jel = imapping[j];
+//           unsigned jel = inverse_element_mapping[j];
 //           unsigned jelMat = el->GetElementMaterial (jel);
 //           unsigned jelGroup = el->GetElementGroup (jel);
 //           if (jelMat < ielMat || (jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel))) {
-//             imapping[i] = jel;
-//             imapping[j] = iel;
+//             inverse_element_mapping[i] = jel;
+//             inverse_element_mapping[j] = iel;
 //             iel = jel;
 //             ielMat = jelMat;
 //             ielGroup = jelGroup;
@@ -581,17 +609,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       while(n > 1) {
         unsigned newN = 0u;
         for(unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
-          jel = imapping[j];
+          jel = inverse_element_mapping[j];
           jelMat = el->GetElementMaterial(jel);
           jelGroup = el->GetElementGroup(jel);
 
-          iel = imapping[j - 1];
+          iel = inverse_element_mapping[j - 1];
           ielMat = el->GetElementMaterial(iel);
           ielGroup = el->GetElementGroup(iel);
 
           if( jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel) ) ) ) {
-            imapping[j - 1] = jel;
-            imapping[j] = iel;
+            inverse_element_mapping[j - 1] = jel;
+            inverse_element_mapping[j] = iel;
             newN = j - _elementOffset[isdom];
           }
         }
@@ -601,14 +629,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     }
     
 
-    std::vector <unsigned>  mapping(GetNumberOfElements());
+    std::vector <unsigned>  element_mapping(GetNumberOfElements());
         
     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
-      mapping[imapping[i]] = i;
+      element_mapping[inverse_element_mapping[i]] = i;
     }
 
 
-    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(mapping);
+    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(element_mapping);
     
     //END building the  metis2mesh_file element list 
 
@@ -793,6 +821,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
        
            BuildElementAndNodeStructures();
 
+//====  CharacteristicLength ======== 
+           SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
+
+//====  Print Info ======== 
+           PrintInfo();  //needs dofmap
+    
   }
 
   
@@ -805,7 +839,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
   
 
-  void Mesh::set_elem_counts() {
+  void Mesh::set_elem_counts_per_subdomain() {
       
     el->SetElementOffsets(_elementOffset, _iproc, _nprocs);
 
@@ -827,7 +861,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
    initialize_elem_offsets();
    build_elem_offsets(partition);
    mesh_reorder_elem_quantities();
-   set_elem_counts();
+   set_elem_counts_per_subdomain();
    
       
   }
@@ -868,31 +902,40 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
            set_node_counts();
   
       return node_mapping_from_mesh_file_to_new;
-}  
+}
+
  /**
   * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
   */
-  void Mesh::FillISvector(std::vector < unsigned >& partition) {
+  void Mesh::FillISvectorDofMapAllFEFamilies(std::vector < unsigned >& partition) {
 
         dofmap_all_fe_families_initialize();
      
+      //BEGIN  k = 3, 4
      FillISvectorElemOffsets(partition);
      
         dofmap_Element_based_dof_offsets_build();  
+      //END  k = 3, 4
+        
 
       //BEGIN building for k = 0,1,2
      FillISvectorNodeOffsets();
     
       dofmap_Node_based_dof_offsets_Continue_biquadratic();
+      
         //BEGIN ghost nodes search k = 0, 1, 2
       dofmap_Node_based_dof_offsets_Ghost_nodes_search_Complete_biquadratic();
         //END ghost nodes search k = 0, 1, 2
-      //END building for k = 2, but incomplete for k = 0, 1
+      
+      // --END building for k = 2, but incomplete for k = 0, 1
+      
       //BEGIN completing for k = 0,1
       dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
       //END completing for k = 0,1
     
     set_node_counts(); //also, it shouldn't use dofOffset
+    
+      //END building for k = 0,1,2
 
      
      
@@ -1397,7 +1440,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
   
 
-  basis* Mesh::GetBasis(const short unsigned& ielType, const short unsigned& solType) {
+  basis* Mesh::GetBasis(const short unsigned& ielType, const short unsigned& solType)  const {
     return _finiteElement[ielType][solType]->GetBasis();
   }
 

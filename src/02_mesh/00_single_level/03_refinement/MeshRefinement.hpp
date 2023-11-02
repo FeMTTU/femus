@@ -54,27 +54,26 @@ public:
 
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
+    
     bool FlagElementsToBeRefined(const double & treshold, NumericVector& error);
-
-    /** Flag all the even elements to be refined */
-    void FlagOnlyEvenElementsToBeRefined();
 
     /** Flag the elements to be refined in according to AMR criteria */
     bool FlagElementsToBeRefined();
 
+    /** Flag all the even elements to be refined */
+    void FlagOnlyEvenElementsToBeRefined();
+
 
 private:
-
+    
     void FlagElementsToRefine(const unsigned& type);
-    bool FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error);
+    bool FlagElementsToRefineBasedOnError(const double& treshold, NumericVector& error);
 
     /** To be added */
     void AddFaceDofAndElementDof();
 
 
     Mesh& _mesh;                 //< reference to the mesh which is built by refinement
-
-};
 
 
   const unsigned coarse2FineFaceMapping[N_GEOM_ELS][6][4][2]= { // fine element,fine face=c2FFM[element type][coarse face][face split index][0,1]
@@ -176,6 +175,11 @@ private:
       {0,2}
     }
   };
+
+  
+  
+};
+
 
 
 }   //end namespace femus

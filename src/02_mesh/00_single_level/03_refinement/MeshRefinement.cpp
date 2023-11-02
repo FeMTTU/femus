@@ -41,7 +41,7 @@ namespace femus {
 
 //-------------------------------------------------------------------
   bool MeshRefinement::FlagElementsToBeRefined(const double & treshold, NumericVector& error) {
-    return FlagElementsToRefineBaseOnError(treshold, error);
+    return FlagElementsToRefineBasedOnError(treshold, error);
   }
 //-------------------------------------------------------------------
   bool MeshRefinement::FlagElementsToBeRefined() {
@@ -131,7 +131,7 @@ namespace femus {
   }
 
 
-  bool MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
+  bool MeshRefinement::FlagElementsToRefineBasedOnError(const double& treshold, NumericVector& error) {
 
     unsigned type = 2;
 
@@ -181,14 +181,13 @@ namespace femus {
 
 
 
-
 //---------------------------------------------------------------------------------------------------------------
 /// 
 void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ elem_type* otherFiniteElement[N_GEOM_ELS][NFE_FAMS]) {
 
-//====================================
-//==== Equivalent of: ReadCoarseMeshBeforePartitioning ======== 
-//====================================
+
+//==== Equivalent of: ReadCoarseMeshBeforePartitioning - BEGIN ======== 
+
       
 //==== Level - BEGIN ==============================
     _mesh.SetLevel(igrid);
@@ -423,29 +422,20 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     AddFaceDofAndElementDof();
 //====== END NODES  ==============================
 
+
+
+//==== Equivalent of: ReadCoarseMeshBeforePartitioning - END ======== 
+
+
+
+
     
 //==== Partition: BEGIN ======== 
+
+    std::vector < unsigned > partition = _mesh.PartitionForElements_refinement(AMR, mshc);
     
-//====================================
-//==== Partition: PartitionForElements ======== 
-//====================================
-    std::vector < unsigned > partition;
-    partition.reserve(_mesh.GetNumberOfNodes());
-    partition.resize(_mesh.GetNumberOfElements());
-
-    MeshMetisPartitioning meshMetisPartitioning(_mesh);
-
-    if(AMR == true) {
-      meshMetisPartitioning.DoPartition(partition, AMR);
-    }
-    else {
-      meshMetisPartitioning.DoPartition(partition, *mshc);
-    }
-
-//====================================
-//==== Partition: FillISvector ======== 
-//====================================
-    _mesh.FillISvector(partition);
+    _mesh.FillISvectorDofMapAllFEFamilies(partition);
+    
     std::vector<unsigned> ().swap(partition);
 
 //==== Partition: END ======== 
@@ -459,15 +449,13 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     
     
-//====================================
-//==== BuildMeshElemStructures ======== 
-//====================================
-        
+//==== BuildMeshElemStructures - BEGIN ======== 
     _mesh.GetMeshElements()->BuildMeshElemStructures();
+//==== BuildMeshElemStructures - END ======== 
   
     
 //====================================
-//==== BEGIN BuildTopologyStructures ======== 
+//==== BuildTopologyStructures - BEGIN ======== 
 //====================================
     
 //====  Topology, Coordinates - BEGIN ======== 
@@ -504,7 +492,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====  Topology, Solid Node Flag - END ======== 
 
 //====================================
-//==== END BuildTopologyStructures ======== 
+//==== BuildTopologyStructures - END ======== 
 //====================================
     
     

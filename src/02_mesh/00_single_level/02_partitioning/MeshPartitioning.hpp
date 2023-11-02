@@ -37,7 +37,7 @@ class MeshPartitioning : public ParallelObject {
 public:
 
     /** Constructor */
-    MeshPartitioning(Mesh& mesh);
+    MeshPartitioning(const Mesh& mesh);
 
     /** destructor */
     ~MeshPartitioning() {}; 
@@ -46,7 +46,7 @@ public:
     
 protected:
 
-   Mesh& _mesh;                 //< reference to the mesh which is built by refinement
+   const Mesh& _mesh;                 //< reference to the mesh which is built by refinement
 
 };
 

@@ -38,7 +38,7 @@ class MeshASMPartitioning : public MeshPartitioning {
 public:
 
     /** Constructor */
-    MeshASMPartitioning(Mesh& mesh);
+    MeshASMPartitioning(const Mesh& mesh);
 
     /** destructor */
     ~MeshASMPartitioning() {} 

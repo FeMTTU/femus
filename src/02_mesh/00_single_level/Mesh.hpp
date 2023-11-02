@@ -112,7 +112,7 @@ public:
     
     void SetCharacteristicLengthOfCoarsestLevel();
     
-    double GetCharacteristicLength(){
+    double GetCharacteristicLength() const {
       return _cLength;
     };
 
@@ -326,7 +326,9 @@ public:
 
     void Partition();
     
-    std::vector < unsigned > PartitionForElements();
+    std::vector < unsigned > PartitionForElements() const;
+    
+    std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
     
 // === PARTITIONING - END =================
 
@@ -366,9 +368,6 @@ public:
       return Mesh::_face_index;
     }
     
-    /** Get if element is refined*/
-    short unsigned GetRefinedElementIndex(const unsigned &iel) const;
-    
     
 private:
     
@@ -382,12 +381,60 @@ private:
     
     /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
     static unsigned _ref_index;
+    
     /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
     static unsigned _face_index;
 
 // === REFINEMENT- END  =================
 
 
+// =========================
+// === REFINEMENT, AMR - BEGIN =================
+// =========================
+public:
+    
+    /** AMR */
+    static bool (* _SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level);
+    static bool _IsUserRefinementFunctionDefined;
+    
+    /** AMR */
+    bool GetIfHomogeneous() const {
+      return _meshIsHomogeneous;
+    }
+
+    /** AMR */
+    void SetIfHomogeneous(const bool &value) {
+      _meshIsHomogeneous = value ;
+    }
+
+    /** AMR */
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() {
+      return _amrRestriction;
+    }
+    
+    /** AMR */
+    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() {
+      return _amrSolidMark;
+    }
+    
+    /** Get if element is refined*/
+    short unsigned GetRefinedElementIndex(const unsigned &iel) const;
+    
+
+private:
+    
+    /** AMR */
+    bool _meshIsHomogeneous;
+    
+    /** AMR: restriction map (vector of 3 FE families: linear, quadratic, biquadratic) */
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
+    
+    /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
+    std::vector < std::map < unsigned, bool > > _amrSolidMark;
+
+// === REFINEMENT, AMR - END =================
+    
+    
 
 // === Geometric Element, FE, Single (FE for single geometric element) - BEGIN =================
 public:
@@ -412,7 +459,7 @@ public:
     const elem_type *_finiteElement[N_GEOM_ELS][NFE_FAMS];
     
     
-    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
+    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType) const;
 
 // === Geometric Element, FE, Single (FE for single geometric element) - END =================
     
@@ -424,16 +471,21 @@ public:
 public:
     
     /** FE: DofMap carriers */
+    
+    /** Elements - BEGIN */
     void initialize_elem_offsets();
     
     void build_elem_offsets(const std::vector <unsigned> & partition);
     
     void mesh_reorder_elem_quantities();
     
-    void set_elem_counts();
+    void set_elem_counts_per_subdomain();
     
     std::vector < unsigned >  elem_offsets();
+    /** Elements -  END */
   
+    
+    /**  Nodes - BEGIN */
     std::vector < unsigned >  node_offsets();
   
     void mesh_reorder_node_quantities(const std::vector <unsigned> & mapping);
@@ -441,6 +493,8 @@ public:
     void set_node_counts();
 
     void deallocate_node_mapping(std::vector < unsigned > & node_mapping) const;
+    /**  Nodes - END */
+    
     
     /** Get the dof number for the element -type- */
     unsigned GetTotalNumberOfDofs(const unsigned &type) const {
@@ -455,7 +509,7 @@ public:
     unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 
     /** FE: DofMap: Here is where the element and node global orderings are changed based on the partitioning */
-    void FillISvector(std::vector < unsigned > &partition);
+    void FillISvectorDofMapAllFEFamilies(std::vector < unsigned > &partition);
 
     void FillISvectorElemOffsets(std::vector < unsigned >& partition);
   
@@ -476,7 +530,7 @@ public:
     
     void dofmap_Node_based_dof_offsets_Complete_linear_quadratic();
     
-    const std::vector < unsigned > * dofmap_get_dof_offset_array() const { return  _dofOffset; }
+    inline const std::vector < unsigned > * dofmap_get_dof_offset_array() const { return  _dofOffset; }
     
     unsigned  dofmap_get_dof_offset(const unsigned soltype, const unsigned proc_id) const { return  _dofOffset[soltype][proc_id]; }
     
@@ -593,46 +647,6 @@ private:
 // === TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - END =================
 
 
-// =========================
-// === REFINEMENT, AMR - BEGIN =================
-// =========================
-public:
-    
-    /** AMR */
-    static bool (* _SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level);
-    static bool _IsUserRefinementFunctionDefined;
-    
-    /** AMR */
-    bool GetIfHomogeneous() {
-      return _meshIsHomogeneous;
-    }
-
-    /** AMR */
-    void SetIfHomogeneous(const bool &value) {
-      _meshIsHomogeneous = value ;
-    }
-
-    /** AMR */
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() {
-      return _amrRestriction;
-    }
-    
-    /** AMR */
-    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark(){
-      return _amrSolidMark;
-    }
-
-private:
-    
-    /** AMR */
-    bool _meshIsHomogeneous;
-    
-    /** AMR: restriction map (vector of 3 FE families: linear, quadratic, biquadratic) */
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
-    /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
-    std::vector < std::map < unsigned, bool > > _amrSolidMark;
-
-// === REFINEMENT, AMR - END =================
 
     
 };

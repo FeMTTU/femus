@@ -39,7 +39,7 @@ class MeshMetisPartitioning : public MeshPartitioning {
 public:
 
     /** Constructor */
-    MeshMetisPartitioning(Mesh& mesh);
+    MeshMetisPartitioning(const Mesh& mesh);
 
     /** destructor */
     ~MeshMetisPartitioning() {};

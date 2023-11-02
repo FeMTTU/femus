@@ -24,7 +24,7 @@
 
 namespace femus {
 
-MeshASMPartitioning::MeshASMPartitioning(Mesh& mesh) : MeshPartitioning(mesh) {
+MeshASMPartitioning::MeshASMPartitioning(const Mesh& mesh) : MeshPartitioning(mesh) {
 
 
 }
