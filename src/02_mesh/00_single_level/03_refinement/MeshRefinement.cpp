@@ -238,6 +238,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     std::vector < unsigned > materialElementCounter(3, 0);
     
+    
     for(unsigned isdom = 0; isdom < _nprocs; isdom++) {
         
       elc->LocalizeElementDof(isdom);
@@ -458,17 +459,10 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //==== BuildTopologyStructures - BEGIN ======== 
 //====================================
     
+    _mesh.Topology_InitializeCoordinates();
+
 //====  Topology, Coordinates - BEGIN ======== 
     // build Mesh coordinates by projecting the coarse coordinates
-    _mesh._topology = new Solution(&_mesh);
-    _mesh._topology->AddSolution("X", LAGRANGE, SECOND, 1, 0);
-    _mesh._topology->AddSolution("Y", LAGRANGE, SECOND, 1, 0);
-    _mesh._topology->AddSolution("Z", LAGRANGE, SECOND, 1, 0);
-
-    _mesh._topology->ResizeSolutionVector("X");
-    _mesh._topology->ResizeSolutionVector("Y");
-    _mesh._topology->ResizeSolutionVector("Z");
-
     unsigned solType = 2;
 
     _mesh._topology->_Sol[0]->matrix_mult(*mshc->_topology->_Sol[0], *_mesh.GetCoarseToFineProjection(solType));
@@ -480,16 +474,9 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====  Topology, Coordinates - END ======== 
 
     
-//====  Topology, AMR - BEGIN ======== 
-    _mesh._topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
-    _mesh._topology->ResizeSolutionVector("AMR");
-//====  Topology, AMR - END ======== 
-
-    
-//====  Topology, Solid Node Flag - BEGIN ======== 
-    _mesh._topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
-    _mesh.AllocateAndMarkStructureNode();
-//====  Topology, Solid Node Flag - END ======== 
+    _mesh.Topology_InitializeAMR();
+    _mesh.Topology_InitializeSolidNodeFlag();
+    _mesh.Topology_FillSolidNodeFlag();
 
 //====================================
 //==== BuildTopologyStructures - END ======== 
@@ -514,7 +501,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //       }
     }
     else{
-      restriction.resize(3);
+      restriction.resize(NFE_FAMS_C_ZERO_LAGRANGE);
     }
 //==== AMR (only uses Topology in one point, does not modify it) - END ======== 
     

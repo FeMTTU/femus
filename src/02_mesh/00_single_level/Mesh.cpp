@@ -184,7 +184,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
   
   
-  void Mesh::Partition() {
+  void Mesh::PartitionElements_and_FillDofMapAllFEFamilies() {
 
     std::vector < unsigned > partition = PartitionForElements();
     
@@ -252,15 +252,18 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     _coords.resize(3);
 //==== Coords, coarse, then to topology - END ==============================
 
+    
 
     ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
 
 
 
+//==== Only in Coarse generations - BEGIN ==============================
     AddBiquadraticNodesNotInMeshFile();
 
     el->ShrinkToFitElementDof();
     el->ShrinkToFitElementNearFace();
+//==== Only in Coarse generations - END ==============================
 
 
   }  
@@ -274,7 +277,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     ReadCoarseMeshBeforePartitioning(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
     
-    Partition();
+    PartitionElements_and_FillDofMapAllFEFamilies();
 
     BuildElementAndNodeStructures();
    
@@ -294,6 +297,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
     
     BuildTopologyStructures();  //needs dofmap
+    
+    
+    _amrRestriction.resize(NFE_FAMS_C_ZERO_LAGRANGE); /** @todo is it really needed here? */
 
   }
   
@@ -302,18 +308,19 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   void Mesh::BuildTopologyStructures() {
       
 
-    Topology_InitializeAndFillCoordinates();
-    Topology_InitializeAMR();
-    Topology_InitializeAndFillSolidNodeFlag();
+    Topology_InitializeCoordinates();
+    Topology_FillCoordinates();
 
-    _amrRestriction.resize(NFE_FAMS_C_ZERO_LAGRANGE); /* 3 Lagrange continuous families (linear, quadr, biquadr) */
+    Topology_InitializeAMR();
+    Topology_InitializeSolidNodeFlag();
+    Topology_FillSolidNodeFlag();
 
 
   }
 
 
  /// this needs all the dof maps, for the continuous Lagrange elements
-  void Mesh::Topology_InitializeAndFillCoordinates() {
+  void Mesh::Topology_InitializeCoordinates() {
       
     _topology = new Solution(this);
 
@@ -325,14 +332,20 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     _topology->ResizeSolutionVector("Y");  //needs dofmap
     _topology->ResizeSolutionVector("Z");  //needs dofmap
 
+  }
+  
+
+  void Mesh::Topology_FillCoordinates() {
+    
     //set coordinates -----------
     _topology->GetSolutionName("X") = _coords[0];
     _topology->GetSolutionName("Y") = _coords[1];
     _topology->GetSolutionName("Z") = _coords[2];
     //set coordinates -----------
-    
 
   }
+  
+  
   
   
 /// This needs the dof maps, for the discontinuous Lagrange elements
@@ -346,11 +359,11 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
 
 /// This needs the dof maps, for the continuous Lagrange elements
-  void Mesh::Topology_InitializeAndFillSolidNodeFlag() {
+  void Mesh::Topology_InitializeSolidNodeFlag() {
       
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
     
-    AllocateAndMarkStructureNode();
+    _topology->ResizeSolutionVector("solidMrk");
 
   }
   
@@ -399,13 +412,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 //==== Coords, coarse, then to topology - END ==============================
     
 
+    
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
 
 
+    
+//==== Only in Coarse generations - BEGIN ==============================
     AddBiquadraticNodesNotInMeshFile();
 
     el->ShrinkToFitElementDof();
     el->ShrinkToFitElementNearFace();
+//==== Only in Coarse generations - END ==============================
 
     
 //==== Material element counter is not in BuildBox - BEGIN ==============================
@@ -415,7 +432,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 //==== Material element counter is not in BuildBox - END ==============================
 
 
-    Partition();
+    PartitionElements_and_FillDofMapAllFEFamilies();
 
     BuildElementAndNodeStructures();
     
@@ -426,16 +443,10 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     PrintInfo();  //needs dofmap
     
   }
-  
 
-  /** This function stores the element adiacent to the element face (iel, iface)
-   * and stores it in _elementNearFace[iel][iface]
-   * @todo this function should go inside the Elem class instead
-   **/
 
-  void Mesh::AllocateAndMarkStructureNode() {
+  void Mesh::Topology_FillSolidNodeFlag() {
 
-    _topology->ResizeSolutionVector("solidMrk");
 
     NumericVector& NodeMaterial =  _topology->GetSolutionName("solidMrk");
 

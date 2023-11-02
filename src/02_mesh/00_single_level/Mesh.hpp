@@ -145,6 +145,37 @@ private:
 // === Geometric Element, Single - END =================
 
     
+// === Geometric Element, Single, REFINEMENT - BEGIN =================
+ public:
+    
+    void SetRefinementCellAndFaceIndices(const unsigned &dim) {
+
+      Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
+      Mesh::_face_index = pow(2, dim -1u);
+    }
+
+    /** MESH */
+    const unsigned GetRefIndex() const {
+      return Mesh::_ref_index;
+    }
+
+    /** MESH */
+    const unsigned GetFaceIndex() const {
+      return Mesh::_face_index;
+    }
+    
+ private:
+   
+    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
+    static unsigned _ref_index;
+    
+    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
+    static unsigned _face_index;
+
+    
+// === Geometric Element, Single, REFINEMENT - END =================
+    
+    
 // === Elements, List - BEGIN =================
  public:
    
@@ -320,17 +351,18 @@ private:
 
     
 // =========================
-// === PARTITIONING - BEGIN =================
+// === PARTITIONING, and FE DOFMAP - BEGIN =================
 // =========================
 public:
 
-    void Partition();
+    void PartitionElements_and_FillDofMapAllFEFamilies();
     
     std::vector < unsigned > PartitionForElements() const;
     
     std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
     
-// === PARTITIONING - END =================
+// === PARTITIONING, and FE DOFMAP - END =================
+
 
 // =========================
 // === REFINEMENT- BEGIN  =================
@@ -352,24 +384,8 @@ public:
       _coarseMsh = otherCoarseMsh;
     }
 
-    void SetRefinementCellAndFaceIndices(const unsigned &dim) {
-
-      Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE
-      Mesh::_face_index = pow(2, dim -1u);
-    }
-
-    /** MESH */
-    const unsigned GetRefIndex() const {
-      return Mesh::_ref_index;
-    }
-
-    /** MESH */
-    const unsigned GetFaceIndex() const {
-      return Mesh::_face_index;
-    }
     
-    
-private:
+ private:
     
     void PrintInfoLevel() const;
     
@@ -379,12 +395,6 @@ private:
     /** Pointer to the coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
     
-    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
-    static unsigned _ref_index;
-    
-    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
-    static unsigned _face_index;
-
 // === REFINEMENT- END  =================
 
 
@@ -619,14 +629,17 @@ public:
   
     void BuildTopologyStructures();
     
-    void Topology_InitializeAndFillCoordinates();
+    void Topology_InitializeCoordinates();
+    
+    void Topology_FillCoordinates();
     
     void Topology_InitializeAMR();
     
-    void Topology_InitializeAndFillSolidNodeFlag();
+    /** FSI:  */
+    void Topology_InitializeSolidNodeFlag();
     
     /** FSI: Allocate memory for adding fluid or solid mark @todo this should be in a separate FSI environment */
-    void AllocateAndMarkStructureNode();
+    void Topology_FillSolidNodeFlag();
     
     /** Only for parallel @todo this should be in a separate FSI environment */
     bool GetSolidMark(const unsigned &inode) const;
