@@ -18,6 +18,7 @@
 //----------------------------------------------------------------------------
 
 #include "LinearEquation.hpp"
+#include "Mesh.hpp"
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
@@ -105,7 +106,7 @@ namespace femus {
   
 
   /** Print numeric vector with structure */
-  void LinearEquation::print_with_structure_matlab_friendly(const unsigned iproc, const std::string filename, NumericVector * num_vec_in) const {
+  void LinearEquation::print_residual_with_structure_matlab_friendly(const unsigned iproc, const std::string filename, NumericVector * num_vec_in) const {
       
 //       if (iproc == 0) {
       
@@ -188,9 +189,12 @@ namespace femus {
   
   
 //--------------------------------------------------------------------------------
-  void LinearEquation::InitPde(const std::vector <unsigned> &SolPdeIndex_other, const  std::vector <int> &SolType_other,
-                               const std::vector <char*> &SolName_other, std::vector <NumericVector*> *Bdc_other,
-                               const unsigned &other_gridn, std::vector <bool> &SparsityPattern_other) {
+  void LinearEquation::InitPde(const std::vector <unsigned> &SolPdeIndex_other, 
+                               const  std::vector <int> &SolType_other,
+                               const std::vector <char*> &SolName_other,
+                               std::vector <NumericVector*> *Bdc_other,
+                               const unsigned &other_gridn, 
+                               std::vector <bool> &SparsityPattern_other) {
       
     _SolPdeIndex = SolPdeIndex_other;
     _gridn = other_gridn;
@@ -282,12 +286,12 @@ namespace femus {
     //--- Error and residual: build and init - END --------------------------------------------------------------------------------------------
 
 
-    //--- Sparsity pattern: fill it as if all variables were sparse - BEGIN  -----------------------------------------------------------------------------------------------
+    //--- Matrix: Sparsity pattern: fill it as if all variables were sparse - BEGIN  -----------------------------------------------------------------------------------------------
     GetSparsityPatternSize();
-    //--- Sparsity pattern: fill it as if all variables were sparse - END  -----------------------------------------------------------------------------------------------
+    //--- Matrix: Sparsity pattern: fill it as if all variables were sparse - END  -----------------------------------------------------------------------------------------------
 
     
-    //--- Sparsity pattern: adjust it for dense variables - BEGIN -----------------------------------------------------------------------------------------------
+    //--- Matrix: Sparsity pattern: adjust it for dense variables - BEGIN -----------------------------------------------------------------------------------------------
 //     const unsigned dim = _msh->GetDimension();
 //     int KK_UNIT_SIZE_ = pow(5, dim);
     int KK_size = KKIndex[KKIndex.size() - 1u];
@@ -319,7 +323,7 @@ namespace femus {
         o_nnz[k] = KK_size - KK_local_size;
       }
     }
-    //--- Sparsity pattern: adjust it for dense variables - END -----------------------------------------------------------------------------------------------
+    //--- Matrix: Sparsity pattern: adjust it for dense variables - END -----------------------------------------------------------------------------------------------
     
 
     //--- Matrix: build and init - BEGIN --------------------------------------------------------------------------------------------
@@ -327,9 +331,9 @@ namespace femus {
     _KK->init(KK_size, KK_size, KK_local_size, KK_local_size, d_nnz, o_nnz);
     //--- Matrix: build and init - END  --------------------------------------------------------------------------------------------
 
-    //--- Matrix AMR: build --------------------------------------------------------------------------------------------
+    //--- Matrix AMR: build - BEGIN --------------------------------------------------------------------------------------------
     _KKamr = SparseMatrix::build().release();
-    //--- Matrix AMR: build --------------------------------------------------------------------------------------------
+    //--- Matrix AMR: build - END --------------------------------------------------------------------------------------------
 
   }
 

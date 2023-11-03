@@ -25,6 +25,7 @@
 #include "MeshASMPartitioning.hpp"
 #include "PetscPreconditioner.hpp"
 #include "PetscMatrix.hpp"
+
 #include <iomanip>
 #include <sstream>
 
@@ -82,7 +83,7 @@ namespace femus {
 
   // ==============================================
 
-  void LinearEquationSolverPetscAsm::BuildAMSIndex(const std::vector <unsigned>& variable_to_be_solved) {
+  void LinearEquationSolverPetscAsm::BuildASMIndex(const std::vector <unsigned>& variable_to_be_solved) {
 
     unsigned nel = _msh->GetNumberOfElements();
 

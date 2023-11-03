@@ -19,10 +19,10 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include "SolvertypeEnum.hpp"
 #include "MgTypeEnum.hpp"
 #include "LinearEquationSolverEnum.hpp"
-#include "FieldSplitTree.hpp"
-
+#include "Mesh.hpp"
 
 
 namespace femus {
@@ -42,7 +42,7 @@ class System {
 
 
 
-//==== Constr/Destr - BEGIN ========
+//==== Constructors / Destructor - BEGIN ========
 public:
   
     /** Constructor.  Optionally initializes required data structures. */
@@ -52,7 +52,7 @@ public:
     virtual ~System();
 
   
-//==== Constr/Destr - END ========
+//==== Constructors / Destructor - END ========
   
   
 //==== Basic - BEGIN ========

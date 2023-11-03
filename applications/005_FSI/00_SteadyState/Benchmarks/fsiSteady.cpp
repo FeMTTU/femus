@@ -440,7 +440,7 @@ output_path.append("/");
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
-  system.PrintSolverInfo(true);
+  system.SetPrintSolverInfo(true);
 
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);

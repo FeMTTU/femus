@@ -47,7 +47,7 @@ namespace femus
   {
 
 // =========================================
-// ===  Constr/Destr - BEGIN =================
+// ===  Constructors / Destructor - BEGIN =================
 // =========================================
     public:
 
@@ -60,7 +60,7 @@ namespace femus
       /** destructor */
       virtual ~elem_type();
 // =========================================
-// ===  Constr/Destr - END =================
+// ===  Constructors / Destructor - END =================
 // =========================================
 
 // =========================================
@@ -437,7 +437,7 @@ namespace femus
 
     public:
         
-// ===  Constr/Destr - BEGIN =================
+// ===  Constructors / Destructor - BEGIN =================
       /** constructor */
       elem_type_1D(const char* geom_elem, const char* fe_order, const char* gauss_order);
 
@@ -446,7 +446,7 @@ namespace femus
 
       /** destructor */
       ~elem_type_1D();      
-// ===  Constr/Destr - END =================
+// ===  Constructors / Destructor - END =================
 
 // =========================================
 // ===   FE (without Quadrature evaluations) - BEGIN =================
@@ -629,7 +629,7 @@ namespace femus
   class elem_type_2D : public elem_type
   {
       
-// ===  Constr/Destr - BEGIN =================
+// ===  Constructors / Destructor - BEGIN =================
     public:
         
       /** constructor */
@@ -640,7 +640,7 @@ namespace femus
 
       /** destructor */
       ~elem_type_2D();
-// ===  Constr/Destr - END =================
+// ===  Constructors / Destructor - END =================
 
       
 // =========================================
@@ -800,7 +800,7 @@ namespace femus
   class elem_type_3D : public elem_type
   {
       
-// ===  Constr/Destr - BEGIN =================
+// ===  Constructors / Destructor - BEGIN =================
     public:
         
       /** constructor */
@@ -811,7 +811,7 @@ namespace femus
 
       /** destructor */
       ~elem_type_3D();
-// ===  Constr/Destr - END =================
+// ===  Constructors / Destructor - END =================
       
 // =========================================
 // ===   FE (without Quadrature evaluations) - BEGIN =================

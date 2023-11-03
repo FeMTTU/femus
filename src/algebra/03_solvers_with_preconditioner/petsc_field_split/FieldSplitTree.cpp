@@ -13,12 +13,15 @@
 
   =========================================================================*/
 
-#include <map>
-#include <algorithm>
-
 #include "FieldSplitTree.hpp"
 #include "LinearEquationSolverPetscFieldSplit.hpp"
 #include "MeshASMPartitioning.hpp"
+
+#include "Mesh.hpp"
+
+#include <map>
+#include <algorithm>
+
 
 namespace femus {
 

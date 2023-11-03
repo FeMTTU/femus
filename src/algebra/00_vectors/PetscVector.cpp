@@ -844,7 +844,7 @@ void PetscVector::create_subvector(
     // init() function (where we let PETSc decide the number of local
     // entries) is not currently offered by the PetscVector
     // class.  Should we differentiate here between sequential and
-    // parallel vector creation based on libMesh::n_processors() ?
+    // parallel vector creation based on n_processors() ?
     ierr = VecCreateMPI(MPI_COMM_WORLD,
                         PETSC_DECIDE,          // n_local
                         rows.size(),           // n_global

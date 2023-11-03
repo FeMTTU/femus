@@ -26,6 +26,9 @@
 #include "PetscPreconditioner.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
+
+#include "Mesh.hpp"
+
 #include <iomanip>
 #include <sstream>
 

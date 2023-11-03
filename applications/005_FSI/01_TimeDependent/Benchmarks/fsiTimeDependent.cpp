@@ -377,7 +377,7 @@ int main(int argc,char **args) {
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
-  system.PrintSolverInfo(true);
+  system.SetPrintSolverInfo(true);
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);

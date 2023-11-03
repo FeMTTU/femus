@@ -24,7 +24,7 @@
 namespace femus {
 
 
-//==== Constr/Destr - BEGIN ========
+//==== Constructors / Destructor - BEGIN ========
 
   /** Constructor.  Optionally initializes required data structures. */
   System::System (MultiLevelProblem& ml_probl, const std::string& name_in, const unsigned int number_in, const LinearEquationSolverType & smoother_type) :
@@ -48,7 +48,7 @@ namespace femus {
 System::~System() {
 }
 
-//==== Constr/Destr - END ========
+//==== Constructors / Destructor - END ========
 
 
 

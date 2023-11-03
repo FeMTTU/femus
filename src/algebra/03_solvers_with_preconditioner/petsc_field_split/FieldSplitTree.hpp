@@ -25,8 +25,6 @@
 #include "SchurFactTypeEnum.hpp"
 #include "SchurPreType.hpp"
 
-#include "Mesh.hpp"
-
 
 #include <cstdlib>
 #include <iostream>
@@ -42,6 +40,7 @@ namespace femus {
   class LinearEquationSolverPetscFieldSplit;
 
   class FieldSplitTree {
+    
     public:
       //single split constructor
       FieldSplitTree (const SolverType& solver, const PreconditionerType& preconditioner, const std::vector < unsigned >& fields, std::string name);

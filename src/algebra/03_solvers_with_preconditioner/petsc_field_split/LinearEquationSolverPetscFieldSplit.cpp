@@ -21,6 +21,8 @@
 
 #include "LinearEquationSolverPetscFieldSplit.hpp"
 
+#include "Mesh.hpp"
+
 
 
 namespace femus {
@@ -31,16 +33,16 @@ namespace femus {
 
   void LinearEquationSolverPetscFieldSplit::BuildBdcIndex(const std::vector <unsigned>& variable_to_be_solved) {
     if(_fieldSplitTree != NULL) _fieldSplitTree->BuildIndexSet(KKoffset, _iproc, _nprocs, _msh->GetLevel(), this);
-    else FielSlipTreeIsNotDefined();
+    else FieldSplitTreeIsNotDefined();
     LinearEquationSolverPetsc::BuildBdcIndex(variable_to_be_solved);
   }
 
   void LinearEquationSolverPetscFieldSplit::SetPreconditioner(KSP& subksp, PC& subpc) {
     if(_fieldSplitTree != NULL) _fieldSplitTree->SetPC(subksp, _msh->GetLevel());
-    else FielSlipTreeIsNotDefined();
+    else FieldSplitTreeIsNotDefined();
   }
   
-  void LinearEquationSolverPetscFieldSplit::FielSlipTreeIsNotDefined(){
+  void LinearEquationSolverPetscFieldSplit::FieldSplitTreeIsNotDefined(){
     std::cout << "Error! No FieldSplitTree object has been passed to the FEMuS_FIELDSPLIT system"<<std::endl;
     std::cout << "Define a FieldSplitTree object FS and pass it to the FEMuS_FIELDSPLIT system with"<<std::endl;
     std::cout << "system.SetFieldSplitTree(&FS);"<<std::endl;

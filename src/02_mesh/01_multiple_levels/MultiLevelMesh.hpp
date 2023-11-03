@@ -47,7 +47,7 @@ class Domain;
 class MultiLevelMesh {
 
 //====================
-//==== Constr/Destr - BEGIN ======== 
+//==== Constructors / Destructor - BEGIN ======== 
 //====================
 public:
 
@@ -65,7 +65,7 @@ public:
     /** Destructor */
     ~MultiLevelMesh();
 
-//==== Constr/Destr - END ======== 
+//==== Constructors / Destructor - END ======== 
     
 //====================
 //==== Basic - BEGIN  ======== 

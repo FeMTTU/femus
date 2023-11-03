@@ -205,8 +205,12 @@ namespace femus {
  //****** init:  Sparsity Pattern, conclusion - BEGIN *******************
     for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
-      _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
-                             _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
+      _LinSolver[i]->InitPde(_SolSystemPdeIndex,
+                             _ml_sol->GetSolType(),
+                             _ml_sol->GetSolName(),
+                             &_solution[i]->_Bdc,
+                             _gridn,
+                             _SparsityPattern);
     }
  //****** init:  Sparsity Pattern, conclusion - END *******************
     
@@ -563,8 +567,12 @@ namespace femus {
 
     _LinSolver[_gridn] = LinearEquationSolver::build(_gridn, _solution[_gridn], _smootherType).release();
 
-    _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
-                                _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc,  _gridn + 1, _SparsityPattern);
+    _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex,
+                                _ml_sol->GetSolType(),
+                                _ml_sol->GetSolName(),
+                                &_solution[_gridn]->_Bdc,
+                                _gridn + 1,
+                                _SparsityPattern);
 
     _PP.resize(_gridn + 1);
     _RR.resize(_gridn + 1);
@@ -589,7 +597,7 @@ namespace femus {
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
     _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
-    _LinSolver[_gridn]->PrintSolverInfo(_printSolverInfo);
+    _LinSolver[_gridn]->SetPrintSolverInfo(_printSolverInfo);
 
     if(_numblock_test) {
       unsigned num_block2 = std::min(_num_block, _msh[_gridn]->GetNumberOfElements());
@@ -986,12 +994,12 @@ namespace femus {
   }
 
 
-  void LinearImplicitSystem::PrintSolverInfo(const bool & printInfo) {
+  void LinearImplicitSystem::SetPrintSolverInfo(const bool & printInfo) {
 
     _printSolverInfo = printInfo;
 
     for(unsigned i = 0; i < _gridn; i++) {
-      _LinSolver[i]->PrintSolverInfo(_printSolverInfo);
+      _LinSolver[i]->SetPrintSolverInfo(_printSolverInfo);
     }
   }
 

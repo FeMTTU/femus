@@ -58,7 +58,7 @@ class QuantityMap;
 class MultiLevelProblem {
 
 
-// ===  Constr/Destr - BEGIN =================
+// ===  Constructors / Destructor - BEGIN =================
 public:
     /** Constructor */
     MultiLevelProblem();
@@ -75,7 +75,7 @@ public:
 //   /** init the system pde structures */
 //   void init();
 
-// ===  Constr/Destr - END =================
+// ===  Constructors / Destructor - END =================
 
 
 // ===  Mesh - BEGIN =================
@@ -89,7 +89,7 @@ public:
         return _gridn;
     };
 
-    /** Increase of one the number of levels */
+    /** Increase by one the number of levels */
     void AddLevel(){
         _gridn++;
     };

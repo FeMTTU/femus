@@ -285,7 +285,7 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(4);
 
 
-  system.PrintSolverInfo(false);
+  system.SetPrintSolverInfo(false);
 
   //system.MGsolve();
 

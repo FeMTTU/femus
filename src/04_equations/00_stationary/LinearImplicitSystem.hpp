@@ -38,7 +38,7 @@ namespace femus {
   class LinearImplicitSystem : public System {
 
 
-//==== Constr/Destr - BEGIN ========
+//==== Constructors / Destructor - BEGIN ========
     public:
 
       /** Constructor.  Optionally initializes required data structures. */
@@ -46,7 +46,7 @@ namespace femus {
 
       /** Destructor */
       virtual ~LinearImplicitSystem();
-//==== Constr/Destr - END ========
+//==== Constructors / Destructor - END ========
 
       
 //==== Basic - BEGIN ========
@@ -209,7 +209,7 @@ namespace femus {
       }
 
       /** Set if the solver has to output convergence information **/
-      void PrintSolverInfo (const bool & printInfo = true);
+      void SetPrintSolverInfo (const bool & printInfo = true);
 
       /** Flag to print fields to file after each linear iteration */
       void SetDebugLinear(const bool my_value); 

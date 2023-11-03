@@ -30,6 +30,9 @@
 #include "LinearEquationSolverPetsc.hpp"
 #include "PetscVector.hpp"
 
+#include "Mesh.hpp"
+
+
 namespace femus {
 
   /**
@@ -63,11 +66,11 @@ namespace femus {
       };
 
       /** To be Added */
-      void BuildAMSIndex(const std::vector <unsigned> &variable_to_be_solved);
+      void BuildASMIndex(const std::vector <unsigned> &variable_to_be_solved);
 
       void BuildBdcIndex(const std::vector <unsigned> &variable_to_be_solved) {
         if(!_standardASM){
-          BuildAMSIndex(variable_to_be_solved);
+          BuildASMIndex(variable_to_be_solved);
         }
         LinearEquationSolverPetsc::BuildBdcIndex(variable_to_be_solved);
       }
@@ -76,6 +79,7 @@ namespace femus {
 
       // data member
     private:
+      
       unsigned _elementBlockNumber[3];
       unsigned short _NSchurVar;
 

@@ -44,13 +44,13 @@ namespace femus {
   ) { // =================================================================================
     // Build the appropriate vector
     switch (solver_package) {
-#ifdef HAVE_PETSC // ------------------------------
+#ifdef HAVE_PETSC
       case PETSC_SOLVERS: {
         std::unique_ptr<SparseMatrix > ap (new PetscMatrix);
         return ap;
       }
 #endif
-#ifdef HAVE_TRILINOS // ----------------------------
+#ifdef HAVE_TRILINOS
       case TRILINOS_SOLVERSM: {
         std::unique_ptr<SparseMatrix > ap (new EpetraMatrix<double>);
         return ap;
@@ -124,7 +124,7 @@ namespace femus {
 //
 //   // We'll print the matrix from processor 0 to make sure
 //   // it's serialized properly
-//   if (libMesh::processor_id() == 0){
+//   if (processor_id() == 0){
 // //       libmesh_assert(this->_dof_map->first_dof() == 0);
 //       for (unsigned int i=this->_dof_map->first_dof();
 //            i!=this->_dof_map->end_dof(); ++i){
@@ -135,7 +135,7 @@ namespace femus {
 //       std::vector<unsigned int> ibuf, jbuf;
 //       std::vector<double> cbuf;
 //       unsigned int currenti = this->_dof_map->end_dof();
-//       for (unsigned int p=1; p < libMesh::n_processors(); ++p)  {
+//       for (unsigned int p=1; p < n_processors(); ++p)  {
 //           Parallel::receive(p, ibuf);
 //           Parallel::receive(p, jbuf);
 //           Parallel::receive(p, cbuf);

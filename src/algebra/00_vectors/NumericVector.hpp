@@ -435,11 +435,7 @@ inline void NumericVector::print_global(std::ostream& os) const {
   std::vector<double> v(this->size());
   this->localize(v);
   // Right now we only want one copy of the output
-#ifdef HAVE_MPIM   
-  if(static_cast<int>(libMeshPrivateData::_processor_id)) return ;
-#else
-  if(0)return;
-#endif
+  
   os << "Size\tglobal =  " << this->size() << std::endl;
   os << "#\tValue" << std::endl;
   for (unsigned int i=0; i!=v.size(); i++) os << i << "\t" << v[i] << std::endl;

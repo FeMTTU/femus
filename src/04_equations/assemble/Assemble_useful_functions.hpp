@@ -87,7 +87,7 @@ void  print_global_residual_jacobian(const bool print_algebra_global,
 
     RES->close();
     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << nonlin_iter  << ".txt";
-    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+    pdeSys->print_residual_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
 
      } 
   

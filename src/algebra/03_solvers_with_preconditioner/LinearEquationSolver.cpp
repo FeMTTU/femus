@@ -41,12 +41,12 @@ namespace femus
 #ifdef HAVE_PETSC
       case PETSC_SOLVERS:  {
           switch(smoother_type) {
-            case FEMuS_ASM: {
-                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetscAsm(igrid, other_solution));
-                return ap;
-              }
             case FEMuS_DEFAULT: {
                 std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetsc(igrid, other_solution));
+                return ap;
+              }
+            case FEMuS_ASM: {
+                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetscAsm(igrid, other_solution));
                 return ap;
               }
             case FEMuS_FIELDSPLIT: {

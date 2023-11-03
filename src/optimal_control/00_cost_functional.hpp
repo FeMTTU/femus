@@ -8,6 +8,9 @@
 #include "FElemTypeEnum_list.hpp"
 #include "paral.hpp"
 
+#include "PetscVector.hpp"
+
+
 #include "opt_common.hpp"
 
 #include "00_cost_functional_without_regularization.hpp"

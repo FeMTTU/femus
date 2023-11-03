@@ -19,13 +19,13 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <cassert>
 
 // Local Includes
 #include "DenseMatrixBase.hpp"
 #include "DenseMatrix.hpp"
 #include "DenseSubvector.hpp"
 
+#include <cassert>
 
 namespace femus {
 

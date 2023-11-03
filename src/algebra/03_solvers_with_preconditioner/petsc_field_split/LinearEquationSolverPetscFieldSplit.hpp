@@ -51,7 +51,7 @@ namespace femus {
 
       void SetPreconditioner(KSP& subksp, PC& subpc);
 
-      void FielSlipTreeIsNotDefined();
+      void FieldSplitTreeIsNotDefined();
       // member data
       FieldSplitTree* _fieldSplitTree;
 

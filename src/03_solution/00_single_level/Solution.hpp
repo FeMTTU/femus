@@ -191,11 +191,11 @@ protected:
 // === Solution as Unknown of System - BEGIN =================
     public:
 //       /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
-//       void UpdateSolAndRes(const std::vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const std::vector < std::vector <unsigned> > &KKoffset);
+//       void UpdateSolAndRes(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* EPS, NumericVector* RES, const std::vector < std::vector <unsigned> > &KKoffset);
 
-      void UpdateSol(const std::vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const std::vector <std::vector <unsigned> > &KKoffset);
+      void UpdateSol(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* EPS, const std::vector <std::vector <unsigned> > &KKoffset);
       /** */
-      void UpdateRes(const std::vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const std::vector <std::vector <unsigned> > &KKoffset);
+      void UpdateRes(const std::vector <unsigned> & SolPdeIndex_in, NumericVector* _RES, const std::vector <std::vector <unsigned> > &KKoffset);
 
 
       /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
@@ -248,7 +248,7 @@ protected:
 // does this depend on a System or can it be also equation-independent?
   public:
 //      /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
-//     bool FlagAMRRegionBasedOnl2(const std::vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
+//     bool FlagAMRRegionBasedOnl2(const std::vector <unsigned> & SolPdeIndex_in, const double &AMRthreshold);
 //
 //      /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
 //     bool FlagAMRRegionBasedOnSemiNorm(const std::vector <unsigned> &SolIndex,const double &AMRthreshold);

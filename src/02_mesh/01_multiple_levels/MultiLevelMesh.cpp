@@ -33,7 +33,7 @@
 namespace femus {
 
 
-//==== Constr/Destr - BEGIN ======== 
+//==== Constructors / Destructor - BEGIN ======== 
 
 MultiLevelMesh::~MultiLevelMesh() {  
     ///@todo these delete's should not be in the Destructor, because the new's are not in the constructor, 
@@ -101,7 +101,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,
 }
 
 
-//==== Constr/Destr - END ======== 
+//==== Constructors / Destructor - END ======== 
 
 
 

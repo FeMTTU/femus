@@ -251,7 +251,7 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  //system2.PrintSolverInfo(true);
+  //system2.SetPrintSolverInfo(true);
   system2.MGsolve();
   //END Temperature Multilevel Problem
 

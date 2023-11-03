@@ -443,13 +443,13 @@ _analytical_function.resize(new_size);
    * Update _Sol, _Res and _Eps based on EPS and RES
    **/
 // //--------------------------------------------------------------------------------
-//   void Solution::UpdateSolAndRes(const std::vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS,  NumericVector* _RES,
+//   void Solution::UpdateSolAndRes(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* _EPS,  NumericVector* _RES,
 //                                  const std::vector < std::vector <unsigned> > &KKoffset) {
 // 
 //     PetscScalar zero = 0.;
 // 
-//     for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
-//       unsigned indexSol = _SolPdeIndex[k];
+//     for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
+//       unsigned indexSol = SolPdeIndex_in[k];
 //       unsigned soltype =  _SolType[indexSol];
 // 
 //       int loc_offset_EPS = KKoffset[k][processor_id()];
@@ -478,8 +478,8 @@ _analytical_function.resize(new_size);
 //       _Eps[indexSol]->close();
 //     }
 // 
-//     for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
-//       unsigned indexSol = _SolPdeIndex[k];
+//     for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
+//       unsigned indexSol = SolPdeIndex_in[k];
 //       _Sol[indexSol]->add(*_Eps[indexSol]);
 //       _Sol[indexSol]->close();
 // 
@@ -496,12 +496,12 @@ _analytical_function.resize(new_size);
    * Update _Sol: the solution is updated by adding to itself the Eps
    **/
 
-  void Solution::UpdateSol(const std::vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS, const std::vector < std::vector <unsigned> > &KKoffset) {
+  void Solution::UpdateSol(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* _EPS, const std::vector < std::vector <unsigned> > &KKoffset) {
 
     PetscScalar zero = 0.;
 
-    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
-      unsigned indexSol = _SolPdeIndex[k];
+    for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
+      unsigned indexSol = SolPdeIndex_in[k];
       unsigned soltype =  _SolType[indexSol];
 
       int loc_offset_EPS = KKoffset[k][processor_id()];
@@ -529,8 +529,8 @@ _analytical_function.resize(new_size);
       _Eps[indexSol]->close();
     }
 
-    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
-      unsigned indexSol = _SolPdeIndex[k];
+    for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
+      unsigned indexSol = SolPdeIndex_in[k];
       _Sol[indexSol]->add(*_Eps[indexSol]);
       _Sol[indexSol]->close();
 
@@ -548,12 +548,12 @@ _analytical_function.resize(new_size);
    * Update _Res: the residual is updated
    **/
 //--------------------------------------------------------------------------------
-  void Solution::UpdateRes(const std::vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const std::vector < std::vector <unsigned> > &KKoffset) {
+  void Solution::UpdateRes(const std::vector <unsigned> & SolPdeIndex_in, NumericVector* _RES, const std::vector < std::vector <unsigned> > &KKoffset) {
 
     PetscScalar zero = 0.;
 
-    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
-      unsigned indexSol = _SolPdeIndex[k];
+    for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
+      unsigned indexSol = SolPdeIndex_in[k];
       unsigned soltype =  _SolType[indexSol];
 
       int loc_offset_RES = KKoffset[k][processor_id()];

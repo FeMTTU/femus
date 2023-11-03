@@ -407,7 +407,7 @@ public:
 
     
 // =========================
-// === PARTITIONING, and FE DOFMAP - BEGIN =================
+// === PARTITIONING, and FE DOFMAP (from Mesh to Unknowns) - BEGIN =================
 // =========================
 public:
 
@@ -417,7 +417,7 @@ public:
     
     std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
     
-// === PARTITIONING, and FE DOFMAP - END =================
+// === PARTITIONING, and FE DOFMAP (from Mesh to Unknowns) - END =================
 
 
 // =========================

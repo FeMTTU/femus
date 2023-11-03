@@ -42,7 +42,7 @@ namespace femus
           return ap;
         }
 #endif
-#ifdef LIBMESH_HAVE_TRILINOS
+#ifdef HAVE_TRILINOS
       case TRILINOS_SOLVERS: {
           std::unique_ptr<NumericVector > ap(new EpetraVector<double>);
           return ap;
