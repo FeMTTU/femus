@@ -1159,7 +1159,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-        _finiteElement[ielt][jtype]->Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype);
+        _finiteElement[ielt][jtype]->Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
       }
     }
 

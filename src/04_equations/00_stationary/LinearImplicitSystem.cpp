@@ -665,6 +665,8 @@ namespace femus {
 
   void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 
+    // ------------------- Sparsity pattern size - BEGIN
+    
     if(gridf < 1) {
       std::cout << "Error! In function \"BuildProlongatorMatrix\" argument less then 1" << std::endl;
       exit(0);
@@ -697,7 +699,8 @@ namespace femus {
       for(int isdom = iproc; isdom < iproc + 1; isdom++) {
         for(int iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = mshc->GetElementType(iel);
-          mshc->_finiteElement[ielt][SolType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k);
+          mshc->_finiteElement[ielt][SolType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k,
+                                                                                                                     mshc->GetFiniteElement(ielt, SolType) );
         }
       }
     }
@@ -717,6 +720,11 @@ namespace femus {
     delete NNZ_d;
     delete NNZ_o;
 
+    // ------------------- Sparsity pattern size - END
+    
+    
+    // ------------------- Prolongator - BEGIN
+    
     _PP[gridf] = SparseMatrix::build().release();
     _PP[gridf]->init(nf, nc, nf_loc, nc_loc, nnz_d, nnz_o);
 
@@ -734,11 +742,17 @@ namespace femus {
     }
 
     _PP[gridf]->close();
+    
+    // ------------------- Prolongator - END
+    
+    
   }
 
 
   void LinearImplicitSystem::BuildAmrProlongatorMatrix(unsigned level) {
 
+    // ------------------- Sparsity pattern size - BEGIN
+    
     int iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
 
@@ -801,6 +815,11 @@ namespace femus {
 
     delete NNZ_d;
     delete NNZ_o;
+    
+    // ------------------- Sparsity pattern size - END
+    
+    
+    // ------------------- Prolongator - BEGIN
 
     _PPamr[level] = SparseMatrix::build().release();
     _PPamr[level]->init(n, n, n_loc, n_loc, nnz_d, nnz_o);
@@ -843,6 +862,9 @@ namespace femus {
     }
     _PPamr[level]->close();
     _PPamr[level]->get_transpose(*_PPamr[level]);
+    
+    // ------------------- Prolongator - END
+    
   }
   
   

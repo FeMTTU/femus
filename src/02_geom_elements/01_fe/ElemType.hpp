@@ -147,6 +147,11 @@ class Mesh;
         return _nf;
       }
       
+      /** Retrieve the number of dofs for this element */
+      inline int  Get_Prolongator_Num_Columns(const unsigned i) const {
+        const int ncols = _prol_ind[i + 1] - _prol_ind[i];
+        return ncols;
+      }
    protected:
        
       /** Compute element prolongation operator */
@@ -402,7 +407,8 @@ class Mesh;
                                   const int& iel, 
                                   NumericVector* NNZ_d,
                                   NumericVector* NNZ_o,
-                                  const unsigned& itype) const;
+                                  const unsigned& itype,
+                                  const elem_type * elem_type_in) const;
 
         
       /** for solution printing @todo move away from here */
@@ -420,7 +426,8 @@ class Mesh;
                                   NumericVector* NNZ_d,
                                   NumericVector* NNZ_o,
                                   const unsigned& index_sol, 
-                                  const unsigned& kkindex_sol) const;
+                                  const unsigned& kkindex_sol,
+                                  const elem_type * elem_type_in) const;
 
       /** @todo move away from here */
       void BuildProlongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
