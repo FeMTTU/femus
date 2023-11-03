@@ -269,7 +269,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
           // project vertex indices -----------------
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++)
-            for(unsigned inode = 0; inode < elc->GetNVE(elt, LINEAR_FE); inode++) {
+            for(unsigned inode = 0; inode < elc->GetNVE(elt, CONTINUOUS_LINEAR); inode++) {
               unsigned jDof =  otherFiniteElement[elt][0]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
               _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof));
             }
@@ -310,7 +310,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
           }
 
           // project nodes indices -----------------
-          for(unsigned inode = 0; inode < elc->GetNVE(elt, BIQUADR_FE); inode++)
+          for(unsigned inode = 0; inode < elc->GetNVE(elt, CONTINUOUS_BIQUADRATIC); inode++)
             _mesh.el->SetElementDofIndex(jel, inode, elc->GetElementDofIndex(iel, inode));
 
           // project face indices -----------------

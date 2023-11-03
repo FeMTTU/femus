@@ -614,7 +614,7 @@ namespace femus {
               
               const double offset_to_include_line = 1.e-8;
               
-               const unsigned solType_coords = BIQUADR_FE;
+               const unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
 
               const unsigned dim = _mlMesh->GetDimension();
               

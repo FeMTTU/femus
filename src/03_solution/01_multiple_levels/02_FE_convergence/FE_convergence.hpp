@@ -555,7 +555,7 @@ template < class real_num>
 
   
   
-  unsigned solType_coords = BIQUADR_FE;
+  unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
   std::vector < std::vector < real_num > > x(dim_offset_grad);    // local coordinates
   for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(max_size);
 
@@ -1067,7 +1067,7 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
 
 
   //=============== Geometry ========================================
-  unsigned xType = BIQUADR_FE; // the FE for the domain need not be biquadratic
+  unsigned xType = CONTINUOUS_BIQUADRATIC; // the FE for the domain need not be biquadratic
   
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     

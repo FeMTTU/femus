@@ -120,7 +120,7 @@ public:
   
 
   //=============== Geometry ========================================
-   unsigned solType_coords = BIQUADR_FE;
+   unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
   CurrentElem < double > geom_element_jel(dim, msh);            // must be adept if the domain is moving, otherwise double
@@ -1117,7 +1117,7 @@ public:
   constexpr bool print_algebra_local = false;
   
   //=============== Geometry ========================================
-  unsigned solType_coords = BIQUADR_FE;
+  unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -2024,7 +2024,7 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 //***************************************************
   CurrentElem < double > geom_element_iel(dim, msh); 
   
-    const int solType_coords = BIQUADR_FE;  //biquadratic
+    const int solType_coords = CONTINUOUS_BIQUADRATIC;  //biquadratic
 
 //************** geometry (at dofs) *************************************
     std::vector < std::vector < double > > coords_at_dofs(dim);

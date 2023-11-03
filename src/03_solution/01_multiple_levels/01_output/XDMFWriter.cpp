@@ -1191,7 +1191,7 @@ namespace femus {
       // storing  ivar variables (in parallell)
       for( int iel = 0; iel <  mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels]
            - mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1]; iel++ ) {
-        uint elem_gidx = ( iel + mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1] ) * _ml_mesh->GetLevel(0)->GetMeshElements()->GetNVE( mesh->_geomelem_flag[mesh->get_dim() - 1] , BIQUADR_FE);
+        uint elem_gidx = ( iel + mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1] ) * _ml_mesh->GetLevel(0)->GetMeshElements()->GetNVE( mesh->_geomelem_flag[mesh->get_dim() - 1] , CONTINUOUS_BIQUADRATIC);
         for( uint i = 0; i < el_nds; i++ ) {  // linear and quad
           int k = mesh->_el_map[VV][elem_gidx + i]; // the global node
           eqn->_LinSolver[mesh->_NoLevels - 1]->_EPS->set( dofmap->GetDof( mesh->_NoLevels - 1, QQ, ivar, k ), sol[k]*Irefval );   // set the field
@@ -1473,10 +1473,10 @@ namespace femus {
       meshname[BB] = "Boundary";
 
       std::string ord_string;
-      if( order_fe == BIQUADR_FE )     {
+      if( order_fe == CONTINUOUS_BIQUADRATIC )     {
         ord_string = "_biquadratic";
       }
-      else if( order_fe == LINEAR_FE ) {
+      else if( order_fe == CONTINUOUS_LINEAR ) {
         ord_string = "_linear";
       }
 
@@ -1511,10 +1511,10 @@ namespace femus {
       for( uint vb = 0; vb < VB; vb++ )  {
 
         uint n_children;
-        if( order_fe == BIQUADR_FE )     {
+        if( order_fe == CONTINUOUS_BIQUADRATIC )     {
           n_children = 1;
         }
-        else if( order_fe == LINEAR_FE ) {
+        else if( order_fe == CONTINUOUS_LINEAR ) {
           // // // n_children = GetNRE(mesh._eltype_flag[vb]);  ///@todo
         }
 
@@ -1558,10 +1558,10 @@ namespace femus {
 #ifdef HAVE_HDF5
 
     uint n_children;
-    if( order_fe == BIQUADR_FE )     {
+    if( order_fe == CONTINUOUS_BIQUADRATIC )     {
       n_children = 1;
     }
-    else if( order_fe == LINEAR_FE ) {
+    else if( order_fe == CONTINUOUS_LINEAR ) {
           // // // n_children = GetNRE(mesh._eltype_flag[vb]);  ///@todo
     }
     else {
@@ -1616,8 +1616,8 @@ namespace femus {
     if( mesh._iproc == 0 )   {
 
       uint n_children;
-      if( order == BIQUADR_FE )      n_children = 1;
-      else if( order == LINEAR_FE ) 
+      if( order == CONTINUOUS_BIQUADRATIC )      n_children = 1;
+      else if( order == CONTINUOUS_LINEAR ) 
       {
           // // // n_children = GetNRE(mesh._eltype_flag[vb]);  ///@todo
       }
@@ -1666,7 +1666,7 @@ namespace femus {
     const uint iproc = mesh._iproc;
     if( iproc == 0 ) {
       PrintConnAllLEVAllVBLinearHDF5( output_path, mesh, ml_prob );
-      PrintMeshXDMF( output_path, mesh, LINEAR_FE, ml_prob );
+      PrintMeshXDMF( output_path, mesh, CONTINUOUS_LINEAR, ml_prob );
     }
 
     return;
@@ -1711,7 +1711,7 @@ namespace femus {
 
     H5Gclose( subgroup_id_0 );
 
-    PrintSubdomFlagOnCellsAllVBAllLevHDF5( file, namefile.str(), mesh, LINEAR_FE );
+    PrintSubdomFlagOnCellsAllVBAllLevHDF5( file, namefile.str(), mesh, CONTINUOUS_LINEAR );
 
 //================================
 
@@ -1728,7 +1728,7 @@ namespace femus {
     uint* gl_conn;
 
     uint icount = 0;
-    uint mode = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , BIQUADR_FE );
+    uint mode = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , CONTINUOUS_BIQUADRATIC );
     uint n_elements = mesh._n_elements_vb_lev[vb][Level];
     uint nsubel, nnodes;
 
@@ -2182,7 +2182,7 @@ namespace femus {
 
     for( int vb = 0; vb < VB; vb++ ) {
       if( mesh._type_FEM[vb] !=  
-        ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , BIQUADR_FE)  
+        ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , CONTINUOUS_BIQUADRATIC)  
         )  {
         std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the element type of the mesh is" <<
                   "different from the element type as given by the GeomEl" << std::endl;
@@ -2304,7 +2304,7 @@ namespace femus {
 // ===========================================
     mesh._el_map = new uint*[VB];
     for( int vb = 0; vb < VB; vb++ )    {
-      mesh._el_map[vb] = new uint [ mesh._off_el[vb][mesh._NoSubdom * mesh._NoLevels] * ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , BIQUADR_FE) ];
+      mesh._el_map[vb] = new uint [ mesh._off_el[vb][mesh._NoSubdom * mesh._NoLevels] * ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh._dim - 1 - vb] , CONTINUOUS_BIQUADRATIC) ];
       std::ostringstream elName;
       elName << "/ELEMS/VB" << vb  << "/CONN";
       XDMFWriter::read_UIhdf5( file_id, elName.str().c_str(), mesh._el_map[vb] );
@@ -2370,7 +2370,7 @@ namespace femus {
     int* ttype_FEM;
     ttype_FEM = new int[VB];
 
-    for( uint vb = 0; vb < VB; vb++ )   ttype_FEM[vb] = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh.get_dim() - 1 - vb] , BIQUADR_FE );
+    for( uint vb = 0; vb < VB; vb++ )   ttype_FEM[vb] = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( mesh._geomelem_flag[mesh.get_dim() - 1 - vb] , CONTINUOUS_BIQUADRATIC );
 
     dimsf[0] = VB;
     dimsf[1] = 1;
@@ -2527,7 +2527,7 @@ namespace femus {
 // ===========================================
 //   PID
 // ===========================================
-    PrintSubdomFlagOnCellsAllVBAllLevHDF5( file, inmesh.str().c_str(), mesh, BIQUADR_FE );
+    PrintSubdomFlagOnCellsAllVBAllLevHDF5( file, inmesh.str().c_str(), mesh, CONTINUOUS_BIQUADRATIC );
 
 // ===========================================
 //  CLOSE FILE
@@ -2824,7 +2824,7 @@ namespace femus {
 
         out << "<Time Value =\"" << curr_time << "\" /> \n";
 
-        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), LINEAR_FE, ml_prob );
+        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), CONTINUOUS_LINEAR, ml_prob );
 
         MultiLevelProblem::const_system_iterator pos1   = ml_prob.begin();
         MultiLevelProblem::const_system_iterator pos1_e = ml_prob.end();
@@ -2997,7 +2997,7 @@ namespace femus {
         out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
         // TOPOLOGY GEOMETRY ===========
-        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), LINEAR_FE , ml_prob);
+        PrintXDMFTopGeom( out, top_file, geom_file, l, VV, ml_prob.GetMeshTwo(), CONTINUOUS_LINEAR , ml_prob);
 
         // ATTRIBUTES FOR EACH SYSTEM ===========
         MultiLevelProblem::const_system_iterator pos1 = ml_prob.begin();

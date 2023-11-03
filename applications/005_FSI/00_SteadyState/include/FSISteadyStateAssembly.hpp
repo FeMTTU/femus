@@ -1501,7 +1501,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
      
    int dimension = ml_msh.GetLevel(0)->GetDimension();
   
-   unsigned solType_coords = BIQUADR_FE;
+   unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
    
    
 
@@ -1619,7 +1619,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
   unsigned    iproc = msh->processor_id();
 
   //=============== Geometry ========================================
-   unsigned solType_coords = BIQUADR_FE;
+   unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
  
   CurrentElem < double > geom_element(dim, msh);
     

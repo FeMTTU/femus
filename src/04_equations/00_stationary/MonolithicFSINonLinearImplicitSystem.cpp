@@ -48,6 +48,8 @@ namespace femus {
 
   void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 
+    // ------------------- Sparsity pattern size - BEGIN
+    
     if(gridf < 1) {
       std::cout << "Error! In function \"BuildProlongatorMatrix\" argument less then 1" << std::endl;
       exit(0);
@@ -79,7 +81,7 @@ namespace femus {
       for(int isdom = iproc; isdom < iproc + 1; isdom++) {
         for(int iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = mshc->GetElementType(iel);
-          mshc->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k);
+          mshc->_finiteElement[ielt][SolType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k);
         }
       }
     }
@@ -97,6 +99,10 @@ namespace femus {
 
     delete NNZ_d;
     delete NNZ_o;
+    // ------------------- Sparsity pattern size - END
+    
+    // ------------------- Prolongator - BEGIN
+    
 
     _PP[gridf] = SparseMatrix::build().release();
     _PP[gridf]->init(nf, nc, nf_loc, nc_loc, nnz_d, nnz_o);
@@ -118,13 +124,16 @@ namespace femus {
       for(int isdom = iproc; isdom < iproc + 1; isdom++) {
         for(int iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = mshc->GetElementType(iel);
+          
           if(!testIfPressure) {
-            mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, solPairIndex, solPairPdeIndex);
+            mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, solPairIndex, solPairPdeIndex);
           }
           else {
-            mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf, *LinSolc, iel, RRt, SolIndex, k);
+            mshc->_finiteElement[ielt][SolType]->BuildProlongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k);
           }
-          mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k);
+          
+          mshc->_finiteElement[ielt][SolType]->BuildProlongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k);
+          
         }
       }
     }
@@ -135,10 +144,15 @@ namespace femus {
     _RR[gridf] = SparseMatrix::build().release();
     RRt->get_transpose(*_RR[gridf]);
     delete RRt;
+    
+    // ------------------- Prolongator - END
 
+    
   }
   
   void MonolithicFSINonLinearImplicitSystem::BuildAmrProlongatorMatrix(unsigned level) {
+
+    // ------------------- Sparsity pattern size - BEGIN
 
     int iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -204,6 +218,10 @@ namespace femus {
 
     delete NNZ_d;
     delete NNZ_o;
+    // ------------------- Sparsity pattern size - END
+    
+    
+    // ------------------- Prolongator - BEGIN
 
     _PPamr[level] = SparseMatrix::build().release();
     _PPamr[level]->init(n, n, n_loc, n_loc, nnz_d, nnz_o);
@@ -281,6 +299,10 @@ namespace femus {
     _RRamr[level]->close();
     
     _PPamr[level]->get_transpose(*_PPamr[level]);
+    
+    // ------------------- Prolongator - END
+    
+    
   }
   
   

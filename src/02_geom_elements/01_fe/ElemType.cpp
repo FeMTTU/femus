@@ -21,8 +21,8 @@
 #include "GaussPoints.hpp"
 #include "FElemTypeEnum_list.hpp"
 #include "Elem.hpp"
-#include "NumericVector.hpp"
 
+#include "NumericVector.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
 
@@ -351,15 +351,20 @@ namespace femus {
     
     
 //----------------------------------------------------------------------------------------------------
-//BEGIN build matrix sparsity pattern size and build prolungator matrix for the LsysPde  Matrix
+//BEGIN build matrix sparsity pattern size and build prolongator matrix for the LsysPde  Matrix
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::GetSparsityPatternSize(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc,
-                                         NumericVector* NNZ_d, NumericVector* NNZ_o,
-                                         const unsigned& index_sol, const unsigned& kkindex_sol) const
+  void elem_type::Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef, 
+                                         const LinearEquation& lspdec,
+                                         const int& ielc,
+                                         NumericVector* NNZ_d,
+                                         NumericVector* NNZ_o,
+                                         const unsigned& index_sol,
+                                         const unsigned& kkindex_sol) const
   {
       
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      
       for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
@@ -382,8 +387,10 @@ namespace femus {
         NNZ_d->set(irow, ncols - counter_o);
         NNZ_o->set(irow, counter_o);
       }
+      
     }
     else { // coarse2coarse prolongation
+      
       for(int i = 0; i < _nc; i++) {
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
 
@@ -400,17 +407,23 @@ namespace femus {
           NNZ_d->set(irow, 1);
         }
       }
+      
     }
     
     
   }
 
 
-  void elem_type::BuildProlongation(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
-                                    const unsigned& index_sol, const unsigned& kkindex_sol) const
+  void elem_type::BuildProlongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
+                                    const LinearEquation& lspdec,
+                                    const int& ielc,
+                                    SparseMatrix* Projmat,
+                                    const unsigned& index_sol,
+                                    const unsigned& kkindex_sol) const
   {
 
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      
       std::vector<int> cols(_nc);
 
       for(int i = 0; i < _nf; i++) {
@@ -429,8 +442,10 @@ namespace femus {
 
         Projmat->insert_row(irow, ncols, cols, _prol_val[i]);
       }
+      
     }
     else {
+      
       std::vector <int> jcol(1);
       double one = 1.;
 
@@ -439,15 +454,21 @@ namespace femus {
         jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
         Projmat->insert_row(irow, 1, jcol, &one);
       }
+      
     }
     
     
   }
 
 
-  void elem_type::BuildRestrictionTranspose(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
-      const unsigned& index_sol, const unsigned& kkindex_sol,
-      const unsigned& index_pair_sol, const unsigned& kkindex_pair_sol) const
+  void elem_type::BuildRestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
+                                            const LinearEquation& lspdec, 
+                                            const int& ielc, 
+                                            SparseMatrix* Projmat,
+                                            const unsigned& index_sol, 
+                                            const unsigned& kkindex_sol,
+                                            const unsigned& index_pair_sol,
+                                            const unsigned& kkindex_pair_sol) const
   {
 
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
@@ -506,8 +527,10 @@ namespace femus {
 
         Projmat->insert_row(irow, ncols, cols, &copy_prol_val[0]);
       }
+      
     }
     else {
+      
       std::vector <int> jcol(1);
       double one = 1.;
 
@@ -522,21 +545,27 @@ namespace femus {
   }
 
 //----------------------------------------------------------------------------------------------------
-//END build matrix sparsity pattern size and build prolungator matrix for the LsysPde  Matrix
+//END build matrix sparsity pattern size and build prolongator matrix for the LsysPde  Matrix
 //-----------------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------------
-//BEGIN  build matrix sparsity pattern size and build prolungator matrix for single solution
+//BEGIN  build matrix sparsity pattern size and build prolongator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o, const char el_dofs[]) const
+  void elem_type::Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(const Mesh& meshf,
+                                         const Mesh& meshc,
+                                         const int& ielc,
+                                         NumericVector* NNZ_d,
+                                         NumericVector* NNZ_o,
+                                         const char is_fine_or_coarse[]) const
   {
 
       unsigned n_elemdofs = 0;
-      if ( !strcmp(el_dofs, "fine") ) n_elemdofs = _nf;
-      else if ( !strcmp(el_dofs, "coarse") ) n_elemdofs = _nc;
+      if ( !strcmp(is_fine_or_coarse, "fine") ) n_elemdofs = _nf;
+      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = _nc;
       
     if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      
       for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
@@ -556,8 +585,10 @@ namespace femus {
         NNZ_d->set(irow, ncols - counter_o);
         NNZ_o->set(irow, counter_o);
       }
+      
     }
     else { // coarse2coarse prolongation
+      
       for(int i = 0; i < _nc; i++) {
         int irow = meshf.GetSolutionDof(ielc, 0, i , _SolType, &meshc);
 
@@ -571,18 +602,22 @@ namespace femus {
           NNZ_d->set(irow, 1);
         }
       }
+      
     }
     
     
   }
 
-  void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
-                                    SparseMatrix* Projmat, const char el_dofs[]) const
+  void elem_type::Build_Prolongation_OneElement_OneFEFamily(const Mesh& meshf,
+                                    const Mesh& meshc, 
+                                    const int& ielc,
+                                    SparseMatrix* Projmat, 
+                                    const char is_fine_or_coarse[]) const
   {
  
       unsigned n_elemdofs = 0;
-      if ( !strcmp(el_dofs, "fine") ) n_elemdofs = _nf;
-      else if ( !strcmp(el_dofs, "coarse") ) n_elemdofs = _nc;
+      if ( !strcmp(is_fine_or_coarse, "fine") ) n_elemdofs = _nf;
+      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = _nc;
       
       if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
@@ -603,8 +638,10 @@ namespace femus {
 
         Projmat->insert_row(irow, ncols, jcols, _prol_val[i]);
       }
+      
     }
     else { // coarse2coarse prolongation
+      
       std::vector <int> jcol(1);
       double one = 1.;
 
@@ -613,20 +650,25 @@ namespace femus {
         jcol[0] = meshc.GetSolutionDof(i, ielc, _SolType);
         Projmat->insert_row(irow, 1, jcol, &one);
       }
+      
     }
     
     
   }
 
 //----------------------------------------------------------------------------------------------------
-//END  build matrix sparsity pattern size and build prolungator matrix for single solution
+//END  build matrix sparsity pattern size and build prolongator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------------
-//BEGIN prolungator for solution printing
+//BEGIN build matrix sparsity pattern size and build prolongator matrix for solution printing
 //----------------------------------------------------------------------------------------------------
 
-  void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
+  void elem_type::Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
+                                         const int& iel,
+                                         NumericVector* NNZ_d,
+                                         NumericVector* NNZ_o,
+                                         const unsigned& itype) const
   {
       
     bool identity = (_nlag[itype] <= _nc) ? true : false;
@@ -653,7 +695,12 @@ namespace femus {
   }
   
 
-  void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
+  void elem_type::Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
+                                    const int& iel,
+                                    SparseMatrix* Projmat, 
+                                    NumericVector* NNZ_d,
+                                    NumericVector* NNZ_o,
+                                    const unsigned& itype) const
   {
       
     std::vector<int> cols(_nc);
@@ -684,7 +731,7 @@ namespace femus {
   }
 
 //----------------------------------------------------------------------------------------------------
-//END prolungator for solution printing
+//END build matrix sparsity pattern size and build prolongator matrix for solution printing
 //----------------------------------------------------------------------------------------------------
 
   void elem_type::allocate_and_set_coarse_node_indices(const basis* pt_basis_in)  {

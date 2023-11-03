@@ -79,7 +79,7 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(
     real_num_mov weight_qp;    // must be adept if the domain is moving
 
     //=============== Geometry - BEGIN ========================================
-    unsigned xType = BIQUADR_FE;
+    unsigned xType = CONTINUOUS_BIQUADRATIC;
 
     CurrentElem < real_num_mov > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
             Phi < real_num_mov > geom_element_phi_dof_qp(dim_offset_grad/*dim*/);                   // must be adept if the domain is moving, otherwise double

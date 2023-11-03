@@ -239,7 +239,7 @@ void SystemTwo::Initialize() {
 	
 	        currelem.SetDofobjConnCoords();
 		
-                const uint  el_dof_objs = mymsh->GetMeshElements()->GetNVE( GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1], BIQUADR_FE);
+                const uint  el_dof_objs = mymsh->GetMeshElements()->GetNVE( GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1], CONTINUOUS_BIQUADRATIC);
 
             for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {
 		      

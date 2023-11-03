@@ -485,10 +485,10 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
       if(flag_mat == 4) { ///@todo Where on Earth do we say that 4 is a special flag for the solid
         unsigned elementType = GetElementType(iel);
-        unsigned nve = el->GetNVE(elementType, BIQUADR_FE);
+        unsigned nve = el->GetNVE(elementType, CONTINUOUS_BIQUADRATIC);
 
         for(unsigned i = 0; i < nve; i++) {
-          unsigned inode = GetSolutionDof(i, iel, BIQUADR_FE);
+          unsigned inode = GetSolutionDof(i, iel, CONTINUOUS_BIQUADRATIC);
           NodeMaterial.set(inode, 1);
         }
       }
@@ -1159,7 +1159,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-        _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);
+        _finiteElement[ielt][jtype]->Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype);
       }
     }
 
@@ -1182,7 +1182,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-        _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype);
+        _finiteElement[ielt][jtype]->Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype);
       }
     }
 
@@ -1262,7 +1262,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->GetSparsityPatternSize(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs);
+          _finiteElement[ielt][solType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs);
         }
       }
 
@@ -1289,7 +1289,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs);
+          _finiteElement[ielt][solType]->Build_Prolongation_OneElement_OneFEFamily(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs);
         }
       }
 

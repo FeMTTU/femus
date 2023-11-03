@@ -39,7 +39,7 @@ template < typename real_num_mov >
     {
     
 //========== Current "Geometric Element"  ========================
-  uint elnodes = _mesh_new->GetMeshElements()->GetNVE( _mesh._geomelem_flag[_dim-1] , BIQUADR_FE);
+  uint elnodes = _mesh_new->GetMeshElements()->GetNVE( _mesh._geomelem_flag[_dim-1] , CONTINUOUS_BIQUADRATIC);
   _el_conn.resize(elnodes);
   _el_conn_new.resize(elnodes);   
    _xx_nds.resize(_mesh.get_dim()*elnodes);
@@ -351,7 +351,7 @@ template < typename real_num_mov >
 //       unsigned inode=myel->GetElementDofIndex(kel,i)-1u;
 
 //       // dof metis
-//       /*metis_node2*/_el_conn_new[i] = mymsh->GetSolutionDof(inode,BIQUADR_FE);
+//       /*metis_node2*/_el_conn_new[i] = mymsh->GetSolutionDof(inode,CONTINUOUS_BIQUADRATIC);
 //                       metis_node1[i] = mymsh->GetSolutionDof(inode,SolType[2*dim]);
 
 

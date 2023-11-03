@@ -340,9 +340,9 @@ FILE(COPY           ${PROJECT_SOURCE_DIR}/src/02_mesh/00_single_level/01_input/0
 
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_mesh/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_mesh/00_geom_elements/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02b_geom_elements_fe/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_geom_elements/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_geom_elements/00_definition/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_geom_elements/01_fe/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/03_solution/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/03_solution/01_multiple_levels/01_output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/04_equations/)

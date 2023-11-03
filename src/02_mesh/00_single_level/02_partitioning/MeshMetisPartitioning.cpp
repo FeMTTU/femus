@@ -68,9 +68,9 @@ namespace femus {
       exit(1);
 #endif
 
-      unsigned eind_size = _mesh.el->GetElementNumber("Hex") * _mesh.el->GetNVE(0, BIQUADR_FE)      + _mesh.el->GetElementNumber("Tet") * _mesh.el->GetNVE(1, BIQUADR_FE)
-                           + _mesh.el->GetElementNumber("Wedge") *  _mesh.el->GetNVE(2, BIQUADR_FE)    + _mesh.el->GetElementNumber("Quad") * _mesh.el->GetNVE(3, BIQUADR_FE)
-                           + _mesh.el->GetElementNumber("Triangle") * _mesh.el->GetNVE(4, BIQUADR_FE) + _mesh.el->GetElementNumber("Line") * _mesh.el->GetNVE(5, BIQUADR_FE);
+      unsigned eind_size = _mesh.el->GetElementNumber("Hex") * _mesh.el->GetNVE(0, CONTINUOUS_BIQUADRATIC)      + _mesh.el->GetElementNumber("Tet") * _mesh.el->GetNVE(1, CONTINUOUS_BIQUADRATIC)
+                           + _mesh.el->GetElementNumber("Wedge") *  _mesh.el->GetNVE(2, CONTINUOUS_BIQUADRATIC)    + _mesh.el->GetElementNumber("Quad") * _mesh.el->GetNVE(3, CONTINUOUS_BIQUADRATIC)
+                           + _mesh.el->GetElementNumber("Triangle") * _mesh.el->GetNVE(4, CONTINUOUS_BIQUADRATIC) + _mesh.el->GetElementNumber("Line") * _mesh.el->GetNVE(5, CONTINUOUS_BIQUADRATIC);
 
       std::vector < idx_t > eptr(nelem + 1);
       std::vector < idx_t > eind(eind_size);

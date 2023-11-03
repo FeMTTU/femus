@@ -63,9 +63,21 @@ class Mesh;
 // ===  Constructors / Destructor - END =================
 // =========================================
 
+      
 // =========================================
-// ===  Geometry - related - BEGIN =================
+// ===  Geometric element - BEGIN =================
 // =========================================
+   protected:
+       
+      void initialize_geom_elem(const char* geom_elem);
+      
+      
+      GeomElType _GeomElemType;  /* Geometric Element flag */
+// =========================================
+// ===  Geometric element - END =================
+// =========================================
+
+// ===  Geometric element - Dimension - BEGIN =================
     public:
         
       /** Retrieve the dimension of the underlying geometric element */
@@ -74,15 +86,9 @@ class Mesh;
       }
 
    protected:
-       
-      void initialize_geom_elem(const char* geom_elem);
       
       unsigned _dim; /* Spatial dimension of the geometric element */
-      
-      GeomElType _GeomElemType;  /* Geometric Element flag */
-// =========================================
-// ===  Geometry - related - END =================
-// =========================================
+// ===  Geometric element - Dimension - END =================
 
       
 // =========================================
@@ -360,12 +366,44 @@ class Mesh;
 // =========================================
       
 // =========================================
-// ===  Equation, Sparsity pattern and Multigrid - BEGIN =================
+// ===  One Element, Sparsity pattern and Multigrid - BEGIN =================
 // =========================================
     public:
 
       /** @todo move away from here */
-      void GetSparsityPatternSize(const LinearEquation& lspdef, 
+      void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(const Mesh& meshf,
+                                  const Mesh& meshc,
+                                  const int& ielc,
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const char is_fine_or_coarse []) const;
+
+      /** @todo move away from here */
+      void Build_Prolongation_OneElement_OneFEFamily(const Mesh& meshf,
+                             const Mesh& meshc,
+                             const int& ielc,
+                             SparseMatrix* Projmat, 
+                             const char is_fine_or_coarse []) const;
+
+                             
+      /** for solution printing @todo move away from here */
+      void Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& Mesh,
+                                  const int& iel, 
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const unsigned& itype) const;
+
+        
+      /** for solution printing @todo move away from here */
+      void Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
+                             const int& iel,
+                             SparseMatrix* Projmat,
+                             NumericVector* NNZ_d,
+                             NumericVector* NNZ_o,
+                             const unsigned& itype) const;
+
+      /** @todo move away from here */
+      void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef, 
                                   const LinearEquation& lspdec,
                                   const int& ielc,
                                   NumericVector* NNZ_d,
@@ -374,46 +412,15 @@ class Mesh;
                                   const unsigned& kkindex_sol) const;
 
       /** @todo move away from here */
-      void GetSparsityPatternSize(const Mesh& meshf,
-                                  const Mesh& meshc,
-                                  const int& ielc,
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const char el_dofs[]) const;
-
-      /** for solution printing @todo move away from here */
-      void GetSparsityPatternSize(const Mesh& Mesh,
-                                  const int& iel, 
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const unsigned& itype) const;
-
-        
-      /** @todo move away from here */
-      void BuildProlongation(const LinearEquation& lspdef,
+      void BuildProlongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
                              const LinearEquation& lspdec,
                              const int& ielc, 
                              SparseMatrix* Projmat,
                              const unsigned& index_sol, 
                              const unsigned& kkindex_sol) const;
 
-      /** @todo move away from here */
-      void BuildProlongation(const Mesh& meshf,
-                             const Mesh& meshc,
-                             const int& ielc,
-                             SparseMatrix* Projmat, 
-                             const char el_dofs[]) const;
-                             
-      /** for solution printing @todo move away from here */
-      void BuildProlongation(const Mesh& mesh,
-                             const int& iel,
-                             SparseMatrix* Projmat,
-                             NumericVector* NNZ_d,
-                             NumericVector* NNZ_o,
-                             const unsigned& itype) const;
-
-      /** @todo move away from here */
-      void BuildRestrictionTranspose(const LinearEquation& lspdef,
+      /** @todo Only for FSI */
+      void BuildRestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
                                      const LinearEquation& lspdec,
                                      const int& ielc,
                                      SparseMatrix* Projmat,
@@ -423,7 +430,7 @@ class Mesh;
                                      const unsigned& kkindex_pair_sol) const;
                                      
 // =========================================
-// ===  Equation, Sparsity pattern and Multigrid - END =================
+// ===  One Element, Sparsity pattern and Multigrid - END =================
 // =========================================
 
 

@@ -89,7 +89,7 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //=============== Geometry ========================================
-   unsigned solType_coords = BIQUADR_FE;
+   unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
  
   CurrentElem < double > geom_element_iel(dim, msh);
     
@@ -422,7 +422,7 @@ static void compute_cost_functional_regularization_lifting_internal(const MultiL
   const unsigned   iproc = msh->processor_id(); 
 
  //********** Geometry ***************************************** 
- unsigned solType_coords = BIQUADR_FE;
+ unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -698,7 +698,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 
 //***************************************************
     std::vector < std::vector < double > > coords_at_dofs(dim);   // local coordinates
-    unsigned solType_coords  = BIQUADR_FE;  // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+    unsigned solType_coords  = CONTINUOUS_BIQUADRATIC;  // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
     for (unsigned i = 0; i < dim; i++) {
         coords_at_dofs[i].reserve(max_size);
     }

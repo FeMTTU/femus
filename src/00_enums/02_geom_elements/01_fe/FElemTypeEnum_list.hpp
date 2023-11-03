@@ -19,9 +19,11 @@ namespace femus {
 
 
 enum FEFamiliesAsAList {
-    LINEAR_FE      = 0,
-    SERENDIPITY_FE,
-    BIQUADR_FE     
+    CONTINUOUS_LINEAR      = 0,
+    CONTINUOUS_SERENDIPITY,
+    CONTINUOUS_BIQUADRATIC,
+    DISCONTINUOUS_CONSTANT,
+    DISCONTINUOUS_LINEAR
 };
 
 

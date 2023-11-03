@@ -220,7 +220,7 @@ void BoundaryConditions::GenerateBdc() {
   Mesh		*mymsh		=  _dofmap->_eqn->GetMLProb()._ml_msh->GetLevel(Level);
   
    unsigned iel0 = mymsh->_elementOffset[ mymsh->processor_id() ]; //WARNING CHANGE MADE WITH NO TESTING!!!!!!
-   const uint el_nnodes_b = mymsh->GetElementFaceDofNumber(iel0,ZERO_FACE,BIQUADR_FE);
+   const uint el_nnodes_b = mymsh->GetElementFaceDofNumber(iel0,ZERO_FACE,CONTINUOUS_BIQUADRATIC);
    
         for (uint isubd=0; isubd<_dofmap->_mesh._NoSubdom; ++isubd) {
             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level];
@@ -231,7 +231,7 @@ void BoundaryConditions::GenerateBdc() {
                 CurrentElem<double>       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType(),mymsh);
 
 	        currelem.SetDofobjConnCoords();
-                currelem.set_elem_center_3d(iel,BIQUADR_FE);
+                currelem.set_elem_center_3d(iel,CONTINUOUS_BIQUADRATIC);
 
  	    for (uint ivar=0; ivar< _dofmap->_n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
 

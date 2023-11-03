@@ -48,7 +48,7 @@ namespace femus {
   void GMVWriter::Write( const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step ) {
 
     // ********** linear -> index==0 *** quadratic -> index==1 **********
-    unsigned index = ( strcmp( order, "linear" ) ) ? SERENDIPITY_FE : LINEAR_FE;
+    unsigned index = ( strcmp( order, "linear" ) ) ? CONTINUOUS_SERENDIPITY : CONTINUOUS_LINEAR;
 
     std::string filename_prefix;
     if( _ml_sol != NULL )

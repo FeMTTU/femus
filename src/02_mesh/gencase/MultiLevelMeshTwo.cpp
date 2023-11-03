@@ -116,8 +116,8 @@ if ( _dim == 1  && (geomel_type != LINE ) )
     }
 
     for (int vb=0;vb < VB; vb++) {
-        _elnodes[vb][QQ] = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( _geomelem_flag[_dim-1-vb] , BIQUADR_FE);
-        _elnodes[vb][LL] = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE(_geomelem_flag[_dim-1-vb] , LINEAR_FE );
+        _elnodes[vb][QQ] = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE( _geomelem_flag[_dim-1-vb] , CONTINUOUS_BIQUADRATIC);
+        _elnodes[vb][LL] = ml_prob.GetMLMesh()->GetLevel(0)->GetMeshElements()->GetNVE(_geomelem_flag[_dim-1-vb] , CONTINUOUS_LINEAR );
         _elnodes[vb][KK] = 1;
     }
     //i do not want to use the linear part actually!!

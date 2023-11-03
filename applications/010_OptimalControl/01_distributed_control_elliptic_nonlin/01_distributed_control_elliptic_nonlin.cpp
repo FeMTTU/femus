@@ -237,7 +237,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //************** geometry (at dofs) *************************************  
   std::vector < std::vector < double > > coords_at_dofs(dim);
   std::vector < unsigned int >      SolFEType_domain(dim);
-    for (unsigned  d = 0; d < dim; d++) SolFEType_domain[d] = BIQUADR_FE;
+    for (unsigned  d = 0; d < dim; d++) SolFEType_domain[d] = CONTINUOUS_BIQUADRATIC;
     
     for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
@@ -283,7 +283,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   assert(pos_mu    == mlPdeSys->GetSolPdeIndex("mu"));
  //***************************************************  
   
-  const int solFEType_max = BIQUADR_FE;  //biquadratic
+  const int solFEType_max = CONTINUOUS_BIQUADRATIC;  //biquadratic
 
   std::vector < std::string > Solname(n_unknowns);
   Solname[pos_state] = "state";
@@ -734,7 +734,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  //************** geometry (at dofs and quadrature points) *************************************  
   std::vector < std::vector < double > > coords_at_dofs(dim);
-  unsigned SolFEType_domain = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
+  unsigned SolFEType_domain = CONTINUOUS_BIQUADRATIC; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
   for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
   std::vector < double > coord_at_qp(dim);
@@ -853,7 +853,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
-  const int solFEType_max = BIQUADR_FE;  //biquadratic
+  const int solFEType_max = CONTINUOUS_BIQUADRATIC;  //biquadratic
  //*************************************************** 
   
   double integral_target = 0.;
