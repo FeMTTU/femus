@@ -399,7 +399,8 @@ class Mesh;
                              const Mesh& meshc,
                              const int& ielc,
                              SparseMatrix* Projmat, 
-                             const char is_fine_or_coarse []) const;
+                             const char is_fine_or_coarse [],
+                             const elem_type * elem_type_in) const;
 
                              
       /** for solution printing @todo move away from here */
@@ -417,7 +418,8 @@ class Mesh;
                              SparseMatrix* Projmat,
                              NumericVector* NNZ_d,
                              NumericVector* NNZ_o,
-                             const unsigned& itype) const;
+                             const unsigned& itype,
+                             const elem_type * elem_type_in) const;
 
       /** @todo move away from here */
       void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef, 
@@ -430,22 +432,24 @@ class Mesh;
                                   const elem_type * elem_type_in) const;
 
       /** @todo move away from here */
-      void BuildProlongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
+      void Build_Prolongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
                              const LinearEquation& lspdec,
                              const int& ielc, 
                              SparseMatrix* Projmat,
                              const unsigned& index_sol, 
-                             const unsigned& kkindex_sol) const;
+                             const unsigned& kkindex_sol,
+                             const elem_type * elem_type_in) const;
 
       /** @todo Only for FSI */
-      void BuildRestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
+      void Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
                                      const LinearEquation& lspdec,
                                      const int& ielc,
                                      SparseMatrix* Projmat,
                                      const unsigned& index_sol,
                                      const unsigned& kkindex_sol,
                                      const unsigned& index_pair_sol,
-                                     const unsigned& kkindex_pair_sol) const;
+                                     const unsigned& kkindex_pair_sol,
+                                     const elem_type * elem_type_in) const;
                                      
 // =========================================
 // ===  One Element, Sparsity pattern and Multigrid - END =================

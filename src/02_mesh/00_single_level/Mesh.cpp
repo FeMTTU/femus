@@ -1135,6 +1135,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
 
+    // ------------------- Sparsity pattern size - BEGIN
     unsigned ni = _dofOffset[itype][_nprocs];
     unsigned ni_loc = _ownSize[itype][_iproc];
 
@@ -1175,21 +1176,30 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       nnz_d[i] = static_cast < int >((*NNZ_d)(offset + i));
       nnz_o[i] = static_cast < int >((*NNZ_o)(offset + i));
     }
+    // ------------------- Sparsity pattern size - END
 
+    
+    // ------------------- Projection - BEGIN
+    
     _ProjQitoQj[itype][jtype] = SparseMatrix::build().release();
     _ProjQitoQj[itype][jtype]->init(ni, nj, ni_loc, nj_loc, nnz_d, nnz_o);
 
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-        _finiteElement[ielt][jtype]->Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype);
+        _finiteElement[ielt][jtype]->Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, 
+                                                                                                      GetFiniteElement(ielt, jtype) );
       }
     }
 
     _ProjQitoQj[itype][jtype]->close();
+    // ------------------- Projection - END
 
+    
     delete NNZ_d;
     delete NNZ_o;
+    
+    
   }
 
 
@@ -1289,7 +1299,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->Build_Prolongation_OneElement_OneFEFamily(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs);
+          _finiteElement[ielt][solType]->Build_Prolongation_OneElement_OneFEFamily(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs, GetFiniteElement(ielt, solType) );
         }
       }
 

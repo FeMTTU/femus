@@ -127,13 +127,15 @@ namespace femus {
           short unsigned ielt = mshc->GetElementType(iel);
           
           if(!testIfPressure) {
-            mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, solPairIndex, solPairPdeIndex);
+            mshc->_finiteElement[ielt][SolType]->Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, solPairIndex, solPairPdeIndex,  mshc->GetFiniteElement(ielt, SolType));
           }
           else {
-            mshc->_finiteElement[ielt][SolType]->BuildProlongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k);
+            mshc->_finiteElement[ielt][SolType]->Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, 
+                                                                                                  mshc->GetFiniteElement(ielt, SolType) );
           }
           
-          mshc->_finiteElement[ielt][SolType]->BuildProlongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k);
+          mshc->_finiteElement[ielt][SolType]->Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k, 
+                                                                                                  mshc->GetFiniteElement(ielt, SolType) );
           
         }
       }

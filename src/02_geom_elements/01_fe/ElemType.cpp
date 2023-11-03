@@ -377,7 +377,7 @@ namespace femus {
 
         while(irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
 
-        int ncols = _prol_ind[i + 1] - _prol_ind[i];
+        int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
         int counter_off_diag = 0;
 
         for(int k = 0; k < ncols; k++) {
@@ -419,24 +419,29 @@ namespace femus {
   }
 
 
-  void elem_type::BuildProlongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
+  void elem_type::Build_Prolongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
                                     const LinearEquation& lspdec,
                                     const int& ielc,
                                     SparseMatrix* Projmat,
                                     const unsigned& index_sol,
-                                    const unsigned& kkindex_sol) const
+                                    const unsigned& kkindex_sol,
+                                  const elem_type * elem_type_in) const
   {
+    
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
+
 
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       
-      std::vector<int> cols( GetNDofs() );
+      std::vector<int> cols( ndofs );
 
-      for(int i = 0; i < GetNDofsFine(); i++) {
+      for(int i = 0; i < ndofs_fine; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);
 
-        int ncols = _prol_ind[i + 1] - _prol_ind[i];
+        int ncols =  elem_type_in->Get_Prolongator_Num_Columns(i);
         cols.assign(ncols, 0);
 
         for(int k = 0; k < ncols; k++) {
@@ -454,7 +459,7 @@ namespace femus {
       std::vector <int> jcol(1);
       double one = 1.;
 
-      for(int i = 0; i < GetNDofs(); i++) {
+      for(int i = 0; i < ndofs; i++) {
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
         jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
         Projmat->insert_row(irow, 1, jcol, &one);
@@ -466,30 +471,36 @@ namespace femus {
   }
 
 
-  void elem_type::BuildRestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
+  void elem_type::Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
                                             const LinearEquation& lspdec, 
                                             const int& ielc, 
                                             SparseMatrix* Projmat,
                                             const unsigned& index_sol, 
                                             const unsigned& kkindex_sol,
                                             const unsigned& index_pair_sol,
-                                            const unsigned& kkindex_pair_sol) const
+                                            const unsigned& kkindex_pair_sol,
+                                            const elem_type * elem_type_in) const
   {
+    
+    const unsigned soltype_in = elem_type_in->GetSolType();
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
+    
 
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
       //BEGIN project nodeSolidMark
-      std::vector < double > fineNodeSolidMark(GetNDofsFine(), 0);
-      std::vector < bool > coarseNodeSolidMark(GetNDofs(), 0);
+      std::vector < double > fineNodeSolidMark(ndofs_fine, 0);
+      std::vector < bool > coarseNodeSolidMark(ndofs, 0);
 
-      if(_SolType == 2) {
-        for(unsigned j = 0; j < GetNDofs(); j++) {
-          int jadd = lspdec._msh->GetSolutionDof(j, ielc, _SolType);
+      if( soltype_in == 2 ) {
+        for(unsigned j = 0; j < ndofs; j++) {
+          int jadd = lspdec._msh->GetSolutionDof(j, ielc, soltype_in);
           coarseNodeSolidMark[j] = lspdec._msh->GetSolidMark(jadd);
         }
 
-        for(unsigned i = 0; i < GetNDofsFine(); i++) {
-          int ncols = _prol_ind[i + 1] - _prol_ind[i];
+        for(unsigned i = 0; i < ndofs_fine; i++) {
+          int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
 
           for(int k = 0; k < ncols; k++) {
             int j = _prol_ind[i][k];
@@ -500,17 +511,17 @@ namespace femus {
 
       //END project nodeSolidMark
 
-      std::vector <int> cols(GetNDofs());
+      std::vector <int> cols( ndofs );
       std::vector <double> copy_prol_val;
-      copy_prol_val.reserve(GetNDofs());
+      copy_prol_val.reserve( ndofs );
 
-      for(int i = 0; i < GetNDofsFine(); i++) {
+      for(int i = 0; i < ndofs_fine; i++) {
         int i0 = _KVERT_IND[i][0]; // id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; // local id node on the subdivision of the fine element
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);
         bool isolidmark = (fineNodeSolidMark[i] > 0.99 && fineNodeSolidMark[i] < 1.01) ? true : false;
 
-        int ncols = _prol_ind[i + 1] - _prol_ind[i];
+        int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
         cols.assign(ncols, 0);
         copy_prol_val.assign(ncols, 0);
 
@@ -539,10 +550,12 @@ namespace femus {
       std::vector <int> jcol(1);
       double one = 1.;
 
-      for(int i = 0; i < GetNDofs(); i++) {
+      for(int i = 0; i < ndofs; i++) {
+        
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
         jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
         Projmat->insert_row(irow, 1, jcol, &one);
+        
       }
     }
     
@@ -629,27 +642,32 @@ namespace femus {
                                     const Mesh& meshc, 
                                     const int& ielc,
                                     SparseMatrix* Projmat, 
-                                    const char is_fine_or_coarse[]) const
+                                    const char is_fine_or_coarse[],
+                                  const elem_type * elem_type_in) const
   {
  
+      const unsigned soltype_in = elem_type_in->GetSolType();
+    
       unsigned n_elemdofs = 0;
-      if ( !strcmp(is_fine_or_coarse, "fine") ) n_elemdofs = GetNDofsFine();
-      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = GetNDofs();
+      if ( !strcmp(is_fine_or_coarse, "fine") )        n_elemdofs = elem_type_in->GetNDofsFine();
+      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = elem_type_in->GetNDofs();
       
       if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
-      std::vector<int> jcols(GetNDofs());
+      std::vector<int> jcols( elem_type_in->GetNDofs() );
 
       for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
+        
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-        int irow = meshf.GetSolutionDof(ielc, i0, i1, _SolType, &meshc);
-        int ncols = _prol_ind[i + 1] - _prol_ind[i];
+        
+        int irow = meshf.GetSolutionDof(ielc, i0, i1, soltype_in, &meshc);
+        int ncols  =  elem_type_in->Get_Prolongator_Num_Columns(i);
         jcols.assign(ncols, 0);
 
         for(int k = 0; k < ncols; k++) {
           int j = _prol_ind[i][k];
-          int jcolumn = meshc.GetSolutionDof(j, ielc, _SolType);
+          int jcolumn = meshc.GetSolutionDof(j, ielc, soltype_in);
           jcols[k] = jcolumn;
         }
 
@@ -662,10 +680,12 @@ namespace femus {
       std::vector <int> jcol(1);
       double one = 1.;
 
-      for(int i = 0; i < GetNDofs(); i++) {
-        int irow = meshf.GetSolutionDof(ielc, 0, i , _SolType, &meshc);
-        jcol[0] = meshc.GetSolutionDof(i, ielc, _SolType);
+      for(int i = 0; i < elem_type_in->GetNDofs(); i++) {
+        
+        int irow = meshf.GetSolutionDof(ielc, 0, i , soltype_in, &meshc);
+        jcol[0] = meshc.GetSolutionDof(i, ielc, soltype_in);
         Projmat->insert_row(irow, 1, jcol, &one);
+        
       }
       
     }
@@ -728,22 +748,27 @@ namespace femus {
                                     SparseMatrix* Projmat, 
                                     NumericVector* NNZ_d,
                                     NumericVector* NNZ_o,
-                                    const unsigned& itype) const
+                                    const unsigned& itype,
+                                  const elem_type * elem_type_in) const
   {
-      
-    std::vector<int> cols(GetNDofs());
-    std::vector<double> value(GetNDofs());
-    bool identity = (_nlag[itype] <= GetNDofs()) ? true : false;
+    
+    const unsigned soltype_in = elem_type_in->GetSolType();
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    
+    std::vector<int> cols( ndofs );
+    std::vector<double> value( ndofs );
+    bool identity = (_nlag[itype] <= ndofs ) ? true : false;
     
     for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
-      int ncols = (identity) ? 1 : GetNDofs();
+      int ncols = (identity) ? 1 : ndofs;
       unsigned counter = 0;
-      cols.resize(GetNDofs());
+      cols.resize( ndofs );
       for(int k = 0; k < ncols; k++) {
+        
         double phi = (identity) ? 1. : _pt_basis->eval_phi(_pt_basis->GetIND(k), _pt_basis->GetXcoarse(i));
         if(fabs(phi) > 1.0e-14) {
-          cols[counter]  = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
+          cols[counter]  = (identity) ? mesh.GetSolutionDof(i, iel, soltype_in) : mesh.GetSolutionDof(k, iel, soltype_in);
           value[counter] = phi;
           counter++;
         }

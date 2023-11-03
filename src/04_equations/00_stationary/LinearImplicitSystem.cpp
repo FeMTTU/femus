@@ -736,7 +736,8 @@ namespace femus {
       for(int isdom = iproc; isdom < iproc + 1; isdom++) {
         for(int iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = mshc->GetElementType(iel);
-          mshc->_finiteElement[ielt][SolType]->BuildProlongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k);
+          mshc->_finiteElement[ielt][SolType]->Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k, 
+                                                                                                  mshc->GetFiniteElement(ielt, SolType) );
         }
       }
     }
