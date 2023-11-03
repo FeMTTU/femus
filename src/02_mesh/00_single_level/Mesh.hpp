@@ -348,24 +348,9 @@ private:
 
 // === COARSE MESH GENERATION - END =================
 
-
     
 // =========================
-// === PARTITIONING, and FE DOFMAP - BEGIN =================
-// =========================
-public:
-
-    void PartitionElements_and_FillDofMapAllFEFamilies();
-    
-    std::vector < unsigned > PartitionForElements() const;
-    
-    std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
-    
-// === PARTITIONING, and FE DOFMAP - END =================
-
-
-// =========================
-// === REFINEMENT- BEGIN  =================
+// === Level, Current - BEGIN  =================
 // =========================
 public:
 
@@ -379,11 +364,6 @@ public:
       return _level;
     }
 
-    /** MESH: Set the coarser mesh from which this mesh is generated */
-    void SetCoarseMesh( Mesh* otherCoarseMsh ){
-      _coarseMsh = otherCoarseMsh;
-    }
-
     
  private:
     
@@ -392,62 +372,13 @@ public:
     /** MESH: level of mesh in the multi-level hierarchy */
     unsigned _level;
     
-    /** Pointer to the coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
-    Mesh* _coarseMsh;
-    
-// === REFINEMENT- END  =================
+// === Level, Current - END  =================
 
 
-// =========================
-// === REFINEMENT, AMR - BEGIN =================
-// =========================
-public:
-    
-    /** AMR */
-    static bool (* _SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level);
-    static bool _IsUserRefinementFunctionDefined;
-    
-    /** AMR */
-    bool GetIfHomogeneous() const {
-      return _meshIsHomogeneous;
-    }
 
-    /** AMR */
-    void SetIfHomogeneous(const bool &value) {
-      _meshIsHomogeneous = value ;
-    }
-
-    /** AMR */
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() {
-      return _amrRestriction;
-    }
-    
-    /** AMR */
-    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() {
-      return _amrSolidMark;
-    }
-    
-    /** Get if element is refined*/
-    short unsigned GetRefinedElementIndex(const unsigned &iel) const;
-    
-
-private:
-    
-    /** AMR */
-    bool _meshIsHomogeneous;
-    
-    /** AMR: restriction map (vector of 3 FE families: linear, quadratic, biquadratic) */
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
-    
-    /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
-    std::vector < std::map < unsigned, bool > > _amrSolidMark;
-
-// === REFINEMENT, AMR - END =================
-    
-    
-
+ 
 // === Geometric Element, FE, Single (FE for single geometric element) - BEGIN =================
-public:
+ public:
     
     /** Also DOFMAP: Only for parallel */
     unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const;
@@ -473,6 +404,20 @@ public:
 
 // === Geometric Element, FE, Single (FE for single geometric element) - END =================
     
+
+    
+// =========================
+// === PARTITIONING, and FE DOFMAP - BEGIN =================
+// =========================
+public:
+
+    void PartitionElements_and_FillDofMapAllFEFamilies();
+    
+    std::vector < unsigned > PartitionForElements() const;
+    
+    std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
+    
+// === PARTITIONING, and FE DOFMAP - END =================
 
 
 // =========================
@@ -556,13 +501,16 @@ private:
     
     /** FE: DofMap: Number of owned dofs per FE family and per processor (count, non-incremental) */
     std::vector < unsigned > _ownSize[NFE_FAMS];
+    
     /** FE: DofMap: Number of ghost dofs per FE family and per processor (count, non-incremental) */
     std::vector< std::vector < int > > _ghostDofs[NFE_FAMS];
     
     /** FE: DofMap  k = 0, 1 */
     std::map < unsigned, unsigned > _ownedGhostMap[2];
+    
     /** FE: DofMap  k = 0, 1 */ 
     std::vector < unsigned > _originalOwnSize[2];
+    
     /** print node-based dofOffset counts */
     void PrintInfoNodes() const;
 
@@ -573,6 +521,11 @@ private:
 // =========================
 public:
     
+    /** MESH: Set the coarser mesh from which this mesh is generated */
+    void SetCoarseMesh( Mesh* otherCoarseMsh ){
+      _coarseMsh = otherCoarseMsh;
+    }
+
     /**  FE: Get the coarse to the fine projection matrix and use it to restrict only on coarse nodes i.e. projection*/
     SparseMatrix* GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType);
 
@@ -580,6 +533,10 @@ public:
     SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);
 
 private:
+  
+    /** Pointer to the coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
+    Mesh* _coarseMsh;
+    
     /** FE: Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
     
@@ -610,7 +567,7 @@ private:
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - END =================
     
 // =========================
-// === TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================
+// === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================
 // =========================
 public:
     /** MESH: Coordinates and other stuff */
@@ -657,9 +614,56 @@ private:
     static const unsigned _amrIndex = 3;
     static const unsigned _solidMarkIndex = 4;
 
-// === TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - END =================
+// === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - END =================
 
 
+// =========================
+// === FE DOFMAP, REFINEMENT, AMR - BEGIN =================
+// =========================
+public:
+    
+    /** AMR */
+    static bool (* _SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level);
+    static bool _IsUserRefinementFunctionDefined;
+    
+    /** AMR */
+    bool GetIfHomogeneous() const {
+      return _meshIsHomogeneous;
+    }
+
+    /** AMR */
+    void SetIfHomogeneous(const bool &value) {
+      _meshIsHomogeneous = value ;
+    }
+
+    /** AMR */
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() {
+      return _amrRestriction;
+    }
+    
+    /** AMR */
+    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() {
+      return _amrSolidMark;
+    }
+    
+    /** Get if element is refined*/
+    short unsigned GetRefinedElementIndex(const unsigned &iel) const;
+    
+    void InitializeAmrRestriction(const bool amr);
+  
+private:
+    
+    /** AMR */
+    bool _meshIsHomogeneous;
+    
+    /** AMR: restriction map (vector of 3 FE families: linear, quadratic, biquadratic) */
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
+    
+    /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
+    std::vector < std::map < unsigned, bool > > _amrSolidMark;
+
+// === FE DOFMAP, REFINEMENT, AMR - END =================
+    
 
     
 };

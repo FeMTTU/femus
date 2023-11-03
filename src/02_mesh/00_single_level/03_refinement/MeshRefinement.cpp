@@ -483,26 +483,8 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====================================
     
     
-//==== AMR (only uses Topology in one point, does not modify it) - BEGIN ======== 
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestrictionMap();
-    
-    if(AMR) {
-      _mesh.el->GetAMRRestriction(&_mesh);
-//       for(unsigned soltype = 0; soltype < 3; soltype++) {
-//         std::cout << "solution type = " << soltype << std::endl;
-//         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
-//           std::cout << it1->first << "\t";
-//           for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
-//             std::cout << it2->first << " (" << it2->second << ")  ";
-// 
-//           }
-//           std::cout << std::endl;
-//         }
-//       }
-    }
-    else{
-      restriction.resize(NFE_FAMS_C_ZERO_LAGRANGE);
-    }
+//==== AMR (only uses Topology in one point, does not modify it) - BEGIN ========
+    _mesh.InitializeAmrRestriction(AMR); 
 //==== AMR (only uses Topology in one point, does not modify it) - END ======== 
     
     

@@ -110,7 +110,6 @@ namespace femus {
 
 
 
-      /** To be Added */
 
 // === Geometric Element, Single - BEGIN =================
   public:

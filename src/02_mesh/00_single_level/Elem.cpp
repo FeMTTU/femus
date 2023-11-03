@@ -731,10 +731,10 @@ namespace femus
   {
 
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & restriction = msh->GetAmrRestrictionMap();
-    restriction.resize(3);
+    restriction.resize(NFE_FAMS_C_ZERO_LAGRANGE);
 
     std::vector < std::map < unsigned, bool > > &interfaceSolidMark = msh->GetAmrSolidMark();
-    interfaceSolidMark.resize(3);
+    interfaceSolidMark.resize(NFE_FAMS_C_ZERO_LAGRANGE);
 
     std::vector < MyVector<unsigned> > interfaceElement;
     std::vector < MyMatrix<unsigned> > interfaceLocalDof;
@@ -744,9 +744,9 @@ namespace femus
 
     interfaceElement.resize(_level + 1);
     interfaceLocalDof.resize(_level + 1);
-    interfaceDof.resize(3);
-    levelInterfaceSolidMark.resize(3);
-    for (unsigned i = 0; i < 3; i++) {
+    interfaceDof.resize(NFE_FAMS_C_ZERO_LAGRANGE);
+    levelInterfaceSolidMark.resize(NFE_FAMS_C_ZERO_LAGRANGE);
+    for (unsigned i = 0; i < NFE_FAMS_C_ZERO_LAGRANGE; i++) {
       interfaceDof[i].resize(_level + 1);
       levelInterfaceSolidMark[i].resize(_level + 1);
     }
@@ -797,7 +797,7 @@ namespace femus
 
       //BEGIN interface node dof global search, one for each soltype
       MyVector <unsigned> rowSize = interfaceLocalDof[ilevel].getRowSize();
-      for (unsigned soltype = 0; soltype < 3; soltype++) {
+      for (unsigned soltype = 0; soltype < NFE_FAMS_C_ZERO_LAGRANGE; soltype++) {
         interfaceDof[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
         levelInterfaceSolidMark[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
         for (unsigned i = interfaceLocalDof[ilevel].begin(); i < interfaceLocalDof[ilevel].end(); i++) {
@@ -840,7 +840,7 @@ namespace femus
       //END interface node coordinates search
     }
 
-    for (unsigned soltype = 0; soltype < 3; soltype++) {
+    for (unsigned soltype = 0; soltype < NFE_FAMS_C_ZERO_LAGRANGE; soltype++) {
       for (int ilevel = 0; ilevel < _level; ilevel++) {
         for (int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
           for (unsigned lproc = 0; lproc < _nprocs; lproc++) {
@@ -856,7 +856,7 @@ namespace femus
 
               candidateNodes.clear();
 
-              std::vector < std::vector < std::vector <double > > > aP(3);
+              std::vector < std::vector < std::vector <double > > > aP(NFE_FAMS_C_ZERO_LAGRANGE);
               bool aPIsInitialized = false;
 
               unsigned iel = interfaceElement[ilevel][i];
@@ -906,7 +906,7 @@ namespace femus
                         if (!aPIsInitialized) {
                           aPIsInitialized = true;
                           std::vector < std::vector <double> > x1(dim);
-                          for (unsigned jtype = 0; jtype < 3; jtype++) {
+                          for (unsigned jtype = 0; jtype < NFE_FAMS_C_ZERO_LAGRANGE; jtype++) {
                             ProjectNodalToPolynomialCoefficients(aP[jtype], xv, ielType, jtype) ;
                           }
                         }

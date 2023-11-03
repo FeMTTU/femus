@@ -40,9 +40,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   bool Mesh::_IsUserRefinementFunctionDefined = false;
 
-  unsigned Mesh::_dimension = 2;
-  unsigned Mesh::_ref_index = 4; // 8*DIM[2]+4*DIM[1]+2*DIM[0];
-  unsigned Mesh::_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
+  unsigned Mesh::_dimension = 2;                                    ///@todo I don't like the default dimension to be 2
+  unsigned Mesh::_ref_index = 4; // 8*DIM[2]+4*DIM[1]+2*DIM[0];     ///@todo I don't like the default dimension to be 2
+  unsigned Mesh::_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];    ///@todo I don't like the default dimension to be 2
 
 
 // === CONSTR-DESTR - BEGIN =================
@@ -106,7 +106,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
   
   void Mesh::PrintInfoLevel() const {
-    std::cout << " Mesh Level                  : " << _level  << std::endl;
+    std::cout << " Mesh Level                  : " <<  GetLevel()  << std::endl;
   }
   
   
@@ -298,10 +298,38 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     
     BuildTopologyStructures();  //needs dofmap
     
+    InitializeAmrRestriction(false);       /** @todo is it really needed here? */
     
-    _amrRestriction.resize(NFE_FAMS_C_ZERO_LAGRANGE); /** @todo is it really needed here? */
+  }
+
+  
+  void Mesh::InitializeAmrRestriction(const bool amr) {
+
+    if(amr) {
+      
+      GetMeshElements()->GetAMRRestriction(this);
+//       for(unsigned soltype = 0; soltype < 3; soltype++) {
+//         std::cout << "solution type = " << soltype << std::endl;
+//         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = _mesh.GetAmrRestrictionMap()[soltype].begin(); it1 != _mesh.GetAmrRestrictionMap()[soltype].end(); it1++) {
+//           std::cout << it1->first << "\t";
+//           for(std::map<unsigned, double> ::iterator it2 = _mesh.GetAmrRestrictionMap()[soltype][it1->first].begin(); it2 != _mesh.GetAmrRestrictionMap()[soltype][it1->first].end(); it2++) {
+//             std::cout << it2->first << " (" << it2->second << ")  ";
+// 
+//           }
+//           std::cout << std::endl;
+//         }
+//       }
+      
+    }
+    else{
+
+     _amrRestriction.resize(NFE_FAMS_C_ZERO_LAGRANGE);
+     
+    }
+    
 
   }
+  
   
   
   
