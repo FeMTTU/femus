@@ -101,6 +101,11 @@ class Mesh;
       }
       
       
+      unsigned  GetSolType() const {
+        return _SolType;
+      }
+      
+      
    protected:
        
       void initialize_fe_and_multigrid_parts(const char* geom_elem);
@@ -135,6 +140,11 @@ class Mesh;
       /** Retrieve the number of dofs for this element */
       inline int  GetNDofs() const {
         return _nc;
+      }
+      
+      /** Retrieve the number of dofs for this element */
+      inline int  GetNDofsFine() const {
+        return _nf;
       }
       
    protected:
@@ -376,7 +386,8 @@ class Mesh;
                                   const int& ielc,
                                   NumericVector* NNZ_d,
                                   NumericVector* NNZ_o,
-                                  const char is_fine_or_coarse []) const;
+                                  const char is_fine_or_coarse [],
+                                  const elem_type * elem_type_in) const;
 
       /** @todo move away from here */
       void Build_Prolongation_OneElement_OneFEFamily(const Mesh& meshf,

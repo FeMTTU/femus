@@ -1262,7 +1262,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs);
+          _finiteElement[ielt][solType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs, GetFiniteElement(ielt, solType) );
         }
       }
 
