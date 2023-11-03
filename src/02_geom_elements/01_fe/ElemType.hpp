@@ -19,8 +19,6 @@
 
 #include "Basis.hpp"
 #include "SparseMatrix.hpp"
-#include "Mesh.hpp"
-#include "LinearEquation.hpp"
 #include "GaussPoints.hpp"
 #include "FElemTypeEnum_list.hpp"
 #include "GeomElTypeEnum.hpp"
@@ -36,8 +34,10 @@ namespace femus
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-  class elem;
-  class LinearEquation;
+class elem;
+
+class LinearEquation;
+class Mesh;
 
   
       /** Class for Finite Element on 1 single Geometric Element 

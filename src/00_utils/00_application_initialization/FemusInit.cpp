@@ -42,7 +42,7 @@ FemusInit::FemusInit(
 #endif
 
 #ifdef HAVE_MPI
-    // redirect libMesh::out to nothing on all
+    // redirect out to nothing on all
     // other processors unless explicitly told
     // not to via the --keep-cout command-line argument.
     int i;

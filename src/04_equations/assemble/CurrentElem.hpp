@@ -23,6 +23,7 @@
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 #include "ElemType.hpp"
+#include "Mesh.hpp"
 
 
 namespace femus {

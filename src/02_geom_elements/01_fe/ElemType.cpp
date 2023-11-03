@@ -23,6 +23,8 @@
 #include "Elem.hpp"
 #include "NumericVector.hpp"
 
+#include "Mesh.hpp"
+#include "LinearEquation.hpp"
 
 
 #define  PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES  1
