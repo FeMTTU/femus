@@ -1,6 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"

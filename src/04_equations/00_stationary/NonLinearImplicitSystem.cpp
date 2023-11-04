@@ -16,10 +16,13 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
+
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 
 #include <iomanip>
+
 
 namespace femus {
 

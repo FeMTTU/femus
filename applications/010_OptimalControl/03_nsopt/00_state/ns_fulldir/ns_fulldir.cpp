@@ -4,13 +4,14 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
 #include "LinearImplicitSystem.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "Files.hpp"
 
+#include "adept.h"
 
 #include   "../../manufactured_solutions.hpp"
 

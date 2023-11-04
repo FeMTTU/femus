@@ -14,6 +14,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 

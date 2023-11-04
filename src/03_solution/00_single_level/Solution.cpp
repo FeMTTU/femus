@@ -17,14 +17,16 @@
 // includes :
 //----------------------------------------------------------------------------
 
-#include <ctime>
-#include <fstream>
-#include <algorithm>
 #include "Solution.hpp"
 #include "FemusDefault.hpp"
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
+
+#include <ctime>
+#include <fstream>
+#include <algorithm>
 
 
 namespace femus {

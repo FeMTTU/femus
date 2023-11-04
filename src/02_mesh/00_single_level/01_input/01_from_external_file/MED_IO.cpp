@@ -13,12 +13,6 @@
  *
  * =========================================================================*/
 
-//C++ include
-#include <cassert>
-#include <cstdio>
-#include <fstream>
-#include <tuple>
-
 
 //local include
 #include "MED_IO.hpp"
@@ -33,6 +27,12 @@
 #include "GeomElemTet10.hpp"
 #include "GeomElemEdge2.hpp"
 #include "GeomElemEdge3.hpp"
+
+//C++ include
+#include <cassert>
+#include <cstdio>
+#include <fstream>
+#include <tuple>
 
 
 

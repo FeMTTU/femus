@@ -5,6 +5,7 @@
 
 #include  "opt_systems_boundary_control_eqn_sobolev_integer.hpp"
 
+#include "SparseMatrix.hpp"
 
 
 

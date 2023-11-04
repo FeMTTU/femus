@@ -9,6 +9,8 @@
 #include "NonLinearImplicitSystem.hpp"
 
 #include "LinearEquationSolver.hpp"
+#include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 
 /**
  * Given the non linear problem

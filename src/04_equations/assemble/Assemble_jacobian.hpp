@@ -4,6 +4,11 @@
 #include "Assemble_unknown.hpp"
 #include "MultiLevelProblem.hpp"
 
+#include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
+
+
+
 namespace femus {
     
 

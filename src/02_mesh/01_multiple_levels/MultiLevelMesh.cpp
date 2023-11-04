@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelMesh.hpp"
+#include "Mesh.hpp"
 #include "ElemType.hpp"
 #include "Elem.hpp"
 #include "SparseMatrix.hpp"
@@ -25,6 +26,7 @@
 #include "MeshRefinement.hpp"
 #include "Domain.hpp"
 
+#include "MED_IO.hpp"
 
 //C++ include
 #include <iostream>

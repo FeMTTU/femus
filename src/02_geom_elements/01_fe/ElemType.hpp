@@ -17,14 +17,16 @@
 #ifndef __femus_fe_ElemType_hpp__
 #define __femus_fe_ElemType_hpp__
 
-#include "Basis.hpp"
-#include "SparseMatrix.hpp"
-#include "GaussPoints.hpp"
-#include "FElemTypeEnum_list.hpp"
 #include "GeomElTypeEnum.hpp"
+#include "FElemTypeEnum_list.hpp"
+#include "Basis.hpp"
+#include "GaussPoints.hpp"
+
 
 #include "adept.h"
 #include <boost/optional.hpp>
+
+
 
 
 namespace femus
@@ -38,6 +40,8 @@ class elem;
 
 class LinearEquation;
 class Mesh;
+class NumericVector;
+class SparseMatrix;
 
   
       /** Class for Finite Element on 1 single Geometric Element 
@@ -77,6 +81,7 @@ class Mesh;
 // ===  Geometric element - END =================
 // =========================================
 
+
 // ===  Geometric element - Dimension - BEGIN =================
     public:
         
@@ -96,7 +101,7 @@ class Mesh;
 // =========================================
     public:
         
-      basis* GetBasis() const {
+      inline basis* GetBasis() const {
         return _pt_basis;
       }
       
@@ -133,7 +138,7 @@ class Mesh;
 
       
 // =========================================
-// ===  FE with MG - BEGIN =================
+// ===  FE (without Quadrature evaluations), with MG - BEGIN =================
 // =========================================
     public:
         
@@ -152,6 +157,21 @@ class Mesh;
         const int ncols = _prol_ind[i + 1] - _prol_ind[i];
         return ncols;
       }
+      
+      inline int  Get_Prolongator_Index(const unsigned i, const unsigned k) const {
+        
+        return _prol_ind[i][k];
+      }
+      
+      
+      std::pair<int, int> GetKVERT_IND(const unsigned i) const {
+        
+        const int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
+        const int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+        
+        return std::make_pair(i0, i1);
+      }
+      
    protected:
        
       /** Compute element prolongation operator */
@@ -200,7 +220,7 @@ class Mesh;
       int* _mem_prol_ind;
 
 // =========================================
-// ===  FE with MG - END =================
+// ===  FE (without Quadrature evaluations), with MG - END =================
 // =========================================
 
 

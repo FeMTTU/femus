@@ -4,6 +4,7 @@
 #include "SparseMatrix.hpp"
 #include "DenseVector.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "LinearEquationSolver.hpp"
 
 #include "Operations.hpp"

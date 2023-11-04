@@ -2,7 +2,18 @@
 #define __femus_equations_boussinesq_hpp__
 
 
+#include "NonLinearImplicitSystem.hpp"
+#include "Mesh.hpp"
+#include "MultiLevelSolution.hpp"
+#include "LinearEquationSolver.hpp"
+#include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
+
+
 #include "adept.h"
+
+
+
 
 
 namespace femus {

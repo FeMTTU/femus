@@ -3,6 +3,7 @@
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemusInit.hpp"

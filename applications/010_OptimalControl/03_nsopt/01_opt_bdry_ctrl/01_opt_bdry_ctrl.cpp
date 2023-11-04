@@ -4,6 +4,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"

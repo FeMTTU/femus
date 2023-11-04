@@ -10,6 +10,7 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"

@@ -17,6 +17,7 @@
 #include "XDMFWriter.hpp"
 #include "GeomElemBase.hpp"
 #include "MultiLevelProblem.hpp"
+#include "SparseMatrix.hpp"
 
 // LibMesh
 #ifdef HAVE_LIBMESH

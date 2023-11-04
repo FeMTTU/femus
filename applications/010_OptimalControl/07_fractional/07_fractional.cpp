@@ -7,6 +7,7 @@
 #include "NonLinearImplicitSystem.hpp"
 
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "adept.h"
 
 #include "CurrentElem.hpp"

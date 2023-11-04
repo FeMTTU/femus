@@ -4,6 +4,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "Assemble_jacobian.hpp"

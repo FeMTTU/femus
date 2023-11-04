@@ -10,6 +10,7 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include <cstdlib>
 #include <cmath>
 

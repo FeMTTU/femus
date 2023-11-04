@@ -3,7 +3,6 @@
 #include "MultiLevelSolution.hpp"
 #include "VTKWriter.hpp"
 #include "LinearImplicitSystem.hpp"
-#include "NumericVector.hpp"
 
 
 #include "00_cost_functional.hpp"

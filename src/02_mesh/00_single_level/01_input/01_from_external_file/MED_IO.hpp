@@ -26,31 +26,22 @@
 #include "GeomElemTri6.hpp"
 #include "GeomElemEdge3.hpp"
 
+#include "FemusConfig.hpp"
+
+
+#include "MED_IO_Group_Info.hpp"
+
+
 #ifdef HAVE_HDF5
 
 #include "hdf5.h"
 
+
+
 namespace femus
 {
 
- #define TYPE_FOR_INT_DATASET  int  //do not use "unsigned": in fact, in MED 
-                                  // these numbers are NEGATIVE for elements,
-                                  //    while they are POSITIVE for nodes!
- #define TYPE_FOR_REAL_DATASET  double
-
-    
-// Auxiliary struct to store group information
-  struct GroupInfo {
-      std::string        _user_defined_group_string;
-      std::string        _node_or_cell_group;
-      TYPE_FOR_INT_DATASET _med_flag;
-      int                _user_defined_flag;
-      unsigned int       _user_defined_property;
-      GeomElemBase*      _geom_el;
-      int _size;
-  };
-    
-// Forward declarations
+   // Forward declarations
 class Mesh;
 
 

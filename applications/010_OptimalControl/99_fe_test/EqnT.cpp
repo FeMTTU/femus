@@ -2,8 +2,8 @@
 #include "FemusDefault.hpp"
 
 #include "NumericVector.hpp"
-#include "DenseVector.hpp"
 #include "SparseMatrix.hpp"
+#include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 
 #include "Files.hpp"

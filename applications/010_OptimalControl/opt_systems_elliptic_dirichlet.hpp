@@ -3,6 +3,7 @@
 
 
 #include "MultiLevelProblem.hpp"
+#include "SparseMatrix.hpp"
 
 // #include "Assemble_jacobian.hpp"
 // #include "Assemble_unknown_jacres.hpp"

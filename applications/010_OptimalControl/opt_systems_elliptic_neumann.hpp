@@ -6,6 +6,8 @@
 
 #include  "03_opt_system_inequalities.hpp"
 
+#include "SparseMatrix.hpp"
+
 
 namespace femus  {
 

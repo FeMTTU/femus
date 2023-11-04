@@ -5,6 +5,7 @@
 
 //library headers
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "MultiLevelProblem.hpp"
 #include "SystemTwo.hpp"
 #include "MultiLevelMeshTwo.hpp"

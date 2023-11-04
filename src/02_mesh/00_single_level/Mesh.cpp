@@ -22,6 +22,7 @@
 #include "MED_IO.hpp"
 #include "MeshMetisPartitioning.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 
 // C++ includes
 #include <iostream>
