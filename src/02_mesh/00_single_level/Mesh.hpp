@@ -39,6 +39,8 @@
 namespace femus {
 
 
+class NumericVector;
+class SparseMatrix;
 
 class Solution;
 
@@ -540,6 +542,23 @@ private:
     /** FE: Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
     
+    void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(const Mesh& meshf,
+                                  const Mesh& meshc,
+                                  const int& ielc,
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const char is_fine_or_coarse [],
+                                  const elem_type * elem_type_in) const;
+
+    void Build_Prolongation_OneElement_OneFEFamily(const Mesh& meshf,
+                             const Mesh& meshc,
+                             const int& ielc,
+                             SparseMatrix* Projmat, 
+                             const char is_fine_or_coarse [],
+                             const elem_type * elem_type_in) const;
+
+    
+    
     /** FE: The coarse to the fine projection matrix */
     SparseMatrix* _ProjCoarseToFine[NFE_FAMS];
 
@@ -559,6 +578,25 @@ private:
     
     /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
     void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+    
+    /** for solution printing */
+    void Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& Mesh,
+                                  const int& iel, 
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const unsigned& itype,
+                                  const elem_type * elem_type_in) const;
+
+        
+    /** for solution printing */
+    void Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
+                             const int& iel,
+                             SparseMatrix* Projmat,
+                             NumericVector* NNZ_d,
+                             NumericVector* NNZ_o,
+                             const unsigned& itype,
+                             const elem_type * elem_type_in) const;
+
 
     /** FE: The projection matrix between Lagrange FEM at the same level mesh */
     SparseMatrix* _ProjQitoQj[NFE_FAMS_C_ZERO_LAGRANGE][NFE_FAMS_C_ZERO_LAGRANGE];

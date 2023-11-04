@@ -1161,7 +1161,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-        _finiteElement[ielt][jtype]->Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
+            Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
       }
     }
 
@@ -1188,8 +1188,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-        _finiteElement[ielt][jtype]->Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, 
-                                                                                                      GetFiniteElement(ielt, jtype) );
+          Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
       }
     }
 
@@ -1204,6 +1203,109 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
 
 
+
+//----------------------------------------------------------------------------------------------------
+//BEGIN build matrix sparsity pattern size and build prolongator matrix for solution printing
+//----------------------------------------------------------------------------------------------------
+
+  void Mesh::Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
+                                         const int& iel,
+                                         NumericVector* NNZ_d,
+                                         NumericVector* NNZ_o,
+                                         const unsigned& itype,
+                                         const elem_type * elem_type_in) const
+  {
+      
+    const unsigned soltype_in = elem_type_in->GetSolType();
+    const basis * pt_basis_in = elem_type_in->GetBasis();
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
+    
+    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
+    
+    for(int i = 0; i < ndofs_Lagrange; i++) {
+      
+      int irow = mesh.GetSolutionDof(i, iel, itype);
+      int iproc = mesh.IsdomBisectionSearch(irow, itype);
+      int ncols = (identity) ? 1 : ndofs;
+      
+      unsigned counter_off_diag = 0;
+      unsigned counter_all_diag = 0;
+      
+      for(int k = 0; k < ncols; k++) {
+        
+        const double phi = (identity) ? 1. : pt_basis_in->eval_phi( pt_basis_in->GetIND(k), pt_basis_in->GetXcoarse(i) );
+        
+        if(fabs(phi) > 1.0e-14) {
+          counter_all_diag ++;
+          int kcolumn = (identity) ? mesh.GetSolutionDof(i, iel, soltype_in) : mesh.GetSolutionDof(k, iel, soltype_in);
+          if( kcolumn <  mesh.dofmap_get_dof_offset(soltype_in, iproc)       || 
+              kcolumn >= mesh.dofmap_get_dof_offset(soltype_in, iproc + 1) ) counter_off_diag++;
+        }
+        
+      }
+      
+      NNZ_d->set(irow, counter_all_diag - counter_off_diag);
+      NNZ_o->set(irow, counter_off_diag);
+    }
+    
+    
+  }
+  
+
+  void Mesh::Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
+                                    const int& iel,
+                                    SparseMatrix* Projmat, 
+                                    NumericVector* NNZ_d,
+                                    NumericVector* NNZ_o,
+                                    const unsigned& itype,
+                                  const elem_type * elem_type_in) const
+  {
+    
+    const unsigned soltype_in = elem_type_in->GetSolType();
+    const basis * pt_basis_in = elem_type_in->GetBasis();
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
+    
+    std::vector<int> cols( ndofs );
+    std::vector<double> value( ndofs );
+    
+    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
+    
+    for(int i = 0; i < ndofs_Lagrange; i++) {
+      int irow = mesh.GetSolutionDof(i, iel, itype);
+      int ncols = (identity) ? 1 : ndofs;
+      unsigned counter = 0;
+      cols.resize( ndofs );
+      for(int k = 0; k < ncols; k++) {
+        
+        const double phi = (identity) ? 1. : pt_basis_in->eval_phi(pt_basis_in->GetIND(k), pt_basis_in->GetXcoarse(i));
+        
+        if(fabs(phi) > 1.0e-14) {
+          cols[counter]  = (identity) ? mesh.GetSolutionDof(i, iel, soltype_in) : mesh.GetSolutionDof(k, iel, soltype_in);
+          value[counter] = phi;
+          counter++;
+        }
+      }
+      
+      cols.resize(counter);
+      int ncols_stored = static_cast <int>(floor((*NNZ_d)(irow) + (*NNZ_o)(irow) + 0.5));
+      if(counter == ncols_stored) {
+        Projmat->insert_row(irow, counter, cols, &value[0]);
+      }
+      
+    }
+    
+    
+  }
+
+//----------------------------------------------------------------------------------------------------
+//END build matrix sparsity pattern size and build prolongator matrix for solution printing
+//----------------------------------------------------------------------------------------------------
+  
+  
+  
+  
   SparseMatrix* Mesh::GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType) {
 
     if(solType >= NFE_FAMS) {
@@ -1244,6 +1346,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     if(!_ProjCoarseToFine[solType]) {
 
+    // ------------------- Sparsity pattern size - BEGIN
       int nf     = _dofOffset[solType][_nprocs];
       int nc     = _coarseMsh->_dofOffset[solType][_nprocs];
       int nf_loc = _ownSize[solType][_iproc];
@@ -1273,7 +1376,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs, GetFiniteElement(ielt, solType) );
+            Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs, GetFiniteElement(ielt, solType) );
         }
       }
 
@@ -1291,7 +1394,11 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
       delete NNZ_d;
       delete NNZ_o;
+    // ------------------- Sparsity pattern size - END
 
+
+      
+    // ------------------- Prolongator - BEGIN
       //build matrix
       _ProjCoarseToFine[solType] = SparseMatrix::build().release();
       _ProjCoarseToFine[solType]->init(nf, nc, nf_loc, nc_loc, nnz_d, nnz_o);
@@ -1300,15 +1407,155 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->Build_Prolongation_OneElement_OneFEFamily(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs, GetFiniteElement(ielt, solType) );
+            Build_Prolongation_OneElement_OneFEFamily(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs, GetFiniteElement(ielt, solType) );
         }
       }
 
       _ProjCoarseToFine[solType]->close();
+    // ------------------- Prolongator - END
+      
     }
 
   }
 
+  
+  
+//----------------------------------------------------------------------------------------------------
+//BEGIN  build matrix sparsity pattern size and build prolongator matrix for single solution
+//-----------------------------------------------------------------------------------------------------
+
+  void Mesh::Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(const Mesh& meshf,
+                                         const Mesh& meshc,
+                                         const int& ielc,
+                                         NumericVector* NNZ_d,
+                                         NumericVector* NNZ_o,
+                                         const char is_fine_or_coarse[],
+                                         const elem_type * elem_type_in) const
+  {
+
+    const unsigned soltype_in = elem_type_in->GetSolType();
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned      ndofs_fine = elem_type_in->GetNDofsFine();
+    
+      unsigned n_elemdofs = 0;
+      if ( !strcmp(is_fine_or_coarse, "fine") )        n_elemdofs = ndofs_fine;
+      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = ndofs;
+      
+    if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      
+      for(int i = 0; i < n_elemdofs ; i++) {
+        
+        const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
+        
+        const int irow = meshf.GetSolutionDof(ielc, id_0_1.first, id_0_1.second, soltype_in, &meshc);
+
+        const int iproc = meshf.IsdomBisectionSearch(irow, soltype_in);
+        
+        const int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
+        
+        unsigned counter_off_diag = 0;
+
+        for(int k = 0; k < ncols; k++) {
+          int j = elem_type_in->Get_Prolongator_Index(i, k);
+          int jcolumn = meshc.GetSolutionDof(j, ielc, soltype_in);
+
+          if(jcolumn <  meshc.dofmap_get_dof_offset(soltype_in, iproc)     ||
+             jcolumn >= meshc.dofmap_get_dof_offset(soltype_in, iproc + 1)   ) counter_off_diag++;
+        }
+
+        NNZ_d->set(irow, ncols - counter_off_diag);
+        NNZ_o->set(irow, counter_off_diag);
+      }
+      
+    }
+    else { // coarse2coarse prolongation
+      
+      for(int i = 0; i < ndofs; i++) {
+        
+        int irow = meshf.GetSolutionDof(ielc, 0, i , soltype_in, &meshc);
+
+        int iproc = meshf.IsdomBisectionSearch(irow, soltype_in);
+        int jcolumn = meshc.GetSolutionDof(i, ielc, soltype_in);
+
+        if( jcolumn <  meshc.dofmap_get_dof_offset(soltype_in, iproc)      || 
+            jcolumn >= meshc.dofmap_get_dof_offset(soltype_in, iproc + 1)     ) {
+          NNZ_o->set(irow, 1);
+        }
+        else {
+          NNZ_d->set(irow, 1);
+        }
+      }
+      
+    }
+    
+    
+  }
+  
+  
+
+  void Mesh::Build_Prolongation_OneElement_OneFEFamily(const Mesh& meshf,
+                                    const Mesh& meshc, 
+                                    const int& ielc,
+                                    SparseMatrix* Projmat, 
+                                    const char is_fine_or_coarse[],
+                                  const elem_type * elem_type_in) const
+  {
+ 
+      const unsigned soltype_in = elem_type_in->GetSolType();
+      const unsigned      ndofs = elem_type_in->GetNDofs();
+      const unsigned      ndofs_fine = elem_type_in->GetNDofsFine();
+    
+      unsigned n_elemdofs = 0;
+      if ( !strcmp(is_fine_or_coarse, "fine") )        n_elemdofs = ndofs_fine;
+      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = ndofs;
+      
+      if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+
+      std::vector<int> jcols( ndofs );
+
+      for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
+        
+        const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
+                
+        const int irow = meshf.GetSolutionDof(ielc, id_0_1.first, id_0_1.second, soltype_in, &meshc);
+        const int ncols  =  elem_type_in->Get_Prolongator_Num_Columns(i);
+        
+        jcols.assign(ncols, 0);
+
+        for(int k = 0; k < ncols; k++) {
+          int j = elem_type_in->Get_Prolongator_Index(i, k);
+          int jcolumn = meshc.GetSolutionDof(j, ielc, soltype_in);
+          jcols[k] = jcolumn;
+        }
+
+        Projmat->insert_row(irow, ncols, jcols, elem_type_in->Get_Prolongator_Values_Row(i) );
+      }
+      
+    }
+    else { // coarse2coarse prolongation
+      
+      std::vector <int> jcol(1);
+      double one = 1.;
+
+      for(int i = 0; i < ndofs; i++) {
+        
+        const int irow = meshf.GetSolutionDof(ielc, 0, i , soltype_in, &meshc);
+        jcol[0] = meshc.GetSolutionDof(i, ielc, soltype_in);
+        Projmat->insert_row(irow, 1, jcol, &one);
+        
+      }
+      
+    }
+    
+    
+  }
+
+//----------------------------------------------------------------------------------------------------
+//END  build matrix sparsity pattern size and build prolongator matrix for single solution
+//-----------------------------------------------------------------------------------------------------
+
+  
+  
 
   short unsigned Mesh::GetRefinedElementIndex(const unsigned& iel) const {
     return static_cast <short unsigned>((*_topology->_Sol[_amrIndex])(iel) + 0.25);

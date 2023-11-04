@@ -71,6 +71,17 @@ protected:
 
     void BuildAmrProlongatorMatrix(unsigned level);
 
+      /** Only for FSI */
+      void Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
+                                     const LinearEquation& lspdec,
+                                     const int& ielc,
+                                     SparseMatrix* Projmat,
+                                     const unsigned& index_sol,
+                                     const unsigned& kkindex_sol,
+                                     const unsigned& index_pair_sol,
+                                     const unsigned& kkindex_pair_sol,
+                                     const elem_type * elem_type_in) const;
+                                     
 
 private:
 

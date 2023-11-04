@@ -19,18 +19,21 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "MultiLevelMesh.hpp"
+#include "FemusInputParser.hpp"
+#include "Files.hpp"
+#include "Parameters.hpp"
+
+
+#include "FElemTypeEnum_list.hpp"
 #include "GaussPoints.hpp"
 #include "ElemType_template.hpp"
-#include "FElemTypeEnum_list.hpp"
+
+#include "MultiLevelMesh.hpp"
 
 #include "System.hpp"
 #include "00_system_specifics.hpp"
 #include "LinearEquationSolverEnum.hpp"
 
-#include "Parameters.hpp"
-#include "FemusInputParser.hpp"
-#include "Files.hpp"
 
 
 #include <vector>
@@ -78,40 +81,51 @@ public:
 // ===  Constructors / Destructor - END =================
 
 
-// ===  Mesh - BEGIN =================
+
+// ===  Input Parser - BEGIN =================
 public:
-    
-    /** Multilevel mesh pointer */
-    MultiLevelMesh *_ml_msh;
 
-    /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
-    const unsigned GetNumberOfLevels() const {
-        return _gridn;
-    };
+    /** Input Parser */
+  inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
 
-    /** Increase by one the number of levels */
-    void AddLevel(){
-        _gridn++;
-    };
-
-    /**  New get/set for new data */
-  inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
-
-  inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
-
-  inline const  MultiLevelMesh * GetMLMesh() const { return  _ml_msh; }
-
-  inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
-
+  void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
 
 protected:
-
-    unsigned short _gridn;
     
-    const MultiLevelMeshTwo               * _mesh;
+    const FemusInputParser<double>        * _phys;
     
-// ===  Mesh - END =================
+// ===  Input Parser - END =================
 
+    
+// ===  Files Handler - BEGIN =================
+public:
+
+    /** Files Handler */
+  void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
+  
+  inline const Files * GetFilesHandler() const { return  _files; }
+  
+protected:
+    
+    const Files                           * _files;
+    
+// ===  Files Handler - END =================
+
+
+// ===  Parameters - BEGIN =================
+public:
+
+    /** Data structure holding arbitrary parameters. */
+    Parameters parameters;
+    
+    
+protected:
+    
+    
+// ===  Parameters - END =================
+
+    
+    
 // ===  Quadrature - BEGIN =================
 public:
 
@@ -212,7 +226,7 @@ protected:
 // ===  FE Evaluations at Quadrature - END =================
 
 
-// ===  ElemType ///@deprecated - BEGIN =================
+// ===  FE ElemType ///@deprecated - BEGIN =================
 public:
     
     /** ElemType and Quadrature rule */
@@ -225,7 +239,42 @@ protected:
 
     std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
 
-// ===  ElemType - END =================
+// ===  FE ElemType - END =================
+
+
+// ===  Mesh - BEGIN =================
+public:
+    
+    /** Multilevel mesh pointer */
+    MultiLevelMesh *_ml_msh;
+
+    /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
+    const unsigned GetNumberOfLevels() const {
+        return _gridn;
+    };
+
+    /** Increase by one the number of levels */
+    void AddLevel(){
+        _gridn++;
+    };
+
+    /**  New get/set for new data */
+  inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
+
+  inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
+
+  inline const  MultiLevelMesh * GetMLMesh() const { return  _ml_msh; }
+
+  inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
+
+
+protected:
+
+    unsigned short _gridn;
+    
+    const MultiLevelMeshTwo               * _mesh;
+    
+// ===  Mesh - END =================
 
 
 // ===  Solution - BEGIN =================
@@ -247,7 +296,7 @@ protected:
     
 // ===  Solution - END =================
     
-// ===  Solution, QuantityMap - BEGIN =================
+// ===  Solution, QuantityMap ///@deprecated - BEGIN =================
 public:
     
   /** Quantity Map */
@@ -264,6 +313,8 @@ protected:
     
 // ===  Solution, QuantityMap - END =================
 
+    
+    
 // ===  Systems - BEGIN =================
 public:
 
@@ -394,48 +445,7 @@ protected:
     
 // ===  System Specifics - END =================
 
-
-
-// ===  Parameters - BEGIN =================
-public:
-
-    /** Data structure holding arbitrary parameters. */
-    Parameters parameters;
-    
-    
-protected:
-    
-    
-// ===  Parameters - END =================
-
-// ===  Input Parser - BEGIN =================
-public:
-
-    /** Input Parser */
-  inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
-
-  void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
-
-protected:
-    
-    const FemusInputParser<double>        * _phys;
-    
-// ===  Input Parser - END =================
-
-// ===  Files Handler - BEGIN =================
-public:
-
-    /** Files Handler */
-  void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
-  
-  inline const Files * GetFilesHandler() const { return  _files; }
-  
-protected:
-    
-    const Files                           * _files;
-    
-// ===  Files Handler - END =================
-    
+   
     
 };
 

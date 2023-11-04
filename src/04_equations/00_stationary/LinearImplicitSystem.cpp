@@ -658,6 +658,138 @@ namespace femus {
   }
 
 
+  
+    
+//----------------------------------------------------------------------------------------------------
+//BEGIN build matrix sparsity pattern size and build prolongator matrix for the LsysPde  Matrix
+//-----------------------------------------------------------------------------------------------------
+
+  void LinearImplicitSystem::Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef, 
+                                         const LinearEquation& lspdec,
+                                         const int& ielc,
+                                         NumericVector* NNZ_d,
+                                         NumericVector* NNZ_o,
+                                         const unsigned& index_sol,
+                                         const unsigned& kkindex_sol,
+                                         const elem_type * elem_type_in) const
+  {
+      
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
+    
+    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      
+      for(int i = 0; i < ndofs_fine; i++) {
+        
+        const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
+        
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec._msh); //  local-id to dof
+        int iproc = 0;
+
+        while(irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
+
+        int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
+        int counter_off_diag = 0;
+
+        for(int k = 0; k < ncols; k++) {
+          const int j = elem_type_in->Get_Prolongator_Index(i, k);
+          int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
+
+          if(jcolumn <  lspdec.KKoffset[0][iproc]                           || 
+             jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size() - 1][iproc]     ) counter_off_diag++;
+        }
+
+        NNZ_d->set(irow, ncols - counter_off_diag);
+        NNZ_o->set(irow, counter_off_diag);
+      }
+      
+    }
+    else { // coarse2coarse prolongation
+      
+      for(int i = 0; i < ndofs; i++) {
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
+
+        int iproc = 0;
+
+        while(irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
+
+        int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
+
+        if(jcolumn <  lspdec.KKoffset[0][iproc]                          ||
+           jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size() - 1][iproc]     ) {
+          NNZ_o->set(irow, 1);
+        }
+        else {
+          NNZ_d->set(irow, 1);
+        }
+      }
+      
+    }
+    
+    
+  }
+
+
+  void LinearImplicitSystem::Build_Prolongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
+                                    const LinearEquation& lspdec,
+                                    const int& ielc,
+                                    SparseMatrix* Projmat,
+                                    const unsigned& index_sol,
+                                    const unsigned& kkindex_sol,
+                                  const elem_type * elem_type_in) const
+  {
+    
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
+
+
+    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      
+      std::vector<int> cols( ndofs );
+
+      for(int i = 0; i < ndofs_fine; i++) {
+        
+        const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
+
+        const int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec._msh);
+
+        const int ncols =  elem_type_in->Get_Prolongator_Num_Columns(i);
+        cols.assign(ncols, 0);
+
+        for(int k = 0; k < ncols; k++) {
+          int j = elem_type_in->Get_Prolongator_Index(i, k);
+          int jj = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
+          cols[k] = jj;
+        }
+
+        Projmat->insert_row(irow, ncols, cols, elem_type_in->Get_Prolongator_Values_Row(i) );
+      }
+      
+    }
+    else {
+      
+      std::vector <int> jcol(1);
+      double one = 1.;
+
+      for(int i = 0; i < ndofs; i++) {
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
+        jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
+        Projmat->insert_row(irow, 1, jcol, &one);
+      }
+      
+    }
+    
+    
+  }
+
+//----------------------------------------------------------------------------------------------------
+//END build matrix sparsity pattern size and build prolongator matrix for the LsysPde  Matrix
+//-----------------------------------------------------------------------------------------------------
+
+
+  
+  
+  
 //---------------------------------------------------------------------------------------------------
 // This routine generates the matrix for the projection of the FE matrix to finer grids.
 // This is a virtual function overloaded in the class MonolithicFSINonLinearImplicitSystem.
@@ -699,8 +831,7 @@ namespace femus {
       for(int isdom = iproc; isdom < iproc + 1; isdom++) {
         for(int iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = mshc->GetElementType(iel);
-          mshc->_finiteElement[ielt][SolType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k,
-                                                                                                                     mshc->GetFiniteElement(ielt, SolType) );
+            Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k, mshc->GetFiniteElement(ielt, SolType) );
         }
       }
     }
@@ -736,7 +867,7 @@ namespace femus {
       for(int isdom = iproc; isdom < iproc + 1; isdom++) {
         for(int iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = mshc->GetElementType(iel);
-          mshc->_finiteElement[ielt][SolType]->Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k, 
+          Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k, 
                                                                                                   mshc->GetFiniteElement(ielt, SolType) );
         }
       }

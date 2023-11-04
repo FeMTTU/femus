@@ -42,6 +42,104 @@ namespace femus {
     Parent::init();
   }
 
+  
+  
+
+  void MonolithicFSINonLinearImplicitSystem::Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
+                                            const LinearEquation& lspdec, 
+                                            const int& ielc, 
+                                            SparseMatrix* Projmat,
+                                            const unsigned& index_sol, 
+                                            const unsigned& kkindex_sol,
+                                            const unsigned& index_pair_sol,
+                                            const unsigned& kkindex_pair_sol,
+                                            const elem_type * elem_type_in) const
+  {
+    
+    const unsigned soltype_in = elem_type_in->GetSolType();
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
+    
+
+    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+
+      //BEGIN project nodeSolidMark
+      std::vector < double > fineNodeSolidMark(ndofs_fine, 0);
+      std::vector < bool > coarseNodeSolidMark(ndofs, 0);
+
+      if( soltype_in == 2 ) {
+        for(unsigned j = 0; j < ndofs; j++) {
+          int jadd = lspdec._msh->GetSolutionDof(j, ielc, soltype_in);
+          coarseNodeSolidMark[j] = lspdec._msh->GetSolidMark(jadd);
+        }
+
+        for(unsigned i = 0; i < ndofs_fine; i++) {
+          int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
+
+          for(int k = 0; k < ncols; k++) {
+            int j = elem_type_in->Get_Prolongator_Index(i, k);
+            fineNodeSolidMark[i] += elem_type_in->Get_Prolongator_Value(i, k) * coarseNodeSolidMark[j];
+          }
+        }
+      }
+
+      //END project nodeSolidMark
+
+      std::vector <int> cols( ndofs );
+      std::vector <double> copy_prol_val;
+      copy_prol_val.reserve( ndofs );
+
+      for(int i = 0; i < ndofs_fine; i++) {
+        
+        const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
+
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec._msh);
+        
+        const bool isolidmark = (fineNodeSolidMark[i] > 0.99 && fineNodeSolidMark[i] < 1.01) ? true : false;
+
+        int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
+        cols.assign(ncols, 0);
+        copy_prol_val.assign(ncols, 0);
+
+        for(int k = 0; k < ncols; k++) {
+          int j = elem_type_in->Get_Prolongator_Index(i, k);
+          bool jsolidmark = coarseNodeSolidMark[j];
+
+          if(isolidmark == jsolidmark) {
+            int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
+            cols[k] = jcolumn;
+            copy_prol_val[k] = elem_type_in->Get_Prolongator_Value(i, k);
+          }
+          else {
+            int jcolumn = lspdec.GetSystemDof(index_pair_sol, kkindex_pair_sol, j, ielc);
+            cols[k] = jcolumn;
+            copy_prol_val[k] = (index_sol != index_pair_sol) ? elem_type_in->Get_Prolongator_Value(i, k) : 0.;
+          }
+        }
+
+        Projmat->insert_row(irow, ncols, cols, &copy_prol_val[0]);
+      }
+      
+    }
+    else {
+      
+      std::vector <int> jcol(1);
+      double one = 1.;
+
+      for(int i = 0; i < ndofs; i++) {
+        
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
+        jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
+        Projmat->insert_row(irow, 1, jcol, &one);
+        
+      }
+    }
+    
+    
+  }
+
+  
+  
 //---------------------------------------------------------------------------------------------------
 // This routine generates the matrix for the projection of the FE matrix to finer grids
 //---------------------------------------------------------------------------------------------------
@@ -81,7 +179,7 @@ namespace femus {
       for(int isdom = iproc; isdom < iproc + 1; isdom++) {
         for(int iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = mshc->GetElementType(iel);
-          mshc->_finiteElement[ielt][SolType]->Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k,
+          Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, NNZ_d, NNZ_o, SolIndex, k,
                                                                                                                      mshc->GetFiniteElement(ielt, SolType) );
         }
       }
@@ -127,14 +225,14 @@ namespace femus {
           short unsigned ielt = mshc->GetElementType(iel);
           
           if(!testIfPressure) {
-            mshc->_finiteElement[ielt][SolType]->Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, solPairIndex, solPairPdeIndex,  mshc->GetFiniteElement(ielt, SolType));
+            Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, solPairIndex, solPairPdeIndex,  mshc->GetFiniteElement(ielt, SolType));
           }
           else {
-            mshc->_finiteElement[ielt][SolType]->Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, 
+            Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, RRt, SolIndex, k, 
                                                                                                   mshc->GetFiniteElement(ielt, SolType) );
           }
           
-          mshc->_finiteElement[ielt][SolType]->Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k, 
+            Build_Prolongation_OneElement_OneFEFamily_In_System(*LinSolf, *LinSolc, iel, _PP[gridf], SolIndex, k, 
                                                                                                   mshc->GetFiniteElement(ielt, SolType) );
           
         }

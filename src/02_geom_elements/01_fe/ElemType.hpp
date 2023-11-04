@@ -33,16 +33,6 @@ namespace femus
 {
 
 
-//------------------------------------------------------------------------------
-// Forward declarations
-//------------------------------------------------------------------------------
-class elem;
-
-class Mesh;
-class LinearEquation;
-class NumericVector;
-class SparseMatrix;
-
   
       /** Class for Finite Element on 1 single Geometric Element 
        @todo must factorize this class a lot 
@@ -424,81 +414,6 @@ class SparseMatrix;
 
 // ===  Quadrature Part - END =================
 
-      
-// =========================================
-// ===  One Element, Sparsity pattern and Multigrid - BEGIN =================
-// =========================================
-    public:
-
-      /** @todo move away from here */
-      void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(const Mesh& meshf,
-                                  const Mesh& meshc,
-                                  const int& ielc,
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const char is_fine_or_coarse [],
-                                  const elem_type * elem_type_in) const;
-
-      /** @todo move away from here */
-      void Build_Prolongation_OneElement_OneFEFamily(const Mesh& meshf,
-                             const Mesh& meshc,
-                             const int& ielc,
-                             SparseMatrix* Projmat, 
-                             const char is_fine_or_coarse [],
-                             const elem_type * elem_type_in) const;
-
-                             
-      /** for solution printing @todo move away from here */
-      void Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& Mesh,
-                                  const int& iel, 
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const unsigned& itype,
-                                  const elem_type * elem_type_in) const;
-
-        
-      /** for solution printing @todo move away from here */
-      void Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
-                             const int& iel,
-                             SparseMatrix* Projmat,
-                             NumericVector* NNZ_d,
-                             NumericVector* NNZ_o,
-                             const unsigned& itype,
-                             const elem_type * elem_type_in) const;
-
-      /** @todo move away from here */
-      void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef, 
-                                  const LinearEquation& lspdec,
-                                  const int& ielc,
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const unsigned& index_sol, 
-                                  const unsigned& kkindex_sol,
-                                  const elem_type * elem_type_in) const;
-
-      /** @todo move away from here */
-      void Build_Prolongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
-                             const LinearEquation& lspdec,
-                             const int& ielc, 
-                             SparseMatrix* Projmat,
-                             const unsigned& index_sol, 
-                             const unsigned& kkindex_sol,
-                             const elem_type * elem_type_in) const;
-
-      /** @todo Only for FSI */
-      void Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
-                                     const LinearEquation& lspdec,
-                                     const int& ielc,
-                                     SparseMatrix* Projmat,
-                                     const unsigned& index_sol,
-                                     const unsigned& kkindex_sol,
-                                     const unsigned& index_pair_sol,
-                                     const unsigned& kkindex_pair_sol,
-                                     const elem_type * elem_type_in) const;
-                                     
-// =========================================
-// ===  One Element, Sparsity pattern and Multigrid - END =================
-// =========================================
 
 
   };

@@ -300,6 +300,26 @@ namespace femus {
       /** Create the Prolongator Operator in order to get the coarser matrix for the Algebraic Multigrid Solver */
       virtual void BuildProlongatorMatrix (unsigned gridf);
       
+      /** @todo move away from here */
+      void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef, 
+                                  const LinearEquation& lspdec,
+                                  const int& ielc,
+                                  NumericVector* NNZ_d,
+                                  NumericVector* NNZ_o,
+                                  const unsigned& index_sol, 
+                                  const unsigned& kkindex_sol,
+                                  const elem_type * elem_type_in) const;
+
+      /** @todo move away from here */
+      void Build_Prolongation_OneElement_OneFEFamily_In_System(const LinearEquation& lspdef,
+                             const LinearEquation& lspdec,
+                             const int& ielc, 
+                             SparseMatrix* Projmat,
+                             const unsigned& index_sol, 
+                             const unsigned& kkindex_sol,
+                             const elem_type * elem_type_in) const;
+                             
+                             
       /** Prolongator and Restrictor */
       std::vector < SparseMatrix* > _PP, _RR;
       
