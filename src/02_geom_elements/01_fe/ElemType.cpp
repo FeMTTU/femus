@@ -20,8 +20,8 @@
 #include "ElemType.hpp"
 
 
-#include "NumericVector.hpp"
 #include "Mesh.hpp"
+
 #include "LinearEquation.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
@@ -452,7 +452,7 @@ namespace femus {
           cols[k] = jj;
         }
 
-        Projmat->insert_row(irow, ncols, cols, _prol_val[i]);
+        Projmat->insert_row(irow, ncols, cols, elem_type_in->Get_Prolongator_Values_Row(i) );
       }
       
     }
@@ -506,7 +506,7 @@ namespace femus {
 
           for(int k = 0; k < ncols; k++) {
             int j = elem_type_in->Get_Prolongator_Index(i, k);
-            fineNodeSolidMark[i] += _prol_val[i][k] * coarseNodeSolidMark[j];
+            fineNodeSolidMark[i] += elem_type_in->Get_Prolongator_Value(i, k) * coarseNodeSolidMark[j];
           }
         }
       }
@@ -536,12 +536,12 @@ namespace femus {
           if(isolidmark == jsolidmark) {
             int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
             cols[k] = jcolumn;
-            copy_prol_val[k] = _prol_val[i][k];
+            copy_prol_val[k] = elem_type_in->Get_Prolongator_Value(i, k);
           }
           else {
             int jcolumn = lspdec.GetSystemDof(index_pair_sol, kkindex_pair_sol, j, ielc);
             cols[k] = jcolumn;
-            copy_prol_val[k] = (index_sol != index_pair_sol) ? _prol_val[i][k] : 0.;
+            copy_prol_val[k] = (index_sol != index_pair_sol) ? elem_type_in->Get_Prolongator_Value(i, k) : 0.;
           }
         }
 
@@ -584,10 +584,12 @@ namespace femus {
   {
 
     const unsigned soltype_in = elem_type_in->GetSolType();
+    const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned      ndofs_fine = elem_type_in->GetNDofsFine();
     
       unsigned n_elemdofs = 0;
-      if ( !strcmp(is_fine_or_coarse, "fine") )        n_elemdofs = elem_type_in->GetNDofsFine();
-      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = elem_type_in->GetNDofs();
+      if ( !strcmp(is_fine_or_coarse, "fine") )        n_elemdofs = ndofs_fine;
+      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = ndofs;
       
     if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       
@@ -651,10 +653,11 @@ namespace femus {
  
       const unsigned soltype_in = elem_type_in->GetSolType();
       const unsigned      ndofs = elem_type_in->GetNDofs();
+      const unsigned      ndofs_fine = elem_type_in->GetNDofsFine();
     
       unsigned n_elemdofs = 0;
-      if ( !strcmp(is_fine_or_coarse, "fine") )        n_elemdofs = elem_type_in->GetNDofsFine();
-      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = elem_type_in->GetNDofs();
+      if ( !strcmp(is_fine_or_coarse, "fine") )        n_elemdofs = ndofs_fine;
+      else if ( !strcmp(is_fine_or_coarse, "coarse") ) n_elemdofs = ndofs;
       
       if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
@@ -675,7 +678,7 @@ namespace femus {
           jcols[k] = jcolumn;
         }
 
-        Projmat->insert_row(irow, ncols, jcols, _prol_val[i]);
+        Projmat->insert_row(irow, ncols, jcols, elem_type_in->Get_Prolongator_Values_Row(i) );
       }
       
     }
@@ -716,10 +719,11 @@ namespace femus {
     const unsigned soltype_in = elem_type_in->GetSolType();
     const basis * pt_basis_in = elem_type_in->GetBasis();
     const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
     
-    bool identity = ( _nlag[itype] <= ndofs ) ? true : false;
+    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
-    for(int i = 0; i < _nlag[itype]; i++) {
+    for(int i = 0; i < ndofs_Lagrange; i++) {
       
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int iproc = mesh.IsdomBisectionSearch(irow, itype);
@@ -761,13 +765,14 @@ namespace femus {
     const unsigned soltype_in = elem_type_in->GetSolType();
     const basis * pt_basis_in = elem_type_in->GetBasis();
     const unsigned      ndofs = elem_type_in->GetNDofs();
+    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
     
     std::vector<int> cols( ndofs );
     std::vector<double> value( ndofs );
     
-    bool identity = (_nlag[itype] <= ndofs ) ? true : false;
+    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
-    for(int i = 0; i < _nlag[itype]; i++) {
+    for(int i = 0; i < ndofs_Lagrange; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int ncols = (identity) ? 1 : ndofs;
       unsigned counter = 0;

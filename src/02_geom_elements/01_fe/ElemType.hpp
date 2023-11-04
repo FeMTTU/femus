@@ -38,8 +38,8 @@ namespace femus
 //------------------------------------------------------------------------------
 class elem;
 
-class LinearEquation;
 class Mesh;
+class LinearEquation;
 class NumericVector;
 class SparseMatrix;
 
@@ -67,6 +67,8 @@ class SparseMatrix;
 // ===  Constructors / Destructor - END =================
 // =========================================
 
+
+// ===  GeomElem Part - BEGIN =================
       
 // =========================================
 // ===  Geometric element - BEGIN =================
@@ -95,6 +97,10 @@ class SparseMatrix;
       unsigned _dim; /* Spatial dimension of the geometric element */
 // ===  Geometric element - Dimension - END =================
 
+// ===  GeomElem Part - END =================
+
+
+// ===  FE Part - BEGIN =================
       
 // =========================================
 // ===   FE (without Quadrature evaluations) - BEGIN =================
@@ -147,6 +153,10 @@ class SparseMatrix;
         return _nc;
       }
       
+      inline int  GetNDofs_Lagrange(const unsigned type) const {
+        return _nlag[type];
+      }
+      
       /** Retrieve the number of dofs for this element */
       inline int  GetNDofsFine() const {
         return _nf;
@@ -163,6 +173,13 @@ class SparseMatrix;
         return _prol_ind[i][k];
       }
       
+      inline double *  Get_Prolongator_Values_Row(const unsigned i) const {
+        return _prol_val[i];
+      }
+      
+      inline double  Get_Prolongator_Value(const unsigned i, const unsigned k) const {
+        return _prol_val[i][k];
+      }
       
       std::pair<int, int> GetKVERT_IND(const unsigned i) const {
         
@@ -223,6 +240,11 @@ class SparseMatrix;
 // ===  FE (without Quadrature evaluations), with MG - END =================
 // =========================================
 
+// ===  FE Part - END =================
+
+      
+      
+// ===  Quadrature Part - BEGIN =================
 
 
 // =========================================
@@ -399,6 +421,9 @@ class SparseMatrix;
 // =========================================
 // ===  Quadrature, with FE evaluations - END =================
 // =========================================
+
+// ===  Quadrature Part - END =================
+
       
 // =========================================
 // ===  One Element, Sparsity pattern and Multigrid - BEGIN =================
