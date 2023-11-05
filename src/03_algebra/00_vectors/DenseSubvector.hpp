@@ -29,7 +29,7 @@ namespace femus {
 // ===========================================
 // Defines a dense subvector for use in Finite Element-type computations.
 // Useful for storing element load vectors  before summation
-// into a global vector, particularly when you have systems of equations.
+// into a global vector, particularly when you have sys of equations.
 //=====================================
 
 // ------------------------------------------------------------

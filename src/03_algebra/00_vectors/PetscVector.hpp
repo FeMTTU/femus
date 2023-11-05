@@ -528,7 +528,7 @@ namespace femus {
     // However we can't assert this, because someone might want to
     // construct a GHOSTED vector which doesn't include neighbor element
     // dofs.  Boyce tried to do so in user code, and we're going to want
-    // to do so in System::project_vector().
+    // to do so in S ystem::project_vector().
     //
     // libmesh_assert(n_local == 0 || n_local == n || !ghost.empty());
 

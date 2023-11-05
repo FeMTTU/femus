@@ -342,10 +342,9 @@ for (uint fe = 0; fe < QL; fe++)     {
         my_system._LinSolver[Level]->_RESC->close();
 
 
-#ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
            << " with " << my_system._LinSolver[Level]->_KK->m() << " dofs" << std::endl;
-#endif
+
 
     return;
 }

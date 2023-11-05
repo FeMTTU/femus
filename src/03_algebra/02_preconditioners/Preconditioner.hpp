@@ -88,7 +88,7 @@ public:
 
 protected:
 
-    /** The matrix P... ie the matrix to be preconditioned. This is often the actual system matrix of a linear sytem.*/
+    /** The matrix P... ie the matrix to be preconditioned. This is often the actual syst matrix of a linear sytem.*/
     SparseMatrix * _matrix;
 
     /** Enum statitng with type of preconditioner to use. */

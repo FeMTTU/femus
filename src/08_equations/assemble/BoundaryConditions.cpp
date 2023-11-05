@@ -11,6 +11,10 @@
 #include "Box.hpp"
 
 
+#define DEFAULT_BC_FLAG 1 //=0 if you put a function on the RHS //you also have to comment the bc_read
+
+
+
 namespace femus {
 
 // ========= ELEM BC AUX ==============
@@ -670,7 +674,7 @@ return;
 // // // // // void BoundaryConditions::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 // // // // // //el_xm[] is the NON-DIMENSIONAL node coordinate // lb,le are NONDIMENSIONALIZED
 // // // // //
-// // // // // const double bdry_toll = DEFAULT_BDRY_TOLL;
+// // // // // const double bdry_toll = 1.e-5;
 // // // // //
 // // // // //
 // // // // //

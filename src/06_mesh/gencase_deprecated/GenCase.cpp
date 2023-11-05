@@ -7,7 +7,7 @@
 #include <algorithm> 
 // FEMuS
 #include "FemusConfig.hpp"
-#include "FemusDefault.hpp"
+#include "FemusDefaultMultigrid.hpp"
 
 #include "Domain.hpp"
 #include "Box.hpp"

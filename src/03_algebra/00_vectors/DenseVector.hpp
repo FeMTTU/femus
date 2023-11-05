@@ -35,7 +35,7 @@ namespace femus {
  * Defines a dense vector for use in Finite Element-type computations.
  * This class is to basically compliment the \p DenseMatix class.  It
  * has additional capabilities over the \p std::vector that make it
- * useful for finite elements, particulary for systems of equations.
+ * useful for finite elements, particulary for sys of equations.
  */
 
 // ------------------------------------------------------------

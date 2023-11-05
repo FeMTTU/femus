@@ -194,7 +194,7 @@ public:
     DenseMatrixBase::condense (i, j, val, rhs);
   }
 
-  /// Solve the system Ax=b given the input vector b.
+  /// Solve the sys Ax=b given the input vector b.
   void lu_solve (DenseVector& b,DenseVector& x,const bool partial_pivot = false);
   /// A Cholesky factorizationof A such that A = L L^T
   void cholesky_solve(DenseVector& b,DenseVector& x);
@@ -210,7 +210,7 @@ private:
 
   /// Form the LU decomposition of the matrix.
   void _lu_decompose (const bool partial_pivot = false);
-  /// Solves the system Ax=b through back substitution.
+  /// Solves the sys Ax=b through back substitution.
   void _lu_back_substitute (DenseVector& b,DenseVector& x,const bool partial_pivot = false) const;
 
   ///Decomposes a symmetric positive definite matrix

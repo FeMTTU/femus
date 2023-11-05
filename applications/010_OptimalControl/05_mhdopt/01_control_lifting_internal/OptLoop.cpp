@@ -4,6 +4,8 @@
 #include <cmath>
 
 //library headers
+#include "BDCTypeEnum.hpp"
+
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "MultiLevelProblem.hpp"

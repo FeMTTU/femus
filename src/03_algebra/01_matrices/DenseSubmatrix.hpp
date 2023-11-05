@@ -34,7 +34,7 @@ namespace femus {
 /**
  * Defines a dense submatrix for use in Finite Element-type computations.
  * Useful for storing element stiffness matrices before summation
- * into a global matrix, particularly when you have systems of equations.
+ * into a global matrix, particularly when you have sys of equations.
  */
 
 // ------------------------------------------------------------

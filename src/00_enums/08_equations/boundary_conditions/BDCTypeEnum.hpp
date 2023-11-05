@@ -7,4 +7,8 @@ enum BDCType {
     ROBIN
 };
 
+
+#define DEFAULT_BDRY_TOLL  0.0000001
+
+
 #endif

@@ -46,6 +46,12 @@
 //*********************************************
 
 
+//*********************** FILE PRINTING - BEGIN ***************************************************************
+#define DEFAULT_SOL_NCHARS   32    //GMV accepts at most 32 characters for a field
+#define DEFAULT_NDIGITS   4  //n of digits for the timestep printing
+//*********************** FILE PRINTING - END ***************************************************************
+
+
 //*********************************************
 //********** PRINT INFO - BEGIN ***********************
 // This is for configuring the "verbosity" of FEMuS:
@@ -62,33 +68,8 @@
 //********** PRINT INFO - END ***********************
 //*********************************************
 
-//*********************************************
-//********** BOUNDARY CONDITIONS - BEGIN **************
-#define DEFAULT_BC_FLAG 1 //=0 if you put a function on the RHS //you also have to comment the bc_read
-#define DEFAULT_BDRY_TOLL  0.0000001
-//********** BOUNDARY CONDITIONS - END **************
-//*********************************************
 
 
-//**************************************************************************************
-//************************EQNBASE - MULTIGRID - BEGIN ******************************************
-//**************************************************************************************
-#define DEFAULT_EPS_LSOLV  1.e-6 //1.e-20
-#define DEFAULT_EPS_LSOLV_C  1.e-20//1.e-10
-#define DEFAULT_EPS_PREPOST 1.e-20
-#define DEFAULT_MAXITS_LSOLV  40
-#define DEFAULT_MG_GAMMA 1
-#define DEFAULT_NC_PRE    8 //16
-#define DEFAULT_NC_COARSE 40
-#define DEFAULT_NC_POST   8 //16 
-#define DEFAULT_REST_SIMPLE  0   //no simple restrictor
-//************************EQNBASE - MULTIGRID - END ******************************************
-//**************************************************************************************
-
-//*********************** FILE PRINTING - BEGIN ***************************************************************
-#define DEFAULT_SOL_NCHARS   32    //GMV accepts at most 32 characters for a field
-#define DEFAULT_NDIGITS   4  //n of digits for the timestep printing
-//*********************** FILE PRINTING - END ***************************************************************
 
 
 

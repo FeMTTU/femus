@@ -1,5 +1,6 @@
 #include "OptLoop.hpp"
 
+#include "BDCTypeEnum.hpp"
 #include "MultiLevelProblem.hpp"
 #include "CurrentElem.hpp"
 #include "CurrentQuantity.hpp"

@@ -22,6 +22,7 @@
 #include "System.hpp"
 #include "LinearEquationSolver.hpp"
 #include "MgTypeEnum.hpp"
+#include "FemusDefaultMultigrid.hpp"
 #include "DirichletBCTypeEnum.hpp"
 #include "LinearEquationSolverEnum.hpp"
 #include "FemusDefault.hpp"
