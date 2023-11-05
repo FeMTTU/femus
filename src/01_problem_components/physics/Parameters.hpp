@@ -6,13 +6,8 @@
 #include <string>
 #include <map>
 #include <iostream>
-#include <assert.h>
-
-// C++ includes
+#include <cassert>
 #include <cstddef>
-#include <map>
-#include <string>
-#include <typeinfo>
 #include <vector>
 
 

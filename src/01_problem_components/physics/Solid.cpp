@@ -16,12 +16,14 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <iostream>
-#include <cstdlib>
-#include <cstring>
 #include "Solid.hpp"
 #include "Material.hpp"
 #include "Parameter.hpp"
+
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
+
 
 
 namespace femus {

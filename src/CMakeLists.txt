@@ -14,6 +14,10 @@ SET(femus_src
 00_utils/function_parser/FunctionBase.cpp
 00_utils/function_parser/ParsedFunction.cpp
 01_problem/MultiLevelProblem.cpp
+01_problem_components/physics/Fluid.cpp
+01_problem_components/physics/Material.cpp
+01_problem_components/physics/Parameter.cpp
+01_problem_components/physics/Solid.cpp
 02_reference_geom_elements/00_definition/GeomElemBase.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge2.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge3.cpp
@@ -98,10 +102,6 @@ ism/PolynomialBases.cpp
 ism/Line.cpp
 uq/uq.cpp
 uq/sparseGrid.cpp
-physics/Fluid.cpp
-physics/Material.cpp
-physics/Parameter.cpp
-physics/Solid.cpp
 )
 
 # IF(HAVE_HDF5)
