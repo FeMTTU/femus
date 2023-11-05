@@ -16,9 +16,8 @@
 #ifndef __femus_problem_MultiLevelProblem_hpp__
 #define __femus_problem_MultiLevelProblem_hpp__
 
-//----------------------------------------------------------------------------
-// includes :
-//----------------------------------------------------------------------------
+
+
 #include "FemusInputParser.hpp"
 #include "Files.hpp"
 #include "Parameters.hpp"
@@ -91,7 +90,7 @@ public:
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
 
-protected:
+private:
     
     const FemusInputParser<double>        * _phys;
     
@@ -106,7 +105,7 @@ public:
   
   inline const Files * GetFilesHandler() const { return  _files; }
   
-protected:
+private:
     
     const Files                           * _files;
     
@@ -140,7 +139,7 @@ public:
   
   void SetQuadratureRuleAllGeomElemsMultiple(const std::vector<std::string> quadr_order_in_vec);
 
-protected:
+private:
     
   std::vector< std::vector< Gauss > >    _qrule;            //[QRULES][Geom Elems][FE]
 // ===  Quadrature - END =================
@@ -216,7 +215,7 @@ public:
    }
 
    
-protected:
+private:
     
     
     /**  attempt to handle templated classes from non-templated class */
@@ -236,7 +235,7 @@ public:
   inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
   
-protected:
+private:
 
     std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
 
@@ -269,7 +268,7 @@ public:
   inline   MultiLevelMesh * GetMLMesh()  { return  _ml_msh; }
 
 
-protected:
+private:
 
     unsigned short _gridn;
     
@@ -291,7 +290,7 @@ public:
 
     
     
-protected:
+private:
     
     
     
@@ -306,7 +305,7 @@ public:
   inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }
   
   
-protected:
+private:
     
 
     const QuantityMap                     * _qtymap;
@@ -416,7 +415,7 @@ public:
   
   
   
-protected:
+private:
     
     /** Data structure holding the systems. */
     std::map< std::string, System* > _systems;
@@ -438,7 +437,7 @@ public:
   inline const system_specifics * get_app_specs_pointer() const { return  _app_specs_ptr; }
  
  
-protected:
+private:
 
     const system_specifics *  _app_specs_ptr;
 

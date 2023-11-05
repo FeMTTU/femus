@@ -1,9 +1,6 @@
 #ifndef __femus_meshGencase_GeomElemQuad9_hpp__
 #define __femus_meshGencase_GeomElemQuad9_hpp__
 
-#include <cstdlib>
-#include <iostream>
-
 
 #include "GeomElemBase.hpp"
 

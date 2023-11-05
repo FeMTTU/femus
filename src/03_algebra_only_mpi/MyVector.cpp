@@ -14,6 +14,9 @@
 
 =========================================================================*/
 
+#include "MyVector.hpp"
+
+
 #include <string>
 #include <iostream>
 #include <vector>
@@ -22,7 +25,6 @@
 #include <mpi.h>
 #include <boost/mpi/datatype.hpp>
 
-#include "MyVector.hpp"
 
 namespace femus {
 

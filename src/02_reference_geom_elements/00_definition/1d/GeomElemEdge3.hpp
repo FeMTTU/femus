@@ -1,9 +1,6 @@
 #ifndef __femus_meshGencase_GeomElemEdge3_hpp__
 #define __femus_meshGencase_GeomElemEdge3_hpp__
 
-//Class for
-#include <cstdlib>
-#include <iostream>
 
 #include "GeomElemBase.hpp"
 

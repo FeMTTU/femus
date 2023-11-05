@@ -1,7 +1,6 @@
 #ifndef __femus_meshGencase_GeomElemTri3_hpp__
 #define __femus_meshGencase_GeomElemTri3_hpp__
 
-//Class for
 
 
 #include "GeomElemBase.hpp"

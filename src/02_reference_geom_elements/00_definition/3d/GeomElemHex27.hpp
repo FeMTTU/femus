@@ -1,13 +1,15 @@
 #ifndef __femus_meshGencase_GeomElemHex27_hpp__
 #define __femus_meshGencase_GeomElemHex27_hpp__
 
-#include <cstdlib>
-#include <iostream>
-//Class for the 3D Hex27
 
 
 #include "GeomElemBase.hpp"
-#include "ElemType.hpp"
+
+#include <vector>
+#include <iostream>
+
+
+
 
 namespace femus {
 

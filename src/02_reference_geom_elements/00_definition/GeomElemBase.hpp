@@ -1,13 +1,15 @@
 #ifndef __femus_meshGencase_GeomElemBase_hpp__
 #define __femus_meshGencase_GeomElemBase_hpp__
 
-#include <string>
-#include <vector>
 
 #include "Typedefs.hpp"
-#include "VBTypeEnum.hpp"
-#include "GaussPoints.hpp"
-#include "ElemType.hpp"
+
+
+#include <string>
+#include <vector>
+#include <iostream>
+
+
 
 namespace femus {
 
