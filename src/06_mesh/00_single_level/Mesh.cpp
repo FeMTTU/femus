@@ -799,7 +799,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         for(unsigned inode = 0; inode < _ghostDofs[k][isdom].size(); inode++) {
           unsigned ghostNode = _ghostDofs[k][isdom][inode];
 
-          unsigned ksdom = IsdomBisectionSearch(ghostNode, 2);
+          unsigned ksdom = BisectionSearch_find_processor_of_dof(ghostNode, 2);
 
           int upperBound = _dofOffset[2][ksdom] + _ownSize[k][ksdom];
 
@@ -985,7 +985,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
 
 // *******************************************************
-  unsigned Mesh::IsdomBisectionSearch(const unsigned& dof, const short unsigned& solType) const {
+  unsigned Mesh::BisectionSearch_find_processor_of_dof(const unsigned& dof, const short unsigned& solType) const {
 
     unsigned isdom0 = 0;
     unsigned isdom1 = _nprocs ;
@@ -1010,7 +1010,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         
       case 0: { // linear Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
 
         if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
           dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
@@ -1023,7 +1023,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
       case 1: { // quadratic Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
 
         if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
           dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
@@ -1044,7 +1044,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         break;
 
       case 4: // piecewise linear discontinuous
-        unsigned isdom = IsdomBisectionSearch(iel, 3);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iel, 3);
         unsigned offset = _elementOffset[isdom];
         unsigned offsetp1 = _elementOffset[isdom + 1];
         unsigned ownSize = offsetp1 - offset;
@@ -1067,7 +1067,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         
       case 0: { // linear Lagrange
         unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
 
         if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
           dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
@@ -1080,7 +1080,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
       case 1: { // quadratic Lagrange
         unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
 
         if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
           dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
@@ -1102,7 +1102,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
       case 4: // piecewise linear discontinuous
         unsigned iel = mshc->el->GetChildElement(ielc, i0);
-        unsigned isdom = IsdomBisectionSearch(iel, 3);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iel, 3);
         unsigned offset = _elementOffset[isdom];
         unsigned offsetp1 = _elementOffset[isdom + 1];
         unsigned ownSize = offsetp1 - offset;
@@ -1226,7 +1226,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(int i = 0; i < ndofs_Lagrange; i++) {
       
       int irow = mesh.GetSolutionDof(i, iel, itype);
-      int iproc = mesh.IsdomBisectionSearch(irow, itype);
+      int iproc = mesh.BisectionSearch_find_processor_of_dof(irow, itype);
       int ncols = (identity) ? 1 : ndofs;
       
       unsigned counter_off_diag = 0;
@@ -1449,7 +1449,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         
         const int irow = meshf.GetSolutionDof(ielc, id_0_1.first, id_0_1.second, soltype_in, &meshc);
 
-        const int iproc = meshf.IsdomBisectionSearch(irow, soltype_in);
+        const int iproc = meshf.BisectionSearch_find_processor_of_dof(irow, soltype_in);
         
         const int ncols = elem_type_in->Get_Prolongator_Num_Columns(i);
         
@@ -1474,7 +1474,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         
         int irow = meshf.GetSolutionDof(ielc, 0, i , soltype_in, &meshc);
 
-        int iproc = meshf.IsdomBisectionSearch(irow, soltype_in);
+        int iproc = meshf.BisectionSearch_find_processor_of_dof(irow, soltype_in);
         int jcolumn = meshc.GetSolutionDof(i, ielc, soltype_in);
 
         if( jcolumn <  meshc.dofmap_get_dof_offset(soltype_in, iproc)      || 

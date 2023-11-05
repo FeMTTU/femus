@@ -683,7 +683,7 @@ double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, con
     }
   }
 
-  unsigned mproc = msh->IsdomBisectionSearch(elem , 3);
+  unsigned mproc = msh->BisectionSearch_find_processor_of_dof(elem , 3);
 
   solTXi.broadcast(mproc);
   double value = solTXi[mproc];

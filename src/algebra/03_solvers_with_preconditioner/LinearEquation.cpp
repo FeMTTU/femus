@@ -75,7 +75,7 @@ namespace femus {
     unsigned soltype =  _SolType[index_sol];
     unsigned idof = _msh->GetSolutionDof(i, iel, soltype);
 
-    unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
+    unsigned isubdom = _msh->BisectionSearch_find_processor_of_dof(idof, soltype);
     return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
     
   }
@@ -86,7 +86,7 @@ namespace femus {
     //unsigned soltype =  _SolType[index_sol];
     unsigned idof = _msh->GetSolutionDof(i, iel, soltype);
 
-    unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
+    unsigned isubdom = _msh->BisectionSearch_find_processor_of_dof(idof, soltype);
     return otherKKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
     
   }
@@ -99,7 +99,7 @@ namespace femus {
     unsigned soltype =  _SolType[index_sol];
     unsigned idof = _msh->GetSolutionDof(ielc, i0, i1, soltype, mshc);
 
-    unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
+    unsigned isubdom = _msh->BisectionSearch_find_processor_of_dof(idof, soltype);
     return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
     
   }
@@ -255,7 +255,7 @@ namespace femus {
         for(int k = 0; k < _msh->dofmap_get_ghost_dofs(_SolType[indexSol], i).size(); k++) {
           // ghost node
           unsigned idof_metis = _msh->dofmap_get_ghost_dofs(_SolType[indexSol], i)[k];
-          unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]);
+          unsigned isubdom = _msh->BisectionSearch_find_processor_of_dof(idof_metis, _SolType[indexSol]);
           KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->_dofOffset[_SolType[indexSol]][isubdom];
           counter++;
         }

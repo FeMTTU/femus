@@ -47,6 +47,7 @@ namespace femus {
 // Forward declarations
 //------------------------------------------------------------------------------
 class MultiLevelSolution;
+class System;
 
 class MultiLevelMeshTwo;
 class elem_type;
@@ -319,17 +320,17 @@ protected:
 public:
 
     //   Returns a non-const reference to the map of Systems
-  std::map<std::string, System*> & get_systems_map() { return _systems; }
+  std::map< std::string, System* > & get_systems_map() { return _systems; }
   
   const int get_current_system_number() const { return _current_system_number; }
 
   void set_current_system_number(const unsigned current_system_number_in) { _current_system_number = current_system_number_in; }
 
     /** Typedef for system iterators */
-    typedef std::map<std::string, System*>::iterator       system_iterator;
+    typedef std::map< std::string, System* >::iterator       system_iterator;
 
     /** Typedef for constatnt system iterators */
-    typedef std::map<std::string, System*>::const_iterator const_system_iterator;
+    typedef std::map< std::string, System* >::const_iterator const_system_iterator;
 
     /** Add the system of type \p system_type named \p name to the systems array. */
     virtual System & add_system (const std::string& system_type, const std::string& name);
@@ -418,7 +419,7 @@ public:
 protected:
     
     /** Data structure holding the systems. */
-    std::map<std::string, System*> _systems;
+    std::map< std::string, System* > _systems;
 
     unsigned int _current_system_number;
 

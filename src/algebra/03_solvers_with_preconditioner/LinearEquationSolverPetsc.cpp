@@ -21,6 +21,7 @@
 #ifdef HAVE_PETSC
 
 // Local Includes
+#include "FElemTypeEnum_list.hpp"
 #include "PetscMacro.hpp"
 #include "LinearEquationSolverPetsc.hpp"
 #include "PetscPreconditioner.hpp"
@@ -70,9 +71,9 @@ namespace femus {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
 
-      for (unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()];
-           inode_mts < _msh->_dofOffset[soltype][processor_id() + 1]; inode_mts++) {
-        int local_mts = inode_mts - _msh->_dofOffset[soltype][processor_id()];
+      for (unsigned inode_mts = GetMeshFromLinEq()->_dofOffset[soltype][processor_id()];
+           inode_mts < GetMeshFromLinEq()->_dofOffset[soltype][processor_id() + 1]; inode_mts++) {
+        int local_mts = inode_mts - GetMeshFromLinEq()->_dofOffset[soltype][processor_id()];
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
 
         if (!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol]) (inode_mts) < 1.5) {
@@ -221,7 +222,7 @@ namespace femus {
     const std::vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
 
-    unsigned level = _msh->GetLevel();
+    unsigned level = GetMeshFromLinEq()->GetLevel();
 
     // ***************** NODE/ELEMENT SEARCH *******************
     if (_bdcIndexIsInitialized == 0) BuildBdcIndex (variable_to_be_solved);
@@ -356,7 +357,7 @@ namespace femus {
 
   void LinearEquationSolverPetsc::RemoveNullSpace() {
 
-    if (_msh->GetLevel() != 0) {
+    if ( GetMeshFromLinEq()->GetLevel() != 0) {
       std::vector < Vec > nullspBase;
       GetNullSpaceBase (nullspBase);
       if (nullspBase.size() != 0) {
@@ -393,12 +394,12 @@ namespace femus {
         VecDuplicate (EPS, &nullspBase[nullspSize]);
         
         unsigned soltype = _SolType[indexSol];
-        unsigned owndofs = _msh->_dofOffset[soltype][processor_id() + 1] - _msh->_dofOffset[soltype][processor_id()];
-        if (soltype == 4) owndofs /= (_msh->GetDimension() + 1);
+        unsigned owndofs = GetMeshFromLinEq()->_dofOffset[soltype][processor_id() + 1] - GetMeshFromLinEq()->_dofOffset[soltype][processor_id()];
+        if (soltype == DISCONTINUOUS_LINEAR ) owndofs /= (GetMeshFromLinEq()->GetDimension() + 1);
         
         for (unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
-          unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()] + i;
+          unsigned inode_mts = GetMeshFromLinEq()->_dofOffset[soltype][processor_id()] + i;
           if ( (* (*_Bdc) [indexSol]) (inode_mts) > 1.9) {
             VecSetValue (nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
           }
@@ -439,7 +440,7 @@ namespace femus {
 
   void LinearEquationSolverPetsc::SetPreconditioner (KSP& subksp, PC& subpc) {
 
-    int parallelOverlapping = (_msh->GetIfHomogeneous()) ? 0 : 0;
+    int parallelOverlapping = (GetMeshFromLinEq()->GetIfHomogeneous()) ? 0 : 0;
     PetscPreconditioner::set_petsc_preconditioner_type (this->_preconditioner_type, subpc, parallelOverlapping);
     PetscReal zero = 1.e-16;
     PCFactorSetZeroPivot (subpc, zero);

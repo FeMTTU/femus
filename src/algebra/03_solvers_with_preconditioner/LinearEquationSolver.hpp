@@ -28,7 +28,7 @@
 #include "MgTypeEnum.hpp"
 #include "FieldSplitTree.hpp"
 
-#include <petscksp.h>
+#include "petscksp.h"
 
 #include <vector>
 #include <memory>

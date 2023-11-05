@@ -61,7 +61,7 @@ namespace femus {
     const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
     
 
-    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+    if(lspdec.GetMeshFromLinEq()->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
       //BEGIN project nodeSolidMark
       std::vector < double > fineNodeSolidMark(ndofs_fine, 0);
@@ -69,8 +69,8 @@ namespace femus {
 
       if( soltype_in == 2 ) {
         for(unsigned j = 0; j < ndofs; j++) {
-          int jadd = lspdec._msh->GetSolutionDof(j, ielc, soltype_in);
-          coarseNodeSolidMark[j] = lspdec._msh->GetSolidMark(jadd);
+          int jadd = lspdec.GetMeshFromLinEq()->GetSolutionDof(j, ielc, soltype_in);
+          coarseNodeSolidMark[j] = lspdec.GetMeshFromLinEq()->GetSolidMark(jadd);
         }
 
         for(unsigned i = 0; i < ndofs_fine; i++) {
@@ -93,7 +93,7 @@ namespace femus {
         
         const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
 
-        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec._msh);
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec.GetMeshFromLinEq());
         
         const bool isolidmark = (fineNodeSolidMark[i] > 0.99 && fineNodeSolidMark[i] < 1.01) ? true : false;
 
@@ -128,7 +128,7 @@ namespace femus {
 
       for(int i = 0; i < ndofs; i++) {
         
-        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec.GetMeshFromLinEq());
         jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
         Projmat->insert_row(irow, 1, jcol, &one);
         
@@ -373,7 +373,7 @@ namespace femus {
 	      }
             }
             else {
-              unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
+              unsigned jproc = _msh[level]->BisectionSearch_find_processor_of_dof(it->first, solType);
               colPP[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
 	      if(solidMarki == true && solidMarkj == false && k != kPair){
 		colRR[j] = LinSol->KKoffset[kPair][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);

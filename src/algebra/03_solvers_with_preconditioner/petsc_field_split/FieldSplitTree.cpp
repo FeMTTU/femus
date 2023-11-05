@@ -15,9 +15,9 @@
 
 #include "FieldSplitTree.hpp"
 #include "LinearEquationSolverPetscFieldSplit.hpp"
-#include "MeshASMPartitioning.hpp"
 
 #include "Mesh.hpp"
+#include "MeshASMPartitioning.hpp"
 
 #include <map>
 #include <algorithm>
@@ -583,7 +583,7 @@ namespace femus {
   void FieldSplitTree::BuildASMIndexSet (const unsigned& level, const LinearEquationSolverPetscFieldSplit *solver) {
 
 
-    Mesh* msh = solver->_msh;
+    const Mesh* msh = solver->GetMeshFromLinEq();
 
     unsigned nel = msh->GetNumberOfElements();
 

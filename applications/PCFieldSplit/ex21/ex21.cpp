@@ -881,8 +881,8 @@ std::pair < std::vector <double>, std::vector <double> > GetVaribleValues(MultiL
   }
   
   std::pair < std::vector <double>, std::vector <double> > out_value;
-  unsigned mproc1 = msh->IsdomBisectionSearch(elem1, 3);
-  unsigned mproc2 = msh->IsdomBisectionSearch(elem2, 3);
+  unsigned mproc1 = msh->BisectionSearch_find_processor_of_dof(elem1, 3);
+  unsigned mproc2 = msh->BisectionSearch_find_processor_of_dof(elem2, 3);
   solUXi.broadcast(mproc1);
   solVXi.broadcast(mproc1);
   solPXi1.broadcast(mproc1);

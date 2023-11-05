@@ -101,6 +101,10 @@ class LinearEquation : public ParallelObject {
 			const unsigned &i, const unsigned &iel, const std::vector < std::vector <unsigned> > &otherKKoffset) const;
 
  public:
+   
+   inline const Mesh *  GetMeshFromLinEq() const { return _msh; }
+   
+ private:
   
   /** Pointer to underlying mesh */
   Mesh *_msh;

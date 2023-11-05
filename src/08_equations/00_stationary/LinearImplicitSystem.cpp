@@ -677,13 +677,13 @@ namespace femus {
     const unsigned      ndofs = elem_type_in->GetNDofs();
     const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
     
-    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+    if(lspdec.GetMeshFromLinEq()->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       
       for(int i = 0; i < ndofs_fine; i++) {
         
         const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
         
-        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec._msh); //  local-id to dof
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec.GetMeshFromLinEq()); //  local-id to dof
         int iproc = 0;
 
         while(irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
@@ -707,7 +707,7 @@ namespace femus {
     else { // coarse2coarse prolongation
       
       for(int i = 0; i < ndofs; i++) {
-        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec.GetMeshFromLinEq());
 
         int iproc = 0;
 
@@ -743,7 +743,7 @@ namespace femus {
     const unsigned ndofs_fine = elem_type_in->GetNDofsFine();
 
 
-    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+    if(lspdec.GetMeshFromLinEq()->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       
       std::vector<int> cols( ndofs );
 
@@ -751,7 +751,7 @@ namespace femus {
         
         const std::pair<int, int> id_0_1 = elem_type_in->GetKVERT_IND(i);
 
-        const int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec._msh);
+        const int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, id_0_1.first, id_0_1.second, lspdec.GetMeshFromLinEq());
 
         const int ncols =  elem_type_in->Get_Prolongator_Num_Columns(i);
         cols.assign(ncols, 0);
@@ -772,7 +772,7 @@ namespace femus {
       double one = 1.;
 
       for(int i = 0; i < ndofs; i++) {
-        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
+        int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec.GetMeshFromLinEq());
         jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
         Projmat->insert_row(irow, 1, jcol, &one);
       }
@@ -982,7 +982,7 @@ namespace femus {
               col[j] = kOffset + (it->first - solOffset);
             }
             else {
-              unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
+              unsigned jproc = _msh[level]->BisectionSearch_find_processor_of_dof(it->first, solType);
               col[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
             }
             value[j] = it->second;

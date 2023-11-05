@@ -39,11 +39,14 @@ namespace femus {
   // ==============================================
 
   void LinearEquationSolverPetscAsm::SetElementBlockNumber(const char all[], const unsigned& overlap) {
-    _elementBlockNumber[0] = _msh->GetNumberOfElements();
-    _elementBlockNumber[1] = _msh->GetNumberOfElements();
-    _elementBlockNumber[2] = _msh->GetNumberOfElements();
+    
+    const unsigned nel = GetMeshFromLinEq()->GetNumberOfElements();
+    _elementBlockNumber[0] = nel;
+    _elementBlockNumber[1] = nel;
+    _elementBlockNumber[2] = nel;
     _standardASM = 1;
     _overlap = overlap;
+    
   }
 
   // =================================================
@@ -85,7 +88,7 @@ namespace femus {
 
   void LinearEquationSolverPetscAsm::BuildASMIndex(const std::vector <unsigned>& variable_to_be_solved) {
 
-    unsigned nel = _msh->GetNumberOfElements();
+    unsigned nel = GetMeshFromLinEq()->GetNumberOfElements();
 
     bool FastVankaBlock = true;
 
@@ -104,15 +107,15 @@ namespace femus {
 
     std::map<int, bool> mymap;
 
-    unsigned ElemOffset   = _msh->_dofOffset[3][iproc];
-    unsigned ElemOffsetp1 = _msh->_dofOffset[3][iproc + 1];
+    unsigned ElemOffset   = GetMeshFromLinEq()->_dofOffset[3][iproc];
+    unsigned ElemOffsetp1 = GetMeshFromLinEq()->_dofOffset[3][iproc + 1];
     unsigned ElemOffsetSize = ElemOffsetp1 - ElemOffset;
     std::vector <PetscInt> indexci(ElemOffsetSize);
     std::vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
 
     std::vector < std::vector < unsigned > > block_elements;
 
-    MeshASMPartitioning meshasmpartitioning(*_msh);
+    MeshASMPartitioning meshasmpartitioning(* GetMeshFromLinEq() );
 
     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
 
@@ -140,8 +143,8 @@ namespace femus {
       // ***************** NODE/ELEMENT SERCH *******************
       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
-	for(unsigned j = 0; j < _msh->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){
-	  unsigned jel = _msh->el->GetElementNearElement(iel,j);
+	for(unsigned j = 0; j < GetMeshFromLinEq()->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){
+	  unsigned jel = GetMeshFromLinEq()->el->GetElementNearElement(iel,j);
 	  if( jel >= ElemOffset && jel<ElemOffsetp1 ){
 	    
             //add elements for velocity to be solved
@@ -154,14 +157,14 @@ namespace femus {
                 if(ThisVaribaleIsNonSchur[indexSol]) {
                   unsigned SolPdeIndex = _SolPdeIndex[indexSol];
                   unsigned SolType = _SolType[SolPdeIndex];
-                  unsigned nvej = _msh->GetElementDofNumber(jel, SolType);
+                  unsigned nvej = GetMeshFromLinEq()->GetElementDofNumber(jel, SolType);
 
                   for(unsigned jj = 0; jj < nvej; jj++) {
-                    unsigned jdof = _msh->GetSolutionDof(jj, jel, SolType);
+                    unsigned jdof = GetMeshFromLinEq()->GetSolutionDof(jj, jel, SolType);
                     unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
 
-                    if(jdof >= _msh->_dofOffset[SolType][iproc] &&
-                        jdof <  _msh->_dofOffset[SolType][iproc + 1]) {
+                    if(jdof >= GetMeshFromLinEq()->_dofOffset[SolType][iproc] &&
+                        jdof <  GetMeshFromLinEq()->_dofOffset[SolType][iproc + 1]) {
                       if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                         owned[kkdof - DofOffset] = true;
                         _localIsIndex[vb_index][PAsize] = kkdof;
@@ -190,14 +193,14 @@ namespace femus {
             if(!ThisVaribaleIsNonSchur[indexSol]) {
               unsigned SolPdeIndex = _SolPdeIndex[indexSol];
               unsigned SolType = _SolType[SolPdeIndex];
-              unsigned nvei = _msh->GetElementDofNumber(iel, SolType);
+              unsigned nvei = GetMeshFromLinEq()->GetElementDofNumber(iel, SolType);
 
               for(unsigned ii = 0; ii < nvei; ii++) {
-                unsigned inode_Metis = _msh->GetSolutionDof(ii, iel, SolType);
+                unsigned inode_Metis = GetMeshFromLinEq()->GetSolutionDof(ii, iel, SolType);
                 unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, ii, iel);
 
-                if(inode_Metis >= _msh->_dofOffset[SolType][iproc] &&
-                    inode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
+                if(inode_Metis >= GetMeshFromLinEq()->_dofOffset[SolType][iproc] &&
+                    inode_Metis <  GetMeshFromLinEq()->_dofOffset[SolType][iproc + 1]) {
                   if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                     owned[kkdof - DofOffset] = true;
                     _localIsIndex[vb_index][PAsize] = kkdof;

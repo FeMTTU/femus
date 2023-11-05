@@ -32,13 +32,13 @@ namespace femus {
   }
 
   void LinearEquationSolverPetscFieldSplit::BuildBdcIndex(const std::vector <unsigned>& variable_to_be_solved) {
-    if(_fieldSplitTree != NULL) _fieldSplitTree->BuildIndexSet(KKoffset, _iproc, _nprocs, _msh->GetLevel(), this);
+    if(_fieldSplitTree != NULL) _fieldSplitTree->BuildIndexSet(KKoffset, _iproc, _nprocs, GetMeshFromLinEq()->GetLevel(), this);
     else FieldSplitTreeIsNotDefined();
     LinearEquationSolverPetsc::BuildBdcIndex(variable_to_be_solved);
   }
 
   void LinearEquationSolverPetscFieldSplit::SetPreconditioner(KSP& subksp, PC& subpc) {
-    if(_fieldSplitTree != NULL) _fieldSplitTree->SetPC(subksp, _msh->GetLevel());
+    if(_fieldSplitTree != NULL) _fieldSplitTree->SetPC(subksp, GetMeshFromLinEq()->GetLevel());
     else FieldSplitTreeIsNotDefined();
   }
   

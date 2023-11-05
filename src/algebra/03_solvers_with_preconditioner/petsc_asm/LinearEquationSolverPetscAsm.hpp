@@ -101,7 +101,7 @@ namespace femus {
   inline LinearEquationSolverPetscAsm::LinearEquationSolverPetscAsm(const unsigned &igrid, Solution *other_solution)
     : LinearEquationSolverPetsc(igrid, other_solution) {
 
-    unsigned dim = _msh->GetDimension();
+    unsigned dim = GetMeshFromLinEq()->GetDimension();
     unsigned base = pow(2, dim);
     unsigned exponent = 5 - dim;
     _elementBlockNumber[0] = pow(base, exponent);
