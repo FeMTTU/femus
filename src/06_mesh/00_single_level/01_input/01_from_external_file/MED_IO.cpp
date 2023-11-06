@@ -1323,61 +1323,70 @@ namespace femus {
 
     Mesh& mesh = GetMesh();
 
-    const int n_fem_types = mesh.GetDimension();
+    const unsigned int dim = mesh.GetDimension();
     std::cout << "No hybrid mesh for now: only 1 FE type per dimension" << std::endl;
 
+    
+    hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
+    
+    hsize_t    n_geom_el_types = get_H5G_size(gid);
+    
+    if (n_geom_el_types != dim) {     std::cout << "Hybrid mesh: implement it" << std::endl; abort();  }
+    
 
     const uint fe_name_nchars = 4;
 
-    std::vector< GeomElemBase* >  geom_elem_per_dimension(mesh.GetDimension());
+    std::vector< GeomElemBase* >  geom_elem_per_dimension( dim );
 
-    for(int i = 0; i < (int) n_fem_types; i++) {
+    for(int i = 0; i < (int) dim; i++) {
 
       std::string temp_i = get_H5L_name_by_idx(file_id, my_mesh_name_dir.c_str(), i);
       
 
 
-      if(mesh.GetDimension() == 3) {
+      if( dim  == 3) {
 
         if( /*temp_i.compare("HE8") == 0 ||*/
           /*temp_i.compare("H20") == 0 ||*/
-          temp_i.compare("H27") == 0)  geom_elem_per_dimension[mesh.GetDimension() - 1] = new GeomElemHex27();
+          temp_i.compare("H27") == 0)  geom_elem_per_dimension[ dim  - 1] = new GeomElemHex27();
 
         if( /*temp_i.compare("TE4") == 0 ||*/
-          temp_i.compare("T10") == 0)  geom_elem_per_dimension[mesh.GetDimension() - 1] = new GeomElemTet10();
+          temp_i.compare("T10") == 0)  geom_elem_per_dimension[ dim  - 1] = new GeomElemTet10();
 
         if(/*temp_i.compare("QU4") == 0 ||*/
           /*temp_i.compare("QU8") == 0 ||*/
-          temp_i.compare("QU9") == 0) geom_elem_per_dimension[mesh.GetDimension() - 1 - 1] = new GeomElemQuad9();
+          temp_i.compare("QU9") == 0) geom_elem_per_dimension[ dim  - 1 - 1] = new GeomElemQuad9();
         if(/*temp_i.compare("TR3") == 0 ||*/
-          temp_i.compare("TR6") == 0)  geom_elem_per_dimension[mesh.GetDimension() - 1 - 1] = new GeomElemTri6();
+          temp_i.compare("TR6") == 0)  geom_elem_per_dimension[ dim  - 1 - 1] = new GeomElemTri6();
 
         if(/*temp_i.compare("SE2") == 0 ||*/
-          temp_i.compare("SE3") == 0)  geom_elem_per_dimension[mesh.GetDimension() - 1 - 1 - 1] = new GeomElemEdge3();
+          temp_i.compare("SE3") == 0)  geom_elem_per_dimension[ dim  - 1 - 1 - 1] = new GeomElemEdge3();
 
       }
 
-      else if(mesh.GetDimension() == 2) {
+      else if( dim  == 2) {
 
         if( /*temp_i.compare("QU4") == 0 ||*/
           /*temp_i.compare("QU8") == 0 ||*/
-          temp_i.compare("QU9") == 0)   geom_elem_per_dimension[mesh.GetDimension() - 1] = new GeomElemQuad9();
+          temp_i.compare("QU9") == 0)   geom_elem_per_dimension[ dim  - 1] = new GeomElemQuad9();
         if( /*temp_i.compare("TR3") == 0 ||*/
-          temp_i.compare("TR6") == 0)   geom_elem_per_dimension[mesh.GetDimension() - 1] = new GeomElemTri6();
+          temp_i.compare("TR6") == 0)   geom_elem_per_dimension[ dim  - 1] = new GeomElemTri6();
 
         if(/*temp_i.compare("SE2") == 0 ||*/
-          temp_i.compare("SE3") == 0)   geom_elem_per_dimension[mesh.GetDimension() - 1 - 1] = new GeomElemEdge3();
+          temp_i.compare("SE3") == 0)   geom_elem_per_dimension[ dim  - 1 - 1] = new GeomElemEdge3();
 
       }
 
-      else if(mesh.GetDimension() == 1) {
+      else if( dim  == 1) {
 
         if( /*temp_i.compare("SE2") == 0 ||*/
-          temp_i.compare("SE3") == 0) geom_elem_per_dimension[mesh.GetDimension() - 1] = new GeomElemEdge3();
+          temp_i.compare("SE3") == 0) geom_elem_per_dimension[ dim  - 1] = new GeomElemEdge3();
       }
 
     }
 
+    H5Gclose(gid);
+    
     return geom_elem_per_dimension;
     
   }
@@ -1388,6 +1397,7 @@ namespace femus {
   const std::vector< GeomElemBase* >  MED_IO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menu)  {
 
 
+// ===============     set_mesh_dimension - BEGIN 
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
@@ -1429,6 +1439,11 @@ namespace femus {
 
     H5Gclose(gid);
 
+// ===============     set_mesh_dimension - END
+    
+    
+       //  std::vector std::vector< GeomElemBase* > geom_elem_per_dimension_vec(mydim);
+    // geom_elem_per_dimension_vec[d]
 
     const std::vector< GeomElemBase* >  geom_elem_per_dimension = get_geom_elem_type_per_dimension(file_id, my_mesh_name_dir);
 
