@@ -9,7 +9,7 @@
 
 #=====================
 if test "$1" != "--prefix"; then
-echo "The first argument must be --prefix"; exit;
+echo "The first argument must be --prefix";
 fi
 
 if test "$2" = ""; then
