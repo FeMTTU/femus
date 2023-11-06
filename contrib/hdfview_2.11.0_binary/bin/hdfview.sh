@@ -17,7 +17,9 @@ if [ ! -d "$JAVABIN" ]; then
     JAVABIN=$(dirname `which java`)
 fi
 
-$JAVABIN/java -Xmx1024M -Djava.library.path="$INSTALLDIR/lib" -Dhdfview.root="$INSTALLDIR" -jar "$INSTALLDIR/lib/jhdfview.jar" $*
+export LIBRARY_FOLDER=library
+
+$JAVABIN/java -Xmx1024M -Djava.library.path="$INSTALLDIR/$LIBRARY_FOLDER" -Dhdfview.root="$INSTALLDIR" -jar "$INSTALLDIR/$LIBRARY_FOLDER/jhdfview.jar" $*
 
 # alternate invocation when using modules
-#$JAVABIN/java -Xmx1024M -Djava.library.path="$INSTALLDIR/lib:$INSTALLDIR/lib/ext" -Dhdfview.root="$INSTALLDIR" -cp "$INSTALLDIR/lib/jhdfview.jar" ncsa.hdf.view.HDFView $*
+#$JAVABIN/java -Xmx1024M -Djava.library.path="$INSTALLDIR/$LIBRARY_FOLDER:$INSTALLDIR/$LIBRARY_FOLDER/ext" -Dhdfview.root="$INSTALLDIR" -cp "$INSTALLDIR/$LIBRARY_FOLDER/jhdfview.jar" ncsa.hdf.view.HDFView $*
