@@ -17,12 +17,14 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
+
+#include "GeomElTypeEnum.hpp"
+
 #include "MultiLevelSolution.hpp"
+
 #include "TransientSystem.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "FemusConfig.hpp"
-#include "GeomElTypeEnum.hpp"
 
 #include <iostream>
 

@@ -1,4 +1,5 @@
 #include "MultiLevelSolution.hpp"
+#include "SparseMatrix.hpp"
 
 
 using namespace femus;

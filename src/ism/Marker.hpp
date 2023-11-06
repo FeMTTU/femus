@@ -128,7 +128,7 @@ namespace femus {
 
 
       unsigned GetMarkerProc (Solution *sol) {
-        _mproc = (_elem == UINT_MAX) ? 0 : sol->GetMesh()->IsdomBisectionSearch (_elem , 3);
+        _mproc = (_elem == UINT_MAX) ? 0 : sol->GetMesh()->BisectionSearch_find_processor_of_dof (_elem , 3);
         return _mproc;
       }
 

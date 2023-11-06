@@ -182,7 +182,7 @@ namespace femus
     unsigned iel = initialElem;
 
     unsigned ielProc = (initialElem < sol->GetMesh()->_elementOffset[_nprocs]) ?
-                       sol->GetMesh()->IsdomBisectionSearch(iel, 3) : _nprocs;
+                       sol->GetMesh()->BisectionSearch_find_processor_of_dof(iel, 3) : _nprocs;
 
     if (useInitialSearch || _iproc != ielProc) {
 
@@ -257,7 +257,7 @@ namespace femus
           processorMarkerFlag[_iproc] = 0;
         }
         else {
-          nextProc = sol->GetMesh()->IsdomBisectionSearch(nextElem[_iproc], 3);
+          nextProc = sol->GetMesh()->BisectionSearch_find_processor_of_dof(nextElem[_iproc], 3);
 
           if (nextProc != _iproc) {
             pointIsOutsideThisProcess = true;
@@ -449,7 +449,7 @@ namespace femus
         break;
       }
       else {
-        _mproc = sol->GetMesh()->IsdomBisectionSearch(_elem , 3);
+        _mproc = sol->GetMesh()->BisectionSearch_find_processor_of_dof(_elem , 3);
         if (_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
           break;
@@ -1781,7 +1781,7 @@ namespace femus
         break;
       }
       else {
-        _mproc = sol->GetMesh()->IsdomBisectionSearch(_elem, 3);
+        _mproc = sol->GetMesh()->BisectionSearch_find_processor_of_dof(_elem, 3);
 
         //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
 
@@ -1866,7 +1866,7 @@ namespace femus
         break;
       }
       else {
-        _mproc = sol->GetMesh()->IsdomBisectionSearch(_elem, 3);
+        _mproc = sol->GetMesh()->BisectionSearch_find_processor_of_dof(_elem, 3);
         if (_mproc == mprocOld) {
           break;
         }

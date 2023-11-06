@@ -17,6 +17,7 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
@@ -182,7 +183,7 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(3);
 
 
-  system.PrintSolverInfo(false);
+  system.SetPrintSolverInfo(false);
 
   system.MGsolve();
 

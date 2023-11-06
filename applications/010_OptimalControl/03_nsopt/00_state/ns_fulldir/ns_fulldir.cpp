@@ -4,13 +4,14 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
 #include "LinearImplicitSystem.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "Files.hpp"
 
+#include "adept.h"
 
 #include   "../../manufactured_solutions.hpp"
 
@@ -892,7 +893,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,iqp,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,iqp,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	ml_prob._ml_msh->_finiteElement[ielGeom][CONTINUOUS_BIQUADRATIC]->Jacobian(coordX,iqp,weight,phi_gss_fe[CONTINUOUS_BIQUADRATIC],phi_x_gss_fe[CONTINUOUS_BIQUADRATIC],phi_xx_gss_fe[CONTINUOUS_BIQUADRATIC]);
 
       std::vector < double > coordX_gss(dim, 0.);
  	for(unsigned k = 0; k <  dim; k++) {
@@ -1301,7 +1302,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
 	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,iqp,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,iqp,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	msh->_finiteElement[ielGeom][CONTINUOUS_BIQUADRATIC]->Jacobian(coordX,iqp,weight,phi_gss_fe[CONTINUOUS_BIQUADRATIC],phi_x_gss_fe[CONTINUOUS_BIQUADRATIC],phi_xx_gss_fe[CONTINUOUS_BIQUADRATIC]);
 
  //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {

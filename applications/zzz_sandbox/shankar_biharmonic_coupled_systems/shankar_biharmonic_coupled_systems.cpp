@@ -16,6 +16,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "VTKWriter.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 
 #include "FE_convergence.hpp"
 

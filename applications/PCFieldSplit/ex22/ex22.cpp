@@ -17,6 +17,7 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "TransientSystem.hpp"
@@ -817,7 +818,7 @@ std::pair < std::vector <double>, std::vector <double> > GetVaribleValues(MultiL
   }
   
   std::pair < std::vector <double>, std::vector <double> > out_value;
-  unsigned mproc = msh->IsdomBisectionSearch(elem , 3);
+  unsigned mproc = msh->BisectionSearch_find_processor_of_dof(elem , 3);
   solUXi.broadcast(mproc);
   solVXi.broadcast(mproc);
   solTXi.broadcast(mproc);

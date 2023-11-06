@@ -4,6 +4,7 @@
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemusInit.hpp"
@@ -251,7 +252,7 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  //system2.PrintSolverInfo(true);
+  //system2.SetPrintSolverInfo(true);
   system2.MGsolve();
   //END Temperature Multilevel Problem
 

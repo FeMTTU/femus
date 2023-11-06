@@ -7,6 +7,7 @@
 #include "NonLinearImplicitSystem.hpp"
 
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "adept.h"
 
 #include "CurrentElem.hpp"
@@ -1117,7 +1118,7 @@ const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
     assemble_jacobian< double, double >::print_global_jacobian(/*assemble_matrix*/true, ml_prob, KK, nonlin_iter);
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
+    pdeSys->print_residual_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
 //--- print matrix on file
 
 

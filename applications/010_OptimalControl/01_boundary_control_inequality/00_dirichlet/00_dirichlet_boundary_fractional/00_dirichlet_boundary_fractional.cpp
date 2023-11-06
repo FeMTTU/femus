@@ -165,7 +165,7 @@ int main(int argc, char** args) {
   
     ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
     
-// // //  BEGIN FillISvector
+// // //  BEGIN FillISvectorDofMapAllFEFamilies
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_initialize();
 
            std::vector < unsigned > elem_partition_from_mesh_file_to_new = ml_mesh.GetLevelZero(0)->elem_offsets();
@@ -174,10 +174,14 @@ int main(int argc, char** args) {
            
            ml_mesh.GetLevelZero(0)->dofmap_all_fe_families_clear_ghost_dof_list_for_other_procs();
 
-// // //   END FillISvector
+// // //   END FillISvectorDofMapAllFEFamilies
        
            ml_mesh.GetLevelZero(0)->BuildElementAndNodeStructures();
  
+           ml_mesh.GetLevelZero(0)->SetCharacteristicLengthOfCoarsestLevel();
+
+           ml_mesh.GetLevelZero(0)->PrintInfo();
+           
 
   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
 //   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements(fe_quad_rule_vec[0].c_str()); 

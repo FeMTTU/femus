@@ -37,6 +37,7 @@
 #include "MultiLevelSolution.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 
 #include "Fluid.hpp"
 #include "Parameter.hpp"
@@ -370,13 +371,13 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob) {
 
   //************** geometry (at dofs and quadrature points) *************************************  
   std::vector < std::vector < double > > coords_at_dofs(dim);
-  unsigned coords_fe_type = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
+  unsigned coords_fe_type = CONTINUOUS_BIQUADRATIC; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
   for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
   std::vector < double > coord_at_qp(dim);
   
   //************* shape functions (at dofs and quadrature points) **************************************  
-  const int solType_max = BIQUADR_FE;  //biquadratic
+  const int solType_max = CONTINUOUS_BIQUADRATIC;  //biquadratic
 
   double weight_qp; // gauss point weight
   
@@ -620,13 +621,13 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
 
   //************** geometry (at dofs and quadrature points) *************************************  
   std::vector < std::vector < double > > coords_at_dofs(dim);
-  unsigned coords_fe_type = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
+  unsigned coords_fe_type = CONTINUOUS_BIQUADRATIC; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
   for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
   std::vector < double > coord_at_qp(dim);
   
   //************* shape functions (at dofs and quadrature points) **************************************  
-  const int solType_max = BIQUADR_FE;  //biquadratic
+  const int solType_max = CONTINUOUS_BIQUADRATIC;  //biquadratic
 
   double weight_qp; // gauss point weight
   

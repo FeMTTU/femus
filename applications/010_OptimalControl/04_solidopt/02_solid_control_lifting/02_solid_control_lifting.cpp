@@ -1,6 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
@@ -428,7 +429,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-   constexpr int solFEType_max = BIQUADR_FE;  //biquadratic, this is the highest-order FE 
+   constexpr int solFEType_max = CONTINUOUS_BIQUADRATIC;  //biquadratic, this is the highest-order FE 
 
    std::vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
@@ -465,7 +466,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   // geometry (at dofs) --------------------------------
   std::vector < std::vector < real_num_mov > >   coords(dim);
   std::vector < std::vector < double > >  coords_hat(dim);
-  unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  unsigned coordsType = CONTINUOUS_BIQUADRATIC; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i = 0; i < dim; i++) {   
            coords[i].reserve(max_size_elem_dofs); 
        coords_hat[i].reserve(max_size_elem_dofs); 
@@ -1091,7 +1092,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob,
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);//
   }
 
-   constexpr int solFEType_max = BIQUADR_FE;  //biquadratic, this is the highest-order FE 
+   constexpr int solFEType_max = CONTINUOUS_BIQUADRATIC;  //biquadratic, this is the highest-order FE 
 
    std::vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
@@ -1120,7 +1121,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob,
   // geometry (at dofs) --------------------------------//
   std::vector < std::vector < real_num_mov > >   coords(dim);
   std::vector < std::vector < double > >  coords_hat(dim);
-  unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  unsigned coordsType = CONTINUOUS_BIQUADRATIC; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i = 0; i < dim; i++) {   
            coords[i].reserve(max_size_elem_dofs); 
        coords_hat[i].reserve(max_size_elem_dofs); 

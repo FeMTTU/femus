@@ -10,6 +10,7 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"
@@ -414,7 +415,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id();
 
   //=============== Geometry ========================================
-  unsigned xType = BIQUADR_FE; // the FE for the domain need not be biquadratic
+  unsigned xType = CONTINUOUS_BIQUADRATIC; // the FE for the domain need not be biquadratic
   
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     

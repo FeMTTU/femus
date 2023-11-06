@@ -1,5 +1,6 @@
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Parameter.hpp"
@@ -377,7 +378,7 @@ int main(int argc,char **args) {
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
-  system.PrintSolverInfo(true);
+  system.SetPrintSolverInfo(true);
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);

@@ -4,6 +4,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
@@ -250,6 +251,10 @@ int main(int argc, char** args) {
        
            ml_mesh.GetLevelZero(0)->BuildElementAndNodeStructures();
  
+           ml_mesh.GetLevelZero(0)->SetCharacteristicLengthOfCoarsestLevel();
+
+           ml_mesh.GetLevelZero(0)->PrintInfo();
+           
 
   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
   

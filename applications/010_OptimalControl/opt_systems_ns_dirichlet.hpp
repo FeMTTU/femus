@@ -5,6 +5,7 @@
 
 #include  "opt_systems_boundary_control_eqn_sobolev_integer.hpp"
 
+#include "SparseMatrix.hpp"
 
 
 
@@ -208,7 +209,7 @@ static void assemble_ns_dirichlet_control_pure_boundary(MultiLevelProblem& ml_pr
 
 
   // ======= Geometry at Dofs - BEGIN  =======
-   unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+   unsigned coordXType = 2; /*CONTINUOUS_BIQUADRATIC*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
    unsigned solType_coords = coordXType;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
@@ -1754,7 +1755,7 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
 	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX, i_qp, AbsDetJxWeight_iqp,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,i_qp,AbsDetJxWeight_iqp,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	msh->_finiteElement[ielGeom][CONTINUOUS_BIQUADRATIC]->Jacobian(coordX,i_qp,AbsDetJxWeight_iqp,phi_gss_fe[CONTINUOUS_BIQUADRATIC],phi_x_gss_fe[CONTINUOUS_BIQUADRATIC],phi_xx_gss_fe[CONTINUOUS_BIQUADRATIC]);
 
  //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < n_unknowns; unk++) {
@@ -2015,7 +2016,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //geometry *******************************
-  unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  unsigned coordXType = 2; /*CONTINUOUS_BIQUADRATIC*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   unsigned solType_coords = coordXType;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
@@ -2742,7 +2743,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_nonAD(MultiLevelProbl
   
   
   // ======= Geometry at Dofs - BEGIN  =======
-  unsigned coordXType = 2; /*BIQUADR_FE*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  unsigned coordXType = 2; /*CONTINUOUS_BIQUADRATIC*/// get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   unsigned solType_coords = coordXType;
  
   CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
@@ -4057,7 +4058,7 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
 	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,iqp, AbsDetJxWeight_iqp,phi_gss_fe[fe],phi_x_gss_fe[fe], boost::none);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,iqp,AbsDetJxWeight_iqp,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE], boost::none);
+  	msh->_finiteElement[ielGeom][CONTINUOUS_BIQUADRATIC]->Jacobian(coordX,iqp,AbsDetJxWeight_iqp,phi_gss_fe[CONTINUOUS_BIQUADRATIC],phi_x_gss_fe[CONTINUOUS_BIQUADRATIC], boost::none);
 
  //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < n_unknowns; unk++) {

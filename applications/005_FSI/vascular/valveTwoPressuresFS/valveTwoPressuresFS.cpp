@@ -1,5 +1,6 @@
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Parameter.hpp"

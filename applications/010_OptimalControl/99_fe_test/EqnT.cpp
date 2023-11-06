@@ -2,8 +2,8 @@
 #include "FemusDefault.hpp"
 
 #include "NumericVector.hpp"
-#include "DenseVector.hpp"
 #include "SparseMatrix.hpp"
+#include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 
 #include "Files.hpp"
@@ -169,10 +169,10 @@ for (uint fe = 0; fe < QL; fe++)     {
         my_system._LinSolver[Level]->_KK->close();
         my_system._LinSolver[Level]->_RESC->close();
 
-#ifdef DEFAULT_PRINT_INFO
+
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
             << " Level "<< Level << " dofs " << my_system._LinSolver[Level]->_KK->n() << std::endl;
-#endif
+
 
   return;
 }
