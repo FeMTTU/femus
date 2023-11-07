@@ -12,7 +12,7 @@
 #include "Fluid.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
-#include "paral.hpp"//to get iproc HAVE_MPI is inside here
+#include "Parallel.hpp"//to get iproc HAVE_MPI is inside here
 
 #include "Assemble_jacobian.hpp"
 

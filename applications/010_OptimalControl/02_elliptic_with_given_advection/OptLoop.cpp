@@ -7,7 +7,7 @@
 #include "Quantity.hpp"
 #include "ElemType.hpp"
 #include "Box.hpp"
-#include "paral.hpp"
+#include "Parallel.hpp"
 #include "Files.hpp"
 #include "XDMFWriter.hpp"
 
@@ -192,7 +192,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
 	std::ofstream intgr_fstream;
 
-    if (paral::get_rank() ==0 ) {
+    if (Parallel::get_rank() ==0 ) {
       intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app);
       intgr_fstream << output_time << " " << eqn->GetMLProb().GetInputParser().get("alphaT") << " " << eqn->GetMLProb().GetInputParser().get("injsuc")<< " "  << J << " " << std::endl ;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream

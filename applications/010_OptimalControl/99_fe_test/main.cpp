@@ -9,7 +9,7 @@
 #include "FemusConfig.hpp"
 
 // FEMuS
-#include "paral.hpp" 
+#include "Parallel.hpp" 
 #include "FemusInit.hpp"
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"

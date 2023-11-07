@@ -19,7 +19,7 @@
 #include "ElemType.hpp"
 #include "Box.hpp"
 
-#include "paral.hpp"
+#include "Parallel.hpp"
 #include "XDMFWriter.hpp"
 
 //application headers
@@ -295,7 +295,7 @@ double integral = 0.;
 
     std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J << std::endl;
 
-if (paral::get_rank() ==0 ){
+if (Parallel::get_rank() ==0 ){
       intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app);
       intgr_fstream << opt_step << " " << pseudo_opttimeval << " " << J << " " << omega /*<< std::endl*/;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
@@ -308,7 +308,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
 
   if (J < Jold  /*|| 1*/ ) {
 
-    if ( paral::get_rank() == 0 ){
+    if ( Parallel::get_rank() == 0 ){
             intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app);
             intgr_fstream << "@@@@@@@@@@@@@@@@ J < Jold" << std::endl;
             intgr_fstream.close();  //you have to close to disassociate the file from the stream
@@ -406,7 +406,7 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 
    else {
        std::cout << "@@@@@@@@@@@@@@@@ You went too far in following the gradient: reduce the intensity " << std::endl;
-    if ( paral::get_rank() == 0 ){
+    if ( Parallel::get_rank() == 0 ){
             intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app);
             intgr_fstream << " J > Jold" << std::endl;
             intgr_fstream.close();  //you have to close to disassociate the file from the stream

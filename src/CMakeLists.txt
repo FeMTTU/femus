@@ -8,9 +8,6 @@ PROJECT(femus)
 
 SET(femus_src 
 00_utils/00_application_initialization/FemusInit.cpp
-00_utils/01_application_file_handling/Files.cpp
-00_utils/input_parser/InputParser.cpp
-00_utils/input_parser/JsonInputParser.cpp
 00_utils/function_parser/FunctionBase.cpp
 00_utils/function_parser/ParsedFunction.cpp
 01_problem/MultiLevelProblem.cpp
@@ -18,6 +15,9 @@ SET(femus_src
 01_problem_components/physics/Material.cpp
 01_problem_components/physics/Parameter.cpp
 01_problem_components/physics/Solid.cpp
+01_problem_components/application_file_handling/Files.cpp
+01_problem_components/file_input_parser/InputParser.cpp
+01_problem_components/file_input_parser/JsonInputParser.cpp
 02_reference_geom_elements/00_definition/GeomElemBase.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge2.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge3.cpp

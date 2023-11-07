@@ -963,7 +963,7 @@ namespace femus {
     this->close();
 
     // Make sure the SparseMatrix passed in is really a PetscMatrix
-    PetscMatrix* petsc_submatrix = libmeshM_cast_ptr<PetscMatrix*> (&submatrix);
+    PetscMatrix* petsc_submatrix = femus::cast_ptr<PetscMatrix*> (&submatrix);
 
     // If we're not reusing submatrix and submatrix is already initialized
     // then we need to clear it, otherwise we get a memory leak.
@@ -1018,7 +1018,7 @@ namespace femus {
 // ======================================================
   void PetscMatrix::get_diagonal (NumericVector& dest) const {
     // Make sure the NumericVector passed in is really a PetscVector
-    PetscVector& petsc_dest = libmeshM_cast_ref<PetscVector&> (dest);
+    PetscVector& petsc_dest = femus::cast_ref<PetscVector&> (dest);
     // Call PETSc function.
     // Needs a const_cast since PETSc does not work with const.
     int ierr =  MatGetDiagonal (const_cast<PetscMatrix*> (this)->mat(), petsc_dest.vec());
@@ -1033,7 +1033,7 @@ namespace femus {
   ) const {
 
     // Make sure the SparseMatrix passed in is really a PetscMatrix
-    PetscMatrix& petsc_dest = libmeshM_cast_ref<PetscMatrix&> (dest);
+    PetscMatrix& petsc_dest = femus::cast_ref<PetscMatrix&> (dest);
 
     // If we aren't reusing the matrix then need to clear dest,
     // otherwise we get a memory leak

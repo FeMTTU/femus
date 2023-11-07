@@ -7,7 +7,7 @@
 
 // FEMuS
 #include "FemusConfig.hpp"
-#include "paral.hpp"
+#include "Parallel.hpp"
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"
 #include "Files.hpp"

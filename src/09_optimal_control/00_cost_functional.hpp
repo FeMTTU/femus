@@ -6,7 +6,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "FElemTypeEnum_list.hpp"
-#include "paral.hpp"
+#include "Parallel.hpp"
 
 #include "PetscVector.hpp"
 
@@ -1286,7 +1286,7 @@ double integral_g_dot_n = 0.;
        std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
 
        std::ofstream intgr_fstream;
-  if (paral::get_rank() == 0 ) {
+  if (Parallel::get_rank() == 0 ) {
       
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       
@@ -1589,7 +1589,7 @@ double  integral_div_ctrl = 0.;
        std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
 
        std::ofstream intgr_fstream;
-  if (paral::get_rank() == 0 ) {
+  if (Parallel::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       intgr_fstream << " ***************************** Iteration " << iteration << " *********************************** " <<  std::endl << std::endl;
       intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;

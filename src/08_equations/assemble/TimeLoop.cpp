@@ -24,7 +24,7 @@
 #include "SparseMatrix.hpp"
 #include "XDMFWriter.hpp"
 
-#include "paral.hpp"
+#include "Parallel.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -249,7 +249,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblem & eqnmap)  {
         std::cout << "\n *+*+* TimeLoop::transient_setup: RESTART  " << std::endl;
 
 
-        if (paral::get_rank() == 0) {
+        if (Parallel::get_rank() == 0) {
 
             std::stringstream tidxin;
             tidxin << std::setw(ndigits) << std::setfill('0') << _t_idx_in;

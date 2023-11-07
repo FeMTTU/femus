@@ -58,7 +58,7 @@ namespace femus {
 //     if(this->_preconditioner_type == AMG_PRECOND)
 //       PCHYPRESetType(this->_pc, "boomerang");
 // #endif
-      PetscMatrix * pmatrix = libmeshM_cast_ptr<PetscMatrix*, SparseMatrix >(this->_matrix);
+      PetscMatrix * pmatrix = femus::cast_ptr<PetscMatrix*, SparseMatrix >(this->_matrix);
       _mat = pmatrix->mat();
     }
     //PCSetOperators(_pc,_mat,_mat,SAME_NONZERO_PATTERN);

@@ -10,7 +10,7 @@
 #include "Parameter.hpp"
 #include "Files.hpp"
 #include "PetscMatrix.hpp"
-#include "paral.hpp"//to get iproc HAVE_MPI is inside here
+#include "Parallel.hpp"//to get iproc HAVE_MPI is inside here
 
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"

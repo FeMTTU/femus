@@ -82,7 +82,7 @@ public:
 
 
 
-// ===  Input Parser - BEGIN =================
+// ===  File Input Parser - BEGIN =================
 public:
 
     /** Input Parser */
@@ -94,7 +94,7 @@ private:
     
     const FemusInputParser<double>        * _phys;
     
-// ===  Input Parser - END =================
+// ===  File Input Parser - END =================
 
     
 // ===  Files Handler - BEGIN =================
@@ -428,7 +428,7 @@ private:
 // ===  Systems - END =================
 
 
-// ===  System Specifics - BEGIN =================
+// ===  Systems, Specifics - BEGIN =================
 public:
 
     /** App Specifics Pointer */
@@ -443,7 +443,7 @@ private:
 
 
     
-// ===  System Specifics - END =================
+// ===  Systems, Specifics - END =================
 
    
     

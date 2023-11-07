@@ -23,7 +23,7 @@
 #include "TimeLoop.hpp"
 #include "CurrentElem.hpp"
 #include "OptLoop.hpp"
-#include "paral.hpp"
+#include "Parallel.hpp"
 
 // application
 #include "TempQuantities.hpp"

@@ -24,7 +24,7 @@
 #include "FETypeEnum_deprecated.hpp"
 #include "MultiLevelProblem.hpp"
 
-#include "paral.hpp"
+#include "Parallel.hpp"
 
 
 #include <sstream>
@@ -102,8 +102,8 @@ if ( _dim == 1  && (geomel_type != LINE ) )
         {  std::cout << "Inconsistent input file" << std::endl; abort();   }
 
     
-    _iproc    = paral::get_rank();
-    _NoSubdom = paral::get_size();   
+    _iproc    = Parallel::get_rank();
+    _NoSubdom = Parallel::get_size();   
     _NoLevels = nolevels;
     
     if (MESH_ORDER != QQ) {

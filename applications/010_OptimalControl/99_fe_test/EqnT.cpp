@@ -16,7 +16,7 @@
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
 #include "CurrentElem.hpp"
-#include "paral.hpp"
+#include "Parallel.hpp"
 #include "MultiLevelProblem.hpp"
 
 // application

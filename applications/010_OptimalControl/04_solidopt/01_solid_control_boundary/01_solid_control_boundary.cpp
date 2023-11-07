@@ -6,7 +6,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "Parameter.hpp"
-#include "paral.hpp"//to get iproc HAVE_MPI is inside here
+#include "Parallel.hpp"//to get iproc HAVE_MPI is inside here
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
@@ -1690,7 +1690,7 @@ real_num   integral_g_dot_n = 0.;
        std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
 
        std::ofstream intgr_fstream;
-  if (paral::get_rank() == 0 ) {
+  if (Parallel::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys->GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
       intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;

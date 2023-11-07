@@ -32,7 +32,7 @@
 #include "petsc.h"
 #endif
 #include "FemusDefault.hpp"
-#include "paral.hpp"//to get iproc HAVE_MPI is inside here
+#include "Parallel.hpp"//to get iproc HAVE_MPI is inside here
 
 
 namespace femus {
@@ -53,7 +53,7 @@ namespace femus {
   
   void Files::ConfigureRestart() {
 
-//         if (paral::get_rank() == 0) { //QUESTA LETTURA LA POSSONO FARE TUTTI I PROCESSORI!
+//         if (Parallel::get_rank() == 0) { //QUESTA LETTURA LA POSSONO FARE TUTTI I PROCESSORI!
             std::cout << " Reading the  run_to_restart_from file to determine restart status or not" << std::endl;
 
     std::string app_path = "./";
@@ -151,7 +151,7 @@ void Files::CheckDirOrAbort(const std::string& dir_name_in, const std::string& m
 
 void Files::CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in) {
   
-  if (paral::get_rank() == 0 )   {
+  if (Parallel::get_rank() == 0 )   {
   
   // input directory ---------------------------------
   std::ostringstream abs_dirname;
@@ -207,7 +207,7 @@ return;
 ///if the directory is there, nothing wrong
 void Files::CheckDir(const std::string& dir_name_in, const std::string& my_name_in) {
   
-  if (paral::get_rank() == 0 )   {
+  if (Parallel::get_rank() == 0 )   {
   
   // input directory ---------------------------------
   std::ostringstream dirname;
@@ -253,7 +253,7 @@ return;
 void Files::PrintRunForRestart(const std::string run_name_in) const {
 
 
-   if (paral::get_rank() == 0 )   {
+   if (Parallel::get_rank() == 0 )   {
 
    std::string app_path = "./";
    std::string run("");
@@ -294,7 +294,7 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
 ////////////    
 /////////// Test
 //  to show that the processors may have different times
-// if (paral::get_rank() == 0) {system("sleep 5");}
+// if (Parallel::get_rank() == 0) {system("sleep 5");}
 // and uncomment the if rank below
 /////////// END test
 ////////////
@@ -341,7 +341,7 @@ void Files::ComposeOutdirName(const bool use_output_time_folder) {
    std::ostringstream outname;
 
 //****** Proc0 generates the string    
-   if (paral::get_rank() == 0) {
+   if (Parallel::get_rank() == 0) {
   
   time_t      curtime = 0; 
  
@@ -378,7 +378,7 @@ void Files::ComposeOutdirName(const bool use_output_time_folder) {
 
 out_char = new char[outchar_size +1]; //for the null
 
-  if (paral::get_rank() == 0)   std::strcpy(out_char, new_out.c_str());
+  if (Parallel::get_rank() == 0)   std::strcpy(out_char, new_out.c_str());
 
 
 #ifdef HAVE_MPI
@@ -405,7 +405,7 @@ MPI_Bcast(out_char, outchar_size, MPI_CHAR, 0, MPI_COMM_WORLD);
     std::string app_path = "./";
    _output_path = app_path + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
  
- std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << _output_path << std::endl;
+ std::cout << "iproc = " << Parallel::get_rank() << " ***** The output dir of this run will be: " << _output_path << std::endl;
 
  
  
@@ -420,7 +420,7 @@ MPI_Bcast(out_char, outchar_size, MPI_CHAR, 0, MPI_COMM_WORLD);
 
 void Files::CopyFile(std::string  f_in,std::string  f_out) const {
   
-  if (paral::get_rank() == 0) {
+  if (Parallel::get_rank() == 0) {
   
   std::ifstream f1(f_in.c_str(), std::fstream::binary);
   std::ofstream f2(f_out.c_str(), std::fstream::trunc| std::fstream::binary);
@@ -565,10 +565,10 @@ void Files::CheckIODirectories(const bool use_output_time_folder) {
 //    std::streambuf* sbuf = std::cout.rdbuf();  //get the current buffer for cout
 
 
-//////// MULTIPRINT // // if (paral::get_rank() == 0) {  //only processor 0 has to open the file stream
+//////// MULTIPRINT // // if (Parallel::get_rank() == 0) {  //only processor 0 has to open the file stream
  
     std::stringstream runlogproc;
-    runlogproc << abs_runlog << "_p" << paral::get_rank() << DEFAULT_EXT_LOG; //multiprint
+    runlogproc << abs_runlog << "_p" << Parallel::get_rank() << DEFAULT_EXT_LOG; //multiprint
     
     abs_runlog = runlogproc.str();
     
@@ -590,7 +590,7 @@ void Files::CheckIODirectories(const bool use_output_time_folder) {
       }
 
       
-      std::cout << "The number of processors is " << paral::get_size() << std::endl;
+      std::cout << "The number of processors is " << Parallel::get_size() << std::endl;
  
     
    return; 

@@ -25,6 +25,7 @@
 # include <mpi.h>
 #endif
 
+
 // System includes
 #include <string>
 #include <vector>
@@ -54,6 +55,35 @@ namespace femus {
  * instead of MPI 2's MPI_IN_PLACE
  */
 namespace Parallel {
+    
+    
+// ========== RANK and SIZE - BEGIN
+///This namespace will hold global data and functions for parallel purposes
+///In this way you dont have to pass these values through a particular instantiation of a class,
+///but everyone can access these
+
+inline int get_rank() {
+    int proc_rank=0;
+#ifdef HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
+#endif
+    return proc_rank;
+}
+
+inline int get_size() {
+    int proc_size=1;
+#ifdef HAVE_MPI
+    MPI_Comm_size(MPI_COMM_WORLD, &proc_size);
+#endif
+    return  proc_size;
+}
+    
+// ========== RANK and SIZE - END
+    
+    
+    
+    
+    
 //// ------------// ------------// ------------// ------------// -------------------
 /// Forward declarations of classes we will define later.
 class DataType;
@@ -226,17 +256,21 @@ private:
  * Encapsulates the MPI_Request
  */
 class Request {
+    
 public:
+    
     Request()  {
 #ifdef HAVE_MPI
         _request = MPI_REQUEST_NULL;
 #endif
     }
+    
     Request(const request &r) : _request(r) {}
     Request & operator = (const Request &other)  {
         _request = other._request;
         return *this;
     }
+    
     Request & operator = (const request &r) {
         _request = r;
         return *this;
@@ -294,7 +328,9 @@ public:
 
 
 private:
+    
     request _request;
+    
 };
 
 

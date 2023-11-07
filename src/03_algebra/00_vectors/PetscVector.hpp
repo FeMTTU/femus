@@ -571,7 +571,7 @@ namespace femus {
   inline void PetscVector::init (const NumericVector& other, const bool fast) {
     // Clear initialized vectors
     if (this->initialized())   this->clear();
-    const PetscVector& v = libmeshM_cast_ref<const PetscVector&> (other);
+    const PetscVector& v = femus::cast_ref<const PetscVector&> (other);
     // Other vector should restore array.
     if (v.initialized())    {
       v._restore_array();
@@ -797,7 +797,7 @@ namespace femus {
 
   inline void PetscVector::swap (NumericVector &other) {
     NumericVector::swap (other);
-    PetscVector& v = libmeshM_cast_ref<PetscVector&> (other);
+    PetscVector& v = femus::cast_ref<PetscVector&> (other);
     std::swap (_vec, v._vec);
     std::swap (_destroy_vec_on_exit, v._destroy_vec_on_exit);
     std::swap (_global_to_local_map, v._global_to_local_map);

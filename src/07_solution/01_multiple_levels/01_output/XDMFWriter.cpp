@@ -39,7 +39,7 @@
 #include "NumericVector.hpp"
 #include "GeomElemBase.hpp"
 #include "FETypeEnum_deprecated.hpp"
-#include "paral.hpp"
+#include "Parallel.hpp"
 
 namespace femus {
 
@@ -2154,7 +2154,7 @@ namespace femus {
 
     if( mesh._NoSubdom != topdata[2] )  {
       std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the number of mesh subdomains is " << mesh._NoSubdom
-                << " while the processor size of this run is " << paral::get_size()
+                << " while the processor size of this run is " << Parallel::get_size()
                 << ". Re-run gencase and your application with the same number of processors" << std::endl;
       abort();
     }

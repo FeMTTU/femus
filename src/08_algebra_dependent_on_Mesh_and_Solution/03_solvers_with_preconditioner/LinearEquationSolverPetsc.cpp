@@ -547,10 +547,10 @@ namespace femus {
 
 //   START_LOG("solve()", "PetscLinearSolverM");
     // Make sure the data passed in are really of Petsc types
-    PetscMatrix* matrix   = libmeshM_cast_ptr<PetscMatrix*> (&matrix_in);
-    PetscMatrix* precond  = libmeshM_cast_ptr<PetscMatrix*> (&precond_in);
-    PetscVector* solution = libmeshM_cast_ptr<PetscVector*> (&solution_in);
-    PetscVector* rhs      = libmeshM_cast_ptr<PetscVector*> (&rhs_in);
+    PetscMatrix* matrix   = femus::cast_ptr<PetscMatrix*> (&matrix_in);
+    PetscMatrix* precond  = femus::cast_ptr<PetscMatrix*> (&precond_in);
+    PetscVector* solution = femus::cast_ptr<PetscVector*> (&solution_in);
+    PetscVector* rhs      = femus::cast_ptr<PetscVector*> (&rhs_in);
     this->init (matrix);
 
     int ierr = 0;
@@ -640,7 +640,7 @@ namespace femus {
 // @deprecated ========================================================
   void LinearEquationSolverPetsc::init (SparseMatrix* matrix) {
 
-    PetscMatrix* matrix_two   = libmeshM_cast_ptr<PetscMatrix*> (matrix);
+    PetscMatrix* matrix_two   = femus::cast_ptr<PetscMatrix*> (matrix);
 
     // Initialize the data structures if not done so already.
     if (!this->initialized())    {

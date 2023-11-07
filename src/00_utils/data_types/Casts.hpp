@@ -13,7 +13,7 @@ namespace femus
 
 //TODO
   template <typename Tnew, typename Told>
-  inline Tnew libmeshM_cast_ptr(Told* oldvar)
+  inline Tnew cast_ptr(Told* oldvar)
   {
 #ifndef NDEBUG
     Tnew newvar = dynamic_cast<Tnew>(oldvar);
@@ -27,7 +27,7 @@ namespace femus
 
 //***********PORCHETTA
   template <typename Tnew, typename Told>
-  inline Tnew libmeshM_cast_ref(Told& oldvar)
+  inline Tnew cast_ref(Told& oldvar)
   {
 #ifndef NDEBUG
     try {
