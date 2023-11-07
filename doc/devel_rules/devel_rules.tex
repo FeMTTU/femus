@@ -98,18 +98,6 @@
 \chapter{cmake vs. ccmake vs. cmake-gui}
 
 
-\part{Library}
-
-
- \chapter{How to add source files to the library}
- 
-- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to 
-update the LIST in the src/ cmake file!!! (use ls -1)
-
-- now go to the binary directory and type make to generate the library
-
-
-
 \part{Application: Creation}
   
   
@@ -194,7 +182,9 @@ Ok, it seems like:
 
   
   
-\chapter{Installation issues}
+\chapter{Installation}
+
+\section{Issues}
 
   The first time you run Salome after installation,
   you may have it asking for opening service...
@@ -245,7 +235,19 @@ corresponding to your hostname. So, you need to add the output of the command
   
   \subsection{Try to do Geometry operations as opposed to Mesh operations}
  
+ 
+  \subsubsection{Compound (in the Geometry) instead of CompoundMesh}
+ 
+  Then you will do Submeshes
   
+  You will have DOUBLE ENTITIES in the interfaces
+  
+  You then have to remove them manually
+  
+  
+  - Merge nodes
+  
+  - Remove inner edges
   
   
   
@@ -270,10 +272,15 @@ Pay attention to the difference between Common and Intersection
 
 \paragraph{When you mesh a Partition object, the Mesh module automatically generates Groups of Faces... Later you may use them, they are automatically Groups on Geometry!}
 
- 
+
+ \chapter{Procedure: Non-hybrid meshes}
+
+
  \section{1D, Edges}
 
  \section{2D, Triangles}
+ 
+  
  
  \section{2D, Quadrangles}
 
@@ -300,7 +307,7 @@ In Mesh:
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
 
   
-  \subsubsection{Create Mesh by pieces: CompoundMesh}
+  \subsubsection{Create Mesh by pieces: CompoundMesh (deprecated)}
   
 -- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
 
@@ -445,11 +452,18 @@ When you explode adjacent faces, the edges are called differently... we should i
 
   \section{3D - Wedges}
   
-  
+ 
+  \chapter{Procedure: hybrid meshes}
+
+ 
+ 
   \chapter{Procedure: Convert to biquadratic (for quad/hex) or to quadratic (for tri/tet)}
   
   This is because we need those nodes to construct quadratic/biquadratic dofs
   
+  Do we need to do it now or can we postpone it right before exporting the MED file?
+  
+  I think it is the same
   
   
   \chapter{Procedure: Mesh operations (avoid, whenever possible)}
@@ -461,6 +475,12 @@ When you explode adjacent faces, the edges are called differently... we should i
 \subsection{Compound Mesh}
    
    
+  \subsubsection{If you do Compound, do the ``Groups on Geometry'' before doing Compound, i.e., on the partial meshes}         
+ 
+ 
+  In fact a Compound does not have an associated Geometry to it
+        
+
    
 \subsection{Translate Mesh}
 
@@ -553,10 +573,6 @@ When you explode adjacent faces, the edges are called differently... we should i
 
 - You can use Filters to define Groups of Mesh Elements
 
-        
-  \subsection{If you do Compound, do the ``Groups on Geometry'' before doing Compound, i.e., on the partial meshes}         
-          
-  In fact a Compound does not have an associated Geometry to it
         
           
 \section{Requirements for Groups: ALL}
@@ -1340,7 +1356,14 @@ FEMuS includes,
    you define interfaces so you can highlight what is ``const'' and what is not,
    you can avoid code duplication, etc.
    
+  \section{How to add source files to the library}
  
+- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to 
+update the LIST in the src/ cmake file!!! (use ls -1)
+
+- now go to the binary directory and type make to generate the library
+
+
 \chapter{Git}
 
 
