@@ -6,6 +6,10 @@
 
 using namespace femus;
 
+
+namespace Domains {
+    
+
 // Functions for every domain - BEGIN ===============================
 
 template < class type = double >
@@ -92,7 +96,7 @@ public:
 
 // Functions for 2D domains - BEGIN ===============================
 
-namespace  Domain_square_01by01  {
+namespace  square_01by01  {
     
 
 
@@ -348,7 +352,7 @@ public:
 
 
 
-namespace  Domain_square_01by01_Mesh_Distorted  {
+namespace  square_01by01_Mesh_Distorted  {
 
 
 template < class type = double >
@@ -405,7 +409,7 @@ public:
 
 
 
-namespace  Domain_square_01by01_Mesh_Straight  {
+namespace  square_01by01_Mesh_Straight  {
   
     
 //this solution does not have SUPERCONVERGENCE even with the straight mesh
@@ -499,7 +503,7 @@ public:
 
 
 
-namespace  Domain_square_m05p05  {
+namespace  square_m05p05  {
 
  template < class type = double >
 class Function_Zero_on_boundary_4 : public Math::Function< type > {
@@ -542,7 +546,7 @@ public:
 
 
 
-namespace  Domain_L_shaped  {
+namespace  L_shaped  {
     
   template < class type = double >
 class Function_NonZero_on_boundary_2 : public Math::Function< type > {
@@ -1068,5 +1072,6 @@ public:
 // Functions for 3D domains - END ===============================
 
 
+} //end Domains
 
 #endif

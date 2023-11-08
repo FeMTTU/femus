@@ -187,7 +187,7 @@ int main(int argc, char** args) {
   // app_segment._boundary_conditions_types_and_values             = segment_0x1::function_0_bc_left_dirichlet_right_neumann;
   app_segment._boundary_conditions_types_and_values             = segment_0x1::function_0_bc_left_neumann_right_dirichlet;
   
-  segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
+  Domains::segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
   app_segment._assemble_function_for_rhs   = & app_segment_function_zero_on_boundary_1;
   app_segment._true_solution_function      = & app_segment_function_zero_on_boundary_1;
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors

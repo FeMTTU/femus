@@ -99,8 +99,8 @@ int main(int argc, char** args) {
 
   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
 
-  Domain_square_01by01::Function_Zero_on_boundary_5<>   system_biharmonic_coupled_function_zero_on_boundary_1;
-  Domain_square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_laplacian;
+  Domains::square_01by01::Function_Zero_on_boundary_5<>   system_biharmonic_coupled_function_zero_on_boundary_1;
+  Domains::square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_laplacian;
   system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
   system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors

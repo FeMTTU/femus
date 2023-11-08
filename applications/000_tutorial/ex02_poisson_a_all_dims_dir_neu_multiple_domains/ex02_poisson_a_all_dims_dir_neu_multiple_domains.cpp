@@ -23,7 +23,9 @@ using namespace femus;
 
 // ======= Domain-related and Mesh-related stuff - BEGIN =========================
 
-
+namespace Domains {
+  
+  
 // 1D - BEGIN ===============================
 
 namespace segment_0x1 {
@@ -73,7 +75,7 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob,
 
 // SQUARE - BEGIN
 
-namespace Domain_square_01by01 {
+namespace square_01by01 {
 
   
 bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
@@ -506,6 +508,7 @@ namespace prism_annular_base_along_z_with_base_centered_at_0_by_0 {
 // 3D - END ===============================
 
 
+} //end Domains
 
 // ======= Domain-related and Mesh-related stuff - END =========================
 
@@ -620,9 +623,9 @@ int main(int argc, char** args) {
   app_segment._mesh_files.push_back("segment_16_dir_neu.med");
   app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/");
   
-  app_segment._boundary_conditions_types_and_values             = segment_0x1::bc_all_dirichlet_homogeneous;
+  app_segment._boundary_conditions_types_and_values             = Domains::segment_0x1::bc_all_dirichlet_homogeneous;
 
-  segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
+  Domains::segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
   app_segment._assemble_function_for_rhs   = & app_segment_function_zero_on_boundary_1;
   app_segment._true_solution_function      = & app_segment_function_zero_on_boundary_1;
   //segment - END
@@ -635,9 +638,9 @@ int main(int argc, char** args) {
   app_square._mesh_files.push_back("square_0-1x0-1_divisions_1x1.med");
   app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/");
   
-  app_square._boundary_conditions_types_and_values             = Domain_square_01by01::bc_all_dirichlet_homogeneous;
+  app_square._boundary_conditions_types_and_values             = Domains::square_01by01::bc_all_dirichlet_homogeneous;
 
-  Domain_square_01by01::Function_Zero_on_boundary_1<>   app_square_function_zero_on_boundary_1;
+  Domains::square_01by01::Function_Zero_on_boundary_1<>   app_square_function_zero_on_boundary_1;
   app_square._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_1;
   app_square._true_solution_function           = & app_square_function_zero_on_boundary_1;
  //assignment_square - END
@@ -651,9 +654,9 @@ int main(int argc, char** args) {
   app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
   app_semicircle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_semi/");
   
-  app_semicircle._boundary_conditions_types_and_values             = semicircle_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
+  app_semicircle._boundary_conditions_types_and_values             = Domains::semicircle_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  semicircle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_semicircle_function_zero_on_boundary_1;
+  Domains::semicircle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_semicircle_function_zero_on_boundary_1;
   app_semicircle._assemble_function_for_rhs = & app_semicircle_function_zero_on_boundary_1;
   app_semicircle._true_solution_function    = & app_semicircle_function_zero_on_boundary_1;
   //assignment_semicircle - END
@@ -668,9 +671,9 @@ int main(int argc, char** args) {
   app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/circle_quarter/");
   
-  app_quarter_circle._boundary_conditions_types_and_values             = quarter_circle_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
+  app_quarter_circle._boundary_conditions_types_and_values             = Domains::quarter_circle_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
+  Domains::quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
   app_quarter_circle._assemble_function_for_rhs = & app_quarter_circle_function_zero_on_boundary_1;
   app_quarter_circle._true_solution_function    = & app_quarter_circle_function_zero_on_boundary_1;
   //assignment_quarter_circle - END
@@ -684,9 +687,9 @@ int main(int argc, char** args) {
   app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
   app_annulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus/");
   
-  app_annulus._boundary_conditions_types_and_values             = annulus_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
+  app_annulus._boundary_conditions_types_and_values             = Domains::annulus_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  annulus_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_annulus_function_zero_on_boundary_1;
+  Domains::annulus_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_annulus_function_zero_on_boundary_1;
   app_annulus._assemble_function_for_rhs = & app_annulus_function_zero_on_boundary_1;
   app_annulus._true_solution_function    = & app_annulus_function_zero_on_boundary_1;
   //assignment_annulus - END
@@ -701,9 +704,9 @@ int main(int argc, char** args) {
   app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
   app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/annulus_semi/");
   
-  app_semiannulus._boundary_conditions_types_and_values             = semiannulus_centered_at_0_by_0_cut_along_y::bc_all_dirichlet_homogeneous;
+  app_semiannulus._boundary_conditions_types_and_values             = Domains::semiannulus_centered_at_0_by_0_cut_along_y::bc_all_dirichlet_homogeneous;
 
-  semiannulus_centered_at_0_by_0_cut_along_y::Function_Zero_on_boundary_1<>     app_semiannulus_function_zero_on_boundary_1;
+  Domains::semiannulus_centered_at_0_by_0_cut_along_y::Function_Zero_on_boundary_1<>     app_semiannulus_function_zero_on_boundary_1;
   app_semiannulus._assemble_function_for_rhs = & app_semiannulus_function_zero_on_boundary_1;
   app_semiannulus._true_solution_function    = & app_semiannulus_function_zero_on_boundary_1;
   //assignment_semiannulus - END
@@ -716,9 +719,9 @@ int main(int argc, char** args) {
   app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
   app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cube/0-1x0-1x0-1/");
   
-  app_cube._boundary_conditions_types_and_values             = cube_01_by_01_by_01::bc_all_dirichlet_homogeneous;
+  app_cube._boundary_conditions_types_and_values             = Domains::cube_01_by_01_by_01::bc_all_dirichlet_homogeneous;
     
-  cube_01_by_01_by_01::Function_Zero_on_boundary_1<>   app_cube_function_zero_on_boundary_1;
+  Domains::cube_01_by_01_by_01::Function_Zero_on_boundary_1<>   app_cube_function_zero_on_boundary_1;
   app_cube._assemble_function_for_rhs              = & app_cube_function_zero_on_boundary_1;
   app_cube._true_solution_function                 = & app_cube_function_zero_on_boundary_1;
  //assignment_cube - END
@@ -734,9 +737,9 @@ int main(int argc, char** args) {
   app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
   app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder/");
   
-  app_cylinder._boundary_conditions_types_and_values             = cylinder_along_z_with_base_centered_at_1_by_1::bc_all_dirichlet_homogeneous;
+  app_cylinder._boundary_conditions_types_and_values             = Domains::cylinder_along_z_with_base_centered_at_1_by_1::bc_all_dirichlet_homogeneous;
 
-  cylinder_along_z_with_base_centered_at_1_by_1::Function_Zero_on_boundary_1<>   app_cylinder_function_zero_on_boundary_1;
+  Domains::cylinder_along_z_with_base_centered_at_1_by_1::Function_Zero_on_boundary_1<>   app_cylinder_function_zero_on_boundary_1;
   app_cylinder._assemble_function_for_rhs                                    = & app_cylinder_function_zero_on_boundary_1;
   app_cylinder._true_solution_function                                       = & app_cylinder_function_zero_on_boundary_1;
   //assignment_cylinder - END
@@ -753,9 +756,9 @@ int main(int argc, char** args) {
   app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/cylinder_quarter/");
   
-  app_quarter_cylinder._boundary_conditions_types_and_values             = quarter_cylinder_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
+  app_quarter_cylinder._boundary_conditions_types_and_values             = Domains::quarter_cylinder_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
     
-  quarter_cylinder_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_quarter_cylinder_function_zero_on_boundary_1;
+  Domains::quarter_cylinder_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_quarter_cylinder_function_zero_on_boundary_1;
   app_quarter_cylinder._assemble_function_for_rhs                                    = & app_quarter_cylinder_function_zero_on_boundary_1;
   app_quarter_cylinder._true_solution_function                                       = & app_quarter_cylinder_function_zero_on_boundary_1;
   //assignment_quarter_cylinder - END
@@ -772,9 +775,9 @@ int main(int argc, char** args) {
   app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
   app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/03_3d/prism_annular_base/");
   
-  app_prism_annular_base._boundary_conditions_types_and_values             = prism_annular_base_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
+  app_prism_annular_base._boundary_conditions_types_and_values             = Domains::prism_annular_base_along_z_with_base_centered_at_0_by_0::bc_all_dirichlet_homogeneous;
 
-  prism_annular_base_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_prism_annular_base_function_zero_on_boundary_1;
+  Domains::prism_annular_base_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_prism_annular_base_function_zero_on_boundary_1;
   app_prism_annular_base._assemble_function_for_rhs                                    = & app_prism_annular_base_function_zero_on_boundary_1;
   app_prism_annular_base._true_solution_function                                       = & app_prism_annular_base_function_zero_on_boundary_1;
   //assignment_tetra_prism_annular_base - END
