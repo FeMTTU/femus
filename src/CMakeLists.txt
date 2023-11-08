@@ -8,8 +8,8 @@ PROJECT(femus)
 
 SET(femus_src 
 00_utils/00_application_initialization/FemusInit.cpp
-00_utils/math/function_parser/FunctionBase.cpp
-00_utils/math/function_parser/ParsedFunction.cpp
+00_math/function_parser/FunctionBase.cpp
+00_math/function_parser/ParsedFunction.cpp
 01_materials/Material.cpp
 01_materials/Fluid.cpp
 01_materials/Solid.cpp
@@ -54,8 +54,8 @@ SET(femus_src
 03_algebra_only_mpi/MyMatrix.cpp
 03_algebra_only_mpi/MyVector.cpp
 05_problem/MultiLevelProblem.cpp
-06_mesh/00_single_level/Elem.cpp
-06_mesh/00_single_level/Mesh.cpp
+06_mesh/00_single_level/00_definition/Mesh.cpp
+06_mesh/00_single_level/00_definition/Elem.cpp
 06_mesh/00_single_level/01_input/01_from_external_file/GambitIO.cpp
 06_mesh/00_single_level/01_input/01_from_external_file/MED_IO.cpp
 06_mesh/00_single_level/01_input/02_from_implemented_code/MeshGeneration.cpp
@@ -63,14 +63,14 @@ SET(femus_src
 06_mesh/00_single_level/02_partitioning/MeshMetisPartitioning.cpp
 06_mesh/00_single_level/02_partitioning/MeshASMPartitioning.cpp
 06_mesh/00_single_level/03_refinement/MeshRefinement.cpp
-06_mesh/01_multiple_levels/MultiLevelMesh.cpp
+06_mesh/01_multiple_levels/00_definition/MultiLevelMesh.cpp
 06_mesh/gencase_deprecated/Box.cpp
 06_mesh/gencase_deprecated/Domain.cpp
 06_mesh/gencase_deprecated/ElemSto.cpp
 06_mesh/gencase_deprecated/MultiLevelMeshTwo.cpp
 06_mesh/gencase_deprecated/GenCase.cpp
-07_solution/00_single_level/Solution.cpp
-07_solution/01_multiple_levels/MultiLevelSolution.cpp
+07_solution/00_single_level/00_definition/Solution.cpp
+07_solution/01_multiple_levels/00_definition/MultiLevelSolution.cpp
 07_solution/01_multiple_levels/01_output/Writer.cpp
 07_solution/01_multiple_levels/01_output/VTKWriter.cpp
 07_solution/01_multiple_levels/01_output/GMVWriter.cpp

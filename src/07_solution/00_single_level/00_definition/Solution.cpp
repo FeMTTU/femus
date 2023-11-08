@@ -18,11 +18,12 @@
 //----------------------------------------------------------------------------
 
 #include "Solution.hpp"
-#include "FemusDefault.hpp"
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
+
+#include "Solution_config.hpp"
 
 #include <ctime>
 #include <fstream>
@@ -98,7 +99,7 @@ namespace femus {
     _SolTmOrder[n] = tmorder;
     _SolOld.resize(n + 1u);
     _SolOld[n] = NULL;
-    _SolName[n] = new char [DEFAULT_SOL_NCHARS];
+    _SolName[n] = new char [SOL_MAXIMUM_NCHARS];
 
     _removeNullSpace.resize(n + 1u);
     _removeNullSpace[n] = false;
@@ -171,7 +172,7 @@ _analytical_function.resize(new_size);
 // ---------------------
     
 // ID related---
-    _SolName[n] = new char [DEFAULT_SOL_NCHARS];
+    _SolName[n] = new char [SOL_MAXIMUM_NCHARS];
     strcpy(_SolName[n], name);
 
 //   FE related---  
@@ -222,7 +223,7 @@ _analytical_function.resize(new_size);
           _order[old_size + s] = order;
         _SolType[old_size + s] = order - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
      _SolTmOrder[old_size + s] = tmorder;
-        _SolName[old_size + s] = new char [DEFAULT_SOL_NCHARS];
+        _SolName[old_size + s] = new char [SOL_MAXIMUM_NCHARS];
  strcpy(_SolName[old_size + s], name);
 _removeNullSpace[old_size + s] = false;
     

@@ -16,15 +16,19 @@ namespace femus {
 
 namespace Math {
   
+   inline void extend_to_zero(const double* a, double* a3D, const uint spacedim);
+
    inline void zeroN(double* x,const uint N); 
+
    inline double dotN(const double* x,const double* y,const uint N);  //TODO this will be deleted 
    inline double dot(const double* x,const double* y, const uint spacedim);
    inline double dot(const std::vector< double > x, const std::vector< double > y, const uint spacedim);
-   inline std::vector< double > tangent_vector_from_normal(const std::vector< double > orig_vector, const std::vector< double > normal, const uint spacedim);
+   
    inline  void cross(const double* a,const double* b, double* res);
-   inline void extend(const double* a, double* a3D, const uint spacedim);
-   inline void extend_nds(const uint,const double*, double*, const uint spacedim);
-   inline void normalize(double* x,const double fac, const uint spacedim);
+
+   inline void normalize(double* x, const double fac, const uint spacedim);
+
+   inline std::vector< double > tangent_vector_from_normal(const std::vector< double > orig_vector, const std::vector< double > normal, const uint spacedim);
 
 
 
@@ -74,32 +78,13 @@ inline void cross(const double* a,const double* b, double* res) {
 }
 
 /// extend to a 3D vector a vector with dimension 
-inline void extend(const double* a, double* a3D, const uint spacedim)  {
+inline void extend_to_zero(const double* a, double* a3D, const uint spacedim)  {
   for (uint i=0; i<3; i++) a3D[i]=0.;
   for (uint i=0; i< spacedim; i++)  a3D[i]=a[i];
   return;
 }
 
-/// extend to 3D an element dof vector
-inline void extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D, const uint spacedim)  {
 
-//AAA: valid from spacedim to 3
-
-//set to zero
-  for (uint eln=0; eln<el_ndofs; eln++)  {
-    for (uint i=0; i<3; i++) {
-      a_nds3D[eln+i*el_ndofs]=0.;
-    }
-  }
-//extend
-  for (uint eln=0; eln<el_ndofs; eln++)    {
-    for (uint idim=0; idim<spacedim; idim++) {
-      a_nds3D[eln+idim*el_ndofs] = a_nds[eln+idim*el_ndofs];
-    }
-  }
-
-  return;
-}
 
 
 

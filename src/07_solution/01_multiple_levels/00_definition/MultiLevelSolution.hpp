@@ -42,7 +42,7 @@ class MultiLevelProblem;
 
 class MultiLevelSolution : public ParallelObject {
 
-// === CONSTR/DESTR  - BEGIN =================
+// === Constructors / Destructor  - BEGIN =================
 public:
     
     /** Constructor */
@@ -54,7 +54,7 @@ public:
     /** this is the destructor that can be called explicitly, instead of the automatic destructor */
     void clear();
  
-// === CONSTR/DESTR  - END =================
+// === Constructors / Destructor  - END =================
     
     
 // === BASIC SOL MANIPULATION - BEGIN =================

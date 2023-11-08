@@ -207,17 +207,15 @@ void TimeLoop::OneTimestepEqnLoop(
 void TimeLoop::TransientSetup(const MultiLevelProblem & eqnmap)  {
 
     const uint initial_step = _timemap.get("initial_step");
-    const uint ndigits      = DEFAULT_NDIGITS;
+    const uint ndigits      = XDMFWriter::n_digits_step_print;
 
-    std::string   lastrun_f = DEFAULT_LAST_RUN;
-    std::string     basesol = DEFAULT_BASESOL;
-    std::string    ext_xdmf = DEFAULT_EXT_XDMF;
-    std::string      ext_h5 = DEFAULT_EXT_H5;
+    const std::string   lastrun_f = DEFAULT_LAST_RUN;
+    const std::string     basesol = XDMFWriter::_solution_basename;
+    const std::string    ext_xdmf = XDMFWriter::_xdmf_extension;
+    const std::string      ext_h5 = XDMFWriter::_hdf5_extension;
 
-    std::string    basecase = DEFAULT_BASECASE;
-    std::string    basemesh = DEFAULT_BASEMESH;
-
-    std::string  aux_xdmf   = DEFAULT_AUX_XDMF;
+    const std::string    basecase = XDMFWriter::_case_basename;
+    const std::string    basemesh = XDMFWriter::_mesh_basename;
 
 
 //now, every run, restart or not, has a new output dir.

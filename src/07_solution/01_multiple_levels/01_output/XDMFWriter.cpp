@@ -16,11 +16,11 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FemusConfig.hpp"
 #include "XDMFWriter.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -42,7 +42,9 @@
 #include "Parallel.hpp"
 
 namespace femus {
+  
 
+  
   const std::string XDMFWriter::type_el[3][N_GEOM_ELS] = {{"Hexahedron", "Tetrahedron", "Wedge", "Quadrilateral", "Triangle", "Polyline"}, //linear
     {"Hexahedron_20", "Tetrahedron_10", "Not_implemented", "Quadrilateral_8", "Triangle_6", "Edge_3"},        //serendipity
     {"Hexahedron_27", "Tetrahedron_10", "Not_implemented", "Quadrilateral_9", "Triangle_6", "Edge_3"}
@@ -53,7 +55,28 @@ namespace femus {
   const std::string XDMFWriter::_nodes_name = "/NODES";
   const std::string XDMFWriter::_elems_name = "/ELEMS";
   const std::string XDMFWriter::_conn = "CONN";
+  const std::string XDMFWriter::_bdry_suffix = "_bd";
 
+  const std::string XDMFWriter::_hdf5_extension = ".h5";
+  const std::string XDMFWriter::_xdmf_extension     = ".xmf";
+  const std::string XDMFWriter::_auxiliary_dtd_file = "Xdmf.dtd";
+  
+  const unsigned XDMFWriter::n_digits_step_print = 4; 
+
+
+  const std::string XDMFWriter::_solution_basename = "sol";
+  const std::string XDMFWriter::_case_basename     = "case";
+  const std::string XDMFWriter::_time_seq_basename = "time";
+
+  
+  const std::string XDMFWriter::_mesh_basename = "mesh_biquadratic";
+  const std::string XDMFWriter::_mesh_basename_linear = "mesh_linear";
+  const std::string XDMFWriter::_mesh_basename_biquadratic = "_biquadratic";
+  
+
+  
+  
+  
   XDMFWriter::XDMFWriter( MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
     _debugOutput = false;
   }
@@ -481,13 +504,13 @@ namespace femus {
     uint NoLevels = nolevels_in;
 
     // time parameters
-    const uint ndigits     = DEFAULT_NDIGITS;
+    const uint ndigits     = XDMFWriter::n_digits_step_print;
 
     // dir names
-    std::string    basetime     = DEFAULT_BASETIME;
-    std::string    ext_xdmf     = DEFAULT_EXT_XDMF;
-    std::string    basesol      = DEFAULT_BASESOL;
-    std::string    aux_xdmf     = DEFAULT_AUX_XDMF;
+    std::string    basetime     = XDMFWriter::_time_seq_basename;
+    std::string    ext_xdmf     = XDMFWriter::_xdmf_extension;
+    std::string    basesol      = XDMFWriter::_solution_basename;
+    std::string    aux_xdmf     = XDMFWriter::_auxiliary_dtd_file;
 
 // =================================
 // ============= LEVELS ============
@@ -1292,7 +1315,7 @@ namespace femus {
   
     hid_t file_id = H5Fopen( namefile.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
 
-    std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
+    const std::string  bdry_suffix = XDMFWriter::_bdry_suffix;
 
     const uint Lev_pick_bc_NODE_dof = mesh->_NoLevels - 1; //we use the FINE Level as reference
 
@@ -1480,15 +1503,15 @@ namespace femus {
         ord_string = "_linear";
       }
 
-      std::string     ext_xdmf = DEFAULT_EXT_XDMF;
-      std::string       ext_h5 = DEFAULT_EXT_H5;
-      std::string     basemesh = DEFAULT_BASEMESH;
-      std::string      connlin = DEFAULT_BASEMESH_LIN;
+      std::string     ext_xdmf = XDMFWriter::_xdmf_extension;
+      std::string       ext_h5 = XDMFWriter::_hdf5_extension;
+      std::string     basemesh = XDMFWriter::_mesh_basename;
+      std::string      connlin = XDMFWriter::_mesh_basename_linear;
 
       std::ostringstream top_file;
       top_file  << "mesh" << ord_string << ext_h5;
       std::ostringstream geom_file;
-      geom_file << "mesh" << DEFAULT_BASEMESH_BIQ << ext_h5;
+      geom_file << "mesh" << XDMFWriter::_mesh_basename_biquadratic << ext_h5;
 
       std::ostringstream namefile;
       namefile << output_path << "/" << "mesh" << ord_string << ext_xdmf;
@@ -1683,9 +1706,9 @@ namespace femus {
     auxvb[0] = "0";
     auxvb[1] = "1";
 
-    std::string    basemesh = DEFAULT_BASEMESH;
-    std::string    ext_h5   = DEFAULT_EXT_H5;
-    std::string    connlin  = DEFAULT_BASEMESH_LIN;
+    std::string    basemesh = XDMFWriter::_mesh_basename;
+    std::string    ext_h5   = XDMFWriter::_hdf5_extension;
+    std::string    connlin  = XDMFWriter::_mesh_basename_linear;
 
     std::ostringstream namefile;
     namefile << output_path << "/" <<  connlin << ext_h5;
@@ -2122,8 +2145,8 @@ namespace femus {
   void XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5( const std::string output_path, MultiLevelMeshTwo& mesh,
                                     const MultiLevelProblem& ml_prob  )   {
 
-    std::string    basemesh = DEFAULT_BASEMESH;
-    std::string      ext_h5 = DEFAULT_EXT_H5;
+    std::string    basemesh = XDMFWriter::_mesh_basename;
+    std::string      ext_h5 = XDMFWriter::_hdf5_extension;
 
     std::ostringstream meshname;
     meshname << output_path << "/" << basemesh  << ext_h5;
@@ -2337,8 +2360,8 @@ namespace femus {
 
     std::ostringstream name;
 
-    std::string basemesh  = DEFAULT_BASEMESH;
-    std::string ext_h5    = DEFAULT_EXT_H5;
+    std::string basemesh  = XDMFWriter::_mesh_basename;
+    std::string ext_h5    = XDMFWriter::_hdf5_extension;
 
     std::ostringstream inmesh;
     inmesh << output_path << "/" << basemesh << ext_h5;
@@ -2722,9 +2745,9 @@ namespace femus {
     const uint    iproc  = ml_prob.GetMeshTwo()._iproc;
     if( iproc == 0 ) {
 
-      const uint     ndigits  = DEFAULT_NDIGITS;
-      std::string    basesol  = DEFAULT_BASESOL;
-      std::string     ext_h5  = DEFAULT_EXT_H5;
+      const uint     ndigits  = XDMFWriter::n_digits_step_print;
+      std::string    basesol  = XDMFWriter::_solution_basename;
+      std::string     ext_h5  = XDMFWriter::_hdf5_extension;
       std::ostringstream filename;
       filename << output_path << "/" << basesol << "." << std::setw( ndigits ) << std::setfill( '0' ) << t_flag << ext_h5;
 
@@ -2768,7 +2791,7 @@ namespace femus {
     const uint    iproc = ml_prob.GetMeshTwo()._iproc;
     if( iproc == 0 ) {
 
-      const uint ndigits  = DEFAULT_NDIGITS;
+      const uint ndigits  = XDMFWriter::n_digits_step_print;
       const uint NoLevels = ml_prob.GetMeshTwo()._NoLevels;
 
       //FE print
@@ -2777,12 +2800,12 @@ namespace femus {
       DofType[LL] = "Node";
       DofType[KK] = "Cell";
 
-      std::string basesol     = DEFAULT_BASESOL;
-      std::string basemesh    = DEFAULT_BASEMESH;
-      std::string aux_xdmf    = DEFAULT_AUX_XDMF;
-      std::string connlin     = DEFAULT_BASEMESH_LIN;
-      std::string     ext_h5  = DEFAULT_EXT_H5;
-      std::string    ext_xdmf = DEFAULT_EXT_XDMF;
+      std::string basesol     = XDMFWriter::_solution_basename;
+      std::string basemesh    = XDMFWriter::_mesh_basename;
+      std::string aux_xdmf    = XDMFWriter::_auxiliary_dtd_file;
+      std::string connlin     = XDMFWriter::_mesh_basename_linear;
+      std::string     ext_h5  = XDMFWriter::_hdf5_extension;
+      std::string    ext_xdmf = XDMFWriter::_xdmf_extension;
 
       std::ostringstream top_file;
       top_file << connlin << ext_h5;
@@ -2893,10 +2916,10 @@ namespace femus {
     const uint    iproc = ml_prob.GetMeshTwo()._iproc;
     if( iproc == 0 ) {
 
-      const uint ndigits      = DEFAULT_NDIGITS;
-      std::string    basecase = DEFAULT_BASECASE;
-      std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
-      std::string     ext_h5  = DEFAULT_EXT_H5;
+      const uint ndigits      = XDMFWriter::n_digits_step_print;
+      std::string    basecase = XDMFWriter::_case_basename;
+      std::string   ext_xdmf  = XDMFWriter::_xdmf_extension;
+      std::string     ext_h5  = XDMFWriter::_hdf5_extension;
 
       std::ostringstream filename;
       filename << output_path << "/" << basecase << "." << std::setw( ndigits ) << std::setfill( '0' ) << t_init << ext_h5;
@@ -2938,15 +2961,15 @@ namespace femus {
     if( iproc == 0 ) {
 
       const uint NoLevels = ml_prob.GetMeshTwo()._NoLevels;
-      const uint ndigits  = DEFAULT_NDIGITS;
+      const uint ndigits  = XDMFWriter::n_digits_step_print;
 
-      std::string     basecase = DEFAULT_BASECASE;
-      std::string     basemesh = DEFAULT_BASEMESH;
-      std::string       ext_h5 = DEFAULT_EXT_H5;
-      std::string     ext_xdmf = DEFAULT_EXT_XDMF;
-      std::string     aux_xdmf = DEFAULT_AUX_XDMF;
-      std::string      connlin = DEFAULT_BASEMESH_LIN;
-      std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
+      const std::string     basecase = XDMFWriter::_case_basename;
+      const std::string     basemesh = XDMFWriter::_mesh_basename;
+      const std::string       ext_h5 = XDMFWriter::_hdf5_extension;
+      const std::string     ext_xdmf = XDMFWriter::_xdmf_extension;
+      const std::string     aux_xdmf = XDMFWriter::_auxiliary_dtd_file;
+      const std::string      connlin = XDMFWriter::_mesh_basename_linear;
+      const std::string  bdry_suffix = XDMFWriter::_bdry_suffix;
 
       std::ostringstream top_file;
       top_file << connlin << ext_h5;
@@ -3040,10 +3063,10 @@ namespace femus {
 /// This function read the solution form all the system (restart)
   void XDMFWriter::ReadSol( const std::string output_path, const uint t_step, double& time_out, const MultiLevelProblem& ml_prob ) {
 
-    const uint ndigits      = DEFAULT_NDIGITS;
-    std::string    basesol  = DEFAULT_BASESOL;
-    std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
-    std::string     ext_h5  = DEFAULT_EXT_H5;
+    const uint ndigits      = XDMFWriter::n_digits_step_print;
+    std::string    basesol  = XDMFWriter::_solution_basename;
+    std::string   ext_xdmf  = XDMFWriter::_xdmf_extension;
+    std::string     ext_h5  = XDMFWriter::_hdf5_extension;
 // ---------------------------------------------------
     // reading time from from sol.N.xmf file
     // ---------------------------------------------------

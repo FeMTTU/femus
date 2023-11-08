@@ -18,10 +18,10 @@ PURPOSE.  See the above copyright notice for more information.
 //----------------------------------------------------------------------------
 #include "MultiLevelSolution.hpp"
 #include "ElemType.hpp"
-#include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "FemusConfig.hpp"
-#include "FemusDefault.hpp"
+#include "Solution_config.hpp"
+
 #include "ParsedFunction.hpp"
 
 
@@ -147,7 +147,7 @@ namespace femus {
     _family[n] = fefamily;
     _order[n] = order;
     _solType[n] = order - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
-    _solName[n]  = new char [DEFAULT_SOL_NCHARS];
+    _solName[n]  = new char [SOL_MAXIMUM_NCHARS];
     _bdcType[n]  = new char [20];
     sprintf(_bdcType[n], "undefined");
     strcpy(_solName[n], name);
@@ -214,7 +214,7 @@ namespace femus {
 // ---------------------
     
 // ID related---
-    _solName[n]  = new char [DEFAULT_SOL_NCHARS];
+    _solName[n]  = new char [SOL_MAXIMUM_NCHARS];
     strcpy(_solName[n], name);
     
 // is_an_unknown_of_a_pde---

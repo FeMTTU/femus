@@ -17,12 +17,11 @@
 #define __femus_utils_Files_hpp__
 
 #include "FemusDefault.hpp"
-#include "FemusInputParser.hpp"
 
 // C++
-#include <map>
 #include <string>
 #include <fstream>
+#include <sstream>
 
 
 namespace femus {
@@ -39,38 +38,42 @@ namespace femus {
 // =======================================
 class Files {
 
+  
+// === Constructors / Destructor  - BEGIN =================
 public:
   
-   Files(); //constructor
-  ~Files(); // destructor
+   Files();
+   
+  ~Files();
+// === Constructors / Destructor  - END =================
 
-// Directory management =========
-         void CheckIODirectories(const bool use_output_time_folder);
+// Directory management - BEGIN =========
+public:
   
-// Copy ========================= 
-  void CopyInputFiles() const;
+  void CheckIODirectories(const bool use_output_time_folder);
 
-// Restart ======================
-  void ConfigureRestart();
-  void PrintRunForRestart(const std::string run_name_in) const;
+  static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
   
-// LOG ==========================
-// Stream redirect to file ======
-         void RedirectCout(const bool redirect_cout_to_file) const;
-  static void RedirectCoutFinalize(std::streambuf* sbuf);
-         void log_petsc() const;
+private:
+  
+         void ComposeOutdirName(const bool use_output_time_folder);
+  static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);
+//   static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
+  static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
+// Directory management - END =========
 
-// get=============
-  std::string  GetOutputPath() const {
-    return _output_path;
-  }
+  
+
+
+// Input - BEGIN ======================
+public:
   
   std::string  GetInputPath() const {
     return _input_path;
   }
-
+  
+  
 static  std::string get_input_file_with_prefix(const std::string input_file, const std::string relative_location_of_input_folder)  {
-
 
       std::ostringstream mystream; mystream << relative_location_of_input_folder  /*"./"*/ << DEFAULT_INPUTDIR << "/" << input_file;
       const std::string infile = mystream.str();
@@ -78,35 +81,72 @@ static  std::string get_input_file_with_prefix(const std::string input_file, con
       return infile;
 
    }
+// Input - END ======================
 
+
+// Input, Copy - BEGIN ========================= 
+  void CopyInputFiles() const;
+// Input, Copy - END ========================= 
+
+  
+// Output - BEGIN ======================
+  std::string  GetOutputPath() const {
+    return _output_path;
+  }
+  
   std::string  GetOutputTime() const {
     return _output_time;
   }
   
+// Output - END ======================
+
+
+// Output, LOG - BEGIN ==========================
+ public:
+
+// Stream redirect to file ======
+         void RedirectCout(const bool redirect_cout_to_file) const;
+  static void RedirectCoutFinalize(std::streambuf* sbuf);
+         void log_petsc() const;
+
+ private:
+   
+  static const std::string _run_log_basename;
+  static const std::string _run_log_extension;
+         
+// Output, LOG - END ==========================
+
+
+// Restart - BEGIN ======================
+ public:
+   
+  void ConfigureRestart();
+  void PrintRunForRestart(const std::string run_name_in) const;
+
   bool  GetRestartFlag() const {
     return _restart_flag;
   }
   
-  static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
+ private:
+
+  bool _restart_flag; 
+// Restart - END ======================
+
+
   
 private:
   
   static std::ofstream file_sbuf;  //needed for I/O purposes
+  
   std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
+
   std::string _output_path;
   std::string _output_time; //this is the OUTTIME DIR!!!
-
-  bool _restart_flag; 
   
   
-// Directory management
-         void ComposeOutdirName(const bool use_output_time_folder);
-  static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);
-//   static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
-  static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
-
 // Copy 
   void CopyFile(std::string  f_in,std::string  f_out) const;
+  
   
 };
 

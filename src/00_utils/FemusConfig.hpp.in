@@ -10,47 +10,59 @@
 
 #cmakedefine HAVE_MPI
 
+
 //PETSc solver library
 
 #cmakedefine HAVE_PETSC
 
-//MPI library
-
-#cmakedefine HAVE_METIS
-
-//HDF5 library
-
-#cmakedefine HAVE_HDF5
-
-//b64 library
-
-#cmakedefine HAVE_B64
-
-//jsoncpp library
-
-#cmakedefine HAVE_JSONCPP
-
-//adept library
-
-#cmakedefine HAVE_ADEPT
-
-//FParser library
-
-#cmakedefine HAVE_FPARSER
-
-//libMesh library
-
-#cmakedefine HAVE_LIBMESH
 
 //SLEPc library
 
 #cmakedefine HAVE_SLEPC
 
+
+//Metis library
+
+#cmakedefine HAVE_METIS
+
+
+//HDF5 library
+
+#cmakedefine HAVE_HDF5
+
+
+//b64 library
+
+#cmakedefine HAVE_B64
+
+
+//jsoncpp library
+
+#cmakedefine HAVE_JSONCPP
+
+
+//adept library
+
+#cmakedefine HAVE_ADEPT
+
+
+//FParser library
+
+#cmakedefine HAVE_FPARSER
+
+
+//libMesh library
+
+#cmakedefine HAVE_LIBMESH
+
+
+
+
 #ifdef HAVE_PETSC
   #undef  LSOLVER
   #define LSOLVER  PETSC_SOLVERS
   
-  //******PETSC VERSION ***88
+  //******PETSC VERSION *****
   /* PETSc's major version number, as detected by findPETSC.cmake */
   #ifndef FEMTTU_DETECTED_PETSC_VERSION_MAJOR
     #define FEMTTU_DETECTED_PETSC_VERSION_MAJOR  @PETSC_VERSION_MAJOR@

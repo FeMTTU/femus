@@ -17,6 +17,10 @@ PURPOSE.  See the above copyright notice for more information.
 #define __femus_utils_FemusInputParser_hpp__
 
 
+
+#include "FemusDefault.hpp"
+
+
 #include <cstdlib>
 #include <sstream>
 #include <fstream>  
@@ -24,8 +28,6 @@ PURPOSE.  See the above copyright notice for more information.
 #include <iomanip>
 #include <map>
 #include <string>
-
-#include "FemusDefault.hpp"
 
 
 namespace femus {

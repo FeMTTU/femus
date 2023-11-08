@@ -817,7 +817,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   
   
   //filename << "./input/NewCorrectedTensorSPD_0_1.txt";
-  //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
+  //fileAD << "./Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
 

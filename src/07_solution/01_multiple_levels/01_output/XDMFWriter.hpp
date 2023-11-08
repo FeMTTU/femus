@@ -19,6 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include "FemusConfig.hpp"
 #include "Writer.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
@@ -164,8 +165,24 @@ namespace femus {
       void SetDebugOutput( bool value ) {
         _debugOutput = value;
       }
+      
 
+      static const unsigned n_digits_step_print;
+      
+      static const std::string _xdmf_extension;
+      static const std::string _hdf5_extension;
+      
+      static const std::string  _solution_basename;
+      static const std::string _case_basename     ;
+      static const std::string _time_seq_basename ;
+      
+      static const std::string _mesh_basename ;
+      
     private:
+      
+      static const std::string _mesh_basename_linear;
+      static const std::string _mesh_basename_biquadratic;
+      
 
       bool _debugOutput;
 
@@ -174,10 +191,11 @@ namespace femus {
       static const std::string _nodes_name;
       static const std::string _elems_name;
       static const std::string _conn;
-      //     std::string _nd_coord_folder;
-//     std::string _el_pid_name;
-//     std::string _nd_map_FineToLev;
+      
+      static const std::string _bdry_suffix;
 
+      static const std::string _auxiliary_dtd_file;
+      
 
 
   };

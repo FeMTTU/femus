@@ -16,6 +16,9 @@ namespace femus {
   class uq {
 
     public:
+      
+      
+// === Constructors / Destructor  - BEGIN =================
       uq (UqQuadratureType quadratureType) :
         _quadratureType (quadratureType)
       {};
@@ -23,6 +26,7 @@ namespace femus {
       ~uq() {
         Clear();
       };
+// === Constructors / Destructor  - END =================
 
       ////////////////////////////////////////////
 
@@ -196,6 +200,8 @@ namespace femus {
       ////////////////////////////////////////////
 
     private:
+      
+      
       const UqQuadratureType _quadratureType;
       static const double _hermiteQuadrature[16][2][16];
       static const double _legendreQuadrature[16][2][16];

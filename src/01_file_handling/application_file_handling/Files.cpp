@@ -13,16 +13,6 @@
 
 =========================================================================*/
 
-// c/c++
-#include <sstream>
-#include <fstream>
-#include <iostream>
-#include <iomanip>
-#include <cstdlib>
-#include <sys/stat.h>
-#include <sys/types.h>  //for mkdir
-#include <ctime>        //for output dir name
-#include <cstring>      //for strcpy
 
 // class
 #include "Files.hpp"
@@ -35,19 +25,38 @@
 #include "Parallel.hpp"//to get iproc HAVE_MPI is inside here
 
 
+
+// c/c++
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <cstdlib>
+#include <sys/stat.h>
+#include <sys/types.h>  //for mkdir
+#include <ctime>        //for output dir name
+#include <cstring>      //for strcpy
+
+
+
+
 namespace femus {
 
 
   //static data ===================================
   std::ofstream Files::file_sbuf;
 
+  const std::string Files::_run_log_basename = "run";
+  const std::string Files::_run_log_extension = ".log";
   
   
 
+// === Constructors / Destructor  - BEGIN =================
   Files::Files()  { }
 
 	
   Files::~Files() { }
+// === Constructors / Destructor  - END =================
 
   
   
@@ -558,7 +567,7 @@ void Files::CheckIODirectories(const bool use_output_time_folder) {
       
       if (redirect_cout_to_file)  {
 
-    std::string abs_runlog = _output_path + DEFAULT_RUN_LOG;
+    std::string abs_runlog = _output_path + Files::_run_log_basename;
 
 //  std::ofstream file;  //if a filestream dies, then also its stream-buffer dies ?!? 
 //                       //So I have to declare it outside? Yes. This seems to work.
@@ -568,7 +577,7 @@ void Files::CheckIODirectories(const bool use_output_time_folder) {
 //////// MULTIPRINT // // if (Parallel::get_rank() == 0) {  //only processor 0 has to open the file stream
  
     std::stringstream runlogproc;
-    runlogproc << abs_runlog << "_p" << Parallel::get_rank() << DEFAULT_EXT_LOG; //multiprint
+    runlogproc << abs_runlog << "_p" << Parallel::get_rank() << Files::_run_log_extension; //multiprint
     
     abs_runlog = runlogproc.str();
     

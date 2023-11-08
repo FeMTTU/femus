@@ -49,14 +49,14 @@ namespace femus {
   class Solution : public ParallelObject {
 
 
-// === CONSTR/DESTR  - BEGIN =================
+// === Constructors / Destructor  - BEGIN =================
     public:
       /* Constructor */
       Solution(Mesh *other_msh);
 
       /** Destructor */
       ~Solution();
-// === CONSTR/DESTR  - END =================
+// === Constructors / Destructor  - END =================
 
 // === BASIC SOL MANIPULATION - BEGIN =================
     public:

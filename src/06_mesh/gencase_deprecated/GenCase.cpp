@@ -1,10 +1,5 @@
 #include "GenCase.hpp"
 
-// C++
-#include <sstream>
-#include <cassert>
-#include <cmath>
-#include <algorithm> 
 // FEMuS
 #include "FemusConfig.hpp"
 #include "FemusDefaultMultigrid.hpp"
@@ -18,6 +13,13 @@
 #include "GeomElemBase.hpp"
 #include "MultiLevelProblem.hpp"
 #include "SparseMatrix.hpp"
+
+// C++
+#include <sstream>
+#include <cassert>
+#include <cmath>
+#include <algorithm> 
+
 
 // LibMesh
 #ifdef HAVE_LIBMESH
@@ -35,6 +37,13 @@ using namespace libMesh;
 
 namespace femus {
 
+    
+  const std::string  GenCase::_matrix_name = "Matrix";
+  const std::string  GenCase::_prolongator_name = "Prol";
+  const std::string  GenCase::_restrictor_name = "Rest";
+    
+    
+    
 // ========================================================
 GenCase::GenCase(const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in,
                                     const MultiLevelProblem& ml_prob)
@@ -723,8 +732,8 @@ void GenCase::ComputeAndPrintProl(const std::string output_path)  {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-    std::string f_prol    = DEFAULT_F_PROL;
-    std::string ext_h5    = DEFAULT_EXT_H5;
+    const std::string f_prol    = GenCase::_prolongator_name;
+    const std::string ext_h5    = XDMFWriter::_hdf5_extension;
 
     std::ostringstream name;
     name << output_path << "/" << f_prol << ext_h5;
@@ -1324,8 +1333,8 @@ void GenCase::ComputeAndPrintMatrix(const std::string output_path) {
     int *** memG;
 
 //========= CREATE THE FILE ============================
-    std::string f_matrix  = DEFAULT_F_MATRIX;
-    std::string ext_h5    = DEFAULT_EXT_H5;
+    std::string f_matrix  = GenCase::_matrix_name;
+    std::string ext_h5    = XDMFWriter::_hdf5_extension;
 
         std::ostringstream name;
         name << output_path << "/" << f_matrix << ext_h5;
@@ -1643,8 +1652,8 @@ void GenCase::ComputeAndPrintRest(const std::string output_path) {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-        std::string f_rest    = DEFAULT_F_REST;
-        std::string ext_h5    = DEFAULT_EXT_H5;
+        std::string f_rest    = GenCase::_restrictor_name;
+        std::string ext_h5    = XDMFWriter::_hdf5_extension;
 
         std::ostringstream filename;
         filename << output_path << "/" << f_rest << ext_h5;
@@ -2123,10 +2132,10 @@ void GenCase::ComputeMaxElXNode() {
 // =========================================
 void GenCase::ReadMGOps(const std::string output_path, SystemTwo * mysys) {
 
-    std::string     f_matrix = DEFAULT_F_MATRIX;
-    std::string       f_rest = DEFAULT_F_REST;
-    std::string       f_prol = DEFAULT_F_PROL;
-    std::string       ext_h5 = DEFAULT_EXT_H5;
+    const std::string     f_matrix = GenCase::_matrix_name;
+    const std::string       f_rest = GenCase::_restrictor_name;
+    const std::string       f_prol = GenCase::_prolongator_name;
+    const std::string       ext_h5 = XDMFWriter::_hdf5_extension;
 
     std::ostringstream filename;
     std::string filename_base;

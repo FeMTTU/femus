@@ -295,7 +295,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   }
   
 //vector product
-        Math::extend(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);
+        Math::extend_to_zero(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);
         Math::cross(&BhomAdj_vecQuant._curl_g3D[0],&Bmag._val_g3D[0],curlxiXB_g3D);
 
 //==============================================================

@@ -384,7 +384,7 @@ namespace femus
       
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
-      virtual void deallocate_shape_at_quadrature_points() = 0; /* you shouldn't call virtual function from constr/destr, so I am not using them in there*/
+      virtual void deallocate_shape_at_quadrature_points() = 0; /* you shouldn't call virtual function from Constructors / Destructor, so I am not using them in there*/
       
       virtual void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss) = 0;
 
