@@ -30,11 +30,9 @@ namespace femus {
   //http://www.vtk.org/doc/nightly/html/vtkCellType_8h.html#ab1d6fd1f3177b8a2a32bb018807151f8aff535f3b1a33b5e51d1ef1e3aed69447
 
   VTKWriter::VTKWriter( MultiLevelSolution* ml_sol ): Writer( ml_sol ) {
-    _debugOutput = false;
   }
 
   VTKWriter::VTKWriter( MultiLevelMesh* ml_mesh ): Writer( ml_mesh ) {
-    _debugOutput = false;
   }
 
   VTKWriter::~VTKWriter(){}

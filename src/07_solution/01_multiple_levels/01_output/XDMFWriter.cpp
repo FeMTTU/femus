@@ -78,15 +78,15 @@ namespace femus {
   
   
   XDMFWriter::XDMFWriter( MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
-    _debugOutput = false;
   }
 
   XDMFWriter::XDMFWriter( MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
-    _debugOutput = false;
   }
 
   XDMFWriter::~XDMFWriter() {}
 
+  
+  
   void XDMFWriter::Write( const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step ) {
 
 #ifdef HAVE_HDF5

@@ -15,8 +15,8 @@ SET(femus_src
 01_materials/Solid.cpp
 01_materials/Parameter.cpp
 01_file_handling/application_file_handling/Files.cpp
-01_file_handling/file_input_parser/InputParser.cpp
-01_file_handling/file_input_parser/JsonInputParser.cpp
+01_file_handling/runtime_input_parsing/file/InputParser.cpp
+01_file_handling/runtime_input_parsing/file/JsonInputParser.cpp
 02_reference_geom_elements/00_definition/GeomElemBase.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge2.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge3.cpp

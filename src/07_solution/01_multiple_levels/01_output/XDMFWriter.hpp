@@ -38,6 +38,7 @@ namespace femus {
 
     public:
 
+// === Constructors / Destructor  - BEGIN =================
       /** Constructor. */
       XDMFWriter( MultiLevelSolution* ml_sol );
 
@@ -46,9 +47,12 @@ namespace femus {
 
       /** Destructor */
       virtual ~XDMFWriter();
+// === Constructors / Destructor  - END =================
 
+// === Write - BEGIN =================
       /** write output function */
       void Write( const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0 ) ;
+// === Write - END =================
 
       /** write a wrapper file for paraview to open all the files of a history together */
       void write_solution_wrapper( const std::string output_path, const char type[] ) const;
@@ -161,10 +165,6 @@ namespace femus {
       static void ReadSol( const std::string output_path, const uint t_step, double& time_out, const MultiLevelProblem& ml_prob ); ///< Read solution //TODO must be updated, not implemented
       /** MultiLevelProblem - END */
 
-      /** Set if to print or not to prind the debugging variables */
-      void SetDebugOutput( bool value ) {
-        _debugOutput = value;
-      }
       
 
       static const unsigned n_digits_step_print;
@@ -183,8 +183,6 @@ namespace femus {
       static const std::string _mesh_basename_linear;
       static const std::string _mesh_basename_biquadratic;
       
-
-      bool _debugOutput;
 
       static const std::string type_el[3][N_GEOM_ELS];
 

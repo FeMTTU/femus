@@ -47,6 +47,7 @@ class VTKWriter : public Writer {
 
 public:
 
+// === Constructors / Destructor  - BEGIN =================
     /** Constructor. */
     VTKWriter(MultiLevelSolution * ml_sol);
 
@@ -55,7 +56,9 @@ public:
 
     /** Destructor */
     virtual ~VTKWriter();
+// === Constructors / Destructor  - END =================
 
+// === Write - BEGIN =================
     /** write output function */
     void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) ;
     
@@ -67,10 +70,9 @@ public:
   
     /** write output function with arbitrary level (starting at 1) and arbitrary initial string and arbitrary suffix before the extension */
     void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+// === Write - END =================
+    
   
-    /** Set if to print or not to prind the debugging variables */
-    void SetDebugOutput( bool value ){ _debugOutput = value; }
-
   private:
       
     void vtk_unstructured_header_parallel_wrapper(std::ofstream & Pfout) const;
@@ -126,13 +128,13 @@ public:
                                std::vector <char> & enc) const;
 
 
-    bool _debugOutput;
-
     /** [Lagrange linear/quadratic/biquadratic][geom_elem_type]  */
     static short unsigned int femusToVtkCellType[3][6];
 
     
 };
+
+
 
 
 
