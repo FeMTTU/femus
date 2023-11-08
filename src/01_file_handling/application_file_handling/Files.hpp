@@ -68,6 +68,8 @@ private:
 // Input - BEGIN ======================
 public:
   
+  static const std::string  _application_input_directory;
+  
   std::string  GetInputPath() const {
     return _input_path;
   }
@@ -75,7 +77,7 @@ public:
   
 static  std::string get_input_file_with_prefix(const std::string input_file, const std::string relative_location_of_input_folder)  {
 
-      std::ostringstream mystream; mystream << relative_location_of_input_folder  /*"./"*/ << DEFAULT_INPUTDIR << "/" << input_file;
+      std::ostringstream mystream; mystream << relative_location_of_input_folder  /*"./"*/ << Files::_application_input_directory << "/" << input_file;
       const std::string infile = mystream.str();
 
       return infile;
@@ -85,11 +87,17 @@ static  std::string get_input_file_with_prefix(const std::string input_file, con
 
 
 // Input, Copy - BEGIN ========================= 
+public:
+  
   void CopyInputFiles() const;
 // Input, Copy - END ========================= 
 
   
 // Output - BEGIN ======================
+public:
+  
+  static const std::string  _application_output_directory;
+  
   std::string  GetOutputPath() const {
     return _output_path;
   }

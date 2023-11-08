@@ -108,7 +108,7 @@ int main(int argc, char** args) {
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   
   const std::string relative_path_to_mesh_input_folder = "./";
-  std::ostringstream mystream; mystream << relative_path_to_mesh_input_folder << DEFAULT_INPUTDIR << "/" << input_file;
+  std::ostringstream mystream; mystream << relative_path_to_mesh_input_folder << Files::_application_input_directory << "/" << input_file;
   const std::string infile = mystream.str();
 
   const bool read_groups = true;

@@ -19,7 +19,7 @@ PURPOSE.  See the above copyright notice for more information.
 
 
 #include "FemusDefault.hpp"
-
+#include "Files.hpp"
 
 #include <cstdlib>
 #include <sstream>
@@ -109,7 +109,7 @@ template <typename T>
   void FemusInputParser<T>::read() {
 
     std::ostringstream filename;
-    filename << _basepath <<  "/" << DEFAULT_INPUTDIR << "/" << DEFAULT_RUNTIMECONF;  
+    filename << _basepath <<  "/" << Files::_application_input_directory << "/" << DEFAULT_RUNTIMECONF;  
 
 
 std::ifstream fin(filename.str().c_str());

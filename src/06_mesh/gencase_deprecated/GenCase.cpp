@@ -145,7 +145,7 @@ void GenCase::GenerateCoarseMesh() const {
     std::clock_t start_timeA=std::clock();
 #endif
     
-        std::string config_dir  = DEFAULT_INPUTDIR;
+        std::string config_dir  = Files::_application_input_directory;
         std::string f_mesh_read = _mesh_file;
 
         std::ostringstream mesh_infile;
