@@ -307,7 +307,7 @@ int main(int argc, char **args)
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, 0);
 
 
   // ******* Solve *******
@@ -367,7 +367,7 @@ int main(int argc, char **args)
 
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
-  PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, 0);
+  PrintLine(Files::_application_output_directory, "streamline", streamline, 0);
 
   std::vector <double> data;
 
@@ -392,7 +392,7 @@ int main(int argc, char **args)
     GetSolutionNorm(ml_sol, 7, data); //AAA_thrombus, 15=thrombus
   }
 
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, 1);
 
 
   const unsigned int n_timesteps = 260 /*500*/;
@@ -424,7 +424,7 @@ int main(int argc, char **args)
     for (int i = 0; i < linea.size(); i++) {
       linea[i]->GetStreamLine(streamline, i + 1);
     }
-    PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, time_step + 1);
+    PrintLine(Files::_application_output_directory, "streamline", streamline, time_step + 1);
 
 
   }

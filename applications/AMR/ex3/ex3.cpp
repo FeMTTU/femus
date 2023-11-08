@@ -168,12 +168,12 @@ int main (int argc, char** args) {
       variablesToBePrinted.push_back ("All");
       VTKWriter vtkIO (&mlSol);
       vtkIO.SetDebugOutput (true);
-      vtkIO.Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
 
 //       GMVWriter gmvIO (&mlSol);
 //       variablesToBePrinted.push_back ("all");
 //       gmvIO.SetDebugOutput (true);
-//       gmvIO.Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+//       gmvIO.Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
 
     }
 

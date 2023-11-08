@@ -395,11 +395,11 @@ int main(int argc, char** argv) {
 
         VTKWriter vtkio(&ml_sol);
 	
-        vtkio.Write(DEFAULT_OUTPUTDIR, "first", print_vars,H*100+k*10+j);
-        vtkio.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars,H*100+k*10+j);
+        vtkio.Write(Files::_application_output_directory, "first", print_vars,H*100+k*10+j);
+        vtkio.Write(Files::_application_output_directory, "biquadratic", print_vars,H*100+k*10+j);
 
         //GMVWriter gmvio(&ml_sol);
-        //gmvio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+        //gmvio.ParallelWrite(Files::_application_output_directory,"biquadratic",print_vars);
 
         //
         //     XDMFWriter xdmfio(ml_sol);

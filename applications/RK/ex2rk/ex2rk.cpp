@@ -242,7 +242,7 @@ int main (int argc, char** args) {
   if ( dim==3 ) mov_vars.push_back ("DY");
   mlSol.GetWriter()->SetMovingMesh (mov_vars);
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, 0);
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
@@ -252,7 +252,7 @@ int main (int argc, char** args) {
 
     std::cout << "Fluxes = " << GetSolutionFluxes (mlSol) << "    " << sin (M_PI * system.GetTime()) << std::endl;
 
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+    mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, time_step + 1);
   }
 
   for (unsigned i = 0; i < RK; i++) {

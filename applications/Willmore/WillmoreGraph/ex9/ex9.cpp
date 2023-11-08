@@ -155,7 +155,7 @@ int main (int argc, char** args) {
 
   mlSol.GetWriter()->SetGraphVariable("u");
   mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   // add system Wilmore in mlProb as a Linear Implicit System
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("Willmore");
@@ -179,7 +179,7 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
     if ( (time_step + 1) % 1 == 0)
-      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, (time_step + 1) );
+      mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, (time_step + 1) );
   }
 
   return 0;

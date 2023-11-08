@@ -247,7 +247,7 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
- mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted, i);
+ mlSol.GetWriter()->Write(files.GetOutputPath()/*Files::_application_output_directory*/,"biquadratic", variablesToBePrinted, i);
  
   //Destroy all the new systems
 //   mlProb.clear();

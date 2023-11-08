@@ -202,7 +202,7 @@ int main(int argc, char** args) {
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(files.GetOutputPath()/*Files::_application_output_directory*/, "biquadratic", variablesToBePrinted);
 
   return 0;
 }

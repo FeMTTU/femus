@@ -163,7 +163,7 @@ int main(int argc, char** args) {
     // ******* Print solution *******
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   return 0;
 }

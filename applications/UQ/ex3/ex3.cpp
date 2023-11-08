@@ -231,7 +231,7 @@ int main ( int argc, char** argv )
     std::vector<std::string> print_vars;
     print_vars.push_back ( "All" );
     //mlSol.GetWriter()->SetDebugOutput(true);
-    mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0 );
+    mlSol.GetWriter()->Write ( Files::_application_output_directory, "biquadratic", print_vars, 0 );
 
     return 0;
 

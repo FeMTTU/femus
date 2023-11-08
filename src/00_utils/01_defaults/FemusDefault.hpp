@@ -16,7 +16,6 @@
 #define DEFAULT_BASEPATH     "./" //perhaps one day we should consider to treat these slashes appropriately in case we compile on Windows etc.
 
 // # ----  Applications - BEGIN --------------
-#define DEFAULT_OUTPUTDIR    "output/"  //we have to hardcode it here otherwise we cannot perform restart without logical inconsistencies
 #define DEFAULT_RUNTIMECONF  "femus_conf.in"
 // # ----  Applications - END --------------
 

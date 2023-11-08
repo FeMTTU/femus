@@ -263,7 +263,7 @@ int main (int argc, char** argv) {
   std::vector<std::string> print_vars;
   print_vars.push_back ("All");
   //mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, 0);
   //END
 
 /*
@@ -325,14 +325,14 @@ int main (int argc, char** argv) {
   std::vector<std::string> print_vars_2;
   print_vars_2.push_back ("All");
   //mlSolHisto.GetWriter()->SetDebugOutput(true);
-  mlSolHisto.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_and_proposed", print_vars_2, 0);
+  mlSolHisto.GetWriter()->Write (Files::_application_output_directory, "histo_and_proposed", print_vars_2, 0);
 
 
   mlSolHistoFinest.SetWriter (VTK);
   std::vector<std::string> print_vars_3;
   print_vars_3.push_back ("All");
   //mlSolHisto.GetWriter()->SetDebugOutput(true);
-  mlSolHistoFinest.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_finer", print_vars_3, 0);
+  mlSolHistoFinest.GetWriter()->Write (Files::_application_output_directory, "histo_finer", print_vars_3, 0);
   //END
 
  */ 

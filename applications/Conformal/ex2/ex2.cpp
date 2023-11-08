@@ -173,7 +173,7 @@ int main (int argc, char** args) {
 
   mlSol.SetWriter (VTK);
   mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   system0.MGsolve();
 
@@ -184,7 +184,7 @@ int main (int argc, char** args) {
   mlSol.GetWriter()->SetMovingMesh (mov_vars1);
   
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 1);
 
   // Add system Conformal or Shear Minimization in mlProb.
   NonLinearImplicitSystem& system1 = mlProb.add_system < NonLinearImplicitSystem > ("conformal"); //for conformal
@@ -211,7 +211,7 @@ int main (int argc, char** args) {
     mov_vars2.push_back ("Dx2");
     mlSol.GetWriter()->SetMovingMesh (mov_vars2);
 
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2+j);
+    mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 2+j);
   }
 
   return 0;

@@ -376,7 +376,7 @@ int main (int argc, char** args) {
   
   std::vector < std::vector < std::vector < double > > > lineS (1);
   solidLine->GetLine (lineS[0]);
-  PrintLine (DEFAULT_OUTPUTDIR, "solidLine", lineS, 0);
+  PrintLine (Files::_application_output_directory, "solidLine", lineS, 0);
   
   x.resize (0);
   mass.resize (0);
@@ -449,7 +449,7 @@ int main (int argc, char** args) {
   
   std::vector < std::vector < std::vector < double > > > lineF (1);
   fluidLine->GetLine (lineF[0]);
-  PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, 0);
+  PrintLine (Files::_application_output_directory, "fluidLine", lineF, 0);
   
   
   fluidLine->GetParticlesToGridMaterial (false);
@@ -470,7 +470,7 @@ int main (int argc, char** args) {
   print_vars.push_back ("All");
   
   mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, 0);
   
   //return 1;
   
@@ -493,14 +493,14 @@ int main (int argc, char** args) {
     GridToParticlesProjection (ml_prob, *solidLine, *fluidLine);
     
     solidLine->GetLine (lineS[0]);
-    PrintLine (DEFAULT_OUTPUTDIR, "solidLine", lineS, time_step);
+    PrintLine (Files::_application_output_directory, "solidLine", lineS, time_step);
     PrintLine ("./output1", "solidLine", lineS, time_step);
     
     fluidLine->GetLine (lineF[0]);
-    PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, time_step);
+    PrintLine (Files::_application_output_directory, "fluidLine", lineF, time_step);
     PrintLine ("./output1", "fluidLine", lineF, time_step);
     
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, time_step);
     
   }
   

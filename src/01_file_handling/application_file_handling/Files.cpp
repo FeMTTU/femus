@@ -69,7 +69,7 @@ namespace femus {
 
     std::string app_path = "./";
     std::string lastrun_str;
-    lastrun_str = app_path + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
+    lastrun_str = app_path + Files::_application_output_directory + "/" + DEFAULT_LAST_RUN;
 
     //check if last_run is there, if it's not there go ahead and set restart = FALSE
             std::string lastone;
@@ -93,7 +93,7 @@ namespace femus {
 	      std::cout << "*** RESTART is activated *****" << std::endl; 
 	      //we must set the basepath accordingly
 	    
-	    _input_path = app_path + DEFAULT_OUTPUTDIR + "/" + lastone + "/";
+	    _input_path = app_path + Files::_application_output_directory + "/" + lastone + "/";
 	    
 	      std::cout << "*** The new input path is *****" << _input_path << std::endl; 
 	    
@@ -268,7 +268,7 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
 
    std::string app_path = "./";
    std::string run("");
-   run = app_path + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
+   run = app_path + Files::_application_output_directory + "/" + run_name_in; //AAA BASE OUTPUT
    std::cout << "Print the run " << run << "to file" << std::endl;
 
    std::ofstream run_file; run_file.open(run.c_str());
@@ -414,7 +414,7 @@ MPI_Bcast(out_char, outchar_size, MPI_CHAR, 0, MPI_COMM_WORLD);
  //************************
  //set the input and output_path variables
     std::string app_path = "./";
-   _output_path = app_path + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
+   _output_path = app_path + Files::_application_output_directory + "/" + _output_time + "/";
  
  std::cout << "iproc = " << Parallel::get_rank() << " ***** The output dir of this run will be: " << _output_path << std::endl;
 
@@ -529,9 +529,9 @@ void Files::CheckIODirectories(const bool use_output_time_folder) {
                     std::string abs_app = "./";
 /*all procs*/   CheckDirOrAbort(abs_app, Files::_application_input_directory); //it must be there only to be COPIED (and we don't even need the check in restart case)
 
-/*all procs*/   CheckDir(abs_app, DEFAULT_OUTPUTDIR);
+/*all procs*/   CheckDir(abs_app, Files::_application_output_directory);
 
-   std::string abs_outputdir = abs_app + "/" + DEFAULT_OUTPUTDIR;
+   std::string abs_outputdir = abs_app + "/" + Files::_application_output_directory;
    
 /*(iproc==0)*/  ComposeOutdirName(use_output_time_folder);  //this adds an element to the Files map, so the SetupAll function cannot be constant
 

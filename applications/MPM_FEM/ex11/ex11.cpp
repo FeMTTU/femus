@@ -179,9 +179,9 @@ int main (int argc, char** args) {
 
       VTKWriter vtkIO (&mlSol);
       vtkIO.SetDebugOutput (true);
-      vtkIO.Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i + j * 10);
-      vtkIO.Write (DEFAULT_OUTPUTDIR, "quadratic", variablesToBePrinted, i + j * 10);
-      vtkIO.Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, "linear", variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, "quadratic", variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, i + j * 10);
       delete Proj;
     }
   }

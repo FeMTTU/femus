@@ -3170,7 +3170,7 @@ namespace femus
     std::vector<std::string> print_vars;
     print_vars.push_back("All");
 
-    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1000 + counter);
+    mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, 1000 + counter);
 
     counter++;
     //}

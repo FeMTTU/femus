@@ -375,7 +375,7 @@ restart:
 
           std::string out_path;
           if (this->GetMLProb().GetFilesHandler() != NULL)  out_path = this->GetMLProb().GetFilesHandler()->GetOutputPath();
-          else                                              out_path = DEFAULT_OUTPUTDIR;
+          else                                              out_path = Files::_application_output_directory;
 
           std::string file_prefix;
           if ( GetMLProb().GetMLMesh()->_mesh_filename.empty() ) { file_prefix = "sol"; }

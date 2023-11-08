@@ -167,7 +167,7 @@ int main(int argc, char** args) {
 // 
 //         VTKWriter vtkIO( &mlSol );
 //         vtkIO.SetDebugOutput( true );
-//         vtkIO.Write( DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted );
+//         vtkIO.Write( Files::_application_output_directory, "biquadratic", variablesToBePrinted );
 // 
 // 
 // 
@@ -233,7 +233,7 @@ int main(int argc, char** args) {
 // 
 //       VTKWriter vtkIO(&mlSol);
 //       vtkIO.SetDebugOutput(true);
-//       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//       vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 // 
 //     }
 //     break;
@@ -335,7 +335,7 @@ int main(int argc, char** args) {
 // 
 //       VTKWriter vtkIO(&mlSol);
 //       vtkIO.SetDebugOutput(true);
-//       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//       vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 // 
 //     }
 //     break;
@@ -377,7 +377,7 @@ int main(int argc, char** args) {
 // 
 //       VTKWriter vtkIO(&mlSol);
 //       vtkIO.SetDebugOutput(true);
-//       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//       vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 // 
 //     }
 //     break;
@@ -420,7 +420,7 @@ int main(int argc, char** args) {
 // 
 //       VTKWriter vtkIO(&mlSol);
 //       vtkIO.SetDebugOutput(true);
-//       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//       vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 //     }
 //     break;
 //   }

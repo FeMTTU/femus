@@ -614,7 +614,7 @@ int main ( int argc, char** args )
     std::vector<std::string> print_vars;
     print_vars.push_back ( "All" );
     //mlSol.GetWriter()->SetDebugOutput(true);
-    mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
+    mlSol.GetWriter()->Write ( Files::_application_output_directory, "linear", print_vars, 0 );
 
     unsigned numberOfTimeSteps = 10001; //17h=1020 with dt=60, 17h=10200 with dt=6
     dt = 0.25;
@@ -626,7 +626,7 @@ int main ( int argc, char** args )
         system.CopySolutionToOldSolution();
         //ETD ( ml_prob, numberOfTimeSteps );
         RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
-        mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
+        mlSol.GetWriter()->Write ( Files::_application_output_directory, "linear", print_vars, ( i + 1 ) / 1 );
         counter = i;
         counter2++;
     }

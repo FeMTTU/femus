@@ -115,7 +115,7 @@ int main (int argc, char** args) {
 
   system.MGsolve();
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", print_vars, 0);
 
   ml_prob.clear();
 

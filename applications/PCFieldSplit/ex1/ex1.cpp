@@ -143,7 +143,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   return 0;
 }

@@ -382,7 +382,7 @@ int main ( int argc, char ** args )
   print_vars.push_back ( "All" );
 
   ml_sol.GetWriter()->SetDebugOutput ( true );
-  ml_sol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0 );
+  ml_sol.GetWriter()->Write ( Files::_application_output_directory, "biquadratic", print_vars, 0 );
 
 
   // ******* Solve *******
@@ -421,7 +421,7 @@ int main ( int argc, char ** args )
 //     else if ( simulation == 3 ) {   //AAA_thrombus, 15=thrombus
 //       GetSolutionNorm ( ml_sol, 7, data[time_step] );
 //     }
-//     ml_sol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1 );
+//     ml_sol.GetWriter()->Write ( Files::_application_output_directory, "biquadratic", print_vars, time_step + 1 );
   }
 
   int  iproc;

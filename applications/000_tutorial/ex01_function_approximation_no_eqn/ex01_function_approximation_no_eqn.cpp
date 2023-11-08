@@ -72,12 +72,12 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("T");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   GMVWriter gmvIO(&mlSol);
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(false);
-  gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  gmvIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   return 0;
 }

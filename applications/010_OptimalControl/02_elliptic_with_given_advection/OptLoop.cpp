@@ -188,7 +188,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     /////////so that we explore the variation wrt alpha
 
     std::string app_path = "./";
-    std::string intgr_fname = app_path + DEFAULT_OUTPUTDIR + "/" + "alpha";
+    std::string intgr_fname = app_path + Files::_application_output_directory + "/" + "alpha";
 
 	std::ofstream intgr_fstream;
 

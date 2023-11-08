@@ -172,7 +172,7 @@ int main(int argc, char** args) {
       
       vtkIO.SetGraphVariable( unknowns[u]._name.c_str() );
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(unknowns[u]._name.c_str(), DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(unknowns[u]._name.c_str(), Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
 
     }
   }

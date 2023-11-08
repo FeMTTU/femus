@@ -156,7 +156,7 @@ int main (int argc, char** args) {
   
   mlSol.GetWriter()->SetGraphVariable("u");
   mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
   
   unsigned numberOfTimeSteps = 30;
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
@@ -164,7 +164,7 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
     if ( (time_step + 1) % 1 == 0)
-      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, (time_step + 1) );
+      mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, (time_step + 1) );
   }
   
   system.MGsolve();

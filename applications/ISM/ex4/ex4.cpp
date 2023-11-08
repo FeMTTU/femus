@@ -212,7 +212,7 @@ int main(int argc, char** args)
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -269,7 +269,7 @@ int main(int argc, char** args)
 
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
-  PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, 0);
+  PrintLine(Files::_application_output_directory, "streamline", streamline, 0);
 
   //END INITIALIZE PARTICLES
 
@@ -287,7 +287,7 @@ int main(int argc, char** args)
       linea[i]->AdvectionParallel(40, T / n, 4);
       linea[i]->GetStreamLine(streamline, linea.size() - i );     
     }
-    PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, k + 1);
+    PrintLine(Files::_application_output_directory, "streamline", streamline, k + 1);
     linea.resize(k+2);
     linea[k+1] =  new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), 2);
     
