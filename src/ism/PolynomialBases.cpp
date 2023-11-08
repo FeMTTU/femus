@@ -13,12 +13,16 @@
 
 =========================================================================*/
 
-#include <stdlib.h>
-#include<iostream>
-#include<cmath>
-
 #include "PolynomialBases.hpp"
 #include "GeomElTypeEnum.hpp"
+
+#include "Files.hpp"
+
+#include <cstdlib>
+#include <iostream>
+#include <cmath>
+#include <b64/b64.h>
+
 
 namespace femus {
 

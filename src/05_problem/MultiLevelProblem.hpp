@@ -49,7 +49,6 @@ class MultiLevelSolution;
 class System;
 
 class MultiLevelMeshTwo;
-class elem_type;
 class QuantityMap;
 
 
@@ -126,7 +125,7 @@ protected:
 
     
     
-// ===  Quadrature - BEGIN =================
+// ===  Geometric Element, Quadrature - BEGIN =================
 public:
 
   inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule[0]; }  ///@todo obsolete
@@ -142,9 +141,9 @@ public:
 private:
     
   std::vector< std::vector< Gauss > >    _qrule;            //[QRULES][Geom Elems][FE]
-// ===  Quadrature - END =================
+// ===  Geometric Element, Quadrature - END =================
   
-// ===  FE Evaluations at Quadrature - BEGIN =================
+// ===  Geometric Element, FE Evaluations at Quadrature - BEGIN =================
 public:
     
   void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd[0]; }
@@ -223,7 +222,7 @@ private:
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > > >            _elem_all_ad;  //[QRULES][Geom Elems][FE]
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > > >    _elem_all_aa;  //[QRULES][Geom Elems][FE]
 
-// ===  FE Evaluations at Quadrature - END =================
+// ===  Geometric Element, FE Evaluations at Quadrature - END =================
 
 
 // ===  Mesh - BEGIN =================

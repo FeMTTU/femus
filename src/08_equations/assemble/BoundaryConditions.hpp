@@ -16,7 +16,7 @@
 #ifndef __femus_equations_BoundaryConditions_hpp__
 #define __femus_equations_BoundaryConditions_hpp__
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 
 
 

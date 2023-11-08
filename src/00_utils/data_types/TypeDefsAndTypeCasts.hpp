@@ -7,6 +7,14 @@
 #include <typeinfo>
 
 
+// ===  Typedefs - BEGIN =================
+
+typedef unsigned int uint;
+
+// ===  Typedefs - END =================
+
+
+
 namespace femus
 {
 

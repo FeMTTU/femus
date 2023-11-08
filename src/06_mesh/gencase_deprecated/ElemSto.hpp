@@ -19,7 +19,7 @@
 //           side-nodes]
 // ================================================
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 
 
 namespace femus {

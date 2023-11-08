@@ -36,12 +36,14 @@ class NonLinearImplicitSystemWithPrimalDualActiveSetMethod : public NonLinearImp
 
 public:
 
-// constructor - BEGIN ======   
+//==== Constructors / Destructor - BEGIN ========
     /** Constructor.  Optionally initializes required data structures. */
     NonLinearImplicitSystemWithPrimalDualActiveSetMethod (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type );
-// constructor - END ======   
+//==== Constructors / Destructor - END ========
 
-// system name - BEGIN ======   
+
+//==== Basic - BEGIN ========
+
     /**
      * Helps in identifying
      * the system type in an equation system file.
@@ -49,10 +51,11 @@ public:
     virtual std::string system_type () const {
         return "NonlinearImplicitWithPrimalDualActiveSetMethod";
     }
-// system name - END ======   
+
+//==== Basic - END ========
 
 
-// active flag - BEGIN ======   
+//====  active flag - BEGIN ======   
     /** Set the active set flag name */
     void SetActiveSetFlagName(const std::vector<std::string> & name_in ) {
         _active_flag_name = name_in;
@@ -67,10 +70,10 @@ protected:
   
     std::vector< std::string > _active_flag_name;
 
-// active flag - END ======
+//====  active flag - END ======
 
 
-// // ContReg flag - BEGIN ======   
+//====  // ContReg flag - BEGIN ======   
 //     /** Set the active set flag name */
 //     void SetContRegFlagName(const std::vector<std::string> & name_in ) {
 //         _cont_reg_flag_name = name_in;
@@ -85,20 +88,20 @@ protected:
 //   
 //     std::vector< std::string > _cont_reg_flag_name;
 // 
-// // ContReg flag - END ======
+//====  // ContReg flag - END ======
 
     
-// solver - BEGIN ======   
+//====  solver - BEGIN ======   
 public:
     /** Solves the system. */
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     
     
     void nonlinear_solve_single_level(const MgSmootherType& mgSmootherType, double & totalAssembyTime, const unsigned int grid0, const unsigned int igridn);
-// solver - END ======   
+//====  solver - END ======   
 
     
-// debug function sub-class - BEGIN ======   
+//====  debug function sub-class - BEGIN ======   
 protected:
     /** Debug function typedef */
     typedef void (*DebugFunc) (const MultiLevelProblem& ml_prob, 
@@ -146,7 +149,7 @@ public:
                      const std::vector<std::string> state_vars,  
                      const std::vector<std::string> ctrl_vars  ) const;
    
-// debug function sub-class - END ======   
+//====  debug function sub-class - END ======   
     
     
     

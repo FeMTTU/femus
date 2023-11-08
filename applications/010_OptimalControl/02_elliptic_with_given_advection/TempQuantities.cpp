@@ -2,7 +2,7 @@
 
 //library includes
 #include "BDCTypeEnum.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "Box.hpp"
 

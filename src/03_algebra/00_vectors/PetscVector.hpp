@@ -31,7 +31,7 @@
 #include "NumericVector.hpp"
 #include "PetscMacro.hpp"
 #include "ParalleltypeEnum.hpp"
-#include "Casts.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 
 /// Petsc include files.
 EXTERN_C_FOR_PETSC_BEGIN

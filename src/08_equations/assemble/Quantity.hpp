@@ -21,7 +21,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "CurrentQuantity.hpp"
 
 

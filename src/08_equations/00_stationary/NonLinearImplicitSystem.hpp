@@ -34,6 +34,7 @@ namespace femus {
 
 class NonLinearImplicitSystem : public LinearImplicitSystem {
 
+//==== Constructors / Destructor - BEGIN ========
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
@@ -41,12 +42,13 @@ public:
 
     /** destructor */
     virtual ~NonLinearImplicitSystem();
+//==== Constructors / Destructor - END ========
+    
+//==== Basic - BEGIN ========
+public:
 
     /** The type of the parent. */
     typedef LinearImplicitSystem Parent;
-
-    /** Init the system PDE structures */
-    virtual void init();
 
     /**
      * @returns \p "NonlinearImplicit".  Helps in identifying
@@ -55,6 +57,47 @@ public:
     virtual std::string system_type () const {
         return "NonlinearImplicit";
     }
+    
+    /** Init the system PDE structures */
+    virtual void init();
+
+//==== Basic - END ========
+
+    
+//==== Matrix, Assemble - BEGIN ========
+public:
+
+    /** Only call assemble function */
+    virtual void assemble_call_before_boundary_conditions(const unsigned int n_times);
+    
+
+//==== Matrix, Assemble - END ========
+
+
+    
+//==== Solver - BEGIN ========
+public:
+    
+    /** Solves the system. */
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+    
+    
+//==== Solver - END ========    
+
+
+//==== Solver, Convergence rate - BEGIN ========
+public:
+
+    void compute_convergence_rate() const;
+    
+protected:
+
+    /** Vector of all nonlinear iterations for convergence rate */
+    std::vector< NumericVector* >  _eps_fine;
+    
+//==== Solver, Convergence rate - END ========
+    
+public:
 
     /** Returns the final residual for the nonlinear system solve. */
     double final_nonlinear_residual() const {
@@ -88,14 +131,6 @@ public:
       _linearAbsoluteConvergenceTolerance = tolerance;
     }
     
-    void compute_convergence_rate() const;
-    
-    /** Solves the system. */
-    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
-    
-    /** Only call assemble function */
-    virtual void assemble_call_before_boundary_conditions(const unsigned int n_times);
-    
     void print_iteration_to_file(const unsigned nonLinearIterator) const;
     
 protected:
@@ -120,9 +155,6 @@ protected:
     double _max_nonlinear_convergence_tolerance;
 
     unsigned _maxNumberOfResidualUpdateIterations;
-    
-    /** Vector of all nonlinear iterations for convergence rate */
-    std::vector< NumericVector* >  _eps_fine;
     
     /** Flag for printing fields at each nonlinear iteration */
     bool _debug_nonlinear;

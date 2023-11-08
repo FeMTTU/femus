@@ -9,7 +9,7 @@
 
 // FEMuS
 #include "FemusConfig.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum_deprecated.hpp"
 #include "FemusInputParser.hpp"

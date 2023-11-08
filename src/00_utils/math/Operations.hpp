@@ -2,7 +2,7 @@
 #define __femus_utils_Math_hpp__
 
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 
 #include <vector>
 

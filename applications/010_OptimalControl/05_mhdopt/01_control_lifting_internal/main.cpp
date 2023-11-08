@@ -18,7 +18,7 @@
 #include "FETypeEnum_deprecated.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "CmdLine.hpp"
 #include "Quantity.hpp"
 #include "Box.hpp"  //for the DOMAIN

@@ -18,7 +18,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "TimeLoop.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "Quantity.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "LinearEquationSolver.hpp"

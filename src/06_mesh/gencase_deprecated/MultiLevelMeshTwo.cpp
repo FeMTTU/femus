@@ -16,7 +16,7 @@
 #include "MultiLevelMeshTwo.hpp"
 
 #include "Domain.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "XDMFWriter.hpp"
 #include "Elem.hpp"
 #include "GeomElTypeEnum.hpp"

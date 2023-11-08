@@ -34,6 +34,8 @@ namespace femus {
 
 class MonolithicFSINonLinearImplicitSystem : public NonLinearImplicitSystem {
 
+
+//==== Constructors / Destructor - BEGIN ========
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
@@ -41,12 +43,13 @@ public:
 
     /** Destructor */
     virtual ~MonolithicFSINonLinearImplicitSystem();
+//==== Constructors / Destructor - END ========
+
+//==== Basic - BEGIN ========
+public:
 
     /** The type of the parent. */
     typedef NonLinearImplicitSystem Parent;
-
-    /** Init the system PDE structures */
-    virtual void init();
 
     /**
      * @returns \p "MonolithicFSINonlinearImplicit".  Helps in identifying
@@ -56,6 +59,13 @@ public:
         return "MonolithicFSINonlinearImplicit";
     }
 
+    /** Init the system PDE structures */
+    virtual void init();
+//==== Basic - END ========
+
+    
+//==== ASM, FSI - BEGIN ========
+public:
 
     void SetElementBlockNumberFluid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
     void SetElementBlockNumberSolid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
@@ -63,16 +73,17 @@ public:
     void SetElementBlockFluidAll();
     void SetElementBlockSolidAll();
     void SetElementBlockPorousAll();
+//==== ASM, FSI - END ========
 
+
+//==== Solver, Multigrid, Prol/Rest Operators - BEGIN ========
 protected:
 
     /** Create the Prolongator and Restrictor Operators for the Algebraic Multigrid Solver */
     void BuildProlongatorMatrix(unsigned gridf);
 
-    void BuildAmrProlongatorMatrix(unsigned level);
-
       /** Only for FSI */
-      void Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
+    void Build_RestrictionTranspose_OneElement_OneFEFamily_With_Pair_In_System(const LinearEquation& lspdef,
                                      const LinearEquation& lspdec,
                                      const int& ielc,
                                      SparseMatrix* Projmat,
@@ -81,7 +92,14 @@ protected:
                                      const unsigned& index_pair_sol,
                                      const unsigned& kkindex_pair_sol,
                                      const elem_type * elem_type_in) const;
+//==== Solver, Multigrid, Prol/Rest Operators - END ========
+
                                      
+//==== Solver, Multigrid, AMR, Prol/Rest Operators - BEGIN ========
+protected:
+
+    void BuildAmrProlongatorMatrix(unsigned level);
+//==== Solver, Multigrid, AMR, Prol/Rest Operators - END ========
 
 private:
 

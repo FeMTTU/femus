@@ -169,6 +169,12 @@ protected:
 
 
 
+
+//==== 
+//==== LINEAR ALGEBRA - END ========
+//==== 
+
+    
 //==== Solver - BEGIN ========
 public:
   
@@ -183,11 +189,7 @@ public:
     
 //==== Solver - END ========
 
-//==== 
-//==== LINEAR ALGEBRA - END ========
-//==== 
-
-
+    
 //==== Problem - BEGIN ======== 
 public:
 
@@ -243,6 +245,7 @@ protected:
 
 
 
+//==== Basic - BEGIN ========
 // System inline methods
 inline
 const std::string & System::name() const
@@ -255,6 +258,7 @@ unsigned int System::number() const
 {
     return _sys_number;
 }
+//==== Basic - END ========
 
 
 } //end namespace femus

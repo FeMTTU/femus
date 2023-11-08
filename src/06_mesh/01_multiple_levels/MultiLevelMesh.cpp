@@ -26,6 +26,7 @@
 #include "MeshRefinement.hpp"
 #include "Domain.hpp"
 
+#include "Files.hpp"
 #include "MED_IO.hpp"
 
 //C++ include
