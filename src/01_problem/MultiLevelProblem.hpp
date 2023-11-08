@@ -453,6 +453,7 @@ private:
 
 
 
+// ===  Systems - BEGIN =================
 
 template <typename T_sys>
 inline
@@ -596,6 +597,8 @@ unsigned int MultiLevelProblem::n_systems () const
 {
     return static_cast<unsigned int>(_systems.size());  //libmesh static_cast_int
 }
+// ===  Systems - END =================
+
 
 
 } //end namespace femus

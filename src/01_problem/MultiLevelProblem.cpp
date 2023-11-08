@@ -34,6 +34,7 @@ namespace femus {
 
 
 
+// ===  Constructors / Destructor - BEGIN =================
 MultiLevelProblem::MultiLevelProblem():
 				      _files(NULL),
 				      _app_specs_ptr(NULL)
@@ -60,17 +61,12 @@ MultiLevelProblem::~MultiLevelProblem(){
     delete iterator->second;
   }
 }
+// ===  Constructors / Destructor - END =================
 
 
 
- void MultiLevelProblem::SetMultiLevelMeshAndSolution(MultiLevelSolution * ml_sol) {
-     
-				      _ml_sol = ml_sol;
-				      _ml_msh = ml_sol->_mlMesh;
-				       _gridn = _ml_msh->GetNumberOfLevels();
-     
- }
 
+// ===  Systems - BEGIN =================
 
 System & MultiLevelProblem::add_system (const std::string& sys_type,
 				      const std::string& name)
@@ -158,6 +154,25 @@ void MultiLevelProblem::clear_systems() {
 //     this->get_system(i).init();
 // }
 
+// ===  Systems - END =================
+
+
+
+// ===  Mesh, Solution - BEGIN =================
+
+ void MultiLevelProblem::SetMultiLevelMeshAndSolution(MultiLevelSolution * ml_sol) {
+     
+				      _ml_sol = ml_sol;
+				      _ml_msh = ml_sol->_mlMesh;
+				       _gridn = _ml_msh->GetNumberOfLevels();
+     
+ }
+ 
+// ===  Mesh, Solution - END =================
+
+ 
+ 
+// ===  Quadrature - BEGIN =================
 
  void MultiLevelProblem::SetQuadratureRuleAllGeomElems(const std::string quadr_order_in) {
 
@@ -194,6 +209,8 @@ void MultiLevelProblem::clear_systems() {
   
    return;
 }
+
+// ===  Quadrature - END =================
 
 
 } //end namespace femus
