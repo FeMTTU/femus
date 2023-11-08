@@ -226,22 +226,6 @@ private:
 // ===  FE Evaluations at Quadrature - END =================
 
 
-// ===  FE ElemType ///@deprecated - BEGIN =================
-public:
-    
-    /** ElemType and Quadrature rule */
-  inline const std::vector<const elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
-
-  inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
-
-  
-private:
-
-    std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
-
-// ===  FE ElemType - END =================
-
-
 // ===  Mesh - BEGIN =================
 public:
     

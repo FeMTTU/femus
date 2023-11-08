@@ -232,7 +232,7 @@ void BoundaryConditions::GenerateBdc() {
 
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 
-                CurrentElem<double>       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType(),mymsh);
+                CurrentElem<double>       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh, NULL,mymsh);
 
 	        currelem.SetDofobjConnCoords();
                 currelem.set_elem_center_3d(iel,CONTINUOUS_BIQUADRATIC);

@@ -41,9 +41,11 @@ class CurrentElem {
 
   public:
       
+// ===  Constructors / Destructor - BEGIN =================
     CurrentElem(const unsigned dim, const Mesh * msh_in);
-
-    CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo*,  const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type, const Mesh * mesh_new);
+// ===  Constructors / Destructor - END =================
+    
+    
 
     inline const uint  GetVb() const {
       return _mesh.get_dim() - _dim;
@@ -184,7 +186,20 @@ class CurrentElem {
                             std::vector < std::vector < real_num_mov > > & coords_at_dofs_in, 
                             const unsigned int space_dim);
 
-// === OLD =====================================================================================
+// === OLD - BEGIN =====================================================================================
+  public:
+
+    CurrentElem(const uint iel_in,
+                const uint iproc_in,
+                const uint level,
+                const uint vb,
+                const SystemTwo*,
+                const MultiLevelMeshTwo& mesh,
+                const std::vector< std::vector<const elem_type*> >  * elem_type,
+                const Mesh * mesh_new);
+
+  private:
+    
   const std::vector<const elem_type*>  &  _elem_type;
     
 // ========================================================================================
@@ -208,6 +223,8 @@ class CurrentElem {
    const uint _iel;  //the index of the element (input for the parallel partition)
    const uint _proc;
    
+// === OLD - END =====================================================================================
+  
   
   };
 

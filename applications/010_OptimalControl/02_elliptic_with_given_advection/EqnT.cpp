@@ -105,7 +105,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob){
 
 //   for (uint iel_two = nel_beg; iel_two < nel_end; iel_two++) {
   
-  CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
+  CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(), NULL,mymsh);    
   //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
   
 
