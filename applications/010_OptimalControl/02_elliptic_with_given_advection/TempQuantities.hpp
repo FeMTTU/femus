@@ -13,6 +13,10 @@
 
 using namespace femus;
 
+
+namespace applications_opt_control {
+
+
 class Temperature : public Quantity {
 
   public:
@@ -77,5 +81,9 @@ class VelocityY : public Quantity {
   void initialize_xyz(const double* xp, std::vector<double> & value) const;
 
 };
+
+
+}
+
 
 #endif

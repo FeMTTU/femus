@@ -15,6 +15,13 @@
 #include <cmath>
 #include <iostream>
 
+
+using namespace femus;
+
+
+namespace applications_opt_control {
+
+
 //=================== BEGIN CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
@@ -1696,3 +1703,7 @@ void MagnFieldExtLagMult::initialize_xyz(const double* xp, std::vector< double >
 
   return;
 }
+
+
+}
+

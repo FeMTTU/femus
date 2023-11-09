@@ -17,8 +17,8 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "DenseMatrix.hpp"
-#include <cmath> 
 #include "DenseVector.hpp"
+#include <cmath> 
 
 #ifdef MATRIX_HAVE_PETSC    
 #include "petsc_macroM.h"

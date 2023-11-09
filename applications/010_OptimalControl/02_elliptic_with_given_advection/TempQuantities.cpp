@@ -14,6 +14,15 @@
 #include <cmath>
 #include <iostream>
 
+
+
+using namespace femus;
+
+
+
+namespace applications_opt_control {
+
+
 //=================== BEGIN CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
@@ -489,3 +498,7 @@ void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) co
   
   return;
 }
+
+
+}
+

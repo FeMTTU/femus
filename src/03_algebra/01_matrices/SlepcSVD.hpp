@@ -29,7 +29,7 @@
 #include "PetscMacro.hpp"
 #include "SparseMatrix.hpp"
 
-/// Petsc include files.
+// Petsc include files.
 EXTERN_C_FOR_PETSC_BEGIN
 #include <petscmat.h>
 #include "slepcsvd.h"

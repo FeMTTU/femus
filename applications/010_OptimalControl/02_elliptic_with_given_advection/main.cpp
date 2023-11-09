@@ -31,6 +31,11 @@
 #include "libmesh/libmesh.h"
 #endif
 
+
+using namespace femus;
+using namespace applications_opt_control;
+
+
 void  GenMatRhsT(MultiLevelProblem &ml_prob);
 void  GenMatRhsNS(MultiLevelProblem &ml_prob);
 

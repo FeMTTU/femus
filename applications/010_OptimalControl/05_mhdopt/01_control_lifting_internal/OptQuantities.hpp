@@ -12,6 +12,8 @@
 using namespace femus;
 
 
+namespace applications_opt_control {
+  
 
 class MagnFieldHomX : public Quantity {
 
@@ -262,6 +264,10 @@ class VelocityAdjZ : public Quantity {
 
 
 };
+
+}
+
+
 
 #endif
 
