@@ -194,7 +194,7 @@ int main(int argc,char **args) {
 //    std::string input_file = "ellipse_tri6.med";
 //    std::string input_file = "ellipse_with_hole_tri6.med";
    std::string input_file = "segment_1_all_dir.med";
-   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+   std::ostringstream mystream; mystream << "./" << Files::_application_input_directory << "/" << input_file;
   const std::string infile = mystream.str();
   
   MultiLevelMesh ml_msh;

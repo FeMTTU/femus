@@ -129,7 +129,7 @@ int main (int argc, char** args) {
   std::vector<std::string> print_vars;
   print_vars.push_back ("All");
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, 0);
 
   double dt = GetTimeStep (0.);
 
@@ -140,7 +140,7 @@ int main (int argc, char** args) {
 
     system.MGsolve();
 
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+    mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, time_step + 1);
   }
 
   mlProb.clear();

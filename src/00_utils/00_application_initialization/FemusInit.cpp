@@ -16,24 +16,38 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include <iostream>
 #include "FemusInit.hpp"
+
 #include "UqQuadratureTypeEnum.hpp"
+
+
+#include <iostream>
+
+
 
 namespace femus {
 
-adept::Stack FemusInit::_adeptStack;
 
+// === Automatic differentiation - BEGIN =================
+adept::Stack FemusInit::_adeptStack;
+// === Automatic differentiation - END =================
+
+
+// === UQ Quadratures - BEGIN =================
 uq FemusInit::_uqHermite(UQ_HERMITE); 
 uq FemusInit::_uqLegendre(UQ_LEGENDRE); 
+// === UQ Quadratures - END =================
 
-// =======================================================
+
+// === Constructors / Destructor  - BEGIN =================
+
+
 /// This function initializes the libraries if it is parallel
 FemusInit::FemusInit(
     int & argc,            // integer program input
     char** & argv,         // char program input
     MPI_Comm comm_world_in // communicator for MPI direct
-) {// ======================================================
+) {
 
 #ifdef HAVE_PETSC
 
@@ -69,6 +83,10 @@ FemusInit::~FemusInit() {
 
     return;
 }
+
+
+// === Constructors / Destructor  - END =================
+
 
 
 } //end namespace femus

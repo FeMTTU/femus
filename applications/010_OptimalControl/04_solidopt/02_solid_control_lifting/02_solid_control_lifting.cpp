@@ -284,7 +284,7 @@ int main(int argc, char** args) {
         files.RedirectCout(true);
 
     std::string input_file = "cyl.med";
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR  << "/"  << input_file;
+  std::ostringstream mystream; mystream << "./" << Files::_application_input_directory  << "/"  << input_file;
   const std::string infile = mystream.str();
 
   // ======= Quad Rule ========================

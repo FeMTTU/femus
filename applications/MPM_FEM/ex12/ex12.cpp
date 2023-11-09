@@ -254,9 +254,9 @@ int main (int argc, char** args) {
 
     VTKWriter vtkIO (&mlSol);
     vtkIO.SetDebugOutput (true);
-    // vtkIO.Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i);
-    //vtkIO.Write (DEFAULT_OUTPUTDIR, "quadratic", variablesToBePrinted, i);
-    vtkIO.Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+    // vtkIO.Write (Files::_application_output_directory, "linear", variablesToBePrinted, i);
+    //vtkIO.Write (Files::_application_output_directory, "quadratic", variablesToBePrinted, i);
+    vtkIO.Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
     for (unsigned k = 0; k < i; k++) {
       delete prol[k];
     }

@@ -22,10 +22,9 @@
 #include "System.hpp"
 #include "LinearEquationSolver.hpp"
 #include "MgTypeEnum.hpp"
-#include "FemusDefaultMultigrid.hpp"
 #include "DirichletBCTypeEnum.hpp"
 #include "LinearEquationSolverEnum.hpp"
-#include "FemusDefault.hpp"
+
 
 #include <petscksp.h>
 
@@ -148,15 +147,6 @@ namespace femus {
 //==== Solver - BEGIN ========
     public:
 
-      /** @deprecated Multigrid routine */
-      void MGSolve (double Eps, int MaxIter, const uint Gamma = DEFAULT_MG_GAMMA, const uint Nc_pre = DEFAULT_NC_PRE, const uint Nc_coarse = DEFAULT_NC_COARSE, const uint Nc_post = DEFAULT_NC_POST);
-
-      /** @deprecated Multigrid step routine */
-      double MGStep (int Level, double Eps1, int MaxIter, const uint Gamma, const uint Nc_pre, const uint Nc_coarse, const uint Nc_post);
-
-      /** Solves the system. */
-      virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
-
       /** Set the max number of linear iterationsfor solving Ax=b */
       void SetMaxNumberOfLinearIterations (unsigned int max_lin_it) {
         _n_max_linear_iterations = max_lin_it;
@@ -258,6 +248,35 @@ namespace femus {
       void SetLinearEquationSolverType (const LinearEquationSolverType LinearEquationSolverType, const CoarseLevelInclude &includeCoarseLevel = INCLUDE_COARSE_LEVEL_FALSE);
 
 
+      /** Solves the system. */
+      virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+      
+      
+      /** @deprecated Multigrid routine */
+      void MGSolve (double Eps           , 
+                    int MaxIter          = max_its_lsolv(), 
+                    const uint Gamma     = mg_gamma(), 
+                    const uint Nc_pre    = nc_pre_smooth(), 
+                    const uint Nc_coarse = nc_coarse(), 
+                    const uint Nc_post   = nc_post_smooth());
+
+      /** @deprecated Multigrid step routine */
+      double MGStep (int Level, double Eps1, int MaxIter, const uint Gamma, const uint Nc_pre, const uint Nc_coarse, const uint Nc_post);
+
+      
+      static constexpr double eps_lsolv()              {  return 1.e-6; /*1.e-20*/ }
+      static constexpr double eps_lsolv_coarse()       {  return 1.e-20; /*1.e-10*/ }
+      static constexpr double eps_pre_post_smoothing() { return  1.e-20; }
+      
+      static constexpr unsigned   mg_gamma()             { return 1; }
+      static constexpr unsigned   nc_pre_smooth()        { return  8; /*16*/ }     
+      static constexpr unsigned   nc_coarse()            { return  40; }     
+      static constexpr unsigned   nc_post_smooth()       { return  8; /*16*/ }     
+      static constexpr unsigned   max_its_lsolv()        { return 40; }
+      
+      static constexpr unsigned   is_restrictor_simple() { return  0; }  //0 = no simple restrictor   
+
+      
     protected:
 
 

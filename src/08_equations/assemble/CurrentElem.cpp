@@ -26,11 +26,11 @@
 namespace femus {
 
 template < typename real_num_mov >
-    CurrentElem<real_num_mov>::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in, const Mesh * mesh_new ):
+    CurrentElem<real_num_mov>::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  * elem_type_in, const Mesh * mesh_new ):
     _eqn(eqn_in),
     _mesh(mesh),
     _dim(_mesh.get_dim()-vb),
-    _elem_type(elem_type_in[mesh.get_dim()-vb -1]),
+    _elem_type(std::vector<const elem_type*>()/*elem_type_in[mesh.get_dim()-vb -1]*/),
     _mesh_vb(vb),
     _Level(level),
     _iel(iel_in),

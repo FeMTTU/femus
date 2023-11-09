@@ -1,7 +1,5 @@
 
 //library includes
-#include "FemusDefault.hpp"
-
 #include "DenseMatrix.hpp"
 #include "SparseMatrix.hpp"
 #include "DenseVector.hpp"
@@ -74,7 +72,7 @@ using namespace femus;
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
-    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system, ml_prob.GetMeshTwo(), NULL,mymsh);
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -272,8 +270,8 @@ for (uint fe = 0; fe < QL; fe++)     {
    }
 	
 // vector product
-      Math::extend(   &Vel_vec_val_g[0],   &Vel_vec_val_g3D[0],space_dim);
-      Math::extend(&VelAdj_vec_val_g[0],&VelAdj_vec_val_g3D[0],space_dim);
+      Math::extend_to_zero(   &Vel_vec_val_g[0],   &Vel_vec_val_g3D[0],space_dim);
+      Math::extend_to_zero(&VelAdj_vec_val_g[0],&VelAdj_vec_val_g3D[0],space_dim);
 
       Math::cross(&BhomAdj_vecQuant._curl_g3D[0],   &Vel_vec_val_g3D[0],curlxiXvel_g3D ); 
       Math::cross(   &Bhom_vecQuant._curl_g3D[0],&VelAdj_vec_val_g3D[0],curlbXlambda_g3D );
@@ -295,7 +293,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 // // //         const double                             phii_g       =      currgp._phi_ndsQLVB_g[BextOldX._FEord][i];
 // // //         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BextOldX._FEord][i+idim*BextOldX._ndof];
 // // // 
-// // // 	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
+// // // 	 Math::extend_to_zero(dphiidx_g,dphiidx_g3D,space_dim);
 // // // 	 Math::cross(&BhomAdj_vecQuant._curl_g3D[0],dphiidx_g3D,curlxiXdphii_g3D);
 // // // 
 // // // 	  double bDdphii_g = 0.;

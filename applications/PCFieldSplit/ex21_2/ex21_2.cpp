@@ -254,7 +254,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   double dt = 0.05;
   system.SetIntervalTime(dt);
@@ -313,7 +313,7 @@ int main(int argc, char** args) {
 	ptCoord = out_value1.second;
 	outfile5 << (time_step + 1) * dt <<"  "<< sqrt(kineticEnergy/2.0/8.0) << std::endl; 
 
-     if ((time_step + 1) % 200 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+     if ((time_step + 1) % 200 ==0)  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, time_step + 1);
    }
   outfile1.close();
   outfile2.close();

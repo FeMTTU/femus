@@ -76,7 +76,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/02_2d/rectangle/minus2p5-plus2p5_minus0p5-plus0p5/rectangle_quad.neu";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/rectangle/minus2p5-plus2p5_minus0p5-plus0p5/rectangle_quad.neu";
   mlMsh.ReadCoarseMesh (mesh_file.c_str(), "seventh", scalingFactor );
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -143,7 +143,7 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   return 0;
 }

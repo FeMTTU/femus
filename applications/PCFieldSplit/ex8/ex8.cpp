@@ -242,7 +242,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   system.SetIntervalTime(1.0);
   unsigned n_timesteps = 600;
@@ -254,7 +254,7 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
-    if ((time_step  + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step  + 1) % 10 ==0)  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();

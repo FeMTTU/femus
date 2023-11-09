@@ -19,6 +19,14 @@
 
 #include "ElemType.hpp"
 
+#include "Wedge.hpp"
+#include "Tetrahedron.hpp"
+#include "Hexahedron.hpp"
+#include "Quadrilateral.hpp"
+#include "Triangle.hpp"
+#include "Edge.hpp"
+
+
 #include <cstring>
 
 

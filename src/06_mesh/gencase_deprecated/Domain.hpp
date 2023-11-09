@@ -17,7 +17,7 @@
 #define __femus_meshGencase_Domain_hpp__
 
 #include <string>
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "FemusInputParser.hpp"
 
 

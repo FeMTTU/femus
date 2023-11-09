@@ -393,7 +393,7 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 300;
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory,"biquadratic",print_vars, 0);
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
@@ -407,7 +407,7 @@ int main(int argc,char **args) {
     system.MGsolve();
 
 
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
+    ml_sol.GetWriter()->Write(Files::_application_output_directory,"biquadratic",print_vars, time_step+1);
   }
   // ******* Clear all systems *******
   ml_prob.clear();

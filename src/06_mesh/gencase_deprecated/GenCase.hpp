@@ -9,7 +9,7 @@
 
 // FEMuS
 #include "FemusConfig.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum_deprecated.hpp"
 #include "FemusInputParser.hpp"
@@ -69,6 +69,10 @@ public:
 
 private:
 
+  static const std::string  _matrix_name;
+  static const std::string  _prolongator_name;
+  static const std::string  _restrictor_name;
+  
 #ifdef HAVE_LIBMESH
   libMesh::Mesh* _msh_coarse;
   libMesh::Mesh* _msh_all_levs;

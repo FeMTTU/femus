@@ -16,11 +16,13 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "Marker.hpp"
 #include "Line.hpp"
+#include "Marker.hpp"
 #include "NumericVector.hpp"
-#include <cmath>
 #include "PolynomialBases.hpp"
+
+#include <cmath>
+
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 

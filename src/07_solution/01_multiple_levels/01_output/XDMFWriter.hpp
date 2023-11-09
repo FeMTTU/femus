@@ -19,6 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include "FemusConfig.hpp"
 #include "Writer.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
@@ -37,6 +38,7 @@ namespace femus {
 
     public:
 
+// === Constructors / Destructor  - BEGIN =================
       /** Constructor. */
       XDMFWriter( MultiLevelSolution* ml_sol );
 
@@ -45,9 +47,12 @@ namespace femus {
 
       /** Destructor */
       virtual ~XDMFWriter();
+// === Constructors / Destructor  - END =================
 
+// === Write - BEGIN =================
       /** write output function */
       void Write( const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0 ) ;
+// === Write - END =================
 
       /** write a wrapper file for paraview to open all the files of a history together */
       void write_solution_wrapper( const std::string output_path, const char type[] ) const;
@@ -160,24 +165,35 @@ namespace femus {
       static void ReadSol( const std::string output_path, const uint t_step, double& time_out, const MultiLevelProblem& ml_prob ); ///< Read solution //TODO must be updated, not implemented
       /** MultiLevelProblem - END */
 
-      /** Set if to print or not to prind the debugging variables */
-      void SetDebugOutput( bool value ) {
-        _debugOutput = value;
-      }
+      
 
+      static const unsigned n_digits_step_print;
+      
+      static const std::string _xdmf_extension;
+      static const std::string _hdf5_extension;
+      
+      static const std::string  _solution_basename;
+      static const std::string _case_basename     ;
+      static const std::string _time_seq_basename ;
+      
+      static const std::string _mesh_basename ;
+      
     private:
-
-      bool _debugOutput;
+      
+      static const std::string _mesh_basename_linear;
+      static const std::string _mesh_basename_biquadratic;
+      
 
       static const std::string type_el[3][N_GEOM_ELS];
 
       static const std::string _nodes_name;
       static const std::string _elems_name;
       static const std::string _conn;
-      //     std::string _nd_coord_folder;
-//     std::string _el_pid_name;
-//     std::string _nd_map_FineToLev;
+      
+      static const std::string _bdry_suffix;
 
+      static const std::string _auxiliary_dtd_file;
+      
 
 
   };

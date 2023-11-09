@@ -175,7 +175,7 @@ int main (int argc, char** args) {
     double time = system.GetTime();
     GetDeadCells (time, mlSol);
 
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+    mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, 0);
 
 
     for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
@@ -186,7 +186,7 @@ int main (int argc, char** args) {
 
       double time = system.GetTime();
       bool stop = GetDeadCells (time, mlSol);
-      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+      mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, time_step + 1);
 
       //if (stop) break;
     }

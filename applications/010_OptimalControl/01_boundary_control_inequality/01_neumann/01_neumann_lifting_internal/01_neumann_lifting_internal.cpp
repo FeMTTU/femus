@@ -74,7 +74,7 @@ int main(int argc, char** args) {
    std::string input_file = "square_0-1x0-1_divisions_2x2.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
-  std::ostringstream mystream; mystream << "../../../" << DEFAULT_INPUTDIR << "/" << input_file;
+  std::ostringstream mystream; mystream << "../../../" << Files::_application_input_directory << "/" << input_file;
   const std::string infile = mystream.str();
 
   const bool read_groups = true;
@@ -163,7 +163,7 @@ int main(int argc, char** args) {
     // ******* Print solution *******
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   return 0;
 }

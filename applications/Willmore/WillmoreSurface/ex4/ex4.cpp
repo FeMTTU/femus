@@ -247,7 +247,7 @@ int main (int argc, char** args) {
   system.CopySolutionToOldSolution();
   systemY.MGsolve();
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 0);
 
   // Parameters for the main algorithm loop.
 
@@ -295,7 +295,7 @@ int main (int argc, char** args) {
     }
 
     if ( (time_step + 1) % printInterval == 0)
-      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
+      mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
   }
 
   if(iproc == 0) fs.close();

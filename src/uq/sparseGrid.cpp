@@ -1,9 +1,12 @@
-#include <math.h>
+
 #include "sparseGrid.hpp"
+
+#include <cmath>
 #include <iostream>
 #include <cstdlib>
 #include <numeric>
 #include <vector>
+
 
 namespace femus
 {

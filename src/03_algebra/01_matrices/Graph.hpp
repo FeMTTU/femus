@@ -1,7 +1,7 @@
 #ifndef __femus_algebra_Graph_hpp__
 #define __femus_algebra_Graph_hpp__
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 
 #include <vector>
 

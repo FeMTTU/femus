@@ -178,7 +178,7 @@ int main(int argc, char** args) {
   //segment_dir_neu_fine
   const std::string relative_path_to_build_directory =  "../../../";
   app_segment._mesh_files.push_back("segment_2_dir_neu.med");
-  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/");
+  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/01_1d/segment/0-1/");
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
@@ -187,7 +187,7 @@ int main(int argc, char** args) {
   // app_segment._boundary_conditions_types_and_values             = segment_0x1::function_0_bc_left_dirichlet_right_neumann;
   app_segment._boundary_conditions_types_and_values             = segment_0x1::function_0_bc_left_neumann_right_dirichlet;
   
-  segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
+  Domains::segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
   app_segment._assemble_function_for_rhs   = & app_segment_function_zero_on_boundary_1;
   app_segment._true_solution_function      = & app_segment_function_zero_on_boundary_1;
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors

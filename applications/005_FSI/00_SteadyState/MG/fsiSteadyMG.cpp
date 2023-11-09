@@ -367,8 +367,8 @@ int main(int argc,char **args) {
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput( true );
-  //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  //ml_sol.GetWriter()->ParallelWrite(Files::_application_output_directory,"biquadratic",print_vars);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory,"biquadratic",print_vars);
 
   // ******* Clear all systems *******
   ml_prob.clear();

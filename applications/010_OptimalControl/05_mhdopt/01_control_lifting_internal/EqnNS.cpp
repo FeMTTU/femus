@@ -1,5 +1,4 @@
 
-#include "FemusDefault.hpp"
 
 #include "DenseMatrix.hpp"
 #include "SparseMatrix.hpp"
@@ -141,7 +140,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
       
-    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(), NULL,mymsh);    
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -381,7 +380,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      Bmag.val_g();
 
 //compute curlBxB
-          Math::extend(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);                    //fills _val_g3D
+          Math::extend_to_zero(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);                    //fills _val_g3D
           Math::cross(&Bmag._curl_g3D[0],&Bmag._val_g3D[0],curlBXB_g3D);
 
 //compute JxB
@@ -541,7 +540,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 
   for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
   
-    CurrentElem<double>       currelem(iel,myproc,Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
+    CurrentElem<double>       currelem(iel,myproc,Level,BB,&my_system,ml_prob.GetMeshTwo(), NULL,mymsh);    
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================

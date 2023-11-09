@@ -361,7 +361,7 @@ int main(int argc, char **args)
 //   print_vars.push_back("All");
 // 
 //   ml_sol.GetWriter()->SetDebugOutput(true);
-//   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+//   ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, 0);
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -369,7 +369,7 @@ int main(int argc, char **args)
 
   VTKWriter vtkIO(&ml_sol);
   vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   // print mesh info
   ml_msh.PrintInfo();
@@ -520,7 +520,7 @@ int main(int argc, char **args)
 //       system.SetMgType(V_CYCLE);
 //     system.CopySolutionToOldSolution();
 //     system.MGsolve();
-//     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+//     ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, time_step + 1);
 
     //if (time_step >= itPeriod) {
     for (configuration = 0; configuration < confNumber; configuration++) {

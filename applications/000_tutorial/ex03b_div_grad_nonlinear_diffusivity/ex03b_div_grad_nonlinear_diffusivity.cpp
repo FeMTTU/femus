@@ -81,7 +81,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/02_2d/square/minus1-plus1_minus1-plus1/square_2x2_quad_Two_face_groups.neu"; 
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus1-plus1_minus1-plus1/square_2x2_quad_Two_face_groups.neu"; 
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -172,7 +172,7 @@ int main(int argc, char** args) {
       
       vtkIO.SetGraphVariable( unknowns[u]._name.c_str() );
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(unknowns[u]._name.c_str(), DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(unknowns[u]._name.c_str(), Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
 
     }
   }

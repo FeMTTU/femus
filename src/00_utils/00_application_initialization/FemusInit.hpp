@@ -36,10 +36,11 @@
 
 
 // ========================================
-/// Class FemusInit
+// Class FemusInit
 // ========================================
 
 #include "adept.h"
+
 #include "uq.hpp"
 
 namespace femus {
@@ -50,15 +51,24 @@ class FemusInit {
   
 public:
   
+// === Constructors / Destructor  - BEGIN =================
     /// Constructor
     FemusInit(int & argc,char** & argv, MPI_Comm comm_world_in = MPI_COMM_WORLD);
 
     /// Destructor
     ~FemusInit();
+// === Constructors / Destructor  - END =================
+
+
+// === Automatic differentiation (needed for automatic Jacobian computations) - BEGIN =================
+    static adept::Stack _adeptStack;
+// === Automatic differentiation (needed for automatic Jacobian computations) - END =================
     
-    static adept::Stack _adeptStack; 
+    
+// === UQ Quadratures - BEGIN =================
     static uq _uqHermite; 
     static uq _uqLegendre; 
+// === UQ Quadratures - END =================
      
 };
 

@@ -20,12 +20,9 @@ ADD_SUBDIRECTORY(ex05_biharmonic_uncoupled_systems/)
 
 ADD_SUBDIRECTORY(ex06_navier_stokes/)
 ADD_SUBDIRECTORY(ex06b_navier_stokes/)
-# ADD_SUBDIRECTORY(ex06c_navier_stokes_poiseuille_finite_volume_petsc/)  #copied from petsc tutorial, should remove it
 
 ADD_SUBDIRECTORY(ex08_boussinesq/)
 ADD_SUBDIRECTORY(ex08_boussinesq_amr/)
 
 ADD_SUBDIRECTORY(ex20_time_dependent/)
-
-ADD_SUBDIRECTORY(ex40_other/)
 

@@ -36,6 +36,7 @@ namespace femus {
 
   public:
 
+// === Constructors / Destructor  - BEGIN =================
       /** Constructor. */
       GMVWriter(MultiLevelSolution * ml_sol);
 
@@ -44,18 +45,14 @@ namespace femus {
 
       /** Destructor */
       virtual ~GMVWriter();
+// === Constructors / Destructor  - END =================
 
       /** write output function */
       void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) ;
     
 
-      /** Set if to print or not to prind the debugging variables */
-      void SetDebugOutput( bool value ){ _debugOutput = value;}
-
-  private:
-
-    bool _debugOutput;
     protected:
+      
       void Mysol();
 };
 

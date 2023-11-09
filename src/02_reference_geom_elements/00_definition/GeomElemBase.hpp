@@ -2,7 +2,7 @@
 #define __femus_meshGencase_GeomElemBase_hpp__
 
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 
 
 #include <string>

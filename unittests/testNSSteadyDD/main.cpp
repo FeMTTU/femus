@@ -247,7 +247,7 @@ int main(int argc, char** args) {
 //   variablesToBePrinted.push_back("All");
 //
 //   VTKWriter vtkIO(&ml_sol);
-//   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   vtkIO.write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   //Destroy all the new systems
   ml_prob.clear();

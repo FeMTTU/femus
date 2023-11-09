@@ -209,7 +209,7 @@ int main(int argc, char **args) {
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,0);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory,"biquadratic",print_vars,0);
 
   
   // ******* Solve *******
@@ -217,7 +217,7 @@ int main(int argc, char **args) {
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   system.MGsolve();
 
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,1);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory,"biquadratic",print_vars,1);
   
   // ******* Clear all systems *******
   ml_prob.clear();

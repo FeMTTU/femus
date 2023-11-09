@@ -195,7 +195,7 @@ int main (int argc, char** args) {
     double time = system.GetTime();
     GetDeadCells (time, mlSol, false);
 
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+    mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, 0);
 
     for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
@@ -207,7 +207,7 @@ int main (int argc, char** args) {
 
       double time = system.GetTime();
       bool stop = GetDeadCells (time, mlSol, last);
-      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+      mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", print_vars, time_step + 1);
       if (stop) break;
     }
     // mlProb.clear();
@@ -817,7 +817,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   
   
   //filename << "./input/NewCorrectedTensorSPD_0_1.txt";
-  //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
+  //fileAD << "./Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
 

@@ -261,15 +261,15 @@ int main(int argc, char** argv) {
   print_vars.push_back("Sol");
 
   VTKWriter vtkio(&ml_sol);
-  vtkio.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars);
+  vtkio.Write(Files::_application_output_directory, "biquadratic", print_vars);
 
 
   GMVWriter gmvio(&ml_sol);
   gmvio.SetDebugOutput(true);
-  gmvio.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars);
+  gmvio.Write(Files::_application_output_directory, "biquadratic", print_vars);
 
   //XDMFWriter xdmfio(&ml_sol);
-  //xdmfio.Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  //xdmfio.Pwrite(Files::_application_output_directory,"biquadratic",print_vars);
 
   //Destroy all the new systems
   ml_prob.clear();

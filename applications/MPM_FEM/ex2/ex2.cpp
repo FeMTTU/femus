@@ -295,7 +295,7 @@ int main(int argc, char** args)
 //   linea->SetParticlesMass(beamArea, rhos);
 
   linea->GetLine(line0[0]);
-  PrintLine(DEFAULT_OUTPUTDIR,"line", line0, 0);
+  PrintLine(Files::_application_output_directory,"line", line0, 0);
 
   
   linea->GetParticlesToGridMaterial();
@@ -313,7 +313,7 @@ int main(int argc, char** args)
   print_vars.push_back("All");
 
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, 0);
 
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
@@ -328,12 +328,12 @@ int main(int argc, char** args)
     
     system.MGsolve();
 
-    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, time_step);
 
     GridToParticlesProjection(ml_prob, *linea);
 
     linea->GetLine(line[0]);
-    PrintLine(DEFAULT_OUTPUTDIR, "line", line, time_step);
+    PrintLine(Files::_application_output_directory, "line", line, time_step);
 
 
 

@@ -30,7 +30,7 @@
 #include "DenseSubvector.hpp"
 #include "Parallel.hpp"
 #include "PetscMacro.hpp"
-#include "Casts.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include <numeric>
 
 

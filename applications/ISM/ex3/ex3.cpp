@@ -188,9 +188,9 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
-// PrintLine(DEFAULT_OUTPUTDIR, xn);
+// PrintLine(Files::_application_output_directory, xn);
 
 
   clock_t start_time = clock();
@@ -220,7 +220,7 @@ int main(int argc, char** args) {
   particle[0]->GetMarkerCoordinates(line[0][pSize]);
 
   std::vector < std::vector < std::vector < double > > > line0 = line; // saves the initial position
-  PrintLine(DEFAULT_OUTPUTDIR, "line", line, 0);
+  PrintLine(Files::_application_output_directory, "line", line, 0);
 
   n = 30;
 
@@ -246,7 +246,7 @@ int main(int argc, char** args) {
       particle[j]->GetMarkerCoordinates(line[0][j]);
     }
     particle[0]->GetMarkerCoordinates(line[0][pSize]);
-    PrintLine(DEFAULT_OUTPUTDIR,"line", line, k);
+    PrintLine(Files::_application_output_directory,"line", line, k);
   }
 
 

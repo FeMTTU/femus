@@ -1,7 +1,7 @@
 #ifndef __femus_tempopt_OptLoop_hpp__
 #define __femus_tempopt_OptLoop_hpp__
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "FemusInputParser.hpp"
 #include "SystemTwo.hpp"
 #include "TimeLoop.hpp"

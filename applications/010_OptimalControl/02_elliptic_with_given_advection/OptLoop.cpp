@@ -29,9 +29,7 @@ namespace femus {
 
    curr_time += 1.;
 
-#if DEFAULT_PRINT_TIME==1
       std::clock_t  start_time=std::clock();
-#endif
 
        _curr_t_idx = curr_step;
        _curr_time  = curr_time;
@@ -45,20 +43,20 @@ namespace femus {
       //  time step for each system, without printing (good)
       OneTimestepEqnLoop(delta_t_step,ml_prob);
 
-#if DEFAULT_PRINT_TIME==1
+
       std::clock_t    end_time=std::clock();
-#endif
+
 
       // print solution
       // if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,ml_prob);   //print sol.N.h5 and sol.N.xmf
 
 
-#if DEFAULT_PRINT_TIME==1
+
       std::clock_t    end_time2=std::clock();
       std::cout << " Time solver ----->= "   << double(end_time- start_time)/ CLOCKS_PER_SEC
                 << " Time printing ----->= " << double(end_time2- end_time) / CLOCKS_PER_SEC <<
                 std::endl;
-#endif
+                
 
 //=====functional evaluations=======
    SystemTwo & eqnT = ml_prob.get_system<SystemTwo>("Eqn_T");
@@ -99,7 +97,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh, NULL, mymsh);
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
   //==========
@@ -188,7 +186,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     /////////so that we explore the variation wrt alpha
 
     std::string app_path = "./";
-    std::string intgr_fname = app_path + DEFAULT_OUTPUTDIR + "/" + "alpha";
+    std::string intgr_fname = app_path + Files::_application_output_directory + "/" + "alpha";
 
 	std::ofstream intgr_fstream;
 
@@ -230,7 +228,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
 
-    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh, NULL,mymsh);
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
 //======Functions in the integrand ============

@@ -326,7 +326,7 @@ int main(int argc, char** args)
   if (dim == 3)mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, time_step_start - 1);
 
 
   // ******* Solve *******
@@ -394,7 +394,7 @@ int main(int argc, char** args)
 //     }
 
     //ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    //ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, time_step);
 
     //if (time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 

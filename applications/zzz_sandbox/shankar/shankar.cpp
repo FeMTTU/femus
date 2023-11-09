@@ -143,7 +143,7 @@ int main(int argc, char** args) {
   app_segment._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
   app_segment._boundary_conditions_types_and_values             = square__laplacian__bc;
   
-  Domain_square_01by01::Function_Zero_on_boundary_1<>    app_square_function_zero_on_boundary_1;
+  Domains::square_01by01::Function_Zero_on_boundary_1<>    app_square_function_zero_on_boundary_1;
   app_segment._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_1;
   ///@todo if this is not set, nothing should happen here
 

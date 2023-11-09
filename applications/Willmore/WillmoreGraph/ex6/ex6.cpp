@@ -254,12 +254,12 @@ int main(int argc, char** args) {
       VTKWriter vtkIO(&mlSol);
       vtkIO.SetGraphVariable("u");
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i + j * 10);
+      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, i + j * 10);
       
       VTKWriter vtkIO2(&mlSol);
       vtkIO.SetGraphVariable("S");
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i + j * 10);
+      vtkIO.Write(Files::_application_output_directory, "linear", variablesToBePrinted, i + j * 10);
       
     }
   }

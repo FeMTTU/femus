@@ -387,7 +387,7 @@ int main(int argc,char **args) {
   //ml_sol.LoadSolution("turek_FSI3");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory,"biquadratic",print_vars, 0);
 
 
 
@@ -404,7 +404,7 @@ int main(int argc,char **args) {
 
     if( time_step%1 == 0) ml_sol.SaveSolution("turek_FSI3");
 
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
+    ml_sol.GetWriter()->Write(Files::_application_output_directory,"biquadratic",print_vars, time_step+1);
   }
   // ******* Clear all systems *******
   ml_prob.clear();

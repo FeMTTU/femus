@@ -16,7 +16,7 @@
 #include "TimeLoop.hpp"
 #include "CurrentElem.hpp"
 
-#include "FemusDefault.hpp"
+
 
 #include "OptLoop.hpp"
 
@@ -59,7 +59,7 @@ using namespace femus;
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
-    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(), NULL,mymsh);
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -295,7 +295,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   }
   
 //vector product
-        Math::extend(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);
+        Math::extend_to_zero(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);
         Math::cross(&BhomAdj_vecQuant._curl_g3D[0],&Bmag._val_g3D[0],curlxiXB_g3D);
 
 //==============================================================

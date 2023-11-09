@@ -1,4 +1,3 @@
-#include "FemusDefault.hpp"
 #include "FemusInit.hpp"
 #include "MultiLevelMesh.hpp"
 #include "MultiLevelSolution.hpp"
@@ -118,7 +117,7 @@ int main(int argc,char **args) {
             
 #if FEMUS_TEST_MESH != 0
   // ======= Mesh ========================
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_files[m];
+  std::ostringstream mystream; mystream << "./" << Files::_application_input_directory << "/" << input_files[m];
   const std::string infile = mystream.str();
 
   //Nondimensional

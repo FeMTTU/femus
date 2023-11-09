@@ -288,15 +288,15 @@ int main(int argc, char** args) {
 
   const std::string relative_path_to_build_directory =  "../../../";
 
-      // const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";  
+      // const std::string input_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";  
            // @todo works with given Function;
            // @todo WORKS with with Laplace equation
   
-   const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2_unstructured.med";  
+   const std::string input_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2_unstructured.med";  
          // @todo works with given Function;
          // @todo WORKS with with Laplace equation
   
-//    const std::string input_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/02_2d/L_shaped_domain/L_shaped_domain_quad9.med";
+//    const std::string input_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/L_shaped_domain/L_shaped_domain_quad9.med";
           // @todo WORKS with biquadratic exact 
   
 //    const std::string input_file = "square_regular_triangular.med";    
@@ -376,12 +376,12 @@ int main(int argc, char** args) {
 
 //     Domain_L_shaped::Function_NonZero_on_boundary_2< double >  analytical_function_1;
 
-    // Domain_square_01by01_Mesh_Distorted::Function_Zero_on_boundary_Continuous0_NotC1_1< double >  analytical_function_1;
-    // Domain_square_01by01_Mesh_Straight::Function_Zero_on_boundary_Continuous1_1< double >  analytical_function_1;
-//     Domain_square_01by01_Mesh_Straight::Function_NonZero_on_boundary_Continuous0_1< double >  analytical_function_1;
-    Domain_square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
-    // Domain_square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
-//     Domain_square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
+    // Domains::square_01by01_Mesh_Distorted::Function_Zero_on_boundary_Continuous0_NotC1_1< double >  analytical_function_1;
+    // Domains::square_01by01_Mesh_Straight::Function_Zero_on_boundary_Continuous1_1< double >  analytical_function_1;
+//     Domains::square_01by01_Mesh_Straight::Function_NonZero_on_boundary_Continuous0_1< double >  analytical_function_1;
+    Domains::square_01by01::Function_NonZero_on_boundary_1< double >  analytical_function_1;
+    // Domains::square_01by01::Function_Zero_on_boundary_1< double >  analytical_function_1;
+//     Domains::square_01by01::Function_Zero_on_boundary_2< double >  analytical_function_1;
 //     Domain_square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function_1;
 //     Zero< double >  analytical_function_1;
 

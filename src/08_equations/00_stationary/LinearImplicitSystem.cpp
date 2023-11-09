@@ -1286,9 +1286,9 @@ namespace femus {
                                      const uint Nc_post    // n post-smoothing cycles
                                     ) {
 
-#ifdef DEFAULT_PRINT_INFO
+
     std::cout << "######### BEGIN MG SOLVE ########" << std::endl;
-#endif
+
     double res_fine;
 
     _LinSolver[GetGridn() - 1]->_RESC->close();
@@ -1296,12 +1296,12 @@ namespace femus {
     _LinSolver[GetGridn() - 1]->_EPSC->close();
     double x_old_fine = _LinSolver[GetGridn() - 1]->_EPSC->l2_norm();
 
-#ifdef DEFAULT_PRINT_INFO
+
     std::cout << " bNorm_fine l2 "     <<  bNorm_fine                     << std::endl;
     std::cout << " bNorm_fine linfty " << _LinSolver[GetGridn() - 1]->_RESC->linfty_norm()  << std::endl;
     std::cout << " xold_fine l2 "      <<  x_old_fine                     << std::endl;
-#endif
 
+    
     // FAS Multigrid (Nested) ---------
     bool NestedMG = false;
 
@@ -1346,15 +1346,15 @@ namespace femus {
 
       cycle++;
 
-#ifdef DEFAULT_PRINT_INFO
-      std::cout << " cycle= " << cycle   << " residual= " << res_fine << " \n";
-#endif
 
+      std::cout << " cycle= " << cycle   << " residual= " << res_fine << " \n";
+
+      
     }
 
-#ifdef DEFAULT_PRINT_INFO
+
     std::cout << "######### END MG SOLVE #######" << std::endl;
-#endif
+
     return;
   }
 
@@ -1382,7 +1382,7 @@ namespace femus {
     if(Level == 0) {
 ///  std::cout << "************ REACHED THE BOTTOM *****************"<< std::endl;
 
-#ifdef DEFAULT_PRINT_CONV
+    if  (_debug_linear) {
       _LinSolver[Level]->_EPS->close();
       double xNorm0 = _LinSolver[Level]->_EPS->linfty_norm();
       _LinSolver[Level]->_RESC->close();
@@ -1390,15 +1390,23 @@ namespace femus {
       _LinSolver[Level]->_KK->close();
       double ANorm0 = _LinSolver[Level]->_KK->l1_norm();
       std::cout << "Level " << Level << " ANorm l1 " << ANorm0 << " bNorm linfty " << bNorm0  << " xNormINITIAL linfty " << xNorm0 << std::endl;
-#endif
+    }
 
-      rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK, *_LinSolver[Level]->_KK, *_LinSolver[Level]->_EPS, *_LinSolver[Level]->_RESC, DEFAULT_EPS_LSOLV_C, Nc_coarse);   //****** smooth on the coarsest level
+    
+      rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,
+                                      *_LinSolver[Level]->_KK, 
+                                      *_LinSolver[Level]->_EPS,
+                                      *_LinSolver[Level]->_RESC,
+                                      eps_lsolv_coarse(), 
+                                      Nc_coarse);   //****** smooth on the coarsest level
 
-#ifdef DEFAULT_PRINT_CONV
+
+    if  (_debug_linear) {
       std::cout << " Coarse sol : res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
       _LinSolver[Level]->_EPS->close();
       std::cout << " Norm of x after the coarse solution " << _LinSolver[Level]->_EPS->linfty_norm() << std::endl;
-#endif
+    }
+
 
       _LinSolver[Level]->_RES->resid(*_LinSolver[Level]->_RESC, *_LinSolver[Level]->_EPS, *_LinSolver[Level]->_KK);    //************ compute the coarse residual
 
@@ -1410,10 +1418,11 @@ namespace femus {
     else {
 
 ///  std::cout << "************ BEGIN ONE PRE-SMOOTHING *****************"<< std::endl;
-#ifdef DEFAULT_PRINT_TIME
+
       std::clock_t start_time = std::clock();
-#endif
-#ifdef DEFAULT_PRINT_CONV
+
+      
+  if  (_debug_linear) {
       _LinSolver[Level]->_EPS->close();
       double xNormpre = _LinSolver[Level]->_EPS->linfty_norm();
       _LinSolver[Level]->_RESC->close();
@@ -1421,18 +1430,26 @@ namespace femus {
       _LinSolver[Level]->_KK->close();
       double ANormpre = _LinSolver[Level]->_KK->l1_norm();
       std::cout << "Level " << Level << " ANorm l1 " << ANormpre << " bNorm linfty " << bNormpre  << " xNormINITIAL linfty " << xNormpre << std::endl;
-#endif
+    }
 
-      rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK, *_LinSolver[Level]->_KK, *_LinSolver[Level]->_EPS, *_LinSolver[Level]->_RESC, DEFAULT_EPS_PREPOST, Nc_pre);   //****** smooth on the finer level
 
-#ifdef DEFAULT_PRINT_CONV
+      rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,
+                                      *_LinSolver[Level]->_KK, 
+                                      *_LinSolver[Level]->_EPS,
+                                      *_LinSolver[Level]->_RESC,
+                                      eps_pre_post_smoothing(), 
+                                      Nc_pre);   //****** smooth on the finer level
+
+
+    if  (_debug_linear) {
       std::cout << " Pre Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
-#endif
-#ifdef DEFAULT_PRINT_TIME
-      std::clock_t end_time = std::clock();
-      std::cout << " time =" << double(end_time - start_time) / CLOCKS_PER_SEC << std::endl;
-#endif
+    }
 
+
+    std::clock_t end_time = std::clock();
+    std::cout << " time =" << double(end_time - start_time) / CLOCKS_PER_SEC << std::endl;
+
+      
       _LinSolver[Level]->_RES->resid(*_LinSolver[Level]->_RESC, *_LinSolver[Level]->_EPS, *_LinSolver[Level]->_KK);   //********** compute the residual
 
 ///    std::cout << "************ END ONE PRE-SMOOTHING *****************"<< std::endl;
@@ -1449,26 +1466,32 @@ namespace femus {
 //at this point you have certainly reached the COARSE level
 
 ///      std::cout << ">>>>>>>> BEGIN ONE ASCENT >>>>>>>>"<< std::endl;
-#ifdef DEFAULT_PRINT_CONV
+
+    if  (_debug_linear) {
       _LinSolver[Level - 1]->_RES->close();
       std::cout << "BEFORE PROL Level " << Level << " res linfty " << _LinSolver[Level - 1]->_RES->linfty_norm() << " res l2 " << _LinSolver[Level - 1]->_RES->l2_norm() << std::endl;
-#endif
+    }
+
 
       _LinSolver[Level]->_RES->matrix_mult(*_LinSolver[Level - 1]->_EPS, *_PP[Level]);   //******** project the dx from the coarser grid
-#ifdef DEFAULT_PRINT_CONV
+
+    if  (_debug_linear) {
       _LinSolver[Level]->_RES->close();
       //here, the _res contains the prolongation of dx, so the new x is x_old + P dx
       std::cout << "AFTER PROL Level " << Level << " res linfty " << _LinSolver[Level]->_RES->linfty_norm() << " res l2 " << _LinSolver[Level]->_RES->l2_norm() << std::endl;
-#endif
+    }
+
       _LinSolver[Level]->_EPS->add(*_LinSolver[Level]->_RES);   // adding the coarser residual to x
       //initial value of x for the post-smoothing iterations
       //_b is the same as before
 ///   std::cout << "************ BEGIN ONE POST-SMOOTHING *****************"<< std::endl;
       // postsmooting (Nc_post)
-#ifdef DEFAULT_PRINT_TIME
+
+
       start_time = std::clock();
-#endif
-#ifdef DEFAULT_PRINT_CONV
+
+      
+      if  (_debug_linear) {
       _LinSolver[Level]->_EPS->close();
       double xNormpost = _LinSolver[Level]->_EPS->linfty_norm();
       _LinSolver[Level]->_RESC->close();
@@ -1476,18 +1499,27 @@ namespace femus {
       _LinSolver[Level]->_KK->close();
       double ANormpost = _LinSolver[Level]->_KK->l1_norm();
       std::cout << "Level " << Level << " ANorm l1 " << ANormpost << " bNorm linfty " << bNormpost << " xNormINITIAL linfty " << xNormpost << std::endl;
-#endif
+    }
 
-      rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK, *_LinSolver[Level]->_KK, *_LinSolver[Level]->_EPS, *_LinSolver[Level]->_RESC, DEFAULT_EPS_PREPOST, Nc_post);   //***** smooth on the coarser level
 
-#ifdef DEFAULT_PRINT_CONV
+      rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,
+                                      *_LinSolver[Level]->_KK, 
+                                      *_LinSolver[Level]->_EPS,
+                                      *_LinSolver[Level]->_RESC,
+                                      eps_pre_post_smoothing(), 
+                                      Nc_post);   //***** smooth on the coarser level
+
+
+    if  (_debug_linear) {
       std::cout << " Post Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
-#endif
-#ifdef DEFAULT_PRINT_TIME
-      end_time = std::clock();
-      std::cout << " time =" << double(end_time - start_time) / CLOCKS_PER_SEC << std::endl;
-#endif
+    }
 
+
+
+    end_time = std::clock();
+    std::cout << " time =" << double(end_time - start_time) / CLOCKS_PER_SEC << std::endl;
+
+      
       _LinSolver[Level]->_RES->resid(*_LinSolver[Level]->_RESC, *_LinSolver[Level]->_EPS, *_LinSolver[Level]->_KK);   //*******  compute the residual
 
 ///    std::cout << "************ END ONE POST-SMOOTHING *****************"<< std::endl;

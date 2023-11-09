@@ -23,7 +23,7 @@
 
 #include "FETypeEnum_deprecated.hpp"
 #include "VBTypeEnum.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "MultiLevelMeshTwo.hpp"
 // #include "SystemTwo.hpp"  //TODO opening this creates a conflict, had to move one inline function to the .cpp
 

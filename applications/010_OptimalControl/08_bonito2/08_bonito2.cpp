@@ -185,7 +185,7 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
 
   //vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
 
   for(int i = 0; i < N; i++) {

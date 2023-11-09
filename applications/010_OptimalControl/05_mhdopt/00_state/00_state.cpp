@@ -98,7 +98,7 @@ int main(int argc, char** args) {
         output_path = files.GetOutputPath();
     }
     else {
-       output_path = DEFAULT_OUTPUTDIR; 
+       output_path = Files::_application_output_directory; 
     }
 
     // ======= Quad Rule ========================

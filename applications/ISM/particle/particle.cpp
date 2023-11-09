@@ -352,7 +352,7 @@ int main(int argc, char **args)
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, 0);
 
 
   // ******* Solve *******
@@ -502,7 +502,7 @@ int main(int argc, char **args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+    ml_sol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", print_vars, time_step + 1);
 
     //if (time_step >= itPeriod) {
     for (configuration = 0; configuration < confNumber; configuration++) {

@@ -253,7 +253,7 @@ int main(int argc, char** args) {
 
       VTKWriter vtkIO(&mlSol);
       vtkIO.SetDebugOutput( true );
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, counter-1);
+      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, counter-1);
     }
   }
   /////////////////////////////////////ultiLevelProb/////////////////////////
@@ -264,7 +264,7 @@ int main(int argc, char** args) {
 // 
 //   VTKWriter vtkIO(&mlSol);
 //   vtkIO.SetDebugOutput( true );
-//   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
   mlMsh.PrintInfo();
   
   return 0;

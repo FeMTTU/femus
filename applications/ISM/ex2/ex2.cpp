@@ -124,7 +124,7 @@ int main(int argc, char** args) {
 
         VTKWriter vtkIO(&mlSol);
         vtkIO.SetDebugOutput(true);
-        vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted,elementType);
+        vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted,elementType);
 
     } // this decides what elements to test
 

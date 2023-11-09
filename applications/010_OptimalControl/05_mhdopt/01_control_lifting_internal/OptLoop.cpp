@@ -504,7 +504,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn, *mesh, NULL, mymsh);
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
 //========= DOMAIN MAPPING

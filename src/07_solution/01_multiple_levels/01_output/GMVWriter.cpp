@@ -21,6 +21,7 @@
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "FElemTypeEnum_list.hpp"
+#include "Files.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -28,21 +29,17 @@
 #include <sstream>
 #include <algorithm>
 #include <cstring>
-#include "Files.hpp"
 
 
 namespace femus {
 
   GMVWriter::GMVWriter( MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
-    _debugOutput = false;
   }
 
   GMVWriter::GMVWriter( MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
-    _debugOutput = false;
   }
 
   GMVWriter::~GMVWriter() {
-
   }
 
   void GMVWriter::Write( const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step ) {

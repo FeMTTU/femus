@@ -194,15 +194,15 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
 //   GMVWriter gmvIO(&mlSol);
 //   gmvIO.SetDebugOutput(true);
-//   gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   gmvIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 //
 //   XDMFWriter xdmfIO(&mlSol);
 //   xdmfIO.SetDebugOutput(true);
-//   xdmfIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   xdmfIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   // print mesh info
   mlMsh.PrintInfo();

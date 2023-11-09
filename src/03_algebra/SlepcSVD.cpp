@@ -14,7 +14,7 @@
 =========================================================================*/
 
 #include "SlepcSVD.hpp"
-#include "iostream"
+#include <iostream>
 #include "PetscMatrix.hpp"
 
 #if defined(HAVE_PETSC) && defined(HAVE_SLEPC)

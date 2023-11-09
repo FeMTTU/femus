@@ -16,7 +16,7 @@
 #ifndef __femus_equations_TimeLoop_hpp__
 #define __femus_equations_TimeLoop_hpp__
 
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "FemusInputParser.hpp"
 #include "SystemTwo.hpp"
 

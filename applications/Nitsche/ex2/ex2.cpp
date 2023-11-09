@@ -185,7 +185,7 @@ int main(int argc, char** args) {
 
   std::vector < std::vector < std::vector < double > > >  line1Points(1);
   line1->GetLine(line1Points[0]);
-  PrintLine(DEFAULT_OUTPUTDIR, "bulk1", line1Points, 0);
+  PrintLine(Files::_application_output_directory, "bulk1", line1Points, 0);
   PrintLine("./output1", "bulk1", line1Points, 0);
 
 
@@ -204,7 +204,7 @@ int main(int argc, char** args) {
 
   std::vector < std::vector < std::vector < double > > > line2Points(1);
   line2->GetLine(line2Points[0]);
-  PrintLine(DEFAULT_OUTPUTDIR, "bulk2", line2Points, 0);
+  PrintLine(Files::_application_output_directory, "bulk2", line2Points, 0);
   PrintLine("./output1", "bulk2", line2Points, 0);
 
   //interface marker initialization
@@ -256,7 +256,7 @@ int main(int argc, char** args) {
 
   std::vector < std::vector < std::vector < double > > > lineIPoints(1);
   lineI->GetLine(lineIPoints[0]);
-  PrintLine(DEFAULT_OUTPUTDIR, "interfaceLine", lineIPoints, 0);
+  PrintLine(Files::_application_output_directory, "interfaceLine", lineIPoints, 0);
   PrintLine("./output1", "interfaceLine", lineIPoints, 0);
   //END interface markers
 
@@ -272,7 +272,7 @@ int main(int argc, char** args) {
 
   system.MGsolve();
 
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
+  mlSol.GetWriter()->Write(Files::_application_output_directory, "linear", print_vars, 0);
 
   ml_prob.clear();
 

@@ -17,7 +17,7 @@
 #include "MultiLevelProblem.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
-#include "Typedefs.hpp"
+#include "TypeDefsAndTypeCasts.hpp"
 #include "Quantity.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "XDMFWriter.hpp"
@@ -284,7 +284,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   opt_loop.optimization_loop(ml_prob);
 
 // at this point, the run has been completed
-  files.PrintRunForRestart(DEFAULT_LAST_RUN);
+  files.PrintRunForRestart( Files::run_to_restart_from_string() );
   files.log_petsc();
 
 // ============  clean ================================

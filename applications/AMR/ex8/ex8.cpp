@@ -440,10 +440,10 @@ int main(int argc, char** argv) {
   //gmvio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
 
   VTKWriter vtkio(&ml_sol);
-  vtkio.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars);
+  vtkio.Write(Files::_application_output_directory, "biquadratic", print_vars);
 
   //GMVWriter gmvio(&ml_sol);
-  //gmvio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  //gmvio.ParallelWrite(Files::_application_output_directory,"biquadratic",print_vars);
 
   //
   //     XDMFWriter xdmfio(ml_sol);

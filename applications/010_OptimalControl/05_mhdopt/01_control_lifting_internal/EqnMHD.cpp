@@ -20,7 +20,7 @@
 #include "OptLoop.hpp"
 #include "CurrentElem.hpp"
 
-#include "FemusDefault.hpp"
+
 
 using namespace femus;
 
@@ -69,7 +69,7 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob) {
  
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
    
-    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system, ml_prob.GetMeshTwo(), NULL,mymsh);
     //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -242,8 +242,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     
       Bext_vecQuant.curl_g();          //----- for Curl Curl RHS         //THE EXTENSION of the DOFS to 3D is done INSIDE!!
 
-       Math::extend(&Vel_vec_val_g[0],&Vel_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
-       Math::extend(&Bext_vec_val_g[0],&Bext_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
+       Math::extend_to_zero(&Vel_vec_val_g[0],&Vel_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
+       Math::extend_to_zero(&Bext_vec_val_g[0],&Bext_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
        Math::cross(&Vel_vec_val_g3D[0],&Bext_vec_val_g3D[0],vXBe_g3D);          //----- for Advection RHS
 
 //================================
@@ -266,7 +266,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 // // // 	    }
 // // //  	  }
 // // // 
-// // //              Math::extend(&Phii._grad_g[0][0],&Phii._grad_g3D[0][0],space_dim);
+// // //              Math::extend_to_zero(&Phii._grad_g[0][0],&Phii._grad_g3D[0][0],space_dim);
 // // // 
 // // //     //--------- CURL CURL: Operator, RHS: curl Be . curl phi -------------------
 // // //              Math::cross(&Bext_vecQuant._curl_g3D[0],&Phii._grad_g3D[0][0],curlBeXdphii_g3D);

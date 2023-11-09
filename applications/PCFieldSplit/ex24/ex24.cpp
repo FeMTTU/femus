@@ -244,7 +244,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   double dt = 1.0;
   system.SetIntervalTime(dt);
@@ -279,7 +279,7 @@ int main(int argc, char** args) {
 	outfile1 << (time_step + 1) * dt <<"  "<< ptCoord[0] << std::endl;
 	outfile2 << (time_step + 1) * dt <<"  "<< ptCoord[1] << std::endl;
 
-    if ((time_step + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 10 ==0)  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();
