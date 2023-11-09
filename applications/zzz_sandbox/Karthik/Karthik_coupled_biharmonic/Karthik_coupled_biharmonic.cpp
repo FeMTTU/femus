@@ -20,7 +20,7 @@
 #include "VTKWriter.hpp"
 #include "NumericVector.hpp"
 
-#include "biharmonic_coupled.hpp"
+//#include "biharmonic_coupled.hpp"
 
 #include "FE_convergence.hpp"
 
@@ -30,19 +30,13 @@
 #include "adept.h"
 
 
-// // // #define LIBRARY_OR_USER   1 //0: library; 1: user
-// // //
-// // // #if LIBRARY_OR_USER == 0
-// // //    #include "01_biharmoic_coupled.hpp"
-// // //    #define NAMESPACE_FOR_POISSON  femus
-// // // #elif LIBRARY_OR_USER == 1
-// // //    #include "biharmoic_coupled.hpp"
-// // //    #define NAMESPACE_FOR_POISSON  karthik_poisson
-// // // #endif
+#define LIBRARY_OR_USER   1 //0: library; 1: user
 
-
-
-
+#if LIBRARY_OR_USER == 0
+   #include "01_biharmonic_coupled.hpp"
+#elif LIBRARY_OR_USER == 1
+   #include "biharmonic_coupled.hpp"
+#endif
 
 
 
