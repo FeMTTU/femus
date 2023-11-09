@@ -30,7 +30,7 @@ SET(femus_src
 02_reference_geom_elements/00_definition/3d/GeomElemTet4.cpp
 02_reference_geom_elements/00_definition/3d/GeomElemTet10.cpp
 02_reference_geom_elements/01_fe/ElemType.cpp
-02_reference_geom_elements/01_fe/1d/Line.cpp
+02_reference_geom_elements/01_fe/1d/Edge.cpp
 02_reference_geom_elements/01_fe/2d/Quadrilateral.cpp
 02_reference_geom_elements/01_fe/2d/Triangle.cpp
 02_reference_geom_elements/01_fe/3d/Hexaedron.cpp
