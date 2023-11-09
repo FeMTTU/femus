@@ -19,7 +19,6 @@
 
 #include "LinearEquation.hpp"
 #include "Mesh.hpp"
-#include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"

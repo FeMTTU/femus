@@ -9,6 +9,10 @@
 
 using namespace femus;
 
+
+namespace applications_opt_control {
+  
+  
 class Temperature : public Quantity {
 
   public:
@@ -20,5 +24,9 @@ class Temperature : public Quantity {
  
 
 };
+
+
+}
+
 
 #endif

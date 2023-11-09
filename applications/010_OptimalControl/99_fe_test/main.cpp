@@ -31,6 +31,12 @@
 #include "libmesh/libmesh.h"
 #endif 
 
+
+
+using namespace applications_opt_control;
+
+
+
  void GenMatRhsT(MultiLevelProblem &ml_prob);
 
 

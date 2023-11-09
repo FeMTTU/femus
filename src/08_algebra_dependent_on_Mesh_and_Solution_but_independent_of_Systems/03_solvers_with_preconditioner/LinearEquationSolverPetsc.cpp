@@ -21,7 +21,6 @@
 #ifdef HAVE_PETSC
 
 // Local Includes
-#include "FElemTypeEnum_list.hpp"
 #include "PetscMacro.hpp"
 #include "LinearEquationSolverPetsc.hpp"
 #include "PetscPreconditioner.hpp"
