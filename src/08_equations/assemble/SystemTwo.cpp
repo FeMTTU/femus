@@ -25,7 +25,6 @@
 #include "mpi.h"
 #endif
 
-#include "FemusDefault.hpp"
 
 #include "LinearEquationSolverEnum.hpp"
 #include "NormTangEnum.hpp"
@@ -274,10 +273,10 @@ void SystemTwo::Initialize() {
     } //end Level
     
 
-#ifdef DEFAULT_PRINT_INFO
-        std::cout << "\n Initialize(Base): Initial solution defined by ic_read" << "\n \n";
-#endif
 
+    std::cout << "\n Initialize(Base): Initial solution defined by ic_read" << "\n \n";
+
+    
     return;
 }
 

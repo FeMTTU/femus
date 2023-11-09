@@ -1,4 +1,3 @@
-#include "FemusDefault.hpp"
 #include "FemusInit.hpp"
 #include "MultiLevelMesh.hpp"
 #include "MultiLevelSolution.hpp"

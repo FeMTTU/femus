@@ -18,10 +18,11 @@
 #include "Files.hpp"
 
 #include "FemusConfig.hpp" //for log_petsc
+
 #ifdef HAVE_PETSC
 #include "petsc.h"
 #endif
-#include "FemusDefault.hpp"
+
 #include "Parallel.hpp"//to get iproc HAVE_MPI is inside here
 
 
@@ -69,7 +70,7 @@ namespace femus {
 
     std::string app_path = "./";
     std::string lastrun_str;
-    lastrun_str = app_path + Files::_application_output_directory + "/" + DEFAULT_LAST_RUN;
+    lastrun_str = app_path + Files::_application_output_directory + "/" +  Files::run_to_restart_from_string();
 
     //check if last_run is there, if it's not there go ahead and set restart = FALSE
             std::string lastone;
@@ -272,7 +273,7 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
    std::cout << "Print the run " << run << "to file" << std::endl;
 
    std::ofstream run_file; run_file.open(run.c_str());
-   run_file << DEFAULT_LAST_RUN << " ";
+   run_file <<  Files::run_to_restart_from_string() << " ";
    run_file << _output_time;
   
       run_file << std::endl;
@@ -453,8 +454,8 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 CheckDirOrMake(_output_path, Files::_application_input_directory);
 
 //copy configuration file
-   std::string op_in  =   _input_path + "/" + Files::_application_input_directory + "/" + DEFAULT_RUNTIMECONF;
-   std::string op_out =  _output_path + "/" + Files::_application_input_directory + "/" + DEFAULT_RUNTIMECONF;
+   std::string op_in  =   _input_path + "/" + Files::_application_input_directory + "/" + Files::runtime_config_filename();
+   std::string op_out =  _output_path + "/" + Files::_application_input_directory + "/" + Files::runtime_config_filename();
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 //TODO here we should also copy the mesh file from the mesh generator... but we need to know the filename...

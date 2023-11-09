@@ -3075,11 +3075,12 @@ namespace femus {
     namefile << output_path << "/"
              << basesol << "." << std::setw( ndigits ) << std::setfill( '0' ) << t_step << "_l" << ( ml_prob.GetMeshTwo()._NoLevels - 1 ) << ext_xdmf;   //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
 
-#ifdef DEFAULT_PRINT_INFO // --------  info ------------------
-    std::cout << "\n MultiLevelProblemTwo::read_soln: Reading time  from "
+
+      std::cout << "\n MultiLevelProblemTwo::read_soln: Reading time  from "
               << namefile.str().c_str();
-#endif  // -------------------------------------------
-    std::ifstream in ;
+
+              
+      std::ifstream in ;
     in.open( namefile.str().c_str() );  //associate the file stream with the name of the file
     if( !in.is_open() ) {
       std::cout << " read_soln: restart .xmf file not found "  << std::endl;
@@ -3112,10 +3113,10 @@ namespace femus {
     //if i put the path of this file to be relative, will the read depend on where I launched the executable...
     // or where the executable is I think... no, the path is given by where the executable is LAUNCHED
 
-#ifdef DEFAULT_PRINT_INFO  // --------------- info ---------------
-    std::cout << "\n MultiLevelProblemTwo::read_soln: Reading from file "
+
+             std::cout << "\n MultiLevelProblemTwo::read_soln: Reading from file "
               << namefile.str().c_str() << std::endl;
-#endif // ---------------------------------------------
+
     // loop reading over the variables ---------------------
     for( MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++ ) {
       SystemTwo* mgsol = static_cast<SystemTwo*>( eqn->second );

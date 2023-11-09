@@ -8,15 +8,15 @@ PROJECT(femus)
 
 SET(femus_src 
 00_utils/00_application_initialization/FemusInit.cpp
-00_math/function_parser/FunctionBase.cpp
-00_math/function_parser/ParsedFunction.cpp
+00_file_handling/application_file_handling/Files.cpp
+00_file_handling/runtime_input_parsing/file/InputParser.cpp
+00_file_handling/runtime_input_parsing/file/JsonInputParser.cpp
 01_materials/Material.cpp
 01_materials/Fluid.cpp
 01_materials/Solid.cpp
 01_materials/Parameter.cpp
-01_file_handling/application_file_handling/Files.cpp
-01_file_handling/runtime_input_parsing/file/InputParser.cpp
-01_file_handling/runtime_input_parsing/file/JsonInputParser.cpp
+02_math/function_parser/FunctionBase.cpp
+02_math/function_parser/ParsedFunction.cpp
 02_reference_geom_elements/00_definition/GeomElemBase.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge2.cpp
 02_reference_geom_elements/00_definition/1d/GeomElemEdge3.cpp

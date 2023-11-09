@@ -81,7 +81,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "01_gambit/03_3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/cube_tet.neu";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/03_3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/cube_tet.neu";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);

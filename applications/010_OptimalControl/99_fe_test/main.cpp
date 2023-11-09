@@ -169,7 +169,6 @@
   time_loop.TransientLoop(ml_prob);
 
 // at this point, the run has been completed 
-  files.PrintRunForRestart(DEFAULT_LAST_RUN);
   files.log_petsc();
   
 // ============  clean ================================

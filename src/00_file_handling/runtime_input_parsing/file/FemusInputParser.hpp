@@ -17,8 +17,6 @@ PURPOSE.  See the above copyright notice for more information.
 #define __femus_utils_FemusInputParser_hpp__
 
 
-
-#include "FemusDefault.hpp"
 #include "Files.hpp"
 
 #include <cstdlib>
@@ -39,6 +37,7 @@ class FemusInputParser   {
 
 public:
 
+  
    FemusInputParser(const std::string class_name, const std::string basepath_in );
   ~FemusInputParser();
 
@@ -109,7 +108,7 @@ template <typename T>
   void FemusInputParser<T>::read() {
 
     std::ostringstream filename;
-    filename << _basepath <<  "/" << Files::_application_input_directory << "/" << DEFAULT_RUNTIMECONF;  
+    filename << _basepath <<  "/" << Files::_application_input_directory << "/" << Files::runtime_config_filename();  
 
 
 std::ifstream fin(filename.str().c_str());
@@ -161,8 +160,8 @@ return;
 template <typename T>
 void FemusInputParser<T>::print() const {
   
-#ifdef DEFAULT_PRINT_INFO
 
+  
   std::cout << "\n ============================= \n";
   std::cout << _tag_name << "   FemusInputParser: " << (int)_rtmap.size() << " parameters: \n";
   
@@ -175,7 +174,7 @@ void FemusInputParser<T>::print() const {
 	      << std::setprecision(12) << value << std::endl;
   }
   
-#endif  
+
   
   return;
 }

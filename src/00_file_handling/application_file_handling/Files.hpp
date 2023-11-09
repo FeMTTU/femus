@@ -16,9 +16,8 @@
 #ifndef __femus_utils_Files_hpp__
 #define __femus_utils_Files_hpp__
 
-#include "FemusDefault.hpp"
 
-// C++
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -68,6 +67,8 @@ private:
 // Input - BEGIN ======================
 public:
   
+  static const std::string runtime_config_filename() { return "femus_conf.in"; };  //how to have it in the header!
+  
   static const std::string  _application_input_directory;
   
   std::string  GetInputPath() const {
@@ -83,13 +84,21 @@ static  std::string get_input_file_with_prefix(const std::string input_file, con
       return infile;
 
    }
+   
+  private:
+    
+  std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
 // Input - END ======================
 
 
 // Input, Copy - BEGIN ========================= 
-public:
+ public:
   
   void CopyInputFiles() const;
+  
+ private:
+
+  void CopyFile(std::string  f_in,std::string  f_out) const;
 // Input, Copy - END ========================= 
 
   
@@ -106,6 +115,12 @@ public:
     return _output_time;
   }
   
+  
+ private:
+   
+  std::string _output_path;
+  std::string _output_time; //this is the OUTTIME DIR!!!
+ 
 // Output - END ======================
 
 
@@ -128,6 +143,9 @@ public:
 // Restart - BEGIN ======================
  public:
    
+ // # if a run reaches the end, then we write it as a "default restart" run
+  static const std::string run_to_restart_from_string() { return "run_to_restart_from"; };  //how to have it in the header!
+
   void ConfigureRestart();
   void PrintRunForRestart(const std::string run_name_in) const;
 
@@ -140,23 +158,24 @@ public:
   bool _restart_flag; 
 // Restart - END ======================
 
+  
+// Mesh files database - BEGIN ======================
+ public:
+   
+  static const std::string mesh_folder_path() {  return "src/06_mesh/00_single_level/01_input/00_mesh_files/";  }
 
+// Mesh files database - END ======================
   
 private:
   
   static std::ofstream file_sbuf;  //needed for I/O purposes
   
-  std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
 
-  std::string _output_path;
-  std::string _output_time; //this is the OUTTIME DIR!!!
-  
-  
-// Copy 
-  void CopyFile(std::string  f_in,std::string  f_out) const;
-  
-  
 };
+
+
+/// @todo  FORWARD SLASHES and BACKSLASHES //perhaps one day we should consider to treat these slashes appropriately, in case we compile on Windows etc.
+
 
 
 

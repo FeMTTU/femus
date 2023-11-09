@@ -22,7 +22,6 @@
 #include <map>
 
 //FEMuS includes 
-#include "FemusDefault.hpp"
 #include "FemusConfig.hpp"
 #include "TypeDefsAndTypeCasts.hpp"
 #include "VBTypeEnum.hpp"

@@ -8,7 +8,6 @@
 // FEMuS
 #include "FemusConfig.hpp"
 #include "Parallel.hpp"
-#include "FemusDefault.hpp"
 #include "FemusInit.hpp"
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
@@ -358,7 +357,7 @@ int main(int argc, char** argv) {
 // well, we do not know whether for the whole time range time.N-M.xmf
 // or the optimization loop stopped before
 // we could also print the last step number
-  files.PrintRunForRestart(DEFAULT_LAST_RUN); /*(iproc==0)*/
+  files.PrintRunForRestart( Files::run_to_restart_from_string() ); /*(iproc==0)*/
   files.log_petsc();
 
 // ============  clean ================================

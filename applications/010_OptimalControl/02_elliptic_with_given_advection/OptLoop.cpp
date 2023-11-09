@@ -29,9 +29,7 @@ namespace femus {
 
    curr_time += 1.;
 
-#if DEFAULT_PRINT_TIME==1
       std::clock_t  start_time=std::clock();
-#endif
 
        _curr_t_idx = curr_step;
        _curr_time  = curr_time;
@@ -45,20 +43,20 @@ namespace femus {
       //  time step for each system, without printing (good)
       OneTimestepEqnLoop(delta_t_step,ml_prob);
 
-#if DEFAULT_PRINT_TIME==1
+
       std::clock_t    end_time=std::clock();
-#endif
+
 
       // print solution
       // if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,ml_prob);   //print sol.N.h5 and sol.N.xmf
 
 
-#if DEFAULT_PRINT_TIME==1
+
       std::clock_t    end_time2=std::clock();
       std::cout << " Time solver ----->= "   << double(end_time- start_time)/ CLOCKS_PER_SEC
                 << " Time printing ----->= " << double(end_time2- end_time) / CLOCKS_PER_SEC <<
                 std::endl;
-#endif
+                
 
 //=====functional evaluations=======
    SystemTwo & eqnT = ml_prob.get_system<SystemTwo>("Eqn_T");

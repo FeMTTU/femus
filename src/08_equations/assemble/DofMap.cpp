@@ -418,10 +418,10 @@ void DofMap::ComputeMeshToDof() {
 #endif
 
         
-#ifdef DEFAULT_PRINT_INFO
-        std::cout << "DofMap::InitMeshToDof(D)   Level= " << Level  << std::endl;
-#endif
 
+        std::cout << "DofMap::InitMeshToDof(D)   Level= " << Level  << std::endl;
+
+        
     } //end Level
     
     PrintMeshToDof();

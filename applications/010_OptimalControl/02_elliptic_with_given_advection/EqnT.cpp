@@ -1,8 +1,6 @@
-#ifndef __eqnt_hpp__
-#define __eqnt_hpp__
 
 
-#include "FemusDefault.hpp"
+
 
 #include "NumericVector.hpp"
 #include "DenseVector.hpp"
@@ -362,4 +360,3 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 
 
-#endif

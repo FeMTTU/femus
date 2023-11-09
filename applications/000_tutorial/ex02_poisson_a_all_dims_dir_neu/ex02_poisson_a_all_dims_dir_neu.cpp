@@ -178,7 +178,7 @@ int main(int argc, char** args) {
   //segment_dir_neu_fine
   const std::string relative_path_to_build_directory =  "../../../";
   app_segment._mesh_files.push_back("segment_2_dir_neu.med");
-  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + DEFAULT_MESH_FILES_PATH + "00_salome/01_1d/segment/0-1/");
+  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/01_1d/segment/0-1/");
   
   app_segment._system_name = "Equation";
   app_segment._assemble_function = femus::poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;

@@ -15,7 +15,6 @@
 
 
 #include "TimeLoop.hpp"
-#include "FemusDefaultMultigrid.hpp"
 #include "MultiLevelProblem.hpp"
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
@@ -114,58 +113,61 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
     *(_x_oold) = *( eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPSC );
 
     /// A) Assemblying
-#if  DEFAULT_PRINT_TIME==1
-    std::clock_t start_time=std::clock();
-#endif
 
+    std::clock_t start_time=std::clock();
+
+    
     for (uint Level = 0 ; Level < eqn_in->GetGridn(); Level++) {
 	eqn_in->SetLevelToAssemble(Level);
         eqn_in->GetAssembleFunction()(eqn_in->GetMLProb());
 
-#ifdef DEFAULT_PRINT_INFO
+
         eqn_in->_LinSolver[Level]->_KK->close();
         double ANorm = eqn_in->_LinSolver[Level]->_KK->l1_norm();
 
 //	_LinSolver[Level]->_KK->print_graphic(true); TODO should pass this true or false as a parameter
 
         std::cout << " ANorm l1 " << Level << " "  << ANorm  << std::endl;
-#endif
+
+        
     }
 
-#if    DEFAULT_PRINT_TIME==1
+
     std::clock_t end_time=std::clock();
     std::cout << " ================ Assembly time = " << double(end_time- start_time) / CLOCKS_PER_SEC
               << " s " << std::endl;
-#endif
 
+              
 ///std::cout << " $$$$$$$$$ Prepared A for all levels and b for the fine level $$$$$$" << std::endl;
 // The matrices R and P for all levels were already prepared at read-time
 // and they do not depend on  time (because no adaptive refinement is performed)
 // They only depend on the nodes (dofs!)
 
 /// D) Solution of the linear MGsystem
-#ifdef DEFAULT_PRINT_TIME
-        std::clock_t start_time_sol = std::clock();
-#endif
 
-        eqn_in->MGSolve(DEFAULT_EPS_LSOLV, DEFAULT_MAXITS_LSOLV);
+              std::clock_t start_time_sol = std::clock();
+
+              
+        eqn_in->MGSolve( LinearImplicitSystem::eps_lsolv() );
 
 
-#if    DEFAULT_PRINT_TIME==1
-    std::clock_t end_time_sol = std::clock();
+
+        std::clock_t end_time_sol = std::clock();
     std::cout << " ================ Solver time = " << double(end_time_sol- start_time_sol) / CLOCKS_PER_SEC
               << " s "<< std::endl;
-#endif
 
+              
 
 /// std::cout << "$$$$$$$$$ Computed the x with the MG method $$$$$$$" << std::endl;
 
     /// E) Update of the old solution at the top Level
     eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPS->localize(*(eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPSC));   // x_old = x
-#ifdef DEFAULT_PRINT_INFO
+
+    
     std::cout << "$$$$$$$$$ Updated the x_old solution $$$$$$$$$" << std::endl;
-#endif
-/// std::cout << "$$$$$$$$$ Check the convergence $$$$$$$" << std::endl;
+
+    
+    /// std::cout << "$$$$$$$$$ Check the convergence $$$$$$$" << std::endl;
 
     _x_tmp->zero();
     _x_tmp->add(+1.,*(_x_oold));
@@ -209,7 +211,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblem & eqnmap)  {
     const uint initial_step = _timemap.get("initial_step");
     const uint ndigits      = XDMFWriter::n_digits_step_print;
 
-    const std::string   lastrun_f = DEFAULT_LAST_RUN;
+    const std::string   lastrun_f =  Files::run_to_restart_from_string();
     const std::string     basesol = XDMFWriter::_solution_basename;
     const std::string    ext_xdmf = XDMFWriter::_xdmf_extension;
     const std::string      ext_h5 = XDMFWriter::_hdf5_extension;
@@ -343,7 +345,6 @@ void TimeLoop::TransientSetup(const MultiLevelProblem & eqnmap)  {
     //now you can update last_run with new_run for a following run
     //well,actually before putting the last_run you should be sure that this run was completely finished.
     //That is why I'd better put this call at the end of the main program
-//   _utils._files.PrintRunForRestart(DEFAULT_LAST_RUN);
 
 //------- print
     //this happens when the output dir is already set
@@ -372,10 +373,10 @@ void TimeLoop::TransientLoop(const MultiLevelProblem & eqnmap)  {
         curr_time += dt;
         _curr_time  = curr_time;
 
-#if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
-        std::clock_t  start_time=std::clock();
-#endif // -------------------------------------------
 
+        std::clock_t  start_time=std::clock();
+
+        
         // set up the time step
         std::cout << "\n  ** Solving time step " << curr_step
                   << ", time = "                 << curr_time  << " ***" << std::endl;
@@ -386,21 +387,21 @@ void TimeLoop::TransientLoop(const MultiLevelProblem & eqnmap)  {
         //  time step for each system, without printing (good)
         OneTimestepEqnLoop(delta_t_step,eqnmap);
 
-#if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
-        std::clock_t    end_time=std::clock();
-#endif  // ------------------------------------------
 
+        std::clock_t    end_time=std::clock();
+
+        
         // print solution
         if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,eqnmap);   //print sol.N.h5 and sol.N.xmf
 
 
-#if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
+
         std::clock_t    end_time2=std::clock();
         std::cout <<" Time solver ----->= "   << double(end_time- start_time)/ CLOCKS_PER_SEC
                   <<" Time printing ----->= " << double(end_time2- end_time) / CLOCKS_PER_SEC <<
                   std::endl;
-#endif  // ------------------------------------------
 
+                  
 
     }   // end time loop
 

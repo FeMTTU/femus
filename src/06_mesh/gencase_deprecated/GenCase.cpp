@@ -2,7 +2,6 @@
 
 // FEMuS
 #include "FemusConfig.hpp"
-#include "FemusDefaultMultigrid.hpp"
 
 #include "Domain.hpp"
 #include "Box.hpp"
@@ -83,10 +82,10 @@ void GenCase::GenerateCase(const std::string output_path, const MultiLevelProble
 #ifdef HAVE_LIBMESH //i am putting this inside because there are no libmesh dependent arguments
   
   
-#ifdef DEFAULT_PRINT_TIME
-    std::clock_t start_timeA=std::clock();
-#endif
 
+    std::clock_t start_timeA=std::clock();
+
+    
     _msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
 
     GenerateCoarseMesh();
@@ -99,10 +98,10 @@ void GenCase::GenerateCase(const std::string output_path, const MultiLevelProble
 
     GenerateBoundaryMesh();
 
-#ifdef DEFAULT_PRINT_TIME
-    std::clock_t start_timeC=std::clock();
-#endif
 
+    std::clock_t start_timeC=std::clock();
+
+    
     GrabMeshinfoFromLibmesh();  //only proc==0
 
     delete _bd_msht;
@@ -115,14 +114,14 @@ void GenCase::GenerateCase(const std::string output_path, const MultiLevelProble
 
     Delete();
 
-#ifdef DEFAULT_PRINT_TIME
+
     std::clock_t end_timeC = std::clock();
     std::cout << " Print and Operators time ="<< double(end_timeC- start_timeC) / CLOCKS_PER_SEC << std::endl;
-#endif
-#ifdef DEFAULT_PRINT_TIME
-    std::cout << " +*+*+* Total time ="<< double(end_timeC- start_timeA) / CLOCKS_PER_SEC << std::endl;
-#endif
 
+
+    std::cout << " +*+*+* Total time ="<< double(end_timeC- start_timeA) / CLOCKS_PER_SEC << std::endl;
+
+    
     
 #endif //end have_libmesh    
     
@@ -141,9 +140,9 @@ void GenCase::GenerateCase(const std::string output_path, const MultiLevelProble
 void GenCase::GenerateCoarseMesh() const {
 #ifdef HAVE_LIBMESH
 
-#ifdef DEFAULT_PRINT_TIME
+
     std::clock_t start_timeA=std::clock();
-#endif
+
     
         std::string config_dir  = Files::_application_input_directory;
         std::string f_mesh_read = _mesh_file;
@@ -200,11 +199,12 @@ void GenCase::GenerateCoarseMesh() const {
 
     _msh_coarse->print_info();
 
-#ifdef DEFAULT_PRINT_TIME
+
     std::clock_t end_timeA=std::clock();
     std::cout << " *+* Generation/Reading coarse mesh time ="
               << double(end_timeA- start_timeA) / CLOCKS_PER_SEC << std::endl;
-#endif
+
+              
 
 #endif //end have_libmesh
     return;
@@ -226,19 +226,20 @@ void GenCase::GenerateCoarseMesh() const {
 void GenCase::RefineMesh() const {
 #ifdef HAVE_LIBMESH
 
-#ifdef DEFAULT_PRINT_TIME
+
     std::clock_t start_timeB=std::clock();
-#endif
+
+    
 
     std::cout << "\n LibMesh Mesh Refinement ---------  \n";
     libMesh::MeshRefinement mesh_refinement(*_msh_all_levs);
     mesh_refinement.uniformly_refine(_NoLevels-1);
 
-#ifdef DEFAULT_PRINT_TIME
+
     std::clock_t end_timeB=std::clock();
     std::cout << " *+* Generation refined mesh time ="
               << double(end_timeB- start_timeB) / CLOCKS_PER_SEC << std::endl;
-#endif
+
 
 #endif //end have_libmesh
     return;
@@ -907,10 +908,10 @@ void GenCase::ComputeAndPrintProl(const std::string output_path)  {
 
     H5Fclose(file);
 
-#ifdef DEFAULT_PRINT_INFO
-    std::cout<< " GenCase::compute_and_print_MGOps: compute_prol end  \n";
-#endif
 
+    std::cout<< " GenCase::compute_and_print_MGOps: compute_prol end  \n";
+
+    
     return;
 }
 
@@ -1312,10 +1313,10 @@ void GenCase::ComputeAndPrintProl(const std::string output_path)  {
 
 void GenCase::ComputeAndPrintMatrix(const std::string output_path) {
 
-#ifdef DEFAULT_PRINT_INFO
-    std::cout << " GenCase::compute_matrix:  start \n";
-#endif
 
+    std::cout << " GenCase::compute_matrix:  start \n";
+
+    
       const int NegativeOneFlag = -1;
 
 //==============================================================
@@ -1346,9 +1347,9 @@ void GenCase::ComputeAndPrintMatrix(const std::string output_path) {
 
     for (int Level1 = 0; Level1 < _NoLevels; Level1++) {
 
-#ifdef DEFAULT_PRINT_TIME
+
         std::clock_t   start_time=std::clock();
-#endif
+
 
     std::ostringstream groupname_lev; groupname_lev <<  "LEVEL" << Level1;
     hid_t group = H5Gcreate(file, groupname_lev.str().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -1581,10 +1582,9 @@ void GenCase::ComputeAndPrintMatrix(const std::string output_path) {
 
 	H5Gclose(group);
 
-#ifdef DEFAULT_PRINT_TIME
-        std::clock_t end_time=std::clock();
-        std::cout << " Reference level = " <<  Level1 << " Matrix compute time ="<< double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
-#endif
+
+    std::clock_t end_time=std::clock();
+    std::cout << " Reference level = " <<  Level1 << " Matrix compute time = " << double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
 
     }
 
@@ -1595,10 +1595,10 @@ void GenCase::ComputeAndPrintMatrix(const std::string output_path) {
 // CLOSE THE FILE ============================
       H5Fclose(file);
 
-#ifdef DEFAULT_PRINT_INFO
-    std::cout << " GenCase::compute_and_print_MGOps: compute_matrix end \n";
-#endif
 
+      std::cout << " GenCase::compute_and_print_MGOps: compute_matrix end \n";
+
+      
     return;
 }
 
@@ -1730,7 +1730,8 @@ void GenCase::ComputeAndPrintRest(const std::string output_path) {
                             for (uint k_ch = 0; k_ch < _elnodes[VV][fe]; k_ch++) {
                                 int ch_op = _nd_libm_fm[_el_sto[ch_el]->_elnds[k_ch]];   //child node (fine node) (for columns)
 
-#if DEFAULT_REST_SIMPLE == 1
+if ( LinearImplicitSystem::is_restrictor_simple() == 1) {
+    
 //the only contributions from the fine grid to the coarse grid come from the fine nodes which also belong to the coarse grid, very easy.
                                 if (ch_op == op) {   //if the fine dof is also a coarse dof
                                     std::cout << "=============== SIMPLE RESTRICTOR, CHECK HERE AND IN THE READING =============" << std::endl;
@@ -1745,7 +1746,9 @@ void GenCase::ComputeAndPrintRest(const std::string output_path) {
 //                                 Rest_val[LL][ g_indexL[ FELevel_c[LL] ][op]*_elnodes[VV][/*LL*/QQ]*max_elnd ] = 1.;    //TODO: what is this?
 //                                mult_cols[LL][ g_indexL[ FELevel_c[LL] ][op]]=_elnodes[VV][LL];                   //TODO: what is this?
                                 }
-#else
+                                
+}
+else {
                                 double val = _feelems[fe]->get_embedding_matrix(i_ch,k_ch,k_fath);   //the value AT THE FINE (CHILD) NODE of the SHAPE FUNCTION of the COARSE (FATHER) NODE
                                 if ( fabs(val) > PseudoZero ) {
 
@@ -1762,7 +1765,9 @@ void GenCase::ComputeAndPrintRest(const std::string output_path) {
                                     }
                                 }
 
-#endif
+    
+}
+
 
                             } //end k_ch
 
@@ -1893,9 +1898,10 @@ void GenCase::ComputeAndPrintRest(const std::string output_path) {
 
      H5Fclose(file);
 	
-#ifdef DEFAULT_PRINT_INFO
-    std::cout<< " GenCase::compute_and_print_MGOps: compute_rest  \n";
-#endif
+
+     std::cout<< " GenCase::compute_and_print_MGOps: compute_rest  \n";
+
+     
 
     return;
 }
@@ -2494,9 +2500,9 @@ void GenCase::ReadMatrix(const  std::string& namefile, SystemTwo * mysys) {
     
     } //end levels   
 
-#ifdef DEFAULT_PRINT_INFO
+
     std::cout << " ReadMatrix: matrix reading "  << std::endl;
-#endif
+
 
     return;
 }
@@ -2717,10 +2723,10 @@ void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
 //     _Prl[  Lev_f ]->print_graphic(false); //TODO should pass this true or false as a parameter
    } //end levels
     
-#ifdef DEFAULT_PRINT_INFO
-    std::cout << " ReadProl(B): read Op " << name.c_str() << std::endl;
-#endif
 
+    std::cout << " ReadProl(B): read Op " << name.c_str() << std::endl;
+
+    
     return;
 }
 
@@ -2953,10 +2959,11 @@ void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
 
   } //end levels
   
-#ifdef DEFAULT_PRINT_INFO
-    std::cout << " ReadRest(B): read Op " << name.c_str() << std::endl;
-#endif
-    return;
+
+  std::cout << " ReadRest(B): read Op " << name.c_str() << std::endl;
+
+  
+  return;
 }
 
 
