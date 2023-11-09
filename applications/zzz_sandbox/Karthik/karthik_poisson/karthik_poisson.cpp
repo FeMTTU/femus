@@ -34,7 +34,7 @@
    #define NAMESPACE_FOR_POISSON  femus
 #elif LIBRARY_OR_USER == 1
    #include "00_poisson_eqn.hpp"
-   #define NAMESPACE_FOR_POISSON  karthik_poisson
+   #define NAMESPACE_FOR_POISSON  karthik
 #endif
 
 
