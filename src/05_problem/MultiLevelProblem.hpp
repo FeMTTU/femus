@@ -24,7 +24,7 @@
 
 
 #include "FElemTypeEnum_list.hpp"
-#include "GaussPoints.hpp"
+#include "quadrature_interface.hpp"
 #include "ElemType_template.hpp"
 
 #include "MultiLevelMesh.hpp"

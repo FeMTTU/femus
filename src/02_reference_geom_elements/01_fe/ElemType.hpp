@@ -20,7 +20,7 @@
 #include "GeomElTypeEnum.hpp"
 #include "FElemTypeEnum_list.hpp"
 #include "Basis.hpp"
-#include "GaussPoints.hpp"
+#include "quadrature_interface.hpp"
 
 
 #include "adept.h"
