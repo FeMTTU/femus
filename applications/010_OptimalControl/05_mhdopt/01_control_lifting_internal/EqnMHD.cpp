@@ -7,7 +7,7 @@
 #include "SparseMatrix.hpp"
 #include "LinearEquationSolver.hpp"
 
-#include "Operations.hpp"
+#include "VectorOperations.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "Quantity.hpp"
 #include "MultiLevelProblem.hpp"

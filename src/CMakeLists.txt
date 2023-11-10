@@ -29,7 +29,6 @@ SET(femus_src
 02_reference_geom_elements/00_definition/3d/GeomElemHex27.cpp
 02_reference_geom_elements/00_definition/3d/GeomElemTet4.cpp
 02_reference_geom_elements/00_definition/3d/GeomElemTet10.cpp
-02_reference_geom_elements/01_fe/ElemType.cpp
 02_reference_geom_elements/01_fe/1d/Edge.cpp
 02_reference_geom_elements/01_fe/2d/Quadrilateral.cpp
 02_reference_geom_elements/01_fe/2d/Triangle.cpp
@@ -46,6 +45,7 @@ SET(femus_src
 02_reference_geom_elements/02_quadrature/3d/quadrature_Wedge.cpp
 02_reference_geom_elements/03_fe_evaluations_at_quadrature/ElemType_template.cpp
 02_reference_geom_elements/03_fe_evaluations_at_quadrature/ElemType_template_base.cpp
+02_reference_geom_elements/03_fe_evaluations_at_quadrature/ElemType.cpp
 03_algebra_dense/00_vectors/DenseVectorBase.cpp
 03_algebra_dense/01_matrices/DenseMatrixBase.cpp
 03_algebra_dense/01_matrices/DenseMatrix.cpp

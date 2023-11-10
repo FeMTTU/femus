@@ -9,7 +9,7 @@
 #include "LinearEquationSolver.hpp"
 
 #include "Files.hpp"
-#include "Operations.hpp"
+#include "VectorOperations.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
 #include "SystemTwo.hpp"

@@ -13,9 +13,6 @@
 
   =========================================================================*/
 
-/**
- * This class contains the fe basis function and their derivatives
- */
 
 
 #ifndef __femus_fe_Basis_hpp__
@@ -30,11 +27,19 @@
 
 namespace femus {
     
-    
 
+
+/**
+ * This class contains the fe basis function and their derivatives
+ */
   class basis {
       
     public:
+      
+      const int n_dofs() const { return _nc; }
+      const int n_dofs_fine() const { return _nf; }
+      
+    protected:
 
       /**
        * _nc = number of dofs of 1 element;  
@@ -44,10 +49,17 @@ namespace femus {
         _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
         _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
       */
-      const int _nc, _nf, _nlag0, _nlag1, _nlag2, _nlag3;
+      const int _nc, _nf;
+      
+    public:
+      
+      const int _nlag0, _nlag1, _nlag2, _nlag3;
       
       /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...) */
       int faceNumber[3];
+
+// ===  Constructors / Destructor - BEGIN =================
+    public:
 
       basis(const int &nc, const int &nf, const int &nlag0, const int &nlag1, const int &nlag2, const int &nlag3,
 	    const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):
@@ -62,13 +74,21 @@ namespace femus {
 	  faceNumber[1] = faceNumber1;
 	  faceNumber[2] = faceNumber2;
 	  }
+// ===  Constructors / Destructor - END =================
 
+// ===  Basic - BEGIN =================
       virtual void PrintType() const = 0;
+// ===  Basic - END =================
       
+      // DERIVATIVES of ORDER 0 - BEGIN ============
       double eval_phi(const unsigned &j, const std::vector < double > &x) const {
         return eval_phi(this->GetIND(j), &x[0]);
       }
+      // DERIVATIVES of ORDER 0 - END ============
       
+      
+      
+      // DERIVATIVES of ORDER 1 - BEGIN ============
       double eval_dphidx(const unsigned &j, const std::vector < double > &x) const {
         return eval_dphidx(this->GetIND(j), &x[0]);
       }
@@ -94,7 +114,10 @@ namespace femus {
         }
         
     }
+      // DERIVATIVES of ORDER 1 - END ============
+
       
+      // DERIVATIVES of ORDER 2 - BEGIN ============
       double eval_d2phidx2(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidx2(this->GetIND(j), &x[0]);
       }
@@ -118,14 +141,18 @@ namespace femus {
       double eval_d2phidzdx(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidzdx(this->GetIND(j), &x[0]);
       }
+      // DERIVATIVES of ORDER 2 - END ============
       
       
       
+      // DERIVATIVES of ORDER 0 - BEGIN ============
       virtual double eval_phi(const int *I, const double* x) const {
         std::cout << "Error this phi is not available for this element \n";
         abort();
       }
+      // DERIVATIVES of ORDER 0 - END ============
       
+      // DERIVATIVES of ORDER 1 - BEGIN ============
       virtual double eval_dphidx(const int *I, const double* x) const {
         std::cout << "Error this dphidx is not available for this element dimension\n";
         abort();
@@ -140,7 +167,10 @@ namespace femus {
         std::cout << "Error this dphidz is not available for this element dimension\n";
         abort();
       }
+      // DERIVATIVES of ORDER 1 - END ============
       
+      
+      // DERIVATIVES of ORDER 2 - BEGIN ============
       virtual double eval_d2phidx2(const int *I, const double* x) const {
         std::cout << "Error this d2phix2 is not available for this element dimension\n";
         abort();
@@ -170,7 +200,9 @@ namespace femus {
         std::cout << "Error this d2phidydz is not available for this element dimension\n";
         abort();
       }
-
+      // DERIVATIVES of ORDER 2 - END ============
+      
+      
       virtual const double* GetX(const int &i) const = 0;
 
       virtual const double* GetXcoarse(const int &i) const {

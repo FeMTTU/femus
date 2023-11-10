@@ -385,8 +385,8 @@ namespace femus {
   
   void elem_type::set_coarse_and_fine_num_dofs(const basis* pt_basis_in)  {
   
-    _nc 	 = pt_basis_in->_nc;
-    _nf 	 = pt_basis_in->_nf;
+    _nc 	 = pt_basis_in->n_dofs();
+    _nf 	 = pt_basis_in->n_dofs_fine();
     _nlag[0] = pt_basis_in->_nlag0;
     _nlag[1] = pt_basis_in->_nlag1;
     _nlag[2] = pt_basis_in->_nlag2;
@@ -820,7 +820,7 @@ namespace femus {
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
       
-      const unsigned n_face_dofs = faceBasis -> _nc;
+      const unsigned n_face_dofs = faceBasis -> n_dofs();
 
       for(int iface = 0; iface < nFaces; iface++) {
           
@@ -928,10 +928,10 @@ if( _SolType >= 3 && _SolType < 5 ) {
 
       for(unsigned type = 0; type < 2; type++) {
         for(int iface = _pt_basis->faceNumber[type]; iface < _pt_basis->faceNumber[type + 1]; iface++) {
-          std::vector< double > xv(faceBasis[type] -> _nc);
-          std::vector< double > yv(faceBasis[type] -> _nc);
-          std::vector< double > zv(faceBasis[type] -> _nc);
-          for(int jnode = 0; jnode < faceBasis[type] -> _nc; jnode++) {
+          std::vector< double > xv(faceBasis[type] -> n_dofs());
+          std::vector< double > yv(faceBasis[type] ->  n_dofs());
+          std::vector< double > zv(faceBasis[type] ->  n_dofs());
+          for(int jnode = 0; jnode < faceBasis[type] ->  n_dofs(); jnode++) {
             unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
             xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
             yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
@@ -946,7 +946,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
           for(unsigned i = 0; i < nGaussPts; i++) {
             double x[3] = {0., 0., 0.};
             const double vertex[2] = {xi[type][i], yi[type][i]};
-            for(int j = 0; j <  faceBasis[type] -> _nc; j++) {
+            for(int j = 0; j <  faceBasis[type] ->  n_dofs(); j++) {
               x[0] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * xv[j] ;
               x[1] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * yv[j] ;
               x[2] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * zv[j] ;

@@ -5,7 +5,7 @@
 #include "NumericVector.hpp"
 #include "LinearEquationSolver.hpp"
 
-#include "Operations.hpp"
+#include "VectorOperations.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "Domain.hpp"
 #include "MultiLevelProblem.hpp"
