@@ -21,10 +21,13 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 #include "PetscMatrix.hpp"
+
+
+#include "adept.h"
+#include <stdlib.h>
 
 
 using namespace femus;

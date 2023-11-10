@@ -21,11 +21,13 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 #include "Marker.hpp"
 #include "MyVector.hpp"
+
+#include "adept.h"
+#include <stdlib.h>
 
 double Prandtl = 1.0;
 double Rayleigh = 1000.;

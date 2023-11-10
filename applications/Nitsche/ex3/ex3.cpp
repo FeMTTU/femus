@@ -20,6 +20,8 @@
 #include "slepceps.h"
 
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "Marker.hpp"
 #include "Line.hpp"
 

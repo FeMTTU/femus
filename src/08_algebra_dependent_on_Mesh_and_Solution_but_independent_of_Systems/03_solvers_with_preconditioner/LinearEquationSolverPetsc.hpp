@@ -39,11 +39,13 @@ namespace femus {
 
     public:
 
+//==== Constructors / Destructor - BEGIN ========
       /**  Constructor. Initializes Petsc data structures */
       LinearEquationSolverPetsc (const unsigned &igrid, Solution *other_solution);
 
       /// Destructor.
       ~LinearEquationSolverPetsc();
+//==== Constructors / Destructor - END ========
       
       /// Set PETSC solver 
       static void SetPetscSolverType (KSP &ksp, const SolverType &solver_type, const double *parameter);

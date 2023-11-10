@@ -24,9 +24,11 @@
 #include "GMVWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
 #include "Marker.hpp"
+
+#include "adept.h"
 
 double Prandtl = 0.71;
 double Rayleigh = 340000.;

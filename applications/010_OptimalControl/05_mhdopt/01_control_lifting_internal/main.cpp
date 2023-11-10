@@ -22,6 +22,7 @@
 #include "Quantity.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "XDMFWriter.hpp"
+#include "LinearEquationSolver.hpp"
 
 
 // application includes

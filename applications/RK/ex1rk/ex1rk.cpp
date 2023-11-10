@@ -18,6 +18,7 @@
 #include "VTKWriter.hpp"
 #include "ImplicitRungeKuttaSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "adept.h"
 #include "PetscMatrix.hpp"
 #include "PetscVector.hpp"

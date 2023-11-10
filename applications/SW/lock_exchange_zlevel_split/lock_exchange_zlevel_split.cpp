@@ -19,6 +19,7 @@
 #include "PetscMatrix.hpp"
 
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "slepceps.h"
 #include <slepcmfn.h>

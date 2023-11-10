@@ -621,7 +621,26 @@ namespace femus {
 
   // ********************************************
 
+      void LinearImplicitSystem::SetRichardsonScaleFactor (const double &richardsonScaleFactor) {
+        _richardsonScaleFactor = richardsonScaleFactor;
+        _richardsonScaleFactorDecrease = 0;
+        _richardsonScaleFactorIsSet = true;
+        for (unsigned i = 0; i < _gridn; i++) {
+          _LinSolver[i]->SetRichardsonScaleFactor (_richardsonScaleFactor);
+        }
+      }
 
+      void LinearImplicitSystem::SetRichardsonScaleFactor (const double &richardsonScaleFactorMin, const double &richardsonScaleFactorMax) {
+        _richardsonScaleFactor = richardsonScaleFactorMax;
+        _richardsonScaleFactorDecrease = (_gridn > 1) ? (richardsonScaleFactorMin - richardsonScaleFactorMax) / (_gridn - 2) : 0;
+        _richardsonScaleFactorIsSet = true;
+        _LinSolver[0]->SetRichardsonScaleFactor (_richardsonScaleFactor);
+        for (unsigned i = 1; i < _gridn; i++) {
+          _LinSolver[i]->SetRichardsonScaleFactor (_richardsonScaleFactor + _richardsonScaleFactorDecrease * (i - 1));
+        }
+      }
+      
+      
 //---------------------------------------------------------------------------------------------
 // This is function sets the AMR options
 //---------------------------------------------------------------------------------------------

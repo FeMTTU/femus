@@ -1,5 +1,6 @@
 #include "MultiLevelSolution.hpp"
 #include "PetscMatrix.hpp"
+#include "LinearEquationSolver.hpp"
 
 using namespace femus;
 

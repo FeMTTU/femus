@@ -140,7 +140,7 @@ namespace femus {
 
       PetscInt Csize = 0;
 
-      // ***************** NODE/ELEMENT SERCH *******************
+      // ***************** NODE/ELEMENT SEARCH *******************
       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
 	for(unsigned j = 0; j < GetMeshFromLinEq()->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){

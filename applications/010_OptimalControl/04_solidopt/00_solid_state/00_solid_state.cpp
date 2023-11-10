@@ -6,11 +6,13 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "Parameter.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 #include "Assemble_jacobian.hpp"
+
 #include "adept.h"
 
 

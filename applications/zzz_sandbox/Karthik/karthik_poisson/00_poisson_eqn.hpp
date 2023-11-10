@@ -4,6 +4,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 #include "MultiLevelSolution.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"

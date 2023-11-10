@@ -22,6 +22,8 @@
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 
 

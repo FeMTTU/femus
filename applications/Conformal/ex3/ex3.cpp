@@ -9,6 +9,8 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 #include <cstdlib>
 #include "petsc.h"

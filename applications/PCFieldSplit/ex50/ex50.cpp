@@ -21,9 +21,13 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
+
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
+
+#include "adept.h"
+
+#include <cstdlib>
 
 
 double Re = 500;

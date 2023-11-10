@@ -6,6 +6,7 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "Assemble_jacobian.hpp"
 

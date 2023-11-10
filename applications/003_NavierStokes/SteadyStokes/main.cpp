@@ -11,6 +11,7 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"

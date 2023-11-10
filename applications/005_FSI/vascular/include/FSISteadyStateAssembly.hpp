@@ -1,9 +1,10 @@
 #ifndef __femus_include_FSISteadyStateAssembly_hpp__
 #define __femus_include_FSISteadyStateAssembly_hpp__
-#endif
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "MultiLevelSolution.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 
 #include "OprtrTypeEnum.hpp"
@@ -1764,3 +1765,4 @@ namespace femus {
 
 }
 
+#endif

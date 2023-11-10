@@ -18,6 +18,7 @@
 #include "Quantity.hpp"
 #include "ElemType.hpp"
 #include "Box.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "Parallel.hpp"
 #include "XDMFWriter.hpp"

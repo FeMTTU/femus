@@ -11,12 +11,14 @@
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
-#include <json/json.h>
-#include <json/value.h>
 #include "ParsedFunction.hpp"
 #include "Files.hpp"
+
+#include <json/json.h>
+#include <json/value.h>
 #include <cstdlib>
 
 

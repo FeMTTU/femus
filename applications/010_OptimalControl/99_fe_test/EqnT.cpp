@@ -16,6 +16,7 @@
 #include "CurrentElem.hpp"
 #include "Parallel.hpp"
 #include "MultiLevelProblem.hpp"
+#include "LinearEquationSolver.hpp"
 
 // application
 #include "TempQuantities.hpp"

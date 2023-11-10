@@ -12,6 +12,7 @@
 #include "GeomElemBase.hpp"
 #include "MultiLevelProblem.hpp"
 #include "SparseMatrix.hpp"
+#include "LinearEquationSolver.hpp"
 
 // C++
 #include <sstream>

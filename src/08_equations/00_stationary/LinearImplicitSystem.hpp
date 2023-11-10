@@ -20,13 +20,14 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "System.hpp"
-#include "LinearEquationSolver.hpp"
 #include "MgTypeEnum.hpp"
 #include "DirichletBCTypeEnum.hpp"
 #include "LinearEquationSolverEnum.hpp"
+#include "PrecondtypeEnum.hpp"
+
+#include <iostream>
 
 
-#include <petscksp.h>
 
 namespace femus {
 
@@ -34,7 +35,14 @@ namespace femus {
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
+class elem_type;
+class NumericVector;
+class SparseMatrix;
+class LinearEquation;
+class LinearEquationSolver;
+class FieldSplitTree;
 
+  
   class LinearImplicitSystem : public System {
 
 
@@ -226,9 +234,9 @@ namespace femus {
       * The \p LinearSolver defines the default interface used to
       * solve the linear_implicit system.  This class handles all the
       * details of interfacing with various linear algebra packages
-      * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
+      * Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
       */
-      std::vector < LinearEquationSolver*> _LinSolver;   /* vector of number of levels */
+      std::vector < LinearEquationSolver* > _LinSolver;   /* vector of number of levels */
 
       /** Set the tolerances for the ksp solver on each grid: rtol, atol, divtol, maxits */
       void SetTolerances (const double &rtol, const double &atol,
@@ -450,7 +458,7 @@ namespace femus {
     public:
 
       /** Set the PCFIELDSPLIT structure in linear solver */
-      void SetFieldSplitTree (FieldSplitTree *fieldSplitTree);
+      void SetFieldSplitTree (FieldSplitTree * fieldSplitTree);
 
       
       
@@ -490,24 +498,9 @@ namespace femus {
 //==== Richardson - BEGIN ========
     public:
       
-      void SetRichardsonScaleFactor (const double &richardsonScaleFactor) {
-        _richardsonScaleFactor = richardsonScaleFactor;
-        _richardsonScaleFactorDecrease = 0;
-        _richardsonScaleFactorIsSet = true;
-        for (unsigned i = 0; i < _gridn; i++) {
-          _LinSolver[i]->SetRichardsonScaleFactor (_richardsonScaleFactor);
-        }
-      }
+      void SetRichardsonScaleFactor (const double &richardsonScaleFactor);
 
-      void SetRichardsonScaleFactor (const double &richardsonScaleFactorMin, const double &richardsonScaleFactorMax) {
-        _richardsonScaleFactor = richardsonScaleFactorMax;
-        _richardsonScaleFactorDecrease = (_gridn > 1) ? (richardsonScaleFactorMin - richardsonScaleFactorMax) / (_gridn - 2) : 0;
-        _richardsonScaleFactorIsSet = true;
-        _LinSolver[0]->SetRichardsonScaleFactor (_richardsonScaleFactor);
-        for (unsigned i = 1; i < _gridn; i++) {
-          _LinSolver[i]->SetRichardsonScaleFactor (_richardsonScaleFactor + _richardsonScaleFactorDecrease * (i - 1));
-        }
-      }
+      void SetRichardsonScaleFactor (const double &richardsonScaleFactorMin, const double &richardsonScaleFactorMax);
       
     protected:
 

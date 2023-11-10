@@ -21,11 +21,13 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 #include "Marker.hpp"
 #include "MyVector.hpp"
+
+#include "adept.h"
+#include <stdlib.h>
 
 //double Miu = 0.01;   int c0=-1; int cn=-1; //Re=100;
 //double Miu = 0.002;  int c0=-1; int cn=-1; //Re=500;

@@ -17,8 +17,11 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "Marker.hpp"
+
+#include "adept.h"
+
 
 using namespace femus;
 

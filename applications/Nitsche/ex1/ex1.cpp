@@ -18,6 +18,8 @@
 #include "GMVWriter.hpp"
 #include "PetscMatrix.hpp"
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 
 using namespace femus;
 void AssembleNitscheProblem_AD (MultiLevelProblem& mlProb);

@@ -20,6 +20,7 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include <cstdio>
 #include <fstream>

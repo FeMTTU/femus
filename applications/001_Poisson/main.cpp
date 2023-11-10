@@ -13,6 +13,7 @@
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
 #include "ParsedFunction.hpp"

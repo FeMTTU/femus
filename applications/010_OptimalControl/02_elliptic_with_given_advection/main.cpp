@@ -1,10 +1,3 @@
-//C++ includes
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <iostream>
-#include <cstdlib>
-#include <sstream>
-
 #include "FemusConfig.hpp"
 #include "Parallel.hpp"
 #include "FemusInit.hpp"
@@ -21,10 +14,20 @@
 #include "Quantity.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "XDMFWriter.hpp"
+#include "LinearEquationSolver.hpp"
 
 // application
 #include "TempQuantities.hpp"
 #include "OptLoop.hpp"
+
+
+//C++ includes
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <iostream>
+#include <cstdlib>
+#include <sstream>
+
 
 
 #ifdef HAVE_LIBMESH
