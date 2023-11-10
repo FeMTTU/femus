@@ -3,7 +3,7 @@
  
 
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
-
+#include "LinearEquationSolver.hpp"
 
 //*********************** Domain and Mesh Independent - BEGIN *****************************************
   
