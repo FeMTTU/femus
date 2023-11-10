@@ -19,8 +19,11 @@
 #include "TransientSystem.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
-#include "NumericVector.hpp"
-#include "MonolithicFSINonLinearImplicitSystem.hpp"
+#include "System.hpp"
+#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
+
+
 
 namespace femus {
 
@@ -74,16 +77,16 @@ void TransientSystem<Base>::SetUpForSolve(){
   }
 
   if(_assembleCounter % 1 == 0 || _dt != dtOld){
-    std::cout<<"Assemble Matrix\n";
+    std::cout << "Assemble Matrix\n";
     Base::_buildSolver = true;
     if( _dt != dtOld )
       _assembleCounter = 0;
   }
   else{
-    std::cout<<"Do not Assemble Matrix";
+    std::cout << "Do not Assemble Matrix";
     Base::_buildSolver = false;
   }
-  std::cout<<"assemble counter = "<<_assembleCounter<<std::endl;
+  std::cout << "assemble counter = " << _assembleCounter << std::endl;
   _assembleCounter++;
 
 
@@ -111,7 +114,8 @@ void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
 
 //---------------------------------------------------------------------------------------------------------
 template <class Base>
-void TransientSystem<Base>::NewmarkAccUpdate() {
+void TransientSystem<Base>::NewmarkAccUpdate(const std::vector< std::string > acceleration_name,
+                                             const std::vector< std::string > velocity_name) {
 
   const double gamma = 0.5;
   const double a5    = -1.*(1. - gamma)/gamma;
@@ -122,12 +126,10 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
 
   unsigned axyz[3];
   unsigned vxyz[3];
-  const char accname[3][3] = {"AX","AY","AZ"};
-  const char velname[3][2] = {"U","V","W"};
 
   for(unsigned i=0; i<dim; i++) {
-     axyz[i] = this->_ml_sol->GetIndex(&accname[i][0]);
-     vxyz[i] = this->_ml_sol->GetIndex(&velname[i][0]);
+     axyz[i] = this->_ml_sol->GetIndex( acceleration_name[i].c_str()  );
+     vxyz[i] = this->_ml_sol->GetIndex( velocity_name[i].c_str() );
   }
 
   for (int ig=0;ig< this->_gridn;ig++) {
@@ -151,8 +153,21 @@ void TransientSystem<Base>::AttachGetTimeIntervalFunction (double (* get_time_in
 template class TransientSystem<System>;
 template class TransientSystem<LinearImplicitSystem>;
 template class TransientSystem<NonLinearImplicitSystem>;
-template class TransientSystem<MonolithicFSINonLinearImplicitSystem>;
+
 
 } //end namespace femus
+
+
+
+#include "MonolithicFSINonLinearImplicitSystem.hpp"
+
+
+namespace femus {
+
+// TransientSystem forward instantiations
+template class TransientSystem<MonolithicFSINonLinearImplicitSystem>;
+
+}
+
 
 

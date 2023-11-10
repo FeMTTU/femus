@@ -9,6 +9,7 @@
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
 #include "TransientSystem.hpp"
+#include "TransientFSI.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "../include/FSITimeDependentAssembly.hpp"
 #include <dlfcn.h>

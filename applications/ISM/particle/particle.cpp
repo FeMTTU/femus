@@ -9,6 +9,7 @@
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
+#include "TransientFSI.hpp"
 #include "LinearEquationSolver.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"

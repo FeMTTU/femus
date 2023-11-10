@@ -27,6 +27,14 @@ double InitVariableP(const std::vector < double >& x);
 bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time);
 
+
+
+ static std::vector< std::string > acceleration_name = {"AX","AY","AZ"};
+ static std::vector< std::string > velocity_name = {"U","V","W"};
+
+
+
+ 
 int main(int argc,char **args) {
 
   /// Init Petsc-MPI communicator
@@ -135,7 +143,7 @@ int main(int argc,char **args) {
     ml_prob.get_system("Navier-Stokes").MGsolve();
 
     //The update of the acceleration must be done before the update of the other variables
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").NewmarkAccUpdate();
+    ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").NewmarkAccUpdate( acceleration_name, velocity_name );
 
     //update Solution
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").CopySolutionToOldSolution();
@@ -244,6 +252,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   unsigned nwtn_alg = 1;
   bool newton = (nwtn_alg==0) ? 0:1;
 
+  
+  std::cout << "Check the name strings are the same from the main ============= " << std::endl;
+  
   // solution and coordinate variables
   const char Solname[4][2] = {"U","V","W","P"};
   std::vector < unsigned > SolPdeIndex(dim+1);
