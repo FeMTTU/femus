@@ -52,11 +52,12 @@ namespace femus {
 
     protected:
         
-      static const double Xc[15][3];
       double X[67][3];
       static const int IND[15][3];
       static const int KVERT_IND[67][2];
 
+      static const double Xc[15][3];
+      
       static const unsigned fine2CoarseVertexMapping[8][4];
       static const unsigned faceDofs[4][7];
       

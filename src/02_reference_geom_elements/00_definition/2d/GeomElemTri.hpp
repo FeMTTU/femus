@@ -13,9 +13,12 @@ class GeomElemTri : public GeomElemBase  {
 
 public:
          
-    unsigned int  get_dimension() const { return 2; };
-    unsigned int n_nodes_linear() const { return 3; };
+    unsigned int  get_dimension() const { return _dim; };
+    unsigned int n_nodes_linear() const { return _n_vertices; };
+
     
+   static constexpr unsigned int _dim        =  2;
+   static constexpr unsigned int _n_vertices =  3;
 
 };
 

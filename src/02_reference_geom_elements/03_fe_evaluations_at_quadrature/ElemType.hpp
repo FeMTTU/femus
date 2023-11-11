@@ -60,21 +60,17 @@ namespace femus
 
 // ===  GeomElem Part - BEGIN =================
       
-// =========================================
-// ===  Geometric element - BEGIN =================
-// =========================================
-   protected:
+
+   private:
        
       void initialize_geom_elem(const char* geom_elem);
       
       
+   protected:
+     
       GeomElType _GeomElemType;  /* Geometric Element flag */
-// =========================================
-// ===  Geometric element - END =================
-// =========================================
 
 
-// ===  Geometric element - Dimension - BEGIN =================
     public:
         
       /** Retrieve the dimension of the underlying geometric element */
@@ -85,15 +81,33 @@ namespace femus
    protected:
       
       unsigned _dim; /* Spatial dimension of the geometric element */
-// ===  Geometric element - Dimension - END =================
+      
+    public:
+        
+      inline int  GetNDofs_Lagrange(const unsigned type) const {
+        return _nlag[type];
+      }
+      
+   protected:
+      
+      /**  _nlag[0] = number of linear dofs in 1 element;
+           _nlag[1] = number of serendipity dofs in 1 element; 
+           _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+           _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+       */
+      int _nlag[4];
+      
+   private:
+     
+   void set_coarse_and_fine_num_nodes_geometry(const basis* pt_basis_in);
 
 // ===  GeomElem Part - END =================
 
 
-// ===  FE Part - BEGIN =================
+// ===  FE Part (without Quadrature evaluations) - BEGIN =================
       
 // =========================================
-// ===   FE (without Quadrature evaluations) - BEGIN =================
+// ===   single level - BEGIN =================
 // =========================================
     public:
         
@@ -106,46 +120,53 @@ namespace femus
         return _SolType;
       }
       
-      
-   protected:
-       
-      void initialize_fe_and_multigrid_parts(const char* geom_elem);
-      
-      void deallocate_fe_and_multigrid_parts();
-      
-      void initialize_fe_soltype(const char* fe_order);
-      
-      /** Finite Element Family flag */
-      unsigned _SolType;
-      
-      /** FE basis functions*/
-      basis* _pt_basis;
-      
-      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
-      
-      void allocate_and_set_coarse_node_indices(const basis* pt_basis_in);
-      
-      /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
-      const int** _IND;
-// =========================================
-// ===   FE (without Quadrature evaluations) - END =================
-// =========================================
-
-
-      
-// =========================================
-// ===  FE (without Quadrature evaluations), with MG - BEGIN =================
-// =========================================
-    public:
-        
       /** Retrieve the number of dofs for this element */
       inline int  GetNDofs() const {
         return _nc;
       }
       
-      inline int  GetNDofs_Lagrange(const unsigned type) const {
-        return _nlag[type];
-      }
+      
+   protected:
+       
+      void initialize_fe_soltype(const char* fe_order);
+      
+      /** Finite Element Family flag */
+      unsigned _SolType;
+      
+      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
+      
+      /** FE basis functions*/
+      basis* _pt_basis;
+      
+      void initialize_fe_and_multigrid_parts(const char* geom_elem);
+      
+      void deallocate_fe_and_multigrid_parts();
+      
+      
+   private:
+     
+      /** _nc: number of dofs of 1 element;  */
+      int _nc;
+      
+      /** Set numbers of coarse dofs for 1 element */
+      void set_coarse_num_dofs(const basis* pt_basis_in);
+      
+      void allocate_and_set_coarse_node_indices_IND(const basis* pt_basis_in);
+      
+   protected:
+     
+      /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
+      const int** _IND;
+// =========================================
+// ===   single level - END =================
+// =========================================
+
+
+      
+// =========================================
+// ===  refinement - BEGIN =================
+// =========================================
+    public:
       
       /** Retrieve the number of dofs for this element */
       inline int  GetNDofsFine() const {
@@ -181,9 +202,19 @@ namespace femus
       
    protected:
        
-      /** Compute element prolongation operator */
-      void set_element_prolongation(const basis* linearElement);
       
+      /** _nf: number of dofs in the element after refinement; */
+      int _nf;
+      
+      /** [_nf][_dim] coordinates of the _nf nodes in the refined elements ... @todo in what order? */ 
+      const double** _X;
+      
+      /** [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element */
+      const int** _KVERT_IND;
+
+      
+   private:
+     
       void allocate_fine_coordinates_and_KVERT_IND();
       
       /** Compute node coordinates in basis object */
@@ -192,28 +223,12 @@ namespace femus
       /** Set fine node coordinates and fine node indices */
       void set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in);
       
-      /** Set numbers of coarse and fine dofs for 1 element */
-      void set_coarse_and_fine_num_dofs(const basis* pt_basis_in);
+      /** Set numbers of fine dofs for 1 element */
+      void set_fine_num_dofs(const basis* pt_basis_in);
       
-      /** _nc: number of dofs of 1 element;  */
-      int _nc;
+      /** Compute element prolongation operator */
+      void set_element_prolongation(const basis* linearElement);
       
-      /** _nf: number of dofs in the element after refinement; */
-      int _nf;
-      
-      /**  _nlag[0] = number of linear dofs in 1 element;
-           _nlag[1] = number of serendipity dofs in 1 element; 
-           _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
-           _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
-       */
-      int _nlag[4];
-      
-      /** [_nf][_dim] coordinates of the _nf nodes in the refined elements ... @todo in what order? */ 
-      const double** _X;
-      
-      /** [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element */
-      const int** _KVERT_IND;
-
       /** Prolongator value */
       double** _prol_val;
       
@@ -227,10 +242,10 @@ namespace femus
       int* _mem_prol_ind;
 
 // =========================================
-// ===  FE (without Quadrature evaluations), with MG - END =================
+// ===  refinement - END =================
 // =========================================
 
-// ===  FE Part - END =================
+// ===  FE Part (without Quadrature evaluations) - END =================
 
       
       
@@ -557,8 +572,8 @@ namespace femus
       }
       
       void GetPhi(std::vector<double> &phi, const std::vector < double >& xi ) const {
-        phi.resize(_nc);
-        for(unsigned i = 0; i < _nc; i++) {
+        phi.resize(GetNDofs());
+        for(unsigned i = 0; i < phi.size(); i++) {
           phi[i] = _pt_basis->eval_phi(_IND[i], &xi[0]);
         }
       }
@@ -718,8 +733,8 @@ namespace femus
       }
       
       void GetPhi(std::vector<double> &phi, const std::vector < double >& xi ) const{
-        phi.resize(_nc);
-        for(unsigned i = 0; i < _nc; i++) {
+        phi.resize(GetNDofs());
+        for(unsigned i = 0; i < phi.size(); i++) {
           phi[i] = _pt_basis->eval_phi(_IND[i], &xi[0]);
         }
       }
@@ -885,8 +900,8 @@ namespace femus
       }
       
       void GetPhi(std::vector<double> &phi, const std::vector < double >& xi ) const {
-        phi.resize(_nc);
-        for(unsigned i = 0; i < _nc; i++) {
+        phi.resize( GetNDofs() );
+        for(unsigned i = 0; i < phi.size(); i++) {
           phi[i] = _pt_basis->eval_phi(_IND[i], &xi[0]);
         }
       }
@@ -979,7 +994,7 @@ namespace femus
 
     const double* dxi = _dphidxi[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++) {
+    for(int inode = 0; inode < GetNDofs(); inode++, dxi++) {
       Jac += (*dxi) * vt[0][inode];
     }
 
@@ -1002,17 +1017,19 @@ namespace femus
 //     if(&nablaphi == NULL) {
 //       hermitianMatrix = false;
 //     }
+    
+    const unsigned n_dofs = GetNDofs();
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 1);
-    if(nablaphi) nablaphi->resize(_nc * 1);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 1);
+    if(nablaphi) nablaphi->resize( n_dofs  * 1);
 
     type Jac = 0.;
     type JacI;
 
     const double* dxi = _dphidxi[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++) {
       Jac += (*dxi) * vt[0][inode];
     }
 
@@ -1023,7 +1040,7 @@ namespace femus
     dxi = _dphidxi[ig];
     const double* dxi2 = _d2phidxi2[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, dxi2++) {
       phi[inode] = _phi[ig][inode];
       gradphi[inode] = (*dxi) * JacI;
       if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI * JacI;
@@ -1039,16 +1056,18 @@ namespace femus
                                    std::vector < double >& phi, std::vector < type >& gradphi,
                                    boost::optional < std::vector < type > & > nablaphi) const
   {
+    
+    const unsigned n_dofs = GetNDofs();
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 1);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 1);
 
-    if(nablaphi) nablaphi->resize(_nc * 1);
+    if(nablaphi) nablaphi->resize( n_dofs  * 1);
 
-    std::vector <double> dphidxi(_nc);
-    std::vector <double> d2phidxi2(_nc);
+    std::vector <double> dphidxi( n_dofs );
+    std::vector <double> d2phidxi2( n_dofs );
 
-    for(int j = 0; j < _nc; j++) {
+    for(int j = 0; j <  n_dofs ; j++) {
       phi[j] = _pt_basis->eval_phi(_IND[j], &xi[0]);
       dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], &xi[0]);
       d2phidxi2[j] = _pt_basis->eval_d2phidx2(_IND[j], &xi[0]);
@@ -1059,7 +1078,7 @@ namespace femus
 
     const double* dxi = &dphidxi[0];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++) {
       Jac += (*dxi) * vt[0][inode];
     }
 
@@ -1070,7 +1089,7 @@ namespace femus
     dxi = &dphidxi[0];
     const double* dxi2 = &d2phidxi2[0];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, dxi2++) {
       gradphi[inode] = (*dxi) * JacI;
       if(nablaphi) {
         (*nablaphi)[inode] = (*dxi2) * JacI * JacI;
@@ -1087,7 +1106,9 @@ namespace femus
                                       std::vector < double >& phi, std::vector < type >& gradphi, std::vector < type >& normal) const
   {
 
-    phi.resize(_nc);
+    const unsigned n_dofs = GetNDofs();
+    
+    phi.resize( n_dofs );
     normal.resize(2);
 
     type Jac[2][2] = {{0., 0.}, {0., 0.}};
@@ -1095,7 +1116,7 @@ namespace femus
 
     const double* dfeta = _dphidxi[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dfeta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dfeta++) {
       Jac[0][0] += (*dfeta) * vt[0][inode];
       Jac[1][0] += (*dfeta) * vt[1][inode];
     }
@@ -1124,7 +1145,7 @@ namespace femus
 
     Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
-    for(int inode = 0; inode < _nc; inode++) {
+    for(int inode = 0; inode <  n_dofs ; inode++) {
       phi[inode] = _phi[ig][inode];
     }
 
@@ -1144,6 +1165,8 @@ namespace femus
                                       std::vector < std::vector < type > >& jacobianMatrix) const
   {
 
+    const unsigned n_dofs = GetNDofs();
+    
     jacobianMatrix.resize(2);
     jacobianMatrix[0].resize(2);
     jacobianMatrix[1].resize(2);
@@ -1152,7 +1175,7 @@ namespace femus
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[1][0] += (*deta) * vt[0][inode];
@@ -1184,18 +1207,19 @@ namespace femus
 //       hermitianMatrix = false;
 //     }
 
+    const unsigned n_dofs = GetNDofs();
 
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 2);
-    if(nablaphi) nablaphi->resize(_nc * 3);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 2);
+    if(nablaphi) nablaphi->resize( n_dofs  * 3);
 
     type Jac[2][2] = {{0, 0}, {0, 0}};
     type JacI[2][2];
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[1][0] += (*deta) * vt[0][inode];
@@ -1218,7 +1242,7 @@ namespace femus
     const double* deta2 = _d2phideta2[ig];
     const double* dxideta = _d2phidxideta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
 
       phi[inode] = _phi[ig][inode];
 
@@ -1246,18 +1270,19 @@ namespace femus
                                    std::vector < double >& phi, std::vector < type >& gradphi,
                                    boost::optional < std::vector < type > & > nablaphi) const
   {
+    const unsigned n_dofs = GetNDofs();
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 2);
-    if(nablaphi) nablaphi->resize(_nc * 3);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 2);
+    if(nablaphi) nablaphi->resize( n_dofs  * 3);
 
-    std::vector <double> dphidxi(_nc);
-    std::vector <double> dphideta(_nc);
-    std::vector <double> d2phidxi2(_nc);
-    std::vector <double> d2phideta2(_nc);
-    std::vector <double> d2phidxideta(_nc);
+    std::vector <double> dphidxi( n_dofs );
+    std::vector <double> dphideta( n_dofs );
+    std::vector <double> d2phidxi2( n_dofs );
+    std::vector <double> d2phideta2( n_dofs );
+    std::vector <double> d2phidxideta( n_dofs );
 
-    for(int j = 0; j < _nc; j++) {
+    for(int j = 0; j <  n_dofs ; j++) {
       phi[j] = _pt_basis->eval_phi(_IND[j], &xi[0]);
       dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], &xi[0]);
       dphideta[j] = _pt_basis->eval_dphidy(_IND[j], &xi[0]);
@@ -1271,7 +1296,7 @@ namespace femus
     const double* dxi = &dphidxi[0];
     const double* deta = &dphideta[0];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[1][0] += (*deta) * vt[0][inode];
@@ -1294,7 +1319,7 @@ namespace femus
     const double* deta2 = &d2phideta2[0];
     const double* dxideta = &d2phidxideta[0];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
 
       gradphi[2 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
       gradphi[2 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
@@ -1321,7 +1346,9 @@ namespace femus
   void elem_type_2D::JacobianSur_type(const std::vector < std::vector < type > >& vt, const unsigned& ig, type& Weight,
                                       std::vector < double >& phi, std::vector < type >& gradphi, std::vector < type >& normal) const
   {
-    phi.resize(_nc);
+    const unsigned n_dofs = GetNDofs();
+
+    phi.resize( n_dofs );
     normal.resize(3);
 
     type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -1329,7 +1356,7 @@ namespace femus
     const double* dfx = _dphidxi[ig];
     const double* dfy = _dphideta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dfx++, dfy++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dfx++, dfy++) {
       Jac[0][0] += (*dfx) * vt[0][inode];
       Jac[1][0] += (*dfx) * vt[1][inode];
       Jac[2][0] += (*dfx) * vt[2][inode];
@@ -1360,7 +1387,7 @@ namespace femus
 
     Weight = det * _gauss->GetGaussWeightsPointer()[ig];
 
-    for(int inode = 0; inode < _nc; inode++) {
+    for(int inode = 0; inode <  n_dofs ; inode++) {
       phi[inode] = _phi[ig][inode];
     }
 
@@ -1379,6 +1406,8 @@ namespace femus
                                       std::vector< std::vector < type > >& jacobianMatrix) const
   {
 
+    const unsigned n_dofs = GetNDofs();
+    
     jacobianMatrix.resize(3);
     jacobianMatrix[0].resize(3);
     jacobianMatrix[1].resize(3);
@@ -1390,7 +1419,7 @@ namespace femus
     const double* deta = _dphideta[ig];
     const double* dzeta = _dphidzeta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[0][2] += (*dxi) * vt[2][inode];
@@ -1432,10 +1461,11 @@ namespace femus
 //     if(&nablaphi == NULL) {
 //       hermitianMatrix = false;
 //     }
+    const unsigned n_dofs = GetNDofs();
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 3);
-    if(nablaphi) nablaphi->resize(_nc * 6);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 3);
+    if(nablaphi) nablaphi->resize( n_dofs  * 6);
 
 
     type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -1445,7 +1475,7 @@ namespace femus
     const double* deta = _dphideta[ig];
     const double* dzeta = _dphidzeta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[0][2] += (*dxi) * vt[2][inode];
@@ -1484,7 +1514,7 @@ namespace femus
     const double* detadzeta = _d2phidetadzeta[ig];
     const double* dzetadxi = _d2phidzetadxi[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
 
       phi[inode] = _phi[ig][inode];
 
@@ -1530,24 +1560,26 @@ namespace femus
                                    std::vector < double >& phi, std::vector < type >& gradphi,
                                    boost::optional < std::vector < type > & > nablaphi) const
   {
+    
+    const unsigned n_dofs = GetNDofs();
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 3);
-    if(nablaphi) nablaphi->resize(_nc * 6);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 3);
+    if(nablaphi) nablaphi->resize( n_dofs  * 6);
 
-    std::vector < double > dphidxi(_nc);
-    std::vector < double > dphideta(_nc);
-    std::vector < double > dphidzeta(_nc);
+    std::vector < double > dphidxi( n_dofs );
+    std::vector < double > dphideta( n_dofs );
+    std::vector < double > dphidzeta( n_dofs );
 
-    std::vector < double > d2phidxi2(_nc);
-    std::vector < double > d2phideta2(_nc);
-    std::vector < double > d2phidzeta2(_nc);
+    std::vector < double > d2phidxi2( n_dofs );
+    std::vector < double > d2phideta2( n_dofs );
+    std::vector < double > d2phidzeta2( n_dofs );
 
-    std::vector < double > d2phidxideta(_nc);
-    std::vector < double > d2phidetadzeta(_nc);
-    std::vector < double > d2phidzetadxi(_nc);
+    std::vector < double > d2phidxideta( n_dofs );
+    std::vector < double > d2phidetadzeta( n_dofs );
+    std::vector < double > d2phidzetadxi( n_dofs );
 
-    for(int j = 0; j < _nc; j++) {
+    for(int j = 0; j <  n_dofs ; j++) {
       phi[j] = _pt_basis->eval_phi(_IND[j], &xi[0]);
       dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], &xi[0]);
       dphideta[j] = _pt_basis->eval_dphidy(_IND[j], &xi[0]);
@@ -1570,7 +1602,7 @@ namespace femus
     const double* deta = &dphideta[0];
     const double* dzeta = &dphidzeta[0];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[0][2] += (*dxi) * vt[2][inode];
@@ -1609,7 +1641,7 @@ namespace femus
     const double* detadzeta = &d2phidetadzeta[0];
     const double* dzetadxi = &d2phidzetadxi[0];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
 
       gradphi[3 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1] + (*dzeta) * JacI[0][2];
       gradphi[3 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1] + (*dzeta) * JacI[1][2];

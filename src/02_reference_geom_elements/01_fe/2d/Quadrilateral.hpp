@@ -52,6 +52,7 @@ namespace femus {
     protected:
         
       static const double Xc[9][2];
+      
       double X[25][2];
       static const int IND[9][2];
       static const int KVERT_IND[25][2];

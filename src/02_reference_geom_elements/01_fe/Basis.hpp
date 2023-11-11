@@ -55,55 +55,28 @@ namespace femus {
 	  }
 // ===  Constructors / Destructor - END =================
 
-
-// ===  Basic - BEGIN =================
-    public:
       
-      virtual void PrintType() const = 0;
-// ===  Basic - END =================
-
-      
- 
  // ===  Geom Elem - BEGIN =================
     public:
-      
-      virtual const double* GetX(const int &i) const = 0;
-
-      virtual const double* GetXcoarse(const int &i) const {
-        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
-        return NULL;
-      }
-
-      virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
-        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
-      }
-
-      virtual const int* GetIND(const int &i) const = 0;
-
-      virtual const int* GetKVERT_IND(const int &i) const = 0;
-
-      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
-        std::cout << "Warning this function in not implemented for const element type" << std::endl;
-        return 0u;
-      }
-
-      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
-	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::endl;
-    return 0u;
-      }
       
       
       const int n_faces(const unsigned type_in) const { return faceNumber[type_in]; }
       
-      static constexpr const unsigned _n_faces_three_types = 3;
+      static constexpr const unsigned _n_face_types_and_total = 3;
       
     private:
 
       /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...) */
-      int faceNumber[ basis::_n_faces_three_types ];
+      int faceNumber[ basis::_n_face_types_and_total ];
 
     public:
       
+      /**
+        _nlag[0] = number of linear dofs in 1 element;
+        _nlag[1] = number of serendipity dofs in 1 element; 
+        _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+        _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+      */
       const int _nlag0, _nlag1, _nlag2, _nlag3;
  // ===  Geom Elem - END =================
 
@@ -111,28 +84,53 @@ namespace femus {
  // ===  FE  - BEGIN =================
     public:
       
+      virtual void PrintType() const = 0;
+      
       //fe
       const int n_dofs() const { return _nc; }
       
       const int n_dofs_fine() const { return _nf; }
       
+
+      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
+	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::endl;
+    return 0u;
+      }
+      
+      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
+        std::cout << "Warning this function in not implemented for const element type" << std::endl;
+        return 0u;
+      }
+
+      /// Coordinates of the points that are DofCarrier of the coarse element
+      virtual const double* GetXcoarse(const int &i) const {
+        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
+        return NULL;
+      }
+
+      
+      virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
+        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
+      }
+
+      /// Coordinates of the points that are DofCarrier of the fine element
+      virtual const double* GetX(const int &i) const = 0;
+      
+      virtual const int* GetIND(const int &i) const = 0;
+
+      virtual const int* GetKVERT_IND(const int &i) const = 0;
+
     private:
 
       /**
        * _nc = number of dofs of 1 element;  
        * _nf = number of dofs in that element after refinement; 
       */
-      /**
-        _nlag[0] = number of linear dofs in 1 element;
-        _nlag[1] = number of serendipity dofs in 1 element; 
-        _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
-        _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
-      */
       const int _nc, _nf;
  // ===  FE  - END =================
       
 
- // ===  FE Functions - BEGIN =================
+ // ===  FE Shape Functions - BEGIN =================
     public:
      
       // DERIVATIVES of ORDER 0 - BEGIN ============
@@ -257,104 +255,64 @@ namespace femus {
       }
       // DERIVATIVES of ORDER 2 - END ============
       
- // ===  FE Functions - END =================
+ // ===  FE Shape Functions - END =================
  
 
- // === FE Functions, Service for other elements (bit of repetition) - BEGIN ============
+ 
+ // === FE Shape Functions, Service for other elements (bit of repetition) - 2D basis, triangle BEGIN ============
       
     protected:
-    
-      //1D basis - BEGIN
-      
-      // linear lagrangian
-      inline double lagLinear(const double& x, const int& i) const {
-        return (!i) * 0.5 * (1. - x) + !(i - 2) * 0.5 * (1. + x);
-      }
-      
-      inline double dlagLinear(const double& x, const int& i) const {
-        return (!i) * (-0.5) + !(i - 2) * 0.5;
-      }
-
-      //quadratic lagrangian
-      inline double lagQuadratic(const double& x, const int& i) const {
-        return !i * (0.5) * (1. - x) + !(i - 1) * (1. - x) * (1. + x) + !(i - 2) * (0.5) * (1. + x);
-      }
-
-      inline double dlagQuadratic(const double& x, const int& i) const {
-        return (!i) * (-0.5) + !(i - 1) * (-2.*x) + !(i - 2) * (0.5);
-      }
-
-      inline double d2lagQuadratic(const double& x, const int& i) const {
-        return !(i - 1) * (-2.);
-      }
-
-      //bi-quadratic lagrangian
-      inline double lagBiquadratic(const double& x, const int& i) const {
-        return !i * 0.5 * x * (x - 1.) + !(i - 1) * (1. - x) * (1. + x) + !(i - 2) * 0.5 * x * (1. + x);
-      }
-
-      inline double dlagBiquadratic(const double& x, const int& i) const {
-        return !i * (x - 0.5) + !(i - 1) * (-2.*x) + !(i - 2) * (x + 0.5);
-      }
-
-      inline double d2lagBiquadratic(const double& x, const int& i) const {
-        return !i + !(i - 1) * (-2.) + !(i - 2);
-      }
-      //1D basis - END
-
-
-      //2D basis - BEGIN
       
       // linear triangle
-      inline double triangleLinear(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double triangleLinear(const double& x, const double& y, const int& i, const int& j) {
         return (!i * !j) * (1. - x - y) + !(i - 2) * x + !(j - 2) * y;
       }
 
-      inline double dtriangleLineardx(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double dtriangleLineardx(const double& x, const double& y, const int& i, const int& j) {
         return -(!i * !j) + !(i - 2);
       }
 
-      inline double dtriangleLineardy(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double dtriangleLineardy(const double& x, const double& y, const int& i, const int& j) {
         return -(!i * !j) + !(j - 2);
       }
 
       // quadratic triangle
-      inline double triangleQuadratic(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double triangleQuadratic(const double& x, const double& y, const int& i, const int& j) {
         return
           !i     * (!j * (1. - x - y) * (1. - 2.*x - 2.*y) + !(j - 1) * 4.*y * (1. - x - y) + !(j - 2) * (-y + 2.*y * y)) +
           !(i - 1) * (!j * 4.*x * (1. - x - y) + !(j - 1) * 4.*x * y) +
           !(i - 2) * (!j * (-x + 2.*x * x));
       }
 
-      inline double dtriangleQuadraticdx(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double dtriangleQuadraticdx(const double& x, const double& y, const int& i, const int& j) {
         return
           !i     * (!j * (-3. + 4.*x + 4.*y) + !(j - 1) * y * (-4.)) +
           !(i - 1) * (!j * 4.*(1. - 2.*x - y)  + !(j - 1) * y * (4.)) +
           !(i - 2) * (!j * (-1 + 4.*x));
       }
 
-      inline double dtriangleQuadraticdy(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double dtriangleQuadraticdy(const double& x, const double& y, const int& i, const int& j) {
         return
           !j     * (!i * (-3. + 4.*y + 4.*x) + !(i - 1) * x * (-4.)) +
           !(j - 1) * (!i * 4.*(1. - 2.*y - x)  + !(i - 1) * x * (4.)) +
           !(j - 2) * (!i * (-1 + 4.*y));
       }
 
-      inline double d2triangleQuadraticdx2(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double d2triangleQuadraticdx2(const double& x, const double& y, const int& i, const int& j) {
         return !j * ((!i) * 4. + !(i - 1) * (-8.) + !(i - 2) * 4.);
       }
 
-      inline double d2triangleQuadraticdy2(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double d2triangleQuadraticdy2(const double& x, const double& y, const int& i, const int& j) {
         return !i * ((!j) * 4. + !(j - 1) * (-8.) + !(j - 2) * 4.);
       }
 
-      inline double d2triangleQuadraticdxdy(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double d2triangleQuadraticdxdy(const double& x, const double& y, const int& i, const int& j) {
         return ((!i) * (!j) + !(i - 1) * !(j - 1)) * 4. + (!(i - 1) * (!j) + (!i) * !(j - 1)) * (-4.);
       }
 
       //biquadratic triangle
 
-      inline double triangleBiquadratic(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double triangleBiquadratic(const double& x, const double& y, const int& i, const int& j) {
         return
           !i     * (!j * ((1. - x - y) * (1. - 2.*x - 2.*y) + 3.*x * y * (1 - x - y)) +
                     !(j - 1) * 4.*(y * (1. - x - y) - 3.*x * y * (1 - x - y))  +
@@ -365,7 +323,7 @@ namespace femus {
           !(i - 7) * (!(j - 7) * 27.*x * y * (1 - x - y));
       }
 
-      inline double dtriangleBiquadraticdx(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double dtriangleBiquadraticdx(const double& x, const double& y, const int& i, const int& j) {
         return
           !i     * (!j * (-3. + 4.*x + 4.*y + 3.*(y - 2.*x * y - y * y)) +
                     !(j - 1) * 4.*(-y - 3.*(y - 2.*x * y - y * y))  +
@@ -376,7 +334,7 @@ namespace femus {
           !(i - 7) * (!(j - 7) * 27.*(y - 2.*x * y - y * y));
       }
 
-      inline double dtriangleBiquadraticdy(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double dtriangleBiquadraticdy(const double& x, const double& y, const int& i, const int& j) {
         return
           !j     * (!i * (-3. + 4.*y + 4.*x + 3.*(x - x * x - 2.*x * y)) +
                     !(i - 1) * 4.*(-x - 3.*(x - x * x - 2.*x * y))  +
@@ -387,7 +345,7 @@ namespace femus {
           !(j - 7) * (!(i - 7) * 27.*(x - x * x - 2.*x * y));
       }
 
-      inline double d2triangleBiquadraticdx2(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double d2triangleBiquadraticdx2(const double& x, const double& y, const int& i, const int& j) {
         return
           !i     * (!j * (4. - 6.*y) +
                     !(j - 1) * 4.*(6.*y)  +
@@ -398,7 +356,7 @@ namespace femus {
           !(i - 7) * (!(j - 7) * (-54.*y));
       }
 
-      inline double d2triangleBiquadraticdy2(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double d2triangleBiquadraticdy2(const double& x, const double& y, const int& i, const int& j) {
         return
           !j     * (!i * (4. - 6.*x) +
                     !(i - 1) * 4.*(6.*x) +
@@ -409,7 +367,7 @@ namespace femus {
           !(j - 7) * (!(i - 7) * (-54.*x));
       }
 
-      inline double d2triangleBiquadraticdxdy(const double& x, const double& y, const int& i, const int& j) const {
+      static inline double d2triangleBiquadraticdxdy(const double& x, const double& y, const int& i, const int& j) {
         return
           !j     * (!i * (4. + 3.*(1 - 2.*x - 2.*y)) +
                     !(i - 1) * 4.*(-1. - 3.*(1 - 2.*x - 2.*y))  +
@@ -419,9 +377,8 @@ namespace femus {
           !(j - 2) * (!i * (3.*(1 - 2.*x - 2.*y))) +
           !(j - 7) * (!(i - 7) * 27.*(1 - 2.*x - 2.*y));
       }
-      //2D basis - END
       
- // === FE Functions, Service for other elements (bit of repetition) - END ============
+ // === FE Shape Functions, Service for other elements (bit of repetition) - 2D basis, triangle END ============
 
  
   };

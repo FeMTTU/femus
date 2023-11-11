@@ -13,9 +13,11 @@ class GeomElemEdge : public GeomElemBase  {
 
 public:
          
-    unsigned int  get_dimension() const { return 1; };
-    unsigned int n_nodes_linear() const { return 2; };
-    
+    unsigned int  get_dimension() const { return _dim; };
+    unsigned int n_nodes_linear() const { return _n_vertices; };
+
+   static constexpr unsigned int _dim        =  1;
+   static constexpr unsigned int _n_vertices =  2;
 
 };
 

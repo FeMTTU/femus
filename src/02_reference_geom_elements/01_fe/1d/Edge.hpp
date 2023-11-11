@@ -47,15 +47,65 @@ namespace femus {
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
       }
+      
+      
+
+ // === FE Shape Functions, Service for other elements (bit of repetition) - 1D basis BEGIN ============
+      
+    public:  /*now they are all static and used by the functions needing them */
+    
+      
+      // linear lagrangian
+     static inline  double lagLinear(const double& x, const int& i) {
+        return (!i) * 0.5 * (1. - x) + !(i - 2) * 0.5 * (1. + x);
+      }
+      
+      static inline double dlagLinear(const double& x, const int& i)  {
+        return (!i) * (-0.5) + !(i - 2) * 0.5;
+      }
+
+      //quadratic lagrangian
+      static inline double lagQuadratic(const double& x, const int& i) {
+        return !i * (0.5) * (1. - x) + !(i - 1) * (1. - x) * (1. + x) + !(i - 2) * (0.5) * (1. + x);
+      }
+
+      static inline double dlagQuadratic(const double& x, const int& i) {
+        return (!i) * (-0.5) + !(i - 1) * (-2.*x) + !(i - 2) * (0.5);
+      }
+
+      static inline double d2lagQuadratic(const double& x, const int& i) {
+        return !(i - 1) * (-2.);
+      }
+
+      //bi-quadratic lagrangian
+      static inline double lagBiquadratic(const double& x, const int& i) {
+        return !i * 0.5 * x * (x - 1.) + !(i - 1) * (1. - x) * (1. + x) + !(i - 2) * 0.5 * x * (1. + x);
+      }
+
+      static inline double dlagBiquadratic(const double& x, const int& i) {
+        return !i * (x - 0.5) + !(i - 1) * (-2.*x) + !(i - 2) * (x + 0.5);
+      }
+
+      static inline double d2lagBiquadratic(const double& x, const int& i) {
+        return !i + !(i - 1) * (-2.) + !(i - 2);
+      }
+
+
+ // === FE Shape Functions, Service for other elements (bit of repetition) - 1D basis END ============
+      
 
     protected:
         
+      /// DofCarrier of coarse dofs
       static const double Xc[3][1];
-      double X[5][2];  ///@todo why does this have 2 in the second component instead of 1?
+      
+      /// DofCarrier of fine dofs
+      double X[5][1];
       static const int IND[3][1];
       static const int KVERT_IND[5][2];
       
       static const unsigned fine2CoarseVertexMapping[2][2];
+      
   };
 
   class LineLinear: public line_lag {

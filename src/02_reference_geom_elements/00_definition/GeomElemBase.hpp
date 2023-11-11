@@ -24,12 +24,14 @@ public:
 
 
 // Geom, Independent of Number of Nodes - BEGIN ===
+public:
     virtual unsigned int get_dimension() const = 0;
     virtual unsigned int n_nodes_linear() const = 0;
 // Geom, Independent of Number of Nodes - END ===
     
     
 // Geom, Dependent of Number of Nodes - BEGIN ===
+public:
     virtual unsigned int n_nodes()       const  = 0;
     
     virtual std::vector<unsigned> get_nodes_of_face(const unsigned f) const  = 0;

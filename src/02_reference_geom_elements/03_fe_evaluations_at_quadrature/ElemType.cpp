@@ -354,11 +354,13 @@ namespace femus {
     
 
 
-  void elem_type::allocate_and_set_coarse_node_indices(const basis* pt_basis_in)  {
+  void elem_type::allocate_and_set_coarse_node_indices_IND(const basis* pt_basis_in)  {
       
-    _IND = new const int * [_nc];
+    const unsigned n_dofs = GetNDofs();
+    
+    _IND = new const int * [ n_dofs ];
 
-    for(int i = 0; i < _nc; i++) {
+    for(int i = 0; i <  n_dofs ; i++) {
       _IND[i] = pt_basis_in->GetIND(i);
     }
     
@@ -367,10 +369,11 @@ namespace femus {
   
   void elem_type::allocate_fine_coordinates_and_KVERT_IND()  {
       
-    _X         = new const double * [_nf];
     _KVERT_IND = new const int * [_nf];
+    _X         = new const double * [_nf];
       
   }
+  
   
   
   void elem_type::set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
@@ -383,22 +386,29 @@ namespace femus {
   } 
   
   
-  void elem_type::set_coarse_and_fine_num_dofs(const basis* pt_basis_in)  {
+  void elem_type::set_coarse_num_dofs(const basis* pt_basis_in)  {
   
-    _nc 	 = pt_basis_in->n_dofs();
-    _nf 	 = pt_basis_in->n_dofs_fine();
+     _nc  	 = pt_basis_in->n_dofs();
+
+    
+ }
+
+  void elem_type::set_fine_num_dofs(const basis* pt_basis_in)  {
+    
+        _nf 	 = pt_basis_in->n_dofs_fine();
+
+  } 
+ 
+   void elem_type::set_coarse_and_fine_num_nodes_geometry(const basis* pt_basis_in)  {
+
     _nlag[0] = pt_basis_in->_nlag0;
     _nlag[1] = pt_basis_in->_nlag1;
     _nlag[2] = pt_basis_in->_nlag2;
     _nlag[3] = pt_basis_in->_nlag3;
-
-    
-    allocate_and_set_coarse_node_indices(pt_basis_in);
-
-    allocate_fine_coordinates_and_KVERT_IND();
-    
-  }
-  
+     
+   }
+   
+ 
   
   
    void elem_type::set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
@@ -431,6 +441,8 @@ namespace femus {
   
    void elem_type::set_element_prolongation(const basis* linearElement)  {
 
+       const unsigned n_dofs = GetNDofs();
+       
        const double threshold_derivative_nonzero = 1.0e-14;
        
       int counter = 0;
@@ -457,7 +469,7 @@ namespace femus {
         } //k
       }
       
-      for(int j = 0; j < _nc; j++) {
+      for(int j = 0; j <  n_dofs ; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
         if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear
           phi = jac[j];
@@ -503,7 +515,7 @@ namespace femus {
 
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
-      for(int j = 0; j < _nc; j++) {
+      for(int j = 0; j <  n_dofs ; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
         if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
           phi = jac[j];
@@ -525,20 +537,21 @@ namespace femus {
    void elem_type_1D::allocate_and_fill_shape_at_quadrature_points()  {
        
      // shape function and its derivatives evaluated at Gauss'points
-    int n_gauss = _gauss->GetGaussPointsNumber();
+    const int n_gauss = _gauss->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
 
     _phi = new double*[n_gauss];
     _dphidxi  = new double*[n_gauss];
     _d2phidxi2  = new double*[n_gauss];
 
-    _phi_memory = new double [n_gauss * _nc];
-    _dphidxi_memory  = new double [n_gauss * _nc];
-    _d2phidxi2_memory  = new double [n_gauss * _nc];
+    _phi_memory = new double [n_gauss *  n_dofs ];
+    _dphidxi_memory  = new double [n_gauss *  n_dofs ];
+    _d2phidxi2_memory  = new double [n_gauss *  n_dofs ];
 
     for(unsigned i = 0; i < n_gauss; i++) {
-      _phi[i] = &_phi_memory[i * _nc];
-      _dphidxi[i]  = &_dphidxi_memory[i * _nc];
-      _d2phidxi2[i]  = &_d2phidxi2_memory[i * _nc];
+      _phi[i] = &_phi_memory[i *  n_dofs ];
+      _dphidxi[i]  = &_dphidxi_memory[i *  n_dofs ];
+      _d2phidxi2[i]  = &_d2phidxi2_memory[i *  n_dofs ];
     }
 
     const double* ptx[1] = {_gauss->GetGaussWeightsPointer() + n_gauss};  // you sum an integer to a pointer, which offsets the pointer as a result
@@ -551,7 +564,7 @@ namespace femus {
         ptx[j]++;
       }
 
-      for(int j = 0; j < _nc; j++) {
+      for(int j = 0; j <  n_dofs ; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
@@ -565,7 +578,8 @@ namespace femus {
    void elem_type_2D::allocate_and_fill_shape_at_quadrature_points()  {
        
     // shape function and its derivatives evaluated at Gauss'points
-    int n_gauss = _gauss->GetGaussPointsNumber();
+    const int n_gauss = _gauss->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
 
     _phi = new double*[n_gauss];
     _dphidxi  = new double*[n_gauss];
@@ -576,23 +590,23 @@ namespace femus {
 
     _d2phidxideta  = new double*[n_gauss];
 
-    _phi_memory = new double [n_gauss * _nc];
-    _dphidxi_memory  = new double [n_gauss * _nc];
-    _dphideta_memory = new double [n_gauss * _nc];
+    _phi_memory = new double [n_gauss *  n_dofs ];
+    _dphidxi_memory  = new double [n_gauss *  n_dofs ];
+    _dphideta_memory = new double [n_gauss *  n_dofs ];
 
-    _d2phidxi2_memory  = new double [n_gauss * _nc];
-    _d2phideta2_memory = new double [n_gauss * _nc];
-    _d2phidxideta_memory  = new double [n_gauss * _nc];
+    _d2phidxi2_memory  = new double [n_gauss *  n_dofs ];
+    _d2phideta2_memory = new double [n_gauss *  n_dofs ];
+    _d2phidxideta_memory  = new double [n_gauss *  n_dofs ];
 
     for(unsigned i = 0; i < n_gauss; i++) {
-      _phi[i] = &_phi_memory[i * _nc];
-      _dphidxi[i]  = &_dphidxi_memory[i * _nc];
-      _dphideta[i] = &_dphideta_memory[i * _nc];
+      _phi[i] = &_phi_memory[i *  n_dofs ];
+      _dphidxi[i]  = &_dphidxi_memory[i *  n_dofs ];
+      _dphideta[i] = &_dphideta_memory[i *  n_dofs ];
 
-      _d2phidxi2[i]  = &_d2phidxi2_memory[i * _nc];
-      _d2phideta2[i] = &_d2phideta2_memory[i * _nc];
+      _d2phidxi2[i]  = &_d2phidxi2_memory[i *  n_dofs ];
+      _d2phideta2[i] = &_d2phideta2_memory[i *  n_dofs ];
 
-      _d2phidxideta[i]  = &_d2phidxideta_memory[i * _nc];
+      _d2phidxideta[i]  = &_d2phidxideta_memory[i *  n_dofs ];
 
     }
     
@@ -606,7 +620,7 @@ namespace femus {
         ptx[j]++;
       }
 
-      for(int j = 0; j < _nc; j++) {
+      for(int j = 0; j <  n_dofs ; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
@@ -625,7 +639,8 @@ namespace femus {
    void elem_type_3D::allocate_and_fill_shape_at_quadrature_points()  {
        
     // shape function and its derivatives evaluated at Gauss'points
-    int n_gauss = _gauss->GetGaussPointsNumber();
+    const int n_gauss = _gauss->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
 
     _phi = new double*[n_gauss];
     _dphidxi  = new double*[n_gauss];
@@ -640,32 +655,32 @@ namespace femus {
     _d2phidetadzeta = new double*[n_gauss];
     _d2phidzetadxi = new double*[n_gauss];
 
-    _phi_memory = new double [n_gauss * _nc];
-    _dphidxi_memory  = new double [n_gauss * _nc];
-    _dphideta_memory = new double [n_gauss * _nc];
-    _dphidzeta_memory = new double [n_gauss * _nc];
+    _phi_memory = new double [n_gauss *  n_dofs ];
+    _dphidxi_memory  = new double [n_gauss *  n_dofs ];
+    _dphideta_memory = new double [n_gauss *  n_dofs ];
+    _dphidzeta_memory = new double [n_gauss *  n_dofs ];
 
-    _d2phidxi2_memory  = new double [n_gauss * _nc];
-    _d2phideta2_memory = new double [n_gauss * _nc];
-    _d2phidzeta2_memory = new double [n_gauss * _nc];
+    _d2phidxi2_memory  = new double [n_gauss *  n_dofs ];
+    _d2phideta2_memory = new double [n_gauss *  n_dofs ];
+    _d2phidzeta2_memory = new double [n_gauss *  n_dofs ];
 
-    _d2phidxideta_memory  = new double [n_gauss * _nc];
-    _d2phidetadzeta_memory = new double [n_gauss * _nc];
-    _d2phidzetadxi_memory = new double [n_gauss * _nc];
+    _d2phidxideta_memory  = new double [n_gauss *  n_dofs ];
+    _d2phidetadzeta_memory = new double [n_gauss *  n_dofs ];
+    _d2phidzetadxi_memory = new double [n_gauss *  n_dofs ];
 
     for(unsigned i = 0; i < n_gauss; i++) {
-      _phi[i] = &_phi_memory[i * _nc];
-      _dphidxi[i]  = &_dphidxi_memory[i * _nc];
-      _dphideta[i] = &_dphideta_memory[i * _nc];
-      _dphidzeta[i] = &_dphidzeta_memory[i * _nc];
+      _phi[i] = &_phi_memory[i *  n_dofs ];
+      _dphidxi[i]  = &_dphidxi_memory[i *  n_dofs ];
+      _dphideta[i] = &_dphideta_memory[i *  n_dofs ];
+      _dphidzeta[i] = &_dphidzeta_memory[i *  n_dofs ];
 
-      _d2phidxi2[i]  = &_d2phidxi2_memory[i * _nc];
-      _d2phideta2[i] = &_d2phideta2_memory[i * _nc];
-      _d2phidzeta2[i] = &_d2phidzeta2_memory[i * _nc];
+      _d2phidxi2[i]  = &_d2phidxi2_memory[i *  n_dofs ];
+      _d2phideta2[i] = &_d2phideta2_memory[i *  n_dofs ];
+      _d2phidzeta2[i] = &_d2phidzeta2_memory[i *  n_dofs ];
 
-      _d2phidxideta[i]  = &_d2phidxideta_memory[i * _nc];
-      _d2phidetadzeta[i] = &_d2phidetadzeta_memory[i * _nc];
-      _d2phidzetadxi[i] = &_d2phidzetadxi_memory[i * _nc];
+      _d2phidxideta[i]  = &_d2phidxideta_memory[i *  n_dofs ];
+      _d2phidetadzeta[i] = &_d2phidetadzeta_memory[i *  n_dofs ];
+      _d2phidzetadxi[i] = &_d2phidzetadxi_memory[i *  n_dofs ];
 
     }
 
@@ -693,7 +708,7 @@ namespace femus {
       double d2phidetadzetasum = 0.;
       double d2phidzetadxisum = 0.;
 
-      for(int j = 0; j < _nc; j++) {
+      for(int j = 0; j < n_dofs; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
@@ -736,6 +751,7 @@ namespace femus {
 #endif
 
       constexpr unsigned int nFaces = 2;
+      const unsigned n_dofs = GetNDofs();
       
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
@@ -751,11 +767,11 @@ namespace femus {
         _gradPhiFace[iface].resize(nGaussPts_on_each_face);
         _hessianPhiFace[iface].resize(nGaussPts_on_each_face);
 
-        _phiFace[iface][0].resize(_nc);
-        _gradPhiFace[iface][0].resize(_nc);
-        _hessianPhiFace[iface][0].resize(_nc);
+        _phiFace[iface][0].resize( n_dofs );
+        _gradPhiFace[iface][0].resize( n_dofs );
+        _hessianPhiFace[iface][0].resize( n_dofs );
 
-        for(int j = 0; j < _nc; j++) {
+        for(int j = 0; j <  n_dofs ; j++) {
 
           _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xi[iface]);
 
@@ -785,6 +801,7 @@ namespace femus {
    
    void elem_type_2D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
          
+    const unsigned n_dofs = GetNDofs();
           
         constexpr unsigned int dim = 2;  
 
@@ -846,11 +863,11 @@ namespace femus {
             x_qp_face[1] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi_ptr[i]) * yv_face[j] ;
           }
           
-          _phiFace[iface][i].resize(_nc);
-          _gradPhiFace[iface][i].resize(_nc);
-          _hessianPhiFace[iface][i].resize(_nc);
+          _phiFace[iface][i].resize( n_dofs );
+          _gradPhiFace[iface][i].resize( n_dofs );
+          _hessianPhiFace[iface][i].resize( n_dofs );
           
-          for(int j = 0; j < _nc; j++) {
+          for(int j = 0; j <  n_dofs ; j++) {
             _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x_qp_face);
 
             _gradPhiFace[iface][i][j].resize(2);
@@ -891,6 +908,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
    
    void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
+    const unsigned n_dofs = GetNDofs();
    
 #if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
        if(_SolType < 3) {
@@ -921,13 +939,13 @@ if( _SolType >= 3 && _SolType < 5 ) {
                             };
 // --------- quadrature - END
 
-      unsigned nFaces = _pt_basis->n_faces( basis::_n_faces_three_types - 1 );
+      unsigned nFaces = _pt_basis->n_faces( basis::_n_face_types_and_total - 1 );
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
 
       //only the first two face types
-      for(unsigned type = 0; type < basis::_n_faces_three_types - 1; type++) {
+      for(unsigned type = 0; type < basis::_n_face_types_and_total - 1; type++) {
         for(int iface = _pt_basis->n_faces(type); iface < _pt_basis->n_faces(type + 1); iface++) {
           std::vector< double > xv(faceBasis[type] -> n_dofs());
           std::vector< double > yv(faceBasis[type] ->  n_dofs());
@@ -953,11 +971,11 @@ if( _SolType >= 3 && _SolType < 5 ) {
               x[2] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * zv[j] ;
             }
 
-            _phiFace[iface][i].resize(_nc);
-            _gradPhiFace[iface][i].resize(_nc);
-            _hessianPhiFace[iface][i].resize(_nc);
+            _phiFace[iface][i].resize( n_dofs );
+            _gradPhiFace[iface][i].resize( n_dofs );
+            _hessianPhiFace[iface][i].resize( n_dofs );
 
-            for(int j = 0; j < _nc; j++) {
+            for(int j = 0; j <  n_dofs ; j++) {
 
               _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
 
@@ -1005,9 +1023,20 @@ if( _SolType >= 3 && _SolType < 5 ) {
     //************ FE and MG SETUP ******************
     const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
 
-    // get data from basis object
-    set_coarse_and_fine_num_dofs(_pt_basis);
+    // FE get FE data from basis object
+    set_coarse_num_dofs(_pt_basis);
+    
+    set_fine_num_dofs(_pt_basis);
+    
+    //Geom get Geom data from basis object
+    set_coarse_and_fine_num_nodes_geometry(_pt_basis);
+    
+    // FE
+    allocate_and_set_coarse_node_indices_IND(_pt_basis);
 
+    allocate_fine_coordinates_and_KVERT_IND();
+    
+ 
     //***********************************************************
     // construction of coordinates
     set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
@@ -1209,16 +1238,17 @@ if( _SolType >= 3 && _SolType < 5 ) {
   
   void elem_type_1D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
        
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
     
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
-    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
-    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry *  n_dofs ];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry *  n_dofs ];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
-      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i *  n_dofs ];
+      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i *  n_dofs ];
      }
      
 }
@@ -1236,19 +1266,20 @@ if( _SolType >= 3 && _SolType < 5 ) {
 
    void elem_type_2D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
 
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
     
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
     _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
-    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
-    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
-    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry *  n_dofs ];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry *  n_dofs ];
+    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry *  n_dofs ];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
-      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i * _nc];
-      _dphideta_vol_at_bdry[i] = &_dphideta_vol_at_bdry_memory[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i *  n_dofs ];
+      _dphidxi_vol_at_bdry[i]  = &_dphidxi_vol_at_bdry_memory[i *  n_dofs ];
+      _dphideta_vol_at_bdry[i] = &_dphideta_vol_at_bdry_memory[i *  n_dofs ];
      }
      
     }
@@ -1269,22 +1300,23 @@ if( _SolType >= 3 && _SolType < 5 ) {
     
   void elem_type_3D::allocate_volume_shape_at_reference_boundary_quadrature_points_per_current_face() {
       
-     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
     
     _phi_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidxi_vol_at_bdry  = new double*[n_gauss_bdry];
     _dphideta_vol_at_bdry = new double*[n_gauss_bdry];
     _dphidzeta_vol_at_bdry = new double*[n_gauss_bdry];
-    _phi_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
-    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry * _nc];
-    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
-    _dphidzeta_vol_at_bdry_memory = new double [n_gauss_bdry * _nc];
+    _phi_vol_at_bdry_memory = new double [n_gauss_bdry *  n_dofs ];
+    _dphidxi_vol_at_bdry_memory  = new double [n_gauss_bdry *  n_dofs ];
+    _dphideta_vol_at_bdry_memory = new double [n_gauss_bdry *  n_dofs ];
+    _dphidzeta_vol_at_bdry_memory = new double [n_gauss_bdry *  n_dofs ];
     
      for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i * _nc];
-      _dphidxi_vol_at_bdry[i]   = & _dphidxi_vol_at_bdry_memory[i * _nc];
-      _dphideta_vol_at_bdry[i]  = & _dphideta_vol_at_bdry_memory[i * _nc];
-      _dphidzeta_vol_at_bdry[i] = & _dphidzeta_vol_at_bdry_memory[i * _nc];
+      _phi_vol_at_bdry[i] = &_phi_vol_at_bdry_memory[i *  n_dofs ];
+      _dphidxi_vol_at_bdry[i]   = & _dphidxi_vol_at_bdry_memory[i *  n_dofs ];
+      _dphideta_vol_at_bdry[i]  = & _dphideta_vol_at_bdry_memory[i *  n_dofs ];
+      _dphidzeta_vol_at_bdry[i] = & _dphidzeta_vol_at_bdry_memory[i *  n_dofs ];
      }
       
 }
@@ -1464,11 +1496,12 @@ if( _SolType >= 3 && _SolType < 5 ) {
   void elem_type_1D::fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const {
       
     const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
 
  //evaluate volume shape functions and derivatives at reference boundary gauss points             
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
-      for (int dof = 0; dof < _nc; dof++) {
+      for (int dof = 0; dof <  n_dofs ; dof++) {
             _phi_vol_at_bdry[qp][dof] = _phiFace[jface][qp][dof]        ;
         _dphidxi_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ;
         }
@@ -1483,10 +1516,11 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
   void elem_type_3D::fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const {
       
     const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
 
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
-      for (int dof = 0; dof < _nc; dof++) {
+      for (int dof = 0; dof <  n_dofs ; dof++) {
             _phi_vol_at_bdry[qp][dof] = _phiFace[jface][qp][dof]        ;
         _dphidxi_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ;
        _dphideta_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][1] ;
@@ -1604,10 +1638,11 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     
     
     const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
 
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
-      for (int dof = 0; dof < _nc; dof++) {
+      for (int dof = 0; dof <  n_dofs ; dof++) {
             _phi_vol_at_bdry[qp][dof] = _phiFace[jface][qp][dof]        ; //_pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_phiFace[jface][qp][dof]        - _phi_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
         _dphidxi_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ; //_pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][0] - _dphidxi_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
        _dphideta_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][1] ; //_pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][1] - _dphideta_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
@@ -1633,13 +1668,16 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
                                        
 
     fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*vt_bdry,*/ jface);
+    
+    const unsigned n_dofs = GetNDofs();
 
 //Compute volume jacobian and its inverse at boundary gauss points
     double Jac[2][2] = {{0, 0}, {0, 0}};
     double JacInv[2][2];
     const double* dxi = _dphidxi_vol_at_bdry[ig_bdry];
     const double* deta = _dphideta_vol_at_bdry[ig_bdry];
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+    
+    for (int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++) {
       Jac[0][0] += (*dxi) * vt_vol[0][inode];  // d x/d csi
       Jac[0][1] += (*dxi) * vt_vol[1][inode];  // d y/d csi
       Jac[1][0] += (*deta) * vt_vol[0][inode]; // d x/d eta
@@ -1660,14 +1698,14 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 
 //Compute shape functions and derivatives in REAL coordinates
     
-    phi.resize(_nc);
-    gradphi.resize(_nc * 2);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 2);
     
 
     dxi  = _dphidxi_vol_at_bdry[ig_bdry];
     deta = _dphideta_vol_at_bdry[ig_bdry];
 
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+    for (int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++) {
 
       phi[inode] = _phi_vol_at_bdry[ig_bdry][inode];
 
@@ -1690,6 +1728,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
                                        
 
 //********* EVALUATION STAGE **********************
+    const unsigned n_dofs = GetNDofs();
                                        
     //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
     std::vector<int> tang_vec_ref(_dim);     std::fill(tang_vec_ref.begin(), tang_vec_ref.end(), 0.);
@@ -1760,7 +1799,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              ref_bdry_qp_coords_in_vol[abs(tang_vec_ref[0])]   = xi_factor * 1.;
       
              
-      for (int dof = 0; dof < _nc; dof++) {
+      for (int dof = 0; dof <  n_dofs ; dof++) {
              _phi_vol_at_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
          _dphidxi_vol_at_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
         _dphideta_vol_at_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
@@ -1777,9 +1816,9 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 //********* END EVALUATION STAGE **********************
     
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 3);
-//     if(nablaphi) nablaphi->resize(_nc * 6);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 3);
+//     if(nablaphi) nablaphi->resize( n_dofs  * 6);
 
 
      //Jac ===============
@@ -1789,7 +1828,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     const double * deta = _dphideta_vol_at_bdry[ig_bdry];
     const double * dzeta = _dphidzeta_vol_at_bdry[ig_bdry];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++) {
       Jac[0][0] += (*dxi) * vt_vol[0][inode];
       Jac[0][1] += (*dxi) * vt_vol[1][inode];
       Jac[0][2] += (*dxi) * vt_vol[2][inode];
@@ -1835,7 +1874,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 //     const double* detadzeta = _d2phidetadzeta[ig];
 //     const double* dzetadxi = _d2phidzetadxi[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++) {
 
       phi[inode] = _phi_vol_at_bdry[ig_bdry][inode];
 
