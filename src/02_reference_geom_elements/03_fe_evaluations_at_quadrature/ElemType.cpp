@@ -814,7 +814,7 @@ namespace femus {
       const double* xi_ptr = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
 // --------- quadrature - END
 
-      unsigned nFaces = /*_pt_basis*/underlying_volume_basis->faceNumber[2];
+      unsigned nFaces = /*_pt_basis*/underlying_volume_basis->n_faces(2);
       
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
@@ -921,13 +921,14 @@ if( _SolType >= 3 && _SolType < 5 ) {
                             };
 // --------- quadrature - END
 
-      unsigned nFaces = _pt_basis->faceNumber[2];
+      unsigned nFaces = _pt_basis->n_faces( basis::_n_faces_three_types - 1 );
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
 
-      for(unsigned type = 0; type < 2; type++) {
-        for(int iface = _pt_basis->faceNumber[type]; iface < _pt_basis->faceNumber[type + 1]; iface++) {
+      //only the first two face types
+      for(unsigned type = 0; type < basis::_n_faces_three_types - 1; type++) {
+        for(int iface = _pt_basis->n_faces(type); iface < _pt_basis->n_faces(type + 1); iface++) {
           std::vector< double > xv(faceBasis[type] -> n_dofs());
           std::vector< double > yv(faceBasis[type] ->  n_dofs());
           std::vector< double > zv(faceBasis[type] ->  n_dofs());

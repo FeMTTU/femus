@@ -14,6 +14,10 @@ namespace femus {
   
   //******** HEXAHEDRON - BEGIN ****************************************************
 
+  
+  
+  //******** C0 LAGRANGE - BEGIN ****************************************************
+
   class hex_lag : public basis {
     public:
       hex_lag(const int& nc, const int& nf):
@@ -143,7 +147,10 @@ namespace femus {
 
   };
 
-  //************************************************************
+  //******** C0 LAGRANGE - END ****************************************************
+
+
+  //******** DISCONTINUOUS POLYNOMIAL - BEGIN ****************************************************
 
   class hex_const : public basis {
       
@@ -268,6 +275,7 @@ namespace femus {
       }
 
   };
+  //******** DISCONTINUOUS POLYNOMIAL - END ****************************************************
 
   //******** HEXAHEDRON - END ****************************************************
   

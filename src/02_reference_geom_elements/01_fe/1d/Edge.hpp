@@ -14,6 +14,8 @@ namespace femus {
   
   //******** EDGE - BEGIN ****************************************************
   
+  //******** C0 LAGRANGE - BEGIN ****************************************************
+  
 
   class line_lag : public basis {
       
@@ -90,8 +92,13 @@ namespace femus {
       double eval_d2phidx2(const int *I, const double* x) const;
       
   };
+  
+  
+  //******** C0 LAGRANGE - END ****************************************************
 
-  //************************************************************
+  
+  
+  //******** DISCONTINUOUS POLYNOMIAL - BEGIN ****************************************************
 
   class line_const : public basis {
       
@@ -165,6 +172,7 @@ namespace femus {
 
   };
 
+  //******** DISCONTINUOUS POLYNOMIAL - END ****************************************************
 
   //******** EDGE - END ****************************************************
 

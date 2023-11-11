@@ -24,11 +24,21 @@ public:
     ~GeomElemHex27();
   
     unsigned int  get_dimension() const { return 3; };
+    unsigned int n_nodes_linear() const { return 8; };
+    
     unsigned int n_nodes()        const { return 27; };
+    
+    
     std::string   get_name_med()  const { return "H27"; };
     std::string   get_name_xdmf() const { return "Hexahedron_27"; };
+    
     std::vector<unsigned> get_face (const unsigned f) const { std::vector<unsigned> my_faces(_faces[f],_faces[f] + 9);  return my_faces; }; 
 
+private:
+    
+    static const unsigned _faces[6][9];
+
+// Refinement - BEGIN ===
     float get_embedding_matrix(const uint,const uint,const uint);
 
 
@@ -36,9 +46,8 @@ public:
 
 private:
     
-    static const unsigned _faces[6][9];
-
     static const float _embedding_matrix[8/*NCHILDS*/][27/*NNDS*/][27/*NNDS*/];   // (volume)
+// Refinement - END ===
 
 };
 

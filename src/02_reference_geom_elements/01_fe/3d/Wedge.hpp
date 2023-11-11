@@ -14,6 +14,10 @@ namespace femus {
 
   //******** WEDGE - BEGIN ****************************************************
 
+  
+  //******** C0 LAGRANGE - BEGIN ****************************************************
+  
+  
   class wedge_lag : public basis {
       
     public:
@@ -155,7 +159,12 @@ namespace femus {
 
   };
   
+  //******** C0 LAGRANGE - END ****************************************************
 
+  
+  //******** DISCONTINUOUS POLYNOMIAL - BEGIN ****************************************************
+  
+  
   class wedge_const : public basis {
       
     public:
@@ -272,6 +281,7 @@ namespace femus {
       }
 
   };
+  //******** DISCONTINUOUS POLYNOMIAL - END ****************************************************
 
   //******** WEDGE - END ****************************************************
 

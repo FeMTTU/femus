@@ -34,29 +34,8 @@ namespace femus {
  */
   class basis {
       
-    public:
       
-      const int n_dofs() const { return _nc; }
-      const int n_dofs_fine() const { return _nf; }
       
-    protected:
-
-      /**
-       * _nc = number of dofs of 1 element;  
-       * _nf = number of dofs in that element after refinement; 
-        _nlag[0] = number of linear dofs in 1 element;
-        _nlag[1] = number of serendipity dofs in 1 element; 
-        _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
-        _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
-      */
-      const int _nc, _nf;
-      
-    public:
-      
-      const int _nlag0, _nlag1, _nlag2, _nlag3;
-      
-      /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...) */
-      int faceNumber[3];
 
 // ===  Constructors / Destructor - BEGIN =================
     public:
@@ -76,10 +55,86 @@ namespace femus {
 	  }
 // ===  Constructors / Destructor - END =================
 
+
 // ===  Basic - BEGIN =================
+    public:
+      
       virtual void PrintType() const = 0;
 // ===  Basic - END =================
+
       
+ 
+ // ===  Geom Elem - BEGIN =================
+    public:
+      
+      virtual const double* GetX(const int &i) const = 0;
+
+      virtual const double* GetXcoarse(const int &i) const {
+        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
+        return NULL;
+      }
+
+      virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
+        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
+      }
+
+      virtual const int* GetIND(const int &i) const = 0;
+
+      virtual const int* GetKVERT_IND(const int &i) const = 0;
+
+      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
+        std::cout << "Warning this function in not implemented for const element type" << std::endl;
+        return 0u;
+      }
+
+      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
+	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::endl;
+    return 0u;
+      }
+      
+      
+      const int n_faces(const unsigned type_in) const { return faceNumber[type_in]; }
+      
+      static constexpr const unsigned _n_faces_three_types = 3;
+      
+    private:
+
+      /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...) */
+      int faceNumber[ basis::_n_faces_three_types ];
+
+    public:
+      
+      const int _nlag0, _nlag1, _nlag2, _nlag3;
+ // ===  Geom Elem - END =================
+
+      
+ // ===  FE  - BEGIN =================
+    public:
+      
+      //fe
+      const int n_dofs() const { return _nc; }
+      
+      const int n_dofs_fine() const { return _nf; }
+      
+    private:
+
+      /**
+       * _nc = number of dofs of 1 element;  
+       * _nf = number of dofs in that element after refinement; 
+      */
+      /**
+        _nlag[0] = number of linear dofs in 1 element;
+        _nlag[1] = number of serendipity dofs in 1 element; 
+        _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+        _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+      */
+      const int _nc, _nf;
+ // ===  FE  - END =================
+      
+
+ // ===  FE Functions - BEGIN =================
+    public:
+     
       // DERIVATIVES of ORDER 0 - BEGIN ============
       double eval_phi(const unsigned &j, const std::vector < double > &x) const {
         return eval_phi(this->GetIND(j), &x[0]);
@@ -202,34 +257,13 @@ namespace femus {
       }
       // DERIVATIVES of ORDER 2 - END ============
       
+ // ===  FE Functions - END =================
+ 
+
+ // === FE Functions, Service for other elements (bit of repetition) - BEGIN ============
       
-      virtual const double* GetX(const int &i) const = 0;
-
-      virtual const double* GetXcoarse(const int &i) const {
-        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
-        return NULL;
-      }
-
-      virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
-        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
-      }
-
-      virtual const int* GetIND(const int &i) const = 0;
-
-      virtual const int* GetKVERT_IND(const int &i) const = 0;
-
-      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
-        std::cout << "Warning this function in not implemented for const element type" << std::endl;
-        return 0u;
-      }
-
-      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
-	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::endl;
-    return 0u;
-      }
-
     protected:
-        
+    
       //1D basis - BEGIN
       
       // linear lagrangian
@@ -387,7 +421,9 @@ namespace femus {
       }
       //2D basis - END
       
+ // === FE Functions, Service for other elements (bit of repetition) - END ============
 
+ 
   };
 
 

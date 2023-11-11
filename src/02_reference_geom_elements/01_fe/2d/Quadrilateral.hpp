@@ -13,6 +13,10 @@ namespace femus {
 
   //******** QUADRILATERAL - BEGIN ****************************************************
 
+  
+  //******** C0 LAGRANGE - BEGIN ****************************************************
+  
+  
   class quad_lag : public basis {
       
     public:
@@ -123,7 +127,10 @@ namespace femus {
       double eval_d2phidxdy(const int *I, const double* x) const;
   };
 
-  //******************************************************************************
+  //******** C0 LAGRANGE - END ****************************************************
+
+
+  //******** DISCONTINUOUS POLYNOMIAL - BEGIN ****************************************************
 
   class quad_const : public basis {
       
@@ -214,7 +221,9 @@ namespace femus {
       }
       
   };
+  //******** DISCONTINUOUS POLYNOMIAL - END ****************************************************
 
+  
   //******** QUADRILATERAL - END ****************************************************
 
 

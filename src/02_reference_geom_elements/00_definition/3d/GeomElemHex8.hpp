@@ -20,18 +20,26 @@ public:
     ~GeomElemHex8();
   
     unsigned int  get_dimension() const { return 3; };
+    unsigned int n_nodes_linear() const { return 8; };
+    
     unsigned int n_nodes()        const { return 8; };
+    
     std::string   get_name_med()  const { return "HE8"; };
     std::string   get_name_xdmf() const { return "Hexahedron"; };
     
+// Refinement - BEGIN ===
+public:
+
       float get_embedding_matrix(const uint,const uint,const uint);
 
        double get_prol(const uint j) {return _Prol[j];};
-       static const double _Prol[/*NNDS*/27*8/*NNDSL*/];
        
 private:
+      
+       static const double _Prol[/*NNDS*/27*8/*NNDSL*/];
     
       static const float _embedding_matrix[8/*NCHILDS*/][8/*NNDS*/][8/*NNDS*/];   // (volume)
+// Refinement - END ===
        
 };
 
