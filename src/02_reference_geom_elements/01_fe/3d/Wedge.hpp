@@ -4,6 +4,8 @@
 
 
 #include "Basis.hpp"
+#include "Triangle.hpp"
+
 
 #include <iostream>
 #include <vector>

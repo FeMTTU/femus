@@ -177,61 +177,61 @@ namespace femus {
   //************************************************************
   
   double WedgeLinear::eval_phi(const int *I,const double* x) const {
-    return triangleLinear(x[0],x[1],I[0],I[1]) * line_lag::lagLinear(x[2],I[2]);
+    return tri_lag::triangleLinear(x[0],x[1],I[0],I[1]) * line_lag::lagLinear(x[2],I[2]);
   }
 
   double WedgeLinear::eval_dphidx(const int *I,const double* x) const {
-    return dtriangleLineardx(x[0],x[1],I[0],I[1]) * line_lag::lagLinear(x[2],I[2]);
+    return tri_lag::dtriangleLineardx(x[0],x[1],I[0],I[1]) * line_lag::lagLinear(x[2],I[2]);
   }
 
   double WedgeLinear::eval_dphidy(const int *I,const double* x) const {
-    return dtriangleLineardy(x[0],x[1],I[0],I[1]) * line_lag::lagLinear(x[2],I[2]);
+    return tri_lag::dtriangleLineardy(x[0],x[1],I[0],I[1]) * line_lag::lagLinear(x[2],I[2]);
   }
 
   double WedgeLinear::eval_dphidz(const int *I,const double* x) const {
-    return triangleLinear(x[0],x[1],I[0],I[1]) * line_lag::dlagLinear(x[2],I[2]);
+    return tri_lag::triangleLinear(x[0],x[1],I[0],I[1]) * line_lag::dlagLinear(x[2],I[2]);
   }
 
   //************************************************************
 
   double WedgeBiquadratic::eval_phi(const int *I,const double* x) const {
-    return triangleBiquadratic(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
+    return tri_lag::triangleBiquadratic(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_dphidx(const int *I,const double* x) const {
-    return dtriangleBiquadraticdx(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
+    return tri_lag::dtriangleBiquadraticdx(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_dphidy(const int *I,const double* x) const {
-    return dtriangleBiquadraticdy(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
+    return tri_lag::dtriangleBiquadraticdy(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_dphidz(const int *I,const double* x) const {
-    return triangleBiquadratic(x[0],x[1],I[0],I[1]) * line_lag::dlagBiquadratic(x[2],I[2]);
+    return tri_lag::triangleBiquadratic(x[0],x[1],I[0],I[1]) * line_lag::dlagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
-    return d2triangleBiquadraticdx2(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
+    return tri_lag::d2triangleBiquadraticdx2(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_d2phidy2(const int *I,const double* x) const {
-    return d2triangleBiquadraticdy2(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
+    return tri_lag::d2triangleBiquadraticdy2(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_d2phidz2(const int *I,const double* x) const {
-    return triangleBiquadratic(x[0],x[1],I[0],I[1]) * line_lag::d2lagBiquadratic(x[2],I[2]);
+    return tri_lag::triangleBiquadratic(x[0],x[1],I[0],I[1]) * line_lag::d2lagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_d2phidxdy(const int *I,const double* x) const {
-    return d2triangleBiquadraticdxdy(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
+    return tri_lag::d2triangleBiquadraticdxdy(x[0],x[1],I[0],I[1]) * line_lag::lagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_d2phidydz(const int *I,const double* x) const {
-    return dtriangleBiquadraticdy(x[0],x[1],I[0],I[1]) * line_lag::dlagBiquadratic(x[2],I[2]);
+    return tri_lag::dtriangleBiquadraticdy(x[0],x[1],I[0],I[1]) * line_lag::dlagBiquadratic(x[2],I[2]);
   }
 
   double WedgeBiquadratic::eval_d2phidzdx(const int *I,const double* x) const {
-    return dtriangleBiquadraticdx(x[0],x[1],I[0],I[1]) * line_lag::dlagBiquadratic(x[2],I[2]);
+    return tri_lag::dtriangleBiquadraticdx(x[0],x[1],I[0],I[1]) * line_lag::dlagBiquadratic(x[2],I[2]);
   }
 
   //************************************************************
