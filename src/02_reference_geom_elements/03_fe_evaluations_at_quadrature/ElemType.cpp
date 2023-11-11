@@ -71,21 +71,29 @@ namespace femus {
   elem_type::~elem_type()
   {
 
-// FE and MG ====      
-   deallocate_fe_and_multigrid_parts();
+// FE ====      
+   deallocate_fe_parts();
+   
+// Refinement ====      
+   deallocate_refinement_parts();
 
-    
+   
 // Quadrature (without FE Evaluations) ====    
     deallocate_quadrature_all();
     
   }
   
 ///@todo maybe initialize all these pointers to NULL in case they may not be allocated
-  void elem_type::deallocate_fe_and_multigrid_parts() {
+  void elem_type::deallocate_fe_parts() {
       
-    delete    _pt_basis       ;
+    delete    _pt_basis       ;  //also refinement implicitly here actually
     
     delete [] _IND            ;
+    
+  }
+  
+///@todo maybe initialize all these pointers to NULL in case they may not be allocated
+  void elem_type::deallocate_refinement_parts() {
     
     delete [] _X              ;
     delete [] _KVERT_IND      ;
@@ -96,6 +104,7 @@ namespace femus {
     delete [] _mem_prol_ind   ;
     
   }
+
   
   
  
@@ -202,8 +211,9 @@ namespace femus {
 
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
       
-    //************ FE and MG SETUP ******************
-    initialize_fe_and_multigrid_parts(geom_elem);
+    initialize_fe_parts(geom_elem);
+
+    initialize_refinement_parts(geom_elem);
 
 
     
@@ -219,9 +229,11 @@ namespace femus {
   {
 
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
-    //************ FE and MG SETUP ******************
-    initialize_fe_and_multigrid_parts(geom_elem);
+    initialize_fe_parts(geom_elem);
 
+
+    initialize_refinement_parts(geom_elem);
+    
     //************ FE and QUADRATURE EVALUATIONS ******************
     initialize_to_null_fe_quadrature_evaluations_all();
   }
@@ -234,8 +246,11 @@ namespace femus {
   {
 
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
-    //************ FE and MG SETUP ******************
-    initialize_fe_and_multigrid_parts(geom_elem);
+
+    initialize_fe_parts(geom_elem);
+
+
+    initialize_refinement_parts(geom_elem);
 
 
     //************ FE and QUADRATURE EVALUATIONS ******************
@@ -250,8 +265,10 @@ namespace femus {
   {
 
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
-    //************ FE and MG SETUP ******************
-    initialize_fe_and_multigrid_parts(geom_elem);
+
+    initialize_fe_parts(geom_elem);
+
+    initialize_refinement_parts(geom_elem);
 
     //************ FE and QUADRATURE EVALUATIONS ******************
     initialize_to_null_fe_quadrature_evaluations_all();
@@ -263,9 +280,11 @@ namespace femus {
   {
     
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
-    //************ FE and MG SETUP ******************
-    initialize_fe_and_multigrid_parts(geom_elem);
+
+    initialize_fe_parts(geom_elem);
     
+
+    initialize_refinement_parts(geom_elem);
 
     //************ FE and QUADRATURE EVALUATIONS ******************
     initialize_fe_quadrature_evaluations(order_gauss);
@@ -278,9 +297,12 @@ namespace femus {
   {
     
 // these cannot be called from the father constructor because they contain calls to PURE VIRTUAL functions
-    //************ FE and MG SETUP ******************
-    initialize_fe_and_multigrid_parts(geom_elem);
+
+    initialize_fe_parts(geom_elem);
     
+
+    initialize_refinement_parts(geom_elem);
+
     //************ FE and QUADRATURE EVALUATIONS ******************
     initialize_to_null_fe_quadrature_evaluations_all();
   }
@@ -367,23 +389,35 @@ namespace femus {
   }
   
   
-  void elem_type::allocate_fine_coordinates_and_KVERT_IND()  {
+  void elem_type::allocate_fine_coordinates()  {
       
-    _KVERT_IND = new const int * [_nf];
     _X         = new const double * [_nf];
       
   }
   
+  void elem_type::allocate_fine_KVERT_IND()  {
+    
+    _KVERT_IND = new const int * [_nf];
+      
+  }
   
   
-  void elem_type::set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
+  void elem_type::set_fine_coordinates(const basis* pt_basis_in)  {
        
       for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = pt_basis_in->GetKVERT_IND(i);
               _X[i] = pt_basis_in->GetX(i);
     }
     
   } 
+
+  
+  void elem_type::set_fine_KVERT_IND(const basis* pt_basis_in)  {
+    
+         for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = pt_basis_in->GetKVERT_IND(i);
+    }
+  } 
+  
   
   
   void elem_type::set_coarse_num_dofs(const basis* pt_basis_in)  {
@@ -399,18 +433,22 @@ namespace femus {
 
   } 
  
-   void elem_type::set_coarse_and_fine_num_nodes_geometry(const basis* pt_basis_in)  {
+   void elem_type::set_coarse_num_nodes_geometry(const basis* pt_basis_in)  {
 
     _nlag[0] = pt_basis_in->_nlag0;
     _nlag[1] = pt_basis_in->_nlag1;
     _nlag[2] = pt_basis_in->_nlag2;
-    _nlag[3] = pt_basis_in->_nlag3;
      
    }
    
+   void elem_type::set_fine_num_nodes_geometry(const basis* pt_basis_in)  {
  
-  
-  
+      _nlag[3] = pt_basis_in->Get_NNodes_Lagrange_biq_fine();
+
+   }
+
+   
+   
    void elem_type::set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
        
      if(_SolType <= 2) {
@@ -420,11 +458,11 @@ namespace femus {
         std::vector<double> xm(_dim,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
             
-          unsigned element = *(linearElement_in->GetKVERT_IND(i) + 0);
+          const unsigned element = *(linearElement_in->GetKVERT_IND(i) + 0);
           std::vector< double > xv(_dim);
           for(int d = 0; d < _dim; d++)  xv[d] = * (linearElement_in->GetXcoarse(linearElement_in->GetFine2CoarseVertexMapping(element, k)) + d);
           
-          unsigned vertex = *(linearElement_in->GetKVERT_IND(i) + 1);
+          const unsigned vertex = *(linearElement_in->GetKVERT_IND(i) + 1);
           for(int d = 0; d < _dim; d++)  xm[d] += linearElement_in->eval_phi(linearElement_in->GetIND(k), linearElement_in->GetXcoarse(vertex)) * xv[d];
             
         }
@@ -1015,44 +1053,96 @@ if( _SolType >= 3 && _SolType < 5 ) {
    }
       
       
+   const basis*  elem_type::set_underlying_Linear_FE_basis(const char* geom_elem) const {
+     
+       basis* linearElement;
+     
+         if(!strcmp(geom_elem, "line")) {  linearElement = new LineLinear;  }
+    else if(!strcmp(geom_elem, "tri"))  {  linearElement = new TriLinear;  }
+    else if(!strcmp(geom_elem, "quad")) {  linearElement = new QuadLinear;  }
+    else if(!strcmp(geom_elem, "hex")) {     linearElement = new HexLinear;    }
+    else if(!strcmp(geom_elem, "tet")) {     linearElement = new TetLinear;    }
+    else if(!strcmp(geom_elem, "wedge")) {   linearElement = new WedgeLinear;    }
+    else {
+      std::cout << geom_elem << " is not a valid option" << std::endl;
+      abort();
+    }
+    
+    return linearElement;    
+    
+    
+   }
         
   
-  void elem_type::initialize_fe_and_multigrid_parts(const char* geom_elem) {
-      
+  void elem_type::initialize_fe_parts(const char* geom_elem) {
 
-    //************ FE and MG SETUP ******************
-    const basis* linearElement = set_current_FE_family_and_underlying_linear_FE_family(geom_elem, _SolType);
+    
+    // FE:
+    set_current_FE_basis(geom_elem, _SolType);
+    
 
-    // FE get FE data from basis object
+    //Geom: 
+    //get Geom data from basis object
+    set_coarse_num_nodes_geometry(_pt_basis);
+    
+    // FE:
+    //get FE data from basis object
     set_coarse_num_dofs(_pt_basis);
     
-    set_fine_num_dofs(_pt_basis);
-    
-    //Geom get Geom data from basis object
-    set_coarse_and_fine_num_nodes_geometry(_pt_basis);
-    
-    // FE
+    // FE:
     allocate_and_set_coarse_node_indices_IND(_pt_basis);
 
-    allocate_fine_coordinates_and_KVERT_IND();
+
     
+  }
+  
+  
+  
+  void elem_type::initialize_refinement_parts(const char* geom_elem) {
+  
+    
+    //Geom: MG 
+    set_fine_num_nodes_geometry(_pt_basis);
+    
+    // FE: MG
+    set_fine_num_dofs(_pt_basis);
+    
+    // FE: MG
+    allocate_fine_KVERT_IND();    
  
-    //***********************************************************
-    // construction of coordinates
+    // FE: MG
+    set_fine_KVERT_IND(_pt_basis);
+    
+    
+    // FE: MG   with   linearElement - BEGIN
+     
+    const basis* linearElement = set_underlying_Linear_FE_basis(geom_elem);
+    
+    // construction of coordinates ***********************************************************
+    allocate_fine_coordinates();
+    
     set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
 
-    set_fine_coordinates_and_KVERT_IND(_pt_basis);
+    set_fine_coordinates(_pt_basis);
     //***********************************************************
 
-    //***********************************************************
-    // local prolongation matrix evaluation
+    // FE: MG
+    //local prolongation matrix evaluation ***********************************************************
     set_element_prolongation(linearElement);
     //***********************************************************
 
     delete linearElement;
+    
+    // FE: MG   with   linearElement - END
+
+  
+  
+  
 
     
   }
+   
+  
   
   
   void elem_type_1D::initialize_to_null_fe_quadrature_evaluations_vol_at_bdry() {
@@ -1366,14 +1456,11 @@ if( _SolType >= 3 && _SolType < 5 ) {
   
 
   
-  const basis* elem_type_1D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) { 
+   void elem_type_1D::set_current_FE_basis(const char* geom_elem, unsigned int FEType_in) { 
         
-    basis* linearElement;
 
     if(!strcmp(geom_elem, "line")) {  //line
         
-      linearElement = new LineLinear;
-
       if(_SolType == 0) _pt_basis = new LineLinear;
       else if(_SolType == 1) _pt_basis = new LineBiquadratic;
       else if(_SolType == 2) _pt_basis = new LineBiquadratic;
@@ -1390,19 +1477,18 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     
     
-    return linearElement;
-
     }
+
+
+  
+    
     
 
-  const basis* elem_type_2D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) {
+  void elem_type_2D::set_current_FE_basis(const char* geom_elem, unsigned int FEType_in) {
         
-    basis* linearElement;
 
     if(!strcmp(geom_elem, "quad")) {  //QUAD
         
-      linearElement = new QuadLinear;
-
       if(_SolType == 0) _pt_basis = new QuadLinear;
       else if(_SolType == 1) _pt_basis = new QuadQuadratic;
       else if(_SolType == 2) _pt_basis = new QuadBiquadratic;
@@ -1415,8 +1501,6 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     else if(!strcmp(geom_elem, "tri")) {  //TRIANGLE
         
-      linearElement = new TriLinear;
-
       if(_SolType == 0) _pt_basis = new TriLinear;
       else if(_SolType == 1) _pt_basis = new TriQuadratic;
       else if(_SolType == 2) _pt_basis = new TriBiquadratic;
@@ -1431,19 +1515,16 @@ if( _SolType >= 3 && _SolType < 5 ) {
       std::cout << geom_elem << " is not a valid option" << std::endl;
       abort();
     }
-    
-    return linearElement;
-    
+        
     }
     
+    
 
-  const basis* elem_type_3D::set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) {
+    
+    void elem_type_3D::set_current_FE_basis(const char* geom_elem, unsigned int FEType_in) {
   
-    basis* linearElement;
     
     if(!strcmp(geom_elem, "hex")) {  //HEX
-
-      linearElement = new HexLinear;
 
       if(_SolType == 0) _pt_basis = new HexLinear;
       else if(_SolType == 1) _pt_basis = new HexQuadratic;
@@ -1457,8 +1538,6 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
         
-      linearElement = new WedgeLinear;
-
       if(_SolType == 0) _pt_basis = new WedgeLinear;
       else if(_SolType == 1) _pt_basis = new WedgeQuadratic;
       else if(_SolType == 2) _pt_basis = new WedgeBiquadratic;
@@ -1471,8 +1550,6 @@ if( _SolType >= 3 && _SolType < 5 ) {
     }
     else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
         
-      linearElement = new TetLinear;
-
       if(_SolType == 0) _pt_basis = new TetLinear;
       else if(_SolType == 1) _pt_basis = new TetQuadratic;
       else if(_SolType == 2) _pt_basis = new TetBiquadratic;
@@ -1488,10 +1565,13 @@ if( _SolType >= 3 && _SolType < 5 ) {
       abort();
     }
     
-    return linearElement;
     
  }
 
+ 
+ 
+ 
+ 
  
   void elem_type_1D::fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const {
       

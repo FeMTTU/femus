@@ -99,7 +99,7 @@ namespace femus {
       /// DofCarrier of coarse dofs
       static const double Xc[3][1];
       
-      /// DofCarrier of fine dofs
+      /// DofCarrier of fine dofs // these are static for discontinuous poly, but here they are filled afterwards
       double X[5][1];
       static const int IND[3][1];
       static const int KVERT_IND[5][2];

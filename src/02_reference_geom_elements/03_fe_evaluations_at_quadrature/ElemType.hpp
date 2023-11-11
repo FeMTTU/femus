@@ -88,7 +88,7 @@ namespace femus
         return _nlag[type];
       }
       
-   protected:
+   private:
       
       /**  _nlag[0] = number of linear dofs in 1 element;
            _nlag[1] = number of serendipity dofs in 1 element; 
@@ -96,18 +96,18 @@ namespace femus
            _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
        */
       int _nlag[4];
-      
-   private:
+
      
-   void set_coarse_and_fine_num_nodes_geometry(const basis* pt_basis_in);
+   void set_coarse_num_nodes_geometry(const basis* pt_basis_in);
+   
+   void set_fine_num_nodes_geometry(const basis* pt_basis_in);
 
 // ===  GeomElem Part - END =================
 
 
-// ===  FE Part (without Quadrature evaluations) - BEGIN =================
       
 // =========================================
-// ===   single level - BEGIN =================
+// ===   FE Part (without Quadrature evaluations), single level - BEGIN =================
 // =========================================
     public:
         
@@ -133,15 +133,20 @@ namespace femus
       /** Finite Element Family flag */
       unsigned _SolType;
       
-      virtual const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in) = 0;
+      virtual void  set_current_FE_basis(const char* geom_elem, unsigned int FEType_in) = 0;
       
       /** FE basis functions*/
       basis* _pt_basis;
       
-      void initialize_fe_and_multigrid_parts(const char* geom_elem);
+      void initialize_fe_parts(const char* geom_elem);
       
-      void deallocate_fe_and_multigrid_parts();
+      void initialize_refinement_parts(const char* geom_elem);
       
+      void deallocate_fe_parts();
+      
+     
+      /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
+      const int** _IND;
       
    private:
      
@@ -153,18 +158,15 @@ namespace femus
       
       void allocate_and_set_coarse_node_indices_IND(const basis* pt_basis_in);
       
-   protected:
-     
-      /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
-      const int** _IND;
+
 // =========================================
-// ===   single level - END =================
+// ===   FE Part (without Quadrature evaluations), single level - END =================
 // =========================================
 
 
       
 // =========================================
-// ===  refinement - BEGIN =================
+// ===  FE Part (without Quadrature evaluations), Refinement - BEGIN =================
 // =========================================
     public:
       
@@ -203,6 +205,7 @@ namespace femus
    protected:
        
       
+      
       /** _nf: number of dofs in the element after refinement; */
       int _nf;
       
@@ -215,14 +218,23 @@ namespace femus
       
    private:
      
-      void allocate_fine_coordinates_and_KVERT_IND();
+      /** Needed for some Refinement purposes */
+      const basis* set_underlying_Linear_FE_basis(const char* geom_elem) const;
+      
+      void deallocate_refinement_parts();
+     
+      void allocate_fine_coordinates();
+      
+      void allocate_fine_KVERT_IND();
       
       /** Compute node coordinates in basis object */
       void set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
       
       /** Set fine node coordinates and fine node indices */
-      void set_fine_coordinates_and_KVERT_IND(const basis* pt_basis_in);
+      void set_fine_coordinates(const basis* pt_basis_in);
       
+      void set_fine_KVERT_IND(const basis* pt_basis_in);
+  
       /** Set numbers of fine dofs for 1 element */
       void set_fine_num_dofs(const basis* pt_basis_in);
       
@@ -242,10 +254,9 @@ namespace femus
       int* _mem_prol_ind;
 
 // =========================================
-// ===  refinement - END =================
+// ===  FE Part (without Quadrature evaluations), Refinement - END =================
 // =========================================
 
-// ===  FE Part (without Quadrature evaluations) - END =================
 
       
       
@@ -457,7 +468,7 @@ namespace femus
 // =========================================
   protected:
       
-      const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+     void  set_current_FE_basis(const char* geom_elem, unsigned int FEType_in);
 // ===   FE (without Quadrature evaluations) - END =================
       
                             
@@ -652,7 +663,8 @@ namespace femus
 // =========================================
     protected:
       
-    const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+    void  set_current_FE_basis(const char* geom_elem, unsigned int FEType_in);
+    
 // ===   FE (without Quadrature evaluations) - END =================
 
 // =========================================
@@ -822,7 +834,7 @@ namespace femus
 // =========================================
     protected:
      
-     const basis* set_current_FE_family_and_underlying_linear_FE_family(const char* geom_elem, unsigned int FEType_in);
+     void  set_current_FE_basis(const char* geom_elem, unsigned int FEType_in);
 // ===   FE (without Quadrature evaluations) - END =================
      
       
