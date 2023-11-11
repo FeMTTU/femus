@@ -2,28 +2,21 @@
 #define __femus_meshGencase_GeomElemEdge2_hpp__
 
 
-#include "GeomElemBase.hpp"
+#include "GeomElemEdge.hpp"
 
 
 namespace femus {
 
 
 
-class GeomElemEdge2 : public GeomElemBase  {
+class GeomElemEdge2 : public GeomElemEdge  {
 
 public:
-  
-     GeomElemEdge2();
-     
-    ~GeomElemEdge2();
-  
-    unsigned int  get_dimension() const { return 1; };
-    unsigned int n_nodes_linear() const { return 2; };
-    
+
+      
     unsigned int n_nodes()        const { return 2; };
     
-    std::string   get_name_med()  const { return "SE2"; };
-    std::string   get_name_xdmf() const { return "Polyline"; };
+      std::vector<unsigned> get_nodes_of_face(const unsigned f) const { std::cout << "Not implemented FE" << __func__ << std::endl; abort(); };
     
 // Refinement - BEGIN ===
 public:
@@ -37,6 +30,13 @@ private:
 //       static const float _embedding_matrix[][][];   // (volume)
 // Refinement - END ===
 
+      
+// File names - BEGIN ===
+    std::string   get_name_med()  const { return "SE2"; };
+    std::string   get_name_xdmf() const { return "Polyline"; };
+// File names - END ===
+    
+      
 };
 
 

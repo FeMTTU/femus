@@ -2,30 +2,23 @@
 #define __femus_meshGencase_GeomElemQuad9_hpp__
 
 
-#include "GeomElemBase.hpp"
+#include "GeomElemQuad.hpp"
 
 
 namespace femus {
 
 
 
-class GeomElemQuad9 : public GeomElemBase  {
+class GeomElemQuad9 : public GeomElemQuad  {
 
 public:
   
-     GeomElemQuad9();
-     
-    ~GeomElemQuad9();
   
-    unsigned int  get_dimension() const { return 2; };
-    unsigned int n_nodes_linear() const { return 4; };
     
     unsigned int n_nodes()        const { return 9; };
     
-    std::vector<unsigned> get_face (const unsigned f) const { std::vector<unsigned> my_faces(_faces[f],_faces[f] + 3);  return my_faces; }; 
+    std::vector<unsigned> get_nodes_of_face(const unsigned f) const { std::vector<unsigned> my_faces(_faces[f],_faces[f] + 3);  return my_faces; }; 
     
-    std::string   get_name_med()  const { return "QU9"; };
-    std::string   get_name_xdmf() const { return "Quadrilateral_9"; };
     
 private:
     
@@ -43,6 +36,11 @@ private:
 
 // Refinement - END ===
 
+
+// File names - BEGIN ===
+    std::string   get_name_med()  const { return "QU9"; };
+    std::string   get_name_xdmf() const { return "Quadrilateral_9"; };
+// File names - END ===
      
 };
 

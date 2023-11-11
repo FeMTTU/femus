@@ -500,13 +500,13 @@ namespace femus {
 
       for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
 
-        unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_face(f).size();
+        unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_nodes_of_face(f).size();
 
         // on one hand I construct the boundary face connectivity from the volume connectivity, with the order that was given in our code
         std::vector<unsigned> face_nodes_from_vol_connectivity(n_nodes_face);
 
         for(unsigned nd = 0; nd < n_nodes_face; nd++) {
-          unsigned nd_of_face = _geom_elems[iel_geom_type]->get_face(f)[nd];
+          unsigned nd_of_face = _geom_elems[iel_geom_type]->get_nodes_of_face(f)[nd];
           face_nodes_from_vol_connectivity[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
 
         }
@@ -603,12 +603,12 @@ namespace femus {
                                
             for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
                 
-                unsigned n_nodes_in_face = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;  //here the faces are made of 1 node
+                unsigned n_nodes_in_face = 1 /*_geom_elems[iel_geom_type]->get_nodes_of_face(f).size()*/;  //here the faces are made of 1 node
                 
                 std::vector<unsigned> face_nodes(n_nodes_in_face);
                 
                for(unsigned nd = 0; nd < face_nodes.size(); nd++) {
-                   unsigned nd_of_face = f /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
+                   unsigned nd_of_face = f /*_geom_elems[iel_geom_type]->get_nodes_of_face(f)[nd]*/;
                    face_nodes[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
                 
                }
@@ -745,13 +745,13 @@ namespace femus {
       unsigned iel_geom_type_face = mesh.GetElementFaceType(iel, f);
  
       unsigned f_n_faces_faces  =  mesh.el->GetNFC(iel_geom_type, iel_geom_type_face); /* ElementFaceFaceNumber */
-//           unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_face(f).size();
+//           unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_nodes_of_face(f).size();
  
       
       for (unsigned f_f = 0; f_f < f_n_faces_faces; f_f++) {
           
           
-                  unsigned n_nodes_face_face = _geom_elems[iel_geom_type_face]->get_face(f_f).size();
+                  unsigned n_nodes_face_face = _geom_elems[iel_geom_type_face]->get_nodes_of_face(f_f).size();
 
                   std::vector < int > nodes_face_face_flags(n_nodes_face_face, 0); 
           

@@ -2,7 +2,7 @@
 #define __femus_meshGencase_GeomElemTri7_hpp__
 
 
-#include "GeomElemBase.hpp"
+#include "GeomElemTri.hpp"
 
 
 
@@ -10,23 +10,14 @@ namespace femus {
 
 
 
-class GeomElemTri7 : public GeomElemBase  {
+class GeomElemTri7 : public GeomElemTri  {
 
 public:
-  
-     GeomElemTri7();
-     
-    ~GeomElemTri7();
-  
-    unsigned int  get_dimension() const { return 2; };
-    unsigned int n_nodes_linear() const { return 3; };
     
     unsigned int n_nodes()        const { return 7; };
     
-    std::string   get_name_med()  const { return "TR7"; };
-    std::string   get_name_xdmf() const { abort(); /*return "Triangle_6";*/ };
     
-    std::vector<unsigned> get_face (const unsigned f) const { std::vector<unsigned> my_faces(_faces[f],_faces[f] + 3);  return my_faces; }; 
+    std::vector<unsigned> get_nodes_of_face(const unsigned f) const { std::vector<unsigned> my_faces(_faces[f],_faces[f] + 3);  return my_faces; }; 
 
     
 private:
@@ -46,7 +37,14 @@ private:
     
     static const float _embedding_matrix[4][6][6];   // (volume)
 // Refinement - END ===
-      
+
+
+// File names - BEGIN ===
+    std::string   get_name_med()  const { return "TR7"; };
+    std::string   get_name_xdmf() const { abort(); /*return "Triangle_6";*/ };
+// File names - END ===
+
+
 };
 
 

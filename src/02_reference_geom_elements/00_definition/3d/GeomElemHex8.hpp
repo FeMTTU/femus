@@ -4,28 +4,24 @@
 
 
 
-#include "GeomElemBase.hpp"
+#include "GeomElemHex.hpp"
 
 
 namespace femus {
 
 
 
-class  GeomElemHex8 : public GeomElemBase  {
+class  GeomElemHex8 : public GeomElemHex  {
 
 public:
   
-     GeomElemHex8();
-     
-    ~GeomElemHex8();
-  
-    unsigned int  get_dimension() const { return 3; };
-    unsigned int n_nodes_linear() const { return 8; };
+
     
     unsigned int n_nodes()        const { return 8; };
     
-    std::string   get_name_med()  const { return "HE8"; };
-    std::string   get_name_xdmf() const { return "Hexahedron"; };
+    
+      std::vector<unsigned> get_nodes_of_face(const unsigned f) const { std::cout << "Not implemented FE" << __func__ << std::endl; abort(); };
+    
     
 // Refinement - BEGIN ===
 public:
@@ -40,6 +36,13 @@ private:
     
       static const float _embedding_matrix[8/*NCHILDS*/][8/*NNDS*/][8/*NNDS*/];   // (volume)
 // Refinement - END ===
+
+
+// File names - BEGIN ===
+    std::string   get_name_med()  const { return "HE8"; };
+    std::string   get_name_xdmf() const { return "Hexahedron"; };
+// File names - END ===
+    
        
 };
 

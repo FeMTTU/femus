@@ -3,28 +3,23 @@
 
 
 
-#include "GeomElemBase.hpp"
+#include "GeomElemTri.hpp"
 
 
 namespace femus {
 
 
 
-class GeomElemTri3 : public GeomElemBase  {
+class GeomElemTri3 : public GeomElemTri  {
 
 public:
-  
-     GeomElemTri3();
-     
-    ~GeomElemTri3();
-  
-    unsigned int  get_dimension() const { return 2; };
-    unsigned int n_nodes_linear() const { return 3; };
+    
     
     unsigned int n_nodes()        const { return 3; };
     
-    std::string   get_name_med()  const { return "TR3"; };
-    std::string   get_name_xdmf() const { return "Triangle"; };
+    
+      std::vector<unsigned> get_nodes_of_face(const unsigned f) const { std::cout << "Not implemented FE" << __func__ << std::endl; abort(); };
+    
     
 // Refinement - BEGIN ===
 public:
@@ -38,6 +33,12 @@ private:
     
       static const float _embedding_matrix[4][3][3];   // (volume)
 // Refinement - END ===
+
+
+// File names - BEGIN ===
+    std::string   get_name_med()  const { return "TR3"; };
+    std::string   get_name_xdmf() const { return "Triangle"; };
+// File names - END ===
 
 };
 

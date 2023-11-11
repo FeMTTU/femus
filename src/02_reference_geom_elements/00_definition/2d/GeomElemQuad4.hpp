@@ -3,30 +3,22 @@
 
 
 
-
-#include "GeomElemBase.hpp"
+#include "GeomElemQuad.hpp"
 
 
 namespace femus {
 
 
 
-class GeomElemQuad4 : public GeomElemBase  {
+class GeomElemQuad4 : public GeomElemQuad  {
 
 public:
   
-     GeomElemQuad4();
-     
-    ~GeomElemQuad4();
   
-    
-    unsigned int  get_dimension() const { return 2; };
-    unsigned int n_nodes_linear() const { return 4; };
-    
+        
     unsigned int n_nodes()        const { return 4; };
     
-    std::string   get_name_med()  const { return "QU4"; };
-    std::string   get_name_xdmf() const { return "Quadrilateral"; };
+      std::vector<unsigned> get_nodes_of_face(const unsigned f) const { std::cout << "Not implemented FE" << __func__ << std::endl; abort(); };
 
 // Refinement - BEGIN ===
 public:
@@ -41,7 +33,14 @@ private:
    
       static const float _embedding_matrix[4][4][4];   // (volume)
 // Refinement - END ===
-    
+
+
+// File names - BEGIN ===
+    std::string   get_name_med()  const { return "QU4"; };
+    std::string   get_name_xdmf() const { return "Quadrilateral"; };
+// File names - END ===
+
+
 };
 
 

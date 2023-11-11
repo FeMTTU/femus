@@ -27,9 +27,6 @@ namespace femus {
 
 
 
-  GeomElemBase::GeomElemBase() { }
-
-  GeomElemBase::~GeomElemBase() { }
 
 
 

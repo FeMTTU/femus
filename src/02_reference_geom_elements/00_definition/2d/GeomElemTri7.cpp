@@ -3,15 +3,6 @@
 
 namespace femus {
 
-
-
-
-// =======================
-GeomElemTri7::GeomElemTri7() : GeomElemBase() {  }
-	  
-// =======================
-          GeomElemTri7::~GeomElemTri7() {    }
-
           
 // =======================
       float GeomElemTri7::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
