@@ -25,7 +25,7 @@ namespace femus {
     public:
         
       wedge_lag(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { }
+        basis(nc, nf, 6, 15, 21, LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -58,10 +58,10 @@ namespace femus {
     private:
         
       static const double Xc[21][3];
-      
-      double X[95][3];
       static const int IND[21][3];
-      static const int KVERT_IND[95][2];
+      
+      double X[ LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE ][3];
+      static const int KVERT_IND[ LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE ][2];
 
       static const unsigned fine2CoarseVertexMapping[8][8];
       static const unsigned faceDofs[5][9];
@@ -173,7 +173,7 @@ namespace femus {
     public:
         
       wedge_const(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { }
+        basis(nc, nf, 6, 15, 21, DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -189,9 +189,10 @@ namespace femus {
 
     private:
         
-      static const double X[32][3];
       static const int IND[4][3];
-      static const int KVERT_IND[32][2];
+      
+      static const double X[ DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE ][3];
+      static const int KVERT_IND[ DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE ][2];
 
   };
 

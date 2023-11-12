@@ -22,7 +22,7 @@ namespace femus {
     public:
         
       quad_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, 25, 0, 4, 4) { }
+        basis(nc, nf, 4, 8, 9, LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE, 0, 4, 4) { }
         
       const double* GetX(const int &i) const {
         return X[i];
@@ -138,7 +138,7 @@ namespace femus {
     public:
         
       quad_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, 25,  0, 4, 4) { }
+        basis(nc, nf, 4, 8, 9, DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE,  0, 4, 4) { }
         
       const double* GetX(const int &i) const {
         return X[i];
@@ -153,9 +153,10 @@ namespace femus {
 
     private:
         
-      static const double X[12][2];
       static const int IND[3][2];
-      static const int KVERT_IND[12][2];
+      
+      static const double X[ DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE ][2];
+      static const int KVERT_IND[ DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE ][2];
 
 
   };

@@ -11,7 +11,7 @@ namespace femus {
 namespace Math {
     
     
-
+/// 
 template < class type = double >
   class Function {
  

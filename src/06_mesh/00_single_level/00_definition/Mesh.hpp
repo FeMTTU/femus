@@ -566,7 +566,7 @@ private:
 // === FE DOFMAP & REFINEMENT - END =================
     
 // =========================
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - BEGIN =================
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
 // =========================
 public:
     
@@ -602,7 +602,7 @@ private:
     SparseMatrix* _ProjQitoQj[NFE_FAMS_C_ZERO_LAGRANGE][NFE_FAMS_C_ZERO_LAGRANGE];
 
    
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - END =================
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
     
 // =========================
 // === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================

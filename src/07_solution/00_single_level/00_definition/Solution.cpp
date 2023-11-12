@@ -1065,7 +1065,7 @@ _analytical_function.resize(new_size);
 //   std::vector <unsigned> SolType(SolIndex.size());
 //   std::vector <unsigned> SolEndInd(SolIndex.size());
 //
-//   unsigned END_IND[5]= {0,1,1,4,5};
+//   unsigned END_IDX[5]= {0,1,1,4,5};
 //
 //   for (unsigned k=0; k<SolIndex.size(); k++) {
 //     double EPSMAX = _AMREps[SolIndex[k]]->linfty_norm ();
@@ -1073,7 +1073,7 @@ _analytical_function.resize(new_size);
 //     cout << std::endl << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
 //     SolMax[k] = AMRthreshold * SOLMAX;
 //     SolType[k] = _SolType[SolIndex[k]];
-//     SolEndInd[k]   = END_IND[SolType[k]];
+//     SolEndInd[k]   = END_IDX[SolType[k]];
 //   }
 //
 //   Solution* AMR = _msh->_topology;

@@ -690,7 +690,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
         }
 
         if(_solType[k] < 3) {  // boundary condition for lagrangian elements
-          //AMR - related
+          //AMR - related - BEGIN
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
@@ -707,7 +707,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
               }
             }
           }
-          //AMR - related - end
+          //AMR - related - END
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
 
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {

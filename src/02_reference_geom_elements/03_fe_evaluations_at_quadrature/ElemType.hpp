@@ -67,16 +67,10 @@ namespace femus
       inline unsigned  GetDim() const {
         return _dim;
       }
-
-      inline int  GetNDofs_Lagrange(const unsigned type) const {
-        assert(type < NFE_FAMS_C_ZERO_LAGRANGE);
-        return _nlag[type];
-      }
       
      const GeomElType geom_el_type() const { return _GeomElemType; }
      
 
-     
    protected:
       
       unsigned _dim; /* Spatial dimension of the geometric element */
@@ -88,17 +82,6 @@ namespace femus
       
       
      GeomElType _GeomElemType;  /* Geometric Element flag */
-
-      /**  _nlag[0] = number of linear dofs in 1 element;
-           _nlag[1] = number of serendipity dofs in 1 element; 
-           _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
-       */
-      
-      int _nlag[ NFE_FAMS_C_ZERO_LAGRANGE ];
-
-     
-   void set_coarse_num_nodes_geometry(const basis* pt_basis_in);
-   
 
 // ===  GeomElem  - END =================
 
@@ -225,7 +208,7 @@ namespace femus
       void set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
             
       /** Compute element prolongation operator */
-      void set_element_prolongation(const basis* linearElement);
+      void set_prolongation_OneElement_All_FE(const basis* linearElement);
       
       void deallocate_refinement_parts();
      

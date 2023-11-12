@@ -1136,6 +1136,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
 
+    assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
+    assert(jtype < NFE_FAMS_C_ZERO_LAGRANGE);
+
     // ------------------- Sparsity pattern size - BEGIN
     unsigned ni = _dofOffset[itype][_nprocs];
     unsigned ni_loc = _ownSize[itype][_iproc];
@@ -1215,11 +1218,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                                          const unsigned& itype,
                                          const elem_type * elem_type_in) const
   {
+    
+        assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
+
       
     const unsigned soltype_in = elem_type_in->GetSolType();
     const basis * pt_basis_in = elem_type_in->GetBasis();
     const unsigned      ndofs = elem_type_in->GetNDofs();
-    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
+    const unsigned      ndofs_Lagrange = elem_type_in->GetBasis()->GetNDofs_Lagrange(itype);
     
     bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
@@ -1262,10 +1268,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                                   const elem_type * elem_type_in) const
   {
     
+        assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
+    
     const unsigned soltype_in = elem_type_in->GetSolType();
     const basis * pt_basis_in = elem_type_in->GetBasis();
     const unsigned      ndofs = elem_type_in->GetNDofs();
-    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
+    const unsigned      ndofs_Lagrange = elem_type_in->GetBasis()->GetNDofs_Lagrange(itype);
     
     std::vector<int> cols( ndofs );
     std::vector<double> value( ndofs );

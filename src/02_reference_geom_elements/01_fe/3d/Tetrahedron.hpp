@@ -26,7 +26,7 @@ namespace femus {
     public:
         
       tet_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, 67, 0, 0, 4) { }
+        basis(nc, nf, 4, 10, 15, LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE, 0, 0, 4) { }
       const double* GetX(const int &i) const {
         return X[i];
       }
@@ -52,11 +52,12 @@ namespace femus {
 
     private:
         
-      double X[67][3];
-      static const int IND[15][3];
-      static const int KVERT_IND[67][2];
-
       static const double Xc[15][3];
+      static const int IND[15][3];
+      
+      double X[ LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE ][3];
+      static const int KVERT_IND[ LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE ][2];
+
       
       static const unsigned fine2CoarseVertexMapping[8][4];
       static const unsigned faceDofs[4][7];
@@ -170,7 +171,7 @@ namespace femus {
     public:
         
       tet_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, 67,  0, 0, 4) { }
+        basis(nc, nf, 4, 10, 15, DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE,  0, 0, 4) { }
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -186,9 +187,10 @@ namespace femus {
 
     private:
         
-      static const double X[32][3];
       static const int IND[4][3];
-      static const int KVERT_IND[32][2];
+      
+      static const double X[ DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE ][3];
+      static const int KVERT_IND[ DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE ][2];
       
   };
 

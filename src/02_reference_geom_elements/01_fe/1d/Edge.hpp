@@ -24,7 +24,7 @@ namespace femus {
     public:
       
       line_lag(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { }
+        basis(nc, nf, 2, 3, 3, LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
 // ===  Constructors / Destructor - END =================
 
 
@@ -103,7 +103,6 @@ namespace femus {
  // ===  FE, Refinement  - BEGIN =================
    public:
          
-        
       const double* GetX(const int &i) const {
         return X[i];
       }
@@ -116,20 +115,26 @@ namespace femus {
         return KVERT_IND[i];
       }
       
+    private:
+      
+      /// DofCarrier of fine dofs // these are static for discontinuous poly, but here they are filled afterwards
+      double X[ LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE ][1];
+      static const int KVERT_IND[ LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE ][2];
+      
+ // ===  FE, Refinement  - END =================
+      
+      
+ // ===  FE, Refinement, Lagrange  - BEGIN =================
+   public:
+      
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
         return fine2CoarseVertexMapping[i][j];
       }
  
     private:
       
-      /// DofCarrier of fine dofs // these are static for discontinuous poly, but here they are filled afterwards
-      double X[5][1];
-      static const int KVERT_IND[5][2];
-      
       static const unsigned fine2CoarseVertexMapping[2][2];
-      
-      
- // ===  FE, Refinement  - END =================
+ // ===  FE, Refinement, Lagrange  - END =================
 
       
   };
@@ -187,26 +192,44 @@ namespace femus {
       
     public:
         
+// ===  Constructors / Destructor - BEGIN =================
       line_const(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { }
-        
-      const double* GetX(const int &i) const {
-        return X[i];
-      }
+        basis(nc, nf, 2, 3, 3, DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
+// ===  Constructors / Destructor - END =================
+
+
+ // ===  FE, Shape functions - BEGIN =================
+    public:
       
       const int* GetIND(const int &i) const {
         return IND[i];
       }
       
+      
+    private:
+      
+      static const int IND[2][1];
+ // ===  FE, Shape functions - END =================
+      
+ // ===  FE, Refinement  - BEGIN =================
+      
+    public:
+
+      const double* GetX(const int &i) const {
+        return X[i];
+      }
+      
+
       const int* GetKVERT_IND(const int &i) const {
         return KVERT_IND[i];
       }
 
     private:
         
-      static const double X[4][1];
-      static const int IND[2][1];
-      static const int KVERT_IND[4][2];
+      static const double X[ DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE ][1];
+      static const int KVERT_IND[  DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE ][2];
+      
+ // ===  FE, Refinement  - END =================
       
   };
 

@@ -23,7 +23,7 @@ namespace femus {
     public:
         
       tri_lag(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { }
+        basis(nc, nf, 3, 6, 7, LAGRANGE_TRIANGLE_NDOFS_MAXIMUM_FINE, 0, 3, 3) { }
         
       const double* GetX(const int &i) const {
         return X[i];
@@ -181,9 +181,10 @@ namespace femus {
         
       static const double Xc[7][2];
       
-      double X[19][2];
       static const int IND[7][2];
-      static const int KVERT_IND[19][2];
+      
+      double X[ LAGRANGE_TRIANGLE_NDOFS_MAXIMUM_FINE ][2];
+      static const int KVERT_IND[ LAGRANGE_TRIANGLE_NDOFS_MAXIMUM_FINE ][2];
 
       static const unsigned fine2CoarseVertexMapping[4][3];
       static const unsigned faceDofs[3][3];
@@ -272,7 +273,7 @@ namespace femus {
     public:
         
       tri_const(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { }
+        basis(nc, nf, 3, 6, 7, DISCPOLY_TRIANGLE_NDOFS_MAXIMUM_FINE, 0, 3, 3) { }
         
       const double* GetX(const int &i) const {
         return X[i];
@@ -288,9 +289,10 @@ namespace femus {
 
     private:
         
-      static const double X[12][2];
       static const int IND[3][2];
-      static const int KVERT_IND[12][2];
+      
+      static const double X[ DISCPOLY_TRIANGLE_NDOFS_MAXIMUM_FINE ][2];
+      static const int KVERT_IND[  DISCPOLY_TRIANGLE_NDOFS_MAXIMUM_FINE ][2];
 
   };
 

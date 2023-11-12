@@ -270,7 +270,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
           // project vertex indices -----------------
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++)
             for(unsigned inode = 0; inode < elc->GetNVE(elt, CONTINUOUS_LINEAR); inode++) {
-              unsigned jDof =  otherFiniteElement[elt][0]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
+              unsigned jDof =  otherFiniteElement[elt][ CONTINUOUS_LINEAR ]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
               _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof));
             }
 

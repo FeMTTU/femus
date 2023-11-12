@@ -21,7 +21,7 @@ namespace femus {
   class hex_lag : public basis {
     public:
       hex_lag(const int& nc, const int& nf):
-        basis(nc, nf, 8, 20, 27, 125, 0, 6, 6) { };
+        basis(nc, nf, 8, 20, 27, LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -56,9 +56,10 @@ namespace femus {
       
       static const double Xc[27][3];
       
-      double X[125][3];
       static const int IND[27][3];
-      static const int KVERT_IND[125][2];
+      
+      double X[ LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE ][3];
+      static const int KVERT_IND[ LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE ][2];
 
       static const unsigned fine2CoarseVertexMapping[8][8];
       static const unsigned faceDofs[6][9];
@@ -159,7 +160,7 @@ namespace femus {
     public:
         
       hex_const(const int& nc, const int& nf):
-        basis(nc, nf, 8, 20, 27, 125, 0, 6, 6) { };
+        basis(nc, nf, 8, 20, 27, DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -175,9 +176,10 @@ namespace femus {
 
     private:
         
-      static const double X[32][3];
       static const int IND[4][3];
-      static const int KVERT_IND[32][2];
+      
+      static const double X[ DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE ][3];
+      static const int KVERT_IND[ DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE ][2];
 
 
   };

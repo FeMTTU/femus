@@ -24,7 +24,10 @@
 
 namespace femus {
   
-  //************************************************************
+  
+  
+  //******** C0 LAGRANGE - BEGIN ****************************************************
+  
   
   const double quad_lag::Xc[9][2]= { 
     {-1,-1},{1,-1},{1, 1},{-1, 1},
@@ -60,40 +63,7 @@ namespace femus {
     {2, 3, 6},
     {3, 0, 7}
   };
-  
-  
-  //************************************************************
-    
-  const double quad_const::X[12][2]={ 
-    {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},
-    {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},
-    {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5}
-  };
-  
-  const int quad_const::IND[3][2]= {{0, 0},{1, 0},{0, 1}};
-
-  const int quad_const::KVERT_IND[12][2]={ 
-    {0,0},{1,0},{2,0},{3,0},
-    {0,1},{1,1},{2,1},{3,1},
-    {0,2},{1,2},{2,2},{3,2}
-  };
-  
-  //************************************************************
-  
-  double quadpwLinear::eval_phi(const int *I,const double* x) const {
-    return (1.-I[0])*(1.-I[1]) + 
-	    x[0]*eval_dphidx(I,x) + 
-	    x[1]*eval_dphidy(I,x);
-  }
-
-  double quadpwLinear::eval_dphidx(const int *I,const double* x) const {
-    return I[0];
-  }
-
-  double quadpwLinear::eval_dphidy(const int *I,const double* x) const {
-    return I[1];
-  }
-
+   
   //************************************************************
 
   double QuadLinear::eval_phi(const int *I,const double* x) const {
@@ -189,7 +159,49 @@ namespace femus {
       jx*line_lag::lagQuadratic(x[1],I[1]) * line_lag::dlagQuadratic(x[0],I[0])+
       (-1.+ix*x[0]+jx*x[1]) * line_lag::dlagQuadratic(x[0],I[0]) * line_lag::dlagQuadratic(x[1],I[1]);
   }
+  
+  
+  //******** C0 LAGRANGE - END ****************************************************
 
+  
+  
+  //******** DISCONTINUOUS POLYNOMIAL - BEGIN ****************************************************
+  
+  //************************************************************
+    
+  const double quad_const::X[12][2]={ 
+    {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},
+    {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},
+    {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5}
+  };
+  
+  const int quad_const::IND[3][2]= {{0, 0},{1, 0},{0, 1}};
+
+  const int quad_const::KVERT_IND[12][2]={ 
+    {0,0},{1,0},{2,0},{3,0},
+    {0,1},{1,1},{2,1},{3,1},
+    {0,2},{1,2},{2,2},{3,2}
+  };
+  
+  //************************************************************
+  /// { 1, x, y}  the non-const functions are zero at the center of the element
+  double quadpwLinear::eval_phi(const int *I,const double* x) const {
+    return (1.-I[0])*(1.-I[1]) + 
+	    x[0]*eval_dphidx(I,x) + 
+	    x[1]*eval_dphidy(I,x);
+  }
+
+  double quadpwLinear::eval_dphidx(const int *I,const double* x) const {
+    return I[0];
+  }
+
+  double quadpwLinear::eval_dphidy(const int *I,const double* x) const {
+    return I[1];
+  }
+
+  //******** DISCONTINUOUS POLYNOMIAL - END ****************************************************
+
+  
 } //end namespace femus
 
 

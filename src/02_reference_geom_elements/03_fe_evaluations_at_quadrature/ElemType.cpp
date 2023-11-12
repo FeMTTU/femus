@@ -401,29 +401,21 @@ namespace femus {
         _nf 	 = pt_basis_in->n_dofs_fine();
 
   } 
- 
-   void elem_type::set_coarse_num_nodes_geometry(const basis* pt_basis_in)  {
 
-    _nlag[0] = pt_basis_in->_nlag0;
-    _nlag[1] = pt_basis_in->_nlag1;
-    _nlag[2] = pt_basis_in->_nlag2;
-     
-   }
-   
 
    
    void elem_type::set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
        
-     if(_SolType <= 2) {
+     if(_SolType < NFE_FAMS_C_ZERO_LAGRANGE ) {
          
-       const unsigned n_nodes_biq_fine = pt_basis_in->Get_NNodes_Lagrange_biq_fine();
+       const unsigned n_nodes_biq_fine = pt_basis_in->Get_NDofs_maximum_to_fill_fine_coordinates_of_DofCarriers();
        
        
       for(int i = 0; i < n_nodes_biq_fine; i++) {
           
         std::vector<double> xm(_dim, 0.);
         
-        for(int k = 0; k <  GetNDofs_Lagrange(0); k++) {
+        for(int k = 0; k <  linearElement_in->n_dofs(); k++) {
             
           const unsigned element = *(linearElement_in->GetKVERT_IND(i) + 0);
           std::vector< double > xv(_dim);
@@ -444,7 +436,7 @@ namespace femus {
   }
 
   
-   void elem_type::set_element_prolongation(const basis* linearElement)  {
+   void elem_type::set_prolongation_OneElement_All_FE(const basis* linearElement)  {
 
        const unsigned n_dofs = GetNDofs();
        
@@ -459,7 +451,7 @@ namespace femus {
       std::vector<double> jac(_dim + 1, 0.);
       
       if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k < GetNDofs_Lagrange(0); k++) {
+        for(int k = 0; k < linearElement->n_dofs(); k++) {
             
           //coordinates of the coarse vertices with respect to the fine elements
           std::vector<double> xv(_dim);
@@ -503,7 +495,7 @@ namespace femus {
       std::vector<double> jac(_dim + 1, 0.);
 
       if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  GetNDofs_Lagrange(0); k++) {
+        for(int k = 0; k <  linearElement->n_dofs(); k++) {
             
           //coordinates of the coarse vertices with respect to the fine elements
           std::vector<double> xv(_dim);
@@ -1051,10 +1043,6 @@ if( _SolType >= 3 && _SolType < 5 ) {
     // FE:
     set_current_FE_basis(geom_elem, _SolType);
     
-
-    //Geom: 
-    //get Geom data from basis object
-    set_coarse_num_nodes_geometry(_pt_basis);
     
     // FE:
     //get FE data from basis object
@@ -1083,7 +1071,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
 
     //local prolongation matrix evaluation ***********************************************************
-    set_element_prolongation(linearElement);
+    set_prolongation_OneElement_All_FE(linearElement);
 
     delete linearElement;
     // FE: MG   with   linearElement - END --------
