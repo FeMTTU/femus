@@ -104,19 +104,17 @@ namespace femus {
 
       const int n_dofs() const { return _nc; }
        
-
-      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
-	std::cout << "Warning AAA this function is not yet implemented for this element type" << std::endl;
-    return 0u;
-      }
-      
       /// Coordinates of the points that are DofCarrier of the coarse element
       virtual const double* GetXcoarse(const int &i) const {
         std::cout << "Warning this function is not yet implemented for this element type" << std::endl;
         return NULL;
       }
 
-      virtual const int* GetIND(const int &i) const = 0;
+
+      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
+	std::cout << "Warning AAA this function is not yet implemented for this element type" << std::endl;
+    return 0u;
+      }
       
     private:
 
@@ -126,42 +124,12 @@ namespace femus {
       const int _nc;
  // ===  FE  - END =================
 
-
- // ===  FE, Refinement  - BEGIN =================
+      
+ // ===  FE, Shape Functions - BEGIN =================
     public:
      
-      const int n_dofs_fine() const { return _nf; }
+      virtual const int* GetIND(const int &i) const = 0;
       
-      /// Coordinates of the points that are DofCarrier of the fine element
-      virtual const double* GetX(const int &i) const = 0;
-
-      /// Coordinates of the points that are DofCarrier of the fine element
-      virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
-        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
-      }
-
-      virtual const int* GetKVERT_IND(const int &i) const = 0;
-
-      
-      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
-        std::cout << "Warning this function in not implemented for const element type" << std::endl;
-        return 0u;
-      }
-
-    private:
-      
-      /**
-       * _nf = number of dofs in that element after refinement; 
-      */
-      const int _nf;
-
- // ===  FE, Refinement  - END =================
-
-      
-
- // ===  FE Shape Functions - BEGIN =================
-    public:
-     
       // DERIVATIVES of ORDER 0 - BEGIN ============
       double eval_phi(const unsigned &j, const std::vector < double > &x) const {
         return eval_phi(this->GetIND(j), &x[0]);
@@ -284,8 +252,39 @@ namespace femus {
       }
       // DERIVATIVES of ORDER 2 - END ============
       
- // ===  FE Shape Functions - END =================
+ // ===  FE, Shape Functions - END =================
  
+
+ // ===  FE, Refinement  - BEGIN =================
+    public:
+     
+      const int n_dofs_fine() const { return _nf; }
+      
+      /// Coordinates of the points that are DofCarrier of the fine element
+      virtual const double* GetX(const int &i) const = 0;
+
+      /// Coordinates of the points that are DofCarrier of the fine element
+      virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
+        std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
+      }
+
+      virtual const int* GetKVERT_IND(const int &i) const = 0;
+
+      
+      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
+        std::cout << "Warning this function in not implemented for const element type" << std::endl;
+        return 0u;
+      }
+
+    private:
+      
+      /**
+       * _nf = number of dofs in that element after refinement; 
+      */
+      const int _nf;
+
+ // ===  FE, Refinement  - END =================
+
  
   };
 

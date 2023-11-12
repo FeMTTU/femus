@@ -140,7 +140,6 @@ namespace femus
       
       void initialize_fe_parts(const char* geom_elem);
       
-      void initialize_refinement_parts(const char* geom_elem);
       
       void deallocate_fe_parts();
       
@@ -154,7 +153,7 @@ namespace femus
       int _nc;
       
       /** Set numbers of coarse dofs for 1 element */
-      void set_coarse_num_dofs(const basis* pt_basis_in);
+      void set_NDofs_coarse(const basis* pt_basis_in);
       
       void allocate_and_set_coarse_node_indices_IND(const basis* pt_basis_in);
       
@@ -205,19 +204,20 @@ namespace femus
    protected:
        
       
+      void initialize_refinement_parts(const char* geom_elem);
       
-      /** _nf: number of dofs in the element after refinement; */
-      int _nf;
       
+   private:
+     
       /** [_nf][_dim] coordinates of the _nf nodes in the refined elements ... @todo in what order? */ 
       const double** _X;
       
       /** [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element */
       const int** _KVERT_IND;
 
+      /** _nf: number of dofs in the element after refinement; */
+      int _nf;
       
-   private:
-     
       /** Needed for some Refinement purposes */
       const basis* set_underlying_Linear_FE_basis(const char* geom_elem) const;
       
@@ -236,7 +236,7 @@ namespace femus
       void set_fine_KVERT_IND(const basis* pt_basis_in);
   
       /** Set numbers of fine dofs for 1 element */
-      void set_fine_num_dofs(const basis* pt_basis_in);
+      void set_NDofs_fine(const basis* pt_basis_in);
       
       /** Compute element prolongation operator */
       void set_element_prolongation(const basis* linearElement);

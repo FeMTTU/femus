@@ -177,9 +177,10 @@ namespace femus {
       
       
 
-    protected:
+    private:
         
       static const double Xc[7][2];
+      
       double X[19][2];
       static const int IND[7][2];
       static const int KVERT_IND[19][2];
@@ -285,7 +286,7 @@ namespace femus {
         return KVERT_IND[i];
       }
 
-    protected:
+    private:
         
       static const double X[12][2];
       static const int IND[3][2];

@@ -420,14 +420,14 @@ namespace femus {
   
   
   
-  void elem_type::set_coarse_num_dofs(const basis* pt_basis_in)  {
+  void elem_type::set_NDofs_coarse(const basis* pt_basis_in)  {
   
      _nc  	 = pt_basis_in->n_dofs();
 
     
  }
 
-  void elem_type::set_fine_num_dofs(const basis* pt_basis_in)  {
+  void elem_type::set_NDofs_fine(const basis* pt_basis_in)  {
     
         _nf 	 = pt_basis_in->n_dofs_fine();
 
@@ -455,7 +455,8 @@ namespace femus {
          
       for(int i = 0; i < _nlag[3]; i++) {
           
-        std::vector<double> xm(_dim,0.);
+        std::vector<double> xm(_dim, 0.);
+        
         for(int k = 0; k <  _nlag[0]; k++) {
             
           const unsigned element = *(linearElement_in->GetKVERT_IND(i) + 0);
@@ -500,15 +501,16 @@ namespace femus {
 
           for(unsigned int ideriv = 0; ideriv < _dim; ideriv++) {
           if( i / n_geom_elems_after_refinement[_dim-1] == (ideriv + 1) ) {
-              for(int d = 0; d < _dim; d++)  jac[d+1] += linearElement->eval_dphidxyz(ideriv, linearElement->GetIND(k), _X[i]) * xv[d];
+              for(int d = 0; d < _dim; d++)  jac[d+1] += linearElement->eval_dphidxyz(ideriv, linearElement->GetIND(k), _pt_basis->GetX(i) ) * xv[d];
             }
           } //ideriv
+
           
         } //k
       }
       
       for(int j = 0; j <  n_dofs ; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
+        double phi = _pt_basis->eval_phi(_IND[j], _pt_basis->GetX(i) );
         if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear
           phi = jac[j];
         }
@@ -543,7 +545,7 @@ namespace femus {
 
           for(unsigned int ideriv = 0; ideriv < _dim; ideriv++) {
           if( i / n_geom_elems_after_refinement[_dim-1] == (ideriv + 1) ) {
-              for(int d = 0; d < _dim; d++)  jac[d+1] += linearElement->eval_dphidxyz(ideriv, linearElement->GetIND(k), _X[i]) * xv[d];
+              for(int d = 0; d < _dim; d++)  jac[d+1] += linearElement->eval_dphidxyz(ideriv, linearElement->GetIND(k), _pt_basis->GetX(i) ) * xv[d];
             }
           } //ideriv
           
@@ -554,7 +556,7 @@ namespace femus {
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
       for(int j = 0; j <  n_dofs ; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
+        double phi = _pt_basis->eval_phi(_IND[j], _pt_basis->GetX(i) );
         if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
           phi = jac[j];
         }
@@ -944,6 +946,9 @@ if( _SolType >= 3 && _SolType < 5 ) {
       
    }
    
+   
+   
+   
    void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
     const unsigned n_dofs = GetNDofs();
@@ -1087,7 +1092,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     
     // FE:
     //get FE data from basis object
-    set_coarse_num_dofs(_pt_basis);
+    set_NDofs_coarse(_pt_basis);
     
     // FE:
     allocate_and_set_coarse_node_indices_IND(_pt_basis);
@@ -1105,7 +1110,7 @@ if( _SolType >= 3 && _SolType < 5 ) {
     set_fine_num_nodes_geometry(_pt_basis);
     
     // FE: MG
-    set_fine_num_dofs(_pt_basis);
+    set_NDofs_fine(_pt_basis);
     
     // FE: MG
     allocate_fine_KVERT_IND();    

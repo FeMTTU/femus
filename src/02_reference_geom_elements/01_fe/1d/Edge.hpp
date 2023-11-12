@@ -19,38 +19,44 @@ namespace femus {
 
   class line_lag : public basis {
       
-    public:
         
+// ===  Constructors / Destructor - BEGIN =================
+    public:
+      
       line_lag(const int& nc, const int& nf):
         basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { }
-        
-      const double* GetX(const int &i) const {
-        return X[i];
-      }
-      
-      void SetX(const unsigned &i, const unsigned &j, const double &value) {
-        X[i][j] = value;
-      }
-      
+// ===  Constructors / Destructor - END =================
+
+
+ // ===  FE - BEGIN =================
+   public:
+     
       const double* GetXcoarse(const int &i) const {
         return Xc[i];
       }
+         
+    private:
+        
+      /// DofCarrier of coarse dofs
+      static const double Xc[3][1];
       
+ // ===  FE - END =================
+ 
+ 
+ // ===  FE, Shape functions - BEGIN =================
+   public:
+         
       const int* GetIND(const int &i) const {
         return IND[i];
       }
       
-      const int* GetKVERT_IND(const int &i) const {
-        return KVERT_IND[i];
-      }
+    private:
       
-      const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
-        return fine2CoarseVertexMapping[i][j];
-      }
-      
-      
+      static const int IND[3][1];
+ // ===  FE, Shape functions - END =================
 
- // === FE Shape Functions, Service for other elements (bit of repetition) - 1D basis BEGIN ============
+ 
+ // === FE, Shape Functions, Service for other elements (bit of repetition) - 1D basis BEGIN ============
       
     public:  /*now they are all static and used by the functions needing them */
     
@@ -91,39 +97,66 @@ namespace femus {
       }
 
 
- // === FE Shape Functions, Service for other elements (bit of repetition) - 1D basis END ============
+ // === FE, Shape Functions, Service for other elements (bit of repetition) - 1D basis END ============
       
 
-    protected:
+ // ===  FE, Refinement  - BEGIN =================
+   public:
+         
         
-      /// DofCarrier of coarse dofs
-      static const double Xc[3][1];
+      const double* GetX(const int &i) const {
+        return X[i];
+      }
+      
+      void SetX(const unsigned &i, const unsigned &j, const double &value) {
+        X[i][j] = value;
+      }
+      
+      const int* GetKVERT_IND(const int &i) const {
+        return KVERT_IND[i];
+      }
+      
+      const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
+        return fine2CoarseVertexMapping[i][j];
+      }
+ 
+    private:
       
       /// DofCarrier of fine dofs // these are static for discontinuous poly, but here they are filled afterwards
       double X[5][1];
-      static const int IND[3][1];
       static const int KVERT_IND[5][2];
       
       static const unsigned fine2CoarseVertexMapping[2][2];
+      
+      
+ // ===  FE, Refinement  - END =================
+
       
   };
 
   class LineLinear: public line_lag {
       
+// ===  Constructors / Destructor - BEGIN =================
     public:
         
       LineLinear(): line_lag(2, 3) {}
-      
+// ===  Constructors / Destructor - END =================
+
+
+ // ===  FE - BEGIN =================
       void PrintType() const {
         std::cout << " LineLinear ";
       }
-
+ // ===  FE - END =================
+ 
+ // ===  FE, Shape functions - BEGIN =================
       double eval_phi(const int *I, const double* x) const;
       double eval_dphidx(const int *I, const double* x) const;
       double eval_d2phidx2(const int *I, const double* x) const {
         return 0.;
       }
-
+ // ===  FE, Shape functions - END =================
+ 
   };
 
   //************************************************************
@@ -169,7 +202,7 @@ namespace femus {
         return KVERT_IND[i];
       }
 
-    protected:
+    private:
         
       static const double X[4][1];
       static const int IND[2][1];

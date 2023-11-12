@@ -55,9 +55,10 @@ namespace femus {
         return faceDofs[i][j];
       }
 
-    protected:
+    private:
         
       static const double Xc[21][3];
+      
       double X[95][3];
       static const int IND[21][3];
       static const int KVERT_IND[95][2];
@@ -186,7 +187,7 @@ namespace femus {
         return KVERT_IND[i];
       }
 
-    protected:
+    private:
         
       static const double X[32][3];
       static const int IND[4][3];

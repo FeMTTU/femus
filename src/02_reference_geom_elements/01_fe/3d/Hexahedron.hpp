@@ -51,15 +51,15 @@ namespace femus {
         return faceDofs[i][j];
       }
 
-    protected:
+    private:
         
+      
+      static const double Xc[27][3];
       
       double X[125][3];
       static const int IND[27][3];
       static const int KVERT_IND[125][2];
 
-      static const double Xc[27][3];
-      
       static const unsigned fine2CoarseVertexMapping[8][8];
       static const unsigned faceDofs[6][9];
 
@@ -173,7 +173,7 @@ namespace femus {
         return KVERT_IND[i];
       }
 
-    protected:
+    private:
         
       static const double X[32][3];
       static const int IND[4][3];
