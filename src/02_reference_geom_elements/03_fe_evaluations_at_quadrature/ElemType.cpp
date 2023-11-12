@@ -44,7 +44,7 @@ namespace femus {
   _gauss_bdry(NULL)
   {
       
-     initialize_geom_elem(geom_elem);
+     initialize_dim_and_geom_elem(geom_elem);
       
      initialize_fe_soltype(fe_order);
      
@@ -60,7 +60,7 @@ namespace femus {
   _gauss_bdry(NULL)
   {
       
-     initialize_geom_elem(geom_elem);
+     initialize_dim_and_geom_elem(geom_elem);
       
      initialize_fe_soltype(fe_order);
       
@@ -95,9 +95,7 @@ namespace femus {
 ///@todo maybe initialize all these pointers to NULL in case they may not be allocated
   void elem_type::deallocate_refinement_parts() {
     
-    delete [] _X              ;
-    delete [] _KVERT_IND      ;
-
+    
     delete [] _prol_val       ;
     delete [] _prol_ind       ;
     delete [] _mem_prol_val   ;
@@ -108,7 +106,7 @@ namespace femus {
   
   
  
-   void elem_type::initialize_geom_elem(const char* geom_elem) {
+   void elem_type::initialize_dim_and_geom_elem(const char* geom_elem) {
        
 // GEOM ELEM ============
            if ( !strcmp(geom_elem, "hex") )    { _dim = 3; _GeomElemType = HEX;   }
@@ -389,35 +387,6 @@ namespace femus {
   }
   
   
-  void elem_type::allocate_fine_coordinates()  {
-      
-    _X         = new const double * [_nf];
-      
-  }
-  
-  void elem_type::allocate_fine_KVERT_IND()  {
-    
-    _KVERT_IND = new const int * [_nf];
-      
-  }
-  
-  
-  void elem_type::set_fine_coordinates(const basis* pt_basis_in)  {
-       
-      for(int i = 0; i < _nf; i++) {
-              _X[i] = pt_basis_in->GetX(i);
-    }
-    
-  } 
-
-  
-  void elem_type::set_fine_KVERT_IND(const basis* pt_basis_in)  {
-    
-         for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = pt_basis_in->GetKVERT_IND(i);
-    }
-  } 
-  
   
   
   void elem_type::set_NDofs_coarse(const basis* pt_basis_in)  {
@@ -441,23 +410,20 @@ namespace femus {
      
    }
    
-   void elem_type::set_fine_num_nodes_geometry(const basis* pt_basis_in)  {
- 
-      _nlag[3] = pt_basis_in->Get_NNodes_Lagrange_biq_fine();
 
-   }
-
-   
    
    void elem_type::set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
        
      if(_SolType <= 2) {
          
-      for(int i = 0; i < _nlag[3]; i++) {
+       const unsigned n_nodes_biq_fine = pt_basis_in->Get_NNodes_Lagrange_biq_fine();
+       
+       
+      for(int i = 0; i < n_nodes_biq_fine; i++) {
           
         std::vector<double> xm(_dim, 0.);
         
-        for(int k = 0; k <  _nlag[0]; k++) {
+        for(int k = 0; k <  GetNDofs_Lagrange(0); k++) {
             
           const unsigned element = *(linearElement_in->GetKVERT_IND(i) + 0);
           std::vector< double > xv(_dim);
@@ -493,7 +459,7 @@ namespace femus {
       std::vector<double> jac(_dim + 1, 0.);
       
       if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k < _nlag[0]; k++) {
+        for(int k = 0; k < GetNDofs_Lagrange(0); k++) {
             
           //coordinates of the coarse vertices with respect to the fine elements
           std::vector<double> xv(_dim);
@@ -537,7 +503,7 @@ namespace femus {
       std::vector<double> jac(_dim + 1, 0.);
 
       if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  _nlag[0]; k++) {
+        for(int k = 0; k <  GetNDofs_Lagrange(0); k++) {
             
           //coordinates of the coarse vertices with respect to the fine elements
           std::vector<double> xv(_dim);
@@ -851,8 +817,8 @@ namespace femus {
            underlying_volume_basis = _pt_basis;
        }
        else if( _SolType < 5 ) {
-              if( _GeomElemType == QUAD) underlying_volume_basis = new QuadLinear;
-         else if( _GeomElemType == TRI)  underlying_volume_basis = new TriLinear;
+              if( geom_el_type() == QUAD) underlying_volume_basis = new QuadLinear;
+         else if( geom_el_type() == TRI)  underlying_volume_basis = new TriLinear;
        }
       
       
@@ -1104,41 +1070,23 @@ if( _SolType >= 3 && _SolType < 5 ) {
   
   
   void elem_type::initialize_refinement_parts(const char* geom_elem) {
-  
-    
-    //Geom: MG 
-    set_fine_num_nodes_geometry(_pt_basis);
+ 
     
     // FE: MG
     set_NDofs_fine(_pt_basis);
     
-    // FE: MG
-    allocate_fine_KVERT_IND();    
- 
-    // FE: MG
-    set_fine_KVERT_IND(_pt_basis);
     
-    
-    // FE: MG   with   linearElement - BEGIN
-     
+    // FE: MG   with   linearElement - BEGIN --------
     const basis* linearElement = set_underlying_Linear_FE_basis(geom_elem);
     
-    // construction of coordinates ***********************************************************
-    allocate_fine_coordinates();
-    
+    // construction of coordinates ***********************************************************    
     set_fine_coordinates_in_Basis_object(_pt_basis, linearElement);
 
-    set_fine_coordinates(_pt_basis);
-    //***********************************************************
-
-    // FE: MG
     //local prolongation matrix evaluation ***********************************************************
     set_element_prolongation(linearElement);
-    //***********************************************************
 
     delete linearElement;
-    
-    // FE: MG   with   linearElement - END
+    // FE: MG   with   linearElement - END --------
 
   
   

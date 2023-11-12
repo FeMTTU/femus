@@ -58,18 +58,8 @@ namespace femus
 // =========================================
 
 
-// ===  GeomElem Part - BEGIN =================
+// ===  GeomElem  - BEGIN =================
       
-
-   private:
-       
-      void initialize_geom_elem(const char* geom_elem);
-      
-      
-   protected:
-     
-      GeomElType _GeomElemType;  /* Geometric Element flag */
-
 
     public:
         
@@ -78,31 +68,39 @@ namespace femus
         return _dim;
       }
 
+      inline int  GetNDofs_Lagrange(const unsigned type) const {
+        assert(type < NFE_FAMS_C_ZERO_LAGRANGE);
+        return _nlag[type];
+      }
+      
+     const GeomElType geom_el_type() const { return _GeomElemType; }
+     
+
+     
    protected:
       
       unsigned _dim; /* Spatial dimension of the geometric element */
       
-    public:
-        
-      inline int  GetNDofs_Lagrange(const unsigned type) const {
-        return _nlag[type];
-      }
-      
+
    private:
+     
+      void initialize_dim_and_geom_elem(const char* geom_elem);
       
+      
+     GeomElType _GeomElemType;  /* Geometric Element flag */
+
       /**  _nlag[0] = number of linear dofs in 1 element;
            _nlag[1] = number of serendipity dofs in 1 element; 
            _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
-           _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
        */
-      int _nlag[4];
+      
+      int _nlag[ NFE_FAMS_C_ZERO_LAGRANGE ];
 
      
    void set_coarse_num_nodes_geometry(const basis* pt_basis_in);
    
-   void set_fine_num_nodes_geometry(const basis* pt_basis_in);
 
-// ===  GeomElem Part - END =================
+// ===  GeomElem  - END =================
 
 
       
@@ -128,20 +126,16 @@ namespace femus
       
    protected:
        
-      void initialize_fe_soltype(const char* fe_order);
+      /** FE basis functions*/
+      basis* _pt_basis;
       
       /** Finite Element Family flag */
       unsigned _SolType;
       
       virtual void  set_current_FE_basis(const char* geom_elem, unsigned int FEType_in) = 0;
       
-      /** FE basis functions*/
-      basis* _pt_basis;
-      
       void initialize_fe_parts(const char* geom_elem);
       
-      
-      void deallocate_fe_parts();
       
      
       /** [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
@@ -149,6 +143,10 @@ namespace femus
       
    private:
      
+      void deallocate_fe_parts();
+      
+      void initialize_fe_soltype(const char* fe_order);
+      
       /** _nc: number of dofs of 1 element;  */
       int _nc;
       
@@ -193,10 +191,13 @@ namespace femus
         return _prol_val[i][k];
       }
       
+      
       std::pair<int, int> GetKVERT_IND(const unsigned i) const {
         
-        const int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
-        const int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+        const int * kvert_i = GetBasis()->GetKVERT_IND(i);
+        
+        const int i0 = kvert_i[0]; //id of the subdivision of the fine element
+        const int i1 = kvert_i[1]; //local id node on the subdivision of the fine element
         
         return std::make_pair(i0, i1);
       }
@@ -208,39 +209,27 @@ namespace femus
       
       
    private:
-     
-      /** [_nf][_dim] coordinates of the _nf nodes in the refined elements ... @todo in what order? */ 
-      const double** _X;
-      
-      /** [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element */
-      const int** _KVERT_IND;
+
 
       /** _nf: number of dofs in the element after refinement; */
       int _nf;
       
-      /** Needed for some Refinement purposes */
-      const basis* set_underlying_Linear_FE_basis(const char* geom_elem) const;
-      
-      void deallocate_refinement_parts();
-     
-      void allocate_fine_coordinates();
-      
-      void allocate_fine_KVERT_IND();
-      
-      /** Compute node coordinates in basis object */
-      void set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
-      
-      /** Set fine node coordinates and fine node indices */
-      void set_fine_coordinates(const basis* pt_basis_in);
-      
-      void set_fine_KVERT_IND(const basis* pt_basis_in);
-  
       /** Set numbers of fine dofs for 1 element */
       void set_NDofs_fine(const basis* pt_basis_in);
       
+      
+      /** Needed for some Refinement purposes */
+      const basis* set_underlying_Linear_FE_basis(const char* geom_elem) const;
+      
+      /** Compute fine node coordinates in basis object */
+      void set_fine_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
+            
       /** Compute element prolongation operator */
       void set_element_prolongation(const basis* linearElement);
       
+      void deallocate_refinement_parts();
+     
+
       /** Prolongator value */
       double** _prol_val;
       

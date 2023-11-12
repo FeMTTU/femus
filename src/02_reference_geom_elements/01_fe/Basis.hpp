@@ -87,7 +87,8 @@ namespace femus {
       
       const unsigned int Get_NNodes_Lagrange_biq_fine() const { return _nlag3; }
       
-      /**
+   protected:
+   /**
         _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
       */
       
@@ -261,6 +262,7 @@ namespace femus {
       const int n_dofs_fine() const { return _nf; }
       
       /// Coordinates of the points that are DofCarrier of the fine element
+      /** [_nf][_dim] coordinates of the _nf nodes in the refined elements ... @todo in what order? */ 
       virtual const double* GetX(const int &i) const = 0;
 
       /// Coordinates of the points that are DofCarrier of the fine element
@@ -268,6 +270,7 @@ namespace femus {
         std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
       }
 
+      /** [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element */
       virtual const int* GetKVERT_IND(const int &i) const = 0;
 
       
