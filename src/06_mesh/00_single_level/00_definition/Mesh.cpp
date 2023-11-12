@@ -1133,6 +1133,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     return _ProjQitoQj[itype][jtype];
   }
+  
+  
 
   void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
 
@@ -1161,10 +1163,13 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     NNZ_o->init(*NNZ_d);
     NNZ_o->zero();
 
+    
+    
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-            Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
+        const unsigned ndofs_itype_in = GetFiniteElement(ielt, itype)->GetBasis()->n_dofs();
+            Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype), ndofs_itype_in );
       }
     }
 
@@ -1191,7 +1196,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-          Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
+        const unsigned ndofs_itype_in = GetFiniteElement(ielt, itype)->GetBasis()->n_dofs();
+          Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype), ndofs_itype_in );
       }
     }
 
@@ -1216,16 +1222,18 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                                          NumericVector* NNZ_d,
                                          NumericVector* NNZ_o,
                                          const unsigned& itype,
-                                         const elem_type * elem_type_in) const
+                                         const elem_type * elem_type_in_jtype,
+                                         const unsigned ndofs_itype_in) const
   {
     
         assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
 
       
-    const unsigned soltype_in = elem_type_in->GetSolType();
-    const basis * pt_basis_in = elem_type_in->GetBasis();
-    const unsigned      ndofs = elem_type_in->GetNDofs();
-    const unsigned      ndofs_Lagrange = elem_type_in->GetBasis()->GetNDofs_Lagrange(itype);
+    const unsigned soltype_in = elem_type_in_jtype->GetSolType();
+    const basis * pt_basis_in = elem_type_in_jtype->GetBasis();
+    const unsigned      ndofs = elem_type_in_jtype->GetNDofs();
+    
+    const unsigned      ndofs_Lagrange = ndofs_itype_in;
     
     bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
@@ -1265,20 +1273,22 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                                     NumericVector* NNZ_d,
                                     NumericVector* NNZ_o,
                                     const unsigned& itype,
-                                  const elem_type * elem_type_in) const
+                                  const elem_type * elem_type_in_jtype,
+                                         const unsigned ndofs_itype_in) const
   {
     
         assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
     
-    const unsigned soltype_in = elem_type_in->GetSolType();
-    const basis * pt_basis_in = elem_type_in->GetBasis();
-    const unsigned      ndofs = elem_type_in->GetNDofs();
-    const unsigned      ndofs_Lagrange = elem_type_in->GetBasis()->GetNDofs_Lagrange(itype);
+    const unsigned soltype_in = elem_type_in_jtype->GetSolType();
+    const basis * pt_basis_in = elem_type_in_jtype->GetBasis();
+    const unsigned      ndofs = elem_type_in_jtype->GetNDofs();
+    
+    const unsigned      ndofs_Lagrange = ndofs_itype_in;
+
+    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
     std::vector<int> cols( ndofs );
     std::vector<double> value( ndofs );
-    
-    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
     for(int i = 0; i < ndofs_Lagrange; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);

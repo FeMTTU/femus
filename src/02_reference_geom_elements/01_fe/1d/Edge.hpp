@@ -8,6 +8,13 @@
 #include <vector>
 
 
+//maximum is Edge3
+//2, 3, 3,
+#define LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE  5
+#define DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE  4
+
+
+
 namespace femus {
     
 
@@ -24,7 +31,7 @@ namespace femus {
     public:
       
       line_lag(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
+        basis(nc, nf, LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
 // ===  Constructors / Destructor - END =================
 
 
@@ -124,7 +131,7 @@ namespace femus {
  // ===  FE, Refinement  - END =================
       
       
- // ===  FE, Refinement, Lagrange  - BEGIN =================
+ // ===  FE, Refinement, only underlying Lagrange linear  - BEGIN =================
    public:
       
       const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
@@ -134,7 +141,7 @@ namespace femus {
     private:
       
       static const unsigned fine2CoarseVertexMapping[2][2];
- // ===  FE, Refinement, Lagrange  - END =================
+ // ===  FE, Refinement, only underlying Lagrange linear  - END =================
 
       
   };
@@ -194,7 +201,7 @@ namespace femus {
         
 // ===  Constructors / Destructor - BEGIN =================
       line_const(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
+        basis(nc, nf, DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
 // ===  Constructors / Destructor - END =================
 
 

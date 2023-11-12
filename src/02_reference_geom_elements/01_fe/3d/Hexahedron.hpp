@@ -8,6 +8,12 @@
 #include <iostream>
 #include <vector>
 
+//maximum is Hex27
+// 8, 20, 27
+#define LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE  125
+#define DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE  32
+
+
 
 namespace femus {
     
@@ -21,7 +27,7 @@ namespace femus {
   class hex_lag : public basis {
     public:
       hex_lag(const int& nc, const int& nf):
-        basis(nc, nf, 8, 20, 27, LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
+        basis(nc, nf, LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -160,7 +166,7 @@ namespace femus {
     public:
         
       hex_const(const int& nc, const int& nf):
-        basis(nc, nf, 8, 20, 27, DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
+        basis(nc, nf, DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
 
       const double* GetX(const int &i) const {
         return X[i];

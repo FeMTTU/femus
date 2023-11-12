@@ -9,6 +9,11 @@
 #include <vector>
 
 
+//maximum is Tet15
+// 4, 10, 15
+#define LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE  67   //8 tetrahedra, ...
+#define DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE  32
+
 
 
 namespace femus {
@@ -26,7 +31,7 @@ namespace femus {
     public:
         
       tet_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE, 0, 0, 4) { }
+        basis(nc, nf, LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE, 0, 0, 4) { }
       const double* GetX(const int &i) const {
         return X[i];
       }
@@ -171,7 +176,7 @@ namespace femus {
     public:
         
       tet_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE,  0, 0, 4) { }
+        basis(nc, nf, DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE,  0, 0, 4) { }
 
       const double* GetX(const int &i) const {
         return X[i];

@@ -11,6 +11,18 @@
 #include <vector>
 
 
+
+//maximum is Wedge21
+// Tri7 x Edge3 = Tri7 and Quad9 faces (no volume center)
+// One Ref: 19 nodes x 5 layers = 95
+// 6, 15, 21
+#define LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE  95   // 4 Tri7 * 2 Edge 3 + 
+#define DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE  32
+
+
+
+
+
 namespace femus {
     
 
@@ -25,7 +37,7 @@ namespace femus {
     public:
         
       wedge_lag(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
+        basis(nc, nf, LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -173,7 +185,7 @@ namespace femus {
     public:
         
       wedge_const(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
+        basis(nc, nf, DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
 
       const double* GetX(const int &i) const {
         return X[i];

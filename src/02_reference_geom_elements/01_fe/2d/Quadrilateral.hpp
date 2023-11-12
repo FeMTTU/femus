@@ -8,6 +8,13 @@
 #include <vector>
 
 
+//maximum is Quad9
+// 4, 8, 9,
+#define LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE  25
+#define DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE  12
+
+
+
 namespace femus {
     
 
@@ -22,7 +29,7 @@ namespace femus {
     public:
         
       quad_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE, 0, 4, 4) { }
+        basis(nc, nf, LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE, 0, 4, 4) { }
         
       const double* GetX(const int &i) const {
         return X[i];
@@ -52,10 +59,10 @@ namespace femus {
     private:
         
       static const double Xc[9][2];
-      
-      double X[25][2];
       static const int IND[9][2];
-      static const int KVERT_IND[25][2];
+      
+      double X[ LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE ][2];
+      static const int KVERT_IND[ LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE ][2];
 
       static const unsigned fine2CoarseVertexMapping[4][4];
       static const unsigned faceDofs[4][3];
@@ -138,7 +145,7 @@ namespace femus {
     public:
         
       quad_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE,  0, 4, 4) { }
+        basis(nc, nf, DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE,  0, 4, 4) { }
         
       const double* GetX(const int &i) const {
         return X[i];

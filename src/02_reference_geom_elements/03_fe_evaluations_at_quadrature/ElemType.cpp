@@ -495,7 +495,7 @@ namespace femus {
       std::vector<double> jac(_dim + 1, 0.);
 
       if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  linearElement->n_dofs(); k++) {
+        for(int k = 0; k < linearElement->n_dofs(); k++) {
             
           //coordinates of the coarse vertices with respect to the fine elements
           std::vector<double> xv(_dim);

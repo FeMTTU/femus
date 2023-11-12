@@ -27,30 +27,11 @@
 #include <cassert>
 
 
-//maximum is Edge3
-#define LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE  5
-#define DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE  4
 
-//maximum is Tri7
-#define LAGRANGE_TRIANGLE_NDOFS_MAXIMUM_FINE  19
-#define DISCPOLY_TRIANGLE_NDOFS_MAXIMUM_FINE  12
 
-//maximum is Quad9
-#define LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE  25
-#define DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE  12
 
-//maximum is Hex27
-#define LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE  125
-#define DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE  32
 
-//maximum is Tet14
-#define LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE  67   //8 tetrahedra, ...
-#define DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE  32
 
-// Tri7 x Edge3 = Tri7 and Quad9 faces (no volume center)
-// One Ref: 19 nodes x 5 layers = 95
-#define LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE  95   // 4 Tri7 * 2 Edge 3 + 
-#define DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE  32
 
 
 
@@ -69,12 +50,12 @@ namespace femus {
 // ===  Constructors / Destructor - BEGIN =================
     public:
 
-      basis(const int &nc, const int &nf, const int &nlag0, const int &nlag1, const int &nlag2, const int &nlag3,
-	    const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):
+      basis(const int &nc, const int &nf, 
+            const int &nlag3,
+	        const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):
         _nc(nc),
         _nf(nf),
-        _nlag3(nlag3),
-        _nlag{nlag0, nlag1, nlag2}
+        _nlag3(nlag3)
         {
 	  faceNumber[0] = faceNumber0;
 	  faceNumber[1] = faceNumber1;
@@ -91,22 +72,10 @@ namespace femus {
       
       static constexpr const unsigned _n_face_types_and_total = 3;
       
-      inline int  GetNDofs_Lagrange(const unsigned type) const {
-        assert(type < NFE_FAMS_C_ZERO_LAGRANGE);
-        return _nlag[type];
-      }
-      
     private:
 
       /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...) */
       int faceNumber[ basis::_n_face_types_and_total ];
-
-      /**
-        _nlag[0] = number of linear dofs in 1 element;
-        _nlag[1] = number of serendipity dofs in 1 element; 
-        _nlag[2] = number of tensor-product quadratic dofs in 1 element;
-      */
-      const int _nlag[ NFE_FAMS_C_ZERO_LAGRANGE ];
               
  // ===  Geom Elem - END =================
       
@@ -126,11 +95,6 @@ namespace femus {
       }
 
 
-      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
-	std::cout << "Warning AAA this function is not yet implemented for this element type" << std::endl;
-    return 0u;
-      }
-      
     private:
 
       /**
@@ -138,6 +102,20 @@ namespace femus {
       */
       const int _nc;
  // ===  FE  - END =================
+
+
+ // ===  FE, only Lagrange  - BEGIN =================
+    public:
+      
+      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
+	std::cout << "Warning AAA this function is not yet implemented for this element type" << std::endl;
+    return 0u;
+      }
+      
+      
+      
+ // ===  FE, only Lagrange  - END =================
+
 
       
  // ===  FE, Shape Functions - BEGIN =================
@@ -273,18 +251,6 @@ namespace femus {
  // ===  Refinement  - BEGIN =================
 
       
- // ===  FE, Refinement, only Lagrange  - BEGIN =================
-    public:
-     
-      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
-        std::cout << "Warning this function in not implemented for discontinuous polynomial element type" << std::endl;
-        return 0u;
-      }
-
-
- // ===  FE, Refinement, only Lagrange  - END =================
-      
-      
  // ===  FE, Refinement  - BEGIN =================
     public:
      
@@ -320,6 +286,18 @@ namespace femus {
       
  // ===  FE, Refinement  - END =================
 
+      
+ // ===  FE, Refinement, only underlying Lagrange linear  - BEGIN =================
+    public:
+     
+      virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
+        std::cout << "Warning this function is only implemented for linear Lagrange element type" << std::endl;
+        return 0u;
+      }
+
+
+ // ===  FE, Refinement, only underlying Lagrange linear - END =================
+      
  // ===  Refinement  - END =================
  
   };

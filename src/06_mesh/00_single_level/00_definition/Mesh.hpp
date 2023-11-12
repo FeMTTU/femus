@@ -585,7 +585,8 @@ private:
                                   NumericVector* NNZ_d,
                                   NumericVector* NNZ_o,
                                   const unsigned& itype,
-                                  const elem_type * elem_type_in) const;
+                                  const elem_type * elem_type_in_jtype,
+                                  const unsigned ndofs_itype_in) const;
 
         
     /** for solution printing */
@@ -595,7 +596,8 @@ private:
                              NumericVector* NNZ_d,
                              NumericVector* NNZ_o,
                              const unsigned& itype,
-                             const elem_type * elem_type_in) const;
+                             const elem_type * elem_type_in_jtype,
+                             const unsigned ndofs_itype_in) const;
 
 
     /** FE: The projection matrix between Lagrange FEM at the same level mesh */

@@ -9,6 +9,12 @@
 #include <vector>
 
 
+//maximum is Tri7
+//3, 6, 7
+#define LAGRANGE_TRIANGLE_NDOFS_MAXIMUM_FINE  19
+#define DISCPOLY_TRIANGLE_NDOFS_MAXIMUM_FINE  12
+
+
 namespace femus {
     
 
@@ -23,7 +29,7 @@ namespace femus {
     public:
         
       tri_lag(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, LAGRANGE_TRIANGLE_NDOFS_MAXIMUM_FINE, 0, 3, 3) { }
+        basis(nc, nf, LAGRANGE_TRIANGLE_NDOFS_MAXIMUM_FINE, 0, 3, 3) { }
         
       const double* GetX(const int &i) const {
         return X[i];
@@ -273,7 +279,7 @@ namespace femus {
     public:
         
       tri_const(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, DISCPOLY_TRIANGLE_NDOFS_MAXIMUM_FINE, 0, 3, 3) { }
+        basis(nc, nf, DISCPOLY_TRIANGLE_NDOFS_MAXIMUM_FINE, 0, 3, 3) { }
         
       const double* GetX(const int &i) const {
         return X[i];
