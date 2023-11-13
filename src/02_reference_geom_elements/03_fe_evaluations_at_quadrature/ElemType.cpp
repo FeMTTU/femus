@@ -829,7 +829,7 @@ namespace femus {
       const double* xi_ptr = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
 // --------- quadrature - END
 
-      unsigned nFaces = /*_pt_basis*/underlying_volume_basis->n_faces_total();
+      unsigned nFaces = /*_pt_basis*/underlying_volume_basis->get_geom_elem()->n_faces_total();
       
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
@@ -940,14 +940,15 @@ if( _SolType >= 3 && _SolType < 5 ) {
                             };
 // --------- quadrature - END
 
-      unsigned nFaces = _pt_basis->n_faces_total();
+      unsigned nFaces = _pt_basis->get_geom_elem()->n_faces_total();
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
 
       //only the first two face types
-      for(unsigned type = 0; type < basis::n_faces_types_max(); type++) {
-        for(int iface = _pt_basis->n_faces_offset(type); iface < _pt_basis->n_faces_offset(type + 1); iface++) {
+      for(unsigned type = 0; type < GeomElemBase::get_n_face_types_max(); type++) {
+        for(int iface = _pt_basis->get_geom_elem()->n_faces_offset(type);
+                iface < _pt_basis->get_geom_elem()->n_faces_offset(type + 1); iface++) {
           std::vector< double > xv(faceBasis[type] -> n_dofs());
           std::vector< double > yv(faceBasis[type] ->  n_dofs());
           std::vector< double > zv(faceBasis[type] ->  n_dofs());

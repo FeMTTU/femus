@@ -15,6 +15,7 @@ class  GeomElemHex8 : public GeomElemHex  {
 
 public:
   
+       GeomElemHex8() : GeomElemHex() { };
 
     
     unsigned int n_nodes()        const { return 8; };

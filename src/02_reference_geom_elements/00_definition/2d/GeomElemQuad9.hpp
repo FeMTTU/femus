@@ -14,6 +14,7 @@ class GeomElemQuad9 : public GeomElemQuad  {
 public:
   
   
+      GeomElemQuad9() : GeomElemQuad() { };
     
     unsigned int n_nodes()        const { return 9; };
     

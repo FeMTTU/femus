@@ -14,6 +14,7 @@ class GeomElemTri3 : public GeomElemTri  {
 
 public:
     
+      GeomElemTri3() : GeomElemTri() { };
     
     unsigned int n_nodes()        const { return 3; };
     

@@ -31,12 +31,6 @@
 
 
 
-
-
-
-
-
-
 namespace femus {
     
 
@@ -55,7 +49,6 @@ namespace femus {
             const int &nlag3,
             const GeomElemBase * geom_base_in) :
         _geom_elem(geom_base_in),
-        faceNumber_offsets{ 0, geom_base_in->num_non_triangular_faces() , geom_base_in->num_non_triangular_faces() + geom_base_in->num_triangular_faces()},
         _nc(nc),
         _nf(nf),
         _n_dofs_max_fine_for_dof_carriers(nlag3)
@@ -68,25 +61,9 @@ namespace femus {
       
       const GeomElemBase *  get_geom_elem() const { return  _geom_elem; }
       
-      const int n_faces_offset(const unsigned type_in) const { return faceNumber_offsets[type_in]; }
-      
-      const int n_faces_total() const { return faceNumber_offsets[2]; }
-      
-      static const unsigned int n_faces_types_max()  {  return  _n_face_types_max; } 
-      
     private:
       
       const GeomElemBase *  _geom_elem;
-      
-      static constexpr const unsigned _n_face_types_max = 2;
-
-      /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...)
-       * 0 = begin non-triangular faces
-       * 1 = end non-triangular faces, so that [1] - [0] gives the total of non-triangular faces
-       * 1 = begin triangular faces
-       * 2 = end triangular faces,   so that [2] - [1] gives the total of non-triangular faces
-       */
-      const unsigned int faceNumber_offsets[ _n_face_types_max + 1 ];
       
  // ===  Geom Elem - END =================
       
@@ -113,19 +90,6 @@ namespace femus {
       */
       const int _nc;
  // ===  FE  - END =================
-
-
- // ===  FE, only Lagrange  - BEGIN =================
-    public:
-      
-      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
-	std::cout << "Warning AAA this function is not yet implemented for this element type" << std::endl;
-    return 0u;
-      }
-      
-      
-      
- // ===  FE, only Lagrange  - END =================
 
       
  // ===  FE, Shape Functions - BEGIN =================
@@ -256,9 +220,23 @@ namespace femus {
       // DERIVATIVES of ORDER 2 - END ============
       
  // ===  FE, Shape Functions - END =================
- 
 
- // ===  Refinement  - BEGIN =================
+ 
+ // ===  FE, only Lagrange  - BEGIN =================
+    public:
+      
+      virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
+	std::cout << "Warning AAA this function is not yet implemented for this element type" << std::endl;
+    return 0u;
+      }
+      
+      
+      
+ // ===  FE, only Lagrange  - END =================
+
+
+ 
+ // ===  FE, Refinement  - BEGIN =======================
 
       
  // ===  FE, Refinement  - BEGIN =================
@@ -308,7 +286,7 @@ namespace femus {
 
  // ===  FE, Refinement, only underlying Lagrange linear - END =================
       
- // ===  Refinement  - END =================
+ // ===  FE, Refinement  - END =======================
  
   };
 

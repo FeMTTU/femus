@@ -13,6 +13,9 @@ class GeomElemTet : public GeomElemBase  {
 
 public:
          
+    GeomElemTet() : GeomElemBase() { };
+    
+    
     unsigned int  get_dimension() const { return _dim; };
     unsigned int n_nodes_linear() const { return _n_vertices; };
 

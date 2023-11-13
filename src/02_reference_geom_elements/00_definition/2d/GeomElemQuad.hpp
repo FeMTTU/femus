@@ -12,6 +12,8 @@ namespace femus {
 class GeomElemQuad : public GeomElemBase  {
 
 public:
+    
+    GeomElemQuad() : GeomElemBase() { };
          
     unsigned int  get_dimension() const { return _dim; };
     unsigned int n_nodes_linear() const { return _n_vertices; };

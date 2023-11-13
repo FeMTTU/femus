@@ -13,6 +13,7 @@ class GeomElemEdge2 : public GeomElemEdge  {
 
 public:
 
+      GeomElemEdge2() : GeomElemEdge() { };
       
     unsigned int n_nodes()        const { return 2; };
     

@@ -12,7 +12,10 @@ namespace femus {
 class GeomElemWedge : public GeomElemBase  {
 
 public:
-         
+   
+        GeomElemWedge() : GeomElemBase() { };
+
+    
     unsigned int  get_dimension() const { return _dim; };
     unsigned int n_nodes_linear() const { return _n_vertices; };
 

@@ -14,6 +14,8 @@ namespace femus {
 class GeomElemTet4 : public GeomElemTet  {
 
 public:
+  
+       GeomElemTet4() : GeomElemTet() { };
     
     unsigned int n_nodes()        const { return 4; };
     

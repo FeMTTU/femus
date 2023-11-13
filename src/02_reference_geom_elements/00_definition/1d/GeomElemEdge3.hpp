@@ -12,6 +12,8 @@ namespace femus {
 class GeomElemEdge3 : public GeomElemEdge  {
 
 public:
+  
+      GeomElemEdge3() : GeomElemEdge() { };
         
     unsigned int n_nodes()        const { return 3; };
     

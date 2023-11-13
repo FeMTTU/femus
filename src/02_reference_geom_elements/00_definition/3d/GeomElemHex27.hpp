@@ -19,6 +19,7 @@ class GeomElemHex27 : public GeomElemHex {
 
 public:
   
+       GeomElemHex27() : GeomElemHex() { };
 
     unsigned int n_nodes()        const { return 27; };
     

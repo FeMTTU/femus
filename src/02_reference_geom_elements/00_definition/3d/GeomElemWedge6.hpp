@@ -11,10 +11,11 @@ namespace femus {
 
 
 
-class  GeomElemWedge6 : public GeomElemHex  {
+class  GeomElemWedge6 : public GeomElemWedge  {
 
 public:
   
+       GeomElemWedge6() : GeomElemWedge() { };
 
     
     unsigned int n_nodes()        const { return 6; };

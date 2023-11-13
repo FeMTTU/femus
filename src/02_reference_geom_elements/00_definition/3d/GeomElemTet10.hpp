@@ -17,6 +17,7 @@ class GeomElemTet10 : public GeomElemTet  {
 
 public:
 
+       GeomElemTet10() : GeomElemTet() { };
     
     unsigned int n_nodes()        const { return 10; };
      
