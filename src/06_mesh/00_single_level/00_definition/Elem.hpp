@@ -52,77 +52,19 @@ namespace femus {
       /** destructor */
       ~elem();
 // === CONSTR-DESTR - END =================
-      
-      
-    public:
-
-
-      // reorder the element according to the new element mapping
-      void ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(const std::vector < unsigned >& elementMapping);
-
-      void ReorderElementNearFace_rows(const std::vector < unsigned >& elementMapping);
-      
-      
-      void ReorderChildElement_columns(const std::vector < unsigned >& elementMapping);
-     
-      void ReorderElementDof_rows(const std::vector < unsigned >& elementMapping);
-      
-      // reorder the nodes according to the new node mapping
-      void ReorderMeshNodes_ElementDof(const std::vector < unsigned >& nodeMapping);
-
-      
-      
-
-
-      void BuildMeshElemStructures();
-      
-
-  private:
-      
-      void ResizeElement_Level_Type_Group_Material(const unsigned nel_in, const unsigned level_in) {
-       _elementLevel.resize(nel_in, level_in);
-       _elementType.resize(nel_in);
-       _elementGroup.resize(nel_in);
-       _elementMaterial.resize(nel_in);
-      }
-      
-      void ScatterElement_Level_Type_Group_Material() {
-        _elementLevel.scatter(_elementOffset);
-        _elementType.scatter(_elementOffset);
-        _elementGroup.scatter(_elementOffset);
-        _elementMaterial.scatter(_elementOffset);
-      }
-      
-  public:
-      
-      void LocalizeElement_Level_Type_Group_Material(const unsigned &lproc) {
-        _elementLevel.broadcast(lproc);
-        _elementType.broadcast(lproc);
-        _elementGroup.broadcast(lproc);
-        _elementMaterial.broadcast(lproc);
-      }
-      
-      void FreeLocalizedElement_Level_Type_Group_Material() {
-        _elementLevel.clearBroadcast();
-        _elementType.clearBroadcast();
-        _elementGroup.clearBroadcast();
-        _elementMaterial.clearBroadcast();
-      }
-
-
 
 
 // === Geometric Element, Single - BEGIN =================
   public:
     
       /** To be Added */
-      const unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1) const;
-      
-      const unsigned GetNFC(const unsigned& elementType, const unsigned& type) const;
-
-      const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const;
-      
-      const unsigned GetNRE(const unsigned& elementType) const { return NRE[elementType]; }
+      const unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1) const   {    return GetNFC(_elementType[iel] , type);  }
+  
+      const unsigned GetNFC(const unsigned& elementType, const unsigned& type) const  {    return NFC[elementType][type];  }
+  
+      const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const   {    return ig[elementType][iface][jnode];  }
+  
+      const unsigned GetNRE(const unsigned& elementType) const  { return NRE[elementType]; }
       
       const unsigned GetReferenceElementDirection(const unsigned& elementType, const unsigned dir, const unsigned node) const { 
         return referenceElementDirection[elementType][dir][node]; }
@@ -224,7 +166,56 @@ namespace femus {
       unsigned _dim;
 // === Basic, Dimension - END =================
 
+      
+      
 
+// === Elements - BEGIN ===========================================================
+    public:
+      
+      //Elem
+      // reorder the element according to the new element mapping
+      void ReorderMeshElement_Type_Level_Group_Material___NearFace_rows_ChildElem_columns(const std::vector < unsigned >& elementMapping);
+
+      void ScatterElement_Level_Type_Group_Material___NearFace();
+      
+      void BuildElem_NearFace_NearElem_using_NearVertex();
+      
+      
+  private:
+      
+      void ResizeElement_Level_Type_Group_Material(const unsigned nel_in, const unsigned level_in) {
+       _elementLevel.resize(nel_in, level_in);
+       _elementType.resize(nel_in);
+       _elementGroup.resize(nel_in);
+       _elementMaterial.resize(nel_in);
+      }
+      
+      void ScatterElement_Level_Type_Group_Material() {
+        _elementLevel.scatter(_elementOffset);
+        _elementType.scatter(_elementOffset);
+        _elementGroup.scatter(_elementOffset);
+        _elementMaterial.scatter(_elementOffset);
+      }
+      
+  public:
+      
+      void LocalizeElement_Level_Type_Group_Material(const unsigned &lproc) {
+        _elementLevel.broadcast(lproc);
+        _elementType.broadcast(lproc);
+        _elementGroup.broadcast(lproc);
+        _elementMaterial.broadcast(lproc);
+      }
+      
+      void FreeLocalizedElement_Level_Type_Group_Material() {
+        _elementLevel.clearBroadcast();
+        _elementType.clearBroadcast();
+        _elementGroup.clearBroadcast();
+        _elementMaterial.clearBroadcast();
+      }
+
+
+      
+      
 // === Elements, Numbers - BEGIN =================
     public:
   
@@ -398,6 +389,10 @@ namespace femus {
 // === Elements, for Each Element give the Elements with a common Face to the current element - BEGIN =================
    public:
      
+     //Elem
+      void ReorderElementNearFace_rows(const std::vector < unsigned >& elementMapping);
+      
+ 
       /** To be Added */
       void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
 
@@ -452,6 +447,9 @@ namespace femus {
 // === Elements, for Each Element gives the children elements - BEGIN =================
   public:
 
+      //Elem
+      void ReorderChildElement_OnCoarseElem_columns(const std::vector < unsigned >& elementMapping);
+     
       void AllocateChildrenElement(const unsigned int& refindex, const Mesh* msh);
 
       /** To be Added */
@@ -468,7 +466,14 @@ namespace femus {
       
 // === Elements, for Each Element gives the children elements - END =================
 
+      
+      
+// === Elements - END ===========================================================
 
+      
+      
+// === Nodes - BEGIN ===========================================================
+      
       
 // === Nodes, Number - BEGIN =================
   public:
@@ -510,6 +515,7 @@ namespace femus {
 // === Nodes, for Each Node give the Elements having that Node as a vertex (temporary then deleted) - END =================      
 
 
+// === Nodes - END ===========================================================
 
 
 // =========       
@@ -521,14 +527,16 @@ namespace femus {
 // === Geometric Element, FE, Single (Local) - BEGIN =================
   public:
 
-      const unsigned GetNVE(const unsigned& elementType, const unsigned& doftype) const;
+  /**
+   * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
+   **/
+      const unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type) const      {    return  GetNVE(_elementType[iel], type);   }
       
-      const unsigned GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const;
+      const unsigned GetNVE(const unsigned& elementType, const unsigned& doftype) const        {    return NVE[elementType][doftype];     }
       
-      /** To be Added */
-      const unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type) const;
+      const unsigned GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const  {        return NFACENODES[elementType][jface][dof];   }
       
-  private:
+ private:
     
     
   /**
@@ -598,10 +606,23 @@ namespace femus {
       /** To be Added */
       void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
       
-  private:
-    
       void ScatterElementDof();
       
+      //Dof
+      void ReorderMeshElement_Dof_stuff(const std::vector < unsigned >& elementMapping);
+      
+      //Dof
+      void ReorderElementDof_rows(const std::vector < unsigned >& elementMapping);
+      
+      //Dof
+      // reorder the nodes according to the new node mapping
+      void ReorderElementDof_columns_Using_node_mapping(const std::vector < unsigned >& nodeMapping);
+
+      
+
+     
+  private:
+    
      /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
 // === DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - END =================

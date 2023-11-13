@@ -177,6 +177,9 @@ private:
     
 // === Geometric Element, Single, REFINEMENT - END =================
     
+
+// === Elements - BEGIN ====================================================
+
     
 // === Elements, List - BEGIN =================
  public:
@@ -248,6 +251,12 @@ private:
     
 // === Elements, Material - END =================
     
+// === Elements - END ====================================================
+
+
+
+// === Nodes - BEGIN ====================================================
+
     
 // === Nodes, number - BEGIN =================
  public:
@@ -279,6 +288,9 @@ private:
     /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
     std::vector < std::vector < double > > _coords;
 // === Nodes, coordinates read from coarse file (temporary, then use _topology) - END =================
+    
+// === Nodes - END ====================================================
+    
     
     
     
@@ -376,8 +388,11 @@ public:
     
 // === Level, Current - END  =================
 
+    
 
+// === Here starts the FE stuff -  ====================================================
 
+    
  
 // === Geometric Element, FE, Single (FE for single geometric element) - BEGIN =================
  public:

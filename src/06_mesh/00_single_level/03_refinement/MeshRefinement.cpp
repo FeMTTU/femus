@@ -450,9 +450,13 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     
     
-//==== BuildMeshElemStructures - BEGIN ======== 
-    _mesh.GetMeshElements()->BuildMeshElemStructures();
-//==== BuildMeshElemStructures - END ======== 
+//==== BuildElem_NearFace_NearElem_using_NearVertex - BEGIN ======== 
+    _mesh.GetMeshElements()->BuildElem_NearFace_NearElem_using_NearVertex();
+    
+    _mesh.GetMeshElements()->ScatterElement_Level_Type_Group_Material___NearFace();
+    
+    _mesh.GetMeshElements()->ScatterElementDof();
+//==== BuildElem_NearFace_NearElem_using_NearVertex - END ======== 
   
     
 //====================================

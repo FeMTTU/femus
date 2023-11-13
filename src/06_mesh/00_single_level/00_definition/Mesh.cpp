@@ -295,7 +295,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   void Mesh::BuildElementAndNodeStructures() {
       
-    GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
+    GetMeshElements()->BuildElem_NearFace_NearElem_using_NearVertex();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
+    
+    GetMeshElements()->ScatterElement_Level_Type_Group_Material___NearFace();
+    
+    GetMeshElements()->ScatterElementDof();
+    
+    
+    //------
     
     BuildTopologyStructures();  //needs dofmap
     
@@ -603,8 +610,15 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       }
     }
 
-    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(element_mapping);  ///this is needed because later there will be another reordering based on Group and Material
-  
+    el->ReorderMeshElement_Type_Level_Group_Material___NearFace_rows_ChildElem_columns(element_mapping);  ///this is needed because later there will be another reordering based on Group and Material
+
+    
+    
+    //Dof
+    el->ReorderMeshElement_Dof_stuff(element_mapping);
+    
+    
+    
    }
    
    
@@ -613,12 +627,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
    void Mesh::mesh_reorder_elem_quantities()  {
  
 
-
+//======== Inverse and direct element mapping - BEGIN =============
+     
     std::vector < unsigned > inverse_element_mapping(GetNumberOfElements());
 
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
       inverse_element_mapping[iel] = iel;
     }
+    
 
     for(int isdom = 0; isdom < _nprocs; isdom++) {
 
@@ -674,9 +690,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
       element_mapping[inverse_element_mapping[i]] = i;
     }
+    
+//======== Inverse and direct element mapping - END =============
 
 
-    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(element_mapping);
+    el->ReorderMeshElement_Type_Level_Group_Material___NearFace_rows_ChildElem_columns(element_mapping);
+    
+    
+    
+    //Dof
+    el->ReorderMeshElement_Dof_stuff(element_mapping);
+    
     
     //END building the  metis2mesh_file element list 
 
@@ -726,9 +750,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
    void Mesh::mesh_reorder_node_quantities(const std::vector <unsigned> & mapping)  {
        
      
-    el->ReorderMeshNodes_ElementDof(mapping);
+    el->ReorderElementDof_columns_Using_node_mapping(mapping);
 
-    //reorder coordinate vector at coarse level ----
+    //reorder coordinate vector at coarse level - BEGIN ----
     if(GetLevel() == 0) {
       std::vector <double> coords_temp;
 
@@ -740,7 +764,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         }
       }
     }
-    //reorder coordinate vector at coarse level ----
+    //reorder coordinate vector at coarse level - END ----
 
 
    }
@@ -899,8 +923,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       
    
    initialize_elem_offsets();
+   
    build_elem_offsets(partition);
+   
    mesh_reorder_elem_quantities();
+   
+   
    set_elem_counts_per_subdomain();
    
       

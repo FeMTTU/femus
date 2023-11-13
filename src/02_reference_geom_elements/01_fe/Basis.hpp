@@ -54,6 +54,7 @@ namespace femus {
       basis(const int &nc, const int &nf, 
             const int &nlag3,
             const GeomElemBase * geom_base_in) :
+        _geom_elem(geom_base_in),
         faceNumber_offsets{ 0, geom_base_in->num_non_triangular_faces() , geom_base_in->num_non_triangular_faces() + geom_base_in->num_triangular_faces()},
         _nc(nc),
         _nf(nf),
@@ -65,14 +66,17 @@ namespace femus {
  // ===  Geom Elem - BEGIN =================
     public:
       
+      const GeomElemBase *  get_geom_elem() const { return  _geom_elem; }
       
       const int n_faces_offset(const unsigned type_in) const { return faceNumber_offsets[type_in]; }
       
       const int n_faces_total() const { return faceNumber_offsets[2]; }
       
-      static const unsigned int n_faces_types_max()  {  return  2; } 
+      static const unsigned int n_faces_types_max()  {  return  _n_face_types_max; } 
       
     private:
+      
+      const GeomElemBase *  _geom_elem;
       
       static constexpr const unsigned _n_face_types_max = 2;
 
@@ -83,7 +87,7 @@ namespace femus {
        * 2 = end triangular faces,   so that [2] - [1] gives the total of non-triangular faces
        */
       const unsigned int faceNumber_offsets[ _n_face_types_max + 1 ];
-
+      
  // ===  Geom Elem - END =================
       
       
