@@ -3,10 +3,10 @@
 
 
 #include "Basis.hpp"
+#include "GeomElemEdge.hpp"
 
 #include <iostream>
 #include <vector>
-
 
 //maximum is Edge3
 //2, 3, 3,
@@ -30,8 +30,8 @@ namespace femus {
 // ===  Constructors / Destructor - BEGIN =================
     public:
       
-      line_lag(const int& nc, const int& nf):
-        basis(nc, nf, LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
+      line_lag(const int& nc, const int& nf) :
+        basis(nc, nf, LAGRANGE_EDGE_NDOFS_MAXIMUM_FINE, new GeomElemEdge()  ) { }   ///@todo consider a smart pointer here
 // ===  Constructors / Destructor - END =================
 
 
@@ -201,7 +201,7 @@ namespace femus {
         
 // ===  Constructors / Destructor - BEGIN =================
       line_const(const int& nc, const int& nf):
-        basis(nc, nf, DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE, 0, 2, 2) { }
+        basis(nc, nf, DISCPOLY_EDGE_NDOFS_MAXIMUM_FINE, new GeomElemEdge() ) { }
 // ===  Constructors / Destructor - END =================
 
 

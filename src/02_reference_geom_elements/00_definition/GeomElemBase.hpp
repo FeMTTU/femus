@@ -17,47 +17,60 @@ class GeomElemBase  {
 
 // ===  Constructors / Destructor - BEGIN =================
 public:
+    
     ///runtime selection of Geom Elem
     static  GeomElemBase* build(const std::string geomel_id_in, const uint fe_family);
     
 // ===  Constructors / Destructor - END =================
 
 
-// Geom, Independent of Number of Nodes - BEGIN ===
+// Independent of Nodal Connectivity - BEGIN ===
 public:
+    
     virtual unsigned int get_dimension() const = 0;
+    
     virtual unsigned int n_nodes_linear() const = 0;
-// Geom, Independent of Number of Nodes - END ===
     
+    virtual const unsigned int num_non_triangular_faces() const = 0;
+    virtual const unsigned int num_triangular_faces() const = 0;
+// Independent of Nodal Connectivity - END ===
     
-// Geom, Dependent of Number of Nodes - BEGIN ===
+
+    
+// Dependent of Nodal Connectivity - BEGIN ===
+
+
+    
+// Geom - BEGIN ===
 public:
-    virtual unsigned int n_nodes()       const  = 0;
+    virtual unsigned int n_nodes()       const /* = 0;*/{ abort(); }
     
-    virtual std::vector<unsigned> get_nodes_of_face(const unsigned f) const  = 0;
-// Geom, Dependent of Number of Nodes - END ===
+    virtual std::vector<unsigned> get_nodes_of_face(const unsigned f) const  /*= 0;*/{ abort(); }
+// Geom - END ===
     
-
-    
-// Refinement - BEGIN ===
-public:
-    
-    virtual float get_embedding_matrix(const uint,const uint,const uint) = 0; //[/*NCHILDS*/][/*NNDS*/][/*NNDS*/]
-    virtual double get_prol(const uint) = 0;
-    
-// Refinement - END ===
-
-
 
 // File names - BEGIN ===
 public:
     
-    virtual std::string  get_name_med()  const  = 0;
-    virtual std::string  get_name_xdmf() const  = 0;
+    virtual std::string  get_name_med()  const  /*= 0;*/{ abort(); }
+    virtual std::string  get_name_xdmf() const  /*= 0;*/{ abort(); }
 // File names - END===
     
     
-   
+// Refinement, deprecated - BEGIN ===
+public:
+    
+    virtual float get_embedding_matrix(const uint,const uint,const uint) /*= 0*/{ abort(); }; //[/*NCHILDS*/][/*NNDS*/][/*NNDS*/]
+    virtual double get_prol(const uint) /*= 0*/{ abort(); };
+    
+// Refinement, deprecated - END ===
+
+
+    
+// Dependent of Nodal Connectivity - END ===
+    
+    
+    
 };
 
 

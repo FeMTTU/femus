@@ -20,6 +20,13 @@ public:
    static constexpr unsigned int _dim        =  3;
    static constexpr unsigned int _n_vertices =  8;
     
+   virtual const unsigned int num_non_triangular_faces()  const {  return _number_of_non_triangular_faces; }
+   virtual const unsigned int num_triangular_faces()  const {  return _number_of_triangular_faces; }
+   
+private:
+   static constexpr unsigned int _number_of_non_triangular_faces = 6;
+   
+   static constexpr unsigned int _number_of_triangular_faces = 0;
 
 };
 

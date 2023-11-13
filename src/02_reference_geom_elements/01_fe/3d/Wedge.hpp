@@ -5,6 +5,7 @@
 
 #include "Basis.hpp"
 #include "Triangle.hpp"
+#include "GeomElemWedge.hpp"
 
 
 #include <iostream>
@@ -37,7 +38,7 @@ namespace femus {
     public:
         
       wedge_lag(const int& nc, const int& nf):
-        basis(nc, nf, LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
+        basis(nc, nf, LAGRANGE_WEDGE_NDOFS_MAXIMUM_FINE, new GeomElemWedge() ) { }
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -185,7 +186,7 @@ namespace femus {
     public:
         
       wedge_const(const int& nc, const int& nf):
-        basis(nc, nf, DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE, 0, 3, 5) { }
+        basis(nc, nf, DISCPOLY_WEDGE_NDOFS_MAXIMUM_FINE, new GeomElemWedge() ) { }
 
       const double* GetX(const int &i) const {
         return X[i];

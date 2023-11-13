@@ -4,6 +4,8 @@
 
 
 #include "Basis.hpp"
+#include "GeomElemHex.hpp"
+
 
 #include <iostream>
 #include <vector>
@@ -27,7 +29,7 @@ namespace femus {
   class hex_lag : public basis {
     public:
       hex_lag(const int& nc, const int& nf):
-        basis(nc, nf, LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
+        basis(nc, nf, LAGRANGE_HEXAHEDRON_NDOFS_MAXIMUM_FINE, new GeomElemHex() ) { };
 
       const double* GetX(const int &i) const {
         return X[i];
@@ -166,7 +168,7 @@ namespace femus {
     public:
         
       hex_const(const int& nc, const int& nf):
-        basis(nc, nf, DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE, 0, 6, 6) { };
+        basis(nc, nf, DISCPOLY_HEXAHEDRON_NDOFS_MAXIMUM_FINE, new GeomElemHex() ) { };
 
       const double* GetX(const int &i) const {
         return X[i];

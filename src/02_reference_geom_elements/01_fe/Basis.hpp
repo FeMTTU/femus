@@ -20,6 +20,7 @@
 
 
 #include "FElemTypeEnum_list.hpp"
+#include "GeomElemBase.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -52,15 +53,12 @@ namespace femus {
 
       basis(const int &nc, const int &nf, 
             const int &nlag3,
-	        const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):
+            const GeomElemBase * geom_base_in) :
+        faceNumber_offsets{ 0, geom_base_in->num_non_triangular_faces() , geom_base_in->num_non_triangular_faces() + geom_base_in->num_triangular_faces()},
         _nc(nc),
         _nf(nf),
-        _nlag3(nlag3)
-        {
-	  faceNumber[0] = faceNumber0;
-	  faceNumber[1] = faceNumber1;
-	  faceNumber[2] = faceNumber2;
-	  }
+        _n_dofs_max_fine_for_dof_carriers(nlag3)
+        {  }
 // ===  Constructors / Destructor - END =================
 
       
@@ -68,15 +66,24 @@ namespace femus {
     public:
       
       
-      const int n_faces(const unsigned type_in) const { return faceNumber[type_in]; }
+      const int n_faces_offset(const unsigned type_in) const { return faceNumber_offsets[type_in]; }
       
-      static constexpr const unsigned _n_face_types_and_total = 3;
+      const int n_faces_total() const { return faceNumber_offsets[2]; }
+      
+      static const unsigned int n_faces_types_max()  {  return  2; } 
       
     private:
+      
+      static constexpr const unsigned _n_face_types_max = 2;
 
-      /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...) */
-      int faceNumber[ basis::_n_face_types_and_total ];
-              
+      /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...)
+       * 0 = begin non-triangular faces
+       * 1 = end non-triangular faces, so that [1] - [0] gives the total of non-triangular faces
+       * 1 = begin triangular faces
+       * 2 = end triangular faces,   so that [2] - [1] gives the total of non-triangular faces
+       */
+      const unsigned int faceNumber_offsets[ _n_face_types_max + 1 ];
+
  // ===  Geom Elem - END =================
       
       
@@ -115,7 +122,6 @@ namespace femus {
       
       
  // ===  FE, only Lagrange  - END =================
-
 
       
  // ===  FE, Shape Functions - BEGIN =================
@@ -254,7 +260,7 @@ namespace femus {
  // ===  FE, Refinement  - BEGIN =================
     public:
      
-      const unsigned int Get_NDofs_maximum_to_fill_fine_coordinates_of_DofCarriers() const { return _nlag3; }
+      const unsigned int Get_NDofs_maximum_to_fill_fine_coordinates_of_DofCarriers() const { return _n_dofs_max_fine_for_dof_carriers; }
       
       const int n_dofs_fine() const { return _nf; }
       
@@ -279,10 +285,10 @@ namespace femus {
       const int _nf;
 
      /**
-        _nlag3 = number of maximum dofs for that FE family in that element after 1 refinement; 
+        _n_dofs_max_fine_for_dof_carriers = number of maximum dofs for that FE family in that element after 1 refinement; 
       */
       
-      const int _nlag3;
+      const int _n_dofs_max_fine_for_dof_carriers;
       
  // ===  FE, Refinement  - END =================
 

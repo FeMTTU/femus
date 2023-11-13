@@ -141,9 +141,11 @@ class MED_IO : public MeshInput<Mesh>
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names, const std::string  geom_elem_type) const;
    
  public:
+    
    const std::vector< GroupInfo > get_all_groups_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
     
    const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
+   
  private:
      
    std::pair<int, std::vector<int> >  isolate_number_in_string_between_underscores(const std::string & string_in, const int begin_pos_to_investigate) const;

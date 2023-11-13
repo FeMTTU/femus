@@ -35,6 +35,7 @@ namespace femus {
   /**
    * The elem class: it contains the list of all Mesh Geometric Elements, along with several Element-based and also Node-based properties
    * @todo I believe it would even be more linear if this class did not have any function at all involving the Mesh pointer, there are very few in any case
+   * @todo Some GeomEl information has to be moved to the basic classes
   */
   class elem {
 
@@ -131,7 +132,7 @@ namespace femus {
   /**
    * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
    * The 1st number is the quadrilaterals
-   * The 2nd number is the total number of faces, such that the different "2nd - 1st" is the number of triangular faces
+   * The 2nd number is the total number of faces, such that the difference "2nd - 1st" is the number of triangular faces
    **/
   const unsigned NFC[N_GEOM_ELS][2] = {
     {6, 6},

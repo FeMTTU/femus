@@ -3,6 +3,7 @@
 
 
 #include "Basis.hpp"
+#include "GeomElemQuad.hpp"
 
 #include <iostream>
 #include <vector>
@@ -29,7 +30,7 @@ namespace femus {
     public:
         
       quad_lag(const int& nc, const int& nf):
-        basis(nc, nf, LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE, 0, 4, 4) { }
+        basis(nc, nf, LAGRANGE_QUADRANGLE_NDOFS_MAXIMUM_FINE, new GeomElemQuad() ) { }
         
       const double* GetX(const int &i) const {
         return X[i];
@@ -145,7 +146,7 @@ namespace femus {
     public:
         
       quad_const(const int& nc, const int& nf):
-        basis(nc, nf, DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE,  0, 4, 4) { }
+        basis(nc, nf, DISCPOLY_QUADRANGLE_NDOFS_MAXIMUM_FINE, new GeomElemQuad() ) { }
         
       const double* GetX(const int &i) const {
         return X[i];

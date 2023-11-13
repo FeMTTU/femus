@@ -4,6 +4,7 @@
 
 
 #include "Basis.hpp"
+#include "GeomElemTet.hpp"
 
 #include <iostream>
 #include <vector>
@@ -31,7 +32,7 @@ namespace femus {
     public:
         
       tet_lag(const int& nc, const int& nf):
-        basis(nc, nf, LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE, 0, 0, 4) { }
+        basis(nc, nf, LAGRANGE_TETRAHEDRON_NDOFS_MAXIMUM_FINE, new GeomElemTet() ) { }
       const double* GetX(const int &i) const {
         return X[i];
       }
@@ -176,7 +177,7 @@ namespace femus {
     public:
         
       tet_const(const int& nc, const int& nf):
-        basis(nc, nf, DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE,  0, 0, 4) { }
+        basis(nc, nf, DISCPOLY_TETRAHEDRON_NDOFS_MAXIMUM_FINE, new GeomElemTet() ) { }
 
       const double* GetX(const int &i) const {
         return X[i];
