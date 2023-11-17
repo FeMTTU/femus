@@ -134,11 +134,7 @@ Group_2_0 = Mesh_1.GroupOnGeom(Edge_4,'Group_2_0',SMESH.EDGE)
 Group_3_0 = Mesh_1.GroupOnGeom(Edge_3,'Group_3_0',SMESH.EDGE)
 Group_12_0 = Mesh_1.GroupOnGeom(Face_1,'Group_12_0',SMESH.FACE)
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/gbornia/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_boundary/input/square_parametric.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
+
 Mesh_2 = smesh.Mesh(Face_2)
 Regular_1D_3 = Mesh_2.Segment()
 Quadrangle_2D_1 = Mesh_2.Quadrangle(algo=smeshBuilder.QUADRANGLE)
@@ -152,18 +148,6 @@ isDone = Mesh_2.Compute()
 Mesh_2.ConvertToQuadratic(0, Mesh_2,True)
 [ Group_4_0, Group_1_0, Group_2_0, Group_3_0, Group_12_0 ] = Mesh_1.GetGroups()
 Mesh_3 = smesh.Concatenate([ Mesh_1.GetMesh(), Mesh_2.GetMesh() ], 1, 1, 1e-05)
-aFilterLibrary0x9a6fa80 = aFilterManager.LoadLibrary('/home/gbornia/FilterLib.xml')
-aCriteria = []
-aCriterion = smesh.GetCriterion(SMESH.EDGE,SMESH.FT_FreeBorders,SMESH.FT_Undefined,0,SMESH.FT_LogicalNOT,SMESH.FT_Undefined,0); aCriterion.Precision = 0
-aCriteria.append(aCriterion)
-aFilterLibrary0x9a6fa80.Add('EdgeFilter_1',aFilter0xd437850)
-aCriteria = []
-aCriterion = smesh.GetCriterion(SMESH.EDGE,SMESH.FT_FreeBorders,SMESH.FT_Undefined,0,SMESH.FT_LogicalNOT)
-aCriteria.append(aCriterion)
-aFilterLibrary0x9a6fa80.Copy('EdgeFilter_1')
-aCriteria = []
-aCriterion = smesh.GetCriterion(SMESH.EDGE,SMESH.FT_FreeBorders,SMESH.FT_Undefined,0,SMESH.FT_LogicalNOT)
-aCriteria.append(aCriterion)
 isDone = Mesh_3.RemoveElements( [ 7, 8 ] )
 #Mesh_3.RemoveGroup( smeshObj_1 ) ### smeshObj_1 has not been yet created
 #Mesh_3.RemoveGroup( smeshObj_2 ) ### smeshObj_2 has not been yet created

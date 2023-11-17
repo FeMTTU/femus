@@ -153,11 +153,8 @@ isDone = Mesh_compound.RemoveElements( [ 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 27, 
 Group_1_0 = Mesh_compound.CreateEmptyGroup( SMESH.EDGE, 'Group_1_0' )
 nbAdd = Group_1_0.AddFrom( Mesh_compound.GetMesh() )
 smesh.SetName(Mesh_compound, 'Mesh_compound')
-try:
-  Mesh_compound.ExportMED(r'/home/gbornia/software/femus/applications/OptimalControl/00_laplacian_all_dims/input/disk_quad.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
+
+
 Sub_mesh_1 = Regular_1D_3.GetSubMesh()
 Sub_mesh_2 = Regular_1D_4.GetSubMesh()
 Sub_mesh_3 = Regular_1D_6.GetSubMesh()

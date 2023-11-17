@@ -74,11 +74,7 @@ smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Cut_2)
 QuadFromMedialAxis_1D2D = smesh.CreateHypothesis('QuadFromMedialAxis_1D2D')
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/student/software/femus/applications/2021_fall/fahad/input/semiannulus_mar2.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=1)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
+
 Distribution_of_Layers_1 = smesh.CreateHypothesis('LayerDistribution2D')
 GeometricProgression_Distribution = smesh.CreateHypothesis('GeometricProgression')
 Distribution_of_Layers_1.SetLayerDistribution( GeometricProgression_Distribution )

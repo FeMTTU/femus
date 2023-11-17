@@ -116,9 +116,7 @@ Quadrangle_2D = Mesh_1.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 Regular_1D_1 = Mesh_1.Segment(geom=Edge_21)
 nsubs_radial = Regular_1D_1.NumberOfSegments(3)
 Propagation_of_1D_Hyp = Regular_1D_1.Propagation()
-Regular_1D_2 = Mesh_1.Segment(geom=smeshObj_1)
-#status = Mesh_1.AddHypothesis(smeshObj_2,smeshObj_1) ### smeshObj_2 has not been yet created
-status = Mesh_1.AddHypothesis(Propagation_of_1D_Hyp,smeshObj_1)
+status = Mesh_1.AddHypothesis(Propagation_of_1D_Hyp,Edge_21)
 Regular_1D_3 = Mesh_1.Segment(geom=Edge_23)
 nsubs_tang_ypx = Regular_1D_3.NumberOfSegments(5)
 status = Mesh_1.AddHypothesis(Propagation_of_1D_Hyp,Edge_23)
@@ -138,10 +136,6 @@ Sub_mesh_1 = Regular_1D_1.GetSubMesh()
 Sub_mesh_2 = Regular_1D_3.GetSubMesh()
 Sub_mesh_3 = Regular_1D_4.GetSubMesh()
 
-## some objects were removed
-aStudyBuilder = salome.myStudy.NewBuilder()
-SO = salome.myStudy.FindObjectIOR(salome.myStudy.ConvertObjectToIOR(smeshObj_1))
-if SO: aStudyBuilder.RemoveObjectWithChildren(SO)
 
 ## Set names of Mesh objects
 smesh.SetName(Regular_1D.GetAlgorithm(), 'Regular_1D')
@@ -157,6 +151,3 @@ smesh.SetName(Sub_mesh_3, 'Sub-mesh_3')
 smesh.SetName(Sub_mesh_2, 'Sub-mesh_2')
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 
-
-if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser()

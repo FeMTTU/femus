@@ -100,10 +100,7 @@ Number_of_Segments_2.SetReversedEdges( [] )
 Number_of_Segments_2.SetObjectEntry( "Face_1" )
 #hyp_14.SetLength( 0.141421 ) ### not created Object
 NETGEN_2D_Parameters_2 = smesh.CreateHypothesisByAverageLength( 'NETGEN_Parameters_2D', 'NETGENEngine', 0.141421, 0 )
-try:
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
+
 Number_of_Segments_1.SetNumberOfSegments( "n_r" )
 Propagation_of_1D_Hyp = smesh.CreateHypothesis('Propagation')
 Mesh_1 = smesh.Mesh(Face_1)
@@ -121,23 +118,12 @@ status = Mesh_1.AddHypothesis( Face_1, NETGEN_2D_Parameters_3 )
 status = Mesh_1.RemoveHypothesis(NETGEN_2D_Parameters_3)
 status = Mesh_1.AddHypothesis( Face_1, NETGEN_2D_Parameters_1 )
 Group_1_0 = Mesh_1.GroupOnGeom(Edge_1,'Group_1_0',SMESH.EDGE)
-[ smeshObj_1, smeshObj_2, smeshObj_3, Group_1_0 ] = Mesh_1.GetGroups()
+[ Group_1_0 ] = Mesh_1.GetGroups()
 Group_2_0 = Mesh_1.GroupOnGeom(Edge_2,'Group_2_0',SMESH.EDGE)
-[ smeshObj_1, smeshObj_2, smeshObj_3, Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
+[ Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
 Group_3_0 = Mesh_1.GroupOnGeom(Edge_3,'Group_3_0',SMESH.EDGE)
-[ smeshObj_1, smeshObj_2, smeshObj_3, Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
+[ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_1_assignment_1_triangular.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=1)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
-smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/max/software/femus/applications/2021_fall/shaflynn/input/Mesh_1_assignment_1_triangular.med',auto_groups=0,version=41,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
 isDone = Mesh_1.Compute()
 [ Group_1_0, Group_2_0, Group_3_0 ] = Mesh_1.GetGroups()
 Mesh_1.ConvertToQuadratic(0)
@@ -146,14 +132,7 @@ Sub_mesh_1 = Mesh_1.GetSubMesh( Edge_1, 'Sub-mesh_1' )
 Sub_mesh_2 = Mesh_1.GetSubMesh( Edge_2, 'Sub-mesh_2' )
 Sub_mesh_3 = Mesh_1.GetSubMesh( Edge_3, 'Sub-mesh_3' )
 
-## some objects were removed
-aStudyBuilder = salome.myStudy.NewBuilder()
-SO = salome.myStudy.FindObjectIOR(salome.myStudy.ConvertObjectToIOR(smeshObj_2))
-if SO: aStudyBuilder.RemoveObjectWithChildren(SO)
-SO = salome.myStudy.FindObjectIOR(salome.myStudy.ConvertObjectToIOR(smeshObj_3))
-if SO: aStudyBuilder.RemoveObjectWithChildren(SO)
-SO = salome.myStudy.FindObjectIOR(salome.myStudy.ConvertObjectToIOR(smeshObj_1))
-if SO: aStudyBuilder.RemoveObjectWithChildren(SO)
+
 
 ## Set names of Mesh objects
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')

@@ -24,7 +24,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 length_x = 1.
 length_y = 2.
@@ -77,7 +77,7 @@ geompy.addToStudy( Face_1, 'Face_1' )
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Number_of_Segments_1 = smesh.CreateHypothesis('NumberOfSegments')
 Number_of_Segments_1.SetNumberOfSegments( 2 )
 Regular_1D = smesh.CreateHypothesis('Regular_1D')

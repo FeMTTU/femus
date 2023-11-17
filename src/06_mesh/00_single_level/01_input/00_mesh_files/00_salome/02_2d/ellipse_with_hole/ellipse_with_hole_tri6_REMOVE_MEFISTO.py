@@ -12,7 +12,6 @@ theStudy = salome.myStudy
 
 import salome_notebook
 notebook = salome_notebook.NoteBook(theStudy)
-sys.path.insert( 0, r'/home/gbornia/software/femus/applications/tutorial/ex_time/input')
 
 ###
 ### GEOM component
@@ -24,7 +23,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -52,7 +51,7 @@ geompy.addToStudy( Cut_1, 'Cut_1' )
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 NETGEN_2D = smesh.CreateHypothesis('NETGEN_2D_ONLY', 'NETGENEngine')
 Length_From_Edges_1 = smesh.CreateHypothesis('LengthFromEdges')
 Max_Size_1 = smesh.CreateHypothesis('MaxLength')
@@ -96,6 +95,3 @@ smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
 smesh.SetName(Group_1_0, 'Group_1_0')
 smesh.SetName(Group_2_0, 'Group_2_0')
 
-
-if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)

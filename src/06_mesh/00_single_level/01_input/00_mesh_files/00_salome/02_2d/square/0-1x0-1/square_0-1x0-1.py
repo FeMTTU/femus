@@ -116,11 +116,6 @@ Group_3_0.SetName( 'Group_3_0' )
 Group_2_0.SetName( 'Group_2_0' )
 Group_1_0.SetName( 'Group_1_0' )
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED(r'/home/gbornia/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_boundary/input/square_parametric.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
 Sub_mesh_1 = Regular_1D.GetSubMesh()
 Sub_mesh_2 = Regular_1D_1.GetSubMesh()
 

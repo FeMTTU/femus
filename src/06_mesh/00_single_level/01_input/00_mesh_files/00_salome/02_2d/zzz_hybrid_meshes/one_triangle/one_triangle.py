@@ -111,20 +111,10 @@ Group_4_0 = Mesh_1.GroupOnFilter( SMESH.FACE, 'Group_1', aFilter_2 )
 Group_4_0.SetName( 'Group_4_0' )
 [ Group_1_0, Group_2_0, Group_3_0, Group_4_0 ] = Mesh_1.GetGroups()
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/one_tri6_groups_b_v.med', 0, 41, 1, Mesh_1, 0, [], '',-1, 1 )
-  pass
-except:
-  print('ExportPartToMED() failed. Invalid file name?')
+
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
 [ Group_1_0, Group_2_0, Group_3_0, Group_4_0 ] = Mesh_1.GetGroups()
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/one_tri7_groups_b_v.med', 0, 41, 1, Mesh_1, 0, [], '',-1, 1 )
-  pass
-except:
-  print('ExportPartToMED() failed. Invalid file name?')
-
 
 ## Set names of Mesh objects
 smesh.SetName(NETGEN_1D_2D.GetAlgorithm(), 'NETGEN 1D-2D')
