@@ -146,18 +146,20 @@
 
 
 This is a new module that in the long run is supposed to replace the role of the GEOM module.
-In the meantime, you can:
-  - perform drawing operations in the Shaper module 
-  - do "Export to Geom" if you want to then do the meshing.
+
+
 
 At the beginning you start with a "Partset" that contains 7 elements (Origin, axes, ...) that cannot be deleted  
-To draw stuff in Shaper, first create a Part with "New Part".
 
- \subsubsection{Results}
 
-Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
-If you have no object in the Results, nothing will be exported to Geometry.
- 
+
+ \subsubsection{perform drawing operations in the Shaper module}
+
+To draw stuff in Shaper, first create a Part. 
+Part 1 is created by default.
+
+
+
  
  \subsubsection{Start - Points}
 
@@ -188,7 +190,21 @@ If you have no object in the Results, nothing will be exported to Geometry.
  - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
    
    
-   
+    \subsubsection{Export to Geom}
+    
+    
+    
+  - do "Export to Geom" if you want to then do the meshing.
+
+     \paragraph{Results}
+
+Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
+If you have no object in the Results, nothing will be exported to Geometry.
+ 
+
+    
+    
+    
    
  \subsection{GEOMETRY}
  
@@ -250,6 +266,17 @@ corresponding to your hostname. So, you need to add the output of the command
  salome start -t study.py
  
  
+ \section{Run salome from terminal if one salome instance is already running}
+ 
+ Do first 
+ 
+  salome start it \&
+  
+  Then do 
+  
+  salome shell file.py
+  
+  
   
   
  \chapter{Procedure: Geometry and Mesh}
@@ -261,6 +288,14 @@ corresponding to your hostname. So, you need to add the output of the command
 
     Use the NoteBook tab to define variables. You can then use them both in the Geometry and in the Mesh modules.
 
+    \subsubsection{Parametrize Geometry with Shaper Parameters}
+    
+    This is the new way to go
+    
+    \subsubsection{Parametrize Mesh with NoteBook}
+    
+    
+    
     \subsubsection{Beware of not using ``Update study'' because it often crashes...
     or at least save the Study and the Script before!}
     
@@ -324,24 +359,27 @@ Pay attention to the difference between Common and Intersection
 
  \chapter{Procedure: Non-hybrid meshes}
 
+ \section{1D}
 
- \section{1D, Edges}
+ \subsection{Edges}
 
- \section{2D, Triangles}
+ \section{2D}
+ 
+ \subsection{Triangles}
  
   
  
- \section{2D, Quadrangles}
+ \subsection{Quadrangles}
 
 
-\subsection{Geometry}
+\subsubsection{Geometry}
 
 
 Create faces (Draw points and lines if needed, or create Faces directly)
 
    --> Extract edges from a face (Explode)
    
-\subsection{Mesh}
+\subsubsection{Mesh}
  
 Create Mesh object (only initialize)
 
@@ -356,7 +394,7 @@ In Mesh:
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
 
   
-  \subsubsection{Create Mesh by pieces: CompoundMesh (deprecated)}
+  \paragraph{Create Mesh by pieces: CompoundMesh (deprecated)}
   
 -- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
 
@@ -386,7 +424,7 @@ In Mesh:
     
  
 
-\subsection{Divided Disk}
+\subsubsection{Divided Disk}
 
 Divided Disk or Divided Cylinder do exactly what you are looking for!!!
 
@@ -394,7 +432,7 @@ Partition a semisphere using a Divided Disk!
 
 Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
 
-\subsection{From scratch}
+\subsubsection{From scratch}
 
 For a circle, just do a square in the middle, then divide the circumference into 4 parts,
 join the angles of the squares with the vertices of these parts and you are done.
@@ -433,10 +471,10 @@ So the idea seems to be NOT the following:
  
 
 
-\section{3D - Hexahedra}
+\subsection{Hexahedra}
 
 
- \subsection{Parallelepiped with 3 arbitrary mesh discretizations in the 3 directions}
+ \subsubsection{Parallelepiped with 3 arbitrary mesh discretizations in the 3 directions}
 
 I cannot create a Submesh of a Submesh
 
@@ -449,7 +487,7 @@ I cannot create a Submesh of a Submesh
     ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
 
     
-    \subsubsection{Hexahedron (i,j,k)}
+    \paragraph{Hexahedron (i,j,k)}
     
    Global Algorithms:
     3d: Hexahedron (i,j,k)
@@ -459,7 +497,7 @@ I cannot create a Submesh of a Submesh
     Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
    
     
-  \subsubsection{Extrusion 3d}
+  \paragraph{Extrusion 3d}
   
   
   Box
@@ -470,13 +508,13 @@ I cannot create a Submesh of a Submesh
   
   
   
- \subsection{Geometry of Extrusion type}
+ \subsubsection{Geometry of Extrusion type}
  
   
-  \subsubsection{BETTER: Do 2d Geometry, Extrude 2d Geometry, then 3d Mesh with Algorithm ``Extrusion 3d''}
+  \paragraph{BETTER: Do 2d Geometry, Extrude 2d Geometry, then 3d Mesh with Algorithm ``Extrusion 3d''}
   
   
-  \subsubsection{WORSE: Do 2d Geometry, then 2d Mesh, then Extrude the Mesh}
+  \paragraph{WORSE: Do 2d Geometry, then 2d Mesh, then Extrude the Mesh}
  
  
  - Do extrusion only of faces to avoid generation of extra edges    
@@ -485,21 +523,21 @@ I cannot create a Submesh of a Submesh
 
 
 
-\subsection{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
+\subsubsection{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
 
 
 When you explode adjacent faces, the edges are called differently... we should identify them
 
  
  
-  \section{3D - Tetrahedra}
+  \subsection{Tetrahedra}
   
-   \subsection{Algorithms}
+   \subsubsection{Algorithms}
    
    
    
 
-  \section{3D - Wedges}
+  \subsection{Wedges}
   
  
   \chapter{Procedure: hybrid meshes}
@@ -693,33 +731,35 @@ When you explode adjacent faces, the edges are called differently... we should i
 
  \chapter{Questions}
 
-- What is the difference between SubMeshes and Groups? Are Submeshes exported in the MED file?
+ 
+ 
+\section{What is the difference between SubMeshes and Groups? Are Submeshes exported in the MED file?}
 
-- When I remove a Group, can I ask to remove also the elements of that group from the Mesh???
+\section{When I remove a Group, can I ask to remove also the elements of that group from the Mesh???}
 
-- When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix \verb|_extruded|
+\section{When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix \verb|_extruded|}
 
-- When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
-On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.
+\section{When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
+On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.}
 
-- Other times, you dump the script and the Shaper is gone!! It is a current bug! Up to now, you need to activate Shaper before any dumping. Sorry.
+\section{Other times, you dump the script and the Shaper is gone!! It is a current bug! Up to now, you need to activate Shaper before any dumping. Sorry.}
 
-- Operations in the Mesh such as "Convert to/from quadratic", "Remove elements" and others
-  are not shown as stages in the Mesh menu in Object Browser
+\section{Operations in the Mesh such as "Convert to/from quadratic", "Remove elements" and others
+  are not shown as stages in the Mesh menu in Object Browser}
 
-- Intersection vs. Common: the first does it with Edges, the second does it with Volumes, basically...
+\section{Intersection vs. Common: the first does it with Edges, the second does it with Volumes, basically...}
 
-- To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
+\section{To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
   then that face will be fixed!
-  Another trick is to put the Face in a Compound. There it works!
+  Another trick is to put the Face in a Compound. There it works!}
 
-- When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
-  Otherwise nothing happens!
+\section{When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
+  Otherwise nothing happens!}
 
-- What is the difference between Regular Faces and Free Faces in the Mesh algorithms? For instance, the Disk only shows algorithms for Free faces...
+\section{What is the difference between Regular Faces and Free Faces in the Mesh algorithms? For instance, the Disk only shows algorithms for Free faces...}
 
-- Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
-  where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?
+\section{Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
+  where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?}
     
   Possible answer: I think the way to go in these cases is to do, after Explode, a "Create Group" in the Geometry.
     That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
