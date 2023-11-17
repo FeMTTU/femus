@@ -153,21 +153,42 @@ In the meantime, you can:
 At the beginning you start with a "Partset" that contains 7 elements (Origin, axes, ...) that cannot be deleted  
 To draw stuff in Shaper, first create a Part with "New Part".
 
+ \subsubsection{Results}
+
 Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
 If you have no object in the Results, nothing will be exported to Geometry.
+ 
+ 
+ \subsubsection{Start - Points}
 
-Then, it's not so clear how to start setting points... Should I use Construction, or Sketch... or Build...
+ To start setting points from scratch, do them with 
 
-Ok, it seems like:
- - Sketch is for drawing things "imprecisely", as if it was a real sketch, without specifying precise coordinates and so on.
+ Construction - Point
+ 
  - Construction allows to put precise information
 
- When you do a Sketch, remove the Interaction Style Switch (white mouse icon)
+ Don't do them with Vertex
  
  - If you built a Point as a Construction in the Partset and you want to REMOVE it, you have to click on "Partset" and say "Activate". 
    Then you can right-click and finally "Delete" is active. Then, Deactivate again to continue drawing
 
+   
+ \subsubsection{Start - Sketch}
+
+
+ - Sketch is for drawing things "imprecisely", as if it was a real sketch, without specifying precise coordinates and so on.
+ 
+ Then you apply constraints like coincidence of points, parallelism, horizontality etc.
+   and you will have your precise shape eventually.
+   
+   
+ 
+ When you do a Sketch, remove the Interaction Style Switch (white mouse icon)
+ 
  - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
+   
+   
+   
    
  \subsection{GEOMETRY}
  
@@ -240,6 +261,14 @@ corresponding to your hostname. So, you need to add the output of the command
 
     Use the NoteBook tab to define variables. You can then use them both in the Geometry and in the Mesh modules.
 
+    \subsubsection{Beware of not using ``Update study'' because it often crashes...
+    or at least save the Study and the Script before!}
+    
+    
+    
+    
+    
+    
  \subsection{Synergy between Geometry and Mesh}
  
  
