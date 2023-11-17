@@ -14,18 +14,6 @@ sys.path.insert(0, r'/home/gbornia/software/femus/src/06_mesh/00_single_level/01
 
 
 
-####################################################
-##       Begin of NoteBook variables section      ##
-####################################################
-notebook.set("l_x", 1)
-notebook.set("n_x", 1)
-notebook.set("x_b", 0)
-notebook.set("x_e", "x_b + l_x")
-####################################################
-##        End of NoteBook variables section       ##
-####################################################
-
-
 
 ###
 ### SHAPER component
@@ -63,11 +51,6 @@ SketchPoint_2 = SketchProjection_2.createdFeature()
 Sketch_1.setCoincident(SketchLine_1.endPoint(), SketchPoint_2.result())
 model.do()
 
-### Create Export
-Export_1 = model.exportToXAO(Part_1_doc, '/tmp/shaper_ld4fh7l6.xao', model.selection(), 'XAO')
-
-### Create Export
-Export_2 = model.exportToXAO(Part_1_doc, '/tmp/shaper_8np5fot5.xao', model.selection(), 'XAO')
 
 ### Create Vertex
 Vertex_1 = model.addVertex(Part_1_doc, [model.selection("VERTEX", "all-in-Point_1")], False)
@@ -109,8 +92,6 @@ O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
 OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
 OZ = geompy.MakeVectorDXDYDZ(0, 0, 1)
-(imported, geomObj_1, [], [], []) = geompy.ImportXAO("/tmp/shaper_ld4fh7l6.xao")
-(imported, geomObj_2, [], [], []) = geompy.ImportXAO("/tmp/shaper_8np5fot5.xao")
 (imported, Vertex_1_1, [], [], []) = geompy.ImportXAO("/tmp/shaper_z2369cmc.xao")
 (imported, Vertex_2_1, [], [], []) = geompy.ImportXAO("/tmp/shaper_dfclz5n1.xao")
 (imported, Edge_1_1, [], [], []) = geompy.ImportXAO("/tmp/shaper_9u78ow0x.xao")
@@ -135,7 +116,7 @@ smesh = smeshBuilder.New()
 
 Mesh_1 = smesh.Mesh(Edge_1_1,'Mesh_1')
 Regular_1D = Mesh_1.Segment()
-Number_of_Segments_1 = Regular_1D.NumberOfSegments("n_x")
+Number_of_Segments_1 = Regular_1D.NumberOfSegments(1)  # "n_x"
 isDone = Mesh_1.Compute()
 Mesh_1.ConvertToQuadratic(0)
 smesh.SetName(Mesh_1, 'Mesh_1')
