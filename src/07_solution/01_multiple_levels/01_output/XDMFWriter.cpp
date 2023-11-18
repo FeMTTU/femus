@@ -974,8 +974,8 @@ namespace femus {
 
     std::vector<GeomElemBase*> fe_in( QL_NODES );
     
-  fe_in[0] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 2);
-  fe_in[1] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 0);
+  fe_in[0] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 2).release();
+  fe_in[1] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 0).release();
 
   // This one is missing the KK part!!!
 
@@ -1310,8 +1310,8 @@ namespace femus {
 
     std::vector<GeomElemBase*> fe_in( QL_NODES );
 
-  fe_in[0] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 2);
-  fe_in[1] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 0);
+  fe_in[0] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 2).release();
+  fe_in[1] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), 0).release();
 
   
     hid_t file_id = H5Fopen( namefile.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );

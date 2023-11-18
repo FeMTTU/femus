@@ -122,15 +122,13 @@ int main(int argc,char **args) {
   //Nondimensional
   double Lref = 1.;
   
-  std::string fe_quad_rule("fifth");
-
   MultiLevelMesh ml_mesh;
   
-//   const int n_sub = 1;
-//   ml_mesh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   const bool read_groups = true;
   const bool read_boundary_groups = true;
-  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
+  
+  ml_mesh.ReadCoarseMesh(infile.c_str(), Lref, read_groups, read_boundary_groups);
+  
 //   const unsigned numberOfUniformLevels = 3;
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;

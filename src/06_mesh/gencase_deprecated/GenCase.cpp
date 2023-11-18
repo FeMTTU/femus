@@ -52,8 +52,8 @@ GenCase::GenCase(const unsigned nolevels, const unsigned dim, const GeomElType g
 
    _feelems.resize(QL_NODES);
    
-  _feelems[0] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(), 2);
-  _feelems[1] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(), 0);
+  _feelems[0] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(), 2).release();
+  _feelems[1] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(), 0).release();
  
   // This one is missing the KK part!!!
 }

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 
 
@@ -21,7 +22,7 @@ public:
     GeomElemBase() { }
    
     ///runtime selection of Geom Elem
-    static  GeomElemBase* build(const std::string geomel_id_in, const uint fe_family);
+    static  std::unique_ptr< GeomElemBase > build(const std::string geomel_id_in, const uint fe_family);
     
     
    
