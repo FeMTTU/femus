@@ -46,7 +46,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   unsigned Mesh::_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];    ///@todo I don't like the default dimension to be 2
 
 
-// === CONSTR-DESTR - BEGIN =================
+// === Constructors / Destructor - BEGIN =================
 
 //------------------------------------------------------------------------------------------------------
   Mesh::Mesh() {
@@ -91,7 +91,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
 
 
-// === CONSTR-DESTR - END =================
+// === Constructors / Destructor - END =================
   
   
 

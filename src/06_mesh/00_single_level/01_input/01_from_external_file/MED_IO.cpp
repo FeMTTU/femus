@@ -46,11 +46,11 @@ namespace femus {
   const std::string MED_IO::nodes_folder                       = "NOE";
   const std::string MED_IO::nodes_coord_list                   = "COO";
   const std::string MED_IO::node_or_elem_salome_gui_global_num = "NUM";  //numeration in the Salome GUI, we don't need to read these fields
-  const std::string MED_IO::group_fam                          = "FAM";  //both for Elements, and for Nodes
+  const std::string MED_IO::_node_or_elem_group_fam                          = "FAM";  //both for Elements, and for Nodes
   const std::string MED_IO::group_ensemble                     = "FAS";
   const std::string MED_IO::group_elements                     = "ELEME";
   const std::string MED_IO::group_nodes                        = "NOEUD";
-  const uint MED_IO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
+  const uint MED_IO::_max_length_med_folder = 300;  ///@todo this length of the menu string is conservative enough...
 
 
 
@@ -107,18 +107,18 @@ namespace femus {
     },                           //WEDGE18
 
     {0, 1, 2, 3, 4, 5, 6, 7, 8}, //QUAD9
-    {0, 1, 2, 3, 4, 5},          //TRI6
+    {0, 1, 2, 3, 4, 5, 6},       //TRI7
     {0, 1, 2}                    //EDGE3
   };
 
 
   const unsigned MED_IO::MEDToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES] = {
-    {0, 4, 2, 5, 3, 1}, //HEX27
-    {0, 1, 2, 3},       //TET10
-    {2, 1, 0, 4, 3},    //WEDGE18
-    {0, 1, 2, 3},       //QUAD9
-    {0, 1, 2},          //TRI6
-    {0, 1}              //EDGE3
+    {0, 4, 2, 5, 3, 1}, //HEX
+    {0, 1, 2, 3},       //TET
+    {2, 1, 0, 4, 3},    //WEDGE
+    {0, 1, 2, 3},       //QUAD
+    {0, 1, 2},          //TRI
+    {0, 1}              //EDGE
   }; 
   
   
@@ -247,7 +247,7 @@ namespace femus {
 
         // Group Geom Elem and Size - BEGIN ===============
         for(unsigned i = 0; i < group_info.size(); i++) {
-          compute_group_geom_elem_and_size(file_id, mesh_menus[j], group_info[i]);
+          node_or_elem_Compute_group_geometric_object_type_and_size(file_id, mesh_menus[j], group_info[i]);
         }
         // Group Geom Elem and Size - END ===============
 
@@ -333,7 +333,7 @@ namespace femus {
 
   //separate groups by dimension
   //as soon as an entry is equal to the group_med_flag, that means the dimension is that of the current element dataset
-  void MED_IO::compute_group_geom_elem_and_size(const hid_t&  file_id, 
+  void MED_IO::node_or_elem_Compute_group_geometric_object_type_and_size(const hid_t&  file_id, 
                                                 const std::string mesh_menu,
                                                 GroupInfo & group_info) const {
                                                     
@@ -349,7 +349,7 @@ namespace femus {
 // ========= group size - BEGIN ==========
      std::string my_mesh_name_dir = get_node_info_H5Group(mesh_menu);
  
-     std::string fam_name_dir = my_mesh_name_dir  + group_fam + "/";
+     std::string fam_name_dir = my_mesh_name_dir  + _node_or_elem_group_fam + "/";
       
      std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
@@ -391,7 +391,7 @@ namespace femus {
       std::string elem_types_str =  get_H5L_name_by_idx(gid, ".", j);
       elem_types[j] = elem_types_str;
 
-      std::string fam_name_dir_i = my_mesh_name_dir + elem_types_str + "/" + group_fam;
+      std::string fam_name_dir_i = my_mesh_name_dir + elem_types_str + "/" + _node_or_elem_group_fam;
       
       std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
@@ -471,7 +471,7 @@ namespace femus {
       
 
     //open the FAM field of the boundary element list (for the group flags)
-    std::string fam_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
+    std::string fam_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + _node_or_elem_group_fam;
     
       std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
@@ -581,7 +581,7 @@ namespace femus {
     std::string my_mesh_name_dir = get_node_info_H5Group(mesh_menu);  ///@todo here we have to loop
 
     //open the FAM field of NOE
-    std::string fam_name_dir = my_mesh_name_dir /*+ geom_elem_per_dimension->get_name_med()*/ + "/" + group_fam;
+    std::string fam_name_dir = my_mesh_name_dir /*+ geom_elem_per_dimension->get_name_med()*/ + "/" + _node_or_elem_group_fam;
     
     std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
@@ -661,10 +661,10 @@ namespace femus {
   
   
   //the node global ordering is given by the mesh file, as well as the element global ordering
-  void MED_IO::node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  std::vector < TYPE_FOR_REAL_DATASET >  & node_group_map) {
+  void MED_IO::all_nodes_read_group_flag(const hid_t&  file_id, const std::string mesh_menu,  std::vector < TYPE_FOR_REAL_DATASET >  & node_group_map) {
 
     
-    std::string node_group_dataset = get_node_info_H5Group(mesh_menu) + group_fam + "/";
+    std::string node_group_dataset = get_node_info_H5Group(mesh_menu) + _node_or_elem_group_fam + "/";
               
     dataset_open_and_close_store_in_vector<TYPE_FOR_REAL_DATASET>(file_id, node_group_map, node_group_dataset);
  
@@ -674,13 +674,16 @@ namespace femus {
   /// @todo Pay attention that here it is all in double
    std::vector< TYPE_FOR_REAL_DATASET > MED_IO::node_based_flag_read_from_file(const std::string& name, const std::vector< unsigned > & mapping) {
        
+       if (GetMesh().GetDimension() != 3 ) abort();
+       
+       
         hid_t  file_id = open_mesh_file(name);
         
         const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
         std::vector< TYPE_FOR_REAL_DATASET > node_group_map_with_med_ordering;
 
-        node_read_flag(file_id, mesh_menus[0],  node_group_map_with_med_ordering);
+        all_nodes_read_group_flag(file_id, mesh_menus[0],  node_group_map_with_med_ordering);
                
         close_mesh_file(file_id);
         
@@ -710,7 +713,7 @@ namespace femus {
 
      std::vector< TYPE_FOR_INT_DATASET > node_group_map;
 
-    std::string node_group_dataset = get_node_info_H5Group(mesh_menus[0]) + group_fam + "/";
+    std::string node_group_dataset = get_node_info_H5Group(mesh_menus[0]) + _node_or_elem_group_fam + "/";
               
     dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, node_group_map, node_group_dataset);
         
@@ -852,7 +855,7 @@ namespace femus {
     
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
     
-    std::string fam_name_dir_i = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
+    std::string fam_name_dir_i = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + _node_or_elem_group_fam;
     
     std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
@@ -1125,7 +1128,7 @@ namespace femus {
     
     //======================= After filling all info, Geom elem and size of each group ========================
         for(unsigned i = 0; i < group_info.size(); i++) {
-          compute_group_geom_elem_and_size(file_id, mesh_menu, group_info[i]);
+          node_or_elem_Compute_group_geometric_object_type_and_size(file_id, mesh_menu, group_info[i]);
         }
     
     
@@ -1150,8 +1153,8 @@ namespace femus {
 
    std::string   MED_IO::get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const {
        
-      char*   group_names_char = new char[max_length];
-      ssize_t str_size = H5Lget_name_by_idx(loc_id, group_name/*"."*/, H5_INDEX_NAME, H5_ITER_INC, j, group_names_char, max_length, H5P_DEFAULT);
+      char*   group_names_char = new char[_max_length_med_folder];
+      ssize_t str_size = H5Lget_name_by_idx(loc_id, group_name/*"."*/, H5_INDEX_NAME, H5_ITER_INC, j, group_names_char, _max_length_med_folder, H5P_DEFAULT);
    
       std::string link_name(group_names_char);
             
@@ -1476,7 +1479,7 @@ namespace femus {
     else if(el_type.compare("SE2") == 0) return new GeomElemEdge2();
     else if(el_type.compare("SE3") == 0) return new GeomElemEdge3();
 
-    else if(el_type.compare(nodes_folder) == 0) return NULL;
+    else if(el_type.compare(nodes_folder) == 0) return NULL;  //no basic Node class, yet
     else {
       std::cout << "MED_IO::read: element not supported";
       abort();

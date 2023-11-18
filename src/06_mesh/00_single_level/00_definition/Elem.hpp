@@ -40,7 +40,7 @@ namespace femus {
   class elem {
 
 
-// === CONSTR-DESTR - BEGIN =================
+// === Constructors / Destructor - BEGIN =================
     public:
 
       /** constructors */
@@ -51,7 +51,7 @@ namespace femus {
 
       /** destructor */
       ~elem();
-// === CONSTR-DESTR - END =================
+// === Constructors / Destructor - END =================
 
 
 // === Geometric Element, Single - BEGIN =================

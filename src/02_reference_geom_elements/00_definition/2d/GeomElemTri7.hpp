@@ -37,13 +37,13 @@ public:
 
 private:
     
-    static const float _embedding_matrix[4][6][6];   // (volume)
+    static const float _embedding_matrix[4][7][7];   // (volume)
 // Refinement - END ===
 
 
 // File names - BEGIN ===
     std::string   get_name_med()  const { return "TR7"; };
-    std::string   get_name_xdmf() const { abort(); /*return "Triangle_6";*/ };
+    std::string   get_name_xdmf() const { std::cout << "Triangle 7 not implemented in Xmdf" << std::endl; abort(); /*return "Triangle_6";*/ };
 // File names - END ===
 
 

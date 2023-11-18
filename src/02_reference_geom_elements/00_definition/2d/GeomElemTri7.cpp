@@ -5,7 +5,7 @@ namespace femus {
 
           
 // =======================
-      float GeomElemTri7::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemTri7::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  abort(); /*return _embedding_matrix[a][b][c];*/  }
       
 
 // =======================
@@ -17,7 +17,7 @@ namespace femus {
   };
 
 
-	   const float GeomElemTri7::_embedding_matrix[4][6][6] =
+	   const float GeomElemTri7::_embedding_matrix[4][7][7] =
 { // ---------------------------------------
   {// embedding matrix for child 0
     //  0      1      2    3    4    5

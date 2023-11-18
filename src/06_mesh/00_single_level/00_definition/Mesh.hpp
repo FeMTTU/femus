@@ -55,7 +55,7 @@ class elem_type;
 class Mesh : public ParallelObject {
 
 // =========================
-// === CONSTR-DESTR - BEGIN =================
+// === Constructors / Destructor - BEGIN =================
 // =========================
 public:
 
@@ -67,7 +67,7 @@ public:
     ~Mesh();
 
     
-// === CONSTR-DESTR - END =================
+// === Constructors / Destructor - END =================
 
     
 // =========================

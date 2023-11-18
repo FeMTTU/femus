@@ -25,33 +25,39 @@
 namespace femus {
 
   const unsigned GambitIO::GambitToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES] = {
-    {
+    {//hex27
       4, 16, 0, 15, 23, 11, 7, 19, 3,
       12, 20, 8, 25, 26, 24, 14, 22, 10,
       5, 17, 1, 13, 21, 9, 6, 18, 2
     },
-    {
+    {//tet10
       0, 4, 1, 6, 5,
       2, 7, 8, 9, 3
     },
-    {
+    {//wedge18
       3, 11, 5, 9, 10, 4,
       12, 17, 14, 15, 16, 13,
       0, 8, 2, 6, 7, 1
     },
-    {0, 4, 1, 5, 2, 6, 3, 7, 8},
-    {0, 3, 1, 4, 2, 5, 6},
-    {0, 2, 1}
+    { //quad9
+      0, 4, 1, 5, 2, 6, 3, 7, 8
+    },
+    { //tri7
+      0, 3, 1, 4, 2, 5, 6 ///@todo does Gambit have Tri7 elements???, not really, in fact below we don't use it...
+    },
+    { //edge3
+      0, 2, 1
+    }
   };
 
 
   const unsigned GambitIO::GambitToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES] = {
-    {0, 4, 2, 5, 3, 1},
-    {0, 1, 2, 3},
-    {2, 1, 0, 4, 3},
-    {0, 1, 2, 3},
-    {0, 1, 2},
-    {0, 1}
+    {0, 4, 2, 5, 3, 1}, //hex
+    {0, 1, 2, 3},       //tet
+    {2, 1, 0, 4, 3},    //wedge
+    {0, 1, 2, 3},       //quad
+    {0, 1, 2},          //tri
+    {0, 1}              //edge
   };
 
  
