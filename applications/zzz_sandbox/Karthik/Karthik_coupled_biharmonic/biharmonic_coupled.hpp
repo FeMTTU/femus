@@ -39,7 +39,7 @@ using namespace femus;
 
 namespace karthik {
   
-  class biharmonic_equation {
+  class biharmonic_coupled_equation {
     
   public:
 
