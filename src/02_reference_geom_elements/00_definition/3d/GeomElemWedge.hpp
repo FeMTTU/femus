@@ -13,7 +13,11 @@ class GeomElemWedge : public GeomElemBase  {
 
 public:
    
-        GeomElemWedge() : GeomElemBase() { };
+        GeomElemWedge() : GeomElemBase() { 
+            
+       set_faceNumber_offsets();
+            
+        }
 
     
     unsigned int  get_dimension() const { return _dim; };

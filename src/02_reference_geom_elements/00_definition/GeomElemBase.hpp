@@ -18,11 +18,7 @@ class GeomElemBase  {
 // ===  Constructors / Destructor - BEGIN =================
 public:
     
-    GeomElemBase() {
-        
-       set_faceNumber_offsets();
-       
-    }
+    GeomElemBase() { }
    
     ///runtime selection of Geom Elem
     static  GeomElemBase* build(const std::string geomel_id_in, const uint fe_family);

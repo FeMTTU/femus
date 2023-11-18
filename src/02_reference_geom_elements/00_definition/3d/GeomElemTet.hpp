@@ -13,7 +13,8 @@ class GeomElemTet : public GeomElemBase  {
 
 public:
          
-    GeomElemTet() : GeomElemBase() { };
+    GeomElemTet() : GeomElemBase() {
+       set_faceNumber_offsets(); };
     
     
     unsigned int  get_dimension() const { return _dim; };

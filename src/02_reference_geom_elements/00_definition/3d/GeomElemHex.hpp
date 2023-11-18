@@ -13,7 +13,8 @@ class GeomElemHex : public GeomElemBase  {
 
 public:
     
-    GeomElemHex() : GeomElemBase() { };
+    GeomElemHex() : GeomElemBase() { 
+       set_faceNumber_offsets();};
 
     
     unsigned int  get_dimension() const { return _dim; };
