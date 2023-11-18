@@ -737,7 +737,9 @@ When you explode adjacent faces, the edges are called differently... we should i
 
 \section{When I remove a Group, can I ask to remove also the elements of that group from the Mesh???}
 
-\section{When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix \verb|_extruded|}
+\section{When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix }
+
+\verb|_extruded| 
 
 \section{When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
 On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.}
@@ -1390,6 +1392,19 @@ output.ShallowCopy(B)
 output.GetPointData().AddArray(out)
 output.GetPointData().AddArray(out2)
 output.GetPointData().AddArray(out3)
+
+
+
+\chapter{Warp of Cell Data}
+
+Use the following filters
+
+- Shrink, with a factor of 0.9999, to get disconnected nodes
+ 
+- Cell Data to Point Data
+ 
+- Warp
+
 
 
 
