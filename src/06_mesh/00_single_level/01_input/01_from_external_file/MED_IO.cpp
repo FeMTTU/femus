@@ -45,7 +45,7 @@ namespace femus {
   const std::string MED_IO::elems_connectivity                 = "NOD";
   const std::string MED_IO::nodes_folder                       = "NOE";
   const std::string MED_IO::nodes_coord_list                   = "COO";
-  const std::string MED_IO::node_or_elem_salome_gui_global_num = "NUM";  //numeration in the Salome GUI, we don't need to read these fields
+  const std::string MED_IO::node_or_elem_salome_gui_global_num = "NUM";
   const std::string MED_IO::_node_or_elem_group_fam                          = "FAM";  //both for Elements, and for Nodes
   const std::string MED_IO::group_ensemble                     = "FAS";
   const std::string MED_IO::group_elements                     = "ELEME";
@@ -129,6 +129,13 @@ namespace femus {
     return file_id;
   }
  
+
+ 
+  void MED_IO::close_mesh_file(hid_t file_id) {
+      
+        H5Fclose(file_id);
+  }
+ 
  
  
   //template specialization - BEGIN
@@ -192,11 +199,6 @@ namespace femus {
  
  
 
-  void MED_IO::close_mesh_file(hid_t file_id) {
-      
-        H5Fclose(file_id);
-  }
-  
   
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
@@ -705,7 +707,7 @@ namespace femus {
    void MED_IO::boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user) {
        
        
-      // ======= FILE READ ==================
+      // ======= FILE READ - BEGIN  ==================
        
         hid_t  file_id = open_mesh_file(name);
         
@@ -727,7 +729,7 @@ namespace femus {
 
                
         close_mesh_file(file_id);
-      // ======= FILE READ ==================
+      // ======= FILE READ - END ==================
 
         
         
@@ -1150,6 +1152,7 @@ namespace femus {
    return g_info.nlinks;
 
    }
+   
 
    std::string   MED_IO::get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const {
        
@@ -1322,9 +1325,9 @@ namespace femus {
   const std::vector< GeomElemBase* > MED_IO::get_geom_elem_type_per_dimension(
     const hid_t & file_id,
     const std::string  my_mesh_name_dir
-  ) {
+  ) const {
 
-    Mesh& mesh = GetMesh();
+    const Mesh & mesh = GetMesh();
 
     const unsigned int dim = mesh.GetDimension();
     std::cout << "No hybrid mesh for now: only 1 FE type per dimension" << std::endl;
