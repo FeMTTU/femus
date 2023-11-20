@@ -80,8 +80,6 @@ OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
 
 
 
-OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
-
 OPTION(BUILD_ZZZ_SANDBOX "Build the sandbox apps for playing around" ON)
 
 ### Build options, Applications - END
@@ -208,11 +206,6 @@ IF(BUILD_NITSCHE)
   ADD_SUBDIRECTORY(Nitsche/)
 ENDIF(BUILD_NITSCHE)
 
-
-
-IF(BUILD_PETSC_DEBUG)
-  ADD_SUBDIRECTORY(petscDebug/)
-ENDIF(BUILD_PETSC_DEBUG)
 
 
 IF(BUILD_ZZZ_SANDBOX)
