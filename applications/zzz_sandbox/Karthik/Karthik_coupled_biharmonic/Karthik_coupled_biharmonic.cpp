@@ -38,7 +38,7 @@
    #define NAMESPACE_FOR_BIHARMONIC   femus
 #elif LIBRARY_OR_USER == 1
    #include "biharmonic_coupled.hpp"
-   #define NAMESPACE_FOR_BIHARMONIC   karthik
+   #define NAMESPACE_FOR_BIHARMONIC_COUPLED   karthik
 #endif
 
 
@@ -65,8 +65,6 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
   return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
 };
-
-
 
 
 
@@ -104,7 +102,7 @@ int main(int argc, char** args) {
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";  system_biharmonic_coupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
 
   system_biharmonic_coupled._system_name = "Biharmonic";
-  system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC :: biharmonic_equation :: AssembleBilaplaceProblem_AD;
+  system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation :: AssembleBilaplaceProblem_AD;
 
   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
 
