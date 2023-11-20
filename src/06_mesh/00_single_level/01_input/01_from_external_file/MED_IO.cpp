@@ -28,6 +28,8 @@
 #include "GeomElemEdge2.hpp"
 #include "GeomElemEdge3.hpp"
 
+#include "H5Opublic.h"
+
 //C++ include
 #include <cassert>
 #include <cstdio>
@@ -218,12 +220,38 @@ namespace femus {
     const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
 
-    // dimension and geom_el types - BEGIN ===============
+    // dimension - BEGIN ===============
+    const std::string elem_list_dir = get_element_info_all_dims_H5Group( mesh_menus[0] );  ///@todo here we have to loop
+    
+    const unsigned dim_from_attr = get_mesh_dimension_from_attributes(file_id,  mesh_menus[0] );
+    
+    const unsigned dim_from_elem_types = get_mesh_dimension_by_looping_over_geom_elem_types( file_id, elem_list_dir);
 
-    const std::vector< GeomElemBase* > geom_elem_per_dimension = set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(file_id, mesh_menus[0]);
-
+    if ( dim_from_attr != dim_from_elem_types) abort();
+    
+    mesh.SetDimension(dim_from_elem_types);
+    
     const unsigned mesh_dim = mesh.GetDimension();
-    // dimension and geom_el types - END ===============
+    // dimension - END ===============
+
+    
+    // Refinement indices - BEGIN ===============
+    mesh.SetRefinementCellAndFaceIndices(mesh_dim); 
+    // Refinement indices - END ===============
+
+    
+    // geom_el types - BEGIN ===============
+    
+       //  std::vector std::vector< GeomElemBase* > geom_elem_per_dimension_vec(mydim);
+    // geom_elem_per_dimension_vec[d]
+
+    const std::vector< GeomElemBase* >  geom_elem_per_dimension = get_geom_elem_type_per_dimension(file_id, elem_list_dir);
+
+    //        if(mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl;   abort();  }
+    // ///@todo removed this check to allow 2d object in 3d
+
+    // geom_el types - END ===============
+
 
     // meshes - BEGIN ========================
     for(unsigned j = 0; j < mesh_menus.size(); j++) {
@@ -1159,7 +1187,7 @@ namespace femus {
       char*   group_names_char = new char[_max_length_med_folder];
       ssize_t str_size = H5Lget_name_by_idx(loc_id, group_name/*"."*/, H5_INDEX_NAME, H5_ITER_INC, j, group_names_char, _max_length_med_folder, H5P_DEFAULT);
    
-      std::string link_name(group_names_char);
+      const std::string link_name(group_names_char);
             
       delete[] group_names_char;
 
@@ -1396,26 +1424,65 @@ namespace femus {
     return geom_elem_per_dimension;
     
   }
+  
 
+  const unsigned  MED_IO::get_mesh_dimension_from_attributes(const hid_t &  file_id, const std::string  &  my_mesh_name_dir) const {
+    
+    const  std::string all_path = mesh_ensemble + "/" + my_mesh_name_dir;
+    
+    hid_t       gid = H5Gopen(file_id, all_path.c_str(), H5P_DEFAULT);
+
+//     H5O_info_t * 	oinfo;
+// H5Oget_info(gid,
+//  oinfo
+//  /*,H5O_INFO_ALL*/
+// ); 
+
+
+    
+// ===============     attr - BEGIN
+   int attr_value;
+     
+   const std::string attr_name = "DIM";
+   // const std::string attr_name = "ESP";
+ 
+    hid_t attr = H5Aopen(gid, attr_name.c_str(), H5P_DEFAULT); 
+
+        if ( ( attr ) == H5I_INVALID_HID ) {   abort();    }
+   
+
+    const herr_t 	status = H5Aread(attr, H5T_NATIVE_INT, & attr_value);
+
+        if ( status < 0 ) { abort(); }
+        
+        std::cout << attr_value << "--------------------";
+        H5Aclose(attr);
+// ===============     attr - END
+        
+    H5Gclose(gid);
+    
+    return attr_value;
+        
+  }
+  
+  
   // figures out the Mesh dimension by looping over element types
   /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
+  /// @todo I think I can fix that because I found out about H5 ATTRIBUTES!
+  
+  const unsigned  MED_IO::get_mesh_dimension_by_looping_over_geom_elem_types(const hid_t &  file_id, const std::string  &  elem_list_in) const  {
+    
+    
+    hid_t       gid = H5Gopen(file_id, elem_list_in.c_str(), H5P_DEFAULT);
+    hsize_t    n_geom_elem_types = get_H5G_size(gid);
 
-  const std::vector< GeomElemBase* >  MED_IO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menu)  {
+    unsigned int mydim = 1;  //this is the initial value, then it will be updated below
+    
+    //this is basically the MANIFOLD DIMENSION of the domain    
 
+    unsigned int dim_aux = mydim;
 
-// ===============     set_mesh_dimension - BEGIN 
-    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
-
-    hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
-    hsize_t    n_fem_type = get_H5G_size(gid);
-
-    Mesh& mesh = GetMesh();
-    uint mydim = 1;  //this is the initial value, then it will be updated below
-    mesh.SetDimension(mydim);  //this is basically the MANIFOLD DIMENSION of the domain
-    mesh.SetRefinementCellAndFaceIndices(mydim);
-
-
-    std::vector< std::string > elem_types(n_fem_type);
+    std::vector< std::string > elem_types( n_geom_elem_types );
 
 
     for(unsigned j = 0; j < elem_types.size(); j++) {
@@ -1436,30 +1503,17 @@ namespace femus {
       else if(/*elem_types_str.compare("SE2") == 0 ||*/
         elem_types_str.compare("SE3") == 0)  mydim = 1;
 
-      if(mydim > mesh.GetDimension()) { 
-          mesh.SetDimension(mydim);
-          mesh.SetRefinementCellAndFaceIndices(mydim); 
-      }
-
+      if (mydim > dim_aux) { dim_aux = mydim; }
+      
     }  //end for
 
     H5Gclose(gid);
 
-// ===============     set_mesh_dimension - END
+   
+    return dim_aux;
     
-    
-       //  std::vector std::vector< GeomElemBase* > geom_elem_per_dimension_vec(mydim);
-    // geom_elem_per_dimension_vec[d]
-
-    const std::vector< GeomElemBase* >  geom_elem_per_dimension = get_geom_elem_type_per_dimension(file_id, my_mesh_name_dir);
-
-    //        if(mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl;   abort();  }
-    // ///@todo removed this check to allow 2d object in 3d
-
-    return geom_elem_per_dimension;
   }
-
-
+  
 
 
   GeomElemBase * MED_IO::get_geom_elem_from_med_name(const  std::string el_type) const {

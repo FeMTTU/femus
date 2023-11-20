@@ -90,69 +90,46 @@ class MED_IO : public MeshInput< Mesh >
                      const bool read_boundary_groups);
 // === Read, main function - END =================
   
+
+
+// === HDF5-related functions (no mesh info, could even be external) - BEGIN =================
+
   
-// === Mesh, file, H5File - BEGIN =================
+// === H5File - BEGIN =================
  public:
     
   hid_t open_mesh_file(const std::string& name);
-  
+
+ private:
+   
   void close_mesh_file(hid_t file_id);
-// === Mesh, file, H5File - END =================
+// === H5File - END =================
 
-
-// === Mesh, file, Attributes of a Group, Dataset or Datatype - BEGIN =================
-//           if ((attr = H5Aopen(file, attr_name, H5P_DEFAULT)) == H5I_INVALID_HID) {
-//             ret_val = EXIT_FAILURE;
-//             goto fail_attr;
-//         }
-//         // read the attribute value
-//         if (H5Aread(attr, H5T_NATIVE_INT, &value) < 0)
-//             ret_val = EXIT_FAILURE;
-//  
-//         // do something w/ the attribute value
-//  
-//         H5Aclose(attr);
-
-// === Mesh, file, Attributes of a Group, Dataset or Datatype - END =================
   
-  
-// === Mesh, File, H5Groups (folders in the file) - BEGIN =================
+// === File, H5Groups (folders in the file) - BEGIN =================
  private:
   
   hsize_t  get_H5G_size(const hid_t&  gid) const;
    
-// === Mesh, File, H5Groups (folders in the file) - END =================
-
-
-// === Mesh, file, H5Groups, H5Links of a Group (subobjects of that Group) - BEGIN =================
- private:
-    
+  /// file, H5Groups, H5Links of a Group (subobjects of that Group) =================
   std::string  get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const;
   
-// === Mesh, file, H5Groups, H5Links of a Group (subobjects of that Group) - END =================
-  
-
+// === File, H5Groups (folders in the file) - END =================
   
   
-// === Mesh, file, H5Datasets (arrays of data in the file) - BEGIN =================
+  
+// === File, H5Datasets (arrays of data in the file) - BEGIN =================
  private:
     
  template < class DATASET_TYPE >  
   void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< DATASET_TYPE > & fam_map, const std::string fam_name_dir_i) const;
   
 
-// === Mesh, file, H5Datasets (arrays of data in the file) - END =================
+// === File, H5Datasets (arrays of data in the file) - END =================
 
   
-   
-  
+// === HDF5-related functions (no mesh info, could even be external) - END =================
 
-// === Mesh, dimension and Geom Elems - BEGIN =================
- private:
-    
-   /** Determine mesh dimension from mesh file. It cannot be const because it sets the dimension in the mesh */
-   const std::vector< GeomElemBase* >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name);
-// === Mesh, dimension and Geom Elems - END =================
 
 
 // === Geometric elements, Connectivities - BEGIN =================
@@ -166,7 +143,17 @@ class MED_IO : public MeshInput< Mesh >
 // === Geometric elements, Connectivities - END =================
 
 
-// === Geometric elements, types - BEGIN =================
+// === Mesh, dimension - BEGIN =================
+ private:
+    
+   /** Determine mesh dimension from mesh file. It cannot be const because it sets the dimension in the mesh */
+   const unsigned  get_mesh_dimension_by_looping_over_geom_elem_types(const hid_t &  file_id, const std::string  &  my_elem_list_dir) const;
+  
+   const unsigned  get_mesh_dimension_from_attributes(const hid_t &  file_id, const std::string  &  my_mesh_name_dir) const;
+// === Mesh, dimension - END =================
+
+
+// === Mesh, Geometric elements, list of existing types - BEGIN =================
  private:
     
    GeomElemBase * get_geom_elem_from_med_name(const  std::string el_type) const;
@@ -175,7 +162,7 @@ class MED_IO : public MeshInput< Mesh >
   const std::vector< GeomElemBase* > get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir) const;
    
    std::vector< GeomElemBase* > _geom_elems;
-// === Geometric elements, types - END =================
+// === Mesh, Geometric elements, list of existing types - END =================
 
 
 // === Mesh, Elements or Nodes or Groups - BEGIN =================
