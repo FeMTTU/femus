@@ -66,7 +66,6 @@ static void AssembleV_AD(MultiLevelProblem& ml_prob) {
   unsigned solvIndex;
   solvIndex = mlSol->GetIndex("v");    // get the position of "u" in the ml_sol object
   unsigned solvType = mlSol->GetSolutionType(solvIndex);    // get the finite element type for "u"
-
   unsigned solvPdeIndex;
   solvPdeIndex = mlPdeSys->GetSolPdeIndex("v");    // get the position of "u" in the pdeSys object
 

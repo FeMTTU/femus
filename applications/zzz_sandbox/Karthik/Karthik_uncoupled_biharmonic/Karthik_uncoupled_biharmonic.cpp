@@ -18,6 +18,8 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
+#include "Files.hpp"
+
 
 #include "FE_convergence.hpp"
 #include "Solution_functions_over_domains_or_mesh_files.hpp"
@@ -35,8 +37,13 @@
 // // //    #define NAMESPACE_FOR_BIHARMONIC   karthik
 // // // #endif
 
+
+// // // #define LIBRARY 1
+// // // #if LIBRARY == 1
 // // // #include "biharmonic_uncoupled.hpp"
 // // // #define NAMESPACE_FOR_BIHARMONIC_UNCOUPLED karthik
+// // // #endif
+
 
 using namespace femus;
 
@@ -68,7 +75,7 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
 
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
   return dirichlet;
@@ -97,6 +104,25 @@ int main(int argc, char** args) {
         files.RedirectCout(redirect_cout_to_file);
 
   // ======= Files - END  ========================
+
+// // //      // ======= System Specifics - BEGIN  ==================
+// // //   system_specifics  system_biharmonic_uncoupled;   //me
+// // //
+// // //   system_biharmonic_uncoupled._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
+// // //   const std::string relative_path_to_build_directory =  "../../../../";
+// // //   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";  system_biharmonic_uncoupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
+// // //
+// // //   system_biharmonic_uncoupled._system_name = "Biharmonic";
+// // //   system_biharmonic_uncoupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_UNCOUPLED :: biharmonic_uncoupled_equation :: AssembleV_AD;
+// // //   system_biharmonic_uncoupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_UNCOUPLED :: biharmonic_uncoupled_equation :: AssembleU_AD;
+// // //   system_biharmonic_uncoupled._boundary_conditions_types_and_values             = SetBoundaryCondition;
+// // //
+// // //   Domains::square_01by01::Function_Zero_on_boundary_5<>   system_biharmonic_uncoupled_function_zero_on_boundary_1;
+// // //   Domains::square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_uncoupled_function_zero_on_boundary_1_laplacian;
+// // //   system_biharmonic_uncoupled._assemble_function_for_rhs   = & system_biharmonic_uncoupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
+// // //   system_biharmonic_uncoupled._true_solution_function      = & system_biharmonic_uncoupled_function_zero_on_boundary_1;
+// // //   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
+// // //     // ======= System Specifics - END ==================
 
 
 
