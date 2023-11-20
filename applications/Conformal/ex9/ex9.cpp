@@ -1,3 +1,5 @@
+#include "LinearEquationSolver.hpp"
+
 /* This example is for quasi-conformal minimization */
 /* mu controls the beltrami coefficient */
 
@@ -5,13 +7,10 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
-#include "LinearEquationSolver.hpp"
-
 #include "adept.h"
 #include <cstdlib>
 #include "petsc.h"
@@ -76,7 +75,7 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh("../input/square1.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -144,13 +143,13 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
   mlSol.GetWriter()->SetDebugOutput(true);
+  //mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 0);
   mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   // Attach the assembling function to system and initialize.
   //system.SetAssembleFunction(AssembleShearMinimization);
   //system.SetAssembleFunction (AssembleConformalMinimization);
-
-  system.MGsolve();
+  // system.MGsolve();
   mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, 1);
 
   system.SetAssembleFunction(AssembleConformalMinimization);
@@ -264,7 +263,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  std::vector < double > Res;
+  std::vector< double > Res;
   std::vector < std::vector< adept::adouble > > aResDx(dim);
 
   // Local Jacobian matrix (ordered by column).
@@ -1206,7 +1205,7 @@ void AssembleShearMinimization(MultiLevelProblem& ml_prob) {
 
   std::vector< int > SYSDOF; // local to global pdeSys dofs
 
-  std::vector < double > Res; // local redidual vector
+  std::vector< double > Res; // local redidual vector
   std::vector< adept::adouble > aResDx[dim]; // local redidual vector
 
   std::vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
