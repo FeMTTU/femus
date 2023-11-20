@@ -76,13 +76,13 @@ bool SetBoundaryCondition (const std::vector < double >& x,
   value = 0.;
   return dirichlet;
 }
-double InitalValueY1 (const std::vector < double >& x) {
+double InitialValueY1 (const std::vector < double >& x) {
   return -2. * x[0];
 }
-double InitalValueY2 (const std::vector < double >& x) {
+double InitialValueY2 (const std::vector < double >& x) {
   return -2. * x[1];
 }
-double InitalValueY3 (const std::vector < double >& x) {
+double InitialValueY3 (const std::vector < double >& x) {
   return -2. * x[2];
 }
 
@@ -236,7 +236,7 @@ int main (int argc, char** args) {
 
   // and this?
   mlSol.GetWriter()->SetDebugOutput (false);
-  mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write ("./output1", fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, 0);
 
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
@@ -247,7 +247,7 @@ int main (int argc, char** args) {
   system.CopySolutionToOldSolution();
   systemY.MGsolve();
 
-  mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, 0);
 
   // Parameters for the main algorithm loop.
   unsigned numberOfTimeSteps = 1000u;
@@ -274,7 +274,7 @@ int main (int argc, char** args) {
     dt0 *= 1.02;
 
     if (time_step % 1 == 0) {
-      mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
+      mlSol.GetWriter()->Write ("./output1", fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
 
@@ -288,7 +288,7 @@ int main (int argc, char** args) {
     }
 
     if ( (time_step + 1) % printInterval == 0)
-      mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
+      mlSol.GetWriter()->Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, (time_step + 1) / printInterval);
   }
   
   if(iproc == 0) fs.close();

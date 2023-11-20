@@ -19,23 +19,28 @@
 
 using namespace femus;
 
-double InitalValueU(const std::vector < double >& x) {
+double InitialValueU(const std::vector < double >& x) {
   return x[0] + x[1];
 }
 
-double InitalValueP(const std::vector < double >& x) {
+double InitialValueP(const std::vector < double >& x) {
   return x[0];
 }
 
-double InitalValueT(const std::vector < double >& x) {
+double InitialValueT(const std::vector < double >& x) {
   return x[1];
 }
+
+
 
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
 
+  // Mesh - BEGIN
+  
   // define multilevel mesh
   MultiLevelMesh mlMsh; // Consider the "mlMsh" object of "MultiLevel" class.
   double scalingFactor = 1.;
@@ -49,9 +54,15 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0; // we may want to see solutions on different level of meshes. 
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL); // Add those refined meshed in mlMsh object. 
   mlMsh.PrintInfo();
+  
+  // Mesh - END
 
+  
+  // Solution - BEGIN
+  
   // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh); // Define "mlSol" object with argument mlMsh of "MultiLevelSolution" class. 
+  MultiLevelSolution mlSol(&mlMsh);
+  
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, FIRST);
   mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
@@ -59,25 +70,27 @@ int main(int argc, char** args) {
   mlSol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSol.AddSolution("T", DISCONTINUOUS_POLYNOMIAL, FIRST);
 
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  mlSol.Initialize("All");    // initialize all variables to zero
 
-  mlSol.Initialize("U", InitalValueU);
-  mlSol.Initialize("P", InitalValueP);
-  mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
+  mlSol.Initialize("U", InitialValueU);
+  mlSol.Initialize("P", InitialValueP);
+  mlSol.Initialize("T", InitialValueT);    // note that this initialization is the same as piecewise constant element
+  // Solution - END
 
-  // print solutions
+  // print solutions - BEGIN
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("U");
   variablesToBePrinted.push_back("P");
   variablesToBePrinted.push_back("T");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
 
   GMVWriter gmvIO(&mlSol);
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(false);
-  gmvIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
+  gmvIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
+  // print solutions - END
 
   return 0;
 }

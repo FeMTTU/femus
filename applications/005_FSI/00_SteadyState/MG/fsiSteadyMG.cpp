@@ -29,7 +29,7 @@ bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const ch
 bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[],
 				       double &value, const int FaceName, const double = 0.);
 
-double InitalValueU(const std::vector < double >& x);
+double InitialValueU(const std::vector < double >& x);
 
 // bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
@@ -260,7 +260,7 @@ int main(int argc,char **args) {
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
   if (1 == simulation )
-    ml_sol.Initialize("U",InitalValueU);
+    ml_sol.Initialize("U",InitialValueU);
 
 
   // ******* Set boundary functions *******
@@ -388,7 +388,7 @@ int main(int argc,char **args) {
 // 
 // }
 
-double InitalValueU(const std::vector < double >& x) {
+double InitialValueU(const std::vector < double >& x) {
   double xc = 0.2;
   double yc = 0.2;
   double r = 0.05;

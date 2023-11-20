@@ -22,6 +22,8 @@
 #include "NumericVector.hpp"
 #include "Files.hpp"
 
+#include "FElemTypeEnum_list.hpp"
+
 
 namespace femus {
 
@@ -89,10 +91,10 @@ namespace femus {
         
         unsigned index = 0;
         
-        if( !strcmp( order_str.c_str(), "linear" ) ) 	 index = 0; //linear
-        else if( !strcmp( order_str.c_str(), "quadratic" ) ) 	 index = 1; //quadratic
-        else if( !strcmp( order_str.c_str(), "biquadratic" ) ) index = 2; //biquadratic
-        
+    if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) )           {  index = 0;  }
+    else if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ].c_str() ) )   {  index = 1;  }
+    else if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index = 2;  }
+    
         return index;
     }
     
@@ -232,7 +234,10 @@ namespace femus {
    }
    
    
-   void VTKWriter::Write(const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+   void VTKWriter::Write(const std::string output_path, 
+                         const std::string order,
+                         const std::vector < std::string >& vars,
+                         const unsigned time_step ) {
        
     std::string filename_prefix;
     if( _ml_sol != NULL ) filename_prefix = "sol";
@@ -245,7 +250,11 @@ namespace femus {
    }
    
 
-  void VTKWriter::Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+  void VTKWriter::Write(const unsigned my_level,
+                        const std::string output_path,
+                        const std::string order,
+                        const std::vector < std::string >& vars,
+                        const unsigned time_step ) {
        
     std::string filename_prefix;
     if( _ml_sol != NULL ) filename_prefix = "sol";
@@ -259,7 +268,11 @@ namespace femus {
    
    
    
-  void VTKWriter::Write(const std::string filename_prefix, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+  void VTKWriter::Write(const std::string filename_prefix, 
+                        const std::string output_path,
+                        const std::string order,
+                        const std::vector < std::string >& vars,
+                        const unsigned time_step ) {
        
       const std::string suffix_pre_extension = "";
       
@@ -267,7 +280,13 @@ namespace femus {
    }
    
   
-  void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+  void VTKWriter::Write(const unsigned my_level, 
+                        const std::string filename_prefix, 
+                        const std::string output_path,
+                        const std::string suffix_pre_extension,
+                        const std::string order,
+                        const std::vector < std::string >& vars, 
+                        const unsigned time_step ) {
 
       
     // *********** level - BEGIN ************
@@ -279,8 +298,7 @@ namespace femus {
     // *********** level - END ************
        
     // *********** FE index - BEGIN ************
-    const std::string order_str(order);
-    unsigned index = fe_index(order_str);
+    unsigned index = fe_index(order);
     // *********** FE index - END ************
 
 
@@ -593,7 +611,7 @@ namespace femus {
         const unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
         const unsigned sol_fe_type = _ml_sol->GetSolutionType( solIndex );
         
-        if( sol_fe_type < 3 ) {
+        if( sol_fe_type < NFE_FAMS_C_ZERO_LAGRANGE ) {
             
           //BEGIN LAGRANGIAN Fem SOLUTION
           std::string solName =  _ml_sol->GetSolutionName( solIndex );

@@ -101,7 +101,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
   
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  mlSol.Initialize("All");    // initialize all variables to zero
 
   mlSol.Initialize("state", InitialValueState);
   mlSol.Initialize("control", InitialValueControl);

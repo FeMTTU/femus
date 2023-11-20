@@ -115,7 +115,7 @@ int main(int argc, char** args)
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(Files::_application_output_directory, "linear", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[FILES_CONTINUOUS_LINEAR], variablesToBePrinted);
   return 0;
 }
 

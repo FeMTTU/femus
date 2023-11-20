@@ -341,7 +341,7 @@ int main(int argc, char** args) {
     // ======= Problem, System - END ========================
 
     // ======= Print - BEGIN ========================
-  const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
+  const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  

@@ -53,7 +53,7 @@ unsigned jInitialPosition = 0;
 //std::vector <double>  zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
 
 
-double InitalValueU3D (const std::vector < double >& x) {
+double InitialValueU3D (const std::vector < double >& x) {
     
   unsigned j = jInitialPosition;
   //std::cout<< "J value is: " << j << std::endl;
@@ -88,7 +88,7 @@ double InitalValueU3D (const std::vector < double >& x) {
   
 }
 
-double InitalValueD (const std::vector < double >& x) {
+double InitialValueD (const std::vector < double >& x) {
   return 100.;
 }
 
@@ -154,8 +154,8 @@ int main (int argc, char** args) {
     //mlSol.AddSolution ("AD", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
     mlSol.Initialize ("All");
-    mlSol.Initialize ("u", InitalValueU3D);
-    mlSol.Initialize ("d", InitalValueD);
+    mlSol.Initialize ("u", InitialValueU3D);
+    mlSol.Initialize ("d", InitialValueD);
     GetKFromFileANISO (mlSol);
 
     // attach the boundary condition function and generate boundary data

@@ -28,6 +28,8 @@
 #include "GeomElemEdge2.hpp"
 #include "GeomElemEdge3.hpp"
 
+#include "H5Opublic.h"
+
 //C++ include
 #include <cassert>
 #include <cstdio>
@@ -45,7 +47,7 @@ namespace femus {
   const std::string MED_IO::elems_connectivity                 = "NOD";
   const std::string MED_IO::nodes_folder                       = "NOE";
   const std::string MED_IO::nodes_coord_list                   = "COO";
-  const std::string MED_IO::node_or_elem_salome_gui_global_num = "NUM";  //numeration in the Salome GUI, we don't need to read these fields
+  const std::string MED_IO::node_or_elem_salome_gui_global_num = "NUM";
   const std::string MED_IO::_node_or_elem_group_fam                          = "FAM";  //both for Elements, and for Nodes
   const std::string MED_IO::group_ensemble                     = "FAS";
   const std::string MED_IO::group_elements                     = "ELEME";
@@ -129,6 +131,13 @@ namespace femus {
     return file_id;
   }
  
+
+ 
+  void MED_IO::close_mesh_file(hid_t file_id) {
+      
+        H5Fclose(file_id);
+  }
+ 
  
  
   //template specialization - BEGIN
@@ -192,11 +201,6 @@ namespace femus {
  
  
 
-  void MED_IO::close_mesh_file(hid_t file_id) {
-      
-        H5Fclose(file_id);
-  }
-  
   
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
@@ -216,29 +220,56 @@ namespace femus {
     const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
 
-    // dimension and geom_el types - BEGIN ===============
+    // dimension - BEGIN ===============
+    const std::string elem_list_dir = get_element_info_all_dims_H5Group( mesh_menus[0] );  ///@todo here we have to loop
+    
+    const unsigned dim_from_attr = get_mesh_dimension_from_attributes(file_id,  mesh_menus[0] );
+    
+    const unsigned dim_from_elem_types = get_mesh_dimension_by_looping_over_geom_elem_types( file_id, elem_list_dir);
 
-    const std::vector< GeomElemBase* > geom_elem_per_dimension = set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(file_id, mesh_menus[0]);
-
+    if ( dim_from_attr != dim_from_elem_types) abort();
+    
+    mesh.SetDimension(dim_from_elem_types);
+    
     const unsigned mesh_dim = mesh.GetDimension();
-    // dimension and geom_el types - END ===============
+    // dimension - END ===============
+
+    
+    // Refinement indices - BEGIN ===============
+    mesh.SetRefinementCellAndFaceIndices(mesh_dim); 
+    // Refinement indices - END ===============
+
+    
+    // geom_el types - BEGIN ===============
+    
+       //  std::vector std::vector< GeomElemBase* > geom_elem_per_dimension_vec(mydim);
+    // geom_elem_per_dimension_vec[d]
+
+    const std::vector< GeomElemBase* >  geom_elem_per_dimension = get_geom_elem_type_per_dimension(file_id, elem_list_dir);
+
+    //        if(mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl;   abort();  }
+    // ///@todo removed this check to allow 2d object in 3d
+
+    // geom_el types - END ===============
+
 
     // meshes - BEGIN ========================
     for(unsigned j = 0; j < mesh_menus.size(); j++) {
 
-      // node coordinates - BEGIN
+      // nodes, coordinates - BEGIN
       set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
-      // node coordinates - END
+      // nodes, coordinates - END
 
-      // Volume connectivity - BEGIN
+      // Elements, Volume connectivity - BEGIN
       //       for(unsigned i = 0; i < mesh_dim; i++) {
       unsigned i = mesh_dim - 1;
-      set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
-      // Volume connectivity - END
+      set_elem_connectivity_and_initialize_elem_group(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
+      // Elements, Volume connectivity - END
 
 
 
-        // Groups of the mesh - BEGIN ===============
+       // Groups of the mesh - BEGIN ===============
+      
       if(read_domain_groups_flag == true || read_boundary_groups_flag == true)  {
 
         // Group info - BEGIN ===============
@@ -271,6 +302,7 @@ namespace femus {
 
 
     }
+    
     // meshes - END ========================
 
 
@@ -705,7 +737,7 @@ namespace femus {
    void MED_IO::boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user) {
        
        
-      // ======= FILE READ ==================
+      // ======= FILE READ - BEGIN  ==================
        
         hid_t  file_id = open_mesh_file(name);
         
@@ -727,7 +759,7 @@ namespace femus {
 
                
         close_mesh_file(file_id);
-      // ======= FILE READ ==================
+      // ======= FILE READ - END ==================
 
         
         
@@ -933,7 +965,7 @@ namespace femus {
 
   // Connectivities in MED files are stored on a per-node basis: first all 1st nodes, then all 2nd nodes, and so on.
   // Instead, in Gambit they are stored on a per-element basis
-  void MED_IO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase*  geom_elem_per_dimension, std::vector<bool>& type_elem_flag) {
+  void MED_IO::set_elem_connectivity_and_initialize_elem_group(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase*  geom_elem_per_dimension, std::vector<bool>& type_elem_flag) {
 
     Mesh& mesh = GetMesh();
 
@@ -965,11 +997,12 @@ namespace femus {
 
 
 
+      
 
       for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
-          
-        mesh.el->SetElementGroup(iel, 1);
+                  
         unsigned nve = el_nodes_per_dimension;  /// @todo this is only one element type
+        
         if(nve == 27) {
           type_elem_flag[0] = type_elem_flag[3] = true;
           mesh.el->AddToElementNumber(1, "Hex");
@@ -1013,7 +1046,15 @@ namespace femus {
         
       }
 
-    
+      
+      
+      // Initialize Element Group - BEGIN
+      for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
+        mesh.el->SetElementGroup(iel, 1);
+      }
+      // Initialize Element Group - END
+      
+      
     }
 
 
@@ -1150,13 +1191,14 @@ namespace femus {
    return g_info.nlinks;
 
    }
+   
 
    std::string   MED_IO::get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const {
        
       char*   group_names_char = new char[_max_length_med_folder];
       ssize_t str_size = H5Lget_name_by_idx(loc_id, group_name/*"."*/, H5_INDEX_NAME, H5_ITER_INC, j, group_names_char, _max_length_med_folder, H5P_DEFAULT);
    
-      std::string link_name(group_names_char);
+      const std::string link_name(group_names_char);
             
       delete[] group_names_char;
 
@@ -1322,9 +1364,9 @@ namespace femus {
   const std::vector< GeomElemBase* > MED_IO::get_geom_elem_type_per_dimension(
     const hid_t & file_id,
     const std::string  my_mesh_name_dir
-  ) {
+  ) const {
 
-    Mesh& mesh = GetMesh();
+    const Mesh & mesh = GetMesh();
 
     const unsigned int dim = mesh.GetDimension();
     std::cout << "No hybrid mesh for now: only 1 FE type per dimension" << std::endl;
@@ -1393,26 +1435,65 @@ namespace femus {
     return geom_elem_per_dimension;
     
   }
+  
 
+  const unsigned  MED_IO::get_mesh_dimension_from_attributes(const hid_t &  file_id, const std::string  &  my_mesh_name_dir) const {
+    
+    const  std::string all_path = mesh_ensemble + "/" + my_mesh_name_dir;
+    
+    hid_t       gid = H5Gopen(file_id, all_path.c_str(), H5P_DEFAULT);
+
+//     H5O_info_t * 	oinfo;
+// H5Oget_info(gid,
+//  oinfo
+//  /*,H5O_INFO_ALL*/
+// ); 
+
+
+    
+// ===============     attr - BEGIN
+   int attr_value;
+     
+   const std::string attr_name = "DIM";
+   // const std::string attr_name = "ESP";
+ 
+    hid_t attr = H5Aopen(gid, attr_name.c_str(), H5P_DEFAULT); 
+
+        if ( ( attr ) == H5I_INVALID_HID ) {   abort();    }
+   
+
+    const herr_t 	status = H5Aread(attr, H5T_NATIVE_INT, & attr_value);
+
+        if ( status < 0 ) { abort(); }
+        
+        std::cout << attr_value << "--------------------";
+        H5Aclose(attr);
+// ===============     attr - END
+        
+    H5Gclose(gid);
+    
+    return attr_value;
+        
+  }
+  
+  
   // figures out the Mesh dimension by looping over element types
   /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
+  /// @todo I think I can fix that because I found out about H5 ATTRIBUTES!
+  
+  const unsigned  MED_IO::get_mesh_dimension_by_looping_over_geom_elem_types(const hid_t &  file_id, const std::string  &  elem_list_in) const  {
+    
+    
+    hid_t       gid = H5Gopen(file_id, elem_list_in.c_str(), H5P_DEFAULT);
+    hsize_t    n_geom_elem_types = get_H5G_size(gid);
 
-  const std::vector< GeomElemBase* >  MED_IO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menu)  {
+    unsigned int mydim = 1;  //this is the initial value, then it will be updated below
+    
+    //this is basically the MANIFOLD DIMENSION of the domain    
 
+    unsigned int dim_aux = mydim;
 
-// ===============     set_mesh_dimension - BEGIN 
-    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
-
-    hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
-    hsize_t    n_fem_type = get_H5G_size(gid);
-
-    Mesh& mesh = GetMesh();
-    uint mydim = 1;  //this is the initial value, then it will be updated below
-    mesh.SetDimension(mydim);  //this is basically the MANIFOLD DIMENSION of the domain
-    mesh.SetRefinementCellAndFaceIndices(mydim);
-
-
-    std::vector< std::string > elem_types(n_fem_type);
+    std::vector< std::string > elem_types( n_geom_elem_types );
 
 
     for(unsigned j = 0; j < elem_types.size(); j++) {
@@ -1433,30 +1514,17 @@ namespace femus {
       else if(/*elem_types_str.compare("SE2") == 0 ||*/
         elem_types_str.compare("SE3") == 0)  mydim = 1;
 
-      if(mydim > mesh.GetDimension()) { 
-          mesh.SetDimension(mydim);
-          mesh.SetRefinementCellAndFaceIndices(mydim); 
-      }
-
+      if (mydim > dim_aux) { dim_aux = mydim; }
+      
     }  //end for
 
     H5Gclose(gid);
 
-// ===============     set_mesh_dimension - END
+   
+    return dim_aux;
     
-    
-       //  std::vector std::vector< GeomElemBase* > geom_elem_per_dimension_vec(mydim);
-    // geom_elem_per_dimension_vec[d]
-
-    const std::vector< GeomElemBase* >  geom_elem_per_dimension = get_geom_elem_type_per_dimension(file_id, my_mesh_name_dir);
-
-    //        if(mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl;   abort();  }
-    // ///@todo removed this check to allow 2d object in 3d
-
-    return geom_elem_per_dimension;
   }
-
-
+  
 
 
   GeomElemBase * MED_IO::get_geom_elem_from_med_name(const  std::string el_type) const {

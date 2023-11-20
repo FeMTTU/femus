@@ -48,12 +48,12 @@ namespace femus {
 // === Constructors / Destructor  - END =================
 
       /** write output function */
-      void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) ;
+      void Write(const std::string output_path, 
+                 const std::string order,
+                 const std::vector < std::string > & vars = std::vector < std::string > (), 
+                 const unsigned time_step = 0);
     
 
-    protected:
-      
-      void Mysol();
 };
 
 

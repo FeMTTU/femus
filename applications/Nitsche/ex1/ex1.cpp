@@ -117,7 +117,7 @@ int main (int argc, char** args) {
 
   system.MGsolve();
 
-  mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", print_vars, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, fe_fams_for_files [ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
   ml_prob.clear();
 

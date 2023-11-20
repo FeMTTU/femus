@@ -32,6 +32,8 @@ public:
 // Independent of Nodal Connectivity - BEGIN ===
 public:
     
+    static const unsigned _max_space_dimension;
+    
     virtual unsigned int get_dimension() const = 0;
     
     virtual unsigned int n_nodes_linear() const = 0;

@@ -69,11 +69,11 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   return dirichlet;
 }
 
-double InitalValueScale (const std::vector < double >& x) {
+double InitialValueScale (const std::vector < double >& x) {
   return 1;
 }
 
-double InitalValueEnergy (const std::vector < double >& x) {
+double InitialValueEnergy (const std::vector < double >& x) {
   return 0.000;
 }
 
@@ -127,7 +127,7 @@ int main (int argc, char** args) {
 
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
-  mlSol.Initialize ("eScale", InitalValueScale);
+  mlSol.Initialize ("eScale", InitialValueScale);
 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSol.GenerateBdc ("All");
@@ -162,12 +162,11 @@ int main (int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back ("All");
   mlSol.GetWriter()->SetDebugOutput (true);
-  //mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 0);
+
   mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   system.MGsolve();
 
-  //mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 1);
   mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 1);
 
 //   system.SetAssembleFunction (AssembleConformalMinimization);

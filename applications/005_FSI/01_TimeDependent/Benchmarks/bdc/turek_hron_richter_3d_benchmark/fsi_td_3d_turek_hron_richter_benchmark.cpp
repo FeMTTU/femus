@@ -8,7 +8,7 @@ static const double H = 0.40;
 static const double L = 1.5;
 
 // Inlet velocity
-// extern "C" double InitalValueU(const std::vector < double >& xyz) {
+// extern "C" double InitialValueU(const std::vector < double >& xyz) {
 //   const double x = xyz[0];
 //   const double y = xyz[1];
 //   const double z = xyz[2];

@@ -63,7 +63,7 @@ const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125
 //                          };
 
-double InitalValueVi (const std::vector < double >& x , const unsigned &i)
+double InitialValueVi (const std::vector < double >& x , const unsigned &i)
 {
   double psi1 = 1. - (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) / (5.*5.*5.*5.);
   //double psi1 = 1. - ( pow(( x[0] - 50. ), 40) / pow(50., 40) );
@@ -73,7 +73,7 @@ double InitalValueVi (const std::vector < double >& x , const unsigned &i)
   return (psi1 * d_psi2);
 }
 
-//  double InitalValueV0 ( const std::vector < double >& x ) {
+//  double InitialValueV0 ( const std::vector < double >& x ) {
 //   //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
 //   double psi1 = 1. - ( x[0] - 5. ) * ( x[0] - 5. ) * ( x[0] - 5. ) * ( x[0] - 5. ) / ( 5.*5.*5.*5. );
 //   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 1 );
@@ -84,335 +84,335 @@ double InitalValueVi (const std::vector < double >& x , const unsigned &i)
 
 
 
-double InitalValueV0 (const std::vector < double >& x)
+double InitialValueV0 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 1);
+  return InitialValueVi (x, 1);
 }
-double InitalValueV1 (const std::vector < double >& x)
+double InitialValueV1 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 2);
+  return InitialValueVi (x, 2);
 }
-double InitalValueV2 (const std::vector < double >& x)
+double InitialValueV2 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 3);
+  return InitialValueVi (x, 3);
 }
-double InitalValueV3 (const std::vector < double >& x)
+double InitialValueV3 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 4);
+  return InitialValueVi (x, 4);
 }
-double InitalValueV4 (const std::vector < double >& x)
+double InitialValueV4 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 5);
+  return InitialValueVi (x, 5);
 }
-double InitalValueV5 (const std::vector < double >& x)
+double InitialValueV5 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 6);
+  return InitialValueVi (x, 6);
 }
-double InitalValueV6 (const std::vector < double >& x)
+double InitialValueV6 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 7);
+  return InitialValueVi (x, 7);
 }
-double InitalValueV7 (const std::vector < double >& x)
+double InitialValueV7 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 8);
+  return InitialValueVi (x, 8);
 }
-double InitalValueV8 (const std::vector < double >& x)
+double InitialValueV8 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 9);
+  return InitialValueVi (x, 9);
 }
-double InitalValueV9 (const std::vector < double >& x)
+double InitialValueV9 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 10);
+  return InitialValueVi (x, 10);
 }
-double InitalValueV10 (const std::vector < double >& x)
+double InitialValueV10 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 11);
+  return InitialValueVi (x, 11);
 }
-double InitalValueV11 (const std::vector < double >& x)
+double InitialValueV11 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 12);
+  return InitialValueVi (x, 12);
 }
-double InitalValueV12 (const std::vector < double >& x)
+double InitialValueV12 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 13);
+  return InitialValueVi (x, 13);
 }
-double InitalValueV13 (const std::vector < double >& x)
+double InitialValueV13 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 14);
+  return InitialValueVi (x, 14);
 }
-double InitalValueV14 (const std::vector < double >& x)
+double InitialValueV14 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 15);
+  return InitialValueVi (x, 15);
 }
-double InitalValueV15 (const std::vector < double >& x)
+double InitialValueV15 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 16);
+  return InitialValueVi (x, 16);
 }
-double InitalValueV16 (const std::vector < double >& x)
+double InitialValueV16 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 17);
+  return InitialValueVi (x, 17);
 }
-double InitalValueV17 (const std::vector < double >& x)
+double InitialValueV17 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 18);
+  return InitialValueVi (x, 18);
 }
-double InitalValueV18 (const std::vector < double >& x)
+double InitialValueV18 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 19);
+  return InitialValueVi (x, 19);
 }
-double InitalValueV19 (const std::vector < double >& x)
+double InitialValueV19 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 20);
+  return InitialValueVi (x, 20);
 }
-double InitalValueV20 (const std::vector < double >& x)
+double InitialValueV20 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 21);
+  return InitialValueVi (x, 21);
 }
-double InitalValueV21 (const std::vector < double >& x)
+double InitialValueV21 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 22);
+  return InitialValueVi (x, 22);
 }
-double InitalValueV22 (const std::vector < double >& x)
+double InitialValueV22 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 23);
+  return InitialValueVi (x, 23);
 }
-double InitalValueV23 (const std::vector < double >& x)
+double InitialValueV23 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 24);
+  return InitialValueVi (x, 24);
 }
-double InitalValueV24 (const std::vector < double >& x)
+double InitialValueV24 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 25);
+  return InitialValueVi (x, 25);
 }
-double InitalValueV25 (const std::vector < double >& x)
+double InitialValueV25 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 26);
+  return InitialValueVi (x, 26);
 }
-double InitalValueV26 (const std::vector < double >& x)
+double InitialValueV26 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 27);
+  return InitialValueVi (x, 27);
 }
-double InitalValueV27 (const std::vector < double >& x)
+double InitialValueV27 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 28);
+  return InitialValueVi (x, 28);
 }
-double InitalValueV28 (const std::vector < double >& x)
+double InitialValueV28 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 29);
+  return InitialValueVi (x, 29);
 }
-double InitalValueV29 (const std::vector < double >& x)
+double InitialValueV29 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 30);
+  return InitialValueVi (x, 30);
 }
-double InitalValueV30 (const std::vector < double >& x)
+double InitialValueV30 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 31);
+  return InitialValueVi (x, 31);
 }
-double InitalValueV31 (const std::vector < double >& x)
+double InitialValueV31 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 32);
+  return InitialValueVi (x, 32);
 }
-double InitalValueV32 (const std::vector < double >& x)
+double InitialValueV32 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 33);
+  return InitialValueVi (x, 33);
 }
-double InitalValueV33 (const std::vector < double >& x)
+double InitialValueV33 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 34);
+  return InitialValueVi (x, 34);
 }
-double InitalValueV34 (const std::vector < double >& x)
+double InitialValueV34 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 35);
+  return InitialValueVi (x, 35);
 }
-double InitalValueV35 (const std::vector < double >& x)
+double InitialValueV35 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 36);
+  return InitialValueVi (x, 36);
 }
-double InitalValueV36 (const std::vector < double >& x)
+double InitialValueV36 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 37);
+  return InitialValueVi (x, 37);
 }
-double InitalValueV37 (const std::vector < double >& x)
+double InitialValueV37 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 38);
+  return InitialValueVi (x, 38);
 }
-double InitalValueV38 (const std::vector < double >& x)
+double InitialValueV38 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 39);
+  return InitialValueVi (x, 39);
 }
-double InitalValueV39 (const std::vector < double >& x)
+double InitialValueV39 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 40);
+  return InitialValueVi (x, 40);
 }
-double InitalValueV40 (const std::vector < double >& x)
+double InitialValueV40 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 41);
+  return InitialValueVi (x, 41);
 }
-double InitalValueV41 (const std::vector < double >& x)
+double InitialValueV41 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 42);
+  return InitialValueVi (x, 42);
 }
-double InitalValueV42 (const std::vector < double >& x)
+double InitialValueV42 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 43);
+  return InitialValueVi (x, 43);
 }
-double InitalValueV43 (const std::vector < double >& x)
+double InitialValueV43 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 44);
+  return InitialValueVi (x, 44);
 }
-double InitalValueV44 (const std::vector < double >& x)
+double InitialValueV44 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 45);
+  return InitialValueVi (x, 45);
 }
-double InitalValueV45 (const std::vector < double >& x)
+double InitialValueV45 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 46);
+  return InitialValueVi (x, 46);
 }
-double InitalValueV46 (const std::vector < double >& x)
+double InitialValueV46 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 47);
+  return InitialValueVi (x, 47);
 }
-double InitalValueV47 (const std::vector < double >& x)
+double InitialValueV47 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 48);
+  return InitialValueVi (x, 48);
 }
-double InitalValueV48 (const std::vector < double >& x)
+double InitialValueV48 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 49);
+  return InitialValueVi (x, 49);
 }
-double InitalValueV49 (const std::vector < double >& x)
+double InitialValueV49 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 50);
+  return InitialValueVi (x, 50);
 }
-double InitalValueV50 (const std::vector < double >& x)
+double InitialValueV50 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 51);
+  return InitialValueVi (x, 51);
 }
-double InitalValueV51 (const std::vector < double >& x)
+double InitialValueV51 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 52);
+  return InitialValueVi (x, 52);
 }
-double InitalValueV52 (const std::vector < double >& x)
+double InitialValueV52 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 53);
+  return InitialValueVi (x, 53);
 }
-double InitalValueV53 (const std::vector < double >& x)
+double InitialValueV53 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 54);
+  return InitialValueVi (x, 54);
 }
-double InitalValueV54 (const std::vector < double >& x)
+double InitialValueV54 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 55);
+  return InitialValueVi (x, 55);
 }
-double InitalValueV55 (const std::vector < double >& x)
+double InitialValueV55 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 56);
+  return InitialValueVi (x, 56);
 }
-double InitalValueV56 (const std::vector < double >& x)
+double InitialValueV56 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 57);
+  return InitialValueVi (x, 57);
 }
-double InitalValueV57 (const std::vector < double >& x)
+double InitialValueV57 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 58);
+  return InitialValueVi (x, 58);
 }
-double InitalValueV58 (const std::vector < double >& x)
+double InitialValueV58 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 59);
+  return InitialValueVi (x, 59);
 }
-double InitalValueV59 (const std::vector < double >& x)
+double InitialValueV59 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 60);
+  return InitialValueVi (x, 60);
 }
-double InitalValueV60 (const std::vector < double >& x)
+double InitialValueV60 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 61);
+  return InitialValueVi (x, 61);
 }
-double InitalValueV61 (const std::vector < double >& x)
+double InitialValueV61 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 62);
+  return InitialValueVi (x, 62);
 }
-double InitalValueV62 (const std::vector < double >& x)
+double InitialValueV62 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 63);
+  return InitialValueVi (x, 63);
 }
-double InitalValueV63 (const std::vector < double >& x)
+double InitialValueV63 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 64);
+  return InitialValueVi (x, 64);
 }
-double InitalValueV64 (const std::vector < double >& x)
+double InitialValueV64 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 65);
+  return InitialValueVi (x, 65);
 }
-double InitalValueV65 (const std::vector < double >& x)
+double InitialValueV65 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 66);
+  return InitialValueVi (x, 66);
 }
-double InitalValueV66 (const std::vector < double >& x)
+double InitialValueV66 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 67);
+  return InitialValueVi (x, 67);
 }
-double InitalValueV67 (const std::vector < double >& x)
+double InitialValueV67 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 68);
+  return InitialValueVi (x, 68);
 }
-double InitalValueV68 (const std::vector < double >& x)
+double InitialValueV68 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 69);
+  return InitialValueVi (x, 69);
 }
-double InitalValueV69 (const std::vector < double >& x)
+double InitialValueV69 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 70);
+  return InitialValueVi (x, 70);
 }
-double InitalValueV70 (const std::vector < double >& x)
+double InitialValueV70 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 71);
+  return InitialValueVi (x, 71);
 }
-double InitalValueV71 (const std::vector < double >& x)
+double InitialValueV71 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 72);
+  return InitialValueVi (x, 72);
 }
-double InitalValueV72 (const std::vector < double >& x)
+double InitialValueV72 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 73);
+  return InitialValueVi (x, 73);
 }
-double InitalValueV73 (const std::vector < double >& x)
+double InitialValueV73 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 74);
+  return InitialValueVi (x, 74);
 }
-double InitalValueV74 (const std::vector < double >& x)
+double InitialValueV74 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 75);
+  return InitialValueVi (x, 75);
 }
-double InitalValueV75 (const std::vector < double >& x)
+double InitialValueV75 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 76);
+  return InitialValueVi (x, 76);
 }
-double InitalValueV76 (const std::vector < double >& x)
+double InitialValueV76 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 77);
+  return InitialValueVi (x, 77);
 }
-double InitalValueV77 (const std::vector < double >& x)
+double InitialValueV77 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 78);
+  return InitialValueVi (x, 78);
 }
-double InitalValueV78 (const std::vector < double >& x)
+double InitialValueV78 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 79);
+  return InitialValueVi (x, 79);
 }
-double InitalValueV79 (const std::vector < double >& x)
+double InitialValueV79 (const std::vector < double >& x)
 {
-  return InitalValueVi (x, 80);
+  return InitialValueVi (x, 80);
 }
 
 
 
-double InitalValueH (const std::vector < double >& x)
+double InitialValueH (const std::vector < double >& x)
 {
   return hRest[0];
 }
 
-double InitalValueT (const std::vector < double >& x)
+double InitialValueT (const std::vector < double >& x)
 {
   double pi = acos (-1.);
 
@@ -430,7 +430,7 @@ double InitalValueT (const std::vector < double >& x)
 }
 
 
-double InitalValueB (const std::vector < double >& x)
+double InitialValueB (const std::vector < double >& x)
 {
   return 10.; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 }
@@ -524,88 +524,88 @@ int main (int argc, char** args)
 
   mlSol.Initialize ("All");
 
-  mlSol.Initialize ("v0", InitalValueV0);
-  mlSol.Initialize ("v1", InitalValueV1);
-  mlSol.Initialize ("v2", InitalValueV2);
-  mlSol.Initialize ("v3", InitalValueV3);
-//     mlSol.Initialize ( "v4", InitalValueV4 );
-//     mlSol.Initialize ( "v5", InitalValueV5 );
-//     mlSol.Initialize ( "v6", InitalValueV6 );
-//     mlSol.Initialize ( "v7", InitalValueV7 );
-//     mlSol.Initialize ( "v8", InitalValueV8 );
-//     mlSol.Initialize ( "v9", InitalValueV9 );
-//     mlSol.Initialize ( "v10", InitalValueV10 );
-//     mlSol.Initialize ( "v11", InitalValueV11 );
-//     mlSol.Initialize ( "v12", InitalValueV12 );
-//     mlSol.Initialize ( "v13", InitalValueV13 );
-//     mlSol.Initialize ( "v14", InitalValueV14 );
-//     mlSol.Initialize ( "v15", InitalValueV15 );
-//     mlSol.Initialize ( "v16", InitalValueV16 );
-//     mlSol.Initialize ( "v17", InitalValueV17 );
-//     mlSol.Initialize ( "v18", InitalValueV18 );
-//     mlSol.Initialize ( "v19", InitalValueV19 );
+  mlSol.Initialize ("v0", InitialValueV0);
+  mlSol.Initialize ("v1", InitialValueV1);
+  mlSol.Initialize ("v2", InitialValueV2);
+  mlSol.Initialize ("v3", InitialValueV3);
+//     mlSol.Initialize ( "v4", InitialValueV4 );
+//     mlSol.Initialize ( "v5", InitialValueV5 );
+//     mlSol.Initialize ( "v6", InitialValueV6 );
+//     mlSol.Initialize ( "v7", InitialValueV7 );
+//     mlSol.Initialize ( "v8", InitialValueV8 );
+//     mlSol.Initialize ( "v9", InitialValueV9 );
+//     mlSol.Initialize ( "v10", InitialValueV10 );
+//     mlSol.Initialize ( "v11", InitialValueV11 );
+//     mlSol.Initialize ( "v12", InitialValueV12 );
+//     mlSol.Initialize ( "v13", InitialValueV13 );
+//     mlSol.Initialize ( "v14", InitialValueV14 );
+//     mlSol.Initialize ( "v15", InitialValueV15 );
+//     mlSol.Initialize ( "v16", InitialValueV16 );
+//     mlSol.Initialize ( "v17", InitialValueV17 );
+//     mlSol.Initialize ( "v18", InitialValueV18 );
+//     mlSol.Initialize ( "v19", InitialValueV19 );
 //     if ( NumberOfLayers>39 ) {
-//         mlSol.Initialize ( "v20", InitalValueV20 );
-//         mlSol.Initialize ( "v21", InitalValueV21 );
-//         mlSol.Initialize ( "v22", InitalValueV22 );
-//         mlSol.Initialize ( "v23", InitalValueV23 );
-//         mlSol.Initialize ( "v24", InitalValueV24 );
-//         mlSol.Initialize ( "v25", InitalValueV25 );
-//         mlSol.Initialize ( "v26", InitalValueV26 );
-//         mlSol.Initialize ( "v27", InitalValueV27 );
-//         mlSol.Initialize ( "v28", InitalValueV28 );
-//         mlSol.Initialize ( "v29", InitalValueV29 );
-//         mlSol.Initialize ( "v30", InitalValueV30 );
-//         mlSol.Initialize ( "v31", InitalValueV31 );
-//         mlSol.Initialize ( "v32", InitalValueV32 );
-//         mlSol.Initialize ( "v33", InitalValueV33 );
-//         mlSol.Initialize ( "v34", InitalValueV34 );
-//         mlSol.Initialize ( "v35", InitalValueV35 );
-//         mlSol.Initialize ( "v36", InitalValueV36 );
-//         mlSol.Initialize ( "v37", InitalValueV37 );
-//         mlSol.Initialize ( "v38", InitalValueV38 );
-//         mlSol.Initialize ( "v39", InitalValueV39 );
+//         mlSol.Initialize ( "v20", InitialValueV20 );
+//         mlSol.Initialize ( "v21", InitialValueV21 );
+//         mlSol.Initialize ( "v22", InitialValueV22 );
+//         mlSol.Initialize ( "v23", InitialValueV23 );
+//         mlSol.Initialize ( "v24", InitialValueV24 );
+//         mlSol.Initialize ( "v25", InitialValueV25 );
+//         mlSol.Initialize ( "v26", InitialValueV26 );
+//         mlSol.Initialize ( "v27", InitialValueV27 );
+//         mlSol.Initialize ( "v28", InitialValueV28 );
+//         mlSol.Initialize ( "v29", InitialValueV29 );
+//         mlSol.Initialize ( "v30", InitialValueV30 );
+//         mlSol.Initialize ( "v31", InitialValueV31 );
+//         mlSol.Initialize ( "v32", InitialValueV32 );
+//         mlSol.Initialize ( "v33", InitialValueV33 );
+//         mlSol.Initialize ( "v34", InitialValueV34 );
+//         mlSol.Initialize ( "v35", InitialValueV35 );
+//         mlSol.Initialize ( "v36", InitialValueV36 );
+//         mlSol.Initialize ( "v37", InitialValueV37 );
+//         mlSol.Initialize ( "v38", InitialValueV38 );
+//         mlSol.Initialize ( "v39", InitialValueV39 );
 //         if ( NumberOfLayers>79 ) {
-//             mlSol.Initialize ( "v40", InitalValueV40 );
-//             mlSol.Initialize ( "v41", InitalValueV41 );
-//             mlSol.Initialize ( "v42", InitalValueV42 );
-//             mlSol.Initialize ( "v43", InitalValueV43 );
-//             mlSol.Initialize ( "v44", InitalValueV44 );
-//             mlSol.Initialize ( "v45", InitalValueV45 );
-//             mlSol.Initialize ( "v46", InitalValueV46 );
-//             mlSol.Initialize ( "v47", InitalValueV47 );
-//             mlSol.Initialize ( "v48", InitalValueV48 );
-//             mlSol.Initialize ( "v49", InitalValueV49 );
-//             mlSol.Initialize ( "v50", InitalValueV50 );
-//             mlSol.Initialize ( "v51", InitalValueV51 );
-//             mlSol.Initialize ( "v52", InitalValueV52 );
-//             mlSol.Initialize ( "v53", InitalValueV53 );
-//             mlSol.Initialize ( "v54", InitalValueV54 );
-//             mlSol.Initialize ( "v55", InitalValueV55 );
-//             mlSol.Initialize ( "v56", InitalValueV56 );
-//             mlSol.Initialize ( "v57", InitalValueV57 );
-//             mlSol.Initialize ( "v58", InitalValueV58 );
-//             mlSol.Initialize ( "v59", InitalValueV59 );
-//             mlSol.Initialize ( "v60", InitalValueV60 );
-//             mlSol.Initialize ( "v61", InitalValueV61 );
-//             mlSol.Initialize ( "v62", InitalValueV62 );
-//             mlSol.Initialize ( "v63", InitalValueV63 );
-//             mlSol.Initialize ( "v64", InitalValueV64 );
-//             mlSol.Initialize ( "v65", InitalValueV65 );
-//             mlSol.Initialize ( "v66", InitalValueV66 );
-//             mlSol.Initialize ( "v67", InitalValueV67 );
-//             mlSol.Initialize ( "v68", InitalValueV68 );
-//             mlSol.Initialize ( "v69", InitalValueV69 );
-//             mlSol.Initialize ( "v70", InitalValueV70 );
-//             mlSol.Initialize ( "v71", InitalValueV71 );
-//             mlSol.Initialize ( "v72", InitalValueV72 );
-//             mlSol.Initialize ( "v73", InitalValueV73 );
-//             mlSol.Initialize ( "v74", InitalValueV74 );
-//             mlSol.Initialize ( "v75", InitalValueV75 );
-//             mlSol.Initialize ( "v76", InitalValueV76 );
-//             mlSol.Initialize ( "v77", InitalValueV77 );
-//             mlSol.Initialize ( "v78", InitalValueV78 );
-//             mlSol.Initialize ( "v79", InitalValueV79 );
+//             mlSol.Initialize ( "v40", InitialValueV40 );
+//             mlSol.Initialize ( "v41", InitialValueV41 );
+//             mlSol.Initialize ( "v42", InitialValueV42 );
+//             mlSol.Initialize ( "v43", InitialValueV43 );
+//             mlSol.Initialize ( "v44", InitialValueV44 );
+//             mlSol.Initialize ( "v45", InitialValueV45 );
+//             mlSol.Initialize ( "v46", InitialValueV46 );
+//             mlSol.Initialize ( "v47", InitialValueV47 );
+//             mlSol.Initialize ( "v48", InitialValueV48 );
+//             mlSol.Initialize ( "v49", InitialValueV49 );
+//             mlSol.Initialize ( "v50", InitialValueV50 );
+//             mlSol.Initialize ( "v51", InitialValueV51 );
+//             mlSol.Initialize ( "v52", InitialValueV52 );
+//             mlSol.Initialize ( "v53", InitialValueV53 );
+//             mlSol.Initialize ( "v54", InitialValueV54 );
+//             mlSol.Initialize ( "v55", InitialValueV55 );
+//             mlSol.Initialize ( "v56", InitialValueV56 );
+//             mlSol.Initialize ( "v57", InitialValueV57 );
+//             mlSol.Initialize ( "v58", InitialValueV58 );
+//             mlSol.Initialize ( "v59", InitialValueV59 );
+//             mlSol.Initialize ( "v60", InitialValueV60 );
+//             mlSol.Initialize ( "v61", InitialValueV61 );
+//             mlSol.Initialize ( "v62", InitialValueV62 );
+//             mlSol.Initialize ( "v63", InitialValueV63 );
+//             mlSol.Initialize ( "v64", InitialValueV64 );
+//             mlSol.Initialize ( "v65", InitialValueV65 );
+//             mlSol.Initialize ( "v66", InitialValueV66 );
+//             mlSol.Initialize ( "v67", InitialValueV67 );
+//             mlSol.Initialize ( "v68", InitialValueV68 );
+//             mlSol.Initialize ( "v69", InitialValueV69 );
+//             mlSol.Initialize ( "v70", InitialValueV70 );
+//             mlSol.Initialize ( "v71", InitialValueV71 );
+//             mlSol.Initialize ( "v72", InitialValueV72 );
+//             mlSol.Initialize ( "v73", InitialValueV73 );
+//             mlSol.Initialize ( "v74", InitialValueV74 );
+//             mlSol.Initialize ( "v75", InitialValueV75 );
+//             mlSol.Initialize ( "v76", InitialValueV76 );
+//             mlSol.Initialize ( "v77", InitialValueV77 );
+//             mlSol.Initialize ( "v78", InitialValueV78 );
+//             mlSol.Initialize ( "v79", InitialValueV79 );
 //         }
 //     }
 
@@ -613,16 +613,16 @@ int main (int argc, char** args)
   for (unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf (name, "h%d", i);
-    mlSol.Initialize (name, InitalValueH);
+    mlSol.Initialize (name, InitialValueH);
   }
 
   for (unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf (name, "T%d", i);
-    mlSol.Initialize (name, InitalValueT);
+    mlSol.Initialize (name, InitialValueT);
   }
 
-  mlSol.Initialize ("b", InitalValueB);
+  mlSol.Initialize ("b", InitialValueB);
 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSol.GenerateBdc ("All");
@@ -644,7 +644,7 @@ int main (int argc, char** args)
   std::vector<std::string> print_vars;
   print_vars.push_back ("All");
   //mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", print_vars, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
   unsigned numberOfTimeSteps = 10000; //RK4: dt=0.5, numberOfTimeSteps = 16001
   dt = 0.5;
@@ -660,7 +660,7 @@ int main (int argc, char** args)
     //ETD ( ml_prob, numberOfTimeSteps );
     //RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
     RKe (ml_prob, numberOfTimeSteps);
-    mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", print_vars, (i + 1) / 1);
+    mlSol.GetWriter()->Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, (i + 1) / 1);
     
     counter2++;
   }

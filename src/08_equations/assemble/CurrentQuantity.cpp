@@ -41,13 +41,13 @@ namespace femus {
   ExtendDofs();  
   
 //set to zero  the gauss values
-  for (uint i=0; i<3; i++) _curl_g3D[i]=0.;
+  for (uint i=0; i < 3; i++) _curl_g3D[i]=0.;
   
 //compute the gauss values
            for (uint eln=0; eln<el_nnodes; eln++)    { 
 
           //curl 
-          for (uint idim=0; idim<3; idim++) {
+          for (uint idim=0; idim < 3; idim++) {
 	   uint idimp1 = (idim+1)%3;
 	   uint idimp2 = (idim+2)%3;
 // 	  _curl_g3D[idim] += 
@@ -181,7 +181,7 @@ void CurrentQuantity::ExtendDofs() {
   const uint el_ndofs = _ndof;
   //set to zero
   for (uint eln=0; eln<el_ndofs; eln++)  {
-    for (uint i=0; i<3; i++) {
+    for (uint i=0; i < 3; i++) {
        _val_dofs3D[eln+i*el_ndofs] = 0.;
     }
   }

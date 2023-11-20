@@ -27,7 +27,7 @@ namespace femus {
 
 
 
-
+     const unsigned GeomElemBase::_max_space_dimension = 3;
 
 
 //this build class allows me to return a pointer to a child of this class

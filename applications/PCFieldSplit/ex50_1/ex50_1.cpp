@@ -140,7 +140,7 @@ int main(int argc, char** args)
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
 
-//   mlSol.Initialize("T",InitalValueT);
+//   mlSol.Initialize("T",InitialValueT);
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("R");
