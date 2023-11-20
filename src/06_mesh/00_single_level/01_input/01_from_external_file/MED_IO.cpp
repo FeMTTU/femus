@@ -256,19 +256,20 @@ namespace femus {
     // meshes - BEGIN ========================
     for(unsigned j = 0; j < mesh_menus.size(); j++) {
 
-      // node coordinates - BEGIN
+      // nodes, coordinates - BEGIN
       set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
-      // node coordinates - END
+      // nodes, coordinates - END
 
-      // Volume connectivity - BEGIN
+      // Elements, Volume connectivity - BEGIN
       //       for(unsigned i = 0; i < mesh_dim; i++) {
       unsigned i = mesh_dim - 1;
       set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
-      // Volume connectivity - END
+      // Elements, Volume connectivity - END
 
 
 
-        // Groups of the mesh - BEGIN ===============
+       // Groups of the mesh - BEGIN ===============
+      
       if(read_domain_groups_flag == true || read_boundary_groups_flag == true)  {
 
         // Group info - BEGIN ===============
@@ -301,6 +302,7 @@ namespace femus {
 
 
     }
+    
     // meshes - END ========================
 
 
@@ -995,11 +997,12 @@ namespace femus {
 
 
 
+      
 
       for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
-          
-        mesh.el->SetElementGroup(iel, 1);
+                  
         unsigned nve = el_nodes_per_dimension;  /// @todo this is only one element type
+        
         if(nve == 27) {
           type_elem_flag[0] = type_elem_flag[3] = true;
           mesh.el->AddToElementNumber(1, "Hex");
@@ -1043,7 +1046,15 @@ namespace femus {
         
       }
 
-    
+      
+      
+      // Initialize Element Group - BEGIN
+      for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
+        mesh.el->SetElementGroup(iel, 1);
+      }
+      // Initialize Element Group - END
+      
+      
     }
 
 
