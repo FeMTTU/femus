@@ -103,7 +103,7 @@ int main(int argc, char** args)
     //mlSol.Initialize(name, InitialValueH);
   }
 
-  //mlSol.Initialize("All");    // initialize all varaibles to zero
+  //mlSol.Initialize("All");    // initialize all variables to zero
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");

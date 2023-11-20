@@ -105,7 +105,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("D", LAGRANGE, SECOND);
   mlSol.AddSolution("E", LAGRANGE, SECOND);
 
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  mlSol.Initialize("All");    // initialize all variables to zero
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("U");

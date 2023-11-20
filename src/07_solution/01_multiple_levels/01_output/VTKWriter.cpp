@@ -611,7 +611,7 @@ namespace femus {
         const unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
         const unsigned sol_fe_type = _ml_sol->GetSolutionType( solIndex );
         
-        if( sol_fe_type < 3 ) {
+        if( sol_fe_type < NFE_FAMS_C_ZERO_LAGRANGE ) {
             
           //BEGIN LAGRANGIAN Fem SOLUTION
           std::string solName =  _ml_sol->GetSolutionName( solIndex );

@@ -82,7 +82,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSol.AddSolution("T", DISCONTINUOUS_POLYNOMIAL, FIRST);
 //
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  mlSol.Initialize("All");    // initialize all variables to zero
 //
   mlSol.Initialize("U", InitialValueU);
   mlSol.Initialize("P", InitialValueP);

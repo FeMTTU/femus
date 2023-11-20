@@ -244,7 +244,9 @@ namespace femus {
             sprintf( buffer, "%s %s", "Eps", _ml_sol->GetSolutionName( i ) );
           }
           if( name == 0 || ( _debugOutput  && solution->_ResEpsBdcFlag[i] ) ) {
-            if( _ml_sol->GetSolutionType( i ) < 3 ) { // **********  on the nodes **********
+            
+            
+            if( _ml_sol->GetSolutionType( i ) < NFE_FAMS_C_ZERO_LAGRANGE ) { // **********  on the nodes **********
               fout.write( ( char* ) buffer, sizeof( char ) * 8 );
               fout.write( ( char* ) &one, sizeof( unsigned ) );
               if( name == 0 ) {

@@ -93,7 +93,7 @@ namespace femus {
     bool FastVankaBlock = true;
 
     if(_NSchurVar != 0) {
-      FastVankaBlock = (_SolType[_SolPdeIndex[variable_to_be_solved[variable_to_be_solved.size() - _NSchurVar]]] < 3) ? false : true;
+      FastVankaBlock = (_SolType[_SolPdeIndex[variable_to_be_solved[variable_to_be_solved.size() - _NSchurVar]]] < NFE_FAMS_C_ZERO_LAGRANGE) ? false : true;
     }
 
     unsigned iproc = processor_id();

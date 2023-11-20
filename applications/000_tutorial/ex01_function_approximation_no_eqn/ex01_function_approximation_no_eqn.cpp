@@ -31,6 +31,8 @@ double InitialValueT(const std::vector < double >& x) {
   return x[1];
 }
 
+
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -59,7 +61,8 @@ int main(int argc, char** args) {
   // Solution - BEGIN
   
   // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh); // Define "mlSol" object with argument mlMsh of "MultiLevelSolution" class. 
+  MultiLevelSolution mlSol(&mlMsh);
+  
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, FIRST);
   mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
@@ -67,7 +70,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSol.AddSolution("T", DISCONTINUOUS_POLYNOMIAL, FIRST);
 
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  mlSol.Initialize("All");    // initialize all variables to zero
 
   mlSol.Initialize("U", InitialValueU);
   mlSol.Initialize("P", InitialValueP);

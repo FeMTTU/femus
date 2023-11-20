@@ -144,10 +144,11 @@ int main(int argc,char **args) {
   
 #if FEMUS_TEST_SOLUTION != 0
   
-  MultiLevelSolution ml_sol(&ml_mesh);
+  MultiLevelSolution ml_sol(& ml_mesh);
 
   #if FEMUS_TEST_PROBLEM != 0
-      MultiLevelProblem   ml_prob(&ml_sol);
+      MultiLevelProblem   ml_prob;
+    ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
   #endif 
    
   const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
