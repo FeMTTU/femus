@@ -62,7 +62,7 @@ int main(int argc, char** args) {
   //const elem_type * _finiteElement6 = new const elem_type_3D("tet","biquadratic","seventh");
 
   std::cout<< "**WEDGE**" <<std::endl;
-  const elem_type * _finiteElement5 = new const elem_type_3D("wedge","linear","ninth");
+  const elem_type * _finiteElement5 = new const elem_type_3D("wedge",fe_fams[CONTINUOUS_LINEAR],"ninth");
   //const elem_type * _finiteElement4 = new const elem_type_3D("wedge","biquadratic","third");
   delete _finiteElement5;
 

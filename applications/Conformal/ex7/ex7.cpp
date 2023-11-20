@@ -144,7 +144,6 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
   mlSol.GetWriter()->SetDebugOutput(true);
-  //mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 0);
   mlSol.GetWriter()->Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   // Attach the assembling function to system and initialize.

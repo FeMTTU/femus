@@ -366,7 +366,7 @@ restart:
   void NonLinearImplicitSystem::print_iteration_to_file(const unsigned nonLinearIterator) const {
       
              
-          const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
+          const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
  
           std::vector < std::string > variablesToBePrinted;
           variablesToBePrinted.push_back ("All");

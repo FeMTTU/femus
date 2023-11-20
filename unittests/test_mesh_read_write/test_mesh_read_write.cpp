@@ -178,9 +178,9 @@ int main(int argc,char **args) {
 #endif
 
   std::vector < std::string > print_fe_order;
-  print_fe_order.push_back("linear");
-  print_fe_order.push_back("quadratic");
-  print_fe_order.push_back("biquadratic");
+  print_fe_order.push_back( fe_fams_for_files[FILES_CONTINUOUS_LINEAR] );
+  print_fe_order.push_back( fe_fams_for_files[FILES_CONTINUOUS_QUADRATIC] );
+  print_fe_order.push_back( fe_fams_for_files[FILES_CONTINUOUS_BIQUADRATIC] );
 
 
   std::vector < std::string > variablesToBePrinted;

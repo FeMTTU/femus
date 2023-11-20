@@ -248,7 +248,7 @@ int main(int argc, char** args) {
             
       std::string  output_name = mesh_name + "_" + assemble_pointer_vec[func].second + "_" + unknowns[u]._name;
 //       ml_sol.GetWriter()->SetGraphVariable ("u");
-      ml_sol.GetWriter()->Write(output_name.c_str(), Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
+      ml_sol.GetWriter()->Write(output_name.c_str(), Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i);
   // ======= Print - END  ========================
 
     } //end FE  space

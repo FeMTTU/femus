@@ -42,10 +42,13 @@ namespace femus {
   GMVWriter::~GMVWriter() {
   }
 
-  void GMVWriter::Write( const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step ) {
+  void GMVWriter::Write( const std::string output_path,
+                         const std::string order,
+                         const std::vector<std::string>& vars, 
+                         const unsigned time_step ) {
 
     // ********** linear -> index==0 *** quadratic -> index==1 **********
-    unsigned index = ( strcmp( order, "linear" ) ) ? CONTINUOUS_SERENDIPITY : CONTINUOUS_LINEAR;
+    unsigned index = ( strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) ) ? FILES_CONTINUOUS_QUADRATIC : FILES_CONTINUOUS_LINEAR;
 
     std::string filename_prefix;
     if( _ml_sol != NULL )

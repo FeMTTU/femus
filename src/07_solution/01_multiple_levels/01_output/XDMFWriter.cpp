@@ -88,7 +88,10 @@ namespace femus {
 
   
   
-  void XDMFWriter::Write( const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step ) {
+  void XDMFWriter::Write( const std::string output_path, 
+                          const std::string order,
+                          const std::vector<std::string>& vars, 
+                          const unsigned time_step ) {
 
 #ifdef HAVE_HDF5
 
@@ -98,15 +101,9 @@ namespace femus {
     }
 
     unsigned index_nd = 0;
-    if( !strcmp( order, "linear" ) ) {   //linear
-      index_nd = 0;
-    }
-    else if( !strcmp( order, "quadratic" ) ) {   //quadratic
-      index_nd = 1;
-    }
-    else if( !strcmp( order, "biquadratic" ) ) {   //tensor-product quadratic (real and fake)
-      index_nd = 2;
-    }
+    if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) )           {  index_nd = 0;  }
+    else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ].c_str() ) )   {  index_nd = 1;  }
+    else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index_nd = 2;  }
 
     Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
     Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );

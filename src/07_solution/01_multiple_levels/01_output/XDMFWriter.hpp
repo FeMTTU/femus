@@ -51,7 +51,10 @@ namespace femus {
 
 // === Write - BEGIN =================
       /** write output function */
-      void Write( const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0 ) ;
+      void Write( const std::string output_path, 
+                  const std::string order, 
+                  const std::vector < std::string >& vars = std::vector < std::string > (), 
+                  const unsigned time_step = 0 ) ;
 // === Write - END =================
 
       /** write a wrapper file for paraview to open all the files of a history together */
