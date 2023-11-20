@@ -103,13 +103,15 @@ namespace femus {
     unsigned dim;       //dimension of the Geometric Elements
     unsigned dimNodes;  //number of coordinates provided: it could be different if you have say 2D elements in 3d
     double x, y, z;
+    
     unsigned nvt;
-    unsigned nvt0;
     unsigned nel;
 
     mesh.SetLevel(0);
+
     
     // read control data - BEGIN ******************** A
+    
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " can not read parameters\n";
@@ -118,13 +120,7 @@ namespace femus {
     str2 = "0";
     while(str2.compare("NDFVL") != 0) inf >> str2;
     inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> dimNodes ;
-    nvt0 = nvt;
-    mesh.SetDimension(dim);
-    
-    mesh.SetRefinementCellAndFaceIndices(dim);
-    
-    mesh.SetNumberOfElements(nel);
-    mesh.SetNumberOfNodes(nvt);
+
     inf >> str2;
     if(str2.compare("ENDOFSECTION") != 0) {
       std::cout << "error control data mesh" << std::endl;
@@ -132,7 +128,27 @@ namespace femus {
     }
 //   std::cout << "***************" << _dimension << std::endl;
     inf.close();
-    // read control data - END **************** A
+    
+    // read control data - END **************** A   
+    
+    
+    // Mesh, dimension - BEGIN ********************
+    mesh.SetDimension(dim);
+    // Mesh, dimension - END ********************
+    
+    // geom el, refinement - BEGIN ********************
+    mesh.SetRefinementCellAndFaceIndices(dim);
+    // geom el, refinement - END ******************** 
+    
+    // Mesh, Elements - BEGIN ********************
+    mesh.SetNumberOfElements(nel);
+    // Mesh, Elements - END ********************
+    
+    // Mesh, Nodes - BEGIN ********************
+    mesh.SetNumberOfNodes(nvt);
+    // Mesh, Nodes - END ********************
+    
+
 
     
     // read ELEMENT/CELL - BEGIN ******************** B
@@ -225,7 +241,7 @@ namespace femus {
     coords[2].resize(nvt);
 
     if(dimNodes == 3) {
-      for(unsigned j = 0; j < nvt0; j++) {
+      for(unsigned j = 0; j < nvt; j++) {
         inf >> str2 >> x >> y >> z;
         coords[0][j] = x / Lref;
         coords[1][j] = y / Lref;
@@ -233,7 +249,7 @@ namespace femus {
       }
     }
     else if(dimNodes == 2) {
-      for(unsigned j = 0; j < nvt0; j++) {
+      for(unsigned j = 0; j < nvt; j++) {
         inf >> str2 >> x >> y;
         coords[0][j] = x / Lref;
         coords[1][j] = y / Lref;
@@ -241,7 +257,7 @@ namespace femus {
       }
     }
     else if(dimNodes == 1) {
-      for(unsigned j = 0; j < nvt0; j++) {
+      for(unsigned j = 0; j < nvt; j++) {
         inf >> str2 >> x;
         coords[0][j] = x / Lref;
         coords[1][j] = 0.;
@@ -301,6 +317,7 @@ namespace femus {
     mesh.el->SetMaterialElementCounter(materialElementCounter);
     inf.close();
     // read GROUP - END **************** E
+
 
     // read boundary - BEGIN  **************** D
     inf.open(name.c_str());
