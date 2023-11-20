@@ -196,7 +196,7 @@ class MED_IO : public MeshInput< Mesh >
 // === Mesh, Elements - BEGIN =================
  private:
   
-   void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase* geom_elem_per_dimension, std::vector<bool>& type_elem_flag);
+   void set_elem_connectivity_and_initialize_elem_group(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase* geom_elem_per_dimension, std::vector<bool>& type_elem_flag);
 
    //elements
    std::string get_element_info_all_dims_H5Group(const std::string mesh_menu) const;

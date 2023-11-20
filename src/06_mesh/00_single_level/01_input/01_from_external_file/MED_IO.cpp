@@ -263,7 +263,7 @@ namespace femus {
       // Elements, Volume connectivity - BEGIN
       //       for(unsigned i = 0; i < mesh_dim; i++) {
       unsigned i = mesh_dim - 1;
-      set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
+      set_elem_connectivity_and_initialize_elem_group(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
       // Elements, Volume connectivity - END
 
 
@@ -965,7 +965,7 @@ namespace femus {
 
   // Connectivities in MED files are stored on a per-node basis: first all 1st nodes, then all 2nd nodes, and so on.
   // Instead, in Gambit they are stored on a per-element basis
-  void MED_IO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase*  geom_elem_per_dimension, std::vector<bool>& type_elem_flag) {
+  void MED_IO::set_elem_connectivity_and_initialize_elem_group(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase*  geom_elem_per_dimension, std::vector<bool>& type_elem_flag) {
 
     Mesh& mesh = GetMesh();
 
