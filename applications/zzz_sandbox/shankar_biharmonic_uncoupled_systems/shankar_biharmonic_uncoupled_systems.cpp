@@ -272,6 +272,7 @@ static void natural_loop_V_2d3d(const MultiLevelProblem *    ml_prob,
                        const unsigned int space_dim,
                        const unsigned maxSize
                     ) {
+  
        std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
        std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
        for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {
@@ -453,7 +454,7 @@ void LaplaceGetExactSolutionGradient(const std::vector < double >& x, std::vecto
 
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
   return dirichlet;
@@ -476,7 +477,10 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
-  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
+  
+      std::string fe_quad_rule("seventh");
+  
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 
   unsigned maxNumberOfMeshes = 5;
 
@@ -517,17 +521,22 @@ int main(int argc, char** args) {
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
       mlSol.Initialize("All");
 
+      // define the multilevel problem attach the mlSol object to it
+      MultiLevelProblem ml_prob(&mlSol);
+      
       // attach the boundary condition function and generate boundary data
       mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-      mlSol.GenerateBdc("u");
-      mlSol.GenerateBdc("v");
+      mlSol.GenerateBdc("u", "Steady", & ml_prob);
+      mlSol.GenerateBdc("v", "Steady", & ml_prob);
 
-      // define the multilevel problem attach the mlSol object to it
-      MultiLevelProblem mlProb(&mlSol);
+      // ======= Problem, Quad Rule - BEGIN ========================
+      ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+      ml_prob.set_all_abstract_fe_AD_or_not();
+      // ======= Problem, Quad Rule - END  ========================
 
-      // add system Poisson in mlProb as a Linear Implicit Sygeom_elementstem
-      NonLinearImplicitSystem& systemU = mlProb.add_system < NonLinearImplicitSystem > ("PoissonU");
-      NonLinearImplicitSystem& systemV = mlProb.add_system < NonLinearImplicitSystem > ("PoissonV");
+      // add system Poisson in ml_prob as a Linear Implicit Sygeom_elementstem
+      NonLinearImplicitSystem& systemU = ml_prob.add_system < NonLinearImplicitSystem > ("PoissonU");
+      NonLinearImplicitSystem& systemV = ml_prob.add_system < NonLinearImplicitSystem > ("PoissonV");
 
 
       // add solution "u" to system
@@ -664,15 +673,14 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
   constexpr unsigned int space_dim = 3;
 
   //solution variable
-  const std::string solname_v = mlSol-> GetSolName_string_vec()[0];
+  const std::string solname_v = "v"; //mlSol-> GetSolName_string_vec()[0];
 
 
-  unsigned solvIndex;
-  solvIndex = mlSol->GetIndex("v");    // get the position of "u" in the ml_sol object
+  unsigned solvIndex = mlSol->GetIndex( solname_v.c_str() );    // get the position of "u" in the ml_sol object
   unsigned solvType = mlSol->GetSolutionType(solvIndex);    // get the finite element type for "u"
 
   unsigned solvPdeIndex;
-  solvPdeIndex = mlPdeSys->GetSolPdeIndex("v");    // get the position of "u" in the pdeSys object
+  solvPdeIndex = mlPdeSys->GetSolPdeIndex( solname_v.c_str() );    // get the position of "u" in the pdeSys object
 
   std::vector < adept::adouble >  solv; // local solution
 
@@ -712,12 +720,13 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
-  std::vector <std::vector < /*const*/ elem_type_templ_base = real_num, real_num_mov> * > > elem_all;
-
+  std::vector < std::vector < /*const*/ elem_type_templ_base <double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    
+    geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, solvType);    // number of solution element dofs
@@ -757,9 +766,9 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
     }
 
     //=========== BOUNDARY - BEGIN===========
-    if (dim==1) shankar_biharmonic::biharmonic_equation::natural_loop_v_1d(& ml_prob, msh, mlSol, iel, geom_element, xType, solname_v, solvType, RES);
+    if (dim==1) shankar_biharmonic::biharmonic_equation::natural_loop_v_1d(& ml_prob, msh, mlSol, iel, geom_element, xType, solname_v, solvType, Res);
 
-    if (dim==2 || dim==3) shankar_biharmonic::biharmonic_equation::natural_loop_V_2d3d<real_num, real_num_mov>(& ml_prob, msh, mlSol,
+    if (dim==2 || dim==3) shankar_biharmonic::biharmonic_equation::natural_loop_V_2d3d<double, double>(& ml_prob, msh, mlSol,
                       iel, geom_element, xType,
                       solname_v, solvType,
                       Res,
@@ -938,12 +947,17 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
 
 
 
-
-
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
+  std::vector < std::vector < /*const*/ elem_type_templ_base <double, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+  
+  
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    
+    geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
@@ -961,7 +975,7 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
                                                                            iel, geom_element, xType,
                                                                            solname_u, soluType, Res);
 
-    if (dim==2 || dim==3) shankar_biharmonic::biharmonic_equation::natural_loop_u_2d3d<isalnum, isalnum_l>(& ml_prob, msh, mlSol, iel, geom_element, xType, solname_u, soluType, Res, elem_all, dim, space_dim, maxSize);
+    if (dim==2 || dim==3) shankar_biharmonic::biharmonic_equation::natural_loop_u_2d3d< double, double >(& ml_prob, msh, mlSol, iel, geom_element, xType, solname_u, soluType, Res, elem_all, dim, space_dim, maxSize);
 
     //=========Boundary-END===============
 
