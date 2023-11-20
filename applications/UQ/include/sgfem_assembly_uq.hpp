@@ -1,3 +1,5 @@
+#include "LinearEquationSolver.hpp"
+
 #include "UqQuadratureTypeEnum.hpp"
 #include "MultiLevelSolution.hpp"
 

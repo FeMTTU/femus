@@ -16,6 +16,8 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+#include "FieldSplitTree.hpp"
 #include "adept.h"
 
 #include "PetscMatrix.hpp"

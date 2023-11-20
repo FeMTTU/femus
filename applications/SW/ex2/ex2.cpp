@@ -19,6 +19,7 @@
 #include "PetscMatrix.hpp"
 
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "slepceps.h"
 #include <slepcmfn.h>
@@ -39,13 +40,13 @@ double phi = 0.1;     //relative width of continental shelf: 10%
 
 unsigned NumberOfLayers = 3;
 
-double InitalValueV(const std::vector < double >& x)
+double InitialValueV(const std::vector < double >& x)
 {
   return 0;
 }
 
 
-double InitalValueH0(const std::vector < double >& x)
+double InitialValueH0(const std::vector < double >& x)
 {
   double b = 40;
   if(NumberOfLayers == 1){
@@ -58,7 +59,7 @@ double InitalValueH0(const std::vector < double >& x)
   
 }
 
-double InitalValueH1(const std::vector < double >& x)
+double InitialValueH1(const std::vector < double >& x)
 {
 //   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
 //   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
@@ -67,7 +68,7 @@ double InitalValueH1(const std::vector < double >& x)
   return 50 + (2.* exp(-(x[0] / 100000.) * (x[0] / 100000.))) / NumberOfLayers;
 }
 
-double InitalValueH2(const std::vector < double >& x)
+double InitialValueH2(const std::vector < double >& x)
 {
   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
@@ -77,7 +78,7 @@ double InitalValueH2(const std::vector < double >& x)
 }
 
 
-double InitalValueB(const std::vector < double >& x)
+double InitialValueB(const std::vector < double >& x)
 {
   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
@@ -140,11 +141,11 @@ int main(int argc, char** args)
 
   mlSol.Initialize("All");
   
-  mlSol.Initialize("h0",InitalValueH0);
+  mlSol.Initialize("h0",InitialValueH0);
   if(NumberOfLayers > 1){	  
-    mlSol.Initialize("h1",InitalValueH1);
+    mlSol.Initialize("h1",InitialValueH1);
     if (NumberOfLayers > 2){	  
-      mlSol.Initialize("h2",InitalValueH2);
+      mlSol.Initialize("h2",InitialValueH2);
     }
   }
   
@@ -153,10 +154,10 @@ int main(int argc, char** args)
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "v%d", i);
-    mlSol.Initialize(name, InitalValueV);
+    mlSol.Initialize(name, InitialValueV);
   }
 
-  mlSol.Initialize("b", InitalValueB);
+  mlSol.Initialize("b", InitialValueB);
   
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
@@ -178,12 +179,12 @@ int main(int argc, char** args)
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
   //mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(Files::_application_output_directory, "linear", print_vars, 0);
+  mlSol.GetWriter()->Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
   unsigned numberOfTimeSteps = 2000;
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {
     ETD(ml_prob);
-    mlSol.GetWriter()->Write(Files::_application_output_directory, "linear", print_vars, (i + 1)/1);
+    mlSol.GetWriter()->Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, (i + 1)/1);
   }
   return 0;
 }

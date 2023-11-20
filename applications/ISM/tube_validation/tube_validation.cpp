@@ -10,6 +10,7 @@
 // #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"

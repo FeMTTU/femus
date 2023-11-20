@@ -18,6 +18,8 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 #include <cstdlib>
 
@@ -50,7 +52,7 @@ bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolN
   return dirichlet;
 }
 
-double InitalValueUSphere(const std::vector < double >& x) {
+double InitialValueUSphere(const std::vector < double >& x) {
   
   double r = sqrt(x[0]*x[0]+x[1]*x[1]);
   double rho = 1./cos(thetaSphere);
@@ -63,11 +65,11 @@ double InitalValueUSphere(const std::vector < double >& x) {
 
 
 
-double InitalValueHSphere(const std::vector < double >& x) {
+double InitialValueHSphere(const std::vector < double >& x) {
   return -cos(thetaSphere);
 }
 
-double InitalValueWSphere(const std::vector < double >& x) {
+double InitialValueWSphere(const std::vector < double >& x) {
   
   double r = sqrt(x[0]*x[0]+x[1]*x[1]);
   double rho = 1./cos(thetaSphere);
@@ -100,12 +102,12 @@ bool SetBoundaryConditionCatenoid(const std::vector < double >& x, const char So
   return dirichlet;
 }
 
-double InitalValueUCatenoid(const std::vector < double >& x) {
+double InitialValueUCatenoid(const std::vector < double >& x) {
   
   return c1 * acosh ( 1. / c1 * sqrt(x[0]*x[0] + x[1]*x[1] ) );
 }
 
-double InitalValueWCatenoid(const std::vector < double >& x) {
+double InitialValueWCatenoid(const std::vector < double >& x) {
   
   return 0;
 }
@@ -200,16 +202,16 @@ int main(int argc, char** args) {
       mlSol.AddSolution("S", LAGRANGE, feOrder[j]);
       
       if (simulation == 1) {
-        mlSol.Initialize("u", InitalValueUSphere);
-        mlSol.Initialize("H", InitalValueHSphere);
-        mlSol.Initialize("W", InitalValueWSphere);
-        mlSol.Initialize("S", InitalValueUSphere);
+        mlSol.Initialize("u", InitialValueUSphere);
+        mlSol.Initialize("H", InitialValueHSphere);
+        mlSol.Initialize("W", InitialValueWSphere);
+        mlSol.Initialize("S", InitialValueUSphere);
         // attach the boundary condition function and generate boundary data
         mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionSphere);
       } 
       else if (simulation == 2) {
-        mlSol.Initialize("u", InitalValueUCatenoid);
-        mlSol.Initialize("W", InitalValueWCatenoid);
+        mlSol.Initialize("u", InitialValueUCatenoid);
+        mlSol.Initialize("W", InitialValueWCatenoid);
         // attach the boundary condition function and generate boundary data
         mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCatenoid);
       }
@@ -259,7 +261,7 @@ int main(int argc, char** args) {
       VTKWriter vtkIO2(&mlSol);
       vtkIO.SetGraphVariable("S");
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(Files::_application_output_directory, "linear", variablesToBePrinted, i + j * 10);
+      vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, i + j * 10);
       
     }
   }

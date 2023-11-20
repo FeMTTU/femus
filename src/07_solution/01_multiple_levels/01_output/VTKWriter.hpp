@@ -60,16 +60,33 @@ public:
 
 // === Write - BEGIN =================
     /** write output function */
-    void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) ;
+    void Write(const std::string output_path, 
+               const std::string order,
+               const std::vector < std::string > & vars = std::vector < std::string > (), 
+               const unsigned time_step = 0) ;
     
     /** write output function with arbitrary level */
-    void Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+    void Write(const unsigned my_level, 
+               const std::string output_path, 
+               const std::string order,
+               const std::vector < std::string >& vars = std::vector < std::string > (), 
+               const unsigned time_step = 0);
   
     /** write output function with fixed level and arbitrary initial string */
-    void Write(const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+    void Write(const std::string init_string, 
+               const std::string output_path,
+               const std::string order,
+               const std::vector < std::string >& vars = std::vector < std::string > (), 
+               const unsigned time_step = 0);
   
     /** write output function with arbitrary level (starting at 1) and arbitrary initial string and arbitrary suffix before the extension */
-    void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+    void Write(const unsigned my_level, 
+               const std::string init_string, 
+               const std::string output_path,
+               const std::string suffix_pre_extension, 
+               const std::string order,
+               const std::vector < std::string >& vars = std::vector < std::string > (), 
+               const unsigned time_step = 0);
 // === Write - END =================
     
   

@@ -267,9 +267,9 @@ int main(int argc, char** args) {
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
 
-      ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);
+      ml_sol.GetWriter()->Write(files.GetOutputPath(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i);
       
-      ml_sol_finest->GetWriter()->Write(i+1, files.GetOutputPath(), "biquadratic"/*_finest*/, variablesToBePrinted, i+3 + maxNumberOfMeshes);
+      ml_sol_finest->GetWriter()->Write(i+1, files.GetOutputPath(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i+3 + maxNumberOfMeshes);
 
     }
   }

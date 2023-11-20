@@ -21,10 +21,12 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 #include "PetscMatrix.hpp"
+
+#include "adept.h"
+#include <stdlib.h>
 
 double Prandtl = 0.02;
 double Rayleigh = 10000.;
@@ -33,7 +35,7 @@ unsigned counter = 0;
 
 using namespace femus;
 
-// double InitalValueT0(const std::vector < double >& x){
+// double InitialValueT0(const std::vector < double >& x){
 //   return (x[0]+0.5);
 // }
 
@@ -155,7 +157,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-  //mlSol.Initialize("T0",InitalValueT0);
+  //mlSol.Initialize("T0",InitialValueT0);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition0);

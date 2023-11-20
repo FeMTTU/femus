@@ -14,31 +14,31 @@ using namespace femus;
 
 
 // 2D CASE rigid rotation
-// double InitalValueU(const std::vector < double >& x) {
+// double InitialValueU(const std::vector < double >& x) {
 //   return -x[1];
 // }
 //
-// double InitalValueV(const std::vector < double >& x) {
+// double InitialValueV(const std::vector < double >& x) {
 //   return x[0];
 // }
 //
-// double InitalValueW(const std::vector < double >& x) {
+// double InitialValueW(const std::vector < double >& x) {
 //   return 0.;
 // }
 
 
 //3D CASE  rotation
-// double InitalValueU(const std::vector < double >& x)
+// double InitialValueU(const std::vector < double >& x)
 // {
 //   return (-x[1] + x[2]) / sqrt(3);
 // }
 // 
-// double InitalValueV(const std::vector < double >& x)
+// double InitialValueV(const std::vector < double >& x)
 // {
 //   return (x[0] - x[2]) / sqrt(3);
 // }
 // 
-// double InitalValueW(const std::vector < double >& x)
+// double InitialValueW(const std::vector < double >& x)
 // {
 //   return (x[1] - x[0]) / sqrt(3);
 // }
@@ -47,17 +47,17 @@ using namespace femus;
 // //2D CASE with vorticity
 // double pi = acos(-1.);
 // 
-// double InitalValueU(const std::vector < double >& x) {
+// double InitialValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
 // }
 // 
-// double InitalValueV(const std::vector < double >& x) {
+// double InitialValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
 // }
 // 
-// double InitalValueW(const std::vector < double >& x) {
+// double InitialValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 0.;
 // }
@@ -67,7 +67,7 @@ using namespace femus;
 // 3D CASE with vorticity
 double pi = acos(-1.);
 
-double InitalValueU(const std::vector < double >& x) {
+double InitialValueU(const std::vector < double >& x) {
   double time = (x.size() == 4) ? x[3] : 0.;
   return
     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
@@ -75,7 +75,7 @@ double InitalValueU(const std::vector < double >& x) {
     )* cos(time);
 }
 
-double InitalValueV(const std::vector < double >& x) {
+double InitialValueV(const std::vector < double >& x) {
   double time = (x.size() == 4) ? x[3] : 0.;
   return
     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
@@ -83,7 +83,7 @@ double InitalValueV(const std::vector < double >& x) {
     )* cos(time);
 }
 
-double InitalValueW(const std::vector < double >& x) {
+double InitialValueW(const std::vector < double >& x) {
   double time = (x.size() == 4) ? x[3] : 0.;
   return
     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
@@ -192,9 +192,9 @@ int main(int argc, char** args)
   mlSol.AddSolution("U", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("V", LAGRANGE, SECOND, 2);
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
-  mlSol.Initialize("U" , InitalValueU);
-  mlSol.Initialize("V" , InitalValueV);
-  if (dim == 3) mlSol.Initialize("W", InitalValueW);
+  mlSol.Initialize("U" , InitialValueU);
+  mlSol.Initialize("V" , InitialValueV);
+  if (dim == 3) mlSol.Initialize("W", InitialValueW);
 
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 // Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);
@@ -284,9 +284,9 @@ int main(int argc, char** args)
     std::cout << "Iteration = " << k << std::endl;
     //uncomment for  vortex test
     mlSol.CopySolutionToOldSolution();
-    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-    if (dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+    mlSol.UpdateSolution("U" , InitialValueU, pi * k / n);
+    mlSol.UpdateSolution("V" , InitialValueV, pi * k / n);
+    if (dim == 3) mlSol.UpdateSolution("W" , InitialValueW, pi * k / n);
     linea.AdvectionParallel(40, T / n, 4);
     linea.GetLine(line[0]);
     PrintLine(Files::_application_output_directory, "line",line, k);

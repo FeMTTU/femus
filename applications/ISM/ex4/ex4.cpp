@@ -22,10 +22,11 @@
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "Marker.hpp"
 #include "Line.hpp"
 
+#include "adept.h"
 
 using namespace femus;
 

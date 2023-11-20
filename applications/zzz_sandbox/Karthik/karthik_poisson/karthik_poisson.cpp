@@ -34,7 +34,7 @@
    #define NAMESPACE_FOR_POISSON  femus
 #elif LIBRARY_OR_USER == 1
    #include "00_poisson_eqn.hpp"
-   #define NAMESPACE_FOR_POISSON  karthik_poisson
+   #define NAMESPACE_FOR_POISSON  karthik
 #endif
 
 
@@ -341,7 +341,7 @@ int main(int argc, char** args) {
     // ======= Problem, System - END ========================
 
     // ======= Print - BEGIN ========================
-  const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
+  const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  

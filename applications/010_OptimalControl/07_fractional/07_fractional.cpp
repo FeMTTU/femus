@@ -5,6 +5,7 @@
 #include "VTKWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"

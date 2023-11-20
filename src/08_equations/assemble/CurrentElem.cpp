@@ -347,7 +347,7 @@ template < typename real_num_mov >
 //     
 //     for (unsigned i=0;i<nve;i++) {
 //       // gambit nodes
-//            unsigned inode=(order_ind<3)?(myel->GetElementDofIndex(kel,i)-1u):(kel+i*nel);
+//            unsigned inode=(order_ind < NFE_FAMS_C_ZERO_LAGRANGE)?(myel->GetElementDofIndex(kel,i)-1u):(kel+i*nel);
 //       unsigned inode=myel->GetElementDofIndex(kel,i)-1u;
 
 //       // dof metis

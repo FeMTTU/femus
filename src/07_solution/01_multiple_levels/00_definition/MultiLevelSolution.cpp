@@ -157,8 +157,10 @@ namespace femus {
     _solPairInverseIndex[n] = n;
 
 
-    std::cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
-         << std::setw(12) << order << " and time discretization order " << tmorder << std::endl;
+    std::cout << " Add variable " << std::setw(3) << _solName[n] << 
+    " discretized with FE Family "  <<   fe_families[ fefamily ] << 
+    " and FE order " <<  std::setw(12) << order << 
+    " and time discretization order " << tmorder << std::endl;
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
       _solution[ig]->AddSolution(_solName[n], _family[n], _order[n], _solTimeOrder[n], _pdeType[n]);
@@ -247,8 +249,10 @@ namespace femus {
 
 
 // ---------------------
-    std::cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
-         << std::setw(12) << order_v << " and time discretization order " << tmorder << std::endl;
+    std::cout << " Add variable " << std::setw(3) << _solName[n] <<
+    " discretized with FE Family "  <<   fe_families[ fefamily ] << 
+    " and FE order " << std::setw(12) << order_v << 
+    " and time discretization order " << tmorder << std::endl;    
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
       _solution[ig]->AddSolution(_solName[n], _family[n], _order[n],  order_b, _solTimeOrder[n], _pdeType[n]);
@@ -344,7 +348,7 @@ namespace femus {
         if(func || funcMLProb) {
           double value;
 
-          if(sol_type < 3) {
+          if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
               for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
                   iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
@@ -369,7 +373,7 @@ namespace femus {
               }
             }
           }
-          else if(sol_type < 5) {
+          else if(sol_type < NFE_FAMS) {
             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
               for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
                   iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
@@ -689,8 +693,8 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
           _solution[igridn]->_Bdc[k]->set(j, 2.);
         }
 
-        if(_solType[k] < 3) {  // boundary condition for lagrangian elements
-          //AMR - related
+        if(_solType[k] < NFE_FAMS_C_ZERO_LAGRANGE) {  // boundary condition for lagrangian elements
+          //AMR - related - BEGIN
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
@@ -707,7 +711,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
               }
             }
           }
-          //AMR - related - end
+          //AMR - related - END
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
 
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
@@ -861,7 +865,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
           }
         }
 
-        if(_solType[solIndex] < 3) {  // boundary condition for lagrangian elements
+        if(_solType[solIndex] < NFE_FAMS_C_ZERO_LAGRANGE) {  // boundary condition for lagrangian elements
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
@@ -1136,7 +1140,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     unsigned sol_type = _solType[i];
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
-      if(sol_type < 3) {
+      if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
         for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
           for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
               iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
@@ -1155,7 +1159,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
           }
         }
       }
-      else if(sol_type < 5) {
+      else if(sol_type < NFE_FAMS) {
         for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
           for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
               iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {

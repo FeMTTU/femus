@@ -18,6 +18,8 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 #include <cstdlib>
 
@@ -49,16 +51,16 @@ bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolN
   return dirichlet;
 }
 
-double InitalValueUSphere(const std::vector < double >& x) {
+double InitialValueUSphere(const std::vector < double >& x) {
   return tan(thetaSphere);
 }
 
-double InitalValueHSphere(const std::vector < double >& x) {
+double InitialValueHSphere(const std::vector < double >& x) {
 //   return -1. / tan(thetaSphere);
   return -cos(thetaSphere);
 }
 
-double InitalValueASphere(const std::vector < double >& x) {
+double InitialValueASphere(const std::vector < double >& x) {
   return 1. / sin(thetaSphere);
 }
 
@@ -82,12 +84,12 @@ bool SetBoundaryConditionCatenoid(const std::vector < double >& x, const char So
   return dirichlet;
 }
 
-double InitalValueUCatenoid(const std::vector < double >& x) {
+double InitialValueUCatenoid(const std::vector < double >& x) {
   
   return c1 * acosh ( 1. / c1 * sqrt(x[0]*x[0] + x[1]*x[1] ) );
 }
 
-double InitalValueWCatenoid(const std::vector < double >& x) {
+double InitialValueWCatenoid(const std::vector < double >& x) {
   
   return 0;
 }
@@ -180,15 +182,15 @@ int main(int argc, char** args) {
       mlSol.AddSolution("A", LAGRANGE, feOrder[j]);
       
       if (simulation == 1) {
-        mlSol.Initialize("u", InitalValueUSphere);
-        mlSol.Initialize("H", InitalValueHSphere);
-        mlSol.Initialize("A", InitalValueASphere);
+        mlSol.Initialize("u", InitialValueUSphere);
+        mlSol.Initialize("H", InitialValueHSphere);
+        mlSol.Initialize("A", InitialValueASphere);
         // attach the boundary condition function and generate boundary data
         mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionSphere);
       } 
       else if (simulation == 2) {
-        mlSol.Initialize("u", InitalValueUCatenoid);
-        mlSol.Initialize("W", InitalValueWCatenoid);
+        mlSol.Initialize("u", InitialValueUCatenoid);
+        mlSol.Initialize("W", InitialValueWCatenoid);
         // attach the boundary condition function and generate boundary data
         mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCatenoid);
       }

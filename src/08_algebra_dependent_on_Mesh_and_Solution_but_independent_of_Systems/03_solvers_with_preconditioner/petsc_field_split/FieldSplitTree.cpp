@@ -325,6 +325,7 @@ namespace femus {
     }
 
   }
+  
 
   /*---------adjusted by Guoyi Ke-----------*/
   void FieldSplitTree::SetTolerances(const double& rtol, const double& abstol, const double& dtol, 
@@ -339,9 +340,11 @@ namespace femus {
   void FieldSplitTree::SetSchurFactorizationType (const SchurFactType& schurFactType) {
     _schurFactType = schurFactType;
   }
+  
   void FieldSplitTree::SetSchurPreType (const SchurPreType& schurPreType) {
     _schurPreType = schurPreType;
   }
+  
   /*---------adjusted by Guoyi Ke-----------*/
   void FieldSplitTree::SetPC (KSP& ksp, const unsigned& level) {
 
@@ -590,7 +593,7 @@ namespace femus {
     bool FastVankaBlock = true;
 
     if (_asmSchurVariableNumber != 0) {
-      FastVankaBlock = (_solutionType[ _solutionType.size() - _asmSchurVariableNumber ] < 3) ? false : true;
+      FastVankaBlock = (_solutionType[ _solutionType.size() - _asmSchurVariableNumber ] < NFE_FAMS_C_ZERO_LAGRANGE) ? false : true;
     }
 
     unsigned iproc = solver->processor_id();
@@ -652,7 +655,7 @@ namespace femus {
 
       PetscInt Csize = 0;
 
-      // ***************** NODE/ELEMENT SERCH *******************
+      // ***************** NODE/ELEMENT SEARCH *******************
       for (int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
         for (unsigned j = 0; j < msh->el->GetElementNearElementSize (iel, !FastVankaBlock); j++) {

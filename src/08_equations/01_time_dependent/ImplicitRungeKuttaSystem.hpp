@@ -314,7 +314,6 @@ namespace femus {
 // Useful typedefs
   typedef ImplicitRungeKuttaSystem<LinearImplicitSystem> ImplicitRungeKuttaLinearImplicitSystem;
   typedef ImplicitRungeKuttaSystem<NonLinearImplicitSystem> ImplicitRungeKuttaNonlinearImplicitSystem;
-  typedef ImplicitRungeKuttaSystem<MonolithicFSINonLinearImplicitSystem> ImplicitRungeKuttaMonolithicFSINonlinearImplicitSystem;
 
 } //end namespace femus
 

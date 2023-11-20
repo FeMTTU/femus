@@ -8,6 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "FElemTypeEnum.hpp"
 
 

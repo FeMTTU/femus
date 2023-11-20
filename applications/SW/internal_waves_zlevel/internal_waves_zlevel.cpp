@@ -19,6 +19,7 @@
 #include "PetscMatrix.hpp"
 
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "slepceps.h"
 #include <slepcmfn.h>
@@ -49,19 +50,19 @@ double deltaZ = 25;
 double Tbot = 10.1;
 double Ttop = 20.1;
 
-double InitalValueV(const std::vector < double >& x)
+double InitialValueV(const std::vector < double >& x)
 {
   return 0;
 }
 
 
-double InitalValueH(const std::vector < double >& x)
+double InitialValueH(const std::vector < double >& x)
 {
   return hRest[0];
 }
 
 
-double InitalValueT0(const std::vector < double >& x)
+double InitialValueT0(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-1); 
  double temperature;
@@ -74,7 +75,7 @@ double InitalValueT0(const std::vector < double >& x)
 }
 
 
-double InitalValueT1(const std::vector < double >& x)
+double InitialValueT1(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-2); 
  double temperature;
@@ -87,7 +88,7 @@ double InitalValueT1(const std::vector < double >& x)
 }
 
 
-double InitalValueT2(const std::vector < double >& x)
+double InitialValueT2(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-3); 
  double temperature;
@@ -100,7 +101,7 @@ double InitalValueT2(const std::vector < double >& x)
 }
 
 
-double InitalValueT3(const std::vector < double >& x)
+double InitialValueT3(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-4); 
  double temperature;
@@ -113,7 +114,7 @@ double InitalValueT3(const std::vector < double >& x)
 }
 
 
-double InitalValueT4(const std::vector < double >& x)
+double InitialValueT4(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-5); 
  double temperature;
@@ -126,7 +127,7 @@ double InitalValueT4(const std::vector < double >& x)
 }
 
 
-double InitalValueT5(const std::vector < double >& x)
+double InitialValueT5(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-6); 
  double temperature;
@@ -139,7 +140,7 @@ double InitalValueT5(const std::vector < double >& x)
 }
 
 
-double InitalValueT6(const std::vector < double >& x)
+double InitialValueT6(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-7); 
  double temperature;
@@ -152,7 +153,7 @@ double InitalValueT6(const std::vector < double >& x)
 }
 
 
-double InitalValueT7(const std::vector < double >& x)
+double InitialValueT7(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-8); 
  double temperature;
@@ -165,7 +166,7 @@ double InitalValueT7(const std::vector < double >& x)
 }
 
 
-double InitalValueT8(const std::vector < double >& x)
+double InitialValueT8(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-9); 
  double temperature;
@@ -178,7 +179,7 @@ double InitalValueT8(const std::vector < double >& x)
 }
 
 
-double InitalValueT9(const std::vector < double >& x)
+double InitialValueT9(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-10); 
  double temperature;
@@ -191,7 +192,7 @@ double InitalValueT9(const std::vector < double >& x)
 }
 
 
-double InitalValueT10(const std::vector < double >& x)
+double InitialValueT10(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-11); 
  double temperature;
@@ -203,7 +204,7 @@ double InitalValueT10(const std::vector < double >& x)
  return temperature;
 }
 
-double InitalValueT11(const std::vector < double >& x)
+double InitialValueT11(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-12); 
  double temperature;
@@ -216,7 +217,7 @@ double InitalValueT11(const std::vector < double >& x)
 }
 
 
-double InitalValueT12(const std::vector < double >& x)
+double InitialValueT12(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-13); 
  double temperature;
@@ -229,7 +230,7 @@ double InitalValueT12(const std::vector < double >& x)
 }
 
 
-double InitalValueT13(const std::vector < double >& x)
+double InitialValueT13(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-14); 
  double temperature;
@@ -242,7 +243,7 @@ double InitalValueT13(const std::vector < double >& x)
 }
 
 
-double InitalValueT14(const std::vector < double >& x)
+double InitialValueT14(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-15); 
  double temperature;
@@ -255,7 +256,7 @@ double InitalValueT14(const std::vector < double >& x)
 }
 
 
-double InitalValueT15(const std::vector < double >& x)
+double InitialValueT15(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-16); 
  double temperature;
@@ -268,7 +269,7 @@ double InitalValueT15(const std::vector < double >& x)
 }
 
 
-double InitalValueT16(const std::vector < double >& x)
+double InitialValueT16(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-17); 
  double temperature;
@@ -281,7 +282,7 @@ double InitalValueT16(const std::vector < double >& x)
 }
 
 
-double InitalValueT17(const std::vector < double >& x)
+double InitialValueT17(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-18); 
  double temperature;
@@ -294,7 +295,7 @@ double InitalValueT17(const std::vector < double >& x)
 }
 
 
-double InitalValueT18(const std::vector < double >& x)
+double InitialValueT18(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-19); 
  double temperature;
@@ -307,7 +308,7 @@ double InitalValueT18(const std::vector < double >& x)
 }
 
 
-double InitalValueT19(const std::vector < double >& x)
+double InitialValueT19(const std::vector < double >& x)
 {
  double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-20); 
  double temperature;
@@ -320,7 +321,7 @@ double InitalValueT19(const std::vector < double >& x)
 }
 
 
-double InitalValueB(const std::vector < double >& x)
+double InitialValueB(const std::vector < double >& x)
 { 
   return 500;
 }
@@ -387,37 +388,37 @@ int main(int argc, char** args)
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "h%d", i);
-    mlSol.Initialize(name, InitalValueH);
+    mlSol.Initialize(name, InitialValueH);
   }
   
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "v%d", i);
-    mlSol.Initialize(name, InitalValueV);
+    mlSol.Initialize(name, InitialValueV);
   }
   
-  mlSol.Initialize("T0",InitalValueT0);
-  mlSol.Initialize("T1",InitalValueT1);
-  mlSol.Initialize("T2",InitalValueT2);
-  mlSol.Initialize("T3",InitalValueT3);
-  mlSol.Initialize("T4",InitalValueT4);
-  mlSol.Initialize("T5",InitalValueT5);
-  mlSol.Initialize("T6",InitalValueT6);
-  mlSol.Initialize("T7",InitalValueT7);
-  mlSol.Initialize("T8",InitalValueT8);
-  mlSol.Initialize("T9",InitalValueT9);
-  mlSol.Initialize("T10",InitalValueT10);
-  mlSol.Initialize("T11",InitalValueT11);
-  mlSol.Initialize("T12",InitalValueT12);
-  mlSol.Initialize("T13",InitalValueT13);
-  mlSol.Initialize("T14",InitalValueT14);
-  mlSol.Initialize("T15",InitalValueT15);
-  mlSol.Initialize("T16",InitalValueT16);
-  mlSol.Initialize("T17",InitalValueT17);
-  mlSol.Initialize("T18",InitalValueT18);
-  mlSol.Initialize("T19",InitalValueT19);
+  mlSol.Initialize("T0",InitialValueT0);
+  mlSol.Initialize("T1",InitialValueT1);
+  mlSol.Initialize("T2",InitialValueT2);
+  mlSol.Initialize("T3",InitialValueT3);
+  mlSol.Initialize("T4",InitialValueT4);
+  mlSol.Initialize("T5",InitialValueT5);
+  mlSol.Initialize("T6",InitialValueT6);
+  mlSol.Initialize("T7",InitialValueT7);
+  mlSol.Initialize("T8",InitialValueT8);
+  mlSol.Initialize("T9",InitialValueT9);
+  mlSol.Initialize("T10",InitialValueT10);
+  mlSol.Initialize("T11",InitialValueT11);
+  mlSol.Initialize("T12",InitialValueT12);
+  mlSol.Initialize("T13",InitialValueT13);
+  mlSol.Initialize("T14",InitialValueT14);
+  mlSol.Initialize("T15",InitialValueT15);
+  mlSol.Initialize("T16",InitialValueT16);
+  mlSol.Initialize("T17",InitialValueT17);
+  mlSol.Initialize("T18",InitialValueT18);
+  mlSol.Initialize("T19",InitialValueT19);
 
-  mlSol.Initialize("b", InitalValueB);
+  mlSol.Initialize("b", InitialValueB);
   
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
@@ -441,12 +442,12 @@ int main(int argc, char** args)
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
   //mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(Files::_application_output_directory, "linear", print_vars, 0);
+  mlSol.GetWriter()->Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
   unsigned numberOfTimeSteps = 3601; //58000; //200days = 57600 with dt=300s
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {    
     ETD(ml_prob, numberOfTimeSteps);
-    mlSol.GetWriter()->Write(Files::_application_output_directory, "linear", print_vars, (i + 1)/1);
+    mlSol.GetWriter()->Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, (i + 1)/1);
     counter = i;
   }
   return 0;

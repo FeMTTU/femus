@@ -16,10 +16,12 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+#include "MeshRefinement.hpp"
+
 #include "adept.h"
 
 
-#include "MeshRefinement.hpp"
 
 
 using namespace femus;

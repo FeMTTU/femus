@@ -14,6 +14,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "VTKWriter.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
@@ -171,7 +172,7 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i);
 
     }
   }

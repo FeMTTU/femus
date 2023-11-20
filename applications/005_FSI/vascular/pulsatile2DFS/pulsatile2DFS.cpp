@@ -10,6 +10,7 @@
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
+#include "TransientFSI.hpp"
 #include "VTKWriter.hpp"
 #include "../include/FSITimeDependentAssemblySupgNonConservativeTwoPressures.hpp"
 #include <cmath>

@@ -1,3 +1,5 @@
+#include "LinearEquationSolver.hpp"
+
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 

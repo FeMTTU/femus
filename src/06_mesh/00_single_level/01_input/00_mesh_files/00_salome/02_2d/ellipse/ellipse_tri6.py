@@ -24,7 +24,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -46,32 +46,25 @@ geompy.addToStudy( Face_1, 'Face_1' )
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
-Mesh_1 = smesh.Mesh(Face_1)
-NETGEN_2D = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_2D)
-Length_From_Edges_1 = smesh.CreateHypothesis('LengthFromEdges')
-status = Mesh_1.RemoveHypothesis(NETGEN_2D)
-Regular_1D = Mesh_1.Segment()
-Max_Size_1 = Regular_1D.MaxSize(0.447214)
-MEFISTO_2D = Mesh_1.Triangle(algo=smeshBuilder.MEFISTO)
-isDone = Mesh_1.Compute()
-Mesh_1.ConvertToQuadratic(0)
-Group_1_0 = Mesh_1.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
-nbAdd = Group_1_0.AddFrom( Mesh_1.GetMesh() )
+smesh = smeshBuilder.New()
+
+Max_Size_2 = smesh.CreateHypothesis('MaxLength')
+Max_Size_2.SetLength( 0.447214 )
+Mesh_3 = smesh.Mesh(Face_1)
+status = Mesh_3.AddHypothesis(Max_Size_2)
+status = Mesh_3.AddHypothesis(Regular_1D)
+status = Mesh_3.AddHypothesis(NETGEN_2D)
+isDone = Mesh_3.Compute()
+Mesh_3.ConvertToQuadratic(0)
+
+
+Group_1_0 = Mesh_3.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
+nbAdd = Group_1_0.AddFrom( Mesh_3.GetMesh() )
 Group_1_0.SetName( 'Group_1_0' )
-smesh.SetName(Mesh_1, 'Mesh_1')
-try:
 
 
 ## Set names of Mesh objects
-smesh.SetName(NETGEN_2D.GetAlgorithm(), 'NETGEN 2D')
-smesh.SetName(Regular_1D.GetAlgorithm(), 'Regular_1D')
-smesh.SetName(MEFISTO_2D.GetAlgorithm(), 'MEFISTO_2D')
-smesh.SetName(Max_Size_1, 'Max Size_1')
-smesh.SetName(Length_From_Edges_1, 'Length From Edges_1')
-smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
+smesh.SetName(Max_Size_2, 'Max Size_2')
+smesh.SetName(Mesh_3.GetMesh(), 'Mesh_1')
 smesh.SetName(Group_1_0, 'Group_1_0')
 
-
-if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)

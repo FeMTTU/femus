@@ -24,7 +24,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -44,7 +44,7 @@ geompy.addToStudy( Disk_1, 'Disk_1' )
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Number_of_Layers_1 = smesh.CreateHypothesis('NumberOfLayers2D')
 Number_of_Layers_1.SetNumberOfLayers( 4 )
 RadialQuadrangle_1D2D = smesh.CreateHypothesis('RadialQuadrangle_1D2D')
@@ -71,6 +71,3 @@ smesh.SetName(Number_of_Layers_3, 'Number of Layers_3')
 smesh.SetName(Number_of_Layers_1, 'Number of Layers_1')
 smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
 
-
-if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)

@@ -27,10 +27,7 @@ namespace femus {
 
 
 
-  GeomElemBase::GeomElemBase() { }
-
-  GeomElemBase::~GeomElemBase() { }
-
+     const unsigned GeomElemBase::_max_space_dimension = 3;
 
 
 //this build class allows me to return a pointer to a child of this class
@@ -40,7 +37,7 @@ namespace femus {
 //the build() function returns a POINTER
 
 
-  GeomElemBase* GeomElemBase::build (const std::string geomel_id_in, const uint fe_family_in) {
+  std::unique_ptr<GeomElemBase> GeomElemBase::build (const std::string geomel_id_in, const uint fe_family_in) {
 
     if (fe_family_in >= NFE_FAMS_C_ZERO_LAGRANGE) {
       std::cout << "FE::FE: FE family " << fe_family_in << " not supported" << std::endl;
@@ -51,12 +48,20 @@ namespace femus {
     if (!strcmp (geomel_id_in.c_str(), "hex")) {
 
       switch (fe_family_in) {
-        case (0) :
-          return new  GeomElemHex8()  ;
+        case (0) : 
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new  GeomElemHex8() )  ;
+          return el_ptr;
+        }
         case (1) :
+        {
           abort();
+        }
         case (2) :
-          return new  GeomElemHex27()  ;
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new  GeomElemHex27() ) ;
+          return el_ptr;
+        }
       }
 
     }
@@ -65,11 +70,20 @@ namespace femus {
 
       switch (fe_family_in) {
         case (0) :
-          return new  GeomElemTet4()  ;
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new  GeomElemTet4()  );
+          return el_ptr;
+        }
         case (1) :
+        {
           abort();
+        }
         case (2) :
-          return new  GeomElemTet10() ;
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new  GeomElemTet10() );
+          return el_ptr;
+        }
+        
       }
 
 
@@ -84,11 +98,19 @@ namespace femus {
 
       switch (fe_family_in) {
         case (0) :
-          return new  GeomElemQuad4()  ;
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new  GeomElemQuad4()  );
+          return el_ptr;
+        }
         case (1) :
+        {
           abort();
+        }
         case (2) :
-          return new  GeomElemQuad9() ;
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new  GeomElemQuad9() );
+          return el_ptr;
+        }
       }
     }
 
@@ -96,11 +118,19 @@ namespace femus {
 
       switch (fe_family_in) {
         case (0) :
-          return new GeomElemTri3();
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new GeomElemTri3() );
+          return el_ptr;
+        }
         case (1) :
+        {
           abort();
+        }
         case (2) :
-          return new  GeomElemTri6();
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new  GeomElemTri6() );
+          return el_ptr;
+        }
       }
 
     }
@@ -109,11 +139,19 @@ namespace femus {
 
       switch (fe_family_in) {
         case (0) :
-          return new GeomElemEdge2();
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new GeomElemEdge2() );
+          return el_ptr;
+        }
         case (1) :
+        {
           abort();
+        }
         case (2) :
-          return new GeomElemEdge3();
+        {
+          std::unique_ptr<GeomElemBase>  el_ptr( new GeomElemEdge3() );
+          return el_ptr;
+        }
       }
 
     }

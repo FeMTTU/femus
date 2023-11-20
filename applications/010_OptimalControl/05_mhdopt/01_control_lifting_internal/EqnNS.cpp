@@ -6,7 +6,7 @@
 #include "NumericVector.hpp"
 #include "LinearEquationSolver.hpp"
 
-#include "Operations.hpp"
+#include "VectorOperations.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
 #include "FETypeEnum_deprecated.hpp"

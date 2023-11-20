@@ -4,14 +4,6 @@
 namespace femus {
 
 
-
-
-// =======================
-GeomElemTet10::GeomElemTet10() : GeomElemBase() {  }
-	  
-// =======================
-          GeomElemTet10::~GeomElemTet10() {    }
-
           
 // =======================
       float GeomElemTet10::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }

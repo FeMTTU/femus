@@ -20,6 +20,7 @@
 #include "MgTypeEnum.hpp"
 
 #include <string>
+#include <vector>
 
 namespace femus {
 
@@ -30,7 +31,7 @@ namespace femus {
 class System;
 class LinearImplicitSystem;
 class NonLinearImplicitSystem;
-class MonolithicFSINonLinearImplicitSystem;
+
 
 class MultiLevelProblem;
 
@@ -46,8 +47,9 @@ class MultiLevelProblem;
 template <class Base>
 class TransientSystem : public Base {
 
-public:
 
+//==== Constructors / Destructor - BEGIN ========
+public:
     /** Constructor.  Initializes required data structures.  */
     TransientSystem (MultiLevelProblem& ml_probl,
                      const std::string& name,
@@ -56,7 +58,12 @@ public:
 
     /** Destructor. */
     virtual ~TransientSystem ();
+//==== Constructors / Destructor - END ========
 
+
+//==== Basic - BEGIN ========
+public:
+    
     /** The type of system. */
     typedef TransientSystem<Base> sys_type;
 
@@ -71,21 +78,15 @@ public:
      * system file.
     */
     virtual std::string system_type () const;
+//==== Basic - END ========
 
 
-    /** Update the old solution with new ones. It calls the update solution function of the Solution class */
-    virtual void CopySolutionToOldSolution();
-
+//==== Time - BEGIN ========
+public:
+    
     /** Set up before calling the parent solve */
     void SetUpForSolve();
-   
-    /** calling the parent solve */
-    virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
-
-    /** update the Newmark variables */
-    void NewmarkAccUpdate();
-
-
+    
     /** attach the GetTimeInterval Function for selective interval time */
     void AttachGetTimeIntervalFunction (double (* get_time_interval_function)(const double time));
 
@@ -126,7 +127,38 @@ private:
     /** pointer function to the set time step function */
     double (* _get_time_interval_function)(const double time);
 
+    /** Count how many times the assemble is performed */
     unsigned _assembleCounter;
+    
+//==== Time - END ========
+
+   
+//==== Time, Solver of 1 iteration - BEGIN ========
+public:
+    
+    /** calling the parent solve */
+    virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
+    
+//==== Time, Solver of 1 iteration - END ========
+
+
+//==== Time, Solution Update - BEGIN ========
+public:
+    
+    /** Update the old solution with new ones. It calls the update solution function of the Solution class */
+    void CopySolutionToOldSolution();
+//==== Time, Solution Update - END ========
+
+    
+//==== Time, Newmark - BEGIN ========
+public:
+    
+    /** update the Newmark variables */
+    void NewmarkAccUpdate(const std::vector< std::string > acceleration_name,
+                          const std::vector< std::string > velocity_name);
+
+//==== Time, Newmark - END ========
+
 
 };
 
@@ -136,7 +168,8 @@ private:
 typedef TransientSystem<System> TransientBaseSystem;
 typedef TransientSystem<LinearImplicitSystem> TransientLinearImplicitSystem;
 typedef TransientSystem<NonLinearImplicitSystem> TransientNonlinearImplicitSystem;
-typedef TransientSystem<MonolithicFSINonLinearImplicitSystem> TransientMonolithicFSINonlinearImplicitSystem;
+
+
 
 
 // ------------------------------------------------------------

@@ -36,9 +36,13 @@
 
 
 namespace femus  {
+
+  
+ class biharmonic_equation {
+   
+ public:
     
-    
-void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
+static void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
 
@@ -238,6 +242,13 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
 }
 
 
+
+
+
+
+ };
+ 
+ 
 }
 
 

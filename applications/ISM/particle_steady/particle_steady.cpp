@@ -8,6 +8,7 @@
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "include/FSISteadyStateAssembly.hpp"
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"

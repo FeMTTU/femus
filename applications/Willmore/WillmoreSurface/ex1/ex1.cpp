@@ -25,9 +25,14 @@ using namespace femus;
 /* Vector option for P (to handle polynomials).
  * ap is the coefficient in front of the power of H. */
 
-unsigned P[3] = {2, 3, 4};
 
-const double ap[3] = {1, 0., 0.};
+const double c0 = .1;
+const double kc = 1.;
+const double gamma1 = 0.5;
+
+unsigned P[3] = {0, 1, 2};
+
+const double ap[3] = {kc * c0 * c0 + gamma1, -2. * kc * c0 , kc };
 const double normalSign = -1.;
 
 bool O2conformal = true;
@@ -35,7 +40,7 @@ bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
 bool volumeConstraint = true;
-bool areaConstraint = true;
+bool areaConstraint = false;
 
 unsigned conformalTriangleType = 2;
 const double eps = 1e-5;
@@ -49,8 +54,12 @@ void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
 
-double dt0 = 3.2e-2; //P=2
+//double dt0 = 3.2e-2; //P=2
 //double dt0 = 3.2e-6; //P=4
+
+
+double dt0 = 5.e-5; //P=2
+
 
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
@@ -88,7 +97,7 @@ int main (int argc, char** args) {
 
   //mlMsh.ReadCoarseMesh("../input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
@@ -102,11 +111,11 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
   //mlMsh.ReadCoarseMesh ("../input/armadillo.med", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -247,7 +256,7 @@ int main (int argc, char** args) {
 
   // and this?
   mlSol.GetWriter()->SetDebugOutput (false);
-  mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write ("./output1", fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, 0);
 
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
@@ -259,7 +268,7 @@ int main (int argc, char** args) {
   systemY.MGsolve();
   systemW.MGsolve();
 
-  mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, 0);
 
   // Parameters for the main algorithm loop.
 
@@ -291,7 +300,7 @@ int main (int argc, char** args) {
 
     dt0 *= 1.02;
       //UNCOMMENT FOR P=4
-    //if (dt0 > 5e-3) dt0 = 5e-3;
+      if (dt0 > 5e-3) dt0 = 5e-3;
 
 
         //IGNORE THIS
@@ -306,7 +315,7 @@ int main (int argc, char** args) {
         // }
 
     if (time_step % 1 == 0) {
-      mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
+      mlSol.GetWriter()->Write ("./output1", fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
 
@@ -317,14 +326,14 @@ int main (int argc, char** args) {
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
         //UNCOMMENT FOR P=4
-        if (time_step % 7 == 6){
+        //if (time_step % 7 == 6){
          systemY.MGsolve();
          systemW.MGsolve();
-        }
+        //}
     }
 
     if ( (time_step + 1) % printInterval == 0)
-      mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
+      mlSol.GetWriter()->Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, (time_step + 1) / printInterval);
   }
 
   if(iproc == 0) fs.close();
@@ -723,8 +732,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         YdotN += solYg[K] * normal[K];
         YdotY += solYg[K] * solYg[K];
       }
-      // double signYdotN = (YdotN.value() >= 0.) ? 1. : -1.;
-      double signYdotN = 1.;
+      double signYdotN = (YdotN.value() >= 0.) ? 1. : -1.;
+      //double signYdotN = 1.;
 
       // Some necessary quantities when working with polynomials.
       adept::adouble sumP1 = 0.;

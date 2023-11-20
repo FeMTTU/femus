@@ -55,7 +55,7 @@ class elem_type;
 class Mesh : public ParallelObject {
 
 // =========================
-// === CONSTR-DESTR - BEGIN =================
+// === Constructors / Destructor - BEGIN =================
 // =========================
 public:
 
@@ -67,7 +67,7 @@ public:
     ~Mesh();
 
     
-// === CONSTR-DESTR - END =================
+// === Constructors / Destructor - END =================
 
     
 // =========================
@@ -177,6 +177,9 @@ private:
     
 // === Geometric Element, Single, REFINEMENT - END =================
     
+
+// === Elements - BEGIN ====================================================
+
     
 // === Elements, List - BEGIN =================
  public:
@@ -248,6 +251,12 @@ private:
     
 // === Elements, Material - END =================
     
+// === Elements - END ====================================================
+
+
+
+// === Nodes - BEGIN ====================================================
+
     
 // === Nodes, number - BEGIN =================
  public:
@@ -279,6 +288,9 @@ private:
     /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use _topology for the coordinates! */
     std::vector < std::vector < double > > _coords;
 // === Nodes, coordinates read from coarse file (temporary, then use _topology) - END =================
+    
+// === Nodes - END ====================================================
+    
     
     
     
@@ -376,8 +388,11 @@ public:
     
 // === Level, Current - END  =================
 
+    
 
+// === Here starts the FE stuff -  ====================================================
 
+    
  
 // === Geometric Element, FE, Single (FE for single geometric element) - BEGIN =================
  public:
@@ -566,7 +581,7 @@ private:
 // === FE DOFMAP & REFINEMENT - END =================
     
 // =========================
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - BEGIN =================
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
 // =========================
 public:
     
@@ -585,7 +600,8 @@ private:
                                   NumericVector* NNZ_d,
                                   NumericVector* NNZ_o,
                                   const unsigned& itype,
-                                  const elem_type * elem_type_in) const;
+                                  const elem_type * elem_type_in_jtype,
+                                  const unsigned ndofs_itype_in) const;
 
         
     /** for solution printing */
@@ -595,14 +611,15 @@ private:
                              NumericVector* NNZ_d,
                              NumericVector* NNZ_o,
                              const unsigned& itype,
-                             const elem_type * elem_type_in) const;
+                             const elem_type * elem_type_in_jtype,
+                             const unsigned ndofs_itype_in) const;
 
 
     /** FE: The projection matrix between Lagrange FEM at the same level mesh */
     SparseMatrix* _ProjQitoQj[NFE_FAMS_C_ZERO_LAGRANGE][NFE_FAMS_C_ZERO_LAGRANGE];
 
    
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing) - END =================
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
     
 // =========================
 // === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================

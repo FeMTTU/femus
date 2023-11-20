@@ -15,6 +15,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "adept.h"
 
@@ -172,7 +173,7 @@ int main(int argc, char** args) {
       
       vtkIO.SetGraphVariable( unknowns[u]._name.c_str() );
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(unknowns[u]._name.c_str(), Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(unknowns[u]._name.c_str(), Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i);
 
     }
   }

@@ -6,12 +6,6 @@ namespace femus {
 
 
 
-// =======================
-GeomElemQuad4::GeomElemQuad4()  : GeomElemBase() {  }
-	  
-// =======================
-          GeomElemQuad4::~GeomElemQuad4() {    }
-
           
 // =======================
       float GeomElemQuad4::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }

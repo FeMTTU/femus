@@ -3,6 +3,8 @@
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "MultiLevelSolution.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 
 

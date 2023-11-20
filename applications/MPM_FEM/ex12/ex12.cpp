@@ -5,6 +5,7 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "adept.h"
 
 #include "PetscMatrix.hpp"
@@ -65,7 +66,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 }
 
 
-double InitalValueU (const std::vector < double >& x) {
+double InitialValueU (const std::vector < double >& x) {
   return x[0] + x[1];
 }
 
@@ -154,9 +155,9 @@ int main (int argc, char** args) {
     mlSol.AddSolution ("weight", LAGRANGE, feOrder, 0);
     mlSol.Initialize ("All");
 
-//     mlSol.Initialize ("u", InitalValueU);
-//     mlSol.Initialize ("v", InitalValueU);
-//     mlSol.Initialize ("w", InitalValueU);
+//     mlSol.Initialize ("u", InitialValueU);
+//     mlSol.Initialize ("v", InitialValueU);
+//     mlSol.Initialize ("w", InitialValueU);
 
     // attach the boundary condition function and generate boundary data
     mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
@@ -254,8 +255,6 @@ int main (int argc, char** args) {
 
     VTKWriter vtkIO (&mlSol);
     vtkIO.SetDebugOutput (true);
-    // vtkIO.Write (Files::_application_output_directory, "linear", variablesToBePrinted, i);
-    //vtkIO.Write (Files::_application_output_directory, "quadratic", variablesToBePrinted, i);
     vtkIO.Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
     for (unsigned k = 0; k < i; k++) {
       delete prol[k];

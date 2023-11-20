@@ -22,6 +22,7 @@
 #include "Quantity.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "XDMFWriter.hpp"
+#include "LinearEquationSolver.hpp"
 
 
 // application includes
@@ -32,7 +33,10 @@
 #include "libmesh/libmesh.h"
 #endif
 
+
 using namespace femus;
+using namespace applications_opt_control;
+
 
   void GenMatRhsNS(MultiLevelProblem &ml_prob);
   void GenMatRhsNSAD(MultiLevelProblem &ml_prob);

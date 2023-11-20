@@ -20,6 +20,8 @@
 #include "slepceps.h"
 
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "Marker.hpp"
 #include "Line.hpp"
 
@@ -303,14 +305,14 @@ int main(int argc, char** args) {
   system.MGsolve();
   
   
-  mlSol.GetWriter()->Write("./output", "linear", print_vars, 0);
+  mlSol.GetWriter()->Write("./output", fe_fams_for_files [ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
   std::vector<std::string> mov_vars1;
   mov_vars1.push_back("DX1");
   mov_vars1.push_back("DY1");
   if(DIM == 3) mov_vars1.push_back("DZ1");
   mlSol.GetWriter()->SetMovingMesh(mov_vars1);
-  mlSol.GetWriter()->Write("./outputD1", "linear", print_vars, 0);
+  mlSol.GetWriter()->Write("./outputD1", fe_fams_for_files [ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
 
   std::vector<std::string> mov_vars2;
@@ -318,7 +320,7 @@ int main(int argc, char** args) {
   mov_vars2.push_back("DY2");
   if(DIM == 3) mov_vars2.push_back("DZ2");
   mlSol.GetWriter()->SetMovingMesh(mov_vars2);
-  mlSol.GetWriter()->Write("./outputD2", "linear", print_vars, 0);
+  mlSol.GetWriter()->Write("./outputD2", fe_fams_for_files [ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
 
   ml_prob.clear();

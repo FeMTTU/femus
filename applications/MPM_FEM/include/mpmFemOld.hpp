@@ -1,3 +1,4 @@
+#include "LinearEquationSolver.hpp"
 
 using namespace femus;
 

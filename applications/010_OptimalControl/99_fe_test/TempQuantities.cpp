@@ -14,6 +14,10 @@
 #include <cmath>
 #include <iostream>
 
+
+namespace applications_opt_control {
+
+
 //=================== BEGIN CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
@@ -95,3 +99,5 @@ Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_i
     
   }
   
+}
+

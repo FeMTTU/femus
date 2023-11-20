@@ -1,18 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
+
 PROJECT(femus)
-
-#############################################################################################
-### CMake options - BEGIN
-#############################################################################################
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -O3 -march=native -mtune=native")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mtune=native")
-set(CMAKE_MACOSX_RPATH 1)
-#############################################################################################
-### CMake options - END
-#############################################################################################
-
 
 
 #############################################################################################
@@ -28,9 +17,25 @@ SET(FEMUS_VERSION "${FEMTTU_MAJOR_VERSION}.${FEMTTU_MINOR_VERSION}.${FEMTTU_BUIL
 ### Femus library version - END
 #############################################################################################
 
+
+
+#############################################################################################
+### CMake options - BEGIN
+#############################################################################################
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -O3 -march=native -mtune=native")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mtune=native")
+set(CMAKE_MACOSX_RPATH 1)
+#############################################################################################
+### CMake options - END
+#############################################################################################
+
+
+
+
    
 #############################################################################################
-### Compilers - BEGIN
+### Compiling - BEGIN
 #############################################################################################
 
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -47,14 +52,20 @@ ENDIF()
 #message("CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE})
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter")
+
+
+
+set(CMAKE_CXX_STANDARD 11)
+
+
 #############################################################################################
-### Compilers - END
+### Compiling - END
 #############################################################################################
 
 
 
 #############################################################################################
-### Output libraries folder - BEGIN
+### Compiling, Output libraries folder - BEGIN
 #############################################################################################
 
 # where to place output binaries
@@ -69,22 +80,12 @@ MARK_AS_ADVANCED (
 )
 
 #############################################################################################
-### Output libraries folder - END
+### Compiling, Output libraries folder - END
 #############################################################################################
 
-#############################################################################################
-### Find packages - BEGIN
-#############################################################################################
 
-# Find Petsc Library
-FIND_PACKAGE(PETSc REQUIRED)
-MESSAGE(STATUS "PETSC_FOUND = ${PETSC_FOUND}")
 
-SET(HAVE_PETSC 0)
-IF(PETSC_FOUND)
-  SET(HAVE_PETSC 1)
-ENDIF(PETSC_FOUND)
-
+### Library extension - BEGIN (@todo where is it used?)
 IF(UNIX)
 SET (DYLIB so)
 ENDIF(UNIX)
@@ -92,9 +93,36 @@ ENDIF(UNIX)
 IF(APPLE)
 SET (DYLIB dylib)
 ENDIF(APPLE)
+### Library extension - END
 
 
-# Find MPI (optional)
+
+#############################################################################################
+### Packages, Find - BEGIN
+#############################################################################################
+
+# Find Petsc Library - BEGIN
+FIND_PACKAGE(PETSc REQUIRED)
+MESSAGE(STATUS "PETSC_FOUND = ${PETSC_FOUND}")
+
+SET(HAVE_PETSC 0)
+IF(PETSC_FOUND)
+  SET(HAVE_PETSC 1)
+ENDIF(PETSC_FOUND)
+# Find Petsc Library - END
+
+
+# Find Slepc Library (optional) - BEGIN
+FIND_PACKAGE(SLEPc)
+MESSAGE(STATUS "SLEPC_FOUND = ${SLEPC_FOUND}")
+SET(HAVE_SLEPC 0)
+IF(SLEPC_FOUND)
+  SET(HAVE_SLEPC 1)
+ENDIF(SLEPC_FOUND)
+# Find Slepc Library (optional) - END
+
+
+# Find MPI (optional) - BEGIN
 if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
      set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
 endif()
@@ -105,8 +133,11 @@ SET(HAVE_MPI 0)
 IF(MPI_FOUND)
 SET(HAVE_MPI 1)
 ENDIF(MPI_FOUND)
+# Find MPI (optional) - END
 
-# # Find HDF5 (optional)
+
+# Find HDF5 (optional) - BEGIN
+
 # FIND_PACKAGE (HDF5)
 # MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
 #
@@ -117,7 +148,12 @@ SET(HAVE_HDF5 1)
 # SET (HDF5_FOUND 1)
 # ENDIF(HDF5_FOUND)
 
-# # Find Metis (optional)
+# Find HDF5 (optional) - END
+
+
+
+# Find Metis (optional) - BEGIN
+
 # FIND_PACKAGE(METIS)
 # MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
 #
@@ -127,163 +163,80 @@ SET(HAVE_METIS 1)
 # SET(METIS_FOUND 1)
 # ENDIF(METIS_FOUND)
 
-# Find FParser
+# Find Metis (optional) - END
+
+
+
+# Find FParser - BEGIN
 FIND_PACKAGE(FParser)
 MESSAGE(STATUS "FPARSER_FOUND = ${FPARSER_FOUND}")
 SET (HAVE_FPARSER 0)
 IF(FPARSER_FOUND)
   SET(HAVE_FPARSER 1)
 ENDIF(FPARSER_FOUND)
-
-# Find Slepc Library (optional)
-FIND_PACKAGE(SLEPc)
-MESSAGE(STATUS "SLEPC_FOUND = ${SLEPC_FOUND}")
-SET(HAVE_SLEPC 0)
-IF(SLEPC_FOUND)
-  SET(HAVE_SLEPC 1)
-ENDIF(SLEPC_FOUND)
+# Find FParser - END
 
 
-# Find Libmesh (optional)
+
+
+
+# Find Libmesh (optional) - BEGIN
 FIND_PACKAGE(LIBMESH)
 MESSAGE(STATUS "LIBMESH_FOUND = ${LIBMESH_FOUND}")
 SET (HAVE_LIBMESH 0)
 IF(LIBMESH_FOUND)
   SET(HAVE_LIBMESH 1)
 ENDIF(LIBMESH_FOUND)
-
-set(CMAKE_CXX_STANDARD 11)
-
-#############################################################################################
-### Find packages - END
-#############################################################################################
+# Find Libmesh (optional) - END
 
 
 
 #############################################################################################
-### Build options - BEGIN
+### Packages, Find - END
 #############################################################################################
 
 
-#-- Add an Option to toggle the generation of the API documentation
-OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
+
+
+#############################################################################################
+### External libraries, Add  - BEGIN
+#############################################################################################
+
+
+### External Libraries, Build options - BEGIN
 
 #-- build Adept library
 OPTION(BUILD_B64 "Build Adept library for automatic differentiation" ON)
 
-#-- build Adept library
+#-- build JsonCPP library
 OPTION(BUILD_JSONCPP "Build JsonCPP library for json input parsing" ON)
 
 #-- build b64 library
 OPTION(BUILD_ADEPT "Build b64 library for 64-encoding" ON)
 
-# Ask the user which executable have to be built
-OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
-
-# Ask the user which executable have to be built
-OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
-
-# --
-OPTION(BUILD_OPTCONTROLAPPS "Build the optimal control applications" ON)
-
-# --
-OPTION(BUILD_POISSON "Build the Poisson problem" ON)
-
-# --
-OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
-
-# --
-OPTION(BUILD_WILLMORE "Build the Willmore problem" ON)
-
-# --
-OPTION(BUILD_TUTORIAL "Build the tutorial problems" ON)
-
-# --
-OPTION(BUILD_MGAMR "Build the MGAMR" ON)
-
-# --
-OPTION(BUILD_PCFIELDSPLIT "Build the PCFIELDSPLIT apps" ON)
-
-OPTION(BUILD_AMR "Build the AMR apps" ON)
-
-OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
-
-OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
-
-OPTION(BUILD_MPM_FSI "Build the MPM FSI apps" ON)
-
-OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
-
-OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
-
-OPTION(BUILD_UQ "Build the UQ apps" ON)
-
-OPTION(BUILD_NONLOCAL "Build the NONLOCAL apps" ON)
-
-OPTION(BUILD_SW "Build the Shallow Water apps" ON)
-
-OPTION(BUILD_TUMOR "Build the Tumor apps" ON)
-
-OPTION(BUILD_RK "Build the Runge-Kutta apps" ON)
-
-OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
-
-OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
-
-OPTION(BUILD_ZZZ_SANDBOX "Build the sandbox apps for playing around" ON)
-
-#############################################################################################
-### Build options - END
-#############################################################################################
-
-#############################################################################################
-### Build documentation (Doxygen) - BEGIN
-#############################################################################################
-
-IF(BUILD_DOCUMENTATION)
-  FIND_PACKAGE(Doxygen)
-  IF(NOT DOXYGEN_FOUND)
-    MESSAGE(FATAL_ERROR
-      "Doxygen is needed to build the documentation. Please install it correctly")
-  ENDIF(NOT DOXYGEN_FOUND)
-  #-- Configure the Template Doxyfile for our specific project
-  CONFIGURE_FILE(
-    "${PROJECT_SOURCE_DIR}/doc/doxygen/DoxyfileFemuslib.in"
-    "${PROJECT_BINARY_DIR}/doc/doxygen/DoxyfileFemuslib" @ONLY IMMEDIATE
-  )
-
-  #-- Add a custom target to run Doxygen when ever the project is built
-  ADD_CUSTOM_TARGET (Docs ALL
-    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/doc/doxygen/DoxyfileFemuslib
-    SOURCES ${PROJECT_BINARY_DIR}/doc/doxygen/DoxyfileFemuslib)
-  # IF you do NOT want the documentation to be generated EVERY time you build the project
-  # then leave out the 'ALL' keyword from the above command.
-ENDIF(BUILD_DOCUMENTATION)
-
-#############################################################################################
-### Build documentation (Doxygen) - END
-#############################################################################################
+### External Libraries, Build options - END 
 
 
-#############################################################################################
-### Add external libraries - BEGIN
-#############################################################################################
 
-# Build the b64 library
+# Build the b64 library - BEGIN
 SET(HAVE_B64 0)
 IF(BUILD_B64)
   SET(HAVE_B64 1)
   INCLUDE(external/External_b64.cmake)
 ENDIF(BUILD_B64)
+# Build the b64 library - END 
 
-# Build the jsoncpp library
+
+# Build the jsoncpp library - BEGIN
 SET(HAVE_JSONCPP 0)
 IF(BUILD_JSONCPP)
   SET(HAVE_JSONCPP 1)
   INCLUDE(external/External_jsoncpp.cmake)
 ENDIF(BUILD_JSONCPP)
+# Build the jsoncpp library - END 
 
-# Build the Adept external library
+
+# Build the Adept external library - BEGIN
 SET(HAVE_ADEPT 0)
 IF(BUILD_ADEPT)
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DADEPT_RECORDING_PAUSABLE")
@@ -291,17 +244,20 @@ IF(BUILD_ADEPT)
   SET(HAVE_ADEPT 1)
   INCLUDE(external/External_adept.cmake)
 ENDIF(BUILD_ADEPT)
+# Build the Adept external library - END 
+
+
 
 #message(${CMAKE_CXX_FLAGS_RELEASE})
 #message(${CMAKE_CXX_FLAGS_DEBUG})
 
 #############################################################################################
-### Add external libraries - END
+### External libraries, Add - END
 #############################################################################################
 
 
 #############################################################################################
-### Configuration project file - BEGIN
+### Femus, Include files, Configuration project file - BEGIN
 #############################################################################################
 
 # configure a header file to pass some of the CMake settings to the source code
@@ -316,29 +272,15 @@ CONFIGURE_FILE(
   )
 
 #############################################################################################
-### Configuration project file - END
+### Femus, Include files, Configuration project file - END
 #############################################################################################
 
 
-
 #############################################################################################
-### Mesh files - BEGIN
-#############################################################################################
-
-FILE(COPY           ${PROJECT_SOURCE_DIR}/src/06_mesh/00_single_level/01_input/00_mesh_files/ DESTINATION ${PROJECT_BINARY_DIR}/src/06_mesh/00_single_level/01_input/00_mesh_files/)
-
-#############################################################################################
-### Mesh files - END
+### Femus, Include files - BEGIN
 #############################################################################################
 
-
-
-  
-#############################################################################################
-### Include files - BEGIN
-#############################################################################################
-
-#include femus include files
+#include femus include files - BEGIN
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_reference_geom_elements/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_reference_geom_elements/00_definition/)
@@ -364,8 +306,8 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_file_handling/runtime_input_parsi
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_file_handling/runtime_input_parsing/command_line/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/01_materials/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/01_parameters/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_math/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_math/function_parser/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_calculus/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_calculus/function_parser/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/00_definition/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/00_definition/1d/)
@@ -376,12 +318,21 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/01_fe/1d/
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/01_fe/2d/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/01_fe/3d/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/02_quadrature/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/02_quadrature/0d/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/02_quadrature/1d/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/02_quadrature/2d/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/02_quadrature/3d/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/02_reference_geom_elements/03_fe_evaluations_at_quadrature/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra_dense/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra_dense/00_vectors/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra_dense/01_matrices/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra_only_mpi/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra_only_mpi/00_vectors/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra_only_mpi/01_matrices/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra/00_vectors/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra/01_matrices/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra/02_preconditioners/)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/03_algebra_only_mpi/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/05_problem/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/06_mesh/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/06_mesh/00_single_level/)
@@ -408,36 +359,50 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_equations/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_equations/00_stationary/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_equations/01_time_dependent/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_equations/assemble/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_fsi/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_fsi/00_stationary/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_fsi/01_time_dependent/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/09_optimal_control/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uq/)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/)
+#include femus include files - END
 
 
-# HPCC TTU
-INCLUDE_DIRECTORIES(/opt/ohpc/pub/mpi/openmpi-gnu/1.10.6/include/)
-INCLUDE_DIRECTORIES(/opt/ohpc/pub/libs/gnu/openmpi/boost/1.63.0/include/)
+#############################################################################################
+### Femus, Include files - END
+#############################################################################################
 
 
-# Include petsc files
+
+#############################################################################################
+### Packages, Include files - BEGIN
+#############################################################################################
+
+
+
+# Include petsc files - BEGIN
+IF(PETSC_FOUND)
 INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
 ADD_DEFINITIONS(${PETSC_DEFINITIONS})
+ENDIF(PETSC_FOUND)
+# Include petsc files - END
 
-# Include slepc files
+# Include slepc files - BEGIN
 IF(SLEPC_FOUND)
  INCLUDE_DIRECTORIES(${SLEPC_INCLUDE_DIRS})
 ENDIF(SLEPC_FOUND)
+# Include slepc files - END
 
-# Include Fparser files
+
+# Include Fparser files - BEGIN
 IF(FPARSER_FOUND)
   INCLUDE_DIRECTORIES(${FPARSER_INCLUDE_DIR})
 ENDIF(FPARSER_FOUND)
-
-# add femus macro
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildApplication.cmake)
+# Include Fparser files - END
 
 
-# Libmesh includes and flags
+# Libmesh includes and flags - BEGIN
 IF(LIBMESH_FOUND)
 execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --cppflags
                 COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_CPP)
@@ -453,40 +418,53 @@ ENDIF(LIBMESH_FOUND)
 # libmesh_INCLUDE  := $(shell ${FM_LM_DIR}/bin/libmesh-config --include)
 # libmesh_CPPFLAGS := $(shell ${FM_LM_DIR}/bin/libmesh-config --cppflags)
 # libmesh_LIBS     := $(shell ${FM_LM_DIR}/bin/libmesh-config --libs)
-
-#############################################################################################
-### Include files - END
-#############################################################################################
+# Libmesh includes and flags - END
 
 
+# HPCC TTU
+INCLUDE_DIRECTORIES(/opt/ohpc/pub/mpi/openmpi-gnu/1.10.6/include/)
+INCLUDE_DIRECTORIES(/opt/ohpc/pub/libs/gnu/openmpi/boost/1.63.0/include/)
+
+
 #############################################################################################
-### Add sources - BEGIN
+### Packages, Include files - END
+#############################################################################################
+
+
+
+
+
+#############################################################################################
+### Femus, Add sources - BEGIN
 #############################################################################################
 
 # Add the femus library sources
 ADD_SUBDIRECTORY(src)
 
 #############################################################################################
-### Add sources - END
+### Femus, Add sources - END
 #############################################################################################
 
 
 
 #############################################################################################
-### Add Applications - BEGIN
+### Femus, Applications, Add  - BEGIN
 #############################################################################################
+# add femus macro
+INCLUDE(${CMAKE_MODULE_PATH}/femusMacroBuildApplication.cmake)
+
 
 # Add applications
 ADD_SUBDIRECTORY(applications)
 
 #############################################################################################
-### Add Applications - END
+### Femus, Applications, Add - END
 #############################################################################################
 
 
 
 #############################################################################################
-### Add Unit tests - BEGIN
+### Femus, Add Unit tests - BEGIN
 #############################################################################################
 
 INCLUDE(CTest)
@@ -497,7 +475,58 @@ IF(BUILD_TESTING)
 ENDIF(BUILD_TESTING)
 
 #############################################################################################
-### Add Unit tests - END
+### Femus, Add Unit tests - END
+#############################################################################################
+
+
+
+
+#############################################################################################
+### Femus, Mesh files - BEGIN
+#############################################################################################
+
+FILE(COPY           ${PROJECT_SOURCE_DIR}/src/06_mesh/00_single_level/01_input/00_mesh_files/ DESTINATION ${PROJECT_BINARY_DIR}/src/06_mesh/00_single_level/01_input/00_mesh_files/)
+
+#############################################################################################
+### Femus, Mesh files - END
+#############################################################################################
+
+
+
+#############################################################################################
+### Femus, Build documentation (Doxygen) - BEGIN
+#############################################################################################
+
+### Build options, Documentation - BEGIN
+
+#-- Add an Option to toggle the generation of the API documentation
+OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
+
+### Build options, Documentation - END
+
+
+IF(BUILD_DOCUMENTATION)
+  FIND_PACKAGE(Doxygen)
+  IF(NOT DOXYGEN_FOUND)
+    MESSAGE(FATAL_ERROR
+      "Doxygen is needed to build the documentation. Please install it correctly")
+  ENDIF(NOT DOXYGEN_FOUND)
+  #-- Configure the Template Doxyfile for our specific project
+  CONFIGURE_FILE(
+    "${PROJECT_SOURCE_DIR}/doc/doxygen/DoxyfileFemuslib.in"
+    "${PROJECT_BINARY_DIR}/doc/doxygen/DoxyfileFemuslib" @ONLY IMMEDIATE
+  )
+
+  #-- Add a custom target to run Doxygen when ever the project is built
+  ADD_CUSTOM_TARGET (Docs ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/doc/doxygen/DoxyfileFemuslib
+    SOURCES ${PROJECT_BINARY_DIR}/doc/doxygen/DoxyfileFemuslib)
+  # IF you do NOT want the documentation to be generated EVERY time you build the project
+  # then leave out the 'ALL' keyword from the above command.
+ENDIF(BUILD_DOCUMENTATION)
+
+#############################################################################################
+### Femus, Build documentation (Doxygen) - END
 #############################################################################################
 
 

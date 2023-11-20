@@ -138,7 +138,6 @@ void NewmarkTransientSystem<Base>::SetNewmarkParameters(const double gamma, cons
 typedef NewmarkTransientSystem<System> NewmarkTransientBaseSystem;
 typedef NewmarkTransientSystem<LinearImplicitSystem> NewmarkTransientLinearImplicitSystem;
 typedef NewmarkTransientSystem<NonLinearImplicitSystem> NewmarkTransientNonlinearImplicitSystem;
-typedef NewmarkTransientSystem<MonolithicFSINonLinearImplicitSystem> NewmarkTransientMonolithicFSINonlinearImplicitSystem;
 
 } //end namespace femus
 

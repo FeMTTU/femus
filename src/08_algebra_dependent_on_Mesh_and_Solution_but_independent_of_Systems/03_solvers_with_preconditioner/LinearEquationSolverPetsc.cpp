@@ -21,7 +21,6 @@
 #ifdef HAVE_PETSC
 
 // Local Includes
-#include "FElemTypeEnum_list.hpp"
 #include "PetscMacro.hpp"
 #include "LinearEquationSolverPetsc.hpp"
 #include "PetscPreconditioner.hpp"
@@ -440,7 +439,7 @@ namespace femus {
 
   void LinearEquationSolverPetsc::SetPreconditioner (KSP& subksp, PC& subpc) {
 
-    int parallelOverlapping = (GetMeshFromLinEq()->GetIfHomogeneous()) ? 0 : 0;
+    int parallelOverlapping = 0;
     PetscPreconditioner::set_petsc_preconditioner_type (this->_preconditioner_type, subpc, parallelOverlapping);
     PetscReal zero = 1.e-16;
     PCFactorSetZeroPivot (subpc, zero);

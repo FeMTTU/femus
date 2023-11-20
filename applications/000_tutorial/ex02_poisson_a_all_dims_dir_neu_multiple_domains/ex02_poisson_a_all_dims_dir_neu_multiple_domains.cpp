@@ -579,7 +579,7 @@ int main(int argc, char** args) {
   
   // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = true;
+  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -635,7 +635,7 @@ int main(int argc, char** args) {
   app_square._system_name = system_common_name;
   app_square._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_square._mesh_files.push_back("square_0-1x0-1_divisions_1x1.med");
+  app_square._mesh_files.push_back("square_0-1x0-1_divisions_2x2.med");
   app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/0-1x0-1/");
   
   app_square._boundary_conditions_types_and_values             = Domains::square_01by01::bc_all_dirichlet_homogeneous;
@@ -716,7 +716,7 @@ int main(int argc, char** args) {
   app_cube._system_name = system_common_name;
   app_cube._assemble_function                            = poisson_equation::equation_with_dirichlet_or_neumann_bc<double, double>;
   
-  app_cube._mesh_files.push_back("assignment_cube_hexahedral.med");
+  app_cube._mesh_files.push_back("cube_hexahedral_divisions_2x2x2.med");
   app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/03_3d/cube/0-1x0-1x0-1/");
   
   app_cube._boundary_conditions_types_and_values             = Domains::cube_01_by_01_by_01::bc_all_dirichlet_homogeneous;
@@ -927,11 +927,11 @@ int main(int argc, char** args) {
 
   
     // ======= Print - BEGIN ========================
-  const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
+  const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(/*my_specifics[app]._system_name + "_" +*/ my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(/*my_specifics[app]._system_name + "_" +*/ my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order, variablesToBePrinted);
     // ======= Print - END ========================
   
     }  //end refinement loop

@@ -17,6 +17,8 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 
 
@@ -35,7 +37,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   return dirichlet;
 }
 
-// double InitalValueU2D (const std::vector < double >& x) {
+// double InitialValueU2D (const std::vector < double >& x) {
 //   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
 //   double r2 = r * r;
 //   double R = 1.;
@@ -47,7 +49,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 // }
 
 double V0;
-double InitalValueU3D (const std::vector < double >& x) {
+double InitialValueU3D (const std::vector < double >& x) {
   double r = sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
   double r2 = r * r;
   double R = 1.0001;
@@ -59,7 +61,7 @@ double InitalValueU3D (const std::vector < double >& x) {
   return (V0 * M_PI * 4. / 3. ) / Vb * exp ( (1. - R2 / (R2 - r2)));
 }
 
-double InitalValueD (const std::vector < double >& x) {
+double InitialValueD (const std::vector < double >& x) {
   return 100.;
 }
 
@@ -120,10 +122,10 @@ int main (int argc, char** args) {
 
     mlSol.Initialize ("All");
 //     if (dim == 2)
-//       mlSol.Initialize ("u", InitalValueU2D);
+//       mlSol.Initialize ("u", InitialValueU2D);
 //     else
-    mlSol.Initialize ("u", InitalValueU3D);
-    mlSol.Initialize ("d", InitalValueD);
+    mlSol.Initialize ("u", InitialValueU3D);
+    mlSol.Initialize ("d", InitialValueD);
 
     // attach the boundary condition function and generate boundary data
     mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);

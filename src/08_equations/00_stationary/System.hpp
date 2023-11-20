@@ -22,7 +22,11 @@
 #include "SolvertypeEnum.hpp"
 #include "MgTypeEnum.hpp"
 #include "LinearEquationSolverEnum.hpp"
-#include "Mesh.hpp"
+
+
+#include <vector>
+#include <string>
+
 
 
 namespace femus {
@@ -31,8 +35,14 @@ namespace femus {
 // Forward declarations
 //------------------------------------------------------------------------------
 class MultiLevelProblem;
+
 class MultiLevelMesh;
+class Mesh;
+
 class Unknown;
+class MultiLevelSolution;
+class Solution;
+
 
 /**
  * The system abstract class
@@ -216,7 +226,7 @@ public:
 protected:
 
     /** Mesh vector, dimension _gridn */
-    std::vector<Mesh*> _msh;
+    std::vector< Mesh* > _msh;
 
     /** pointer */
     MultiLevelMesh* _ml_msh;

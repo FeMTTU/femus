@@ -1556,7 +1556,7 @@ namespace femus
   void Marker::InverseMappingTEST(std::vector < double > &x, Solution* sol, const double &s)
   {
 
-    for (int solType = 0; solType < 3; solType++) {
+    for (int solType = 0; solType < NFE_FAMS_C_ZERO_LAGRANGE; solType++) {
       // std::cout << "\n\n--------------------------------------------------" << std::endl;
       // std::cout << "solType = " << solType << std::endl;
 

@@ -4,6 +4,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 #include "MultiLevelSolution.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"
@@ -15,7 +16,7 @@
 using namespace femus;
 
 
-namespace karthik_poisson   {
+namespace karthik {
 
  class poisson_equation   {
 /// This only works with the App Specifics class, because only with that it can be abstract enough
@@ -378,13 +379,13 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
 
 
  //========= BOUNDARY - BEGIN ==================
-    if (dim == 1)   karthik_poisson::poisson_equation::natural_loop_1d/*<real_num, real_num_mov>*/(& ml_prob, msh, ml_sol,
+    if (dim == 1)   karthik::poisson_equation::natural_loop_1d/*<real_num, real_num_mov>*/(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res
                      );
 
-    if (dim == 2 || dim == 3)   karthik_poisson::poisson_equation::natural_loop_2d3d<real_num, real_num_mov>(& ml_prob, msh, ml_sol,
+    if (dim == 2 || dim == 3)   karthik::poisson_equation::natural_loop_2d3d<real_num, real_num_mov>(& ml_prob, msh, ml_sol,
                       iel, geom_element, xType,
                       solname_u, solFEType_u,
                       Res,

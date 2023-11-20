@@ -154,6 +154,7 @@ namespace femus {
                    const unsigned space_dimension) const {
                                
     constexpr unsigned int dim = 1;
+    const unsigned n_dofs = GetNDofs();
 
     //Jac =================
     Jac.resize(dim);
@@ -165,7 +166,7 @@ namespace femus {
 
     for (unsigned d = 0; d < space_dimension; d++) {
 //     const double* dxi_coords  = /*_dphidxi*/dphidxi[0][ig];
-       for(int inode = 0; inode < _nc; inode++/*, dxi_coords++*/) {
+       for(int inode = 0; inode <  n_dofs ; inode++/*, dxi_coords++*/) {
           Jac[0][d] += /*(*dxi_coords) */ dphidxi[0][ig][inode] * vt[d][inode];
         }
      }
@@ -181,19 +182,20 @@ namespace femus {
    void    fill_dphidxi_at_quadrature_points() {
        
               const unsigned int n_gauss = _gauss->GetGaussPointsNumber();
+              const unsigned n_dofs = GetNDofs();
  
                   _dphidxi_templ.resize(_dim);
            
                for(unsigned d = 0; d < _dim; d++) {
                     _dphidxi_templ[d].resize(n_gauss);
                for(unsigned iq = 0; iq < n_gauss; iq++) {
-                      _dphidxi_templ[d][iq].resize(_nc);
+                      _dphidxi_templ[d][iq].resize( n_dofs );
                     }
                  }
                
                
             for(unsigned iq = 0; iq < n_gauss; iq++) {
-                for(unsigned dof = 0; dof < _nc; dof++) {
+                for(unsigned dof = 0; dof <  n_dofs ; dof++) {
                     _dphidxi_templ[0][iq][dof] = _dphidxi[iq][dof];
                    }
                }
@@ -206,7 +208,7 @@ namespace femus {
                for(unsigned d = 0; d < _dim; d++) {
                     _dphidxi_vol_at_bdry_templ[d].resize(n_gauss_bdry);
                for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
-                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize( n_dofs );
                     }
                  }
                
@@ -216,9 +218,10 @@ namespace femus {
     void   fill_dphidxi_at_quadrature_points_vol_at_bdry() {
         
               const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
                
             for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
-                for(unsigned dof = 0; dof < _nc; dof++) {
+                for(unsigned dof = 0; dof <  n_dofs ; dof++) {
                     _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
                    }
                }
@@ -326,6 +329,7 @@ namespace femus {
 // | d xi / dx_3 |                              
 
     constexpr unsigned int dim = 1;
+    const unsigned n_dofs = GetNDofs();
     
     //Jac =================
     Jac.resize(dim);
@@ -337,7 +341,7 @@ namespace femus {
 
     for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords  = _dphidxi[ig];
-       for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
+       for(int inode = 0; inode <  n_dofs ; inode++, dxi_coords++) {
           Jac[0][d] += (*dxi_coords) * vt[d][inode];
         }
      }
@@ -412,15 +416,16 @@ namespace femus {
                                              boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
                                                  
+    const unsigned n_dofs = GetNDofs();
     const double * dxi  =   dphidxi_ref[0][ig];
 // //     const double * dxi2 = d2phidxi2_ref[0][ig];
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.); //we need to set to zero because now all our gradients have length 3
-    if(nablaphi) nablaphi->resize(_nc * space_dimension);   ///@todo fix this: once space_dim was only 1
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.); //we need to set to zero because now all our gradients have length 3
+    if(nablaphi) nablaphi->resize( n_dofs  * space_dimension);   ///@todo fix this: once space_dim was only 1
 
     
-    for(int inode = 0; inode < _nc; inode++, dxi++/*, dxi2++*/) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++/*, dxi2++*/) {
 
       phi[inode] = phi_ref[ig][inode];
       
@@ -444,15 +449,17 @@ namespace femus {
                                              boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
                                                  
+    const unsigned n_dofs = GetNDofs();
+    
     const double* dxi  = _dphidxi[ig];
     const double* dxi2 = _d2phidxi2[ig];
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.); //we need to set to zero because now all our gradients have length 3
-    if(nablaphi) nablaphi->resize(_nc * space_dimension);   ///@todo fix this: once space_dim was only 1
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.); //we need to set to zero because now all our gradients have length 3
+    if(nablaphi) nablaphi->resize( n_dofs  * space_dimension);   ///@todo fix this: once space_dim was only 1
 
     
-    for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, dxi2++) {
 
       phi[inode] = _phi[ig][inode];
       
@@ -538,6 +545,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                            const unsigned space_dimension) const {
 
      constexpr unsigned int dim = 2;                           
+    const unsigned n_dofs = GetNDofs();
 
      Jac.resize(dim);
     
@@ -550,7 +558,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 //     const double* dxi_coords  = /*_dphidxi*/ dphidxi[0][ig];
 //     const double* deta_coords = /*_dphideta*/dphidxi[1][ig];
     
-      for(int inode = 0; inode < _nc; inode++/*, dxi_coords++, deta_coords++*/) {
+      for(int inode = 0; inode <  n_dofs ; inode++/*, dxi_coords++, deta_coords++*/) {
           Jac[0][d] += /*(*dxi_coords) */ dphidxi[0][ig][inode] * vt[d][inode];
           Jac[1][d] += /*(*deta_coords)*/ dphidxi[1][ig][inode] * vt[d][inode];
         }
@@ -568,19 +576,20 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
    void    fill_dphidxi_at_quadrature_points() {
        
               const unsigned int n_gauss = _gauss->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
  
                   _dphidxi_templ.resize(_dim);
            
                for(unsigned d = 0; d < _dim; d++) {
                     _dphidxi_templ[d].resize(n_gauss);
                for(unsigned iq = 0; iq < n_gauss; iq++) {
-                      _dphidxi_templ[d][iq].resize(_nc);
+                      _dphidxi_templ[d][iq].resize( n_dofs );
                     }
                  }
                
                
             for(unsigned iq = 0; iq < n_gauss; iq++) {
-                for(unsigned dof = 0; dof < _nc; dof++) {
+                for(unsigned dof = 0; dof <  n_dofs ; dof++) {
                     _dphidxi_templ[0][iq][dof] = _dphidxi[iq][dof];
                     _dphidxi_templ[1][iq][dof] = _dphideta[iq][dof];
                    }
@@ -594,7 +603,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                for(unsigned d = 0; d < _dim; d++) {
                     _dphidxi_vol_at_bdry_templ[d].resize(n_gauss_bdry);
                for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
-                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize( n_dofs );
                     }
                  }
                  
@@ -606,9 +615,10 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
         
                
               const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
-               
+     const unsigned n_dofs = GetNDofs();
+              
             for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
-                for(unsigned dof = 0; dof < _nc; dof++) {
+                for(unsigned dof = 0; dof <  n_dofs ; dof++) {
                     _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
                     _dphidxi_vol_at_bdry_templ[1][iq][dof] = _dphideta_vol_at_bdry[iq][dof];
                    }
@@ -713,6 +723,8 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                             const unsigned space_dim) const {
 
      constexpr unsigned int dim = 2;                           
+    const unsigned n_dofs = GetNDofs();
+    
      //Jac ===============
     Jac.resize(dim);
     
@@ -725,7 +737,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     const double* dxi_coords  = _dphidxi[ig];
     const double* deta_coords = _dphideta[ig];
     
-      for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
+      for(int inode = 0; inode <  n_dofs ; inode++, dxi_coords++, deta_coords++) {
           Jac[0][d] += (*dxi_coords)  * vt[d][inode];
           Jac[1][d] += (*deta_coords) * vt[d][inode];
         }
@@ -812,6 +824,8 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                              boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
                                                  
+    const unsigned n_dofs = GetNDofs();
+    
      const double* dxi  = dphidxi_ref[0][ig];
     const double* deta  = dphidxi_ref[1][ig];
     
@@ -819,13 +833,13 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 // //     const double* deta2   = d2phidxi2_ref[1]/*_d2phideta2*/[ig];
 // //     const double* dxideta = d2phidxi2_ref[2]/*_d2phidxideta*/[ig];
     
-    phi.resize(_nc);
+    phi.resize( n_dofs );
     
-    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
-    if(nablaphi) nablaphi->resize(_nc * 3);
+    gradphi.resize( n_dofs  * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    if(nablaphi) nablaphi->resize( n_dofs  * 3);
 
     
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++/*, dxi2++, deta2++, dxideta++*/) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++/*, dxi2++, deta2++, dxideta++*/) {
 
       phi[inode] = phi_ref[ig][inode];
 
@@ -861,6 +875,8 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                              const unsigned space_dimension) const {
                                                  
 
+    const unsigned n_dofs = GetNDofs();
+    
     const double* dxi  = _dphidxi[ig];
     const double* deta = _dphideta[ig];
     
@@ -868,13 +884,13 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     const double* deta2 = _d2phideta2[ig];
     const double* dxideta = _d2phidxideta[ig];
     
-    phi.resize(_nc);
+    phi.resize( n_dofs );
     
-    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
-    if(nablaphi) nablaphi->resize(_nc * 3);
+    gradphi.resize( n_dofs  * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    if(nablaphi) nablaphi->resize( n_dofs  * 3);
 
     
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
 
       phi[inode] = _phi[ig][inode];
 
@@ -991,10 +1007,12 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                            const unsigned space_dimension) const {
                                
      constexpr unsigned int dim = 3;
+    const unsigned n_dofs = GetNDofs();
+    
      
      //Jac ===============
-//     Jac.resize(3/*dim*/);
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     Jac.resize(dim);
+//     for (unsigned d = 0; d < dim; d++) {
 // //         Jac[d].resize(3/*space_dim*/);   
 //         std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
 //     }
@@ -1004,12 +1022,12 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
 
     
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     for (unsigned d = 0; d < dim; d++) {
 //     const double * dxi_coords   = /*_dphidxi*/  dphidxi[0][ig];
 //     const double * deta_coords  = /*_dphideta*/ dphidxi[1][ig];
 //     const double * dzeta_coords = /*_dphidzeta*/dphidxi[2][ig];
 
-    for(int inode = 0; inode < _nc; inode++/*, dxi_coords++, deta_coords++, dzeta_coords++*/) {
+    for(int inode = 0; inode <  n_dofs ; inode++/*, dxi_coords++, deta_coords++, dzeta_coords++*/) {
       Jac[0][0] += /*(*dxi_coords)  */ dphidxi[0][ig][inode] * vt[0][inode];
       Jac[0][1] += /*(*dxi_coords)  */ dphidxi[0][ig][inode] * vt[1][inode];
       Jac[0][2] += /*(*dxi_coords)  */ dphidxi[0][ig][inode] * vt[2][inode];
@@ -1036,19 +1054,21 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
    void    fill_dphidxi_at_quadrature_points() {
        
               const unsigned int n_gauss = _gauss->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
+    
  
                   _dphidxi_templ.resize(_dim);
            
                for(unsigned d = 0; d < _dim; d++) {
                     _dphidxi_templ[d].resize(n_gauss);
                for(unsigned iq = 0; iq < n_gauss; iq++) {
-                      _dphidxi_templ[d][iq].resize(_nc);
+                      _dphidxi_templ[d][iq].resize( n_dofs );
                     }
                  }
                
                
             for(unsigned iq = 0; iq < n_gauss; iq++) {
-                for(unsigned dof = 0; dof < _nc; dof++) {
+                for(unsigned dof = 0; dof <  n_dofs ; dof++) {
                     _dphidxi_templ[0][iq][dof] = _dphidxi[iq][dof];
                     _dphidxi_templ[1][iq][dof] = _dphideta[iq][dof];
                     _dphidxi_templ[2][iq][dof] = _dphidzeta[iq][dof];
@@ -1062,7 +1082,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                for(unsigned d = 0; d < _dim; d++) {
                     _dphidxi_vol_at_bdry_templ[d].resize(n_gauss_bdry);
                for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
-                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize( n_dofs );
                     }
                  }
              
@@ -1073,9 +1093,11 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
         
                
               const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    const unsigned n_dofs = GetNDofs();
+    
                
             for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
-                for(unsigned dof = 0; dof < _nc; dof++) {
+                for(unsigned dof = 0; dof <  n_dofs ; dof++) {
                     _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
                     _dphidxi_vol_at_bdry_templ[1][iq][dof] = _dphideta_vol_at_bdry[iq][dof];
                     _dphidxi_vol_at_bdry_templ[2][iq][dof] = _dphidzeta_vol_at_bdry[iq][dof];
@@ -1169,10 +1191,12 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                             const unsigned space_dim) const {
                                                                 
      constexpr unsigned int dim = 3;
+    const unsigned n_dofs = GetNDofs();
+    
      
      //Jac ===============
 //     Jac.resize(3/*dim*/);
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     for (unsigned d = 0; d < dim; d++) {
 // //         Jac[d].resize(3/*space_dim*/);   
 //         std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
 //     }
@@ -1191,12 +1215,12 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 // Jac[2][2] = 0.; 
     
     
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     for (unsigned d = 0; d < dim; d++) {
     const double * dxi_coords   = _dphidxi[ig];
     const double * deta_coords  = _dphideta[ig];
     const double * dzeta_coords = _dphidzeta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
       Jac[0][0] += (*dxi_coords) * vt[0][inode];
       Jac[0][1] += (*dxi_coords) * vt[1][inode];
       Jac[0][2] += (*dxi_coords) * vt[2][inode];
@@ -1251,6 +1275,8 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                              boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
                                                  
+    const unsigned n_dofs = GetNDofs();
+    
     const double * dxi   =  /*_dphidxi*/ dphidxi_ref[0][ig];
     const double * deta  = /*_dphideta*/ dphidxi_ref[1][ig];
     const double * dzeta =/*_dphidzeta*/ dphidxi_ref[2][ig];
@@ -1262,12 +1288,12 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 // //     const double * detadzeta = /*_d2phidetadzeta*/ d2phidxi2_ref[4][ig];
 // //     const double * dzetadxi  = /*_d2phidzetadxi*/  d2phidxi2_ref[5][ig];
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 3);  std::fill(gradphi.begin(),gradphi.end(),0.);
-    if(nablaphi) nablaphi->resize(_nc * 6);
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 3);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    if(nablaphi) nablaphi->resize( n_dofs  * 6);
     
     
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++/*, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++*/) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++/*, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++*/) {
 
       phi[inode] = phi_ref[ig][inode];
 
@@ -1320,6 +1346,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                              boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const {
 
+    
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
     const double* dzeta = _dphidzeta[ig];
@@ -1331,12 +1358,14 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     const double* detadzeta = _d2phidetadzeta[ig];
     const double* dzetadxi = _d2phidzetadxi[ig];
 
-    phi.resize(_nc);
-    gradphi.resize(_nc * 3);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/ //here we can save the setting to zero because all positions will be filled
-    if(nablaphi) nablaphi->resize(_nc * 6);
+    const unsigned n_dofs = GetNDofs();
+    
+    phi.resize( n_dofs );
+    gradphi.resize( n_dofs  * 3);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/ //here we can save the setting to zero because all positions will be filled
+    if(nablaphi) nablaphi->resize( n_dofs  * 6);
     
     
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
+    for(int inode = 0; inode <  n_dofs ; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
 
       phi[inode] = _phi[ig][inode];
 

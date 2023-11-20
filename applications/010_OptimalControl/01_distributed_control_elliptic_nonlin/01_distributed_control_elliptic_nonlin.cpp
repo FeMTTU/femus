@@ -3,6 +3,7 @@
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
+#include "LinearEquationSolver.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "Assemble_jacobian.hpp"

@@ -94,12 +94,14 @@ int main(int argc,char **args) {
  // ======= Files - END  ========================
 
         
+ // ======= Input parser - BEGIN  ========================
 #if FEMUS_TEST_INPUT_PARSER != 0
   // it works, just pay attention that integers do not turn into unsigned
   //   files.CopyInputFiles();   // at this point everything is in the folder of the current run!!!!
   FemusInputParser< unsigned > mesh_map("Mesh", "./"/*files.GetOutputPath()*/);
   const unsigned numberOfUniformLevels =  mesh_map.get("n_levels");
 #endif
+ // ======= Input parser - END  ========================
   
   
   // ======= Loop over mesh files ========================
@@ -122,15 +124,13 @@ int main(int argc,char **args) {
   //Nondimensional
   double Lref = 1.;
   
-  std::string fe_quad_rule("fifth");
-
   MultiLevelMesh ml_mesh;
   
-//   const int n_sub = 1;
-//   ml_mesh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   const bool read_groups = true;
   const bool read_boundary_groups = true;
-  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
+  
+  ml_mesh.ReadCoarseMesh(infile.c_str(), Lref, read_groups, read_boundary_groups);
+  
 //   const unsigned numberOfUniformLevels = 3;
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -144,10 +144,11 @@ int main(int argc,char **args) {
   
 #if FEMUS_TEST_SOLUTION != 0
   
-  MultiLevelSolution ml_sol(&ml_mesh);
+  MultiLevelSolution ml_sol(& ml_mesh);
 
   #if FEMUS_TEST_PROBLEM != 0
-      MultiLevelProblem   ml_prob(&ml_sol);
+      MultiLevelProblem   ml_prob;
+    ml_prob.SetMultiLevelMeshAndSolution(& ml_sol);
   #endif 
    
   const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
@@ -180,9 +181,9 @@ int main(int argc,char **args) {
 #endif
 
   std::vector < std::string > print_fe_order;
-  print_fe_order.push_back("linear");
-  print_fe_order.push_back("quadratic");
-  print_fe_order.push_back("biquadratic");
+  print_fe_order.push_back( fe_fams_for_files[FILES_CONTINUOUS_LINEAR] );
+  print_fe_order.push_back( fe_fams_for_files[FILES_CONTINUOUS_QUADRATIC] );
+  print_fe_order.push_back( fe_fams_for_files[FILES_CONTINUOUS_BIQUADRATIC] );
 
 
   std::vector < std::string > variablesToBePrinted;

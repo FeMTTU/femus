@@ -33,7 +33,7 @@
 #include "ParalleltypeEnum.hpp"
 #include "TypeDefsAndTypeCasts.hpp"
 
-/// Petsc include files.
+// Petsc include files.
 EXTERN_C_FOR_PETSC_BEGIN
 # include <petscvec.h>
 EXTERN_C_FOR_PETSC_END

@@ -20,6 +20,7 @@
 
 #include "TransientSystem.hpp"
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "slepceps.h"
 #include <slepcmfn.h>
@@ -43,15 +44,15 @@ bool assembly = true; //assembly must be left always true
 
 const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
-double InitalValueV ( const std::vector < double >& x ) {
+double InitialValueV ( const std::vector < double >& x ) {
   return 1. / 10.;
 }
 
-double InitalValueH ( const std::vector < double >& x ) {
+double InitialValueH ( const std::vector < double >& x ) {
   return hRest[0];
 }
 
-double InitalValueT ( const std::vector < double >& x ) {
+double InitialValueT ( const std::vector < double >& x ) {
   double pi = acos ( -1. );
   if ( x[0] < 5 ) return 5;
   else return 30;
@@ -59,7 +60,7 @@ double InitalValueT ( const std::vector < double >& x ) {
 }
 
 
-double InitalValueB ( const std::vector < double >& x ) {
+double InitialValueB ( const std::vector < double >& x ) {
   return 10.; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 }
 
@@ -136,22 +137,22 @@ int main ( int argc, char** args ) {
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
-    mlSol.Initialize ( name, InitalValueH );
+    mlSol.Initialize ( name, InitialValueH );
   }
 
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "T%d", i );
-    mlSol.Initialize ( name, InitalValueT );
+    mlSol.Initialize ( name, InitialValueT );
   }
 
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "v%d", i );
-    mlSol.Initialize ( name, InitalValueV );
+    mlSol.Initialize ( name, InitialValueV );
   }
 
-  mlSol.Initialize ( "b", InitalValueB );
+  mlSol.Initialize ( "b", InitialValueB );
 
   mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
   mlSol.GenerateBdc ( "All" );
@@ -171,7 +172,7 @@ int main ( int argc, char** args ) {
   std::vector<std::string> print_vars;
   print_vars.push_back ( "All" );
   //mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write ( Files::_application_output_directory, "linear", print_vars, 0 );
+  mlSol.GetWriter()->Write ( Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, 0 );
 
   unsigned numberOfTimeSteps = 3209; //17h=1020 with dt=60, 17h=10200 with dt=6
   dt = 1./10.;
@@ -181,7 +182,7 @@ int main ( int argc, char** args ) {
     system.CopySolutionToOldSolution();
     //ETD ( ml_prob );
     RK4 ( ml_prob, implicitEuler );
-    mlSol.GetWriter()->Write ( Files::_application_output_directory, "linear", print_vars, ( i + 1 ) / 1 );
+    mlSol.GetWriter()->Write ( Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, ( i + 1 ) / 1 );
   }
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double> ( clock() - start_time ) / CLOCKS_PER_SEC << std::endl;

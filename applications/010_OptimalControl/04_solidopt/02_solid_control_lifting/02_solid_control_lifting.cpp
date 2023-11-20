@@ -7,6 +7,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "LinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "Parameter.hpp"
 #include "Parallel.hpp"//to get iproc HAVE_MPI is inside here
 #include "Fluid.hpp"

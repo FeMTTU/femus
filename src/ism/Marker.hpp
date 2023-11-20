@@ -24,6 +24,7 @@
 #include "NumericVector.hpp"
 #include "MyVector.hpp"
 #include "Mesh.hpp"
+#include "Solution.hpp"
 
 #include <vector>
 #include <map>

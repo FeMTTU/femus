@@ -46,7 +46,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   unsigned Mesh::_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];    ///@todo I don't like the default dimension to be 2
 
 
-// === CONSTR-DESTR - BEGIN =================
+// === Constructors / Destructor - BEGIN =================
 
 //------------------------------------------------------------------------------------------------------
   Mesh::Mesh() {
@@ -91,7 +91,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
 
 
-// === CONSTR-DESTR - END =================
+// === Constructors / Destructor - END =================
   
   
 
@@ -295,7 +295,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   void Mesh::BuildElementAndNodeStructures() {
       
-    GetMeshElements()->BuildMeshElemStructures();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
+    GetMeshElements()->BuildElem_NearFace_NearElem_using_NearVertex();  //must stay here, cannot be anticipated. Does it need dofmap already? I don't think so, but it needs the elem reordering and maybe also the node reordering
+    
+    GetMeshElements()->ScatterElement_Level_Type_Group_Material___NearFace();
+    
+    GetMeshElements()->ScatterElementDof();
+    
+    
+    //------
     
     BuildTopologyStructures();  //needs dofmap
     
@@ -309,7 +316,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     if(amr) {
       
       GetMeshElements()->GetAMRRestriction(this);
-//       for(unsigned soltype = 0; soltype < 3; soltype++) {
+//       for(unsigned soltype = 0; soltype < NFE_FAMS_C_ZERO_LAGRANGE; soltype++) {
 //         std::cout << "solution type = " << soltype << std::endl;
 //         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = _mesh.GetAmrRestrictionMap()[soltype].begin(); it1 != _mesh.GetAmrRestrictionMap()[soltype].end(); it1++) {
 //           std::cout << it1->first << "\t";
@@ -603,8 +610,15 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       }
     }
 
-    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(element_mapping);  ///this is needed because later there will be another reordering based on Group and Material
-  
+    el->ReorderMeshElement_Type_Level_Group_Material___NearFace_rows_ChildElem_columns(element_mapping);  ///this is needed because later there will be another reordering based on Group and Material
+
+    
+    
+    //Dof
+    el->ReorderMeshElement_Dof_stuff(element_mapping);
+    
+    
+    
    }
    
    
@@ -613,12 +627,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
    void Mesh::mesh_reorder_elem_quantities()  {
  
 
-
+//======== Inverse and direct element mapping - BEGIN =============
+     
     std::vector < unsigned > inverse_element_mapping(GetNumberOfElements());
 
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
       inverse_element_mapping[iel] = iel;
     }
+    
 
     for(int isdom = 0; isdom < _nprocs; isdom++) {
 
@@ -674,9 +690,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
       element_mapping[inverse_element_mapping[i]] = i;
     }
+    
+//======== Inverse and direct element mapping - END =============
 
 
-    el->ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(element_mapping);
+    el->ReorderMeshElement_Type_Level_Group_Material___NearFace_rows_ChildElem_columns(element_mapping);
+    
+    
+    
+    //Dof
+    el->ReorderMeshElement_Dof_stuff(element_mapping);
+    
     
     //END building the  metis2mesh_file element list 
 
@@ -690,7 +714,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     //BEGIN building element based dofs -  k = 3,4 
 
     // ghost vs owned nodes: 3 and 4 have no ghost nodes
-    for(unsigned k = 3; k < 5; k++) {
+    for(unsigned k = NFE_FAMS_C_ZERO_LAGRANGE; k < NFE_FAMS; k++) {
       _ownSize[k].assign(_nprocs, 0);
     }
 
@@ -699,7 +723,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       _ownSize[4][isdom] = (_elementOffset[isdom + 1] - _elementOffset[isdom]) * (_dimension + 1);
     }
 
-    for(int k = 3; k < 5; k++) {
+    for(int k = NFE_FAMS_C_ZERO_LAGRANGE; k < NFE_FAMS; k++) {
       _ghostDofs[k].resize(_nprocs);
 
       for(int isdom = 0; isdom < _nprocs; isdom++) {
@@ -726,9 +750,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
    void Mesh::mesh_reorder_node_quantities(const std::vector <unsigned> & mapping)  {
        
      
-    el->ReorderMeshNodes_ElementDof(mapping);
+    el->ReorderElementDof_columns_Using_node_mapping(mapping);
 
-    //reorder coordinate vector at coarse level ----
+    //reorder coordinate vector at coarse level - BEGIN ----
     if(GetLevel() == 0) {
       std::vector <double> coords_temp;
 
@@ -740,7 +764,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         }
       }
     }
-    //reorder coordinate vector at coarse level ----
+    //reorder coordinate vector at coarse level - END ----
 
 
    }
@@ -899,8 +923,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       
    
    initialize_elem_offsets();
+   
    build_elem_offsets(partition);
+   
    mesh_reorder_elem_quantities();
+   
+   
    set_elem_counts_per_subdomain();
    
       
@@ -1133,8 +1161,13 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     return _ProjQitoQj[itype][jtype];
   }
+  
+  
 
   void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
+
+    assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
+    assert(jtype < NFE_FAMS_C_ZERO_LAGRANGE);
 
     // ------------------- Sparsity pattern size - BEGIN
     unsigned ni = _dofOffset[itype][_nprocs];
@@ -1158,10 +1191,13 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     NNZ_o->init(*NNZ_d);
     NNZ_o->zero();
 
+    
+    
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-            Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
+        const unsigned ndofs_itype_in = GetFiniteElement(ielt, itype)->GetBasis()->n_dofs();
+            Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype), ndofs_itype_in );
       }
     }
 
@@ -1188,7 +1224,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
         short unsigned ielt = GetElementType(iel);
-          Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype) );
+        const unsigned ndofs_itype_in = GetFiniteElement(ielt, itype)->GetBasis()->n_dofs();
+          Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, GetFiniteElement(ielt, jtype), ndofs_itype_in );
       }
     }
 
@@ -1213,13 +1250,18 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                                          NumericVector* NNZ_d,
                                          NumericVector* NNZ_o,
                                          const unsigned& itype,
-                                         const elem_type * elem_type_in) const
+                                         const elem_type * elem_type_in_jtype,
+                                         const unsigned ndofs_itype_in) const
   {
+    
+        assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
+
       
-    const unsigned soltype_in = elem_type_in->GetSolType();
-    const basis * pt_basis_in = elem_type_in->GetBasis();
-    const unsigned      ndofs = elem_type_in->GetNDofs();
-    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
+    const unsigned soltype_in = elem_type_in_jtype->GetSolType();
+    const basis * pt_basis_in = elem_type_in_jtype->GetBasis();
+    const unsigned      ndofs = elem_type_in_jtype->GetNDofs();
+    
+    const unsigned      ndofs_Lagrange = ndofs_itype_in;
     
     bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
@@ -1259,18 +1301,22 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                                     NumericVector* NNZ_d,
                                     NumericVector* NNZ_o,
                                     const unsigned& itype,
-                                  const elem_type * elem_type_in) const
+                                  const elem_type * elem_type_in_jtype,
+                                         const unsigned ndofs_itype_in) const
   {
     
-    const unsigned soltype_in = elem_type_in->GetSolType();
-    const basis * pt_basis_in = elem_type_in->GetBasis();
-    const unsigned      ndofs = elem_type_in->GetNDofs();
-    const unsigned      ndofs_Lagrange = elem_type_in->GetNDofs_Lagrange(itype);
+        assert(itype < NFE_FAMS_C_ZERO_LAGRANGE);
+    
+    const unsigned soltype_in = elem_type_in_jtype->GetSolType();
+    const basis * pt_basis_in = elem_type_in_jtype->GetBasis();
+    const unsigned      ndofs = elem_type_in_jtype->GetNDofs();
+    
+    const unsigned      ndofs_Lagrange = ndofs_itype_in;
+
+    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
     std::vector<int> cols( ndofs );
     std::vector<double> value( ndofs );
-    
-    bool identity = ( ndofs_Lagrange <= ndofs ) ? true : false;
     
     for(int i = 0; i < ndofs_Lagrange; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);

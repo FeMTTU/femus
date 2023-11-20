@@ -3,13 +3,8 @@
 
 namespace femus {
 
-// =======================
-GeomElemHex27::GeomElemHex27() : GeomElemBase()   { }
-	  
-// =======================
-          GeomElemHex27::~GeomElemHex27() {    }
 
-          
+
 // =======================
       float GeomElemHex27::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       

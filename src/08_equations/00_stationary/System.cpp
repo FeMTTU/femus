@@ -18,6 +18,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "Assemble_unknown.hpp"
+#include "Mesh.hpp"
 
 #include <sstream>
 

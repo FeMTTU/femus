@@ -1,4 +1,7 @@
 
+#include "LinearEquationSolver.hpp"
+
+
 // Building the Conformal Minimization system.
 void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data

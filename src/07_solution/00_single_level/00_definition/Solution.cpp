@@ -40,7 +40,7 @@ namespace femus {
   Solution::Solution(Mesh *other_msh) {
     _msh = other_msh;
 
-    for(int i = 0; i < 5; i++) {
+    for(int i = 0; i < NFE_FAMS; i++) {
       _GradMat[i].resize(_msh->GetDimension());
       _AMR_flag = 0;
     }
@@ -331,7 +331,7 @@ _analytical_function.resize(new_size);
                     _msh->dofmap_get_own_size(_SolType[i], processor_id()), false, SERIAL);
     }
     else { // IF PARALLEL
-      if(_SolType[i] < 3) {
+      if(_SolType[i] < NFE_FAMS_C_ZERO_LAGRANGE) {
         if(_msh->dofmap_get_ghost_dofs(_SolType[i], processor_id()).size() != 0) {
           _Sol[i]->init(_msh->dofmap_get_dof_offset(_SolType[i], n_processors()),
                         _msh->dofmap_get_own_size(_SolType[i], processor_id()),
@@ -433,7 +433,7 @@ _analytical_function.resize(new_size);
       }
     }
 
-    for(unsigned i = 0; i < 5; i++) {
+    for(unsigned i = 0; i < NFE_FAMS; i++) {
       for(int j = 0; j < _msh->GetDimension(); j++) {
         if(_GradMat[i][j]) {
           delete _GradMat[i][j];
@@ -1065,7 +1065,7 @@ _analytical_function.resize(new_size);
 //   std::vector <unsigned> SolType(SolIndex.size());
 //   std::vector <unsigned> SolEndInd(SolIndex.size());
 //
-//   unsigned END_IND[5]= {0,1,1,4,5};
+//   unsigned END_IDX[5]= {0,1,1,4,5};
 //
 //   for (unsigned k=0; k<SolIndex.size(); k++) {
 //     double EPSMAX = _AMREps[SolIndex[k]]->linfty_norm ();
@@ -1073,7 +1073,7 @@ _analytical_function.resize(new_size);
 //     cout << std::endl << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
 //     SolMax[k] = AMRthreshold * SOLMAX;
 //     SolType[k] = _SolType[SolIndex[k]];
-//     SolEndInd[k]   = END_IND[SolType[k]];
+//     SolEndInd[k]   = END_IDX[SolType[k]];
 //   }
 //
 //   Solution* AMR = _msh->_topology;
@@ -1096,7 +1096,7 @@ _analytical_function.resize(new_size);
 //   for (int kel = _msh->_elementOffset[_iproc]; kel < _msh->_elementOffset[_iproc+1]; kel++) {
 //     short unsigned kelt=_msh->GetElementType(kel);
 //     for (unsigned k=0; k<SolIndex.size(); k++) {
-//       if(SolType[k]<3){
+//       if(SolType[k] < NFE_FAMS_C_ZERO_LAGRANGE){
 //         unsigned nve=_msh->GetElementDofNumber(kel,SolEndInd[k]);
 // 	for(unsigned i=0; i<nve; i++) {
 // 	  unsigned inode_metis=_msh->GetSolutionDof(i,kel,SolType[k]);
@@ -1135,7 +1135,7 @@ _analytical_function.resize(new_size);
 //
 //     for(unsigned k = 0; k < SolIndex.size(); k++) {
 //
-//       if(SolType[k] < 3) {
+//       if(SolType[k] < NFE_FAMS_C_ZERO_LAGRANGE) {
 //
 //         SolType[k] = _SolType[SolIndex[k]];
 //
@@ -1189,7 +1189,7 @@ _analytical_function.resize(new_size);
 //
 //       for(unsigned k = 0; k < SolIndex.size(); k++) {
 //
-//         if(SolType[k] < 3) {
+//         if(SolType[k] < NFE_FAMS_C_ZERO_LAGRANGE) {
 //           double value = 0.;
 //
 //           for(int i = 0; i < dim; i++) {
@@ -1220,7 +1220,7 @@ _analytical_function.resize(new_size);
 
   void Solution::BuildGradMatrixStructure(unsigned SolType) {
 
-    if(SolType < 3 && _GradMat[SolType][0] == 0) {
+    if(SolType < NFE_FAMS_C_ZERO_LAGRANGE && _GradMat[SolType][0] == 0) {
 
       unsigned dim = _msh->GetDimension();
 

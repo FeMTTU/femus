@@ -1,10 +1,3 @@
-//C++ includes
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <iostream>
-#include <cstdlib>
-#include <sstream>
-
 #include "FemusConfig.hpp"
 #include "Parallel.hpp"
 #include "FemusInit.hpp"
@@ -12,7 +5,6 @@
 #include "MultiLevelMeshTwo.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum_deprecated.hpp"
-#include "GaussPoints.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "ElemType.hpp"
@@ -21,15 +13,30 @@
 #include "Quantity.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "XDMFWriter.hpp"
+#include "LinearEquationSolver.hpp"
 
 // application
 #include "TempQuantities.hpp"
 #include "OptLoop.hpp"
 
 
+//C++ includes
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <iostream>
+#include <cstdlib>
+#include <sstream>
+
+
+
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif
+
+
+using namespace femus;
+using namespace applications_opt_control;
+
 
 void  GenMatRhsT(MultiLevelProblem &ml_prob);
 void  GenMatRhsNS(MultiLevelProblem &ml_prob);

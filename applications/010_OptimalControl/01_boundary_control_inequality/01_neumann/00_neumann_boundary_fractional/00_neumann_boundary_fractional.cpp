@@ -149,7 +149,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
   
-  ml_sol.Initialize("All");    // initialize all varaibles to zero
+  ml_sol.Initialize("All");    // initialize all variables to zero
 
   ml_sol.Initialize("state",  Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("control",  Solution_set_initial_conditions, & ml_prob);

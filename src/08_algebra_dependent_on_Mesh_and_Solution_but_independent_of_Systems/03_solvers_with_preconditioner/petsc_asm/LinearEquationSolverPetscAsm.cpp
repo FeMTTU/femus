@@ -93,7 +93,7 @@ namespace femus {
     bool FastVankaBlock = true;
 
     if(_NSchurVar != 0) {
-      FastVankaBlock = (_SolType[_SolPdeIndex[variable_to_be_solved[variable_to_be_solved.size() - _NSchurVar]]] < 3) ? false : true;
+      FastVankaBlock = (_SolType[_SolPdeIndex[variable_to_be_solved[variable_to_be_solved.size() - _NSchurVar]]] < NFE_FAMS_C_ZERO_LAGRANGE) ? false : true;
     }
 
     unsigned iproc = processor_id();
@@ -140,7 +140,7 @@ namespace femus {
 
       PetscInt Csize = 0;
 
-      // ***************** NODE/ELEMENT SERCH *******************
+      // ***************** NODE/ELEMENT SEARCH *******************
       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
 	for(unsigned j = 0; j < GetMeshFromLinEq()->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){

@@ -6,6 +6,7 @@
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "adept.h"
 

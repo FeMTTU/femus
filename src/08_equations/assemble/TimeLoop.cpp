@@ -22,6 +22,7 @@
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "XDMFWriter.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "Parallel.hpp"
 

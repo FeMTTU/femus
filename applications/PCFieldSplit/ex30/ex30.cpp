@@ -22,8 +22,10 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
+
+#include "adept.h"
 
 
 using namespace femus;

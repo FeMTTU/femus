@@ -181,19 +181,11 @@ Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
 Mesh_1.ConvertToQuadratic(0)
 [ Group_6_0, Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/src/06_mesh/00_single_level/01_input/00_mesh_files/00_salome/02_2d/one_tri6_one_quad8_groups_b_v.med', 0, 41, 1, Mesh_1, 0, [], '',-1, 1 )
-  pass
-except:
-  print('ExportPartToMED() failed. Invalid file name?')
+
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
 [ Group_6_0, Group_1_0, Group_2_0 ] = Mesh_1.GetGroups()
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/src/06_mesh/00_single_level/01_input/00_mesh_files/00_salome/02_2d/one_tri7_one_quad9_groups_b_v.med', 0, 41, 1, Mesh_1, 0, [], '',-1, 1 )
-  pass
-except:
-  print('ExportPartToMED() failed. Invalid file name?')
+
 Sub_mesh_1 = Mesh_1.GetSubMesh( Face_3, 'Sub-mesh_1' )
 Sub_mesh_2 = Regular_1D.GetSubMesh()
 Sub_mesh_3 = Regular_1D_1.GetSubMesh()

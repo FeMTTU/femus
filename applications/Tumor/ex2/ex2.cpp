@@ -17,8 +17,10 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
+#include "LinearEquationSolver.hpp"
 #include "Marker.hpp"
+
+#include "adept.h"
 
 using namespace femus;
 
@@ -38,7 +40,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   return dirichlet;
 }
 
-// double InitalValueU2D (const std::vector < double >& x) {
+// double InitialValueU2D (const std::vector < double >& x) {
 //   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
 //   double r2 = r * r;
 //   double R = 1.;
@@ -50,7 +52,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 // }
 
 double V0;
-double InitalValueU3D (const std::vector < double >& x) {
+double InitialValueU3D (const std::vector < double >& x) {
   double r = sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
   double r2 = r * r;
   double R = 1.0001;
@@ -62,7 +64,7 @@ double InitalValueU3D (const std::vector < double >& x) {
   return (V0 * M_PI * 4. / 3.) / Vb * exp ( (1. - R2 / (R2 - r2)));
 }
 
-double InitalValueD (const std::vector < double >& x) {
+double InitialValueD (const std::vector < double >& x) {
   return 100.;
 }
 
@@ -78,7 +80,7 @@ double GetSmootK (const double & kmin, const double & kmax, const double & h, co
   return value;
 }
 
-double InitalValueK11 (const std::vector < double >& x) {
+double InitialValueK11 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 1.;
   double h = 0.1;
@@ -87,7 +89,7 @@ double InitalValueK11 (const std::vector < double >& x) {
   return GetSmootK (kmin, kmax, h, r0, x);
 
 }
-double InitalValueK12 (const std::vector < double >& x) {
+double InitialValueK12 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
   double h = 0.1;
@@ -95,7 +97,7 @@ double InitalValueK12 (const std::vector < double >& x) {
 
   return GetSmootK (kmin, kmax, h, r0, x);
 }
-double InitalValueK13 (const std::vector < double >& x) {
+double InitialValueK13 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
   double h = 0.1;
@@ -103,7 +105,7 @@ double InitalValueK13 (const std::vector < double >& x) {
 
   return GetSmootK (kmin, kmax, h, r0, x);
 }
-double InitalValueK22 (const std::vector < double >& x) {
+double InitialValueK22 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 2.;
   double h = 0.1;
@@ -111,7 +113,7 @@ double InitalValueK22 (const std::vector < double >& x) {
 
   return GetSmootK (kmin, kmax, h, r0, x);
 }
-double InitalValueK23 (const std::vector < double >& x) {
+double InitialValueK23 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
   double h = 0.1;
@@ -119,7 +121,7 @@ double InitalValueK23 (const std::vector < double >& x) {
 
   return GetSmootK (kmin, kmax, h, r0, x);
 }
-double InitalValueK33 (const std::vector < double >& x) {
+double InitialValueK33 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 3.;
   double h = 0.1;
@@ -217,10 +219,10 @@ int main (int argc, char** args) {
 // 
 //     mlSol.Initialize ("All");
 // //     if (dim == 2)
-// //       mlSol.Initialize ("u", InitalValueU2D);
+// //       mlSol.Initialize ("u", InitialValueU2D);
 // //     else
-//     mlSol.Initialize ("u", InitalValueU3D);
-//     mlSol.Initialize ("d", InitalValueD);
+//     mlSol.Initialize ("u", InitialValueU3D);
+//     mlSol.Initialize ("d", InitialValueD);
 // 
 //     ProjectK (mlSolCube, mlSol);
 // 

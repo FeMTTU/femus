@@ -4,6 +4,7 @@
 
 #include "MultiLevelProblem.hpp"
 #include "Assemble_jacobian.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "adept.h"
 

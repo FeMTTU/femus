@@ -1,9 +1,10 @@
 #ifndef __femus_include_IncompressibleFSIAssemblySupg_hpp__
 #define __femus_include_IncompressibleFSIAssemblySupg_hpp__
-#endif
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "MultiLevelSolution.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 
 #include "OprtrTypeEnum.hpp"
@@ -1373,4 +1374,5 @@ namespace femus {
 
 
 
+#endif
 

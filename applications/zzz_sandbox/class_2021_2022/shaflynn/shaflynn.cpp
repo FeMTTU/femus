@@ -586,7 +586,6 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
     
     //std::cout << "ielGeom iqp= " << i_qp << " .... What is this?" << std::endl;
-    //std::cout << *(ml_prob.GetQuadratureRule(ielGeom).GetGaussCoordinatePointer(i_qp)) << std::endl;
     
     
     

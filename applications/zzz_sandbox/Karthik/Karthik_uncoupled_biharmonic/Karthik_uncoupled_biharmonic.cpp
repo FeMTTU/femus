@@ -17,50 +17,69 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+#include "Files.hpp"
+
+
+#include "FE_convergence.hpp"
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 #include "adept.h"
 
 
+// // // #define LIBRARY_OR_USER   1 //0: library; 1: user
+
+// // // #if LIBRARY_OR_USER == 0
+// // //    #include "01_biharmonic_coupled.hpp"
+// // //    #define NAMESPACE_FOR_BIHARMONIC   femus
+// // // #elif LIBRARY_OR_USER == 1
+// // //    #include "biharmonic_coupled.hpp"
+// // //    #define NAMESPACE_FOR_BIHARMONIC   karthik
+// // // #endif
+
+
+// // // #define LIBRARY 1
+// // // #if LIBRARY == 1
+// // // #include "biharmonic_uncoupled.hpp"
+// // // #define NAMESPACE_FOR_BIHARMONIC_UNCOUPLED karthik
+// // // #endif
+
+
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+
+
+// ======= Solution_Set - BEGIN  ========================
+
+double GetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return sin(pi * x[0]) * cos(pi * x[1]);
+};
+
+
+void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = pi * cos(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1] = -pi * sin(pi * x[0]) * sin(pi * x[1]);
+};
+
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -2.*pi * pi * sin(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+};
+
+
+// ======= Solution_Set - END  ========================
+
+
+
+
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
   return dirichlet;
 }
-
-
-// // // -----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-// // // bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-// // //   bool dirichlet = true; //dirichlet
-// // //
-// // //   if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense.
-// // //     value = 0.;
-// // //     if (facename == 1) {
-// // //       if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
-// // //     }
-// // //   }
-// // //   else if (!strcmp(SolName, "V")) {
-// // //     value = 0.;
-// // //     //if (facename == 1) {
-// // //      // if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
-// // //     //}
-// // //   }
-// // //   else if (!strcmp(SolName, "W")) {
-// // //     value = 0.;
-// // //   }
-// // //   else if (!strcmp(SolName, "P")) {
-// // //     value = 0.;
-// // //     dirichlet = false;
-// // //   }
-// // //
-// // //   return dirichlet;
-// // // }
-
-
-
-// // // -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -72,8 +91,39 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
 
 int main(int argc, char** args) {
 
+
+
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+
+  // ======= Files - BEGIN  ========================
+  const bool use_output_time_folder = false; // This allows you to run the code multiple times without overwriting. This will generate an output folder each time you run.
+  const bool redirect_cout_to_file = true; // puts the output in a log file instead of the term
+  Files files;
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
+
+  // ======= Files - END  ========================
+
+// // //      // ======= System Specifics - BEGIN  ==================
+// // //   system_specifics  system_biharmonic_uncoupled;   //me
+// // //
+// // //   system_biharmonic_uncoupled._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
+// // //   const std::string relative_path_to_build_directory =  "../../../../";
+// // //   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";  system_biharmonic_uncoupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
+// // //
+// // //   system_biharmonic_uncoupled._system_name = "Biharmonic";
+// // //   system_biharmonic_uncoupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_UNCOUPLED :: biharmonic_uncoupled_equation :: AssembleV_AD;
+// // //   system_biharmonic_uncoupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_UNCOUPLED :: biharmonic_uncoupled_equation :: AssembleU_AD;
+// // //   system_biharmonic_uncoupled._boundary_conditions_types_and_values             = SetBoundaryCondition;
+// // //
+// // //   Domains::square_01by01::Function_Zero_on_boundary_5<>   system_biharmonic_uncoupled_function_zero_on_boundary_1;
+// // //   Domains::square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_uncoupled_function_zero_on_boundary_1_laplacian;
+// // //   system_biharmonic_uncoupled._assemble_function_for_rhs   = & system_biharmonic_uncoupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
+// // //   system_biharmonic_uncoupled._true_solution_function      = & system_biharmonic_uncoupled_function_zero_on_boundary_1;
+// // //   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
+// // //     // ======= System Specifics - END ==================
+
 
 
   // define multilevel mesh
@@ -248,28 +298,6 @@ int main(int argc, char** args) {
 // // //
 // // // // ======= Solution_Set - END  ========================
 
-// ======= Solution_Set - BEGIN  ========================
-
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return sin(pi * x[0]) * cos(pi * x[1]);
-};
-
-
-void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = pi * cos(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * sin(pi * x[0]) * sin(pi * x[1]);
-};
-
-
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.*pi * pi * sin(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
-};
-
-
-// ======= Solution_Set - END  ========================
 
 
 // // // // ======= Solution_Set - BEGIN  ========================

@@ -19,15 +19,19 @@
 //----------------------------------------------------------------------------
 #include "LinearEquationSolver.hpp"
 #include "FemusConfig.hpp"
+
 #include "PrecondtypeEnum.hpp"
+#include "Preconditioner.hpp"
+
+#include "LinearEquationSolverPetsc.hpp"
+#include "LinearEquationSolverPetscAsm.hpp"
+#include "LinearEquationSolverPetscFieldSplit.hpp"
+
+
 #include "petscksp.h"
 #include "petscvec.h"
 
-// Local Includes
-#include "LinearEquationSolverPetscAsm.hpp"
-#include "LinearEquationSolverPetsc.hpp"
-#include "LinearEquationSolverPetscFieldSplit.hpp"
-#include "Preconditioner.hpp"
+
 
 namespace femus
 {

@@ -5,7 +5,7 @@
 
 
 #include "MultiLevelSolution.hpp"
-#include "Operations.hpp"
+#include "VectorOperations.hpp"
 #include "Function.hpp"
 #include "Assemble_unknown.hpp"
 

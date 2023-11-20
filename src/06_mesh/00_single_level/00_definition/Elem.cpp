@@ -194,7 +194,7 @@ namespace femus
   }
 
   
-  void elem::ReorderChildElement_columns(const std::vector < unsigned >& elementMapping) {
+  void elem::ReorderChildElement_OnCoarseElem_columns(const std::vector < unsigned >& elementMapping) {
     
      //BEGIN reordering _childElementDof (columns) on coarse levels
     if (_level != 0) {
@@ -208,7 +208,7 @@ namespace femus
  
   } 
   
-  void elem::ReorderMeshElement_Type_Level_Group_Material_Dof_rows_NearFace_ChildElem(const std::vector < unsigned >& elementMapping)
+  void elem::ReorderMeshElement_Type_Level_Group_Material___NearFace_rows_ChildElem_columns(const std::vector < unsigned >& elementMapping)
   {
 
     //BEGIN reordering _elementType
@@ -247,22 +247,36 @@ namespace femus
 
     //END reordering _elementGroup and _elementMaterial
 
-    //BEGIN reordering _elementDof (rows)
-    ReorderElementDof_rows(elementMapping);
-    //END reordering OF _elementDof (rows)
-
+    
+    //Elem
     //BEGIN reordering _elementNearFace (rows)
     ReorderElementNearFace_rows(elementMapping);
     //END reordering _elementNearFace (rows)
 
+    //Elem
     //BEGIN reordering _childElement (columns) on coarse levels
-    ReorderChildElement_columns(elementMapping);
+    ReorderChildElement_OnCoarseElem_columns(elementMapping);
     //END reordering _childElement (columns) on coarse levels
+ 
     
   }
 
 
-  void elem::ReorderMeshNodes_ElementDof(const std::vector < unsigned >& nodeMapping)
+  void elem::ReorderMeshElement_Dof_stuff(const std::vector < unsigned >& elementMapping)
+  {
+    
+    //BEGIN reordering _elementDof (rows)
+    ReorderElementDof_rows(elementMapping);
+    //END reordering OF _elementDof (rows)
+
+    
+  }
+  
+  
+  
+  
+  
+  void elem::ReorderElementDof_columns_Using_node_mapping(const std::vector < unsigned >& nodeMapping)
   {
     for (unsigned i = _elementDof.begin(); i < _elementDof.end(); i++) {
       for (unsigned j = _elementDof.begin(i); j < _elementDof.end(i); j++) {
@@ -276,13 +290,6 @@ namespace femus
     _elementNearVertex.clear();
   }
 
-  /**
-   * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
-   **/
-  const unsigned elem::GetElementDofNumber(const unsigned& iel, const unsigned& type) const
-  {
-    return NVE[_elementType[iel]][type];
-  }
 
   /**
    * Set the local->global node number
@@ -344,10 +351,7 @@ namespace femus
     _nelt[ielt] += value;
   }
   
-  const unsigned elem::GetElementFaceNumber(const unsigned& iel, const unsigned& type) const
-  {
-    return NFC[ _elementType[iel] ][type];
-  }
+
 
   /**
    * Return the global adiacent-to-face element number
@@ -548,7 +552,7 @@ namespace femus
 
   
   
-  void elem::BuildMeshElemStructures() {
+  void elem::BuildElem_NearFace_NearElem_using_NearVertex() {
     
       
     BuildElementNearVertex();
@@ -559,14 +563,16 @@ namespace femus
     
     DeleteElementNearVertex();
 
+  }
+  
+  
+  void elem::ScatterElement_Level_Type_Group_Material___NearFace() {
 
+    
     ScatterElement_Level_Type_Group_Material();
     
     ScatterElementNearFace();
-    
-    
-    ScatterElementDof();
-    
+
     
   }
   
@@ -672,25 +678,11 @@ namespace femus
     return _childElem[iel][json];
   }
 
-  const unsigned elem::GetNVE(const unsigned& elementType, const unsigned& doftype) const
-  {
-    return NVE[elementType][doftype];
-  }
 
-  const unsigned elem::GetNFACENODES(const unsigned& elementType, const unsigned& jface, const unsigned& dof) const
-  {
-    return NFACENODES[elementType][jface][dof];
-  }
 
-  const unsigned elem::GetNFC(const unsigned& elementType, const unsigned& type) const
-  {
-    return NFC[elementType][type];
-  }
 
-  const unsigned elem::GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const
-  {
-    return ig[elementType][iface][jnode];
-  }
+
+
 
   void elem::ScatterElementDof()
   {

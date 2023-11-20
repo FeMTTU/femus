@@ -270,7 +270,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
           // project vertex indices -----------------
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++)
             for(unsigned inode = 0; inode < elc->GetNVE(elt, CONTINUOUS_LINEAR); inode++) {
-              unsigned jDof =  otherFiniteElement[elt][0]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
+              unsigned jDof =  otherFiniteElement[elt][ CONTINUOUS_LINEAR ]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
               _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof));
             }
 
@@ -450,9 +450,13 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     
     
-//==== BuildMeshElemStructures - BEGIN ======== 
-    _mesh.GetMeshElements()->BuildMeshElemStructures();
-//==== BuildMeshElemStructures - END ======== 
+//==== BuildElem_NearFace_NearElem_using_NearVertex - BEGIN ======== 
+    _mesh.GetMeshElements()->BuildElem_NearFace_NearElem_using_NearVertex();
+    
+    _mesh.GetMeshElements()->ScatterElement_Level_Type_Group_Material___NearFace();
+    
+    _mesh.GetMeshElements()->ScatterElementDof();
+//==== BuildElem_NearFace_NearElem_using_NearVertex - END ======== 
   
     
 //====================================

@@ -22,7 +22,7 @@ using namespace femus;
 
 //2D NONLOCAL DOMAIN DECOMPOSITION WITH FETI: Dirichlet on the left, Neumann everywhere else
 
-double InitalValueU (const std::vector < double >& x) {
+double InitialValueU (const std::vector < double >& x) {
   double value;
 
   value = 0.;
@@ -90,7 +90,7 @@ int main (int argc, char** argv) {
   mlSol.Initialize ("All");
   mlSolGlobal.Initialize ("All");
 
-//   mlSol.Initialize ("u_exact", InitalValueU);
+//   mlSol.Initialize ("u_exact", InitialValueU);
 
   // ******* Set boundary conditions *******
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);

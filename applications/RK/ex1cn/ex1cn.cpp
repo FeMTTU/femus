@@ -17,6 +17,8 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 
 
@@ -42,7 +44,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   return dirichlet;
 }
 
-double InitalValue(const std::vector < double >& x) {
+double InitialValue(const std::vector < double >& x) {
   double pi=acos(-1);  
   return cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]); 
   //return cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] );
@@ -85,7 +87,7 @@ int main(int argc, char** args) {
 
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND, 2); // We may have more than one, add each of them as u,v,w with their apprx type.
-  mlSol.Initialize("u", InitalValue); // Since this is time depend problem.
+  mlSol.Initialize("u", InitialValue); // Since this is time depend problem.
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);

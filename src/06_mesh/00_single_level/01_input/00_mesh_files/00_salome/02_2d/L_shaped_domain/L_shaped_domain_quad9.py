@@ -187,11 +187,6 @@ aCriterion = smesh.GetCriterion(SMESH.EDGE,SMESH.FT_FreeBorders,SMESH.FT_Undefin
 aCriteria.append(aCriterion)
 isDone = Mesh_1.RemoveElements( [ 3, 5 ] )
 smesh.SetName(Mesh_1, 'Mesh_1')
-try:
-  Mesh_1.ExportMED( r'/home/gbornia/software/femus/unittests/test_mesh_read_write/input/L_shaped_domain.med', 0, 41, 1, Mesh_1, 0, [], '',-1, 1 )
-  pass
-except:
-  print('ExportPartToMED() failed. Invalid file name?')
 Sub_mesh_1 = Regular_1D.GetSubMesh()
 Sub_mesh_2 = Regular_1D_1.GetSubMesh()
 Sub_mesh_3 = Regular_1D_2.GetSubMesh()
@@ -226,6 +221,3 @@ smesh.SetName(Number_of_Segments_8, 'Number of Segments_8')
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 smesh.SetName(Number_of_Segments_7, 'Number of Segments_7')
 
-
-if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser()

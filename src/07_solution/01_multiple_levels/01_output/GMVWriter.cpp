@@ -42,10 +42,13 @@ namespace femus {
   GMVWriter::~GMVWriter() {
   }
 
-  void GMVWriter::Write( const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step ) {
+  void GMVWriter::Write( const std::string output_path,
+                         const std::string order,
+                         const std::vector<std::string>& vars, 
+                         const unsigned time_step ) {
 
     // ********** linear -> index==0 *** quadratic -> index==1 **********
-    unsigned index = ( strcmp( order, "linear" ) ) ? CONTINUOUS_SERENDIPITY : CONTINUOUS_LINEAR;
+    unsigned index = ( strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) ) ? FILES_CONTINUOUS_QUADRATIC : FILES_CONTINUOUS_LINEAR;
 
     std::string filename_prefix;
     if( _ml_sol != NULL )
@@ -241,7 +244,9 @@ namespace femus {
             sprintf( buffer, "%s %s", "Eps", _ml_sol->GetSolutionName( i ) );
           }
           if( name == 0 || ( _debugOutput  && solution->_ResEpsBdcFlag[i] ) ) {
-            if( _ml_sol->GetSolutionType( i ) < 3 ) { // **********  on the nodes **********
+            
+            
+            if( _ml_sol->GetSolutionType( i ) < NFE_FAMS_C_ZERO_LAGRANGE ) { // **********  on the nodes **********
               fout.write( ( char* ) buffer, sizeof( char ) * 8 );
               fout.write( ( char* ) &one, sizeof( unsigned ) );
               if( name == 0 ) {

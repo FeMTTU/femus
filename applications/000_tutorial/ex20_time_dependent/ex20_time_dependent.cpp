@@ -45,6 +45,8 @@
 #include "VTKWriter.hpp"
 
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
+
 #include "FElemTypeEnum.hpp"
 
 
@@ -288,7 +290,7 @@ int main(int argc,char **args) {
         std::vector < std::string > variablesToBePrinted;
         variablesToBePrinted.push_back("all");
         std::string run_prefix = "n_steps_" + std::to_string(n_steps[i]);
-        ml_sol.GetWriter()->Write(run_prefix, files.GetOutputPath(), "biquadratic", variablesToBePrinted, time_step);    // print solutions
+        ml_sol.GetWriter()->Write(run_prefix, files.GetOutputPath(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, time_step);    // print solutions
 
     }
     

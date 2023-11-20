@@ -95,7 +95,7 @@ int main(int argc, char** args) {
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";  system_biharmonic_coupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
   
   system_biharmonic_coupled._system_name = "Biharmonic";
-  system_biharmonic_coupled._assemble_function = AssembleBilaplaceProblem_AD;
+  system_biharmonic_coupled._assemble_function = biharmonic_equation :: AssembleBilaplaceProblem_AD;
   
   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
   
@@ -178,7 +178,7 @@ int main(int argc, char** args) {
       system.AddSolutionToSystemPDE("v");
 
       // attach the assembling function to system
-      system.SetAssembleFunction(AssembleBilaplaceProblem_AD);
+      system.SetAssembleFunction( system_biharmonic_coupled._assemble_function );
 
       // initialize and solve the system
       system.init();
@@ -200,7 +200,7 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i);
 
     }
   }

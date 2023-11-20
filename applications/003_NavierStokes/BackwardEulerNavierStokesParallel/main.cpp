@@ -10,6 +10,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "LinearEquationSolver.hpp"
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
 

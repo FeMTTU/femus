@@ -11,6 +11,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "CurrentElem.hpp"
 #include "../include/FSISteadyStateAssembly.hpp"
+
 #include <dlfcn.h>
 
 
@@ -188,15 +189,15 @@ output_path.append("/");
   }
 
   // load the symbols
-  cout << " Loading symbol InitalValueU...";
-  typedef double (*InitalValueU_t)(const std::vector < double >& x);
+  cout << " Loading symbol InitialValueU...";
+  typedef double (*InitialValueU_t)(const std::vector < double >& x);
 
   // reset errors
   dlerror();
-  InitalValueU_t InitalValueU = (InitalValueU_t) dlsym(handle, "InitalValueU");
+  InitialValueU_t InitialValueU = (InitialValueU_t) dlsym(handle, "InitialValueU");
   const char *dlsym_error = dlerror();
   if (dlsym_error) {
-      cerr << "Cannot load symbol 'InitalValueU': " << dlsym_error << '\n';
+      cerr << "Cannot load symbol 'InitialValueU': " << dlsym_error << '\n';
       dlclose(handle);
       return 1;
   }
@@ -330,7 +331,7 @@ output_path.append("/");
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  ml_sol.Initialize("U",InitalValueU); //only for turek problem
+  ml_sol.Initialize("U",InitialValueU); //only for turek problem
 
   // ******* Set boundary functions *******
   ml_sol.AttachSetBoundaryConditionFunction(BdcFunction);
