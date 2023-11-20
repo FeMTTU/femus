@@ -60,7 +60,7 @@ bool SetBoundaryConditionSphere (const std::vector < double >& x, const char Sol
 }
 
 
-double InitalValueHSphere (const std::vector < double >& x) {
+double InitialValueHSphere (const std::vector < double >& x) {
   double r = sqrt( x[0] * x[0] + x[1] * x[1]);
   return sin(0.5 * M_PI * (1.-r));
 }
@@ -107,7 +107,7 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("W", LAGRANGE, SECOND);
 
   mlSol.Initialize ("All");
-  mlSol.Initialize ("H", InitalValueHSphere);
+  mlSol.Initialize ("H", InitialValueHSphere);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryConditionSphere);

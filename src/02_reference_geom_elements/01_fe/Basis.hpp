@@ -121,7 +121,7 @@ namespace femus {
       /** Evaluate the derivatives either in the x, y or z direction **/
       double eval_dphidxyz(const unsigned int dim, const int* j, const double* x) const {
           
-        assert(dim < 3); //0, 1, 2
+        assert(dim < GeomElemBase::_max_space_dimension); //0, 1, 2
 
         switch(dim) {
             case(0): { return eval_dphidx(j, x); }

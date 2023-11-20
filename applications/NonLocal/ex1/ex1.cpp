@@ -26,7 +26,7 @@
 
 using namespace femus;
 
-double InitalValueU (const std::vector < double >& x) {
+double InitialValueU (const std::vector < double >& x) {
 
   double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0];
   double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0];
@@ -137,7 +137,7 @@ int main (int argc, char** argv) {
   mlSol.Initialize ("All");
   mlSolFine.Initialize ("All");
 
-  mlSol.Initialize ("u_exact", InitalValueU);
+  mlSol.Initialize ("u_exact", InitialValueU);
 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSolFine.AttachSetBoundaryConditionFunction (SetBoundaryCondition);

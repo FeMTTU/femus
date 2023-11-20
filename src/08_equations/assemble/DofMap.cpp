@@ -148,7 +148,7 @@ void DofMap::initNVars()  {
 //We'll see that.
 //Now, actually the biggest number you could have of GEOMETRICAL ENTITIES
 //is the NUMBER OF QUADRATIC NODES.
-//But let us not think of QUADRATIC NODES as "quadratic".
+//But let us not think of QUADRATIC NODES as `quadratic`.
 //Let us think of NODES as MESH GEOMETRICAL ENTITIES.
 //We have NODES, we have ELEMENTS,
 //those are GEOMETRICAL ENTITIES.

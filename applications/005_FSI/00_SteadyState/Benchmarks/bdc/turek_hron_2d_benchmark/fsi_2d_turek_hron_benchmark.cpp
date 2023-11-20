@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-// double InitalValueU(const std::vector < double >& x);
+// double InitialValueU(const std::vector < double >& x);
 //
 // bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[],
 // 						double &value, const int FaceName, const double = 0.);
@@ -12,7 +12,7 @@ const double um = 0.2;
 const double L = 2.5;
 const double H = 0.41;
 
-extern "C" double InitalValueU(const std::vector < double >& x) {
+extern "C" double InitialValueU(const std::vector < double >& x) {
   double xc = 0.2;
   double yc = 0.2;
   double r = 0.05;

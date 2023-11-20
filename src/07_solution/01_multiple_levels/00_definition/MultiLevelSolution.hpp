@@ -584,7 +584,7 @@ namespace femus {
         if(func || funcMLProb) {
           double value = 0.;
 
-          if(sol_type < 3) {
+          if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
               abort();
 //             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
 //               for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
@@ -610,7 +610,7 @@ namespace femus {
 //               }
 //             }
           }
-          else if(sol_type < 5) {
+          else if(sol_type < NFE_FAMS) {
               
               const double offset_to_include_line = 1.e-8;
               

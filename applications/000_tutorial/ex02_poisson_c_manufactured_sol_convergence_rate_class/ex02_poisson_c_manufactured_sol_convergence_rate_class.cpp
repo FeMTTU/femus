@@ -249,7 +249,7 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
     for (unsigned int u = 0; u < unknowns.size(); u++) {
         std::vector < std::string > variablesToBePrinted;
         variablesToBePrinted.push_back(unknowns[u]._name);
-        ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, ml_prob.GetFilesHandler()->GetOutputPath(), "biquadratic", variablesToBePrinted, lev);
+        ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, ml_prob.GetFilesHandler()->GetOutputPath(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, lev);
 
     }
         // ======= Print - END  ========================

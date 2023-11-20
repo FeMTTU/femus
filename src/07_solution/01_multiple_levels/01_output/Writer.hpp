@@ -66,16 +66,36 @@ namespace femus {
   public:
     
     /** write output function */
-    virtual void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0)  = 0;
+    virtual void Write(const std::string output_path,
+                       const std::string order,
+                       const std::vector < std::string > & vars = std::vector < std::string > (), 
+                       const unsigned time_step = 0)  = 0;
     
     /** write output function with arbitrary level */
-    virtual void Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
+    virtual void Write(const unsigned my_level, 
+                       const std::string output_path, 
+                       const std::string order,
+                       const std::vector < std::string >& vars = std::vector < std::string > (), 
+                       const unsigned time_step = 0)
+        { abort(); };
   
     /** write output function with fixed level and arbitrary initial string */
-    virtual void Write(const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
+    virtual void Write(const std::string init_string,
+                       const std::string output_path, 
+                       const std::string order,
+                       const std::vector < std::string >& vars = std::vector < std::string > (), 
+                       const unsigned time_step = 0) 
+        { abort(); };
   
     /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
-    virtual void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
+    virtual void Write(const unsigned my_level, 
+                       const std::string init_string, 
+                       const std::string output_path,
+                       const std::string suffix_pre_extension, 
+                       const std::string order,
+                       const std::vector < std::string >& vars = std::vector < std::string > (), 
+                       const unsigned time_step = 0)
+        { abort(); };
 // === Write - END =================
 
     
@@ -150,14 +170,17 @@ namespace femus {
     MultiLevelMesh* _ml_mesh;
 // === Mesh - END =================
 
-    int _gridn;
 
+// === Mesh, Level - BEGIN =================
+    int _gridn;
+// === Mesh, Level - END =================
+
+
+// === Geometric Element, Connectivities - BEGIN =================
     /** map from femus connectivity to vtk-connectivity for paraview visualization */
     static const unsigned FemusToVTKorToXDMFConn[27];
-
-
-
-  private:
+// === Geometric Element, Connectivities - END =================
+    
 
   };
 

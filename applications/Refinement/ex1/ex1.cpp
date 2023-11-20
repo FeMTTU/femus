@@ -17,12 +17,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
-double InitalValueW(const std::vector < double >& x) {
+double InitialValueW(const std::vector < double >& x) {
   return 1;
 }
 
 
-double InitalValueV(const std::vector < double >& x) {
+double InitialValueV(const std::vector < double >& x) {
   return 1+x[0]-x[1];
 }
 
@@ -62,7 +62,7 @@ int main(int argc, char** args) {
   //const elem_type * _finiteElement6 = new const elem_type_3D("tet","biquadratic","seventh");
 
   std::cout<< "**WEDGE**" <<std::endl;
-  const elem_type * _finiteElement5 = new const elem_type_3D("wedge","linear","ninth");
+  const elem_type * _finiteElement5 = new const elem_type_3D("wedge",fe_fams[CONTINUOUS_LINEAR],"ninth");
   //const elem_type * _finiteElement4 = new const elem_type_3D("wedge","biquadratic","third");
   delete _finiteElement5;
 
@@ -99,8 +99,8 @@ int main(int argc, char** args) {
 //
 //   mlSol.Initialize("All");
 //
-//   mlSol.Initialize("V",InitalValueV);
-//   mlSol.Initialize("W",InitalValueW);
+//   mlSol.Initialize("V",InitialValueV);
+//   mlSol.Initialize("W",InitialValueW);
 //
 //   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 //

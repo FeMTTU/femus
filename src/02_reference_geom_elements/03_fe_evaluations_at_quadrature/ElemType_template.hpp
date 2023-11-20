@@ -1011,8 +1011,8 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
      
      //Jac ===============
-//     Jac.resize(3/*dim*/);
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     Jac.resize(dim);
+//     for (unsigned d = 0; d < dim; d++) {
 // //         Jac[d].resize(3/*space_dim*/);   
 //         std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
 //     }
@@ -1022,7 +1022,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
 
     
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     for (unsigned d = 0; d < dim; d++) {
 //     const double * dxi_coords   = /*_dphidxi*/  dphidxi[0][ig];
 //     const double * deta_coords  = /*_dphideta*/ dphidxi[1][ig];
 //     const double * dzeta_coords = /*_dphidzeta*/dphidxi[2][ig];
@@ -1196,7 +1196,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
      
      //Jac ===============
 //     Jac.resize(3/*dim*/);
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     for (unsigned d = 0; d < dim; d++) {
 // //         Jac[d].resize(3/*space_dim*/);   
 //         std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
 //     }
@@ -1215,7 +1215,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 // Jac[2][2] = 0.; 
     
     
-//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+//     for (unsigned d = 0; d < dim; d++) {
     const double * dxi_coords   = _dphidxi[ig];
     const double * deta_coords  = _dphideta[ig];
     const double * dzeta_coords = _dphidzeta[ig];

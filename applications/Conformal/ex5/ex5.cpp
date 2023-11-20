@@ -153,12 +153,10 @@ int main (int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back ("All");
   mlSol.GetWriter()->SetDebugOutput (true);
-  //mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 0);
   mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 0);
 
   system.MGsolve();
 
-  //mlSol.GetWriter()->Write (Files::_application_output_directory, "linear", variablesToBePrinted, 1);
   mlSol.GetWriter()->Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, 1);
 
 //   system.SetAssembleFunction (AssembleConformalMinimization);

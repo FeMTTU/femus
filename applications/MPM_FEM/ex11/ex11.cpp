@@ -31,7 +31,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-double InitalValueU (const std::vector < double >& x) {
+double InitialValueU (const std::vector < double >& x) {
   return x[0] + x[1];
 }
 
@@ -123,7 +123,7 @@ int main (int argc, char** args) {
       mlSol.AddSolution ("weight", LAGRANGE, feOrder[j], 0);
 
       mlSol.Initialize ("All");
-      //mlSol.Initialize("u", InitalValueU);
+      //mlSol.Initialize("u", InitialValueU);
 
       // attach the boundary condition function and generate boundary data
       mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
@@ -180,9 +180,9 @@ int main (int argc, char** args) {
 
       VTKWriter vtkIO (&mlSol);
       vtkIO.SetDebugOutput (true);
-      vtkIO.Write (Files::_application_output_directory, "linear", variablesToBePrinted, i + j * 10);
-      vtkIO.Write (Files::_application_output_directory, "quadratic", variablesToBePrinted, i + j * 10);
-      vtkIO.Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ], variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i + j * 10);
       delete Proj;
     }
   }

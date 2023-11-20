@@ -316,7 +316,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     if(amr) {
       
       GetMeshElements()->GetAMRRestriction(this);
-//       for(unsigned soltype = 0; soltype < 3; soltype++) {
+//       for(unsigned soltype = 0; soltype < NFE_FAMS_C_ZERO_LAGRANGE; soltype++) {
 //         std::cout << "solution type = " << soltype << std::endl;
 //         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = _mesh.GetAmrRestrictionMap()[soltype].begin(); it1 != _mesh.GetAmrRestrictionMap()[soltype].end(); it1++) {
 //           std::cout << it1->first << "\t";
@@ -714,7 +714,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     //BEGIN building element based dofs -  k = 3,4 
 
     // ghost vs owned nodes: 3 and 4 have no ghost nodes
-    for(unsigned k = 3; k < 5; k++) {
+    for(unsigned k = NFE_FAMS_C_ZERO_LAGRANGE; k < NFE_FAMS; k++) {
       _ownSize[k].assign(_nprocs, 0);
     }
 
@@ -723,7 +723,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       _ownSize[4][isdom] = (_elementOffset[isdom + 1] - _elementOffset[isdom]) * (_dimension + 1);
     }
 
-    for(int k = 3; k < 5; k++) {
+    for(int k = NFE_FAMS_C_ZERO_LAGRANGE; k < NFE_FAMS; k++) {
       _ghostDofs[k].resize(_nprocs);
 
       for(int isdom = 0; isdom < _nprocs; isdom++) {

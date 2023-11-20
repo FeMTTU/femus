@@ -46,11 +46,11 @@ bool SetBoundaryConditionSphere (const std::vector < double >& x, const char Sol
   return dirichlet;
 }
 
-double InitalValueUSphere (const std::vector < double >& x) {
+double InitialValueUSphere (const std::vector < double >& x) {
   return tan (thetaSphere);
 }
 
-double InitalValueWSphere (const std::vector < double >& x) {
+double InitialValueWSphere (const std::vector < double >& x) {
   return -1. / tan (thetaSphere);
 }
 
@@ -86,14 +86,14 @@ bool SetBoundaryConditionTorus (const std::vector < double >& x, const char SolN
   return dirichlet;
 }
 
-double InitalValueUTorus (const std::vector < double >& x) {
+double InitialValueUTorus (const std::vector < double >& x) {
   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
   double cosu = r - sqrt (2) ;
   return sqrt (1 - cosu * cosu);
   //return 0.5;
 }
 
-double InitalValueWTorus (const std::vector < double >& x) {
+double InitialValueWTorus (const std::vector < double >& x) {
 
   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
   double cosu = r - sqrt (2) ;
@@ -193,16 +193,16 @@ int main (int argc, char** args) {
       mlSol.AddSolution ("W", LAGRANGE, feOrder[j]);
 
       if (simulation == 1) {
-        mlSol.Initialize ("u", InitalValueUSphere);
-        mlSol.Initialize ("W", InitalValueWSphere);
+        mlSol.Initialize ("u", InitialValueUSphere);
+        mlSol.Initialize ("W", InitialValueWSphere);
         // attach the boundary condition function and generate boundary data
         mlSol.AttachSetBoundaryConditionFunction (SetBoundaryConditionSphere);
         mlSol.GenerateBdc ("u");
         mlSol.GenerateBdc ("W");
       }
       else if (simulation == 2) {
-        mlSol.Initialize ("u", InitalValueUTorus);
-        mlSol.Initialize ("W", InitalValueWTorus);
+        mlSol.Initialize ("u", InitialValueUTorus);
+        mlSol.Initialize ("W", InitialValueWTorus);
         // attach the boundary condition function and generate boundary data
         mlSol.AttachSetBoundaryConditionFunction (SetBoundaryConditionTorus);
         mlSol.GenerateBdc ("u");

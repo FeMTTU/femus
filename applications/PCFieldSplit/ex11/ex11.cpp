@@ -32,7 +32,7 @@ double Rayleigh = 10000.;
 
 using namespace femus;
 
-double InitalValueT(const std::vector < double >& x){
+double InitialValueT(const std::vector < double >& x){
   return (x[0]+0.5);
 }
 
@@ -138,7 +138,7 @@ int main(int argc, char** args) {
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-  mlSol.Initialize("T",InitalValueT);
+  mlSol.Initialize("T",InitialValueT);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);

@@ -593,7 +593,7 @@ namespace femus {
     bool FastVankaBlock = true;
 
     if (_asmSchurVariableNumber != 0) {
-      FastVankaBlock = (_solutionType[ _solutionType.size() - _asmSchurVariableNumber ] < 3) ? false : true;
+      FastVankaBlock = (_solutionType[ _solutionType.size() - _asmSchurVariableNumber ] < NFE_FAMS_C_ZERO_LAGRANGE) ? false : true;
     }
 
     unsigned iproc = solver->processor_id();

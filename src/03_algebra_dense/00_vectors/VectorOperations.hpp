@@ -72,15 +72,15 @@ inline double dot(const std::vector< double > x,const std::vector< double > y, c
 inline void cross(const double* a,const double* b, double* res) {
 //a,b,res are 3D vectors
 //clean then fill
-  for (uint i=0; i<3; i++) res[i]=0.;
-  for (uint i=0; i<3; i++) res[i] = (a[(i+1)%3]*b[(i+2)%3] - a[(i+2)%3]*b[(i+1)%3]);
+  for (uint i=0; i < 3; i++) res[i]=0.;
+  for (uint i=0; i < 3; i++) res[i] = (a[(i+1)%3]*b[(i+2)%3] - a[(i+2)%3]*b[(i+1)%3]);
   return;
 }
 
 /// extend to a 3D vector a vector with dimension 
 inline void extend_to_zero(const double* a, double* a3D, const uint spacedim)  {
-  for (uint i=0; i<3; i++) a3D[i]=0.;
-  for (uint i=0; i< spacedim; i++)  a3D[i]=a[i];
+  for (uint i=0; i < 3; i++) a3D[i]=0.;
+  for (uint i=0; i < spacedim; i++)  a3D[i]=a[i];
   return;
 }
 

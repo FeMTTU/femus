@@ -50,7 +50,7 @@ class Mesh;
  */
 
 // ------------------------------------------------------------
-class MED_IO : public MeshInput<Mesh>
+class MED_IO : public MeshInput< Mesh >
 {
 
 // === Constructors / Destructor - BEGIN =================
@@ -67,6 +67,15 @@ class MED_IO : public MeshInput<Mesh>
 // === Constructors / Destructor - END =================
   
   
+// === Debug - BEGIN =================
+   
+ private:
+    
+   bool _print_info;
+   
+// === Debug - END =================
+   
+   
 // === Read, main function - BEGIN =================
  public:
     
@@ -81,61 +90,46 @@ class MED_IO : public MeshInput<Mesh>
                      const bool read_boundary_groups);
 // === Read, main function - END =================
   
+
+
+// === HDF5-related functions (no mesh info, could even be external) - BEGIN =================
+
   
-// === Mesh, file - BEGIN =================
+// === H5File - BEGIN =================
  public:
     
   hid_t open_mesh_file(const std::string& name);
-  
+
+ private:
+   
   void close_mesh_file(hid_t file_id);
-// === Mesh, file - END =================
+// === H5File - END =================
 
   
-// === Mesh, file, H5Datasets (arrays of data in the file) - BEGIN =================
+// === File, H5Groups (folders in the file) - BEGIN =================
+ private:
+  
+  hsize_t  get_H5G_size(const hid_t&  gid) const;
+   
+  /// file, H5Groups, H5Links of a Group (subobjects of that Group) =================
+  std::string  get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const;
+  
+// === File, H5Groups (folders in the file) - END =================
+  
+  
+  
+// === File, H5Datasets (arrays of data in the file) - BEGIN =================
  private:
     
  template < class DATASET_TYPE >  
   void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< DATASET_TYPE > & fam_map, const std::string fam_name_dir_i) const;
   
 
-// === Mesh, file, H5Datasets (arrays of data in the file) - END =================
+// === File, H5Datasets (arrays of data in the file) - END =================
 
   
-// === Mesh, file, H5Links - BEGIN =================
- private:
-  std::string  get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const;
-  
-// === Mesh, file, H5Links - END =================
-  
+// === HDF5-related functions (no mesh info, could even be external) - END =================
 
-  
-// === Mesh, File, menus  (folder of the mesh) - BEGIN =================
- public:
-    
-   const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
-// === Mesh, File, menus  (folder of the mesh) - END =================
-
-   
-// === Mesh, File, H5Group (folders in the file) - BEGIN =================
- private:
-  
-  hsize_t  get_H5G_size(const hid_t&  gid) const;
-   
-  std::string get_element_info_all_dims_H5Group(const std::string mesh_menu) const;
-  
-  std::string get_node_info_H5Group(const std::string mesh_menu) const;
-   
-  std::string get_group_info_H5Group(const std::string mesh_menu,  const std::string geom_elem_type) const;
-// === Mesh, File, H5Group (folders in the file) - END =================
-  
-  
-
-// === Mesh, dimension and Geom Elems - BEGIN =================
- private:
-    
-   /** Determine mesh dimension from mesh file. It cannot be const because it sets the dimension in the mesh */
-   const std::vector< GeomElemBase* >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name);
-// === Mesh, dimension and Geom Elems - END =================
 
 
 // === Geometric elements, Connectivities - BEGIN =================
@@ -149,22 +143,67 @@ class MED_IO : public MeshInput<Mesh>
 // === Geometric elements, Connectivities - END =================
 
 
-// === Geometric elements, types - BEGIN =================
+// === Mesh, dimension - BEGIN =================
+ private:
+    
+   /** Determine mesh dimension from mesh file. It cannot be const because it sets the dimension in the mesh */
+   const unsigned  get_mesh_dimension_by_looping_over_geom_elem_types(const hid_t &  file_id, const std::string  &  my_elem_list_dir) const;
+  
+   const unsigned  get_mesh_dimension_from_attributes(const hid_t &  file_id, const std::string  &  my_mesh_name_dir) const;
+// === Mesh, dimension - END =================
+
+
+// === Mesh, Geometric elements, list of existing types - BEGIN =================
  private:
     
    GeomElemBase * get_geom_elem_from_med_name(const  std::string el_type) const;
 
-   /** Read FE type @todo this should be const */
-  const std::vector< GeomElemBase* > get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);
+   /** Read FE type */
+  const std::vector< GeomElemBase* > get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir) const;
    
    std::vector< GeomElemBase* > _geom_elems;
-// === Geometric elements, types - END =================
+// === Mesh, Geometric elements, list of existing types - END =================
+
+
+// === Mesh, Elements or Nodes or Groups - BEGIN =================
+ public:
+    
+   /// menus (folder of the mesh)
+   const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
+   
+// === Mesh, Elements or Nodes or Groups - END =================
+   
+   
+
+// === Mesh, Elements or Nodes - BEGIN =================
+ private:
+    
+   //elements or nodes
+   static const uint _max_length_med_folder;  //max length of a string of an H5Link
+   static const std::string mesh_ensemble;             //ENS_MAA
+   static const std::string aux_zeroone;               // -0000000000000000001-0000000000000000001
+
+   //elements or nodes, gui global numbering
+   static const std::string node_or_elem_salome_gui_global_num;   //NUM    //this is the MED global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
+     //numeration in the Salome GUI, we don't need to read these fields
+     //      
+     //Salome global Numbering of both Nodes and Elements starts at 1.
+     //For Elements, lower dimensional elements are numbered first
+     
+// === Mesh, Elements or Nodes - END =================
 
 
 // === Mesh, Elements - BEGIN =================
  private:
   
-   void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase* geom_elem_per_dimension, std::vector<bool>& type_elem_flag);
+   void set_elem_connectivity_and_initialize_elem_group(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase* geom_elem_per_dimension, std::vector<bool>& type_elem_flag);
+
+   //elements
+   std::string get_element_info_all_dims_H5Group(const std::string mesh_menu) const;
+
+   static const std::string elem_types_folder;         //MAI
+   static const std::string elems_connectivity;        //NOD    //These are written based on the NOE/NUM numbering !
+   
 // === Mesh, Elements - END =================
 
    
@@ -172,8 +211,17 @@ class MED_IO : public MeshInput<Mesh>
  private:
   
   void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, std::vector < std::vector < double> >& coords, const double Lref);
+    
+  //nodes
+   std::string get_node_info_H5Group(const std::string mesh_menu) const;
+   
+   static const std::string nodes_folder;                 //NOE
+   static const std::string nodes_coord_list;             //COO
 // === Mesh, Nodes - END =================
   
+
+  
+// === Mesh, Groups - BEGIN =================
 
 
 // === Mesh, Groups, Elements or Nodes - BEGIN =================
@@ -186,6 +234,18 @@ class MED_IO : public MeshInput<Mesh>
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names, const std::string  geom_elem_type) const;
   
    void node_or_elem_Compute_group_geometric_object_type_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info)  const;
+
+   
+   // groups, elements or nodes
+   std::string get_group_info_H5Group(const std::string mesh_menu,  const std::string geom_elem_type) const;
+  
+   static const std::string _node_or_elem_group_fam;   //FAM
+   static const std::string group_ensemble;            //FAS
+   // groups, elements
+   static const std::string group_elements;            //ELEME
+   // groups, nodes
+   static const std::string group_nodes;               //NOEUD
+   
 // === Mesh, Groups, Elements or Nodes - END =================
 
 
@@ -260,49 +320,14 @@ class MED_IO : public MeshInput<Mesh>
 // === Mesh, Groups, Boundary of Boundary (some part) - Nodes (cannot select such elements) - END =================
 
 
-// === MED inner folders - BEGIN =================
-   
- private:
-    
-//    std::vector<char*> menu_names;
-   static const uint _max_length_med_folder;  //max length of a string of an H5Link
-   static const std::string mesh_ensemble;             //ENS_MAA
-   static const std::string aux_zeroone;               // -0000000000000000001-0000000000000000001
+  
+// === Mesh, Groups - END =================
 
-   //elements
-   static const std::string elem_types_folder;         //MAI
-   static const std::string elems_connectivity;              //NOD    //These are written based on the NOE/NUM numbering !
-   
-   //nodes
-   static const std::string nodes_folder;                 //NOE
-   static const std::string nodes_coord_list;                //COO
-   
-   //elements or nodes, gui global numbering
-   static const std::string node_or_elem_salome_gui_global_num;   //NUM    //this is the MED global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
-                                                       //Salome global Numbering of both Nodes and Elements starts at 1.
-                                                       //For Elements, lower dimensional elements are numbered first
-                                                       
-   // elements or nodes, groups
-   static const std::string _node_or_elem_group_fam;                 //FAM
-   static const std::string group_ensemble;            //FAS
-   // groups, elements
-   static const std::string group_elements;            //ELEME
-   // groups, nodes
-   static const std::string group_nodes;               //NOEUD
-   
-   
-// === MED inner folders - END =================
-
-
-// === Debug - BEGIN =================
-   
- private:
-    
-   bool _print_info;
-   
-// === Debug - END =================
    
 };
+
+
+
 
 inline
 MED_IO::MED_IO (Mesh& mesh) :

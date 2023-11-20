@@ -927,11 +927,11 @@ int main(int argc, char** args) {
 
   
     // ======= Print - BEGIN ========================
-  const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
+  const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
  
-  ml_sol.GetWriter()->Write(/*my_specifics[app]._system_name + "_" +*/ my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.GetWriter()->Write(/*my_specifics[app]._system_name + "_" +*/ my_specifics[app]._mesh_files/*mesh_files*/[m], files.GetOutputPath(), print_order, variablesToBePrinted);
     // ======= Print - END ========================
   
     }  //end refinement loop
