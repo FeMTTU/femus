@@ -261,7 +261,7 @@ int main(int argc, char** args) {
       VTKWriter vtkIO2(&mlSol);
       vtkIO.SetGraphVariable("S");
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(Files::_application_output_directory, "linear", variablesToBePrinted, i + j * 10);
+      vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, i + j * 10);
       
     }
   }

@@ -180,9 +180,9 @@ int main (int argc, char** args) {
 
       VTKWriter vtkIO (&mlSol);
       vtkIO.SetDebugOutput (true);
-      vtkIO.Write (Files::_application_output_directory, "linear", variablesToBePrinted, i + j * 10);
-      vtkIO.Write (Files::_application_output_directory, "quadratic", variablesToBePrinted, i + j * 10);
-      vtkIO.Write (Files::_application_output_directory, "biquadratic", variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ], variablesToBePrinted, i + j * 10);
+      vtkIO.Write (Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i + j * 10);
       delete Proj;
     }
   }

@@ -1096,7 +1096,7 @@ void GenCase::ComputeAndPrintProl(const std::string output_path)  {
 //==============================================================
 //============ LEVEL LOOP ======================================
 //==============================================================
-//For every Level1 ("quadratic" level, or "reference" level Level1):
+//For every Level1 (`quadratic` level, or "reference" level Level1):
 // - setup the file;
 // - for every subdomain in that Level1,
 //       and for every couple (FE_r, FE_c),

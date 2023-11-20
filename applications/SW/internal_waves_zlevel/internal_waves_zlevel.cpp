@@ -442,12 +442,12 @@ int main(int argc, char** args)
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
   //mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(Files::_application_output_directory, "linear", print_vars, 0);
+  mlSol.GetWriter()->Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, 0);
 
   unsigned numberOfTimeSteps = 3601; //58000; //200days = 57600 with dt=300s
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {    
     ETD(ml_prob, numberOfTimeSteps);
-    mlSol.GetWriter()->Write(Files::_application_output_directory, "linear", print_vars, (i + 1)/1);
+    mlSol.GetWriter()->Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], print_vars, (i + 1)/1);
     counter = i;
   }
   return 0;
