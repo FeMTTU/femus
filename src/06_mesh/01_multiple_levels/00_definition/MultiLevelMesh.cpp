@@ -498,46 +498,46 @@ void MultiLevelMesh::AddAMRMeshLevel()
   void MultiLevelMesh::BuildFETypesBasedOnExistingCoarseMeshGeomElements(const char GaussOrder[]) {
       
     if(_finiteElementGeometryFlag[0]) {
-      _finiteElement[0][0] = new elem_type_3D("hex", "linear"     , GaussOrder);
-      _finiteElement[0][1] = new elem_type_3D("hex", "quadratic"  , GaussOrder);
-      _finiteElement[0][2] = new elem_type_3D("hex", "biquadratic", GaussOrder);
-      _finiteElement[0][3] = new elem_type_3D("hex", "constant"   , GaussOrder);
-      _finiteElement[0][4] = new elem_type_3D("hex", "disc_linear", GaussOrder);
+      _finiteElement[0][0] = new elem_type_3D("hex",  fe_fams[CONTINUOUS_LINEAR].c_str()      , GaussOrder);
+      _finiteElement[0][1] = new elem_type_3D("hex",  fe_fams[CONTINUOUS_SERENDIPITY].c_str() , GaussOrder);
+      _finiteElement[0][2] = new elem_type_3D("hex",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str() , GaussOrder);
+      _finiteElement[0][3] = new elem_type_3D("hex",  fe_fams[DISCONTINUOUS_CONSTANT].c_str() , GaussOrder);
+      _finiteElement[0][4] = new elem_type_3D("hex",  fe_fams[DISCONTINUOUS_LINEAR].c_str()   , GaussOrder);
     }
     if(_finiteElementGeometryFlag[1]) {
-      _finiteElement[1][0] = new elem_type_3D("tet", "linear"     , GaussOrder);
-      _finiteElement[1][1] = new elem_type_3D("tet", "quadratic"  , GaussOrder);
-      _finiteElement[1][2] = new elem_type_3D("tet", "biquadratic", GaussOrder);
-      _finiteElement[1][3] = new elem_type_3D("tet", "constant"   , GaussOrder);
-      _finiteElement[1][4] = new elem_type_3D("tet", "disc_linear", GaussOrder);
+      _finiteElement[1][0] = new elem_type_3D("tet",  fe_fams[CONTINUOUS_LINEAR].c_str()     , GaussOrder);
+      _finiteElement[1][1] = new elem_type_3D("tet",  fe_fams[CONTINUOUS_SERENDIPITY].c_str(), GaussOrder);
+      _finiteElement[1][2] = new elem_type_3D("tet",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str(), GaussOrder);
+      _finiteElement[1][3] = new elem_type_3D("tet",  fe_fams[DISCONTINUOUS_CONSTANT].c_str(), GaussOrder);
+      _finiteElement[1][4] = new elem_type_3D("tet",  fe_fams[DISCONTINUOUS_LINEAR].c_str()  , GaussOrder);
     }
     if(_finiteElementGeometryFlag[2]) {
-      _finiteElement[2][0] = new elem_type_3D("wedge", "linear"     , GaussOrder);
-      _finiteElement[2][1] = new elem_type_3D("wedge", "quadratic"  , GaussOrder);
-      _finiteElement[2][2] = new elem_type_3D("wedge", "biquadratic", GaussOrder);
-      _finiteElement[2][3] = new elem_type_3D("wedge", "constant"   , GaussOrder);
-      _finiteElement[2][4] = new elem_type_3D("wedge", "disc_linear", GaussOrder);
+      _finiteElement[2][0] = new elem_type_3D("wedge",  fe_fams[CONTINUOUS_LINEAR].c_str()     , GaussOrder);
+      _finiteElement[2][1] = new elem_type_3D("wedge",  fe_fams[CONTINUOUS_SERENDIPITY].c_str(), GaussOrder);
+      _finiteElement[2][2] = new elem_type_3D("wedge",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str(), GaussOrder);
+      _finiteElement[2][3] = new elem_type_3D("wedge",  fe_fams[DISCONTINUOUS_CONSTANT].c_str(), GaussOrder);
+      _finiteElement[2][4] = new elem_type_3D("wedge",  fe_fams[DISCONTINUOUS_LINEAR].c_str()  , GaussOrder);
     }
     if(_finiteElementGeometryFlag[3]) {
-      _finiteElement[3][0] = new elem_type_2D("quad", "linear"     , GaussOrder);
-      _finiteElement[3][1] = new elem_type_2D("quad", "quadratic"  , GaussOrder);
-      _finiteElement[3][2] = new elem_type_2D("quad", "biquadratic", GaussOrder);
-      _finiteElement[3][3] = new elem_type_2D("quad", "constant"   , GaussOrder);
-      _finiteElement[3][4] = new elem_type_2D("quad", "disc_linear", GaussOrder);
+      _finiteElement[3][0] = new elem_type_2D("quad",  fe_fams[CONTINUOUS_LINEAR].c_str()      , GaussOrder);
+      _finiteElement[3][1] = new elem_type_2D("quad",  fe_fams[CONTINUOUS_SERENDIPITY].c_str() , GaussOrder);
+      _finiteElement[3][2] = new elem_type_2D("quad",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str() , GaussOrder);
+      _finiteElement[3][3] = new elem_type_2D("quad",  fe_fams[DISCONTINUOUS_CONSTANT].c_str() , GaussOrder);
+      _finiteElement[3][4] = new elem_type_2D("quad",  fe_fams[DISCONTINUOUS_LINEAR].c_str()   , GaussOrder);
     }
     if(_finiteElementGeometryFlag[4]) {
-      _finiteElement[4][0] = new elem_type_2D("tri", "linear"     , GaussOrder);
-      _finiteElement[4][1] = new elem_type_2D("tri", "quadratic"  , GaussOrder);
-      _finiteElement[4][2] = new elem_type_2D("tri", "biquadratic", GaussOrder);
-      _finiteElement[4][3] = new elem_type_2D("tri", "constant"   , GaussOrder);
-      _finiteElement[4][4] = new elem_type_2D("tri", "disc_linear", GaussOrder);
+      _finiteElement[4][0] = new elem_type_2D("tri",   fe_fams[CONTINUOUS_LINEAR].c_str()     , GaussOrder);
+      _finiteElement[4][1] = new elem_type_2D("tri",   fe_fams[CONTINUOUS_SERENDIPITY].c_str(), GaussOrder);
+      _finiteElement[4][2] = new elem_type_2D("tri",   fe_fams[CONTINUOUS_BIQUADRATIC].c_str(), GaussOrder);
+      _finiteElement[4][3] = new elem_type_2D("tri",   fe_fams[DISCONTINUOUS_CONSTANT].c_str(), GaussOrder);
+      _finiteElement[4][4] = new elem_type_2D("tri",   fe_fams[DISCONTINUOUS_LINEAR].c_str()  , GaussOrder);
     }
     _finiteElementGeometryFlag[5]=1;
-    _finiteElement[5][0] = new elem_type_1D("line", "linear"     , GaussOrder);
-    _finiteElement[5][1] = new elem_type_1D("line", "quadratic"  , GaussOrder);
-    _finiteElement[5][2] = new elem_type_1D("line", "biquadratic", GaussOrder);
-    _finiteElement[5][3] = new elem_type_1D("line", "constant"   , GaussOrder);
-    _finiteElement[5][4] = new elem_type_1D("line", "disc_linear", GaussOrder);
+    _finiteElement[5][0] = new elem_type_1D("line",   fe_fams[CONTINUOUS_LINEAR].c_str()     , GaussOrder);
+    _finiteElement[5][1] = new elem_type_1D("line",   fe_fams[CONTINUOUS_SERENDIPITY].c_str(), GaussOrder);
+    _finiteElement[5][2] = new elem_type_1D("line",   fe_fams[CONTINUOUS_BIQUADRATIC].c_str(), GaussOrder);
+    _finiteElement[5][3] = new elem_type_1D("line",   fe_fams[DISCONTINUOUS_CONSTANT].c_str(), GaussOrder);
+    _finiteElement[5][4] = new elem_type_1D("line",   fe_fams[DISCONTINUOUS_LINEAR].c_str()  , GaussOrder);
     
     
     SetFiniteElementPtrOnCoarseMesh();
@@ -549,46 +549,46 @@ void MultiLevelMesh::AddAMRMeshLevel()
   void MultiLevelMesh::BuildFETypesBasedOnExistingCoarseMeshGeomElements() {
       
     if(_finiteElementGeometryFlag[0]) {
-      _finiteElement[0][0] = new elem_type_3D("hex", "linear"     );
-      _finiteElement[0][1] = new elem_type_3D("hex", "quadratic"  );
-      _finiteElement[0][2] = new elem_type_3D("hex", "biquadratic");
-      _finiteElement[0][3] = new elem_type_3D("hex", "constant"   );
-      _finiteElement[0][4] = new elem_type_3D("hex", "disc_linear");
+      _finiteElement[0][0] = new elem_type_3D("hex",  fe_fams[CONTINUOUS_LINEAR].c_str()     );
+      _finiteElement[0][1] = new elem_type_3D("hex",  fe_fams[CONTINUOUS_SERENDIPITY].c_str());
+      _finiteElement[0][2] = new elem_type_3D("hex",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str());
+      _finiteElement[0][3] = new elem_type_3D("hex",  fe_fams[DISCONTINUOUS_CONSTANT].c_str());
+      _finiteElement[0][4] = new elem_type_3D("hex",  fe_fams[DISCONTINUOUS_LINEAR].c_str()  );
     }
     if(_finiteElementGeometryFlag[1]) {
-      _finiteElement[1][0] = new elem_type_3D("tet", "linear"     );
-      _finiteElement[1][1] = new elem_type_3D("tet", "quadratic"  );
-      _finiteElement[1][2] = new elem_type_3D("tet", "biquadratic");
-      _finiteElement[1][3] = new elem_type_3D("tet", "constant"   );
-      _finiteElement[1][4] = new elem_type_3D("tet", "disc_linear");
+      _finiteElement[1][0] = new elem_type_3D("tet",  fe_fams[CONTINUOUS_LINEAR].c_str()     );
+      _finiteElement[1][1] = new elem_type_3D("tet",  fe_fams[CONTINUOUS_SERENDIPITY].c_str());
+      _finiteElement[1][2] = new elem_type_3D("tet",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str());
+      _finiteElement[1][3] = new elem_type_3D("tet",  fe_fams[DISCONTINUOUS_CONSTANT].c_str());
+      _finiteElement[1][4] = new elem_type_3D("tet",  fe_fams[DISCONTINUOUS_LINEAR].c_str()  );
     }
     if(_finiteElementGeometryFlag[2]) {
-      _finiteElement[2][0] = new elem_type_3D("wedge", "linear"     );
-      _finiteElement[2][1] = new elem_type_3D("wedge", "quadratic"  );
-      _finiteElement[2][2] = new elem_type_3D("wedge", "biquadratic");
-      _finiteElement[2][3] = new elem_type_3D("wedge", "constant"   );
-      _finiteElement[2][4] = new elem_type_3D("wedge", "disc_linear");
+      _finiteElement[2][0] = new elem_type_3D("wedge",  fe_fams[CONTINUOUS_LINEAR].c_str()     );
+      _finiteElement[2][1] = new elem_type_3D("wedge",  fe_fams[CONTINUOUS_SERENDIPITY].c_str());
+      _finiteElement[2][2] = new elem_type_3D("wedge",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str());
+      _finiteElement[2][3] = new elem_type_3D("wedge",  fe_fams[DISCONTINUOUS_CONSTANT].c_str());
+      _finiteElement[2][4] = new elem_type_3D("wedge",  fe_fams[DISCONTINUOUS_LINEAR].c_str()  );
     }
     if(_finiteElementGeometryFlag[3]) {
-      _finiteElement[3][0] = new elem_type_2D("quad", "linear"     );
-      _finiteElement[3][1] = new elem_type_2D("quad", "quadratic"  );
-      _finiteElement[3][2] = new elem_type_2D("quad", "biquadratic");
-      _finiteElement[3][3] = new elem_type_2D("quad", "constant"   );
-      _finiteElement[3][4] = new elem_type_2D("quad", "disc_linear");
+      _finiteElement[3][0] = new elem_type_2D("quad",  fe_fams[CONTINUOUS_LINEAR].c_str()     );
+      _finiteElement[3][1] = new elem_type_2D("quad",  fe_fams[CONTINUOUS_SERENDIPITY].c_str());
+      _finiteElement[3][2] = new elem_type_2D("quad",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str());
+      _finiteElement[3][3] = new elem_type_2D("quad",  fe_fams[DISCONTINUOUS_CONSTANT].c_str());
+      _finiteElement[3][4] = new elem_type_2D("quad",  fe_fams[DISCONTINUOUS_LINEAR].c_str()  );
     }
     if(_finiteElementGeometryFlag[4]) {
-      _finiteElement[4][0] = new elem_type_2D("tri", "linear"     );
-      _finiteElement[4][1] = new elem_type_2D("tri", "quadratic"  );
-      _finiteElement[4][2] = new elem_type_2D("tri", "biquadratic");
-      _finiteElement[4][3] = new elem_type_2D("tri", "constant"   );
-      _finiteElement[4][4] = new elem_type_2D("tri", "disc_linear");
+      _finiteElement[4][0] = new elem_type_2D("tri",  fe_fams[CONTINUOUS_LINEAR].c_str()     );
+      _finiteElement[4][1] = new elem_type_2D("tri",  fe_fams[CONTINUOUS_SERENDIPITY].c_str());
+      _finiteElement[4][2] = new elem_type_2D("tri",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str());
+      _finiteElement[4][3] = new elem_type_2D("tri",  fe_fams[DISCONTINUOUS_CONSTANT].c_str());
+      _finiteElement[4][4] = new elem_type_2D("tri",  fe_fams[DISCONTINUOUS_LINEAR].c_str()  );
     }
-    _finiteElementGeometryFlag[5]=1;
-    _finiteElement[5][0] = new elem_type_1D("line", "linear"     );
-    _finiteElement[5][1] = new elem_type_1D("line", "quadratic"  );
-    _finiteElement[5][2] = new elem_type_1D("line", "biquadratic");
-    _finiteElement[5][3] = new elem_type_1D("line", "constant"   );
-    _finiteElement[5][4] = new elem_type_1D("line", "disc_linear");
+    _finiteElementGeometryFlag[5]=1;                                                         
+    _finiteElement[5][0] = new elem_type_1D("line",  fe_fams[CONTINUOUS_LINEAR].c_str()      );
+    _finiteElement[5][1] = new elem_type_1D("line",  fe_fams[CONTINUOUS_SERENDIPITY].c_str() );
+    _finiteElement[5][2] = new elem_type_1D("line",  fe_fams[CONTINUOUS_BIQUADRATIC].c_str() );
+    _finiteElement[5][3] = new elem_type_1D("line",  fe_fams[DISCONTINUOUS_CONSTANT].c_str() );
+    _finiteElement[5][4] = new elem_type_1D("line",  fe_fams[DISCONTINUOUS_LINEAR].c_str()   );
     
     
     SetFiniteElementPtrOnCoarseMesh();

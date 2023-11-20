@@ -10,7 +10,7 @@
 
 namespace femus {
 
-  static const std::vector< std::string >  fe_fams    = {"linear", "quadratic", "biquadratic", "constant", "disc_linear"};
+  static const std::vector< std::string >  fe_fams    = {"linear", "quadratic", "biquadratic", "disc_constant", "disc_linear"};
 
 }
 

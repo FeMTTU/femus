@@ -126,11 +126,11 @@ namespace femus {
    void elem_type::initialize_fe_soltype(const char* fe_order) {
 
 // FE FAMILY & ORDER ============
-    if(!strcmp(fe_order, "linear"))           _SolType = CONTINUOUS_LINEAR;
-    else if(!strcmp(fe_order, "quadratic"))   _SolType = CONTINUOUS_SERENDIPITY;
-    else if(!strcmp(fe_order, "biquadratic")) _SolType = CONTINUOUS_BIQUADRATIC;
-    else if(!strcmp(fe_order, "constant"))    _SolType = DISCONTINUOUS_CONSTANT;
-    else if(!strcmp(fe_order, "disc_linear")) _SolType = DISCONTINUOUS_LINEAR;
+    if(!strcmp(fe_order,      fe_fams[CONTINUOUS_LINEAR].c_str()      ) )           _SolType = CONTINUOUS_LINEAR;
+    else if(!strcmp(fe_order, fe_fams[CONTINUOUS_SERENDIPITY].c_str() ) )   _SolType = CONTINUOUS_SERENDIPITY;
+    else if(!strcmp(fe_order, fe_fams[CONTINUOUS_BIQUADRATIC].c_str() ) )  _SolType = CONTINUOUS_BIQUADRATIC;
+    else if(!strcmp(fe_order, fe_fams[DISCONTINUOUS_CONSTANT].c_str() ) )    _SolType = DISCONTINUOUS_CONSTANT;
+    else if(!strcmp(fe_order, fe_fams[DISCONTINUOUS_LINEAR].c_str()    )) _SolType = DISCONTINUOUS_LINEAR;
     else {
       std::cout << fe_order << " is not a valid option " << std::endl;
       abort();
