@@ -51,7 +51,7 @@ int counter = 0 ;
 
 using namespace femus;
 
-double InitalValueU(const std::vector < double >& x)
+double InitialValueU(const std::vector < double >& x)
 {
 
   double value = 0.;
@@ -144,7 +144,7 @@ int main(int argc, char** args)
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-//   mlSol.Initialize("U", InitalValueU);
+//   mlSol.Initialize("U", InitialValueU);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);

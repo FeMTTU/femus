@@ -53,7 +53,7 @@ bool SetBoundaryConditionSphere (const std::vector < double >& x, const char Sol
   return dirichlet;
 }
 
-double InitalValueUSphere (const std::vector < double >& x) {
+double InitialValueUSphere (const std::vector < double >& x) {
 
   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
   double rho = 1. / cos (thetaSphere);
@@ -66,11 +66,11 @@ double InitalValueUSphere (const std::vector < double >& x) {
 
 
 
-double InitalValueHSphere (const std::vector < double >& x) {
+double InitialValueHSphere (const std::vector < double >& x) {
   return -cos (thetaSphere);
 }
 
-double InitalValueWSphere (const std::vector < double >& x) {
+double InitialValueWSphere (const std::vector < double >& x) {
 
   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
   double rho = 1. / cos (thetaSphere);
@@ -120,9 +120,9 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("H", LAGRANGE, SECOND);
   mlSol.AddSolution ("W", LAGRANGE, SECOND);
  
-  mlSol.Initialize ("u", InitalValueUSphere);
-  mlSol.Initialize ("H", InitalValueHSphere);
-  mlSol.Initialize ("W", InitalValueWSphere);
+  mlSol.Initialize ("u", InitialValueUSphere);
+  mlSol.Initialize ("H", InitialValueHSphere);
+  mlSol.Initialize ("W", InitialValueWSphere);
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryConditionSphere);
 

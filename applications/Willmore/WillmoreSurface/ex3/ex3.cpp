@@ -76,13 +76,13 @@ bool SetBoundaryCondition (const std::vector < double >& x,
   value = 0.;
   return dirichlet;
 }
-double InitalValueY1 (const std::vector < double >& x) {
+double InitialValueY1 (const std::vector < double >& x) {
   return -2. * x[0];
 }
-double InitalValueY2 (const std::vector < double >& x) {
+double InitialValueY2 (const std::vector < double >& x) {
   return -2. * x[1];
 }
-double InitalValueY3 (const std::vector < double >& x) {
+double InitialValueY3 (const std::vector < double >& x) {
   return -2. * x[2];
 }
 

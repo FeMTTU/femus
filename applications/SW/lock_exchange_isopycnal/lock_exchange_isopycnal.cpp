@@ -40,39 +40,39 @@ const unsigned NumberOfLayers = 2;
 
 const double hRest[3]={10,10};
 
-double InitalValueV(const std::vector < double >& x)
+double InitialValueV(const std::vector < double >& x)
 {
   return 0;
 }
 
 
-double InitalValueH0(const std::vector < double >& x)
+double InitialValueH0(const std::vector < double >& x)
 {
   if (x[0]<0) return 0.01;
   else return hRest[0]+hRest[1] - 0.01;
 }
 
-double InitalValueH1(const std::vector < double >& x)
+double InitialValueH1(const std::vector < double >& x)
 { 
   if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
   else return 0.01;
 }
 
-double InitalValueT0(const std::vector < double >& x)
+double InitialValueT0(const std::vector < double >& x)
 {
 //    if (x[0]<0) return 30; 
 //    else return 5;
   return 30;
 }
 
-double InitalValueT1(const std::vector < double >& x)
+double InitialValueT1(const std::vector < double >& x)
 {
 //    if (x[0]<0) return 5; 
 //    else return 30; 
   return 5;
 }
 
-double InitalValueB(const std::vector < double >& x)
+double InitialValueB(const std::vector < double >& x)
 {
   return 20; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 }
@@ -138,20 +138,20 @@ int main(int argc, char** args)
   mlSol.Initialize("All");
   
   
-  mlSol.Initialize("h0",InitalValueH0);
-  mlSol.Initialize("T0",InitalValueT0);
+  mlSol.Initialize("h0",InitialValueH0);
+  mlSol.Initialize("T0",InitialValueT0);
   if(NumberOfLayers > 1){
-    mlSol.Initialize("h1",InitalValueH1);
-    mlSol.Initialize("T1",InitalValueT1);
+    mlSol.Initialize("h1",InitialValueH1);
+    mlSol.Initialize("T1",InitialValueT1);
   }
   
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "v%d", i);
-    mlSol.Initialize(name, InitalValueV);
+    mlSol.Initialize(name, InitialValueV);
   }
 
-  mlSol.Initialize("b", InitalValueB);
+  mlSol.Initialize("b", InitialValueB);
   
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");

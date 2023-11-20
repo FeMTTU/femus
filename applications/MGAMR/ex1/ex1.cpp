@@ -19,15 +19,15 @@
 
 using namespace femus;
 
-double InitalValueU(const std::vector < double >& x) {
+double InitialValueU(const std::vector < double >& x) {
   return x[0] + x[1];
 }
 
-double InitalValueP(const std::vector < double >& x) {
+double InitialValueP(const std::vector < double >& x) {
   return x[0];
 }
 
-double InitalValueT(const std::vector < double >& x) {
+double InitialValueT(const std::vector < double >& x) {
   return x[1];
 }
 
@@ -84,9 +84,9 @@ int main(int argc, char** args) {
 //
   mlSol.Initialize("All");    // initialize all varaibles to zero
 //
-  mlSol.Initialize("U", InitalValueU);
-  mlSol.Initialize("P", InitalValueP);
-  mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
+  mlSol.Initialize("U", InitialValueU);
+  mlSol.Initialize("P", InitialValueP);
+  mlSol.Initialize("T", InitialValueT);    // note that this initialization is the same as piecewise constant element
 //
 //   // print solutions
   

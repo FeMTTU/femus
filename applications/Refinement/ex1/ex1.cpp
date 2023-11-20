@@ -17,12 +17,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
-double InitalValueW(const std::vector < double >& x) {
+double InitialValueW(const std::vector < double >& x) {
   return 1;
 }
 
 
-double InitalValueV(const std::vector < double >& x) {
+double InitialValueV(const std::vector < double >& x) {
   return 1+x[0]-x[1];
 }
 
@@ -99,8 +99,8 @@ int main(int argc, char** args) {
 //
 //   mlSol.Initialize("All");
 //
-//   mlSol.Initialize("V",InitalValueV);
-//   mlSol.Initialize("W",InitalValueW);
+//   mlSol.Initialize("V",InitialValueV);
+//   mlSol.Initialize("W",InitialValueW);
 //
 //   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 //

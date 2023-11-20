@@ -94,12 +94,14 @@ int main(int argc,char **args) {
  // ======= Files - END  ========================
 
         
+ // ======= Input parser - BEGIN  ========================
 #if FEMUS_TEST_INPUT_PARSER != 0
   // it works, just pay attention that integers do not turn into unsigned
   //   files.CopyInputFiles();   // at this point everything is in the folder of the current run!!!!
   FemusInputParser< unsigned > mesh_map("Mesh", "./"/*files.GetOutputPath()*/);
   const unsigned numberOfUniformLevels =  mesh_map.get("n_levels");
 #endif
+ // ======= Input parser - END  ========================
   
   
   // ======= Loop over mesh files ========================

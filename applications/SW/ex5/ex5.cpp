@@ -50,13 +50,13 @@ const double hRest[3]={40,50,90};
 
 //const double hRest[3]={90,90};
 
-double InitalValueV(const std::vector < double >& x)
+double InitialValueV(const std::vector < double >& x)
 {
   return 0;
 }
 
 
-double InitalValueH0(const std::vector < double >& x)
+double InitialValueH0(const std::vector < double >& x)
 {
   double b = hRest[0];
   if(NumberOfLayers == 1){
@@ -68,7 +68,7 @@ double InitalValueH0(const std::vector < double >& x)
   return b + ( 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.)));
 }
 
-double InitalValueH1(const std::vector < double >& x)
+double InitialValueH1(const std::vector < double >& x)
 {
   
   if(NumberOfLayers == 2){
@@ -81,7 +81,7 @@ double InitalValueH1(const std::vector < double >& x)
   return hRest[1];
 }
 
-double InitalValueH2(const std::vector < double >& x)
+double InitialValueH2(const std::vector < double >& x)
 {
   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
@@ -90,23 +90,23 @@ double InitalValueH2(const std::vector < double >& x)
   return b - hRest[2];
 }
 
-double InitalValueT0(const std::vector < double >& x)
+double InitialValueT0(const std::vector < double >& x)
 {
   return 20;
 }
 
-double InitalValueT1(const std::vector < double >& x)
+double InitialValueT1(const std::vector < double >& x)
 {
   return 15;
 }
 
-double InitalValueT2(const std::vector < double >& x)
+double InitialValueT2(const std::vector < double >& x)
 {
   return 5;
 }
 
 
-double InitalValueB(const std::vector < double >& x)
+double InitialValueB(const std::vector < double >& x)
 {
   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
@@ -175,24 +175,24 @@ int main(int argc, char** args)
   mlSol.Initialize("All");
   
   
-  mlSol.Initialize("h0",InitalValueH0);
-  mlSol.Initialize("T0",InitalValueT0);
+  mlSol.Initialize("h0",InitialValueH0);
+  mlSol.Initialize("T0",InitialValueT0);
   if(NumberOfLayers > 1){
-    mlSol.Initialize("h1",InitalValueH1);
-    mlSol.Initialize("T1",InitalValueT1);
+    mlSol.Initialize("h1",InitialValueH1);
+    mlSol.Initialize("T1",InitialValueT1);
     if(NumberOfLayers > 2){
-      mlSol.Initialize("h2",InitalValueH2);
-      mlSol.Initialize("T2",InitalValueT2);
+      mlSol.Initialize("h2",InitialValueH2);
+      mlSol.Initialize("T2",InitialValueT2);
     }
   }
   
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "v%d", i);
-    mlSol.Initialize(name, InitalValueV);
+    mlSol.Initialize(name, InitialValueV);
   }
 
-  mlSol.Initialize("b", InitalValueB);
+  mlSol.Initialize("b", InitialValueB);
   
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");

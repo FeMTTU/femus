@@ -44,15 +44,15 @@ const unsigned NumberOfLayers = 20;
 //const double hRest[10]={2,2,2,2,2,2,2,2,2,2};
 const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-double InitalValueV ( const std::vector < double >& x ) {
+double InitialValueV ( const std::vector < double >& x ) {
   return 0;
 }
 
-double InitalValueH ( const std::vector < double >& x ) {
+double InitialValueH ( const std::vector < double >& x ) {
   return hRest[0];
 }
 
-double InitalValueT ( const std::vector < double >& x ) {
+double InitialValueT ( const std::vector < double >& x ) {
   double pi = acos ( -1. );
   //return 17.5 + 25/pi * atan(x[0]/100.);
   if ( x[0] < 0 ) return 5;
@@ -60,7 +60,7 @@ double InitalValueT ( const std::vector < double >& x ) {
 }
 
 
-double InitalValueB ( const std::vector < double >& x ) {
+double InitialValueB ( const std::vector < double >& x ) {
   return 20; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 }
 
@@ -121,36 +121,36 @@ int main ( int argc, char** args ) {
   mlSol.Initialize ( "All" );
 
 
-//   mlSol.Initialize("h0",InitalValueH0);
-//   mlSol.Initialize("T0",InitalValueT0);
+//   mlSol.Initialize("h0",InitialValueH0);
+//   mlSol.Initialize("T0",InitialValueT0);
 //   if(NumberOfLayers > 1){
-//     mlSol.Initialize("h1",InitalValueH1);
-//     mlSol.Initialize("T1",InitalValueT1);
+//     mlSol.Initialize("h1",InitialValueH1);
+//     mlSol.Initialize("T1",InitialValueT1);
 //     if(NumberOfLayers > 2){
-//       mlSol.Initialize("h2",InitalValueH2);
-//       mlSol.Initialize("T2",InitalValueT2);
+//       mlSol.Initialize("h2",InitialValueH2);
+//       mlSol.Initialize("T2",InitialValueT2);
 //     }
 //   }
 
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "v%d", i );
-    mlSol.Initialize ( name, InitalValueV );
+    mlSol.Initialize ( name, InitialValueV );
   }
 
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
-    mlSol.Initialize ( name, InitalValueH );
+    mlSol.Initialize ( name, InitialValueH );
   }
 
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "T%d", i );
-    mlSol.Initialize ( name, InitalValueT );
+    mlSol.Initialize ( name, InitialValueT );
   }
 
-  mlSol.Initialize ( "b", InitalValueB );
+  mlSol.Initialize ( "b", InitialValueB );
 
   mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
   mlSol.GenerateBdc ( "All" );

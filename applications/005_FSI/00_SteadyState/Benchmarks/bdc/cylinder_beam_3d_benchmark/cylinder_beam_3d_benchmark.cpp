@@ -12,7 +12,7 @@ static const double factor_avg = /*1.5*/36. /*9/4 * 16*/;
 
 
 
-extern "C" double InitalValueU(const std::vector < double >& x) {
+extern "C" double InitialValueU(const std::vector < double >& x) {
     
   double xc = 0.2 + inflow_elong;
   double yc = 0.2;
