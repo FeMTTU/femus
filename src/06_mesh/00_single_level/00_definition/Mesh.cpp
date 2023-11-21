@@ -460,13 +460,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     el->ShrinkToFitElementNearFace();
 //==== Only in Coarse generations - END ==============================
 
-    
-//==== Material element counter is not in BuildBox - BEGIN ==============================
-    std::vector < unsigned > materialElementCounter(3, 0);
-    materialElementCounter[0] = GetNumberOfElements();
-    el->SetMaterialElementCounter(materialElementCounter);
-//==== Material element counter is not in BuildBox - END ==============================
-
 
     PartitionElements_and_FillDofMapAllFEFamilies();
 

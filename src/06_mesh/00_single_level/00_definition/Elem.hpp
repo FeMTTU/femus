@@ -368,19 +368,10 @@ namespace femus {
       /** To be Added */
       short unsigned GetElementMaterial(const unsigned& iel);
 
-      void SetMaterialElementCounter( std::vector<unsigned> materialElementCounter){
-        _materialElementCounter = materialElementCounter;
-      }
-      
-      std::vector<unsigned> GetMaterialElementCounter(){
-        return _materialElementCounter;
-      }
 
   private:
     
       MyVector< short unsigned> _elementMaterial;
-      /** Volume elements, 3 types of material */
-      std::vector<unsigned> _materialElementCounter;
     
 // === Elements, Materials - END =================
 

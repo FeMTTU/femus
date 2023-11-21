@@ -236,7 +236,6 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     bool AMR = false;
 
-    std::vector < unsigned > materialElementCounter(3, 0);
     
     
     for(unsigned isdom = 0; isdom < _nprocs; isdom++) {
@@ -257,9 +256,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
             
 	    unsigned gr_mat = elc->GetElementMaterial(iel);
 	    _mesh.el->SetElementMaterial(jel + j, gr_mat);
-	    if( gr_mat == 2) materialElementCounter[0] += 1;
-	    else if(gr_mat == 3 ) materialElementCounter[1] += 1;
-	    else materialElementCounter[2] += 1;
+        
 	        
             _mesh.el->SetElementLevel(jel + j, elc->GetElementLevel(iel) + 1);
             if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
@@ -293,6 +290,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
           AMR = true;
           
           unsigned elt = elc->GetElementType(iel);
+          
           // project element type, group, material; child element  -----------------
           _mesh.el->SetElementType(jel, elc->GetElementType(iel));
           _mesh.el->SetElementGroup(jel , elc->GetElementGroup(iel));
@@ -300,9 +298,6 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 	  
 	  unsigned gr_mat = elc->GetElementMaterial(iel);
 	  _mesh.el->SetElementMaterial(jel, gr_mat);
-	  if( gr_mat == 2) materialElementCounter[0] += 1;
-	  else if(gr_mat == 3 ) materialElementCounter[1] += 1;
-	  else materialElementCounter[2] += 1;
 	  
           _mesh.el->SetElementLevel(jel, elc->GetElementLevel(iel));
           if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
@@ -334,9 +329,6 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
       elc->FreeLocalizedElement_Level_Type_Group_Material();
       
     }
-    
-    _mesh.el->SetMaterialElementCounter(materialElementCounter);
-    
     
    
     std::vector< double > ().swap(coarseLocalizedAmrVector);
