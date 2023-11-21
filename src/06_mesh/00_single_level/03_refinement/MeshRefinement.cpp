@@ -459,7 +459,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
 //====  Topology, Coordinates - BEGIN ======== 
     // build Mesh coordinates by projecting the coarse coordinates
-    unsigned solType = 2;
+    unsigned solType = CONTINUOUS_BIQUADRATIC;
 
     _mesh._topology->_Sol[0]->matrix_mult(*mshc->_topology->_Sol[0], *_mesh.GetCoarseToFineProjection(solType));
     _mesh._topology->_Sol[1]->matrix_mult(*mshc->_topology->_Sol[1], *_mesh.GetCoarseToFineProjection(solType));

@@ -26,6 +26,8 @@
 #include "PetscPreconditioner.hpp"
 #include "PetscMatrix.hpp"
 
+#include "FSIenum.hpp"
+
 #include <iomanip>
 #include <sstream>
 
@@ -41,9 +43,9 @@ namespace femus {
   void LinearEquationSolverPetscAsm::SetElementBlockNumber(const char all[], const unsigned& overlap) {
     
     const unsigned nel = GetMeshFromLinEq()->GetNumberOfElements();
-    _elementBlockNumber[0] = nel;
-    _elementBlockNumber[1] = nel;
-    _elementBlockNumber[2] = nel;
+    _elementBlockNumber[ SOLID_FLAG_INDEX ] = nel;
+    _elementBlockNumber[ POROUS_FLAG_INDEX ] = nel;
+    _elementBlockNumber[ FLUID_FLAG_INDEX ] = nel;
     _standardASM = 1;
     _overlap = overlap;
     
@@ -52,9 +54,9 @@ namespace femus {
   // =================================================
 
   void LinearEquationSolverPetscAsm::SetElementBlockNumber(const unsigned& block_elemet_number) {
-    _elementBlockNumber[0] = block_elemet_number;
-    _elementBlockNumber[1] = block_elemet_number;
-    _elementBlockNumber[2] = block_elemet_number;
+    _elementBlockNumber[SOLID_FLAG_INDEX  ] = block_elemet_number;
+    _elementBlockNumber[POROUS_FLAG_INDEX ] = block_elemet_number;
+    _elementBlockNumber[FLUID_FLAG_INDEX ] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
   }
@@ -62,7 +64,7 @@ namespace femus {
   // =================================================
 
   void LinearEquationSolverPetscAsm::SetElementBlockNumberSolid(const unsigned& block_elemet_number, const unsigned& overlap) {
-    _elementBlockNumber[0] = block_elemet_number;
+    _elementBlockNumber[ SOLID_FLAG_INDEX ] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
     _overlap = overlap;
@@ -71,14 +73,14 @@ namespace femus {
   // =================================================
 
   void LinearEquationSolverPetscAsm::SetElementBlockNumberFluid(const unsigned& block_elemet_number, const unsigned& overlap) {
-    _elementBlockNumber[2] = block_elemet_number;
+    _elementBlockNumber[ FLUID_FLAG_INDEX ] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
     _overlap = overlap;
   }
   
   void LinearEquationSolverPetscAsm::SetElementBlockNumberPorous(const unsigned& block_elemet_number, const unsigned& overlap) {
-    _elementBlockNumber[1] = block_elemet_number;
+    _elementBlockNumber[ POROUS_FLAG_INDEX ] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
     _overlap = overlap;
