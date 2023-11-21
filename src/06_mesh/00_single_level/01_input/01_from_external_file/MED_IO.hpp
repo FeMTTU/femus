@@ -265,7 +265,7 @@ class MED_IO : public MeshInput< Mesh >
 // === Mesh, Groups, Volume - Elements - BEGIN =================
  private:
   
-   void set_elem_group_ownership(const hid_t&  file_id,
+   void set_elem_group_ownership_And_Material(const hid_t&  file_id,
                                  const std::string mesh_menu,
                                  const std::vector<GroupInfo> & group_info,
                                  const GeomElemBase* geom_elem_per_dimension,

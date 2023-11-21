@@ -285,7 +285,7 @@ namespace femus {
     
     
     
-    // read GROUP - BEGIN  **************** E
+    // read GROUP and MATERIAL - BEGIN  **************** E
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " cannot read group\n";
@@ -316,10 +316,10 @@ namespace femus {
     }
     mesh.el->SetMaterialElementCounter(materialElementCounter);
     inf.close();
-    // read GROUP - END **************** E
+    // read GROUP and MATERIAL - END **************** E
 
 
-    // read boundary - BEGIN  **************** D
+    // read GROUP boundary - BEGIN  **************** D
     inf.open(name.c_str());
     if(!inf) {
       std::cout << "Generic-mesh file " << name << " cannot read boudary\n";
@@ -346,7 +346,7 @@ namespace femus {
       }
     }
     inf.close();
-    // read boundary - END **************** D
+    // read GROUP boundary - END **************** D
 
   };
   

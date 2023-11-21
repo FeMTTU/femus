@@ -268,7 +268,7 @@ namespace femus {
 
 
 
-       // Groups of the mesh - BEGIN ===============
+       // Groups and Material of the mesh - BEGIN ===============
       
       if(read_domain_groups_flag == true || read_boundary_groups_flag == true)  {
 
@@ -286,7 +286,7 @@ namespace femus {
         if(read_domain_groups_flag == true) {
           if(i == (mesh_dim - 1)) {
 //           for(unsigned i = 0; i < mesh_dim; i++) {
-            set_elem_group_ownership(file_id, mesh_menus[j], group_info, geom_elem_per_dimension[i], i);
+            set_elem_group_ownership_And_Material(file_id, mesh_menus[j], group_info, geom_elem_per_dimension[i], i);
           }
         }
         // Domain groups (dimension same as max mesh dimension) - END ===============
@@ -298,7 +298,7 @@ namespace femus {
         // Boundary groups (dimension - 1) - END ===============
 
       }
-        // Groups of the mesh - END ===============
+       // Groups and Material of the mesh - END ===============
 
 
     }
@@ -873,7 +873,7 @@ namespace femus {
 
   //  we loop over all elements and see which ones are of that group
   //
-  void MED_IO::set_elem_group_ownership(
+  void MED_IO::set_elem_group_ownership_And_Material(
     const hid_t&  file_id,
     const std::string mesh_menu,
     const std::vector<GroupInfo> & group_info,
