@@ -253,6 +253,7 @@ int main( int argc, char** args ) {
   system.SetNumberOfSchurVariables( 1 );
   system.SetElementBlockNumber( 2 );
   //system.UseSamePreconditioner();
+  
   system.SetOuterSolver(PREONLY);
   system.MGsolve();
 

@@ -289,7 +289,8 @@ int main(int argc, char** args) {
 
   system.SetPrintSolverInfo(false);
 
-  //system.MGsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
 
   // print solutions

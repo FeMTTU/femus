@@ -155,6 +155,7 @@ int main(int argc, char** args) {
 
   system.SetPrintSolverInfo(false);
 
+  system.SetOuterSolver(PREONLY);
   system.MGsolve();
 
 
