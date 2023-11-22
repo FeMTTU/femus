@@ -49,15 +49,15 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-  if(elemgroupnumber == 7 && level < numberOfUniformLevels){
+  if(elemgroupnumber == 7 || elemgroupnumber == 9 ){
     refine = true;
   }
-  else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
-    refine = true;
-  }
-  else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
-    refine = true;
-  }
+//   else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
+//     refine = true;
+//   }
   
   return refine;
 
@@ -78,7 +78,8 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/adaptiveRef4Mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -89,8 +90,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 3;
+  numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 1;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
@@ -100,7 +101,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, SECOND);//FIRST);;
+  mlSol.AddSolution("T", LAGRANGE, FIRST);//FIRST);;
 
   mlSol.Initialize("All");
 
@@ -123,8 +124,8 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleTemperature_AD);
 
 //   
-  system.SetMaxNumberOfLinearIterations(10);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfLinearIterations(26);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-20);
 
 
 //   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
@@ -132,23 +133,56 @@ int main(int argc, char** args) {
 
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1);
-  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
 
   system.init();
 
-  //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
-  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  //system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetPreconditionerFineGrids(JACOBI_PRECOND);
-  
-  
-  system.SetTolerances(1.e-50, 1.e-50, 1.e+50, 10, 10);
 
+  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
+  //system.SetPreconditionerFineGrids(SOR_PRECOND);
+  
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
+  
+  unsigned simulation = 3;
+  double scale = 1.;
+  
+  // ====== BEGIN part to re-implement!!! ================
+  
+  // // // if (simulation  == 0){ //our theory
+  // // //   system.SetSscLevelSmoother(true); 
+  // // //   system.SetFactorAndScale(true, scale); 
+  // // //   system.SetSSCType(SYMMETRIC1111);
+  // // // }
+  // // // else if (simulation  == 1){ //our reduced symmetric
+  // // //   system.SetSscLevelSmoother(true); 
+  // // //   system.SetFactorAndScale(false, scale); 
+  // // //   system.SetSSCType(SYMMETRIC1111);
+  // // // }
+  // // // else if (simulation  == 2){ //our reduced asymmetric
+  // // //   system.SetSscLevelSmoother(true); 
+  // // //   system.SetFactorAndScale(false, scale); 
+  // // //   system.SetSSCType(ASYMMETRIC0101);
+  // // // }
+  // // // else  if(simulation == 3) { //JK
+  // // //   system.SetSscLevelSmoother(false); 
+  // // //   system.SetFactorAndScale(true, scale); 
+  // // // }
+  // // // else if (simulation  == 4){ //BPWX
+  // // //   system.SetSscLevelSmoother(false); 
+  // // //   system.SetFactorAndScale(false, scale);
+  // // // }
+  // ====== END part to re-implement!!! ================
+  
+  
+  system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
+  system.SetNumberPostSmoothingStep(1);
+  
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
+  
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
@@ -261,7 +295,19 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
+    
+    short unsigned ielGroup = msh->GetElementGroup(iel);
+    //double K = ( ielGroup == 7 || ielGroup == 9 )?  1:0.1;
+    
+  
+    double K = ( ielGroup == 6 || ielGroup == 8 ) ?  0.1 * (rand()%((15 - 5) + 1) + 5) :  (rand()%((15 - 5) + 1) + 5) ;
 
+
+    
+//     if(ielGroup == 7){
+//       std::cout << K <<" ";
+//     }
+    
     unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
 
@@ -314,13 +360,15 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
 
       // *** phiT_i loop ***
       for(unsigned i = 0; i < nDofsT; i++) {
-        adept::adouble Temp = 0.;
+        adept::adouble gradTgradphiT = 0.;
 
         for(unsigned j = 0; j < dim; j++) {
-          Temp +=  phiT_x[i * dim + j] * gradSolT_gss[j];
+          gradTgradphiT +=  phiT_x[i * dim + j] * gradSolT_gss[j];
         }
 
-        aResT[i] -= (phiT[i] - Temp) * weight;
+        
+        
+        aResT[i] -= (phiT[i] - K * gradTgradphiT) * weight;
       } // end phiT_i loop
 
     } // end gauss point loop

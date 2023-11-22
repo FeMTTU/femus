@@ -132,21 +132,18 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-
-  //mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
-
-  mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef6.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/Lshape3DTeT_mini.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 6;
-
+  unsigned numberOfSelectiveLevels = 4;
   
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag2); 
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
@@ -154,7 +151,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition2);
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -165,10 +162,8 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-
-  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
-  // system.SetLinearEquationSolverType(FEMuS_ASM);
-
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);  //GMRES
+  // system.SetMgSmoother(ASM_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   
@@ -182,24 +177,58 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
-  system.SetNumberPostSmoothingStep(1);
+ 
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
 
-  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  //system.SetPreconditionerFineGrids(ILU_PRECOND);
-
+  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
-  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
+  
+  unsigned simulation = 0;
+  double scale = 1.;
   
   // ====== BEGIN part to re-implement!!! ================
-  // // // system.SetFactorAndScale(true, 0.2);
+  // // // if (simulation  == 0){ //our theory
+  // // //   system.SetSscLevelSmoother(true); 
+  // // //   system.SetFactorAndScale(true, scale); 
+  // // //   system.SetSSCType(SYMMETRIC1111);
+  // // // }
+  // // // else if (simulation  == 1){ //our reduced symmetric
+  // // //   system.SetSscLevelSmoother(true); 
+  // // //   system.SetFactorAndScale(false, scale); 
+  // // //   system.SetSSCType(SYMMETRIC1111);
+  // // // }
+  // // // else if (simulation  == 2){ //our reduced asymmetric
+  // // //   system.SetSscLevelSmoother(true); 
+  // // //   system.SetFactorAndScale(false, scale); 
+  // // //   system.SetSSCType(ASYMMETRIC0101);
+  // // // }
+  // // // else  if(simulation == 3) { //JK
+  // // //   system.SetSscLevelSmoother(false); 
+  // // //   system.SetFactorAndScale(true, scale); 
+  // // // }
+  // // // else if (simulation  == 4){ //BPWX
+  // // //   system.SetSscLevelSmoother(false); 
+  // // //   system.SetFactorAndScale(false, scale);
+  // // // }
   // ====== END part to re-implement!!! ================
+ 
+ 
+  system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
+  system.SetNumberPostSmoothingStep(1);
+  
+  
+  
+//   system.SetFactorAndScale(true, 0.9);
+//   system.SetSscLevelSmoother(false);
+//   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
+//   system.SetNumberPostSmoothingStep(1);
   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -222,8 +251,11 @@ int main(int argc, char** args) {
     
     std::cout << "iteration = " <<i<<std::endl;
     
+    //mlSol.Initialize("All");
+    
     system.SetOuterSolver(PREONLY);
     system.MGsolve();
+    
     mlSol.GenerateBdc("All");
     std::ofstream fout;
     if(i==0){
@@ -256,7 +288,6 @@ int main(int argc, char** args) {
       vtkIO.SetDebugOutput( true );
       vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, counter-1);
     }
-
   }
   /////////////////////////////////////ultiLevelProb/////////////////////////
   
