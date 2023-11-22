@@ -133,8 +133,8 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
 
-  //mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
 
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
   mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/Lshape3DTeT_mini.neu", "seventh", scalingFactor);
@@ -144,7 +144,6 @@ int main(int argc, char** args) {
 
   numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 6;
-
   
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
   
@@ -197,9 +196,11 @@ int main(int argc, char** args) {
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
   
-  // ====== BEGIN part to re-implement!!! ================
+  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
   // // // system.SetFactorAndScale(true, 0.2);
-  // ====== END part to re-implement!!! ================
+  // // system.SetFactorAndScale(false, 1.0);  //last version
+  // ====== END part to re-implement for SSC MGAMR!!! ================
+
   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");

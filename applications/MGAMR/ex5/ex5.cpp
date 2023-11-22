@@ -39,7 +39,11 @@ using namespace femus;
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int faceIndex, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
-
+  
+  //BEGIN: to use for 3D
+  if(faceIndex == 2) dirichlet = false;
+  //END
+  
   return dirichlet;
 }
 
@@ -49,9 +53,20 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-  if(elemgroupnumber == 7 || elemgroupnumber == 9 ){
-    refine = true;
-  }
+ //BEGIN: refinement strategy for 2D
+//   if(elemgroupnumber == 7 || elemgroupnumber == 9 ){
+//     refine = true;
+//   }
+  //END
+  
+
+  //BEGIN: refinement strategy with circle
+  double radius = 0.25/(level);
+  
+  if(x[0]*x[0]+x[1]*x[1] < radius*radius) refine=true;
+  //END
+
+  
 //   else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
 //     refine = true;
 //   }
@@ -79,7 +94,15 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef4Mixed.neu", "seventh", scalingFactor);
+  
+  //BEGIN mesh for 2D tests
+//   mlMsh.ReadCoarseMesh("./input/adaptiveRef4Mixed.neu", "seventh", scalingFactor);
+  //END 
+  
+  //BEGIN mesh for 3D tests
+  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu", "seventh", scalingFactor);
+  //END 
+    
   //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -91,7 +114,7 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 1;
+  unsigned numberOfSelectiveLevels =3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
@@ -101,7 +124,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, FIRST);//FIRST);;
+  mlSol.AddSolution("T", LAGRANGE, SECOND);//SECOND);;
 
   mlSol.Initialize("All");
 
@@ -124,7 +147,7 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleTemperature_AD);
 
 //   
-  system.SetMaxNumberOfLinearIterations(26);
+  system.SetMaxNumberOfLinearIterations(200);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-20);
 
 
@@ -144,12 +167,12 @@ int main(int argc, char** args) {
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
-  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 10, 10); //GMRES tolerances 
   
   unsigned simulation = 3;
   double scale = 1.;
   
-  // ====== BEGIN part to re-implement!!! ================
+  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
   
   // // // if (simulation  == 0){ //our theory
   // // //   system.SetSscLevelSmoother(true); 
@@ -174,7 +197,7 @@ int main(int argc, char** args) {
   // // //   system.SetSscLevelSmoother(false); 
   // // //   system.SetFactorAndScale(false, scale);
   // // // }
-  // ====== END part to re-implement!!! ================
+  // ====== END part to re-implement for SSC MGAMR!!! ================
   
   
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
@@ -299,10 +322,11 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
     short unsigned ielGroup = msh->GetElementGroup(iel);
     //double K = ( ielGroup == 7 || ielGroup == 9 )?  1:0.1;
     
-  
-    double K = ( ielGroup == 6 || ielGroup == 8 ) ?  0.1 * (rand()%((15 - 5) + 1) + 5) :  (rand()%((15 - 5) + 1) + 5) ;
-
-
+   
+    //BEGIN: K for 2D simulations
+//     double K = ( ielGroup == 6 || ielGroup == 8 ) ?  0.1 * (rand()%((15 - 5) + 1) + 5) :  (rand()%((15 - 5) + 1) + 5) ;
+    //END
+    
     
 //     if(ielGroup == 7){
 //       std::cout << K <<" ";
@@ -337,7 +361,21 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
-
+    
+    
+    //BEGIN: K for circle simulations
+    
+    double xg[3];
+    for(unsigned k = 0; k < dim; k++) {
+      xg[k] = coordX[k][nDofsX-1];
+    }
+    
+    double r = xg[0] * xg[0] + xg[1] * xg[1] ; 
+    
+    double K = (1. / r) * (1.+.01 * (rand()%((100 - 0) + 1) + 0)) ; // 1/r * a where a is from 1 to 2 random
+    
+    //END
+    
     // start a new recording of all the operations involving adept::adouble variables
     if(assembleMatrix) s.new_recording();
 

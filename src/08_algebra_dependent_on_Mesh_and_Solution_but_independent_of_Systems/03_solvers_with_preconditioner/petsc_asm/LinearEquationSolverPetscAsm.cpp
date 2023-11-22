@@ -252,9 +252,8 @@ namespace femus {
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
-
-
     }
+    
 
     //BEGIN Generate std::vector<IS> for ASM PC ***********
     _localIs.resize(_localIsIndex.size());
@@ -264,6 +263,10 @@ namespace femus {
       ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0],  PETSC_USE_POINTER , &_localIs[vb_index]);
       ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0],  PETSC_USE_POINTER , &_overlappingIs[vb_index]);
     }
+    
+   
+    
+    
 
     //END Generate std::vector<IS> for ASM PC ***********
 
@@ -280,11 +283,28 @@ namespace femus {
       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
     }
     PCASMSetOverlap(subpc, _overlap);
-    
+
+
+  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
+// // // // Replace the above initial lines with this block    
+// // //     PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, subpc);
+// // //     for(unsigned i =0 ; i < _overlappingIs.size();i++){
+// // //       PCFieldSplitSetIS(subpc,NULL,_overlappingIs[i]);
+// // //     }
+// // //     
+// // // 
+// // //     PCFieldSplitSetType(subpc,  PC_COMPOSITE_SYMMETRIC_MULTIPLICATIVE);
+  // ====== END part to re-implement for SSC MGAMR!!! ================
+
+  
     KSPSetUp(subksp);
 
     KSP* subksps;
-    PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+    
+    //PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+    
+    PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
+    
     PetscReal epsilon = 1.e-16;
 
     if(!_standardASM) {

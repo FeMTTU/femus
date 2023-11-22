@@ -54,52 +54,20 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-//   if(elemgroupnumber == 8 && level < numberOfUniformLevels){
+//   if(elemgroupnumber == 7 && level < numberOfUniformLevels + 1){
 //     refine = true;
 //   }
-//   else if(elemgroupnumber == 9 && level < numberOfUniformLevels ){
+//   else if(elemgroupnumber == 8 && level < numberOfUniformLevels ){
 //     refine = true;
 //   }
-//   else if(elemgroupnumber == 10 && level < numberOfUniformLevels + 1){
+//   else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
 //     refine = true;
 //   }
-//   else if(elemgroupnumber == 11 && level < numberOfUniformLevels + 1){
-//     refine = true;
-//   }
-//   else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 2){
-//     refine = true;
-//   }
-//   else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 2){
-//     refine = true;
-//   }
-//   else if(elemgroupnumber == 14 && level < numberOfUniformLevels + 3){
-//     refine = true;
-//   }
-//   else if(elemgroupnumber == 15 && level < numberOfUniformLevels + 3){
-//     refine = true;
-//   }
+
   
-  if(elemgroupnumber == 7 && level < numberOfUniformLevels){
+  if(elemgroupnumber == 7 || elemgroupnumber == 9 ){
     refine = true;
   }
-  else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
-    refine = true;
-  }
-  else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
-    refine = true;
-  }
-  else if(elemgroupnumber == 10 && level < numberOfUniformLevels + 3){
-    refine = true;
-  }
-  else if(elemgroupnumber == 11 && level < numberOfUniformLevels + 4){
-    refine = true;
-  }
-  else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 5){
-    refine = true;
-  }
-//   else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 6){
-//     refine = true;
-//   }
 
   return refine;
 
@@ -108,7 +76,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 bool SetRefinementFlag2(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
-  double radious = 0.25/(level*level);
+  double radious = 0.5/(level+1);
   
   if(x[0]*x[0]+x[1]*x[1] < radious*radious) refine=true;
   
@@ -135,7 +103,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/adaptiveRef6.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/adaptiveRef4Tri.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -143,15 +112,15 @@ int main(int argc, char** args) {
   numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 4;
   
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag2); 
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
-  mlSol.AddSolution("U", LAGRANGE, SECOND);
+  mlSol.AddSolution("U", LAGRANGE, FIRST);
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition2);
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -162,8 +131,8 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  system.SetLinearEquationSolverType(FEMuS_DEFAULT);  //GMRES
-  // system.SetMgSmoother(ASM_SMOOTHER);
+  //system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   
@@ -182,16 +151,16 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-
+  
   //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(LU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
   unsigned simulation = 4;
-  double scale = 0.9;
+  double scale = 0.5;
   
   // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
   // // // if (simulation  == 0){ //our theory
@@ -218,8 +187,7 @@ int main(int argc, char** args) {
   // // //   system.SetFactorAndScale(false, scale);
   // // // }
   // ====== END part to re-implement for SSC MGAMR!!! ================
- 
- 
+  
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
   system.SetNumberPostSmoothingStep(1);
   
@@ -233,8 +201,8 @@ int main(int argc, char** args) {
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
-  //system.SetNumberOfSchurVariables(1);
-  //system.SetElementBlockNumber(2);
+  system.SetNumberOfSchurVariables(0);
+  system.SetElementBlockNumber(2);
  
   //////////////////////////////////////////////////////////////////////
   //solution variable
@@ -253,9 +221,8 @@ int main(int argc, char** args) {
     
     //mlSol.Initialize("All");
     
-    system.SetOuterSolver(PREONLY);
-    system.MGsolve();
-    
+   system.SetOuterSolver(PREONLY);
+   system.MGsolve();
     mlSol.GenerateBdc("All");
     std::ofstream fout;
     if(i==0){
@@ -431,6 +398,27 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     }
 
     //END global to local extraction
+    
+    
+        //BEGIN: K for 2D simulations
+    short unsigned ielGroup = msh->GetElementGroup(iel);
+    double K = ( ielGroup == 6 || ielGroup == 8 ) ?  1. : 10. /*0.1 * (rand()%((15 - 5) + 1) + 5) :  0.2 * (rand()%((15 - 5) + 1) + 5)*/ ;
+    //END
+    
+    
+    //BEGIN: K for circle simulations
+    
+//     double xg[3];
+//     for(unsigned k = 0; k < dim; k++) {
+//       xg[k] = coordX[k][nDofsX-1];
+//     }
+//     
+//     double r = xg[0] * xg[0] + xg[1] * xg[1] ; 
+//     
+//     double K = (1. / r)   * (r +.01 * (rand()%((100 - 0) + 1) + 0)) ; // 1/r * a where a is from 1 to 2 random
+    
+    //END
+    
     //BEGIN Gauss point loop
     short unsigned ielGeom = msh->GetElementType(iel);
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solUType]->GetGaussPointNumber(); ig++) {
@@ -453,11 +441,11 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         unsigned irow = i;       
 	Res[irow] +=  phiU[i] * fU[i] * weight;	
         for(unsigned k = 0; k < dim; k++) {
-          Res[irow] +=  - phiU_x[i * dim + k] * gradSolU_gss[k] * weight;
+          Res[irow] +=  - K * phiU_x[i * dim + k] * gradSolU_gss[k] * weight;
           if(assembleMatrix) {
             unsigned irowMat = irow * nDofsU;
             for(unsigned j = 0; j < nDofsU; j++) {
-              Jac[ irowMat + j ] += phiU_x[i * dim + k] * phiU_x[j * dim + k] * weight;
+              Jac[ irowMat + j ] += K * phiU_x[i * dim + k] * phiU_x[j * dim + k] * weight;
             }
           }
         }
