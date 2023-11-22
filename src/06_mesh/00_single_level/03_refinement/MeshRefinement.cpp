@@ -489,11 +489,11 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====================================
     _mesh.SetCharacteristicLength( mshc->GetCharacteristicLength() );
 
-    
+
 //====  Print Info ======== 
     _mesh.PrintInfo();
-    
-    
+
+
   }
 
 
