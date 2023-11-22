@@ -36,6 +36,16 @@ if (sqrt(realJ(j)*realJ(j)+imagJ(j)*imagJ(j))<= 1.0e-12)
 end
 end
 
+max = 0;
+for j=1:size(realJ)
+  this = sqrt((1.-realJ(j))*(1.-realJ(j))+imagJ(j)*imagJ(j));
+if (this >max)
+  max = this;
+end
+end
+max
+
+
 figure
 plot(realJ, imagJ, 'b*')
 
@@ -44,7 +54,6 @@ y=[realJ';imagJ'];
 fid=fopen('/home/gke/coyi/matlab_MG_preconditioner/eig_ILU_TVP_0p8','w');
 fprintf(fid,'%e %e\n',y);  
 fclose(fid);
- 
  
  
 % % sizeT = 289;

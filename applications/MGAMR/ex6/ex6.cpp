@@ -37,42 +37,47 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
-
+unsigned numberOfUniformLevels;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
-  unsigned level0 = 0;
 
-//   if (elemgroupnumber == 6 && level < 3) refine = 1;
-
-
-  double a = static_cast<double>(rand())/RAND_MAX;
-  if ( a < 0.5) refine	= true;
-  return refine;
-
-//  std::cout<<level<<std::endl;
-// double radius = pi / 8.0 /(level - level0);
-
-//  double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
-  
-//   unsigned powindex;
-//   powindex = level -level0;
-//   if (powindex % 2 == 0) powindex = powindex - 1;
-//   double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
-  
- // double radius2 = radius * radius;
-  
-//   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
-//     refine	= true;
-//   }	 
-//   return refine;  
-  
-  
-//   if( fabs(x[0]) < 0.5/ pow(2,level) && fabs(x[1]) < 0.5/ pow(2,level) ){
+//   if(elemgroupnumber == 8 && level < numberOfUniformLevels){
 //     refine = true;
 //   }
-//   return refine;
+//   else if(elemgroupnumber == 9 && level < numberOfUniformLevels ){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 10 && level < numberOfUniformLevels + 1){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 11 && level < numberOfUniformLevels + 1){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 2){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 2){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 14 && level < numberOfUniformLevels + 3){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 15 && level < numberOfUniformLevels + 3){
+//     refine = true;
+//   }
+  
+  if(elemgroupnumber == 7 && level < numberOfUniformLevels){
+    refine = true;
+  }
+  else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
+    refine = true;
+  }
+  
+  
+  return refine;
+
 }
 
 
@@ -89,22 +94,17 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
+   //mlMsh.ReadCoarseMesh("./input/adaptiveRef4Tri.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
+   mlMsh.ReadCoarseMesh("./input/Lshape3D.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 1;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
-  // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(1);
-  //numberOfUniformLevels -= 1;
-  // print mesh info
-  
-  
+ 
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
@@ -123,8 +123,10 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetLinearEquationSolverType(FEMuS_ASM);
+
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  // system.SetLinearEquationSolverType(FEMuS_ASM);
+
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   
@@ -133,25 +135,29 @@ int main(int argc, char** args) {
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
+  system.SetMaxNumberOfLinearIterations(1); // number of Vcycles
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-50);	
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
   system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetRichardsonScaleFactor(.6);
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 10, 10); //GMRES tolerances // 10 number of richardson iterations
+  
+  
+  
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(2);
+  //system.SetNumberOfSchurVariables(1);
+  //system.SetElementBlockNumber(2);
  
   //////////////////////////////////////////////////////////////////////
   //solution variable
@@ -279,13 +285,13 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   std::vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-  if(counter == 10){ 
-    KK->print_matlab("matrix.txt", "ascii");
-    Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
-    PetscViewer    viewer;
-    PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
-    MatView(KKp,viewer);
-  }   
+//   if(counter == 10){ 
+//     KK->print_matlab("matrix.txt", "ascii");
+// //     Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+// //     PetscViewer    viewer;
+// //     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+// //     MatView(KKp,viewer);
+//   }   
   
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
   sol->_Sol[solUIndex]->zero();  
@@ -389,6 +395,15 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
 
   counter++;
+  
+  if(counter == 10){ 
+    KK->print_matlab("matrix.txt", "ascii");
+//     Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+//     MatView(KKp,viewer);
+  }   
+  
   
   // ***************** END ASSEMBLY *******************
 }
