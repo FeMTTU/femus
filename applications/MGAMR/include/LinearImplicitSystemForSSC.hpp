@@ -88,6 +88,8 @@ namespace femus {
       
     protected:
 
+      ///@todo just find where these variables are used and take the corresponding functions!
+      
       bool _factorTest;
       double _scale;
       bool _sscLevelSmoother;

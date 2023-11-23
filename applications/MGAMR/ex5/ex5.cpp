@@ -176,7 +176,6 @@ int main(int argc, char** args) {
   unsigned simulation = 3;
   double scale = 1.;
   
-  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
   
   if (simulation  == 0){ //our theory
     system.SetSscLevelSmoother(true); 
@@ -201,7 +200,6 @@ int main(int argc, char** args) {
     system.SetSscLevelSmoother(false); 
     system.SetFactorAndScale(false, scale);
   }
-  // ====== END part to re-implement for SSC MGAMR!!! ================
   
   
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
