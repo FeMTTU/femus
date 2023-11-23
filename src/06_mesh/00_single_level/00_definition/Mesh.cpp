@@ -460,13 +460,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     el->ShrinkToFitElementNearFace();
 //==== Only in Coarse generations - END ==============================
 
-    
-//==== Material element counter is not in BuildBox - BEGIN ==============================
-    std::vector < unsigned > materialElementCounter(3, 0);
-    materialElementCounter[0] = GetNumberOfElements();
-    el->SetMaterialElementCounter(materialElementCounter);
-//==== Material element counter is not in BuildBox - END ==============================
-
 
     PartitionElements_and_FillDofMapAllFEFamilies();
 
@@ -1036,7 +1029,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     switch(solType) {
         
-      case 0: { // linear Lagrange
+      case CONTINUOUS_LINEAR: { // linear Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
         unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
 
@@ -1049,7 +1042,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       }
       break;
 
-      case 1: { // quadratic Lagrange
+      case CONTINUOUS_SERENDIPITY: { // quadratic Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
         unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
 
@@ -1062,16 +1055,16 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       }
       break;
 
-      case 2: // bi-quadratic Lagrange
+      case CONTINUOUS_BIQUADRATIC: // bi-quadratic Lagrange
         dof = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
         break;
 
-      case 3: // piecewise constant
+      case DISCONTINUOUS_CONSTANT: // piecewise constant
         // in this case use i=0
         dof = iel;
         break;
 
-      case 4: // piecewise linear discontinuous
+      case DISCONTINUOUS_LINEAR: // piecewise linear discontinuous
         unsigned isdom = BisectionSearch_find_processor_of_dof(iel, 3);
         unsigned offset = _elementOffset[isdom];
         unsigned offsetp1 = _elementOffset[isdom + 1];

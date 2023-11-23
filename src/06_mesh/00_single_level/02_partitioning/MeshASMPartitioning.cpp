@@ -19,7 +19,7 @@
 #include "MeshASMPartitioning.hpp"
 #include "Mesh.hpp"
 
-
+#include "FSIenum.hpp"
 
 
 namespace femus {
@@ -30,8 +30,9 @@ MeshASMPartitioning::MeshASMPartitioning(const Mesh& mesh) : MeshPartitioning(me
 }
 
 //----------------------------------------------------------------------------------------------------------------
-void MeshASMPartitioning::DoPartitionOld( const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements,
-					 std::vector <unsigned> &block_type_range){
+void MeshASMPartitioning::DoPartitionOld( const unsigned *block_size,
+                                          std::vector < std::vector< unsigned > > &block_elements,
+                                          std::vector <unsigned> &block_type_range) {
 
   unsigned iproc=processor_id();
   unsigned ElemOffset    = _mesh._elementOffset[iproc];
@@ -85,8 +86,9 @@ void MeshASMPartitioning::DoPartitionOld( const unsigned *block_size, std::vecto
 
 }
 
-void MeshASMPartitioning::DoPartition( const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements,
-                                         std::vector <unsigned> &block_type_range){
+void MeshASMPartitioning::DoPartition( const unsigned *block_size, 
+                                       std::vector < std::vector< unsigned > > &block_elements,
+                                       std::vector <unsigned> &block_type_range){
 
     unsigned iproc = processor_id();
     unsigned ElemOffset    = _mesh._elementOffset[iproc];

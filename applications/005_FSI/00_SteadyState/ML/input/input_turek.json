@@ -1,0 +1,191 @@
+// Configuration options
+{
+    // mesh
+    "multilevel_mesh" : {
+      "first" : {
+        "type" : {
+          "filename" : "input/turek.neu"
+                  }
+                 }
+             },
+             
+    // solution
+    "multilevel_solution" : {
+      "multilevel_mesh" : {
+        "first" : {
+          "variable" : {
+            "DX" : { 
+              "fe_order" : "second",
+              "boundary_conditions" : [
+                {
+                  "facename" : "1",
+                  "bdc_type" : "dirichlet"
+                },
+                {
+                  "facename" : "2",
+                  "bdc_type" : "dirichlet"
+                },
+                {
+                  "facename" : "3",
+                  "bdc_type" : "neumann"
+                },               
+                {
+                  "facename" : "4",
+                  "bdc_type" : "dirichlet"
+                }
+                                    ]                                           
+                  },
+            "DY" : { 
+              "fe_order" : "second",
+              "boundary_conditions" : [
+                {
+                  "facename" : "1",
+                  "bdc_type" : "neumann"
+                },
+                {
+                  "facename" : "2",
+                  "bdc_type" : "neumann"
+                },
+                {
+                  "facename" : "3",
+                  "bdc_type" : "dirichlet"
+                },               
+                {
+                  "facename" : "4",
+                  "bdc_type" : "dirichlet"
+                }
+                                    ]                                           
+                  },
+            "U" : { 
+              "fe_order" : "second",
+              "boundary_conditions" : [
+                {
+                  "facename" : "1",  
+                  "bdc_type" : "dirichlet",
+                  "bdc_func" : "1.5*0.2*4.0/0.1681*y*(0.41-y)"
+                },
+                {
+                  "facename" : "2",
+                  "bdc_type" : "neumann"
+                },
+                {
+                  "facename" : "3",
+                  "bdc_type" : "dirichlet"
+                },               
+                {
+                  "facename" : "4",
+                  "bdc_type" : "dirichlet"
+                }
+                                    ]                                           
+                  },
+            "V" : { 
+              "fe_order" : "second",
+              "boundary_conditions" : [
+                {
+                  "facename" : "1",
+                  "bdc_type" : "dirichlet"
+                },
+                {
+                  "facename" : "2",
+                  "bdc_type" : "neumann"
+                },
+                {
+                  "facename" : "3",
+                  "bdc_type" : "dirichlet"
+                },               
+                {
+                  "facename" : "4",
+                  "bdc_type" : "dirichlet"
+                }
+                                    ]                                           
+                  },
+            "P" : { 
+              "fe_order" : "first",
+              "boundary_conditions" : [
+                {
+                  "facename" : "1",
+                  "bdc_type" : "neumann"
+                },
+                {
+                  "facename" : "2",
+                  "bdc_type" : "neumann"
+                },
+                {
+                  "facename" : "3",
+                  "bdc_type" : "neumann"
+                },               
+                {
+                  "facename" : "4",
+                  "bdc_type" : "neumann"
+                }
+                                    ]                                           
+                  }
+                }
+              }
+            }
+          },
+             
+    // multilevel problem
+    "multilevel_problem" : {
+      "parameters" : {
+        "fluid" : {
+          "density" : 1000.0,
+          "dynamic_viscosity" : 1.,
+          "model" : "Newtonian" 
+        },
+        "solid" : {
+          "density" : 1000.0,
+          "young_module" : 1400000,
+          "poisson_coefficient" : 0.5,        
+          "model" : "Mooney-Rivlin"
+        }
+      },
+      "multilevel_mesh" : {
+        "first" : {
+          "system" : {
+            "fsi" : {
+              "non_linear_solver" : {
+                "max_number_nonlinear_iteration" : 10,
+                "abs_conv_tol" : 1.e-10
+              },
+              "linear_solver" : {
+                "max_number_linear_iteration" : 2, 
+                "abs_conv_tol" : 1.e-09, 
+                "type" : {
+                  "multigrid" : {
+                    "nlevels" : 3, 
+                    "npresmoothing" : 1, 
+                    "npostsmoothing" : 1,                                                                                                 
+                    "mgtype" : "V_cycle",
+                    "smoother" : {
+                    "type" : {
+                      "asm" : {
+                        "block_number" : 2,
+                        "ksp" : "gmres",
+                        "precond" : "ilu",
+                        "rtol"    : 1.e-12,
+                        "atol"    : 1.e-20,
+                        "divtol"  : 1.e+50,
+                        "max_its" : 4
+                               }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+             }
+           }
+}
+
+
+
+
+
+
+
+
+
+

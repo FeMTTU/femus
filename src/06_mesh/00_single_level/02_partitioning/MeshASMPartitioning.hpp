@@ -20,6 +20,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MeshPartitioning.hpp"
+
 #include <vector>
 
 
@@ -43,11 +44,10 @@ public:
     /** destructor */
     ~MeshASMPartitioning() {} 
     
-    /** Refinement functions */
-    
     /** To be added */
     void DoPartition(const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements, std::vector <unsigned> &block_type_range);
-     void DoPartitionOld(const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements, std::vector <unsigned> &block_type_range);
+    
+    void DoPartitionOld(const unsigned *block_size, std::vector < std::vector< unsigned > > &block_elements, std::vector <unsigned> &block_type_range);
     
     
 private:
