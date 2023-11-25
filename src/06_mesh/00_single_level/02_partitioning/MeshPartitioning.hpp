@@ -42,11 +42,9 @@ public:
     /** destructor */
     ~MeshPartitioning() {}; 
     
-    /** Refinement functions */
-    
 protected:
 
-   const Mesh& _mesh;                 //< reference to the mesh which is built by refinement
+   const Mesh & _mesh;                 //< reference to the mesh which is built by refinement
 
 };
 

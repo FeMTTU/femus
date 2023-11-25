@@ -268,7 +268,7 @@ namespace femus {
 
 
 
-       // Groups of the mesh - BEGIN ===============
+       // Groups and Material of the mesh - BEGIN ===============
       
       if(read_domain_groups_flag == true || read_boundary_groups_flag == true)  {
 
@@ -286,7 +286,7 @@ namespace femus {
         if(read_domain_groups_flag == true) {
           if(i == (mesh_dim - 1)) {
 //           for(unsigned i = 0; i < mesh_dim; i++) {
-            set_elem_group_ownership(file_id, mesh_menus[j], group_info, geom_elem_per_dimension[i], i);
+            set_elem_group_ownership_And_Material(file_id, mesh_menus[j], group_info, geom_elem_per_dimension[i], i);
           }
         }
         // Domain groups (dimension same as max mesh dimension) - END ===============
@@ -298,7 +298,7 @@ namespace femus {
         // Boundary groups (dimension - 1) - END ===============
 
       }
-        // Groups of the mesh - END ===============
+       // Groups and Material of the mesh - END ===============
 
 
     }
@@ -873,7 +873,7 @@ namespace femus {
 
   //  we loop over all elements and see which ones are of that group
   //
-  void MED_IO::set_elem_group_ownership(
+  void MED_IO::set_elem_group_ownership_And_Material(
     const hid_t&  file_id,
     const std::string mesh_menu,
     const std::vector<GroupInfo> & group_info,
@@ -898,11 +898,7 @@ namespace femus {
 
     // ****************** Volume *******************************************
     if(i == (mesh.GetDimension() - 1)) {     //volume
-      std::vector < unsigned > materialElementCounter(3, 0); ///@todo I think this counts who is fluid, who is solid, who whatever else, need to double check with the Gambit input files
-      const unsigned group_property_fluid_probably          = 2;
-      const unsigned group_property_something_else_probably = 3;
-      const unsigned group_property_solid_probably          = 4;
-
+      
       //I have to split the groups with the dimensions
       //I have to compute the number of elements of each group
 
@@ -914,12 +910,7 @@ namespace femus {
               if(fam_map[g] == group_info[gv]._med_flag)   {
                 mesh.el->SetElementGroup(g,  group_info[gv]._user_defined_flag /*fam_map[g]*/ /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
                 mesh.el->SetElementMaterial(g, group_info[gv]._user_defined_property);
-                //         mesh.el->SetElementMaterial(elem_indices[g] - 1 - n_elements_b_bb, group_info[gv]._user_defined_property /*gr_material*/);
               }
-
-              if(group_info[gv]._user_defined_property/*gr_material*/ == group_property_fluid_probably) materialElementCounter[0] += 1;
-              else if(group_info[gv]._user_defined_property/*gr_material*/ == group_property_something_else_probably) materialElementCounter[1] += 1;
-              else                                                            materialElementCounter[2] += 1;
 
             }
           }  //groups of the current dimension
@@ -929,7 +920,7 @@ namespace femus {
       }  //loop over all groups
 
       mesh.el->SetElementGroupNumber(1/*n_groups_of_that_space_dimension*/);
-      mesh.el->SetMaterialElementCounter(materialElementCounter);
+
     }
     // ****************** Volume, end *******************************************
 

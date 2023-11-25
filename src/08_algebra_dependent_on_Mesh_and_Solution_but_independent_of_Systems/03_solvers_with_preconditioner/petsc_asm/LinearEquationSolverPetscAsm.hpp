@@ -32,6 +32,7 @@
 
 #include "Mesh.hpp"
 
+#include "FSIenum.hpp"
 
 namespace femus {
 
@@ -80,7 +81,8 @@ namespace femus {
       // data member
     private:
       
-      unsigned _elementBlockNumber[3];
+      unsigned _elementBlockNumber[ FSIMaterialIndex_SolidPorousFluid_count ];
+      
       unsigned short _NSchurVar;
 
       std::vector< std::vector <PetscInt> > _overlappingIsIndex;
@@ -104,8 +106,8 @@ namespace femus {
     unsigned dim = GetMeshFromLinEq()->GetDimension();
     unsigned base = pow(2, dim);
     unsigned exponent = 5 - dim;
-    _elementBlockNumber[0] = pow(base, exponent);
-    _elementBlockNumber[1] = pow(base, exponent);
+    _elementBlockNumber[ SOLID_FLAG_INDEX ] = pow(base, exponent);
+    _elementBlockNumber[ POROUS_FLAG_INDEX ] = pow(base, exponent);
     _NSchurVar = 1;
     _standardASM = 1;
     _overlap = 0;

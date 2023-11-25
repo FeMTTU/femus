@@ -1,0 +1,68 @@
+// Configuration options
+{
+    // mesh
+    "multilevel_mesh" : {
+      "first" : {
+        "type" : {
+          "filename" : "input/bathe_FSI.neu"
+                  }
+                 }
+             },
+             
+    // multilevel problem
+    "multilevel_problem" : {
+      "parameters" : {
+        "fluid" : {
+          "density" : 100.0,
+          "dynamic_viscosity" : 1.0,
+          "model" : "Newtonian" 
+        },
+        "solid" : {
+          "density" : 800.0,
+          "young_module" : 1800000,
+          "poisson_coefficient" : 0.5,        
+          "model" : "Mooney-Rivlin"
+        }
+      },
+      "multilevel_mesh" : {
+        "first" : {
+          "system" : {
+            "fsi" : {
+              "non_linear_solver" : {
+                "max_number_nonlinear_iteration" : 15,
+                "abs_conv_tol" : 1.e-10
+              },
+              "linear_solver" : {
+                "max_number_linear_iteration" : 8, 
+                "abs_conv_tol" : 1.e-09, 
+                "type" : {
+                  "multigrid" : {
+                    "nlevels" : 2, 
+                    "npresmoothing" : 1, 
+                    "npostsmoothing" : 1,                                                                                                 
+                    "mgtype" : "V_cycle",
+                    "smoother" : {
+                    "type" : {
+                      "asm" : {
+                        "fsi" : {
+                          "block_fluid_number" : 2, 
+                          "block_solid_number" : "all"
+                        },
+                        "ksp" : "gmres",
+                        "precond" : "mlu",
+                        "rtol"    : 1.e-12,
+                        "atol"    : 1.e-20,
+                        "divtol"  : 1.e+50,
+                        "max_its" : 4
+                               }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+             }
+           }
+}
