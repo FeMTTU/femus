@@ -253,8 +253,10 @@ int main(int argc, char** args) {
     
     //mlSol.Initialize("All");
     
+  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
     system.SetOuterSolver(PREONLY);
     system.MGsolve();
+  // ====== END part to re-implement for SSC MGAMR!!! ================
     
     mlSol.GenerateBdc("All");
     std::ofstream fout;

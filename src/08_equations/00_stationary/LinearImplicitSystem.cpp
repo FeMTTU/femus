@@ -31,7 +31,8 @@ namespace femus {
 
   LinearImplicitSystem::LinearImplicitSystem(MultiLevelProblem& ml_probl,
                                              const std::string& name_in,
-                                             const unsigned int number_in, const LinearEquationSolverType& smoother_type) :
+                                             const unsigned int number_in,
+                                             const LinearEquationSolverType& smoother_type) :
     System(ml_probl, name_in, number_in, smoother_type),
     _debug_linear(false),
     _n_max_linear_iterations(3),

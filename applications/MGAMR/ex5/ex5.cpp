@@ -31,6 +31,10 @@
 #include "adept.h"
 
 
+
+#include "../include/LinearImplicitSystemForSSC.hpp"
+
+
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
 
@@ -136,7 +140,7 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
 
   // add system Poisson in mlProb as a Linear Implicit System
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Temp");
+  LinearImplicitSystemForSSC & system = mlProb.add_system < LinearImplicitSystemForSSC > ("Temp");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("T");
@@ -172,32 +176,30 @@ int main(int argc, char** args) {
   unsigned simulation = 3;
   double scale = 1.;
   
-  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
   
-  // // // if (simulation  == 0){ //our theory
-  // // //   system.SetSscLevelSmoother(true); 
-  // // //   system.SetFactorAndScale(true, scale); 
-  // // //   system.SetSSCType(SYMMETRIC1111);
-  // // // }
-  // // // else if (simulation  == 1){ //our reduced symmetric
-  // // //   system.SetSscLevelSmoother(true); 
-  // // //   system.SetFactorAndScale(false, scale); 
-  // // //   system.SetSSCType(SYMMETRIC1111);
-  // // // }
-  // // // else if (simulation  == 2){ //our reduced asymmetric
-  // // //   system.SetSscLevelSmoother(true); 
-  // // //   system.SetFactorAndScale(false, scale); 
-  // // //   system.SetSSCType(ASYMMETRIC0101);
-  // // // }
-  // // // else  if(simulation == 3) { //JK
-  // // //   system.SetSscLevelSmoother(false); 
-  // // //   system.SetFactorAndScale(true, scale); 
-  // // // }
-  // // // else if (simulation  == 4){ //BPWX
-  // // //   system.SetSscLevelSmoother(false); 
-  // // //   system.SetFactorAndScale(false, scale);
-  // // // }
-  // ====== END part to re-implement for SSC MGAMR!!! ================
+  if (simulation  == 0){ //our theory
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(true, scale); 
+    system.SetSSCType(SYMMETRIC1111);
+  }
+  else if (simulation  == 1){ //our reduced symmetric
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(false, scale); 
+    system.SetSSCType(SYMMETRIC1111);
+  }
+  else if (simulation  == 2){ //our reduced asymmetric
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(false, scale); 
+    system.SetSSCType(ASYMMETRIC0101);
+  }
+  else  if(simulation == 3) { //JK
+    system.SetSscLevelSmoother(false); 
+    system.SetFactorAndScale(true, scale); 
+  }
+  else if (simulation  == 4){ //BPWX
+    system.SetSscLevelSmoother(false); 
+    system.SetFactorAndScale(false, scale);
+  }
   
   
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
@@ -212,8 +214,10 @@ int main(int argc, char** args) {
 
   system.SetPrintSolverInfo(false);
 
+  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
   system.SetOuterSolver(PREONLY);
   system.MGsolve();
+  // ====== END part to re-implement for SSC MGAMR!!! ================
 
 
   // print solutions
