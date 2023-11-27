@@ -197,31 +197,29 @@ int main(int argc, char** args) {
   unsigned simulation = 4;
   double scale = 0.9;
   
-  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
-  // // // if (simulation  == 0){ //our theory
-  // // //   system.SetSscLevelSmoother(true); 
-  // // //   system.SetFactorAndScale(true, scale); 
-  // // //   system.SetSSCType(SYMMETRIC1111);
-  // // // }
-  // // // else if (simulation  == 1){ //our reduced symmetric
-  // // //   system.SetSscLevelSmoother(true); 
-  // // //   system.SetFactorAndScale(false, scale); 
-  // // //   system.SetSSCType(SYMMETRIC1111);
-  // // // }
-  // // // else if (simulation  == 2){ //our reduced asymmetric
-  // // //   system.SetSscLevelSmoother(true); 
-  // // //   system.SetFactorAndScale(false, scale); 
-  // // //   system.SetSSCType(ASYMMETRIC0101);
-  // // // }
-  // // // else  if(simulation == 3) { //JK
-  // // //   system.SetSscLevelSmoother(false); 
-  // // //   system.SetFactorAndScale(true, scale); 
-  // // // }
-  // // // else if (simulation  == 4){ //BPWX
-  // // //   system.SetSscLevelSmoother(false); 
-  // // //   system.SetFactorAndScale(false, scale);
-  // // // }
-  // ====== END part to re-implement for SSC MGAMR!!! ================
+  if (simulation  == 0){ //our theory
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(true, scale); 
+    system.SetSSCType(SYMMETRIC1111);
+  }
+  else if (simulation  == 1){ //our reduced symmetric
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(false, scale); 
+    system.SetSSCType(SYMMETRIC1111);
+  }
+  else if (simulation  == 2){ //our reduced asymmetric
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(false, scale); 
+    system.SetSSCType(ASYMMETRIC0101);
+  }
+  else  if(simulation == 3) { //JK
+    system.SetSscLevelSmoother(false); 
+    system.SetFactorAndScale(true, scale); 
+  }
+  else if (simulation  == 4){ //BPWX
+    system.SetSscLevelSmoother(false); 
+    system.SetFactorAndScale(false, scale);
+  }
  
  
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
