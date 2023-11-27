@@ -27,6 +27,10 @@
 #include "PetscMatrix.hpp"
 
 
+#include "../include/LinearImplicitSystemForSSC.hpp"
+
+
+
 using namespace femus;
 unsigned counter = 0;
 const double pi = 2.0 * acos(0.0);
@@ -126,7 +130,8 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   // add system Poisson in mlProb as a Linear Implicit System  
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
+  
+  LinearImplicitSystemForSSC & system = mlProb.add_system < LinearImplicitSystemForSSC > ("Poisson");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");

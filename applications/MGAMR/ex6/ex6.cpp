@@ -27,6 +27,9 @@
 #include "PetscMatrix.hpp"
 
 
+#include "../include/LinearImplicitSystemForSSC.hpp"
+
+
 using namespace femus;
 unsigned counter = 0;
 const double pi = 2.0 * acos(0.0);
@@ -159,7 +162,7 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   // add system Poisson in mlProb as a Linear Implicit System  
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
+  LinearImplicitSystemForSSC & system = mlProb.add_system < LinearImplicitSystemForSSC > ("Poisson");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
@@ -196,10 +199,10 @@ int main(int argc, char** args) {
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
   
-  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
+
+
   // // // system.SetFactorAndScale(true, 0.2);
-  // // system.SetFactorAndScale(false, 1.0);  //last version
-  // ====== END part to re-implement for SSC MGAMR!!! ================
+  system.SetFactorAndScale(false, 1.0);  //last version
 
   
   system.ClearVariablesToBeSolved();
