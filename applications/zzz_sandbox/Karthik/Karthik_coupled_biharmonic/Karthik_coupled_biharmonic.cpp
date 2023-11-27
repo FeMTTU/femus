@@ -17,7 +17,6 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "LinearEquationSolver.hpp"
 #include "VTKWriter.hpp"
 #include "NumericVector.hpp"
 
@@ -46,43 +45,6 @@
 using namespace femus;
 
 
-// // // // Solution - BEGIN
-// // //
-// // // double GetExactSolutionValue(const std::vector < double >& x) {
-// // //   double pi = acos(-1.);
-// // //   return cos(pi * x[0]) * cos(pi * x[1]);
-// // // };
-// // //
-// // //
-// // // void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-// // //   double pi = acos(-1.);
-// // //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-// // //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-// // // };
-// // //
-// // //
-// // // double GetExactSolutionLaplace(const std::vector < double >& x) {
-// // //   double pi = acos(-1.);
-// // //   return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
-// // // };
-// // //
-// // //
-// // //
-// // //
-// // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneousu(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[0], double& value, const int facename, const double time) {
-// // //   bool dirichlet = true; //dirichlet
-// // //   double pi = acos(-1.);
-// // //   value = 0.;
-// // //   return dirichlet;
-// // // }
-// // //
-// // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneousv(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[1], double& value, const int facename, const double time) {
-// // //   bool dirichlet = true; //dirichlet
-// // //   double pi = acos(-1.);
-// // //   value = 0.;
-// // //   return dirichlet;
-// // // }
-// // // // Solution - END
 
 
 // Solution - BEGIN
@@ -175,8 +137,8 @@ int main(int argc, char** args) {
 
   // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false; // This allows you to run the code multiple times without overwriting. This will generate an output folder each time you run.
-  const bool redirect_cout_to_file = false; // puts the output in a log file instead of the term
-  Files files;
+  const bool redirect_cout_to_file = true; // puts the output in a log file instead of the term
+  Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
 
@@ -193,6 +155,7 @@ int main(int argc, char** args) {
   system_biharmonic_coupled._system_name = "Biharmonic";
   system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation :: AssembleBilaplaceProblem_AD;
 
+  ///@todo do only one function pointer for boundary conditions, switch the variables with their name
   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneousu;
 
   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneousv;
@@ -204,12 +167,11 @@ int main(int argc, char** args) {
   Domains::square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_laplacian;
   system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
   system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
-
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
     // ======= System Specifics - END ==================
 
-
-
+  
+  
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
@@ -225,15 +187,15 @@ int main(int argc, char** args) {
   std::vector < std::vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
 
-    std::vector<FEOrder> feOrder;
+    std::vector<FEOrder> feOrder;  
     feOrder.push_back(FIRST);
     feOrder.push_back(SERENDIPITY);
     feOrder.push_back(SECOND);
 
+  
 
-
-
-
+    
+    
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     unsigned numberOfUniformLevels = i + 1;
@@ -271,7 +233,7 @@ int main(int argc, char** args) {
       mlSol.AttachSetBoundaryConditionFunction( system_biharmonic_coupled._boundary_conditions_types_and_values );
       mlSol.GenerateBdc("u", "Steady", & ml_prob);
       mlSol.GenerateBdc("v", "Steady", & ml_prob);
-
+      
       // add system Biharmonic in ml_prob as a Linear Implicit System
       NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > (system_biharmonic_coupled._system_name);
 
@@ -284,33 +246,33 @@ int main(int argc, char** args) {
 
       // initialize and solve the system
       system.init();
-
+      
       system.MGsolve();
 
       // convergence for u
       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
       // // convergence for v
       // std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "v", LaplaceGetExactSolutionValue, LaplaceGetExactSolutionGradient );
-
-
+      
+      
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
 
-
+      
       // print solutions
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted, i);
 
     }
   }
 
-
+  
   // FE_convergence::output_convergence_order();
-
-
+  
+  
   // ======= L2 - BEGIN  ========================
   std::cout << std::endl;
   std::cout << std::endl;
@@ -341,10 +303,10 @@ int main(int argc, char** args) {
   }
   // ======= L2 - END  ========================
 
-
-
+  
+  
   // ======= H1 - BEGIN  ========================
-
+  
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";

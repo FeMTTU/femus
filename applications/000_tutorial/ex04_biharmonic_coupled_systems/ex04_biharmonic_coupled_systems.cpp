@@ -63,9 +63,20 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
 
 
 bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = true; //dirichlet
-  value = 0;
+  
+  bool dirichlet;
+  
+  if (!strcmp(SolName, "u")) { 
+  dirichlet = true; //dirichlet
+  value = 0.;
+  }
+  if (!strcmp(SolName, "v")) { 
+  dirichlet = true; //dirichlet
+  value = 0.;
+  }  
+  
   return dirichlet;
+  
 }
 
 
