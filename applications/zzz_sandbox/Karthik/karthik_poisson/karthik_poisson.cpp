@@ -103,10 +103,10 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
       //value = -1. * x[1] * ( 1. - x[1]) ;
   }
   else if (face_name == 2) {
-      dirichlet = true;
+      dirichlet = false;
         value = 0.;
       // dirichlet = false;
-      // value = -1. * x[1] * ( 1. - x[1]) ;
+       value = -1. * x[1] * ( 1. - x[1]) ;
   }
 
  else  if (face_name == 3) {

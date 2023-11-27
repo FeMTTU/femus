@@ -46,34 +46,123 @@
 using namespace femus;
 
 
+// // // // Solution - BEGIN
+// // //
+// // // double GetExactSolutionValue(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return cos(pi * x[0]) * cos(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
+// // //   double pi = acos(-1.);
+// // //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+// // //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+// // // };
+// // //
+// // //
+// // // double GetExactSolutionLaplace(const std::vector < double >& x) {
+// // //   double pi = acos(-1.);
+// // //   return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // };
+// // //
+// // //
+// // //
+// // //
+// // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneousu(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[0], double& value, const int facename, const double time) {
+// // //   bool dirichlet = true; //dirichlet
+// // //   double pi = acos(-1.);
+// // //   value = 0.;
+// // //   return dirichlet;
+// // // }
+// // //
+// // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneousv(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[1], double& value, const int facename, const double time) {
+// // //   bool dirichlet = true; //dirichlet
+// // //   double pi = acos(-1.);
+// // //   value = 0.;
+// // //   return dirichlet;
+// // // }
+// // // // Solution - END
 
+
+// Solution - BEGIN
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
+  return sin(pi * x[0]) * sin(pi * x[1]);
 };
 
 
 void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+  solGrad[0]  = pi * cos(pi * x[0]) * sin(pi * x[1]);
+  solGrad[1] = pi * sin(pi * x[0]) * cos(pi * x[1]);
 };
 
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+  return -2.*pi * pi * sin(pi * x[0]) * sin(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
 };
 
 
 
 
-bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition_bc_all_dirichlet_homogeneousu(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[0], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value = 0;
+  double pi = acos(-1.);
+  value = 0.;
   return dirichlet;
 }
+
+bool SetBoundaryCondition_bc_all_dirichlet_homogeneousv(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[1], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+  double pi = acos(-1.);
+  value = 0.;
+  return dirichlet;
+}
+// Solution - END
+
+
+// SQUARE - BEGIN
+bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+
+  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
+
+   bool dirichlet = true;
+  value = 0.;
+
+
+  if (face_name == 1) {
+       dirichlet = true;
+         value = 0;
+  }
+  else if (face_name == 2) {
+      dirichlet = true;
+        value = 0.;
+  }
+
+ else  if (face_name == 3) {
+      dirichlet = true;
+        value = 0.;
+  }
+  else if (face_name == 4) {
+       double pi = acos(-1.);
+//       dirichlet = true;
+//        value = 0.;
+       dirichlet = true;
+       value = 1.;
+
+  }
+
+
+
+   return dirichlet;
+
+}
+
+// SQUARE - END
+
 
 
 
@@ -86,7 +175,7 @@ int main(int argc, char** args) {
 
   // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false; // This allows you to run the code multiple times without overwriting. This will generate an output folder each time you run.
-  const bool redirect_cout_to_file = true; // puts the output in a log file instead of the term
+  const bool redirect_cout_to_file = false; // puts the output in a log file instead of the term
   Files files;
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -104,12 +193,18 @@ int main(int argc, char** args) {
   system_biharmonic_coupled._system_name = "Biharmonic";
   system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation :: AssembleBilaplaceProblem_AD;
 
-  system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
+  system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneousu;
+
+  system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneousv;
+
+   system_biharmonic_coupled._boundary_conditions_types_and_values             = square__laplacian__bc;
+
 
   Domains::square_01by01::Function_Zero_on_boundary_5<>   system_biharmonic_coupled_function_zero_on_boundary_1;
   Domains::square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_laplacian;
   system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
   system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
+
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
     // ======= System Specifics - END ==================
 
