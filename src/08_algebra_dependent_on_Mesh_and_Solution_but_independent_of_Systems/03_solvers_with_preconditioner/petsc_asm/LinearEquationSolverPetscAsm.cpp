@@ -284,18 +284,6 @@ namespace femus {
     }
     PCASMSetOverlap(subpc, _overlap);
 
-
-  // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
-// // // // Replace the above initial lines with this block    
-// // //     PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, subpc);
-// // //     for(unsigned i =0 ; i < _overlappingIs.size();i++){
-// // //       PCFieldSplitSetIS(subpc,NULL,_overlappingIs[i]);
-// // //     }
-// // //     
-// // // 
-// // //     PCFieldSplitSetType(subpc,  PC_COMPOSITE_SYMMETRIC_MULTIPLICATIVE);
-  // ====== END part to re-implement for SSC MGAMR!!! ================
-
   
     KSPSetUp(subksp);
 
