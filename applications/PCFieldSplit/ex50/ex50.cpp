@@ -151,6 +151,7 @@ int main(int argc, char** args) {
 
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
+  //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -493,41 +494,41 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	gradSolB_gss[j].resize(dim);
 	std::fill(gradSolB_gss[j].begin(), gradSolB_gss[j].end(), 0.0);
       }
-      
-      for(unsigned i = 0; i < nDofsB; i++){
-	for(unsigned j = 0; j< dim;j++){ // define the solutions B1, B2 for solB_gss
-	  solB_gss[j] += phiB[i] * solB[j][i]; 
-	}
-	
-	for(unsigned j = 0; j< dim;j++){   // define the soluitons B1, B2 for gradSolB_gss
-	  for(unsigned k = 0; k < dim; k++){ // define the direction of derivatives X, Y for gradSolB_gss
-	    gradSolB_gss[j][k] += phiB_x[i*dim+k] * solB[j][i];
-	  }
-	}
+
+      for(unsigned i = 0; i < nDofsB; i++) {
+        for(unsigned j = 0; j < dim; j++) { // define the solutions B1, B2 for solB_gss
+          solB_gss[j] += phiB[i] * solB[j][i];
+        }
+
+        for(unsigned j = 0; j < dim; j++) { // define the soluitons B1, B2 for gradSolB_gss
+          for(unsigned k = 0; k < dim; k++) { // define the direction of derivatives X, Y for gradSolB_gss
+            gradSolB_gss[j][k] += phiB_x[i * dim + k] * solB[j][i];
+          }
+        }
       }
       
       double solR_gss = 0.0;
-      for(unsigned i = 0; i < nDofsR; i++){
-	solR_gss += phiR[i] * solR[i]; 
+      for(unsigned i = 0; i < nDofsR; i++) {
+        solR_gss += phiR[i] * solR[i];
       }
       
       std::vector < double > solV_gss(dim, 0);
       std::vector < std::vector < double > > gradSolV_gss(dim);
-      for(unsigned j = 0; j < dim; j++){
-	gradSolV_gss[j].resize(dim);  
-	std::fill(gradSolV_gss[j].begin(), gradSolV_gss[j].end(),0.0);
+      for(unsigned j = 0; j < dim; j++) {
+        gradSolV_gss[j].resize(dim);
+        std::fill(gradSolV_gss[j].begin(), gradSolV_gss[j].end(), 0.0);
       }
-     
-      for(unsigned i = 0; i < nDofsV; i++){
-	for (unsigned j = 0; j < dim; j++){  // define the solutions U,V for solV_gass
-	  solV_gss[j] += phiV[i] * solV[j][i]; 
-	}
-	
-	for(unsigned j = 0; j < dim; j++){ // define the solutions U,V for gradSolV_gss 
-	  for(unsigned k = 0; k < dim; k++){ // define the direction of derivatives X, Y for gradSolV_gss
-	    gradSolV_gss[j][k] += phiV_x[i*dim+k] * solV[j][i];
-	  }
-	}
+
+      for(unsigned i = 0; i < nDofsV; i++) {
+        for (unsigned j = 0; j < dim; j++) { // define the solutions U,V for solV_gass
+          solV_gss[j] += phiV[i] * solV[j][i];
+        }
+
+        for(unsigned j = 0; j < dim; j++) { // define the solutions U,V for gradSolV_gss
+          for(unsigned k = 0; k < dim; k++) { // define the direction of derivatives X, Y for gradSolV_gss
+            gradSolV_gss[j][k] += phiV_x[i * dim + k] * solV[j][i];
+          }
+        }
       }
 
       double solP_gss = 0;
@@ -640,31 +641,33 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
             unsigned irowMat = irow * nDofsBRVP;
 
             for (unsigned l = 0; l < dim; l++) {
-	      if (k == 0){ 
-		kk = 1;
-		coeffSignk =-1.0;
-	      }else{
-		kk = 0;
-		coeffSignk = 1.0;
-	      } 
-	      if (l == 0){ 
-		ll = 1; 
-		coeffSignl =-1.0;
-	      }else{ 
-		ll = 0;
-		coeffSignl = 1.0;
-	      }
+              if (k == 0) {
+                kk = 1;
+                coeffSignk = -1.0;
+              }
+              else {
+                kk = 0;
+                coeffSignk = 1.0;
+              }
+              if (l == 0) {
+                ll = 1;
+                coeffSignl = -1.0;
+              }
+              else {
+                ll = 0;
+                coeffSignl = 1.0;
+              }
               for (unsigned j = 0; j < nDofsV; j++) {
                 unsigned jcol1 = dim * nDofsB + nDofsR + k * nDofsV + j;
                 unsigned jcol2 = dim * nDofsB + nDofsR + l * nDofsV + j;
                 unsigned jcol3 = ll * nDofsB + j;
-		unsigned jcol4 = l * nDofsB + j;
-		Jac[ irowMat + jcol1] += 1.0/Re * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += 1.0/Re * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
+                unsigned jcol4 = l * nDofsB + j;
+                Jac[ irowMat + jcol1] += 1.0 / Re * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
+                Jac[ irowMat + jcol2] += 1.0 / Re * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
                 Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
                 Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
- // 		Jac[irowMat + jcol3] -= coeffS * coeffSignk * phiV[i] * phiB[j] * coeffSignl * gradSolB_gss[l][ll] * weight; 
- // 		Jac[irowMat + jcol4] -= coeffS * coeffSignk * phiV[i] * solB_gss[ll] * coeffSignl * phiB_x[j*dim+ll] * weight;
+// 		Jac[irowMat + jcol3] -= coeffS * coeffSignk * phiV[i] * phiB[j] * coeffSignl * gradSolB_gss[l][ll] * weight;
+// 		Jac[irowMat + jcol4] -= coeffS * coeffSignk * phiV[i] * solB_gss[ll] * coeffSignl * phiB_x[j*dim+ll] * weight;
               }
             }
 
@@ -718,6 +721,4 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
   // ***************** END ASSEMBLY *******************
 }
-
-
 

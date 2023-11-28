@@ -63,6 +63,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+
 void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 // std::vector <double> GetExactSolutionValue(const std::vector < double >& x);
@@ -70,16 +71,16 @@ int main(int argc, char** args)
 {
 
 //   unsigned precType = 0;
-//
+// 
 //   if(argc >= 2) {
 //     if(!strcmp("FS_VT", args[1])) precType = FS_VTp;
 //     else if(!strcmp("FS_TV", args[1])) precType = FS_TVp;
 //     else if(!strcmp("ASM_VT", args[1])) precType = ASM_VTp;
 //     else if(!strcmp("ASM_TV", args[1])) precType = ASM_TVp;
 //     else if(!strcmp("ILU_VT", args[1])) precType = ILU_VTp;
-//
+// 
 //     if(!strcmp("ILU_TV", args[1])) precType = ILU_TVp;
-//
+// 
 //     if(precType == 0) {
 //       std::cout << "wrong input arguments!" << std::endl;
 //       abort();
@@ -89,18 +90,18 @@ int main(int argc, char** args)
 //     std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
 //     precType = FS_VTp;
 //   }
-//
+//   
 //   if(argc >= 3) {
 //     Prandtl = strtod(args[2], NULL);
 //     std::cout << Prandtl<<std::endl;
 //   }
-//
-//
+//   
+//   
 //   if(argc >= 4) {
 //     Rayleigh = strtod(args[3], NULL);
 //     std::cout << Rayleigh <<std::endl;
 //   }
-
+    
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -108,7 +109,7 @@ int main(int argc, char** args)
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor); 
   mlMsh.ReadCoarseMesh("./input/quad_square.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -126,10 +127,10 @@ int main(int argc, char** args)
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-
+  
   mlSol.AddSolution("B1", LAGRANGE, SECOND);
   mlSol.AddSolution("B2", LAGRANGE, SECOND);
-//  mlSol.AddSolution("R",  LAGRANGE, FIRST);
+  //mlSol.AddSolution("R",  LAGRANGE, FIRST);
   mlSol.AddSolution("R",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("R", "Pressure");
 
@@ -139,7 +140,7 @@ int main(int argc, char** args)
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-
+  
 //   mlSol.Initialize("T",InitialValueT);
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -155,7 +156,7 @@ int main(int argc, char** args)
   system.AddSolutionToSystemPDE("B1");
   system.AddSolutionToSystemPDE("B2");
   system.AddSolutionToSystemPDE("R");
-
+  
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
   system.AddSolutionToSystemPDE("P");
@@ -165,18 +166,18 @@ int main(int argc, char** args)
   fieldB1B2R[0] = system.GetSolPdeIndex("B1");
   fieldB1B2R[1] = system.GetSolPdeIndex("B2");
   fieldB1B2R[2] = system.GetSolPdeIndex("R");
-
+  
   std::vector <unsigned> solutionTypeB1B2R(3);
   solutionTypeB1B2R[0] = mlSol.GetSolutionType("B1");
   solutionTypeB1B2R[1] = mlSol.GetSolutionType("B2");
   solutionTypeB1B2R[2] = mlSol.GetSolutionType("R");
-
+  
   FieldSplitTree FS_MF(PREONLY, ASM_PRECOND, fieldB1B2R, solutionTypeB1B2R, "Magnetic Field");
   FS_MF.SetAsmBlockSize(4);
-
+  
   FS_MF.SetAsmBlockPreconditioner(MLU_PRECOND);
   FS_MF.SetAsmNumeberOfSchurVariables(1);
-
+  
   std::vector < unsigned > fieldUVP(3);
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
@@ -189,22 +190,23 @@ int main(int argc, char** args)
 
   FieldSplitTree FS_NS(PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
   FS_NS.SetAsmBlockSize(4);
-
+  
 //   FS_NS.SetAsmBlockPreconditioner(MLU_PRECOND);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
   FS2.push_back(&FS_MF); // Magnetic Field  First
-  FS2.push_back(&FS_NS); // Navier-stokes block Second
+  FS2.push_back(&FS_NS); // Navier-stokes block Second 
 
   FieldSplitTree FS_MHD(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "MHD");
   FS_MHD.SetRichardsonScaleFactor(.6);
+  
 
   //END buid fieldSplitTree
   system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Field-Split preconditioner
   // system.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz preconditioner
-  // ILU preconditioner
+  // ILU preconditioner 
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
@@ -216,10 +218,10 @@ int main(int argc, char** args)
 
   //system.SetMaxNumberOfLinearIterations(10);
   //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-
+  
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-
+  
 
   system.SetMgType(F_CYCLE);
 
@@ -231,7 +233,7 @@ int main(int argc, char** args)
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetRichardsonScaleFactor(.6);
-
+  
   system.SetFieldSplitTree(&FS_MHD);
   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 10, 10); //GMRES tolerances
   system.ClearVariablesToBeSolved();
@@ -245,16 +247,16 @@ int main(int argc, char** args)
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-
-
+  
+  
   vtkIO.SetDebugOutput(true);
-
+  
   vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   mlMsh.PrintInfo();
-
+  
   //char infile[256]="FSVTtrueResidual.txt";
-  //char stdOutfile[256]="output.txt";
+  //char stdOutfile[256]="output.txt"; 
 
   return 0;
 }
@@ -304,8 +306,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
-
-
+  
+  
 //   double Mu;
 //   if(counter < c0 ) Mu = 2. * Miu;
 //   else if ( counter <= cn ) {
@@ -316,10 +318,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
 //   }
 //   std::cout << counter << " " << Mu <<std::endl;
 //   counter++;
-
+  
 //   Re = 1.0/Mu;
-//
-
+//   
+  
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -349,8 +351,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   std::vector < unsigned > solBIndex(dim);
   solBIndex[0] = mlSol->GetIndex("B1");
   solBIndex[1] = mlSol->GetIndex("B2");
-  unsigned solBType = mlSol -> GetSolutionType(solBIndex[0]);
-
+  unsigned solBType = mlSol -> GetSolutionType(solBIndex[0]);  
+  
   unsigned solRIndex;
   solRIndex = mlSol->GetIndex("R");
   unsigned solRType = mlSol->GetSolutionType(solRIndex);
@@ -378,7 +380,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
 
   std::vector < std::vector <double> > solB(dim); // local solution for B1, B2
   std::vector <double> solR; // local solution for langrange for r
-  std::vector < std::vector < double > >  solV(dim);    // local solution for U, V
+  std::vector < std::vector < double > >  solV(dim);    // local solution for U, V 
   std::vector < double >  solP; // local solution for P
 
   std::vector < std::vector < double > > coordX(dim);    // local coordinates
@@ -389,7 +391,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
     coordX[k].reserve(maxSize);
   }
   solR.reserve(maxSize);
-
+  
   for(unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(maxSize);
   }
@@ -403,7 +405,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   phiB_x.reserve(maxSize * dim);
   phiB_xx.reserve(maxSize * dim2);
   double* phiR;
-
+  
   std::vector <double> phiV;  // local test function
   std::vector <double> phiV_x; // local test function first order partial derivatives
   std::vector <double> phiV_xx; // local test function second order partial derivatives
@@ -421,7 +423,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   std::vector < double > Res; // local redidual vector
   Res.reserve((dim * 2 + 2) *maxSize);
 
-  std::vector < double > Jac; //local Jacobian
+  std::vector < double > Jac; //local Jacobian 
   Jac.reserve((dim * 2 + 2) *maxSize * (dim * 2 + 2) *maxSize);
 
   if(assembleMatrix)
@@ -431,12 +433,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     //BEGIN local dof number extraction
-    unsigned nDofsB = msh->GetElementDofNumber(iel, solBType);  //Magnetic
+    unsigned nDofsB = msh->GetElementDofNumber(iel, solBType);  //Magnetic 
     unsigned nDofsR = msh->GetElementDofNumber(iel, solRType);  //pressure
-
+    
     unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);  //velocity
     unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);  //pressure
-
+    
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType); // coordinates
     unsigned nDofsBRVP = dim * nDofsB + nDofsR + dim * nDofsV + nDofsP; // all solutions
     //END local dof number extraction
@@ -464,17 +466,17 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
     for(unsigned i = 0; i < nDofsB; i++) { //Magnetic field
       unsigned solBDof = msh->GetSolutionDof(i, iel, solBType);  //local to global solution dof
       for(unsigned  k = 0; k < dim; k++) {
-        solB[k][i] = (*sol->_Sol[solBIndex[k]])(solBDof);  //global to local solution value
-        sysDof[i + k * nDofsB] = pdeSys->GetSystemDof(solBIndex[k], solBPdeIndex[k], i, iel);  //local to global system dof
-      }
+	solB[k][i] = (*sol->_Sol[solBIndex[k]])(solBDof);  //global to local solution value
+	sysDof[i + k * nDofsB] = pdeSys->GetSystemDof(solBIndex[k], solBPdeIndex[k], i, iel);  //local to global system dof
+     }
     }
-
+    
     for(unsigned i = 0; i < nDofsR; i++) { //Lagrange
       unsigned solRDof = msh->GetSolutionDof(i, iel, solRType);  //local to global solution dof
       solR[i] = (*sol->_Sol[solRIndex])(solRDof);  //global to local solution value
       sysDof[i + dim * nDofsB] = pdeSys->GetSystemDof(solRIndex, solRPdeIndex, i, iel);  //local to global system dof
     }
-
+    
     for(unsigned i = 0; i < nDofsV; i++) { //velocity
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);  //local to global solution dof
       for(unsigned  k = 0; k < dim; k++) {
@@ -506,16 +508,16 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solBType]->Jacobian(coordX, ig, weight, phiB, phiB_x, phiB_xx);
       phiR = msh->_finiteElement[ielGeom][solRType]->GetPhi(ig);
-
+      
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      std::vector <double> solB_gss(dim, 0);
+      std::vector <double> solB_gss(dim,0);
       std::vector < std::vector <double> > gradSolB_gss(dim);
-      for(unsigned j = 0; j < dim; j ++) {
-        gradSolB_gss[j].resize(dim);
-        std::fill(gradSolB_gss[j].begin(), gradSolB_gss[j].end(), 0.0);
+      for(unsigned j = 0; j < dim; j ++){
+	gradSolB_gss[j].resize(dim);
+	std::fill(gradSolB_gss[j].begin(), gradSolB_gss[j].end(), 0.0);
       }
 
       for(unsigned i = 0; i < nDofsB; i++) {
@@ -529,12 +531,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
           }
         }
       }
-
+      
       double solR_gss = 0.0;
       for(unsigned i = 0; i < nDofsR; i++) {
         solR_gss += phiR[i] * solR[i];
       }
-
+      
       std::vector < double > solV_gss(dim, 0);
       std::vector < std::vector < double > > gradSolV_gss(dim);
       for(unsigned j = 0; j < dim; j++) {
@@ -737,7 +739,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       //BEGIN phiP_i loop: mass balance
       for (unsigned i = 0; i < nDofsP; i++) {
         unsigned irow = dim * nDofsB + nDofsR + dim * nDofsV + i;
-
+	
         for (int k = 0; k < dim; k++) {
           Res[irow] += gradSolV_gss[k][k] * phiP[i]  * weight;
 
@@ -754,7 +756,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       //END phiP_i loop
     }
     //END Gauss point loop
-
+    
     //BEGIN local to global Matrix/Vector assembly
     RES->add_vector_blocked(Res, sysDof);
 

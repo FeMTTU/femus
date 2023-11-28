@@ -22,12 +22,12 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-
-#include "adept.h"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 #include "Marker.hpp"
 #include "MyVector.hpp"
+
+#include "adept.h"
+#include <stdlib.h>
 
 double Prandtl = 1.0;
 double Rayleigh = 10000.;
@@ -108,7 +108,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- // mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   mlMsh.ReadCoarseMesh("./input/hex_cube.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -130,7 +130,6 @@ int main(int argc, char** args) {
 
   // print mesh info
   mlMsh.PrintInfo();
-
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
