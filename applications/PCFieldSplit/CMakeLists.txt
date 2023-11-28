@@ -4,6 +4,8 @@ get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 
 
+# Steady-state - BEGIN
+
 # Steady-state Poisson, No Field Split - BEGIN
 ADD_SUBDIRECTORY(ex40_1/) 
 ADD_SUBDIRECTORY(ex40_2/) 
@@ -50,18 +52,22 @@ ADD_SUBDIRECTORY(ex46/) #very very sim to 45
 
 
 # Steady-state MHD, Field Split  - BEGIN
-ADD_SUBDIRECTORY(ex50/)
-ADD_SUBDIRECTORY(ex50_1/)
+ADD_SUBDIRECTORY(ex50_mhd/)
+ADD_SUBDIRECTORY(ex50_1_mhd/)  #very very sim, with manufactured sol
 # Steady-state MHD, Field Split  - END
 
 
 
 # Steady-state Optimal control, Field Split  - BEGIN
-ADD_SUBDIRECTORY(ex30_opt_control/)
+ADD_SUBDIRECTORY(ex60_opt_control/)
 # Steady-state Optimal control, Field Split  - END
 
+# Steady-state - END
 
 
+
+
+# Time dependent - BEGIN
 
 # Time dependent, Boussinesq, Field Split - BEGIN
 ADD_SUBDIRECTORY(ex20_1/)
@@ -76,4 +82,5 @@ ADD_SUBDIRECTORY(ex25/)
 # Time dependent, Boussinesq, Field Split - END
 
 
+# Time dependent - END
 
