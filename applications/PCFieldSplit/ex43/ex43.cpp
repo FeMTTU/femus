@@ -14,19 +14,18 @@
  */
 
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "FieldSplitTree.hpp"
 #include "PetscMatrix.hpp"
 
-#include "adept.h"
-#include <stdlib.h>
+
+#include <cstdlib>
 
 
 using namespace femus;
@@ -38,10 +37,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+
   bool refine = false;
   unsigned level0 = 0;
-//   double a = static_cast<double>(rand())/RAND_MAX;
-//   if ( a < 0.25) refine	= true;
 
   if(x[0] > -1.0e-8 && x[1] > -1.0e-8 ){
     refine = true;
@@ -64,6 +62,7 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
+  
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -82,10 +81,11 @@ int main(int argc, char** args) {
   // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
   //mlMsh.EraseCoarseLevels(1);
   //numberOfUniformLevels -= 1;
   // print mesh info
+  
+  
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
@@ -103,6 +103,7 @@ int main(int argc, char** args) {
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
+
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   system.SetOuterSolver(CG); 
  // system.SetLinearEquationSolverType(FEMuS_ASM);
@@ -111,6 +112,7 @@ int main(int argc, char** args) {
   
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
+  
   system.SetMgType(V_CYCLE);
 
   system.SetNumberPreSmoothingStep(1);
@@ -249,12 +251,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     }
     
     //BEGIN global to local extraction
-    for(unsigned i = 0; i < nDofsU; i++){
-      unsigned solUDof = msh -> GetSolutionDof(i, iel, solUType); //local to global solution dof
-      solU[i] = (*sol ->_Sol[solUIndex])(solUDof); //global to local solution value
+    for(unsigned i = 0; i < nDofsU; i++) { //velocity
+      unsigned solUDof = msh->GetSolutionDof(i, iel, solUType);  //local to global solution dof
+      solU[i] = (*sol->_Sol[solUIndex])(solUDof);  //global to local solution value
       sysDof[i] = pdeSys->GetSystemDof(solUIndex, solUPdeIndex, i, iel);  //local to global system dof
     }
-    
+
     for(unsigned i = 0; i < nDofsX; i++) { //coordinates
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);  //local to global coordinate dof
       for(unsigned k = 0; k < dim; k++) {

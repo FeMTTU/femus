@@ -14,19 +14,18 @@
  */
 
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "FieldSplitTree.hpp"
 #include "PetscMatrix.hpp"
 
-#include "adept.h"
-#include <stdlib.h>
+
+#include <cstdlib>
 
 
 using namespace femus;
@@ -41,8 +40,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
   unsigned level0 = 0;
-//   double a = static_cast<double>(rand())/RAND_MAX;
-//   if ( a < 0.25) refine	= true;
 
 //   if( fabs(x[0] - 0.5) < 0.5/ pow(2,level) && fabs(x[1] - 0.5) < 0.5/ pow(2,level) ){
 //     refine = true;
@@ -87,10 +84,11 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 2;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
   // erase all the coarse mesh levels
- // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
   //mlMsh.EraseCoarseLevels(1);
   //numberOfUniformLevels -= 1;
   // print mesh info
+  
+  
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
@@ -116,6 +114,7 @@ int main(int argc, char** args) {
   
   system.SetMaxNumberOfLinearIterations(20);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
+  
   system.SetMgType(V_CYCLE);
 
   system.SetNumberPreSmoothingStep(1);

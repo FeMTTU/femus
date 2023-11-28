@@ -14,19 +14,18 @@
  */
 
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "FieldSplitTree.hpp"
 #include "PetscMatrix.hpp"
 
-#include "adept.h"
-#include <stdlib.h>
+
+#include <cstdlib>
 
 
 using namespace femus;
@@ -37,6 +36,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   value = 0.;
   return dirichlet;
 }
+
+
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
@@ -168,7 +169,7 @@ int main(int argc, char** args) {
       std::cout << std::endl << " The output file preconditioner cannot be opened.\n";
       abort();
     }
-    
+    fout.precision(20);
     for(unsigned j = 0; j < sizeU; j++ ){
       fout << (*sol->_Sol[solUIndex])(j)<< " ";
     }  

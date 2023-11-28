@@ -14,20 +14,18 @@
  */
 
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "FieldSplitTree.hpp"
 #include "PetscMatrix.hpp"
 
 
-#include "adept.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 
 using namespace femus;
@@ -39,6 +37,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   value = 0.;
   return dirichlet;
 }
+
+
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
@@ -100,12 +100,11 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-//   unsigned numberOfSelectiveLevels = 0;
-//  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
-//   erase all the coarse mesh levels
+  // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(1);
-  //numberOfUniformLevels -= 1;		
+  //numberOfUniformLevels -= 1;
   // print mesh info
+  
   
   
   mlMsh.PrintInfo();
@@ -129,11 +128,6 @@ int main(int argc, char** args) {
   system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
-  
-  //system.SetMaxNumberOfNonLinearIterations(1);
-  //system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
@@ -166,8 +160,8 @@ int main(int argc, char** args) {
   unsigned iproc = msh->processor_id();
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];;  
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
-  
-  for(unsigned i = 0; i < sizeU; i++){
+    
+  for(unsigned i = 0; i< sizeU; i++){
     system.SetOuterSolver(PREONLY);  
     system.MGsolve();
     mlSol.GenerateBdc("All");
@@ -204,8 +198,7 @@ int main(int argc, char** args) {
     // print solutions
     std::vector < std::string > variablesToBePrinted;
     variablesToBePrinted.push_back("All");
-  
-    
+
     VTKWriter vtkIO(&mlSol);
     vtkIO.SetDebugOutput( true );
     vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, counter-1);
@@ -295,7 +288,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   std::vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
-
+  
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
   sol->_Sol[solUIndex]->zero();  
   

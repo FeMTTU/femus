@@ -22,7 +22,6 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "FieldSplitTree.hpp"
 #include "Marker.hpp"
 #include "MyVector.hpp"
 

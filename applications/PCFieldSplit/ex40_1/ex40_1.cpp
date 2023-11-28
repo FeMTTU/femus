@@ -17,15 +17,15 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "FieldSplitTree.hpp"
 #include "PetscMatrix.hpp"
 
-#include "adept.h"
-#include <stdlib.h>
+
+#include <cstdlib>
 
 
 using namespace femus;
@@ -98,8 +98,6 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 4;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(1);
   //numberOfUniformLevels -= 1;
@@ -124,7 +122,7 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
