@@ -30,21 +30,22 @@
 #include <cstdlib>
 
 
+using namespace femus;
+
 double Re = 500;
 double Rem = 0.01;
 double coeffS = 1.0;
-// double Mu = 0.01;
-// double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
-// int counter = 0 ;
 
-using namespace femus;
+
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+
   bool dirichlet = true; //dirichlet
   value = 0.;
 
   if (!strcmp(SolName, "U")) {
     if (facename == 4) {
+      dirichlet = true;
       if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
     }
   }
@@ -53,30 +54,30 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   }
   else if (!strcmp(SolName, "B1")) {
    if(facename == 1 || facename == 3){   
-     value = 0.0;
      dirichlet = false;
+     value = 0.;
    }
    else if(facename == 2 || facename == 4){
+      dirichlet = true;
         value = 1.0;
    }
-   
-//      if (facename == 4) {
-//        if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = -1.;
-//      }
   }
-  else if (!strcmp(SolName, "B2")){
+  else if (!strcmp(SolName, "B2")) {
   if(facename == 1 || facename == 3){
-      value = 0.0;
+      dirichlet = true;
+      value = 0.;
    }
 else if(facename == 2 || facename == 4){
-      value = 0.0;
       dirichlet = false;
+      value = 0.;
     }
   }
   else if (!strcmp(SolName, "R")) {
     dirichlet = false;
   }
+  
   return dirichlet;
+  
 }
 
 
@@ -130,7 +131,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -276,6 +277,8 @@ int main(int argc, char** args) {
   return 0;
 }
 
+
+
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -283,19 +286,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
   
   
-//   double Mu;
-//   if(counter < c0 ) Mu = 2. * Miu;
-//   else if ( counter <= cn ) {
-//     Mu = 2*Miu*(cn-counter)/(cn-c0) + Miu*(counter-c0)/(cn-c0);
-//   }
-//   else{
-//     Mu = Miu;
-//   }
-//   std::cout << counter << " " << Mu <<std::endl;
-//   counter++;
-  
-//   Re = 1.0/Mu;
-//   
   
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
@@ -536,105 +526,119 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
       
-    // Begin phiB_i loop: Momentum balance
-    unsigned kk,ll;
-    double coeffSignk, coeffSignl;
-      for(unsigned i = 0; i < nDofsB; i ++){
-	for(unsigned k = 0; k < dim; k ++){
-	    unsigned irow = k * nDofsB + i;
-	    for (unsigned l = 0; l < dim; l++){
-	        if (k == 0){ 
-		  kk = 1;
-		  coeffSignk =-1.0;
-		}else{
-		  kk = 0;
-		  coeffSignk = 1.0;
-		} 
-		if (l == 0){ 
-		  ll = 1; 
-		  coeffSignl =-1.0;
-		}else{ 
-		  ll = 0;
-		  coeffSignl = 1.0;
-		}
-		Res[irow] -= coeffS * 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl* gradSolB_gss[l][ll] * weight;  
-  		Res[irow] += coeffS * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
-	    }
-	    Res[irow] += phiB_x[i*dim+k] * solR_gss * weight;
-	    
-	    if (assembleMatrix){
-	       unsigned irowMat = irow * nDofsBRVP;
-	       for(unsigned l = 0; l < dim; l++){
-		if (k == 0){ 
-		  kk = 1;
-		  coeffSignk =-1.0;
-		}else{
-		  kk = 0;
-		  coeffSignk = 1.0;
-		} 
-		if (l == 0){ 
-		  ll = 1; 
-		  coeffSignl =-1.0;
-		}else{ 
-		  ll = 0;
-		  coeffSignl = 1.0;
-		}
-		for(unsigned j = 0; j < nDofsB; j++){
-		  unsigned jcol1 = l * nDofsB + j;
-		  unsigned jcol2 = dim * nDofsB + nDofsR + ll * nDofsV + j;
-		  Jac[irowMat+jcol1] += coeffS * 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB_x[j*dim + ll] * weight;
-		  Jac[irowMat+jcol1] -= coeffS * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB[j] * solV_gss[ll] * weight;
-  		  Jac[irowMat+jcol2] -= coeffS * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
-		} 
-	      }
-	      for (unsigned j = 0; j < nDofsR; j++){
-		unsigned jcol = dim * nDofsB + j;
-		Jac[irowMat+jcol] -= phiB_x[i*dim+k] * phiR[j] * weight;  
-	      } 
-	    } 
-	}
+      //BEGIN phiB_i loop: Momentum balance
+      unsigned kk, ll;
+      double coeffSignk, coeffSignl;
+      for(unsigned i = 0; i < nDofsB; i ++) {
+        for(unsigned k = 0; k < dim; k ++) {
+          unsigned irow = k * nDofsB + i;
+          for (unsigned l = 0; l < dim; l++) {
+            if (k == 0) {
+              kk = 1;
+              coeffSignk = -1.0;
+            }
+            else {
+              kk = 0;
+              coeffSignk = 1.0;
+            }
+            if (l == 0) {
+              ll = 1;
+              coeffSignl = -1.0;
+            }
+            else {
+              ll = 0;
+              coeffSignl = 1.0;
+            }
+
+
+            Res[irow] -= coeffS * 1.0 / Rem * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * ( gradSolB_gss[l][ll] )  * weight;
+            Res[irow] += coeffS * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * (solB_gss[l] * solV_gss[ll] )  * weight;
+          }
+          
+          Res[irow] += phiB_x[i * dim + k] * solR_gss * weight;
+
+
+          if (assembleMatrix) {
+            unsigned irowMat = irow * nDofsBRVP;
+            for(unsigned l = 0; l < dim; l++) {
+              if (k == 0) {
+                kk = 1;
+                coeffSignk = -1.0;
+              }
+              else {
+                kk = 0;
+                coeffSignk = 1.0;
+              }
+              if (l == 0) {
+                ll = 1;
+                coeffSignl = -1.0;
+              }
+              else {
+                ll = 0;
+                coeffSignl = 1.0;
+              }
+              for(unsigned j = 0; j < nDofsB; j++) {
+                unsigned jcol1 = l * nDofsB + j;
+                unsigned jcol2 = dim * nDofsB + nDofsR + ll * nDofsV + j;
+                Jac[irowMat + jcol1] += coeffS * 1.0 / Rem * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * phiB_x[j * dim + ll] * weight;
+                Jac[irowMat + jcol1] -= coeffS * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * phiB[j] * solV_gss[ll] * weight;
+                Jac[irowMat + jcol2] -= coeffS * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * phiV[j] * solB_gss[l] * weight;
+              }
+            }
+            for (unsigned j = 0; j < nDofsR; j++) {
+              unsigned jcol = dim * nDofsB + j;
+              Jac[irowMat + jcol] -= phiB_x[i * dim + k] * phiR[j] * weight;
+            }
+          }
+        }
+       }
+      //END phiB_i loop
+
+      //BEGIN phiR_i loop: Mass balance
+      for (unsigned i = 0; i < nDofsR; i++) {
+        unsigned irow = dim * nDofsB + i;
+        for (unsigned k = 0; k < dim; k++) {
+          Res[irow] += phiR[i] * gradSolB_gss[k][k]  * weight;
+          if (assembleMatrix) {
+            unsigned irowMat = irow * nDofsBRVP;
+            for (unsigned j = 0; j < nDofsB; j++) {
+              unsigned jcol = k * nDofsB + j;
+              Jac[irowMat + jcol] += -phiR[i] * phiB_x[j * dim + k] * weight;
+            }
+          }
+        }
       }
-    //END phiB_i loop
- 
-    // Begin phiR_i loop: Mass balance
-    for (unsigned i = 0; i < nDofsR; i++){
-      unsigned irow = dim * nDofsB + i;
-      for (unsigned k = 0; k < dim; k++){
-	  Res[irow] += phiR[i] * gradSolB_gss[k][k] * weight; 
-      if (assembleMatrix){
-	unsigned irowMat = irow * nDofsBRVP;
-	for (unsigned j = 0; j < nDofsB; j++){
-	 unsigned jcol = k * nDofsB + j;
-	 Jac[irowMat+jcol] += -phiR[i] * phiB_x[j*dim+k] * weight;
-	}
-      }
-      }
-    }
-    // END phiR_i loop
-    
+      //END phiR_i loop
+
       //BEGIN phiV_i loop: Momentum balance
       for (unsigned i = 0; i < nDofsV; i++) {
         for (unsigned k = 0; k < dim; k++) {
           unsigned irow = dim * nDofsB + nDofsR + k * nDofsV + i;
           for (unsigned l = 0; l < dim; l++) {
-	    if (k == 0){ 
-	      kk = 1;
-	      coeffSignk =-1.0;
-	    }else{
-	      kk = 0;
-	      coeffSignk = 1.0;
-	    } 
-	    if (l == 0){ 
-	      ll = 1; 
-	      coeffSignl =-1.0;
-	    }else{ 
-	      ll = 0;
-	      coeffSignl = 1.0;
-	    }
-            Res[irow] +=  -1.0/Re * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
-            Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
-// 	    Res[irow] += coeffS * coeffSignk * phiV[i] * coeffSignl * gradSolB_gss[l][ll] * solB_gss[kk]* weight; 
+            if (k == 0) {
+              kk = 1;
+              coeffSignk = -1.0;
+            }
+            else {
+              kk = 0;
+              coeffSignk = 1.0;
+            }
+            if (l == 0) {
+              ll = 1;
+              coeffSignl = -1.0;
+            }
+            else {
+              ll = 0;
+              coeffSignl = 1.0;
+            }
+
+
+            Res[irow] +=  -1.0 / Re * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
+            Res[irow] +=  -phiV[i] * ( solV_gss[l] * gradSolV_gss[k][l] ) * weight;
+
+
           }
+          
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
 
           if (assembleMatrix) {
@@ -698,6 +702,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       }
 
       //END phiP_i loop
+      
+      
     }
     //END Gauss point loop
     

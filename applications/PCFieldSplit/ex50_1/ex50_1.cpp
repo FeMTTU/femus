@@ -23,52 +23,112 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 
-#include "adept.h"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 
-double Re = 0.01;
-double Rem = 1.0;
-double coeffS = 1.0;
-double pi = acos(-1.);
-// double Mu = 0.01;
-// double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
-// int counter = 0 ;
+#include "adept.h"
+
+#include <cstdlib>
+
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
+
+double Re = 0.01;
+double Rem = 1.0;
+
+double coeffS = 1.0;
+
+double pi = acos(-1.);
+
+
+
+
+
+void GetExactSolutionValue(const std::vector < double >& x, std::vector < double >& U,
+                           double &P, std::vector < double >& B)
 {
+  U[0] = x[0] * x[0] * (x[0] - 1.0) * (x[0] - 1.0) * x[1] * (x[1] - 1.) * (2 * x[1] - 1.);
+  U[1] = - x[0] * (x[0] - 1.0) * (2 * x[0] - 1) * x[1] * x[1] * (x[1] - 1.) * (x[1] - 1.);
+  P = (2.0 * x[0] - 1.) * (2.0 * x[1] - 1.);
+  B[0] = sin(pi * x[0]) * cos(pi * x[1]);
+  B[1] = -sin(pi * x[1]) * cos(pi * x[0]);
+}
+
+void GetGradExactSolutionValue(const std::vector < double >& x, std::vector < double >& GradU, std::vector < double >& GradV,
+                               std::vector < double >& GradB1, std::vector < double >& GradB2)
+{
+  GradU [0] = 2. * x[0] * (x[0] - 1.) * (2 * x[0] - 1.) * x[1] * (x[1] - 1.) * (2. * x[1] - 1.);
+  GradU [1] = x[0] * x[0] * (x[0] - 1.) * (x[0] - 1.) * (6. * x[1] * x[1] - 6. * x[1] + 1.);
+  GradV [0] = - (6. * x[0] * x[0] - 6. * x[0] + 1.) * x[1] * x[1] * (x[1] - 1.) * (x[1] - 1.);
+  GradV [1] = - GradU [0];
+
+  GradB1 [0] = pi * cos(pi * x[0]) * cos(pi * x[1]);
+  GradB1 [1] = -pi * sin(pi * x[0]) * sin(pi * x[1]);
+  GradB2 [0] = pi * sin(pi * x[0]) * sin(pi * x[1]);
+  GradB2 [1] = - GradB1 [0];
+
+
+
+  /*
+    GradUx [1] = x[0] * x[0] * (x[0] - 1.0) * (x[0] - 1.0) * (x[1] - 1.0) * (2.0 * x[1] -1. )
+  	      + x[0] * x[0] * (x[0] - 1.0) * (x[0] - 1.0) * (x[1] - 1.0) * (2.0 * x[1] -1. )
+  	     + 2.0 * x[0] * x[0] * (x[0] - 1.0) * x[1] * (x[1] - 1.0) * (2.0 * x[1] -1. );
+
+
+
+      USol[0]= x[0] * x[0] * (x[0]-1.0) * (x[0] - 1.0) * x[1] * (x[1] - 1.) * (2*x[1] -1.);
+      Usol[1] = - x[0] * (x[0] - 1.0) * (2*x[0]-1) * x[1] * x[1] * (x[1] - 1.) * (x[1] -1.);
+      Psol = (2.0 * x[0] - 1.) * (2.0 * x[1] - 1.);
+      Bsol[0] = sin(pi*x[0]) * cos(pi*x[1]);
+      Bsol[1] = -sin(pi*x[1]) * cos(pi*x[0]);*/
+}
+
+
+
+
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+
   bool dirichlet = true; //dirichlet
   value = 0.;
 
   if (!strcmp(SolName, "P")) {
     dirichlet = false;
-//     if(facename == 1) value = -(2.0 * x[1] - 1.);
-//     else if (facename == 2) value = -(2.0 * x[0] - 1.);
-//     else if (facename == 3) value = 2.0 * x[1] - 1.;
-//     else if (facename == 4) value = 2.0 * x[0] - 1.;
   }
   else if (!strcmp(SolName, "B1")) {
-    if(facename == 2) value = sin(pi * x[0]);
-    else if (facename == 4) value = -sin(pi * x[0]);
+    
+    if(facename == 2) {
+      dirichlet = true;
+      value = sin(pi * x[0]);
+    }
+    else if (facename == 4) { 
+      dirichlet = true;
+      value = -sin(pi * x[0]);
+    }
+    
   }
   else if (!strcmp(SolName, "B2")) {
-    if(facename == 1) value = - sin(pi * x[1]);
-    else if (facename == 3) value = sin(pi * x[1]);
+    if(facename == 1) {
+      dirichlet = true;
+      value = - sin(pi * x[1]);
+    }
+    else if (facename == 3) {
+      dirichlet = true;
+      value = sin(pi * x[1]);
+    }
   }
   else if (!strcmp(SolName, "R")) {
     dirichlet = false;
   }
+  
   return dirichlet;
+  
 }
 
 
 void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
-// std::vector <double> GetExactSolutionValue(const std::vector < double >& x);
-int main(int argc, char** args)
-{
+
+int main(int argc, char** args) {
 
 //   unsigned precType = 0;
 // 
@@ -261,66 +321,15 @@ int main(int argc, char** args)
   return 0;
 }
 
-void GetExactSolutionValue(const std::vector < double >& x, std::vector < double >& U,
-                           double &P, std::vector < double >& B)
-{
-  U[0] = x[0] * x[0] * (x[0] - 1.0) * (x[0] - 1.0) * x[1] * (x[1] - 1.) * (2 * x[1] - 1.);
-  U[1] = - x[0] * (x[0] - 1.0) * (2 * x[0] - 1) * x[1] * x[1] * (x[1] - 1.) * (x[1] - 1.);
-  P = (2.0 * x[0] - 1.) * (2.0 * x[1] - 1.);
-  B[0] = sin(pi * x[0]) * cos(pi * x[1]);
-  B[1] = -sin(pi * x[1]) * cos(pi * x[0]);
-}
-
-void GetGradExactSolutionValue(const std::vector < double >& x, std::vector < double >& GradU, std::vector < double >& GradV,
-                               std::vector < double >& GradB1, std::vector < double >& GradB2)
-{
-  GradU [0] = 2. * x[0] * (x[0] - 1.) * (2 * x[0] - 1.) * x[1] * (x[1] - 1.) * (2. * x[1] - 1.);
-  GradU [1] = x[0] * x[0] * (x[0] - 1.) * (x[0] - 1.) * (6. * x[1] * x[1] - 6. * x[1] + 1.);
-  GradV [0] = - (6. * x[0] * x[0] - 6. * x[0] + 1.) * x[1] * x[1] * (x[1] - 1.) * (x[1] - 1.);
-  GradV [1] = - GradU [0];
-
-  GradB1 [0] = pi * cos(pi * x[0]) * cos(pi * x[1]);
-  GradB1 [1] = -pi * sin(pi * x[0]) * sin(pi * x[1]);
-  GradB2 [0] = pi * sin(pi * x[0]) * sin(pi * x[1]);
-  GradB2 [1] = - GradB1 [0];
 
 
-
-  /*
-    GradUx [1] = x[0] * x[0] * (x[0] - 1.0) * (x[0] - 1.0) * (x[1] - 1.0) * (2.0 * x[1] -1. )
-  	      + x[0] * x[0] * (x[0] - 1.0) * (x[0] - 1.0) * (x[1] - 1.0) * (2.0 * x[1] -1. )
-  	     + 2.0 * x[0] * x[0] * (x[0] - 1.0) * x[1] * (x[1] - 1.0) * (2.0 * x[1] -1. );
-
-
-
-      USol[0]= x[0] * x[0] * (x[0]-1.0) * (x[0] - 1.0) * x[1] * (x[1] - 1.) * (2*x[1] -1.);
-      Usol[1] = - x[0] * (x[0] - 1.0) * (2*x[0]-1) * x[1] * x[1] * (x[1] - 1.) * (x[1] -1.);
-      Psol = (2.0 * x[0] - 1.) * (2.0 * x[1] - 1.);
-      Bsol[0] = sin(pi*x[0]) * cos(pi*x[1]);
-      Bsol[1] = -sin(pi*x[1]) * cos(pi*x[0]);*/
-}
-
-void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
-{
+void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
   
   
-//   double Mu;
-//   if(counter < c0 ) Mu = 2. * Miu;
-//   else if ( counter <= cn ) {
-//     Mu = 2*Miu*(cn-counter)/(cn-c0) + Miu*(counter-c0)/(cn-c0);
-//   }
-//   else{
-//     Mu = Miu;
-//   }
-//   std::cout << counter << " " << Mu <<std::endl;
-//   counter++;
-  
-//   Re = 1.0/Mu;
-//   
   
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
@@ -560,13 +569,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       for(unsigned i = 0; i < nDofsP; i++) {
         solP_gss += phiP[i] * solP[i];
       }
+      
 
       std::vector <double> x_gss(dim, 0);
       for(unsigned i = 0; i < nDofsV; i++) {
-        for(unsigned j = 0; j < dim; j ++) {
+        for(unsigned j = 0; j < dim; j ++)  {
           x_gss[j] += phiV[i] *  coordX[j][i];
-        }
-      }
+         }
+       }
 
 
       std::vector < double > Ue(dim);
@@ -578,7 +588,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       for(unsigned j = 0; j < dim; j++) {
         gradUe[j].resize(dim);
         gradBe[j].resize(dim);
-      }
+         }
 
       GetExactSolutionValue(x_gss, Ue, Pe, Be);
       GetGradExactSolutionValue(x_gss, gradUe[0], gradUe[1], gradBe[0], gradBe[1]);
@@ -586,7 +596,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
 
 
 
-      // Begin phiB_i loop: Momentum balance
+      //BEGIN phiB_i loop: Momentum balance
       unsigned kk, ll;
       double coeffSignk, coeffSignl;
       for(unsigned i = 0; i < nDofsB; i ++) {
@@ -609,10 +619,17 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
               ll = 0;
               coeffSignl = 1.0;
             }
-            Res[irow] -= coeffS * 1.0 / Rem * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * (gradSolB_gss[l][ll] - gradBe[l][ll])  * weight;
-            Res[irow] += coeffS * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * (solB_gss[l] * solV_gss[ll] - Be[l] * Ue[ll])  * weight;
+
+
+            Res[irow] -= coeffS * 1.0 / Rem * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * ( gradSolB_gss[l][ll] )  * weight;
+            Res[irow] += coeffS * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * (solB_gss[l] * solV_gss[ll] )  * weight;
+
+            Res[irow] -= coeffS * 1.0 / Rem * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * (     - gradBe[l][ll] )  * weight;
+            Res[irow] += coeffS * coeffSignk * phiB_x[i * dim + kk] * coeffSignl * (    - Be[l] * Ue[ll]       )  * weight;
           }
+          
           Res[irow] += phiB_x[i * dim + k] * solR_gss * weight;
+
 
           if (assembleMatrix) {
             unsigned irowMat = irow * nDofsBRVP;
@@ -647,10 +664,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
             }
           }
         }
-      }
+       }
       //END phiB_i loop
 
-      // Begin phiR_i loop: Mass balance
+      //BEGIN phiR_i loop: Mass balance
       for (unsigned i = 0; i < nDofsR; i++) {
         unsigned irow = dim * nDofsB + i;
         for (unsigned k = 0; k < dim; k++) {
@@ -664,7 +681,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
           }
         }
       }
-      // END phiR_i loop
+      //END phiR_i loop
 
       //BEGIN phiV_i loop: Momentum balance
       for (unsigned i = 0; i < nDofsV; i++) {
@@ -687,11 +704,20 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
               ll = 0;
               coeffSignl = 1.0;
             }
-            Res[irow] +=  -1.0 / Re * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k] - gradUe[k][l] - gradUe[l][k]) * weight;
-            Res[irow] +=  -phiV[i] * ( solV_gss[l] * gradSolV_gss[k][l] - Ue[l] * gradUe[k][l]) * weight;
-// 	    Res[irow] += coeffS * coeffSignk * phiV[i] * coeffSignl * gradSolB_gss[l][ll] * solB_gss[kk]* weight;
+
+
+            Res[irow] +=  -1.0 / Re * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
+            Res[irow] +=  -phiV[i] * ( solV_gss[l] * gradSolV_gss[k][l] ) * weight;
+
+            Res[irow] +=  -1.0 / Re * phiV_x[i * dim + l] * (    - gradUe[k][l]       - gradUe[l][k]) * weight;
+            Res[irow] +=  -phiV[i] * (     - Ue[l] *       gradUe[k][l] ) * weight;
+
           }
-          Res[irow] += (solP_gss - Pe) * phiV_x[i * dim + k] * weight;
+          
+          Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
+
+          Res[irow] +=    ( - Pe) * phiV_x[i * dim + k] * weight;
+          
 
           if (assembleMatrix) {
             unsigned irowMat = irow * nDofsBRVP;
@@ -754,6 +780,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       }
 
       //END phiP_i loop
+      
+      
     }
     //END Gauss point loop
     
