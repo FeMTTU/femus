@@ -46,11 +46,11 @@ bool SetBoundaryCondition0(const std::vector < double >& x, const char SolName[]
   if(!strcmp(SolName, "T0")) {
     if(facename == 2) {
       value = 1.;
-    } 
+    }
     else if(facename == 3) {
       dirichlet = false; //Neumann
     }
-  } 
+  }
   else if(!strcmp(SolName, "P0")) {
     dirichlet = false;
   }
@@ -103,18 +103,17 @@ int main(int argc, char** args) {
     std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
     precType = FS_VTp;
   }
-  
+
   if(argc >= 3) {
     Prandtl = strtod(args[2], NULL);
-    std::cout << Prandtl<<std::endl;
+    std::cout << Prandtl << std::endl;
   }
-  
-  
+
   if(argc >= 4) {
     Rayleigh = strtod(args[3], NULL);
-    std::cout << Rayleigh <<std::endl;
+    std::cout << Rayleigh << std::endl;
   }
-    
+
   preconditioner = precType; // add by guoyi ke to denote the type of preconditioner in the assembling 
   
   // init Petsc-MPI communicator
@@ -138,6 +137,7 @@ int main(int argc, char** args) {
   numberOfUniformLevels -= 1;
   // print mesh info
   mlMsh.PrintInfo();
+
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -152,9 +152,11 @@ int main(int argc, char** args) {
   mlSol.AddSolution("T", LAGRANGE, SECOND);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
+
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
+
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
   //mlSol.Initialize("T0",InitialValueT0);
@@ -167,6 +169,7 @@ int main(int argc, char** args) {
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
+
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system0 = mlProb.add_system < NonLinearImplicitSystem > ("NS0");
   if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp)
@@ -275,6 +278,7 @@ int main(int argc, char** args) {
 
   if(precType == FS_VTp || precType == ILU_VTp) system.AddSolutionToSystemPDE("T");
 
+
   //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   std::vector < unsigned > fieldUVP(3);
   fieldUVP[0] = system.GetSolPdeIndex("U");
@@ -302,14 +306,16 @@ int main(int argc, char** args) {
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
+
   if(precType == FS_VTp) FS2.push_back(&FS_NS);   //Navier-Stokes block first
-  
+
   FS2.push_back(&FS_T);
+
   if(precType == FS_TVp) FS2.push_back(&FS_NS);   //Navier-Stokes block last
 
   FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
   FS_NST.SetRichardsonScaleFactor(.6);
-
+  
   //END buid fieldSplitTree
   if(precType == FS_VTp || precType == FS_TVp) system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);    // Field-Split preconditioned
   else if(precType == ASM_VTp || precType == ASM_TVp) system.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz preconditioner
@@ -321,10 +327,10 @@ int main(int argc, char** args) {
   system.SetNonLinearConvergenceTolerance(1.e-8);
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  
+
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
-  
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+
   system.SetMgType(V_CYCLE);
 
   system.SetNumberPreSmoothingStep(1);
@@ -334,24 +340,24 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  
+
   system.SetRichardsonScaleFactor(.6);
 
   if(precType == FS_VTp || precType == FS_TVp) system.SetFieldSplitTree(&FS_NST);
-  
+
   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
   if(precType == ASM_VTp || precType == ASM_TVp){
-    system.SetNumberOfSchurVariables(1);
+  system.SetNumberOfSchurVariables(1);
     system.SetElementBlockNumber(2);
   }
   else if(precType == ILU_VTp || precType == ILU_TVp){
     system.SetElementBlockNumber("All");
   }
   
- 
+
   //////////////////////////////////////////////////////////////////////
   //solution variable
   unsigned solTIndex;
@@ -381,9 +387,9 @@ int main(int argc, char** args) {
     
   for(unsigned i=0; i< sizeTUVP; i++){
     system.SetOuterSolver(PREONLY);  
-    system.MGsolve();
+  system.MGsolve();
     mlSol.GenerateBdc("All");
-    
+
     std::ofstream fout;
     if(i==0){
       fout.open( "preconditioner.txt");
@@ -395,31 +401,31 @@ int main(int argc, char** args) {
       std::cout << std::endl << " The output file preconditioner cannot be opened.\n";
       abort();
     }
-    
+
     if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp){
       for(unsigned j = 0; j < sizeT; j++ ){
 	 fout << (*sol->_Sol[solTIndex])(j)<< " ";
       } 
     } 
-      
+
     for(unsigned j = 0; j < sizeU; j++ ){
       fout << (*sol->_Sol[solVIndex[0]])(j) << " ";
     }
-    
+
     for(unsigned j = 0; j < sizeV; j++ ){
       fout << (*sol->_Sol[solVIndex[1]])(j) << " ";
     }
-    
+
     if (precType == ASM_VTp){
       for(unsigned j = 0; j < sizeT; j++ ){
 	fout << (*sol->_Sol[solTIndex])(j)<< " ";
       }
     }
-    
+  
     for(unsigned j = 0; j < sizeP; j++ ){
       fout << (*sol->_Sol[solPIndex])(j)<< " ";
     }
-    
+
     if (precType == FS_VTp || precType == ILU_VTp){
       for(unsigned j = 0; j < sizeT; j++ ){
 	fout << (*sol->_Sol[solTIndex])(j)<< " ";
@@ -428,7 +434,7 @@ int main(int argc, char** args) {
 // std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
     fout<<std::endl;
     fout.close();
-    
+
     // print solutions
     std::vector < std::string > variablesToBePrinted;
     variablesToBePrinted.push_back("All");
@@ -438,7 +444,7 @@ int main(int argc, char** args) {
     vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, counter);
   }
   /////////////////////////////////////ultiLevelProb/////////////////////////
-  
+
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
@@ -447,7 +453,7 @@ int main(int argc, char** args) {
   vtkIO.SetDebugOutput( true );
   vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
   mlMsh.PrintInfo();
-  
+
   return 0;
 }
 
@@ -813,11 +819,11 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   Mesh*           msh         = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*           el          = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*   mlSol         = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
 
-  LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
 
   bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -872,7 +878,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   
   std::vector < double >  solT; // local solution
   std::vector < std::vector < double > >  solV(dim);    // local solution
-  
+
   std::vector < double >  solP; // local solution
 
   std::vector < std::vector < double > > coordX(dim);    // local coordinates
@@ -898,7 +904,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
   std::vector < double >  fP; // local solution
   fP.reserve(maxSize);
-  
+
   std::vector <double> phiV;  // local test function
   std::vector <double> phiV_x; // local test function first order partial derivatives
   std::vector <double> phiV_xx; // local test function second order partial derivatives
@@ -934,21 +940,21 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
     MatView(KKp,viewer);	
   }   
-  
+
   if(assembleMatrix)
     KK->zero(); // Set to zero all the entries of the Global Matrix  
-  
+
   sol->_Sol[solVIndex[0]]->zero();  
   sol->_Sol[solVIndex[1]]->zero();  
   sol->_Sol[solPIndex]->zero();  
   sol->_Sol[solTIndex]->zero();  
-  
+
   unsigned nprocs = msh->n_processors();  
   unsigned sizeU = msh->_dofOffset[solVType][nprocs];
   unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
   unsigned sizeP = msh->_dofOffset[solPType][nprocs];
   unsigned sizeT = msh->_dofOffset[solTType][nprocs];
-  
+
   if(preconditioner == FS_TVp || preconditioner == ASM_TVp || preconditioner == ILU_TVp){
     if (counter < sizeT){
        sol->_Sol[solTIndex]->set(counter, 1.);
@@ -967,7 +973,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       sol->_Sol[solPIndex]->close();
     }
   }
-  
+
   if(preconditioner == ASM_VTp ){
     if ( counter <  sizeU ){
       sol->_Sol[solVIndex[0]]->set(counter, 1.);
@@ -986,7 +992,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       sol->_Sol[solPIndex]->close();
     }
   }
-  
+
   if (preconditioner == FS_VTp || preconditioner == ILU_VTp){
      if ( counter <  sizeU ){
       sol->_Sol[solVIndex[0]]->set(counter, 1.);
@@ -1005,7 +1011,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       sol->_Sol[solTIndex]->close();
     }
   }
-   
+
 //   /*if ( counter <  sizeU ){
 //     sol->_Sol[solVIndex[0]]->set(counter, 1.);
 //     sol->_Sol[solVIndex[0]]->close();
@@ -1048,7 +1054,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       solV[k].resize(nDofsV);
       solV0[k].resize(nDofsV);
       coordX[k].resize(nDofsX);
-    }
+        }
 
     solP.resize(nDofsP);
     //END memory allocation
@@ -1080,9 +1086,9 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	if(sysDof[i + nDofsT + k * nDofsV]==counter) {
 	  fV[k][i]=0.;
 	  std::cout<<counter<<" V"<<k<<std::endl;
-	}
       }
     }
+            }
 
     for(unsigned i = 0; i < nDofsP; i++) { //pressure
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);  //local to global solution dof
@@ -1091,16 +1097,16 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       if(sysDof[i + nDofsT + dim * nDofsV]==counter) {
 	fP[i]=0.;
 	std::cout<<counter<<" P"<<std::endl;
-      }
-    }
+              }
+            }
 
     for(unsigned i = 0; i < nDofsX; i++) { //coordinates
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);  //local to global coordinate dof
 
       for(unsigned k = 0; k < dim; k++) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);  //global to local coordinate value
-      }
-    }
+            }
+            }
 
     //END global to local extraction
 
@@ -1127,8 +1133,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         for(unsigned j = 0; j < dim; j++) {
           gradSolT_gss[j] += phiT_x[i * dim + j] * solT[i];
 	  gradSolT0_gss[j] += phiT_x[i * dim + j] * solT0[i];
+          }
         }
-      }
 
       std::vector < double > solV_gss(dim, 0);
       std::vector < std::vector < double > > gradSolV_gss(dim);
@@ -1147,21 +1153,21 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         for(unsigned  k = 0; k < dim; k++) {
           solV_gss[k] += phiV[i] * solV[k][i];
 	  solV0_gss[k] += phiV[i] * solV0[k][i];
-        }
+    }
 
         for(unsigned j = 0; j < dim; j++) {
           for(unsigned  k = 0; k < dim; k++) {
             gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
 	    gradSolV0_gss[k][j] += phiV_x[i * dim + j] * solV0[k][i];
-          }
         }
       }
+    }
 
       double solP_gss = 0;
 
       for(unsigned i = 0; i < nDofsP; i++) {
         solP_gss += phiP[i] * solP[i];
-      }
+  }
 
 
       double alpha = 1.;
@@ -1187,7 +1193,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
             for(unsigned j = 0; j < nDofsT; j++) {
               Jac[ irowMat + j ] +=  alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * phiT_x[j * dim + k] * weight;
               Jac[ irowMat + j ] +=  phiT[i] * solV0_gss[k] * phiT_x[j * dim + k] * weight; 
-            }
+  }
 
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = nDofsT + k * nDofsV + j;
@@ -1211,7 +1217,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
           for(unsigned l = 0; l < dim; l++) {
             Res[irow] +=  -sqrt(Pr / Ra) * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
             Res[irow] +=  - phiV[i] * ( solV0_gss[l] * gradSolV_gss[k][l] + solV_gss[l] * gradSolV0_gss[k][l] ) * weight;
-          }
+  }
 
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
 
@@ -1233,23 +1239,23 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
                 Jac[ irowMat + jcol1] +=  phiV[i] * solV0_gss[l] * phiV_x[j * dim + l] * weight;
 //		Jac[ irowMat + jcol1] +=  phiV[i] * solV0_gss[l] * phiV_x[j * dim + k] * weight;
                 Jac[ irowMat + jcol2] +=  phiV[i] * phiV[j] * gradSolV0_gss[k][l] * weight;
-              }
-            }
+        }
+      }
 
             for(unsigned j = 0; j < nDofsP; j++) {
               unsigned jcol = (nDofsT + dim * nDofsV) + j;
               Jac[ irowMat + jcol] += - phiV_x[i * dim + k] * phiP[j] * weight;
-            }
+    }
 
             if(k == 1) {
               for(unsigned j = 0; j < nDofsT; j++) {
                 Jac[ irowMat + j ] += -beta * phiV[i] * phiT[j] * weight;
-              }
-            }
+      }
+    }
           }
 
-        }
       }
+    }
 
       //END phiV_i loop
 
@@ -1266,11 +1272,11 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = (nDofsT + k * nDofsV + j);
               Jac[ irowMat + jcol ] += phiP[i] * phiV_x[j * dim + k] * weight;
-            }
-          }
-
         }
       }
+
+    }
+  }
 
       //END phiP_i loop
 
@@ -1283,7 +1289,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
     if(assembleMatrix) {
       KK->add_matrix_blocked(Jac, sysDof, sysDof);
-    }
+  }
 
     //END local to global Matrix/Vector assembly
 
