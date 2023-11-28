@@ -27,24 +27,12 @@
 #include "MyVector.hpp"
 
 #include "adept.h"
-#include <stdlib.h>
 
 //double Miu = 0.01;   int c0=-1; int cn=-1; //Re=100;
 //double Miu = 0.002;  int c0=-1; int cn=-1; //Re=500;
 double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
 
-//unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //uniform
-//unsigned numberOfUniformLevels = 8; unsigned numberOfSelectiveLevels = 0; //uniform
-//unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
-//<<<<<<< HEAD
-//unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 3; //non-uniform
-//unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
-
-
-//unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //non-uniform
-// unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
-
-//unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 5; //non-uniform
+#include <cstdlib>
 
 
 int counter = 0 ;
@@ -71,7 +59,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
       if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
     }
   }
-  else if (!strcmp(SolName, "P")) {
+  else if(!strcmp(SolName, "P")) {
     dirichlet = false;
   }
 
@@ -103,8 +91,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
-int main(int argc, char** args)
-{
+int main(int argc, char** args) {
 
   unsigned precType = 0;
 
@@ -133,8 +120,10 @@ int main(int argc, char** args)
   // erase all the coarse mesh levels
   mlMsh.EraseCoarseLevels(3);
 
+  
   // print mesh info
   mlMsh.PrintInfo();
+
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -142,6 +131,7 @@ int main(int argc, char** args)
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
+
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
 //   mlSol.Initialize("U", InitialValueU);
@@ -160,7 +150,8 @@ int main(int argc, char** args)
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  if (dim == 3) system.AddSolutionToSystemPDE("W");
+  if(dim == 3) system.AddSolutionToSystemPDE("W");
+
   system.AddSolutionToSystemPDE("P");
   //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   system.SetLinearEquationSolverType(FEMuS_ASM);
@@ -215,8 +206,11 @@ int main(int argc, char** args)
   return 0;
 }
 
-void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
-{
+
+
+
+
+void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -382,18 +376,18 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       std::vector < double > solV_gss(dim, 0);
       std::vector < std::vector < double > > gradSolV_gss(dim);
 
-      for (unsigned  k = 0; k < dim; k++) {
+      for(unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
         std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
       }
 
-      for (unsigned i = 0; i < nDofsV; i++) {
-        for (unsigned  k = 0; k < dim; k++) {
+      for(unsigned i = 0; i < nDofsV; i++) {
+        for(unsigned  k = 0; k < dim; k++) {
           solV_gss[k] += phiV[i] * solV[k][i];
         }
 
-        for (unsigned j = 0; j < dim; j++) {
-          for (unsigned  k = 0; k < dim; k++) {
+        for(unsigned j = 0; j < dim; j++) {
+          for(unsigned  k = 0; k < dim; k++) {
             gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
           }
         }
@@ -401,7 +395,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
 
       double solP_gss = 0;
 
-      for (unsigned i = 0; i < nDofsP; i++) {
+      for(unsigned i = 0; i < nDofsP; i++) {
         solP_gss += phiP[i] * solP[i];
       }
 
@@ -442,6 +436,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
             Res[irow] +=  -Mu * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
             Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
           }
+
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
 
           if (assembleMatrix) {
@@ -567,7 +562,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
     //BEGIN local to global Matrix/Vector assembly
     RES->add_vector_blocked(Res, sysDof);
 
-    if (assembleMatrix) {
+    if(assembleMatrix) {
       KK->add_matrix_blocked(Jac, sysDof, sysDof);
     }
 
@@ -579,9 +574,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
 
   RES->close();
 
-  if (assembleMatrix) {
+  if(assembleMatrix) {
     KK->close();
   }
+
   // ***************** END ASSEMBLY *******************
 }
 

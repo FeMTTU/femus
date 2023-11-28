@@ -2,17 +2,40 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
+
+
+# Poisson - BEGIN
+ADD_SUBDIRECTORY(ex40_1/)
+ADD_SUBDIRECTORY(ex40_2/)
+ADD_SUBDIRECTORY(ex41/)
+ADD_SUBDIRECTORY(ex42/)
+ADD_SUBDIRECTORY(ex43/)
+# Poisson - END
+
+
+# Steady-state NS - BEGIN
+ADD_SUBDIRECTORY(ex12/)
+ADD_SUBDIRECTORY(ex13/)
+ADD_SUBDIRECTORY(ex14/)
+ADD_SUBDIRECTORY(ex44/)
+
+ADD_SUBDIRECTORY(ex_ns_pcd/)
+# Steady-state NS - END
+
+
+
 # Steady-state Boussinesq - BEGIN
 ADD_SUBDIRECTORY(ex1/)
 
 ADD_SUBDIRECTORY(ex10/)
 ADD_SUBDIRECTORY(ex11/)
 ADD_SUBDIRECTORY(ex11_1/)
-ADD_SUBDIRECTORY(ex11_2/)
-ADD_SUBDIRECTORY(ex12/)
-ADD_SUBDIRECTORY(ex13/)
-ADD_SUBDIRECTORY(ex14/)
+ADD_SUBDIRECTORY(ex11_2/) ## @todo see why it is all different, must be EOF or similar 
+
+ADD_SUBDIRECTORY(ex45/)
+ADD_SUBDIRECTORY(ex46/) #very very sim to 45
 # Steady-state Boussinesq - END
+
 
 
 
@@ -30,19 +53,6 @@ ADD_SUBDIRECTORY(ex25/)
 
 
 
-# Poisson - BEGIN
-ADD_SUBDIRECTORY(ex40_1/)
-ADD_SUBDIRECTORY(ex40_2/)
-ADD_SUBDIRECTORY(ex41/)
-ADD_SUBDIRECTORY(ex42/)
-ADD_SUBDIRECTORY(ex43/)
-# Poisson - END
-
-# Steady-state Boussinesq - BEGIN
-ADD_SUBDIRECTORY(ex44/)
-ADD_SUBDIRECTORY(ex45/)
-ADD_SUBDIRECTORY(ex46/)
-# Steady-state Boussinesq - END
 
 
 # Steady-state MHD - BEGIN
@@ -51,9 +61,10 @@ ADD_SUBDIRECTORY(ex50_1/)
 # Steady-state MHD - END
 
 
-ADD_SUBDIRECTORY(ex_ns_pcd/)
 
 
+# Steady-state Optimal control - BEGIN
 ADD_SUBDIRECTORY(ex30_opt_control/)
+# Steady-state Optimal control - END
 
 

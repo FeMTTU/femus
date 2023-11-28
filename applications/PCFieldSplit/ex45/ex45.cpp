@@ -27,7 +27,9 @@
 #include "MyVector.hpp"
 
 #include "adept.h"
-#include <stdlib.h>
+
+
+#include <cstdlib>
 
 double Prandtl = 1.0;
 double Rayleigh = 1000.;
@@ -68,18 +70,17 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //     refine = true;
 //   }
 
-//  std::cout << level << std::endl;
   double pi = acos(-1.);
  // double radius = pi / 32.0 * (level - level0 + 2.0);
   double radius = 1.0 / 2.0 * (1.0 - pow(0.5,level - level0 + 1));
   double radius2 = radius * radius;
 
   if ( (x[0]*x[0] + x[1] * x[1]) > radius2) {
+   std::cout << level << std::endl;
     refine	= true;
   }
   return refine;
 }
-
 
 void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
@@ -101,8 +102,6 @@ int main(int argc, char** args) {
     std::cout << Rayleigh << std::endl;
   }
 
-  std::cout << Prandtl<<" "<< Rayleigh << std::endl; 
-  
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -120,11 +119,11 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
  // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
-  // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(0);
 
+  
   // print mesh info
   mlMsh.PrintInfo();
+
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -135,6 +134,7 @@ int main(int argc, char** args) {
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
+
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
   mlSol.Initialize("T", InitialValueT);
@@ -149,10 +149,12 @@ int main(int argc, char** args) {
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
+
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
   if(dim == 3) system.AddSolutionToSystemPDE("W");
+
   system.AddSolutionToSystemPDE("P");
   system.AddSolutionToSystemPDE("T");
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
@@ -181,7 +183,8 @@ int main(int argc, char** args) {
   system.SetRichardsonScaleFactor(.6);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-8, 1.e-15, 1.e+50, 30, 30); //GMRES tolerances
+  system.SetTolerances(1.e-8, 1.e-15, 1.e+50, 30, 30);//GMRES tolerances
+
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
@@ -222,14 +225,20 @@ int main(int argc, char** args) {
 
   PrintConvergenceInfo(stdOutfile, outfile, numberOfUniformLevels);
 
-/*  char *stdOutfile1 = new char[100];
+/*
+  char *stdOutfile1 = new char[100];
   char *outfile1 = new char[100];
   sprintf(stdOutfile1, "%sprintout_infoPr=%sRa=%s_time.txt", args[1], args[2], args[3]);
   sprintf(outfile1, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
 
-  PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);*/  
+  PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
+  */
+
   return 0;
 }
+
+
+
 
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {

@@ -27,9 +27,12 @@
 #include "MyVector.hpp"
 
 #include "adept.h"
-#include <stdlib.h>
+
+
+#include <cstdlib>
 
 double Prandtl = 1.0;
+
 double Rayleigh = 10000.;
 
 using namespace femus;
@@ -114,22 +117,15 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-
-
-//   unsigned numberOfUniformLevels = 2;
-//   unsigned numberOfSelectiveLevels = 3;
-
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
-
-
-  //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+ // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
-  // erase all the coarse mesh levels
-  // mlMsh.EraseCoarseLevels(1);
 
+  
   // print mesh info
   mlMsh.PrintInfo();
+
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -140,6 +136,7 @@ int main(int argc, char** args) {
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
+
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
   mlSol.Initialize("T", InitialValueT);
@@ -158,6 +155,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
   if(dim == 3) system.AddSolutionToSystemPDE("W");
+
   system.AddSolutionToSystemPDE("P");
   system.AddSolutionToSystemPDE("T");
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
@@ -228,14 +226,20 @@ int main(int argc, char** args) {
 
   PrintConvergenceInfo(stdOutfile, outfile, numberOfUniformLevels);
 
-/*  char *stdOutfile1 = new char[100];
+/*
+  char *stdOutfile1 = new char[100];
   char *outfile1 = new char[100];
   sprintf(stdOutfile1, "%sprintout_infoPr=%sRa=%s_time.txt", args[1], args[2], args[3]);
   sprintf(outfile1, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
 
-  PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);*/  
+  PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
+  */
+
   return 0;
 }
+
+
+
 
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {

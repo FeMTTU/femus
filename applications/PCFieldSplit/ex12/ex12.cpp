@@ -66,7 +66,7 @@ int main(int argc, char** args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -135,7 +135,6 @@ int main(int argc, char** args) {
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
-
   // initilaize and solve the system
   system.init();
 
@@ -151,8 +150,7 @@ int main(int argc, char** args) {
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
-  //system.SetDirichletBCsHandling(ELIMINATION);
-  //system.solve();
+
   system.MGsolve();
 
   // print solutions
@@ -160,6 +158,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
   vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
 
   return 0;
