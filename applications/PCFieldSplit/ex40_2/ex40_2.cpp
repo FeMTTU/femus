@@ -70,7 +70,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
-unsigned preconditioner = 0;
+
 
 int main(int argc, char** args) {
   
@@ -117,11 +117,6 @@ int main(int argc, char** args) {
   system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
-  
-  //system.SetMaxNumberOfNonLinearIterations(1);
-  //system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	

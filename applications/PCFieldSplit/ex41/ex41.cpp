@@ -203,15 +203,7 @@ int main(int argc, char** args) {
     vtkIO.SetDebugOutput( true );
     vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, counter-1);
   }
-  /////////////////////////////////////ultiLevelProb/////////////////////////
-  
-//   // print solutions
-//   std::vector < std::string > variablesToBePrinted;
-//   variablesToBePrinted.push_back("All");
-// 
-//   VTKWriter vtkIO(&mlSol);
-//   vtkIO.SetDebugOutput( true );
-//   vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
+
   mlMsh.PrintInfo();
   
   return 0;
@@ -239,7 +231,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   // call the adept stack object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   
-  SparseMatrix*   KKamr          = pdeSys->_KKamr;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -391,7 +382,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
 
   if(counter == 10){ 
-    //KKamr->print_matlab("matrix.txt", "ascii");
     KK->print_matlab("matrix.txt", "ascii");
  //   Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
 //     PetscViewer    viewer;

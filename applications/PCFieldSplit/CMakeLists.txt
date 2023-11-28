@@ -13,6 +13,8 @@ ADD_SUBDIRECTORY(ex43/)
 # Steady-state Poisson, No Field Split - END
 
 
+# Steady-state NS - BEGIN
+
 # Steady-state NS, Field Split - BEGIN
 ADD_SUBDIRECTORY(ex12/)
 ADD_SUBDIRECTORY(ex13/)
@@ -24,7 +26,10 @@ ADD_SUBDIRECTORY(ex_ns_pcd/)  #wip
 ADD_SUBDIRECTORY(ex44/)
 # Steady-state NS, No Field Split - END
 
+# Steady-state NS - END
 
+
+# Steady-state Boussinesq  - BEGIN
 
 # Steady-state Boussinesq, Field Split  - BEGIN
 ADD_SUBDIRECTORY(ex1/)
@@ -39,6 +44,8 @@ ADD_SUBDIRECTORY(ex11_2/) ## @todo see why it is all different, must be EOF or s
 ADD_SUBDIRECTORY(ex45/) 
 ADD_SUBDIRECTORY(ex46/) #very very sim to 45
 # Steady-state Boussinesq, No Field Split - END
+
+# Steady-state Boussinesq  - END
 
 
 

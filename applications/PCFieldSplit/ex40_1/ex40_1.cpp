@@ -30,7 +30,7 @@
 
 using namespace femus;
 unsigned counter = 0;
-const double pi = 2.0 * acos(0.0);
+const double pi = 2.0 * acos(0.0); 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
@@ -126,11 +126,6 @@ int main(int argc, char** args) {
   system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
-  
-  //system.SetMaxNumberOfNonLinearIterations(1);
-  //system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	

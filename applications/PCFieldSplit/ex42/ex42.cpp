@@ -36,6 +36,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+
+
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
@@ -64,7 +66,6 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
 };
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
-unsigned preconditioner = 0;
 
 int main(int argc, char** args) {
   
@@ -145,9 +146,9 @@ int main(int argc, char** args) {
   system.SetOuterSolver(PREONLY);
   system.MGsolve();
     
-  // print solutions
-  std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("All");
+    // print solutions
+    std::vector < std::string > variablesToBePrinted;
+    variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput( true );
@@ -178,6 +179,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   // call the adept stack object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem

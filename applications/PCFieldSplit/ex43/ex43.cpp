@@ -36,6 +36,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+
+
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
@@ -143,9 +145,9 @@ int main(int argc, char** args) {
   // Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
   system.MGsolve();
     
-  // print solutions
-  std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("All");
+    // print solutions
+    std::vector < std::string > variablesToBePrinted;
+    variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput( true );
@@ -176,6 +178,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   // call the adept stack object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -246,17 +249,17 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     //END memory allocation
     fU.assign(nDofsU,1.);
     
-    for (unsigned i = 0; i < dim; i++){
-      coordX[i].resize(nDofsX);
-    }
-    
     //BEGIN global to local extraction
     for(unsigned i = 0; i < nDofsU; i++) { //velocity
       unsigned solUDof = msh->GetSolutionDof(i, iel, solUType);  //local to global solution dof
       solU[i] = (*sol->_Sol[solUIndex])(solUDof);  //global to local solution value
       sysDof[i] = pdeSys->GetSystemDof(solUIndex, solUPdeIndex, i, iel);  //local to global system dof
     }
-
+    
+    for (unsigned i = 0; i < dim; i++){
+      coordX[i].resize(nDofsX);
+    }
+    
     for(unsigned i = 0; i < nDofsX; i++) { //coordinates
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);  //local to global coordinate dof
       for(unsigned k = 0; k < dim; k++) {
