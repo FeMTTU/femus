@@ -43,8 +43,7 @@ ADD_SUBDIRECTORY(ex11_2/) ## @todo see why it is all different, must be EOF or s
 # Steady-state Boussinesq, Field Split  - END
 
 # Steady-state Boussinesq, No Field Split - BEGIN
-ADD_SUBDIRECTORY(ex45/) 
-ADD_SUBDIRECTORY(ex46/) #very very sim to 45
+ADD_SUBDIRECTORY(ex46/)  # extension of ex44
 # Steady-state Boussinesq, No Field Split - END
 
 # Steady-state Boussinesq  - END

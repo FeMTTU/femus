@@ -58,7 +58,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
       if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
     }
   }
-  else if(!strcmp(SolName, "P")) {
+  else if (!strcmp(SolName, "P")) {
     dirichlet = false;
   }
 
@@ -69,12 +69,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 {
   bool refine = false;
   unsigned level0 = 0;
-//   double a = static_cast<double>(rand())/RAND_MAX;
-//   if ( a < 0.25) refine	= true;
-
-//   if( fabs(x[0] - 0.5) < 0.5/ pow(2,level) && fabs(x[1] - 0.5) < 0.5/ pow(2,level) ){
-//     refine = true;
-//   }
 
   double pi = acos(-1.);
   double radius = pi / 32.0 * (level - level0 - 2.0);
@@ -92,7 +86,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
-  unsigned precType = 0;
 
   if (argc >= 2) {
     Miu = strtod(args[1], NULL);
@@ -116,6 +109,7 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
  // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+
   // erase all the coarse mesh levels
   mlMsh.EraseCoarseLevels(3);
 
@@ -128,7 +122,9 @@ int main(int argc, char** args) {
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
+
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
+
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
@@ -149,9 +145,10 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  if(dim == 3) system.AddSolutionToSystemPDE("W");
+  if (dim == 3) system.AddSolutionToSystemPDE("W");
 
   system.AddSolutionToSystemPDE("P");
+
   //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   system.SetLinearEquationSolverType(FEMuS_ASM);
   
@@ -375,18 +372,18 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       std::vector < double > solV_gss(dim, 0);
       std::vector < std::vector < double > > gradSolV_gss(dim);
 
-      for(unsigned  k = 0; k < dim; k++) {
+      for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
         std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
       }
 
-      for(unsigned i = 0; i < nDofsV; i++) {
-        for(unsigned  k = 0; k < dim; k++) {
+      for (unsigned i = 0; i < nDofsV; i++) {
+        for (unsigned  k = 0; k < dim; k++) {
           solV_gss[k] += phiV[i] * solV[k][i];
         }
 
-        for(unsigned j = 0; j < dim; j++) {
-          for(unsigned  k = 0; k < dim; k++) {
+        for (unsigned j = 0; j < dim; j++) {
+          for (unsigned  k = 0; k < dim; k++) {
             gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
           }
         }
@@ -394,41 +391,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
       double solP_gss = 0;
 
-      for(unsigned i = 0; i < nDofsP; i++) {
+      for (unsigned i = 0; i < nDofsP; i++) {
         solP_gss += phiP[i] * solP[i];
       }
 
 
-
-//       //BEGIN phiT_i loop: Energy balance
-//       for(unsigned i = 0; i < nDofsT; i++) {
-//         unsigned irow = i;
-//
-//         for(unsigned k = 0; k < dim; k++) {
-//           Res[irow] +=  -alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * gradSolT_gss[k] * weight;
-//           Res[irow] +=  -phiT[i] * solV_gss[k] * gradSolT_gss[k] * weight;
-//
-//           if(assembleMatrix) {
-//             unsigned irowMat = irow * nDofsTVP;
-//
-//             for(unsigned j = 0; j < nDofsT; j++) {
-//               Jac[ irowMat + j ] +=  alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * phiT_x[j * dim + k] * weight;
-//               Jac[ irowMat + j ] +=  phiT[i] * solV_gss[k] * phiT_x[j * dim + k] * weight;
-//             }
-//
-//             for(unsigned j = 0; j < nDofsV; j++) {
-//               unsigned jcol = nDofsT + k * nDofsV + j;
-//               Jac[ irowMat + jcol ] += phiT[i] * phiV[j] * gradSolT_gss[k] * weight;
-//             }
-//           }
-//
-//         }
-//       }
-//
-//       //END phiT_i loop
-
       //BEGIN phiV_i loop: Momentum balance
       for (unsigned i = 0; i < nDofsV; i++) {
+
         for (unsigned k = 0; k < dim; k++) {
           unsigned irow =  k * nDofsV + i;
           for (unsigned l = 0; l < dim; l++) {
@@ -561,7 +531,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     //BEGIN local to global Matrix/Vector assembly
     RES->add_vector_blocked(Res, sysDof);
 
-    if(assembleMatrix) {
+    if (assembleMatrix) {
       KK->add_matrix_blocked(Jac, sysDof, sysDof);
     }
 
@@ -573,7 +543,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   RES->close();
 
-  if(assembleMatrix) {
+  if (assembleMatrix) {
     KK->close();
   }
 
@@ -586,7 +556,7 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
 
   std::ifstream inf;
   inf.open(stdOutfile);
-  if(!inf) {
+  if (!inf) {
     std::cout << "Redirected standard output file not found\n";
     std::cout << "add option -std_output std_out_filename > std_out_filename\n";
     return;
@@ -608,11 +578,11 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
   inf >> str1;
   while(str1.compare("END_COMPUTATION") != 0) {
 
-    if(str1.compare("Start") == 0) {
+    if (str1.compare("Start") == 0) {
       inf >> str1;
-      if(str1.compare("Level") == 0) {
+      if (str1.compare("Level") == 0) {
         inf >> str1;
-        if(str1.compare("Max") == 0) {
+        if (str1.compare("Max") == 0) {
           int value;
           inf >> value;
           Level[counter1] = value;
@@ -620,39 +590,39 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
       }
     }
 
-    if(str1.compare("Nonlinear") == 0) {
+    if (str1.compare("Nonlinear") == 0) {
       inf >> str1;
-      if(str1.compare("iteration") == 0) {
+      if (str1.compare("iteration") == 0) {
         inf >> str1;
         outf << std::endl << str1;
         Num_Nonlinear[counter1] += 1;
       }
     }
-    else if(str1.compare("KSP") == 0) {
+    else if (str1.compare("KSP") == 0) {
       inf >> str1;
-      if(str1.compare("preconditioned") == 0) {
+      if (str1.compare("preconditioned") == 0) {
         inf >> str1;
-        if(str1.compare("resid") == 0) {
+        if (str1.compare("resid") == 0) {
           inf >> str1;
-          if(str1.compare("norm") == 0) {
+          if (str1.compare("norm") == 0) {
             double norm0 = 1.;
             double normN = 1.;
             unsigned counter = 0;
             inf >> norm0;
             outf << "," << norm0;
-            for(unsigned i = 0; i < 11; i++) {
+            for (unsigned i = 0; i < 11; i++) {
               inf >> str1;
             }
             while(str1.compare("norm") == 0) {
               inf >> normN;
               counter++;
-              for(unsigned i = 0; i < 11; i++) {
+              for (unsigned i = 0; i < 11; i++) {
                 inf >> str1;
               }
               Num_GMRES[counter1] += 1;
             }
             outf << "," << normN;
-            if(counter != 0) {
+            if (counter != 0) {
               outf << "," << counter << "," << pow(normN / norm0, 1. / counter);
             }
             else {
@@ -663,11 +633,11 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
       }
     }
 
-    if(str1.compare("End") == 0) {
+    if (str1.compare("End") == 0) {
       inf >> str1;
-      if(str1.compare("Level") == 0) {
+      if (str1.compare("Level") == 0) {
         inf >> str1;
-        if(str1.compare("Max") == 0) {
+        if (str1.compare("Max") == 0) {
           counter1 ++ ;
         }
       }
@@ -677,7 +647,7 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
 
 
   outf << "\n" << "Level, Number of nonlinear,Number of GMRES, Average number of GMRES per nonlinear" << std::endl;
-  for(unsigned i = 0; i < numofrefinements; i++) {
+  for (unsigned i = 0; i < numofrefinements; i++) {
     outf << Level[i] << "," << Num_Nonlinear[i] << ","
          << Num_GMRES[i] << "," << double(Num_GMRES[i]) / double(Num_Nonlinear[i]) << std::endl;
   }
