@@ -25,6 +25,9 @@
 #include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
 
+
+#include <iostream>
+#include <fstream>
 #include "adept.h"
 
 
@@ -281,7 +284,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   MultiLevelSolution*   mlSol         = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
 
   bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
@@ -466,7 +468,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
-
 
     // start a new recording of all the operations involving adept::adouble variables
     if(assembleMatrix) s.new_recording();

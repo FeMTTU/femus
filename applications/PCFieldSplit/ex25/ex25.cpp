@@ -25,7 +25,11 @@
 #include "LinearEquationSolver.hpp"
 #include "FieldSplitTree.hpp"
 
+
+#include <iostream>
+#include <fstream>
 #include "adept.h"
+
 
 using namespace femus;
 
@@ -86,6 +90,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("T", LAGRANGE, SERENDIPITY, 2);
   mlSol.AddSolution("U", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("V", LAGRANGE, SECOND, 2);
+
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
@@ -93,6 +98,7 @@ int main(int argc, char** args) {
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
+
   mlSol.Initialize("T", InitialValueT);
 
   // attach the boundary condition function and generate boundary data
@@ -133,6 +139,7 @@ int main(int argc, char** args) {
   FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
+
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
 //   fieldUV[1] = system.GetSolPdeIndex("V");
@@ -151,15 +158,19 @@ int main(int argc, char** args) {
 //   FS1.push_back(&FS_P);
 //   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
 
+
+
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
 
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
 
+
   FieldSplitTree FS_T(PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
   FS_T.SetAsmBlockSize(4);
   FS_T.SetAsmNumeberOfSchurVariables(1);
+
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
@@ -195,6 +206,8 @@ int main(int argc, char** args) {
 //   FS2.push_back(&FS_NS);
 //   FS2.push_back(&FS_T);
 //   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+
+
 
 
   //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
@@ -238,7 +251,7 @@ int main(int argc, char** args) {
 
   system.SetIntervalTime(0.5);
   unsigned n_timesteps = 600;
-  
+
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
     if(time_step > 0)
@@ -246,11 +259,11 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
-    if ((time_step + 1) % 10 ==0)  vtkIO.Write(Files::_application_output_directory, 
-						"biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step  + 1) % 10 ==0)  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();
+
   return 0;
 }
 
@@ -271,7 +284,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   MultiLevelSolution*   mlSol         = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
 
   bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
@@ -288,7 +300,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));  // conservative: based on line3, quad9, hex27
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //solution variable
   unsigned solTIndex;
@@ -298,7 +310,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");   // get the position of "V" in the ml_sol object
+
+  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");       // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
@@ -308,12 +321,15 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   unsigned solTPdeIndex;
   solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
+
   // std::cout << solTIndex <<" "<<solTPdeIndex<<std::endl;
+
 
   std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
-  if(dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W"); // get the position of "W" in the pdeSys object
+
+  if(dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
 
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
@@ -452,7 +468,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
-
 
     // start a new recording of all the operations involving adept::adouble variables
     if(assembleMatrix) s.new_recording();
