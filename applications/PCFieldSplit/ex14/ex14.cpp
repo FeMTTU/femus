@@ -28,13 +28,14 @@
 
 
 #include "../include/equations_to_move_to_library_soon.hpp"
+#include "03_navier_stokes.hpp"
 
 
 using namespace femus;
 
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   if (!strcmp(SolName, "V")) {
@@ -82,6 +83,11 @@ int main(int argc, char** args) {
 
   MultiLevelSolution mlSol(&mlMsh);
 
+  
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+  
+
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
@@ -97,10 +103,7 @@ int main(int argc, char** args) {
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("P");
-  mlSol.GenerateBdc("All");
-
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
+  mlSol.GenerateBdc("All", "Steady", & mlProb);
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");

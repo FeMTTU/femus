@@ -27,7 +27,7 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
 
@@ -77,6 +77,11 @@ int main(int argc, char** args) {
 
   MultiLevelSolution mlSol(&mlMsh);
 
+  
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+  
+  
   // add variables to mlSol
   mlSol.AddSolution("T", LAGRANGE, FIRST);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
@@ -93,10 +98,8 @@ int main(int argc, char** args) {
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("P");
-  mlSol.GenerateBdc("All");
+  mlSol.GenerateBdc("All", "Steady", & mlProb);
 
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");

@@ -22,9 +22,6 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
-
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -46,6 +43,15 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
+  // call the adept stack object
+  adept::Stack& s = FemusInit::_adeptStack;
+  if( assembleMatrix ) s.continue_recording();
+  else s.pause_recording();
+
+
 
   //solution variable
   std::vector < unsigned > solVIndex(dim);
@@ -105,7 +111,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   Jac.reserve((dim + 1) * maxSize * (dim + 1) * maxSize);
 
   RES->zero(); // Set to zero all the entries of the Global Residual vector
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  if(assembleMatrix) { KK->zero(); } // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -114,6 +120,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
     unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
     unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
         
     unsigned nDofsVP = dim * nDofsV + nDofsP;
     // resize local arrays
@@ -121,7 +128,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
     for (unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
-      coordX[k].resize(nDofsV);
+      coordX[k].resize(nDofsX);
     }
     solP.resize(nDofsP);
 
@@ -147,16 +154,19 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // local to global mapping between coordinates node and coordinate dof
-      for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
-      }
-    }
+    for (unsigned i = 0; i < nDofsX; i++) {
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
 
-    // start a new recording of all the operations involving adept::adouble variables
-    s.new_recording();
-    
+            for(unsigned k=0;k<dim;k++){
+        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+        }
+      }
+      
+      // start a new recording of all the operations involving adept::adouble variables
+     if(assembleMatrix) {  s.new_recording();  }
+
+
+
     /// *** Boundary Integral for the "P" part   @todo add the "normal gradient" part  - BEGIN ************
     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
 
@@ -237,7 +247,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
        
         
       // look for boundary faces
-      if ( velocity_vec_is_dirichlet[u_dot_n_component] == false /*faceIndex == 3*/ ) {
+      if ( velocity_vec_is_dirichlet[u_dot_n_component] == false  ) {
         
         
         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][solVType]->GetGaussPointNumber(); ig++ ) { 
@@ -276,6 +286,8 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x);
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
+        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+
       std::vector < adept::adouble > solV_gss(dim, 0);
       std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
 
@@ -307,12 +319,13 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
         
         for (unsigned  k = 0; k < dim; k++) { //momentum equation in k 
           for (unsigned j = 0; j < dim; j++) { // second index j in each equation
-            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]); // laplace
+            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] /* + gradSolV_gss[j][k] */ ); ///@todo see difference btw "Grad U + (Grad U)^T" and "Lapl"
             NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]); // non-linear term
-          }
-          NSV[k] += -solP_gss * phiV_x[i * dim + k]; // pressure gradient
         }
-        for (unsigned  k = 0; k < dim; k++) {
+          NSV[k] += -solP_gss * phiV_x[i * dim + k]; // pressure gradient
+          }
+
+          for (unsigned  k = 0; k < dim; k++) {
           aResV[k][i] += NSV[k] * weight;
         }
       } // end phiV_i loop
@@ -344,7 +357,8 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
     RES->add_vector_blocked(Res, sysDof);
 
-    //Extract and store the Jacobian
+    if(assembleMatrix){
+      //Extarct and store the Jacobian
 
     Jac.resize(nDofsVP * nDofsVP);
     // define the dependent variables
@@ -352,12 +366,15 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     for (unsigned  k = 0; k < dim; k++) {
       s.dependent(&aResV[k][0], nDofsV);
     }
+
     s.dependent(&aResP[0], nDofsP);
 
     // define the independent variables
+
     for (unsigned  k = 0; k < dim; k++) {
       s.independent(&solV[k][0], nDofsV);
     }
+
     s.independent(&solP[0], nDofsP);
 
     // get the and store jacobian matrix (row-major)
@@ -366,21 +383,22 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
     s.clear_independents();
     s.clear_dependents();
-
+    }
   } //end element loop for each process
 
   RES->close();
+
+  if(assembleMatrix)
   KK->close();
+
   // ***************** END ASSEMBLY *******************
 }
 
 
 
 
-
-
-
 }
 
-#endif
 
+
+#endif

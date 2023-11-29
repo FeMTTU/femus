@@ -8,8 +8,8 @@ get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 # Steady-state Poisson, No Field Split - BEGIN
 # all these are very very sim
-ADD_SUBDIRECTORY(00_poisson_ex40_1/)
-ADD_SUBDIRECTORY(00_poisson_ex40_2/)
+ADD_SUBDIRECTORY(00_poisson_ex40_1/)  #@todo, some runtime error
+ADD_SUBDIRECTORY(00_poisson_ex40_2/)  #@todo, some runtime error
 ADD_SUBDIRECTORY(00_poisson_ex41/)
 ADD_SUBDIRECTORY(00_poisson_ex42/)
 ADD_SUBDIRECTORY(00_poisson_ex43/)
@@ -20,8 +20,8 @@ ADD_SUBDIRECTORY(00_poisson_ex43/)
 # all these are very very sim
 
 # No Field Split - BEGIN
-ADD_SUBDIRECTORY(ex12/)  # square
-ADD_SUBDIRECTORY(ex44/)  # with pressure stabilization, some runtime error
+ADD_SUBDIRECTORY(ex12/)  # square  #@todo, some runtime error
+ADD_SUBDIRECTORY(ex44/)  # with pressure stabilization   #@todo, some runtime error
 ADD_SUBDIRECTORY(ex44_ns_pcd/)  # only initialized
 # No Field Split - END
 
