@@ -30,7 +30,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
   bool dirichlet = true; //dirichlet
     value = 0.;
   
-  if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. why !strcmp??? not false ==true?
+  if (!strcmp(SolName, "U")) {
     if (facename == 2) {
       dirichlet = true; 
       value = -(x[1]-0.5) * (x[1]+0.5);

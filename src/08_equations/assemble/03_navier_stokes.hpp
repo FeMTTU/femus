@@ -9,7 +9,7 @@
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 
-
+#include "adept.h"
 
 
 namespace femus {
