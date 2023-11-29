@@ -37,7 +37,6 @@ ADD_SUBDIRECTORY(ex44_ns_pcd/)  # only initialized
 
 # Steady-state Boussinesq, Field Split  - BEGIN
 ADD_SUBDIRECTORY(ex1/)     # square
-
 ADD_SUBDIRECTORY(ex10/)    # square
 ADD_SUBDIRECTORY(ex11/)    # square
 ADD_SUBDIRECTORY(ex11_1/)  # square
@@ -45,7 +44,7 @@ ADD_SUBDIRECTORY(ex11_2/)  # square16
 # Steady-state Boussinesq, Field Split  - END
 
 # Steady-state Boussinesq, No Field Split - BEGIN
-ADD_SUBDIRECTORY(ex46/)    # hex_cube   # extension of ex44
+ADD_SUBDIRECTORY(ex46/)    # cube   # extension of ex44
 # Steady-state Boussinesq, No Field Split - END
 
 # Steady-state Boussinesq  - END
