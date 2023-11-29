@@ -27,31 +27,33 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-
+  
   if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. 
+      dirichlet = true; 
     value = 0.;
     if (facename == 1) {
       if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
     }
   } 
   else if (!strcmp(SolName, "V")) {
-    value = 0.;
-    //if (facename == 1) {
-     // if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
-    //}
-  }
+      dirichlet = true; 
+      value = 0.;
+    }
   else if (!strcmp(SolName, "W")) {
-    value = 0.;
+      dirichlet = true; 
+      value = 0.;
   } 
   else if (!strcmp(SolName, "P")) {
-    value = 0.;
     dirichlet = false;
+    value = 0.;
   }
 
   return dirichlet;
 }
+
+
 
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
@@ -70,7 +72,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Two_boundary_groups.neu";
-  mlMsh.ReadCoarseMesh ( mesh_file.c_str(), "seventh", scalingFactor );
+  mlMsh.ReadCoarseMesh (mesh_file.c_str(), "seventh", scalingFactor );
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -87,6 +89,11 @@ int main(int argc, char** args) {
 
   MultiLevelSolution mlSol(&mlMsh);
 
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+  
+  
+  
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
@@ -106,10 +113,8 @@ int main(int argc, char** args) {
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("P");
   
-  mlSol.GenerateBdc("All");
+  mlSol.GenerateBdc("All", "Steady", & mlProb);
 
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
@@ -127,7 +132,7 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  system.SetOuterSolver(PREONLY);
+
   system.MGsolve();
 
   // print solutions
@@ -140,6 +145,9 @@ int main(int argc, char** args) {
 
   return 0;
 }
+
+
+
 
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
@@ -182,9 +190,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
  
-  unsigned solPIndex;
-  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
-  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
+  const unsigned solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  const unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
   std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
@@ -192,8 +199,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
 
-  unsigned solPPdeIndex;
-  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
+  const unsigned solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
   std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
   std::vector < adept::adouble >  solP; // local solution
@@ -284,7 +290,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
-
+    
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
@@ -328,7 +334,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k]; // pressure gradient
         }
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += - NSV[k] * weight;  /// @todo check this sign
+          aResV[k][i] += NSV[k] * weight;
         }
       } // end phiV_i loop
 

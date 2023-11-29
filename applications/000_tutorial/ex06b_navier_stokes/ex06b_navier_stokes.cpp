@@ -27,11 +27,9 @@
 
 using namespace femus;
 
-
-
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value = 0.;
+    value = 0.;
   
   if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. why !strcmp??? not false ==true?
     if (facename == 2) {
@@ -83,7 +81,6 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/rectangle/minus2p5-plus2p5_minus0p5-plus0p5/rectangle_quad.neu";
   mlMsh.ReadCoarseMesh (mesh_file.c_str(), "seventh", scalingFactor );
@@ -96,13 +93,18 @@ int main(int argc, char** args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
 
   MultiLevelSolution mlSol(&mlMsh);
 
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+  
+  
+  
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
@@ -122,10 +124,8 @@ int main(int argc, char** args) {
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   //mlSol.FixSolutionAtOnePoint("P");
   
-  mlSol.GenerateBdc("All");
+  mlSol.GenerateBdc("All", "Steady", & mlProb);
 
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
@@ -143,7 +143,7 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  //system.SetOuterSolver(PREONLY);
+
   system.MGsolve();
 
   // print solutions
@@ -156,6 +156,9 @@ int main(int argc, char** args) {
 
   return 0;
 }
+
+
+
 
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
@@ -198,9 +201,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
  
-  unsigned solPIndex;
-  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
-  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
+  const unsigned solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  const unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
   std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
@@ -208,8 +210,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
 
-  unsigned solPPdeIndex;
-  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
+  const unsigned solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
   std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
   std::vector < adept::adouble >  solP; // local solution
@@ -301,14 +302,24 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
     
-    // *** Boundary Integral - BEGIN ***
+    /// *** Boundary Integral for the "P" part   @todo add the "normal gradient" part  - BEGIN ************
     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
+
       
-      int faceIndex = el->GetBoundaryIndex(iel, jface);
+       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       
+       if ( boundary_index < 0) { //I am on the boundary
+
       
-      // look for boundary faces
-      if ( faceIndex == 3 ) {
-        
+      const int faceIndex = el->GetBoundaryIndex(iel, jface);
+
+
+          
+      //Here the integral is \int_{\partial \Omega}  p n \cdot \vec{\phi},  where \vec{\phi} is the velocity test function
+
+     
+         
+      // compute the face coordinates - BEGIN
         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, solVType);
                     
@@ -322,9 +333,62 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
             faceCoordinates[k][i] =  coordX[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
           }
         }
+      // compute the face coordinates - END
+
+      // compute the face coordinates, center - BEGIN
+       std::vector < double > faceCoordinates_center(dim, 0.);
+          for ( unsigned d = 0; d < faceCoordinates_center.size(); d++ ) {
+            
+                    for ( unsigned i = 0; i < faceDofs; i++ ) {
+                        faceCoordinates_center[d] +=  faceCoordinates[d][i];
+                    }
+                    
+            faceCoordinates_center[d] /= faceDofs;
+                    
+          }
+      // compute the face coordinates, center - END
+      
+      // retrieve the dirichlet flag for each component - BEGIN
+       double tau;
+       
+       std::vector <std::string > velocity_vec(dim);
+      
+      velocity_vec[0] = "U";
+      velocity_vec[1] = "V";
+      if (dim == 3) { velocity_vec[2] = "W"; }
+
+      std::vector< bool > velocity_vec_is_dirichlet(dim);
+     for (unsigned d = 0; d < velocity_vec_is_dirichlet.size(); d++) {
+     
+          velocity_vec_is_dirichlet[d] =  mlSol->GetBdcFunctionMLProb()(& ml_prob, faceCoordinates_center, velocity_vec[d].c_str(), tau, faceIndex, 0.);                     
+     }
+      // retrieve the dirichlet flag for each component - END
+
+      
+      /// compute the "element normal" by using the first quadrature point as auxiliary (@todo we assume non-curved boundary elements) - BEGIN
+       const unsigned quadrature_point_placeholder_for_computing_element_normal = 0;
+       std::vector < double > normal;
+       msh->_finiteElement[faceGeom][solVType]->JacobianSur ( faceCoordinates, quadrature_point_placeholder_for_computing_element_normal, weight, phiV, phiV_x, normal );
+     
+      /// compute the "element normal" by using the first quadrature point as auxiliary (@todo we assume non-curved boundary elements) - END
+
+      /// using the normal, pick the normal component of the velocity (@todo only works for faces parallel to the main axes) - BEGIN
+      unsigned u_dot_n_component = 0;
+     for (unsigned d = 0; d < dim; d++) {
+       if ( fabs(normal[d]) >= 1.e-4) u_dot_n_component = d;
+     }
+       
+      /// using the normal, pick the normal component of the velocity (@todo only works for faces parallel to the main axes) - END
+       
+        
+      // look for boundary faces
+      if ( velocity_vec_is_dirichlet[u_dot_n_component] == false /*faceIndex == 3*/ ) {
+        
+        
         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][solVType]->GetGaussPointNumber(); ig++ ) { 
             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
-          std::vector < double> normal;
+          
+          std::fill(normal.begin(), normal.end(), 0.);
           msh->_finiteElement[faceGeom][solVType]->JacobianSur ( faceCoordinates, ig, weight, phiV, phiV_x, normal );
             
           std::vector < double > xg(dim,0.);
@@ -333,19 +397,22 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
               xg[k] += phiV[i] * faceCoordinates[k][i]; // xg(ig)= \sum_{i=0}^faceDofs phi[i](xig) facecoordinates[i]     
             }
           }
-          double tau; // a(u)*grad_u\cdot normal
-          SetBoundaryCondition( xg, "P", tau, faceIndex, 0. ); // return tau
+
+          mlSol->GetBdcFunctionMLProb()(& ml_prob, xg, "P", tau, faceIndex, 0. ); // return tau
           // *** phi_i loop ***
           for ( unsigned i = 0; i < faceDofs; i++ ) {
             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
             for(unsigned k=0;k<dim;k++){
-              aResV[k][inode] +=  -phiV[i] * tau * normal[k] * weight;
+              aResV[k][inode] +=  phiV[i] * tau * normal[k] * weight;
             }
           }        
         }
       }
-    }   
-    // *** Boundary Integral - END ***
+      
+     } //end "is on boundary"
+     
+   }   
+    /// *** Boundary Integral for the "P" part   @todo add the "normal gradient" part- END ************
     
 
     // *** Gauss point loop ***
@@ -391,7 +458,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k]; // pressure gradient
         }
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += NSV[k] * weight;  /// @todo check this sign
+          aResV[k][i] += NSV[k] * weight;
         }
       } // end phiV_i loop
 

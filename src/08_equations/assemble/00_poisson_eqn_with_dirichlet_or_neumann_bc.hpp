@@ -449,7 +449,7 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
        std::vector <  double > xx_face_elem_center(3, 0.); 
        xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
         
-         unsigned int face = - (boundary_index + 1);
+         const unsigned int face = - (boundary_index + 1);
     
          bool is_dirichlet =  ml_sol->GetBdcFunctionMLProb()(ml_prob, xx_face_elem_center, solname_u.c_str(), grad_u_dot_n, face, 0.);                     
          //we have to be careful here, because in GenerateBdc those coordinates are passed as NODE coordinates, 
