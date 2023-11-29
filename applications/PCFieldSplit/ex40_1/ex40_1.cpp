@@ -30,7 +30,6 @@
 
 using namespace femus;
 unsigned counter = 0;
-const double pi = 2.0 * acos(0.0); 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
@@ -52,28 +51,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   if ( a < 0.5) refine	= true;
   return refine;
 
-//  std::cout<<level<<std::endl;
-// double radius = pi / 8.0 /(level - level0);
-
-//  double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
-  
-//   unsigned powindex;
-//   powindex = level -level0;
-//   if (powindex % 2 == 0) powindex = powindex - 1;
-//   double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
-  
- // double radius2 = radius * radius;
-  
-//   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
-//     refine	= true;
-//   }	 
-//   return refine;  
-  
-  
-//   if( fabs(x[0]) < 0.5/ pow(2,level) && fabs(x[1]) < 0.5/ pow(2,level) ){
-//     refine = true;
-//   }
-//   return refine;
 }
 
 
@@ -189,15 +166,7 @@ int main(int argc, char** args) {
     vtkIO.SetDebugOutput( true );
     vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, counter-1);
   }
-  /////////////////////////////////////ultiLevelProb/////////////////////////
-  
-//   // print solutions
-//   std::vector < std::string > variablesToBePrinted;
-//   variablesToBePrinted.push_back("All");
-// 
-//   VTKWriter vtkIO(&mlSol);
-//   vtkIO.SetDebugOutput( true );
-//   vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
+
   mlMsh.PrintInfo();
   
   return 0;
@@ -224,6 +193,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   // call the adept stack object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem

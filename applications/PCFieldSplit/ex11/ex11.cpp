@@ -108,7 +108,6 @@ int main(int argc, char** args) {
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
-  
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
@@ -119,6 +118,7 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+
   // erase all the coarse mesh levels
   mlMsh.EraseCoarseLevels(3);
 
@@ -304,8 +304,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
   // call the adept stack object
   adept::Stack& s = FemusInit::_adeptStack;
-
-  if(assembleMatrix) s.continue_recording();
+  if( assembleMatrix ) s.continue_recording();
   else s.pause_recording();
 
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
@@ -327,7 +326,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
 
-  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");       // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
@@ -345,7 +344,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
 
-  if(dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
+  if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
 
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
@@ -364,7 +363,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   solT.reserve(maxSize);
   aResT.reserve(maxSize);
 
-  for(unsigned  k = 0; k < dim; k++) {
+  for (unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(maxSize);
     aResV[k].reserve(maxSize);
     coordX[k].reserve(maxSize);
@@ -406,7 +405,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     // element geometry type
     short unsigned ielGeom = msh->GetElementType(iel);
@@ -422,7 +421,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     solT.resize(nDofsV);
 
-    for(unsigned  k = 0; k < dim; k++) {
+    for (unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
       coordX[k].resize(nDofsX);
     }
@@ -432,7 +431,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     aResT.resize(nDofsT);    //resize
     std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
 
-    for(unsigned  k = 0; k < dim; k++) {
+    for (unsigned  k = 0; k < dim; k++) {
       aResV[k].resize(nDofsV);    //resize
       std::fill(aResV[k].begin(), aResV[k].end(), 0);    //set aRes to zero
     }
@@ -441,40 +440,40 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     std::fill(aResP.begin(), aResP.end(), 0);    //set aRes to zero
 
     // local storage of global mapping and solution
-    for(unsigned i = 0; i < nDofsT; i++) {
+    for (unsigned i = 0; i < nDofsT; i++) {
       unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);    // global to global mapping between solution node and solution dof
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);      // global extraction and local storage for the solution
       sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
     }
 
     // local storage of global mapping and solution
-    for(unsigned i = 0; i < nDofsV; i++) {
+    for (unsigned i = 0; i < nDofsV; i++) {
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
-      for(unsigned  k = 0; k < dim; k++) {
+      for (unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
         sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
 
-    for(unsigned i = 0; i < nDofsP; i++) {
+    for (unsigned i = 0; i < nDofsP; i++) {
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
       sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
-    for(unsigned i = 0; i < nDofsX; i++) {
+    for (unsigned i = 0; i < nDofsX; i++) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
 
-      for(unsigned k = 0; k < dim; k++) {
+      for (unsigned k = 0; k < dim; k++) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
 
 
-    // start a new recording of all the operations involving adept::adouble variables
-    if(assembleMatrix) s.new_recording();
+      // start a new recording of all the operations involving adept::adouble variables
+       if( assembleMatrix ) s.new_recording();
 
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
@@ -578,29 +577,29 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     //copy the value of the adept::adoube aRes in double Res and store them in RES
     Res.resize(nDofsTVP);    //resize
 
-    for(int i = 0; i < nDofsT; i++) {
+    for (int i = 0; i < nDofsT; i++) {
       Res[i] = -aResT[i].value();
     }
 
-    for(int i = 0; i < nDofsV; i++) {
-      for(unsigned  k = 0; k < dim; k++) {
+    for (int i = 0; i < nDofsV; i++) {
+      for (unsigned  k = 0; k < dim; k++) {
         Res[ i + nDofsT + k * nDofsV ] = -aResV[k][i].value();
       }
     }
 
-    for(int i = 0; i < nDofsP; i++) {
+    for (int i = 0; i < nDofsP; i++) {
       Res[ i + nDofsT + dim * nDofsV ] = -aResP[i].value();
     }
 
     RES->add_vector_blocked(Res, sysDof);
 
     //Extarct and store the Jacobian
-    if(assembleMatrix) {
+    if(assembleMatrix){
       Jac.resize(nDofsTVP * nDofsTVP);
       // define the dependent variables
       s.dependent(&aResT[0], nDofsT);
 
-      for(unsigned  k = 0; k < dim; k++) {
+      for (unsigned  k = 0; k < dim; k++) {
         s.dependent(&aResV[k][0], nDofsV);
       }
 
@@ -609,7 +608,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       // define the independent variables
       s.independent(&solT[0], nDofsT);
 
-      for(unsigned  k = 0; k < dim; k++) {
+      for (unsigned  k = 0; k < dim; k++) {
         s.independent(&solV[k][0], nDofsV);
       }
 
@@ -626,7 +625,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   RES->close();
 
-  if(assembleMatrix) {
+  if(assembleMatrix){
     KK->close();
   }
 

@@ -43,23 +43,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-// //   if (elemgroupnumber == 6 && level < 3) refine = 1;
-// //   if (elemgroupnumber == 7 && level < 4) refine = 1;
-// //   if (elemgroupnumber == 8 && level < 5) refine = 1;
-// 
-//   //if (elemgroupnumber == 6 && level < 4) refine = 1;
-//   //if (elemgroupnumber == 7 && level < 5) refine = 1;
-//   //if (elemgroupnumber == 8 && level < 6) refine = 1;
-// 
-//   if(elemgroupnumber == 6 && level < numberOfUniformLevels) refine = 1;
-//   if(elemgroupnumber == 7 && level < numberOfUniformLevels + 1) refine = 1;
-//   if(elemgroupnumber == 8 && level < numberOfUniformLevels + 2) refine = 1;
-// 
-// 
-// 
-// //   if (elemgroupnumber==6 && level<2) refine=1;
-// //   if (elemgroupnumber==7 && level<3) refine=1;
-// //   if (elemgroupnumber==8 && level<4) refine=1;
 
   double a = static_cast<double>(rand())/RAND_MAX;
   if ( a < 0.25) refine	= true;
@@ -70,7 +53,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
-
 
 int main(int argc, char** args) {
   

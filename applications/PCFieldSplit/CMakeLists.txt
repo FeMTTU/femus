@@ -7,11 +7,12 @@ get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 # Steady-state - BEGIN
 
 # Steady-state Poisson, No Field Split - BEGIN
-ADD_SUBDIRECTORY(ex40_1/) 
-ADD_SUBDIRECTORY(ex40_2/) 
-ADD_SUBDIRECTORY(ex41/)   
-ADD_SUBDIRECTORY(ex42/)   
-ADD_SUBDIRECTORY(ex43/)   
+# all these are very very sim
+ADD_SUBDIRECTORY(ex40_1/)
+ADD_SUBDIRECTORY(ex40_2/)
+ADD_SUBDIRECTORY(ex41/)    
+ADD_SUBDIRECTORY(ex42/)     
+ADD_SUBDIRECTORY(ex43/)  
 # Steady-state Poisson, No Field Split - END
 
 
@@ -82,4 +83,3 @@ ADD_SUBDIRECTORY(ex25/)
 
 
 # Time dependent - END
-
