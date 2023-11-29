@@ -27,12 +27,15 @@
 
 using namespace femus;
 
+
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   
   if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. why !strcmp??? not false ==true?
     if (facename == 2) {
+      dirichlet = true; 
       value = -(x[1]-0.5) * (x[1]+0.5);
     }
     else if (facename == 3) {
@@ -41,6 +44,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   } 
   else if (!strcmp(SolName, "V")) {
      if (facename == 2) {
+      dirichlet = true; 
       value = 0.;
     }
     else if (facename == 3) {
@@ -48,18 +52,21 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
     }
   }
   else if (!strcmp(SolName, "W")) {
-    value = 0.;
+      dirichlet = true; 
+      value = 0.;
   } 
   else if (!strcmp(SolName, "P")) {
     dirichlet = false;
     value = 0.;
-    if(facename == 3){
+    if(facename == 3) {
       value = 0.;
     }
   }
 
   return dirichlet;
 }
+
+
 
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
@@ -294,11 +301,14 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
     
-    // *** Face Gauss point loop (boundary Integral) - BEGIN ***
+    // *** Boundary Integral - BEGIN ***
     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
+      
       int faceIndex = el->GetBoundaryIndex(iel, jface);
+      
       // look for boundary faces
-      if ( faceIndex == 3 ) {  
+      if ( faceIndex == 3 ) {
+        
         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, solVType);
                     
@@ -335,7 +345,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         }
       }
     }   
-    // *** Face Gauss point loop (boundary Integral) - END ***
+    // *** Boundary Integral - END ***
     
 
     // *** Gauss point loop ***

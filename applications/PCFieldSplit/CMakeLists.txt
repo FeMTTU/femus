@@ -17,20 +17,22 @@ ADD_SUBDIRECTORY(00_poisson_ex43/)
 
 
 # Steady-state NS - BEGIN
-
-# Steady-state NS, Field Split - BEGIN
 # all these are very very sim
-ADD_SUBDIRECTORY(ex12/)  # square
-ADD_SUBDIRECTORY(ex13/)  # square
-ADD_SUBDIRECTORY(ex14/)  # square
-# Steady-state NS, Field Split - END
 
-# Steady-state NS, No Field Split - BEGIN
+# No Field Split - BEGIN
+ADD_SUBDIRECTORY(ex12/)  # square
 ADD_SUBDIRECTORY(ex44/)  # with pressure stabilization, some runtime error
 ADD_SUBDIRECTORY(ex44_ns_pcd/)  # only initialized
-# Steady-state NS, No Field Split - END
+# No Field Split - END
+
+# Field Split - BEGIN
+ADD_SUBDIRECTORY(ex13/)  # square
+ADD_SUBDIRECTORY(ex14/)  # square
+# Field Split - END
 
 # Steady-state NS - END
+
+
 
 
 # Steady-state Boussinesq  - BEGIN

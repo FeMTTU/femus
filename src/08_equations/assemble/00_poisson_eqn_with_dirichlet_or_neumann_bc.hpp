@@ -442,13 +442,13 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
        
 
-       std::vector <  double > xx_face_elem_center(3, 0.); 
-       xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
-        
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
        
        if ( boundary_index < 0) { //I am on the boundary
                   
+       std::vector <  double > xx_face_elem_center(3, 0.); 
+       xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
+        
          unsigned int face = - (boundary_index + 1);
     
          bool is_dirichlet =  ml_sol->GetBdcFunctionMLProb()(ml_prob, xx_face_elem_center, solname_u.c_str(), grad_u_dot_n, face, 0.);                     

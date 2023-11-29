@@ -1,17 +1,3 @@
-/** \file Ex7.cpp
- *  \brief This example shows how to set and solve the weak form
- *   of the Boussinesq appoximation of the Navier-Stokes Equation
- *
- *  \f{eqnarray*}
- *  && \mathbf{V} \cdot \nabla T - \nabla \cdot\alpha \nabla T = 0 \\
- *  && \mathbf{V} \cdot \nabla \mathbf{V} - \nabla \cdot \nu (\nabla \mathbf{V} +(\nabla \mathbf{V})^T)
- *  +\nabla P = \beta T \mathbf{j} \\
- *  && \nabla \cdot \mathbf{V} = 0
- *  \f}
- *  in a unit box domain (in 2D and 3D) with given temperature 0 and 1 on
- *  the left and right walls, respectively, and insulated walls elsewhere.
- *  \author Eugenio Aulisa
- */
 
 #include "FemusInit.hpp"
 #include "MultiLevelSolution.hpp"

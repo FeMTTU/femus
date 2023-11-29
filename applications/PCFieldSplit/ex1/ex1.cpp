@@ -1,6 +1,6 @@
 /** \file Ex7.cpp
  *  \brief This example shows how to set and solve the weak form
- *   of the Boussinesq appoximation of the Navier-Stokes Equation
+ *   of the Boussinesq approximation of the Navier-Stokes Equation
  *
  *  \f{eqnarray*}
  *  && \mathbf{V} \cdot \nabla T - \nabla \cdot\alpha \nabla T = 0 \\
@@ -123,6 +123,8 @@ int main(int argc, char** args) {
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
+
+
   // initilaize and solve the system
   system.init();
 
@@ -145,7 +147,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
 
   return 0;
 }
