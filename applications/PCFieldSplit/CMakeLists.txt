@@ -8,11 +8,11 @@ get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 # Steady-state Poisson, No Field Split - BEGIN
 # all these are very very sim
-ADD_SUBDIRECTORY(ex40_1/)
-ADD_SUBDIRECTORY(ex40_2/)
-ADD_SUBDIRECTORY(ex41/)    
-ADD_SUBDIRECTORY(ex42/)     
-ADD_SUBDIRECTORY(ex43/)  
+ADD_SUBDIRECTORY(00_poisson_ex40_1/)
+ADD_SUBDIRECTORY(00_poisson_ex40_2/)
+ADD_SUBDIRECTORY(00_poisson_ex41/)
+ADD_SUBDIRECTORY(00_poisson_ex42/)
+ADD_SUBDIRECTORY(00_poisson_ex43/)
 # Steady-state Poisson, No Field Split - END
 
 
@@ -20,9 +20,9 @@ ADD_SUBDIRECTORY(ex43/)
 
 # Steady-state NS, Field Split - BEGIN
 # all these are very very sim
-ADD_SUBDIRECTORY(ex12/)
-ADD_SUBDIRECTORY(ex13/)
-ADD_SUBDIRECTORY(ex14/)
+ADD_SUBDIRECTORY(ex12/)  # square
+ADD_SUBDIRECTORY(ex13/)  # square
+ADD_SUBDIRECTORY(ex14/)  # square
 # Steady-state NS, Field Split - END
 
 # Steady-state NS, No Field Split - BEGIN
@@ -52,7 +52,7 @@ ADD_SUBDIRECTORY(ex46/)    # cube   # extension of ex44
 
 
 # Steady-state MHD, Field Split  - BEGIN
-ADD_SUBDIRECTORY(ex50_mhd/)
+ADD_SUBDIRECTORY(ex50_mhd/)   # square
 ADD_SUBDIRECTORY(ex50_1_mhd/)  #very very sim, with manufactured sol
 # Steady-state MHD, Field Split  - END
 
