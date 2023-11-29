@@ -85,7 +85,6 @@ int main(int argc, char** args) {
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/03_3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/cube_tet.neu";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
