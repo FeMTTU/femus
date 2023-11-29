@@ -20,7 +20,7 @@ ADD_SUBDIRECTORY(00_poisson_ex43/)
 # all these are very very sim
 
 # No Field Split - BEGIN
-ADD_SUBDIRECTORY(ex12/)  # square  #@todo, some runtime error
+ADD_SUBDIRECTORY(ex12/)  # square                        #@todo, some runtime error
 ADD_SUBDIRECTORY(ex44/)  # with pressure stabilization   #@todo, some runtime error
 ADD_SUBDIRECTORY(ex44_ns_pcd/)  # only initialized
 # No Field Split - END

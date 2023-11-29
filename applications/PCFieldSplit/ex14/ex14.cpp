@@ -27,7 +27,6 @@
 #include "adept.h"
 
 
-#include "../include/equations_to_move_to_library_soon.hpp"
 #include "03_navier_stokes.hpp"
 
 
@@ -142,7 +141,7 @@ int main(int argc, char** args) {
   system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Additive Swartz Method
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+  system.SetAssembleFunction( femus::AssembleNavierStokes_AD );
 
   system.SetMaxNumberOfNonLinearIterations(20);
   system.SetMaxNumberOfLinearIterations(3);

@@ -27,14 +27,8 @@
 
 #include "adept.h"
 
-//double Miu = 0.01;   int c0=-1; int cn=-1; //Re=100;
-//double Miu = 0.002;  int c0=-1; int cn=-1; //Re=500;
-double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
-
 #include <cstdlib>
 
-
-int counter = 0 ;
 
 using namespace femus;
 
@@ -83,6 +77,20 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
+
+
+
+// ==== stuff that need to communicate between the Main and the Assemble - BEGIN
+//double Miu = 0.01;   int c0=-1; int cn=-1; //Re=100;
+//double Miu = 0.002;  int c0=-1; int cn=-1; //Re=500;
+double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
+// ==== stuff that need to communicate between the Main and the Assemble - END
+
+
+
+int counter = 0 ;
+
+
 
 int main(int argc, char** args) {
 
