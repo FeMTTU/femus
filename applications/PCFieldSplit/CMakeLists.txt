@@ -26,7 +26,7 @@ ADD_SUBDIRECTORY(ex_ns_pcd/)  #wip
 # Steady-state NS, Field Split - END
 
 # Steady-state NS, No Field Split - BEGIN
-ADD_SUBDIRECTORY(ex44/)
+ADD_SUBDIRECTORY(ex44/)  # with pressure stabilization, some runtime error
 # Steady-state NS, No Field Split - END
 
 # Steady-state NS - END
@@ -35,16 +35,16 @@ ADD_SUBDIRECTORY(ex44/)
 # Steady-state Boussinesq  - BEGIN
 
 # Steady-state Boussinesq, Field Split  - BEGIN
-ADD_SUBDIRECTORY(ex1/)
+ADD_SUBDIRECTORY(ex1/)     # square
 
-ADD_SUBDIRECTORY(ex10/)
-ADD_SUBDIRECTORY(ex11/)
-ADD_SUBDIRECTORY(ex11_1/)
-ADD_SUBDIRECTORY(ex11_2/) ## @todo see why it is all different, must be EOF or similar 
+ADD_SUBDIRECTORY(ex10/)    # square
+ADD_SUBDIRECTORY(ex11/)    # square
+ADD_SUBDIRECTORY(ex11_1/)  # square
+ADD_SUBDIRECTORY(ex11_2/)  # square16
 # Steady-state Boussinesq, Field Split  - END
 
 # Steady-state Boussinesq, No Field Split - BEGIN
-ADD_SUBDIRECTORY(ex46/)  # extension of ex44
+ADD_SUBDIRECTORY(ex46/)    # hex_cube   # extension of ex44
 # Steady-state Boussinesq, No Field Split - END
 
 # Steady-state Boussinesq  - END
@@ -70,15 +70,16 @@ ADD_SUBDIRECTORY(ex60_opt_control/)
 # Time dependent - BEGIN
 
 # Time dependent, Boussinesq, Field Split - BEGIN
-ADD_SUBDIRECTORY(ex20_1/)
-ADD_SUBDIRECTORY(ex20_2/)
-ADD_SUBDIRECTORY(ex21/)
-ADD_SUBDIRECTORY(ex21_1/)
-ADD_SUBDIRECTORY(ex21_2/)
-ADD_SUBDIRECTORY(ex22_1/)
-ADD_SUBDIRECTORY(ex23/)
-ADD_SUBDIRECTORY(ex24/)
-ADD_SUBDIRECTORY(ex25/)
+ADD_SUBDIRECTORY(ex20_1/)  # square
+ADD_SUBDIRECTORY(ex20_2/)  # rectangle
+ADD_SUBDIRECTORY(ex21/)    # rectangle8x64
+ADD_SUBDIRECTORY(ex21_1/)  # rectangle8x64
+ADD_SUBDIRECTORY(ex21_2/)  # rectangle8x64
+ADD_SUBDIRECTORY(ex22_1/) # rectangle_w4_h1
+ADD_SUBDIRECTORY(ex23/)   # rectangle_w4_h1
+ADD_SUBDIRECTORY(ex24/)   # rectangle_w1_h8
+ADD_SUBDIRECTORY(ex25/)   # box_4_1_1
+
 # Time dependent, Boussinesq, Field Split - END
 
 

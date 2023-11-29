@@ -85,38 +85,6 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
-
-//   unsigned precType = 0;
-// 
-//   if(argc >= 2) {
-//     if(!strcmp("FS_VT", args[1])) precType = FS_VTp;
-//     else if(!strcmp("FS_TV", args[1])) precType = FS_TVp;
-//     else if(!strcmp("ASM_VT", args[1])) precType = ASM_VTp;
-//     else if(!strcmp("ASM_TV", args[1])) precType = ASM_TVp;
-//     else if(!strcmp("ILU_VT", args[1])) precType = ILU_VTp;
-// 
-//     if(!strcmp("ILU_TV", args[1])) precType = ILU_TVp;
-// 
-//     if(precType == 0) {
-//       std::cout << "wrong input arguments!" << std::endl;
-//       abort();
-//     }
-//   }
-//   else {
-//     std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
-//     precType = FS_VTp;
-//   }
-//   
-//   if(argc >= 3) {
-//     Prandtl = strtod(args[2], NULL);
-//     std::cout << Prandtl<<std::endl;
-//   }
-//   
-//   
-//   if(argc >= 4) {
-//     Rayleigh = strtod(args[3], NULL);
-//     std::cout << Rayleigh <<std::endl;
-//   }
     
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -125,7 +93,11 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/quad_square.neu", "seventh", scalingFactor);
+
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Four_face_groups.neu";
+
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
