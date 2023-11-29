@@ -57,8 +57,11 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Three_face_groups.neu";
+
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -219,12 +222,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
 
-  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
-  // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
-  if( assembleMatrix ) s.continue_recording();
-  else s.pause_recording();
-
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
@@ -234,6 +231,15 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
+  // call the adept stack object
+  adept::Stack& s = FemusInit::_adeptStack;
+  if( assembleMatrix ) s.continue_recording();
+  else s.pause_recording();
+
+
 
   //solution variable
 
@@ -390,7 +396,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           solP_gss += phiP[i] * solP[i];
         }
 
-        double nu = 0.01;
+        double nu = 1.0;
         double alpha = 1.;
         double beta = 2000.;
 

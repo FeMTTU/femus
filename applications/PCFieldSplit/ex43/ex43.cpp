@@ -72,7 +72,6 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- // mlMsh.ReadCoarseMesh("./input/quad2_square.neu","seventh",scalingFactor);
   mlMsh.ReadCoarseMesh("./input/quad2_square.neu","seventh",scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */

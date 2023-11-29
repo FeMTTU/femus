@@ -19,14 +19,15 @@ ADD_SUBDIRECTORY(ex43/)
 # Steady-state NS - BEGIN
 
 # Steady-state NS, Field Split - BEGIN
+# all these are very very sim
 ADD_SUBDIRECTORY(ex12/)
 ADD_SUBDIRECTORY(ex13/)
 ADD_SUBDIRECTORY(ex14/)
-ADD_SUBDIRECTORY(ex_ns_pcd/)  #wip
 # Steady-state NS, Field Split - END
 
 # Steady-state NS, No Field Split - BEGIN
 ADD_SUBDIRECTORY(ex44/)  # with pressure stabilization, some runtime error
+ADD_SUBDIRECTORY(ex44_ns_pcd/)  # only initialized
 # Steady-state NS, No Field Split - END
 
 # Steady-state NS - END
@@ -75,10 +76,10 @@ ADD_SUBDIRECTORY(ex20_2/)  # rectangle
 ADD_SUBDIRECTORY(ex21/)    # rectangle8x64
 ADD_SUBDIRECTORY(ex21_1/)  # rectangle8x64
 ADD_SUBDIRECTORY(ex21_2/)  # rectangle8x64
-ADD_SUBDIRECTORY(ex22_1/) # rectangle_w4_h1
-ADD_SUBDIRECTORY(ex23/)   # rectangle_w4_h1
-ADD_SUBDIRECTORY(ex24/)   # rectangle_w1_h8
-ADD_SUBDIRECTORY(ex25/)   # box_4_1_1
+ADD_SUBDIRECTORY(ex22_1/)  # rectangle_w4_h1
+ADD_SUBDIRECTORY(ex23/)    # rectangle_w4_h1
+ADD_SUBDIRECTORY(ex24/)    # rectangle_w1_h8
+ADD_SUBDIRECTORY(ex25/)    # box_4_1_1
 
 # Time dependent, Boussinesq, Field Split - END
 

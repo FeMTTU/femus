@@ -55,8 +55,11 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Three_face_groups.neu";
+
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -171,9 +174,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
-
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -186,6 +186,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
@@ -195,6 +196,15 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
+  // call the adept stack object
+  adept::Stack& s = FemusInit::_adeptStack;
+  if( assembleMatrix ) s.continue_recording();
+  else s.pause_recording();
+
+
 
   //solution variable
 
@@ -257,7 +267,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   std::vector < double > Jac;
   Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
 
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  if(assembleMatrix)
+    KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -314,7 +325,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
       // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
+      if(assembleMatrix) s.new_recording();
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
@@ -323,7 +334,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        
+
         std::vector < adept::adouble > solV_gss(dim, 0);
         std::vector < std::vector < adept::adouble > > gradSolV_gss(dim);
 
@@ -361,7 +372,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
-              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j]);// + gradSolV_gss[j][k]);
               NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
             }
           }
@@ -402,7 +413,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     RES->add_vector_blocked(Res, sysDof);
 
-    //Extarct and store the Jacobian
+    if(assembleMatrix){
+      //Extarct and store the Jacobian
 
       Jac.resize(nDofsVP * nDofsVP);
       // define the dependent variables
@@ -427,12 +439,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       s.clear_independents();
       s.clear_dependents();
-
+    }
   } //end element loop for each process
 
   RES->close();
 
-  KK->close();
+  if(assembleMatrix)
+    KK->close();
 
   // ***************** END ASSEMBLY *******************
 }
