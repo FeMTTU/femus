@@ -110,9 +110,20 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   std::vector < double > Jac;
   Jac.reserve((dim + 1) * maxSize * (dim + 1) * maxSize);
 
+  
+  // // // //pressure stabilization ================
+  // // // std::vector < double > Mass_p;
+  // // // std::vector < adept::adouble > aResMassP;
+  // // // aResMassP.reserve(maxSize);
+  // // // Mass_p.reserve(maxSize*maxSize);
+  
+  
+  
+  
   RES->zero(); // Set to zero all the entries of the Global Residual vector
   if(assembleMatrix) { KK->zero(); } // Set to zero all the entries of the Global Matrix
 
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -161,6 +172,15 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
         }
       }
+      
+
+
+
+    // // // //pressure stabilization ================
+    // // // aResMassP.resize(nDofsP);    //resize
+    // // // std::fill(aResMassP.begin(), aResMassP.end(), 0);    //set aRes to zero
+      
+      
       
       // start a new recording of all the operations involving adept::adouble variables
      if(assembleMatrix) {  s.new_recording();  }
@@ -331,12 +351,21 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
       } // end phiV_i loop
 
       // *** phiP_i loop ***
-      for (unsigned i = 0; i < nDofsP; i++) {
+        for (unsigned i = 0; i < nDofsP; i++) {
         for (int k = 0; k < dim; k++) {
           aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
         }
       } // end phiP_i loop
+      
 
+        // // // //pressure stabilization ================
+        // // // for (unsigned i = 0; i < nDofsP; i++) {
+        // // //     aResMassP[i] += phiP[i] * solP_gss * weight;
+        // // // }
+        
+      
+      
+      
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
@@ -383,7 +412,20 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
     s.clear_independents();
     s.clear_dependents();
+
+    
+      // // // //pressure stabilization ================
+      // // // Mass_p.resize(nDofsP * nDofsP);
+      // // // s.dependent(&aResMassP[0], nDofsP);
+      // // // s.independent(&solP[0], nDofsP);
+      // // // s.jacobian(&Mass_p[0] , true);
+      // // // KK->add_matrix_blocked(Mass_p, sysDof_P, sysDof_P);
+      // // // s.clear_independents();
+      // // // s.clear_dependents();
+    
     }
+    
+    
   } //end element loop for each process
 
   RES->close();
