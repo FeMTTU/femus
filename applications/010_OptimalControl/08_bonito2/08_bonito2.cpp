@@ -63,7 +63,6 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu", fe_quad_rule_1, scalingFactor);
-//   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
 //   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
 //     probably in furure it is not going to be an argument of this function   */
 

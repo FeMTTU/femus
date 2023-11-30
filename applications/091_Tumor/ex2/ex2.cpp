@@ -173,7 +173,6 @@ int main (int argc, char** args) {
 
   mlSolCube.GetWriter()->Write ("outputCube", "biquadratic", print_vars);
 
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in future it is not going to be an argument of this function   */
   // Domain dimension of the problem.

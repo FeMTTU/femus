@@ -69,7 +69,7 @@ void LaplaceGetExactSolutionGradient(const std::vector < double >& x, std::vecto
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
   return dirichlet;
 }
 

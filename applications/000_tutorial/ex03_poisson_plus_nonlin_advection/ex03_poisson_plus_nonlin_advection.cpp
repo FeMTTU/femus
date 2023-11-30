@@ -17,6 +17,9 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
+
+
 #include "adept.h"
 
 
@@ -32,19 +35,32 @@
 using namespace femus;
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+
+double Solution_set_initial_conditions_with_analytical_sol(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
+
+Math::Function< double > *  exact_sol =  ml_prob->get_ml_solution()->get_analytical_function(name);
+
+double value = exact_sol->value(x);
+
+   return value;   
+
+}
+
+
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
 
-  if (facename == 2)
+  if (facename == 2) {
     dirichlet = false;
-
+  }
+  
   return dirichlet;
 }
 
-void AssembleNonlinearProblem(MultiLevelProblem& ml_prob);
+void AssemblePoissonPlusNonlinearAdvection(MultiLevelProblem& ml_prob);
 
-void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob);
+void AssemblePoissonPlusNonlinearAdvection_AD(MultiLevelProblem& ml_prob);
 
 
 
@@ -57,7 +73,7 @@ double GetExactSolutionValue(const std::vector < double >& x) {
 
 void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[0] = -pi * sin(pi * x[0]) * cos(pi * x[1]);
   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 };
 
@@ -83,23 +99,16 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/03_3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/cube_tet.neu";
+
+  // const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
+
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   
   unsigned dim = mlMsh.GetDimension();
-  unsigned maxNumberOfMeshes;
+  unsigned maxNumberOfMeshes = 6;
 
-  if (dim == 2) {
-    maxNumberOfMeshes = 7;
-  } else {
-    maxNumberOfMeshes = 6;
-  }
 
   std::vector < std::vector < double > > l2Norm;
   l2Norm.resize(maxNumberOfMeshes);
@@ -126,19 +135,24 @@ int main(int argc, char** args) {
     semiNorm[i].resize( unknowns.size() );
 
     for (unsigned u = 0; u < unknowns.size(); u++) {   // loop on the FE Order
+
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution ml_sol(&mlMsh);
+      
+      // define the multilevel problem attach the ml_sol object to it
+      MultiLevelProblem ml_prob(&ml_sol);
+      
+      Domains::square_m05p05::Function_Zero_on_boundary_4< double >  analytical_function;
 
       // add variables to ml_sol
       ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
-      ml_sol.Initialize("All");
+      ml_sol.set_analytical_function(unknowns[u]._name.c_str(), & analytical_function);   
+      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions_with_analytical_sol, & ml_prob);
 
       // attach the boundary condition function and generate boundary data
       ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-      ml_sol.GenerateBdc( unknowns[u]._name.c_str() );
+      ml_sol.GenerateBdc( unknowns[u]._name.c_str(), "Steady", & ml_prob);
 
-      // define the multilevel problem attach the ml_sol object to it
-      MultiLevelProblem ml_prob(&ml_sol);
 
       ml_prob.get_systems_map().clear();
       ml_prob.set_current_system_number(0/*u*/);               //way to communicate to the assemble function, which doesn't belong to any class
@@ -158,7 +172,7 @@ int main(int argc, char** args) {
 
         
       // attach the assembling function to system
-      system.SetAssembleFunction(AssembleNonlinearProblem_AD);
+      system.SetAssembleFunction(AssemblePoissonPlusNonlinearAdvection_AD);
 
       // initilaize and solve the system
       system.init();
@@ -272,7 +286,7 @@ int main(int argc, char** args) {
  *
  **/
 
-void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
+void AssemblePoissonPlusNonlinearAdvection(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -470,7 +484,7 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
  *
  **/
 
-void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
+void AssemblePoissonPlusNonlinearAdvection_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
