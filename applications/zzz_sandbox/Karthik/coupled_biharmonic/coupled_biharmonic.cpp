@@ -25,7 +25,7 @@
 
 #include "FE_convergence.hpp"
 
-#include "Solution_functions_over_domains_or_mesh_files.hpp"
+#include "Solution_functions_over_domains_or_mesh_files1.hpp"
 
 #include "adept.h"
 
@@ -44,6 +44,12 @@
 
 using namespace femus;
 
+
+
+
+
+// ============== Solution set - BEGIN ==================
+
 double GetExactSolutionValue(const std::vector < double >& x) {
   Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
 
@@ -53,39 +59,51 @@ double GetExactSolutionValue(const std::vector < double >& x) {
 
 void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
   Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
-  unsigned int m = analytical_function_1.gradient(x).size();
 
   solGrad[0]  = analytical_function_1.gradient(x)[0];
   solGrad[1] = analytical_function_1.gradient(x)[1];
 };
 
+// ============== Solution set - END ==================
 
-
-
-
-
-// // // // Solution - BEGIN
+// // // // ============== Solution set L-shape - BEGIN ==================
 // // //
 // // // double GetExactSolutionValue(const std::vector < double >& x) {
-// // //   double pi = acos(-1.);
-// // //   return cos(pi * x[0]) * cos(pi * x[1]);
-// // // };
+// // //   Domains::L_shaped::Function_NonZero_on_boundary_2 <double> analytical_function_1;
 // // //
+// // //   double FunctionValue = analytical_function_1.value(x);
+// // //   return FunctionValue;
+// // // };
 // // //
 // // // void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-// // //   double pi = acos(-1.);
-// // //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-// // //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+// // //   Domains::L_shaped::Function_NonZero_on_boundary_2 <double> analytical_function_1;
+// // // // // //   unsigned int m = analytical_function_1.gradient(x).size();
+// // //
+// // //   solGrad[0]  = analytical_function_1.gradient(x)[0];
+// // //   solGrad[1] = analytical_function_1.gradient(x)[1];
 // // // };
 // // //
+// // // // ============== Solution set L-shape - END ==================
+
+// // // // ============== Solution set - BEGIN ==================
 // // //
-// // // double GetExactSolutionLaplace(const std::vector < double >& x) {
-// // //   double pi = acos(-1.);
-// // //   return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+// // // double GetExactSolutionValue(const std::vector < double >& x) {
+// // //   Domains::square_01by01::Function_NonZero_on_boundary_1 <double> analytical_function_1;
+// // //
+// // //   double FunctionValue = analytical_function_1.value(x);
+// // //   return FunctionValue;
 // // // };
 // // //
+// // // void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
+// // //   Domains::square_01by01::Function_NonZero_on_boundary_1 <double> analytical_function_1;
+// // // // // //   unsigned int m = analytical_function_1.gradient(x).size();
 // // //
-// // // // Solution - END
+// // //   solGrad[0]  = analytical_function_1.gradient(x)[0];
+// // //   solGrad[1] = analytical_function_1.gradient(x)[1];
+// // // };
+// // //
+// // // // ============== Solution set - END ==================
+
 
 
 
@@ -96,11 +114,11 @@ bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem *
 
   if (!strcmp(SolName, "u")) {
   dirichlet = true; //dirichlet
-  value = 0.;
+  value = 1;
   }
   if (!strcmp(SolName, "v")) {
   dirichlet = true; //dirichlet
-  value = 0.;
+  value = 1;
   }
 
   return dirichlet;
@@ -108,6 +126,23 @@ bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem *
 }
 
 
+
+// // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+// // //
+// // //   bool dirichlet=true;
+// // //
+// // //   if (!strcmp(SolName, "u")) {
+// // //   Math::Function< double > *  FunctionValue =  ml_prob->get_ml_solution()->get_analytical_function(SolName);
+// // //     value = FunctionValue->analytical_function_1.value(x);
+// // //   }
+// // //   if (!strcmp(SolName, "v")) {
+// // //   Math::Function< double > *  solGrad =  ml_prob->get_ml_solution()->get_analytical_function(SolName);
+// // //     value = solGrad->analytical_function_1.value(x);
+// // //   }
+// // //
+// // //   return dirichlet;
+// // //
+// // // }
 
 
 
@@ -130,9 +165,18 @@ int main(int argc, char** args) {
     // ======= System Specifics - BEGIN  ==================
   system_specifics  system_biharmonic_coupled;   //me
 
+  // =========Mesh file - BEGIN ==================
   system_biharmonic_coupled._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
   const std::string relative_path_to_build_directory =  "../../../../";
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";  system_biharmonic_coupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
+ // =========Mesh file - END ==================
+
+
+// // // // =========Mesh file S-shape - BEGIN ==================
+// // //   system_biharmonic_coupled._mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+// // //   const std::string relative_path_to_build_directory =  "../../../../";
+// // //   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/0-1x0-1/";  system_biharmonic_coupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
+// // // // =========Mesh file S-shape - END ==================
 
   system_biharmonic_coupled._system_name = "Biharmonic";
   system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation :: AssembleBilaplaceProblem_AD;
@@ -141,10 +185,11 @@ int main(int argc, char** args) {
 
 
 
-  Domains::square_01by01::Function_Zero_on_boundary_5<>   system_biharmonic_coupled_function_zero_on_boundary_1;
-  Domains::square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_laplacian;
-  system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
-  system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
+   Domains::square_01by01::Function_Zero_on_boundary_5<>   system_biharmonic_coupled_function_zero_on_boundary_1;
+   Domains::square_01by01::Function_Zero_on_boundary_5_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_laplacian;
+   system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
+
+   system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
 
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
     // ======= System Specifics - END ==================
@@ -177,7 +222,7 @@ int main(int argc, char** args) {
 
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-    unsigned numberOfUniformLevels = i + 1;
+    unsigned numberOfUniformLevels = i + 3;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -195,10 +240,16 @@ int main(int argc, char** args) {
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
 
+
+
+
       // add variables to mlSol
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
       mlSol.Initialize("All");
+
+
+
 
 
       // define the multilevel problem attach the mlSol object to it
@@ -230,6 +281,10 @@ int main(int argc, char** args) {
 
       // convergence for u
       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
+
+
+// // //       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, solGrad );
+
       // // convergence for v
       // std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "v", LaplaceGetExactSolutionValue, LaplaceGetExactSolutionGradient );
 
