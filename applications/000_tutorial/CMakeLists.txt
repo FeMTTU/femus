@@ -18,7 +18,7 @@ ADD_SUBDIRECTORY(ex03b_div_grad_nonlinear_diffusivity/)
 ADD_SUBDIRECTORY(ex04_biharmonic_coupled_systems/)
 ADD_SUBDIRECTORY(ex05_biharmonic_uncoupled_systems/)
 
-ADD_SUBDIRECTORY(ex06_navier_stokes/)
+ADD_SUBDIRECTORY(ex06a_navier_stokes/)
 ADD_SUBDIRECTORY(ex06b_navier_stokes/)
 
 ADD_SUBDIRECTORY(ex08_boussinesq/)
