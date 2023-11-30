@@ -46,7 +46,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
 int main(int argc, char** args) {
@@ -113,7 +113,7 @@ int main(int argc, char** args) {
   system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Additive Swartz Method
   //system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+  system.SetAssembleFunction(AssembleBoussinesqApproximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(20);
   system.SetMaxNumberOfLinearIterations(3);
@@ -153,7 +153,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
+void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem

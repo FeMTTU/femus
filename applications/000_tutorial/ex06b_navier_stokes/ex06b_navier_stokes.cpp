@@ -77,7 +77,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/rectangle/minus2p5-plus2p5_minus0p5-plus0p5/rectangle_quad.neu";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/rectangle/minus2p5-plus2p5_minus0p5-plus0p5/rectangle_quad_5x1_Three_boundary_groups.neu";
   mlMsh.ReadCoarseMesh (mesh_file.c_str(), "seventh", scalingFactor );
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */

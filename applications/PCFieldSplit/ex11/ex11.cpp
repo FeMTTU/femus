@@ -56,7 +56,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 enum PrecType {
@@ -282,7 +282,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
+void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem

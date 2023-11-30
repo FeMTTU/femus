@@ -66,7 +66,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 
-//void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+//void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);

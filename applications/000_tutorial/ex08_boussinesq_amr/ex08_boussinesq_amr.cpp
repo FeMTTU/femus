@@ -80,14 +80,9 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-//   unsigned numberOfUniformLevels = 3;
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-
   unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
@@ -132,15 +127,16 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
-  system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+  system.SetAssembleFunction( femus::AssembleBoussinesqApproximation_AD );
 
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(20);
   system.SetMaxNumberOfLinearIterations(3);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
+
   system.SetMgType(F_CYCLE);
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
@@ -151,16 +147,14 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
-
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4);
-  //system.SetDirichletBCsHandling(ELIMINATION);
-  //system.solve();
+
+  system.SetNumberOfSchurVariables(1); // option for FEMuS_ASM fot "P"
+  system.SetElementBlockNumber(4); // option for FEMuS_ASM
+
   system.MGsolve();
 
   // print solutions

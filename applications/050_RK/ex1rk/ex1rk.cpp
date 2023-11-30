@@ -1,10 +1,9 @@
-
-/** tutorial/Ex14
- * This example shows how to set and solve the weak form of the Bistable Equation
+/** tutorial/Ex14 
+ * This example shows how to set and solve the weak form of the Bistable Equation 
  *          $$ \dfrac{\partial u}{ \partial t}-\epsilon \nabla \cdot u=u-u^3  \text{in} \Omega $$
  *          $$ \nabla u.n=0 \text{ on} \partial \Omega $$
  *          $$ u= u_{0} in \Omega x {t=0} $$
- * on a square domain \Omega=[-1,1]x[-1,1].
+ * on a square domain \Omega=[-1,1]x[-1,1]. 
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
  * a direct solver is used to solve the problem.
@@ -19,6 +18,7 @@
 #include "ImplicitRungeKuttaSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
+
 #include "adept.h"
 #include "PetscMatrix.hpp"
 #include "PetscVector.hpp"
@@ -52,7 +52,7 @@ double InitialValue (const std::vector < double >& x) {
 
 }
 
-void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob);
+void AssembleAllenCahnProblem_AD (MultiLevelProblem& ml_prob);
 
 int main (int argc, char** args) {
 
@@ -63,8 +63,11 @@ int main (int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh ("./input/square_quad.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
+
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus1-plus1_minus1-plus1/square_2x2_quad_Two_boundary_groups.neu";
+
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in future it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension(); // Domain dimension of the problem.
@@ -99,8 +102,8 @@ int main (int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb (&mlSol); //
 
-  // add system AllanChan in mlProb as an ImplicitRungeKuttaNonlinearImplicitSystem
-  ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("AllanChan");
+  // add system AllenCahn in mlProb as an ImplicitRungeKuttaNonlinearImplicitSystem
+  ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("AllenCahn");
 
 
   
@@ -112,7 +115,7 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("u");
 
   // attach the assembling function to system
-  system.SetAssembleFunction (AssembleAllanChanProblem_AD);
+  system.SetAssembleFunction (AssembleAllenCahnProblem_AD);
   
   system.SetMaxNumberOfNonLinearIterations(10);
 
@@ -162,7 +165,7 @@ int main (int argc, char** args) {
  * thus
  *                  J w = f(x) - J u0
  **/
-void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
+void AssembleAllenCahnProblem_AD (MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -176,7 +179,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  ImplicitRungeKuttaNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<ImplicitRungeKuttaNonlinearImplicitSystem> ("AllanChan");   // pointer to the linear implicit system named "Poisson"
+  ImplicitRungeKuttaNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<ImplicitRungeKuttaNonlinearImplicitSystem> ("AllenCahn");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel (level);   // pointer to the mesh (level) object
@@ -453,17 +456,4 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 

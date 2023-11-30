@@ -65,7 +65,7 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
   return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
 };
 
-void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
+void AssemblePoisson(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
   
@@ -115,7 +115,7 @@ int main(int argc, char** args) {
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   //system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation);
+  system.SetAssembleFunction(AssemblePoisson);
   
   system.SetMaxNumberOfLinearIterations(20);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
@@ -162,7 +162,7 @@ int main(int argc, char** args) {
   return 0;
 }
 
-void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
+void AssemblePoisson(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
