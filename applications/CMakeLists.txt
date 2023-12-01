@@ -116,6 +116,8 @@ IF(BUILD_NAVIERSTOKESAPPS)
   # Steady Stokes
   ADD_SUBDIRECTORY(${NS_FOLDER}/SteadyStokes/)
 
+  ADD_SUBDIRECTORY(${NS_FOLDER}/NavierStokes_AMR/)
+  
   set(NSTEMP_FOLDER 004_Boussinesq/)
   # Steady Boussinesq
   ADD_SUBDIRECTORY(${NSTEMP_FOLDER}/NavierStokesTemp_AMR/)

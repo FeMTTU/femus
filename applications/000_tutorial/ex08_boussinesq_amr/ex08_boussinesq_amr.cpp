@@ -16,9 +16,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
-#include "NumericVector.hpp"
 #include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
 
@@ -163,6 +161,7 @@ int main(int argc, char** args) {
 
   system.MGsolve();
 
+
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
@@ -172,8 +171,4 @@ int main(int argc, char** args) {
 
   return 0;
 }
-
-
-
-
 

@@ -1,6 +1,6 @@
 /** \file Ex2.cpp
  *  \brief This example shows how to set and solve the weak form
- *   of the Boussinesq appoximation of the Navier-Stokes Equation
+ *   of the Boussinesq approximation of the Navier-Stokes Equation
  *
  *  \f{eqnarray*}
  *  && \mathbf{V} \cdot \nabla T - \nabla \cdot\alpha \nabla T = 0 \\
@@ -50,14 +50,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-//   if (elemgroupnumber == 6 && level < 3) refine = 1;
-//   if (elemgroupnumber == 7 && level < 4) refine = 1;
-//   if (elemgroupnumber == 8 && level < 5) refine = 1;
-
-  //if (elemgroupnumber == 6 && level < 4) refine = 1;
-  //if (elemgroupnumber == 7 && level < 5) refine = 1;
-  //if (elemgroupnumber == 8 && level < 6) refine = 1;
-
   if(elemgroupnumber == 6 && level < numberOfUniformLevels) refine = 1;
   if(elemgroupnumber == 7 && level < numberOfUniformLevels + 1) refine = 1;
   if(elemgroupnumber == 8 && level < numberOfUniformLevels + 2) refine = 1;
@@ -94,10 +86,12 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Three_boundary_groups_Four_volume_groups_AMR.neu";
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
+
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
