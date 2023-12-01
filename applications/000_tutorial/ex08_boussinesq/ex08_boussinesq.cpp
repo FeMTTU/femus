@@ -49,6 +49,11 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
 
 int main(int argc, char** args) {
 
+  
+  boussinesq_equation::Pr = 1.;
+  boussinesq_equation::Ra = 1000.;
+  
+  
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -111,14 +116,15 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
-  // system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
+  // system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
-  system.SetAssembleFunction( femus::AssembleBoussinesqApproximation_AD );
+  system.SetAssembleFunction( femus::boussinesq_equation::AssembleBoussinesqApproximation_AD );
 
   system.SetMaxNumberOfNonLinearIterations(20);
-  system.SetMaxNumberOfLinearIterations(3);
   system.SetNonLinearConvergenceTolerance(1.e-8);
+
+  system.SetMaxNumberOfLinearIterations(3);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
 
   system.SetMgType(V_CYCLE);
@@ -130,7 +136,9 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(GMRES);
+
   system.SetPreconditionerFineGrids(ILU_PRECOND);// for FEMuS_ASM you can use MLU_PRECOND
+
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40); //PETSC GMRES tolerances
 
   system.ClearVariablesToBeSolved();
