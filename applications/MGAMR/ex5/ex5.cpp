@@ -104,7 +104,7 @@ int main(int argc, char** args) {
   //END 
   
   //BEGIN mesh for 3D tests
-  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_mixed_Two_boundary_groups_Four_volume_groups_AMR.neu", "seventh", scalingFactor); ///@todo pick from library!!!
   //END 
     
   //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);

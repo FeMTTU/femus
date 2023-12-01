@@ -55,9 +55,6 @@ int main(int argc,char **args) {
 
   int tmp=nm;  nm+=nr;  nr=tmp;
 
-  char *infile = new char [50];
-
-  sprintf(infile,"./input/square.neu");
 
   //Adimensional quantity (Lref,Uref)
   double Lref = 1.0;

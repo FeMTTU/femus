@@ -4,7 +4,7 @@
     "multilevel_mesh" : {
       "first" : {
         "type" : {
-          "filename" : "input/cube_all_shapes.neu"
+          "filename" : "input/cube_all_shapes_Six_boundary_groups.neu"
                   }
                  }
              },

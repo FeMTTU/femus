@@ -46,7 +46,7 @@ std::string quad9_all_mesh_generation_methods_Structured(const unsigned method_f
         case 2: {
             mesh_name += "_gambit";
 //   // ======= Mesh, coarse gen, II: from Gambit - BEGIN  ========================
-    const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad.neu";
+    const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_One_boundary_group.neu";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
   // ======= Mesh, coarse gen, II: from Gambit - END ========================
             break;
