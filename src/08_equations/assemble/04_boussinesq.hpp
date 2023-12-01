@@ -2,6 +2,18 @@
 #define __femus_equations_boussinesq_hpp__
 
 
+/** \file Ex7.cpp
+ *  Weak form of the Boussinesq approximation of the Navier-Stokes Equation
+ *
+ *  \f{eqnarray*}
+ *  && \mathbf{V} \cdot \nabla T - \nabla \cdot\alpha \nabla T = 0 \\
+ *  && \mathbf{V} \cdot \nabla \mathbf{V} - \nabla \cdot \nu (\nabla \mathbf{V} +(\nabla \mathbf{V})^T)
+ *  +\nabla P = \beta T \mathbf{j} \\
+ *  && \nabla \cdot \mathbf{V} = 0
+ *  \f}
+ */
+
+
 #include "NonLinearImplicitSystem.hpp"
 #include "Mesh.hpp"
 #include "MultiLevelSolution.hpp"
