@@ -51,7 +51,7 @@ double InitialValue(const std::vector < double >& x) {
 }
 
 
-void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob);
+void AssembleAllenCahnProblem_AD(MultiLevelProblem& ml_prob);
 
 
 
@@ -64,8 +64,11 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
+
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus1-plus1_minus1-plus1/square_2x2_quad_Two_boundary_groups.neu";
+
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in future it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension(); // Domain dimension of the problem.
@@ -97,13 +100,13 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol); //
 
   // add system Poisson in mlProb as a Non Linear Implicit System
-  TransientNonlinearImplicitSystem & system = mlProb.add_system < TransientNonlinearImplicitSystem > ("AllanChan");
+  TransientNonlinearImplicitSystem & system = mlProb.add_system < TransientNonlinearImplicitSystem > ("AllenCahn");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("u");
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleAllanChanProblem_AD);
+  system.SetAssembleFunction(AssembleAllenCahnProblem_AD);
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(GetTimeStep);
@@ -150,7 +153,7 @@ int main(int argc, char** args) {
  * thus
  *                  J w = f(x) - J u0
  **/
-void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
+void AssembleAllenCahnProblem_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -163,7 +166,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  TransientNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("AllanChan");   // pointer to the linear implicit system named "Poisson"
+  TransientNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("AllenCahn");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object

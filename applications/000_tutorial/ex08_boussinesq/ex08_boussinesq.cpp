@@ -1,4 +1,4 @@
-/** \file Ex8.cpp
+/** \file Ex7.cpp
  *  \brief This example shows how to set and solve the weak form
  *   of the Boussinesq approximation of the Navier-Stokes Equation
  *
@@ -27,7 +27,7 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
 
@@ -58,9 +58,8 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
 
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Three_face_groups.neu";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Three_boundary_groups.neu";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_2x2x2_hex_Three_face_groups.neu","seventh",scalingFactor); //3D
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -76,6 +75,11 @@ int main(int argc, char** args) {
   mlMsh.PrintInfo();
 
   MultiLevelSolution mlSol(&mlMsh);
+
+  
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+  
 
   // add variables to mlSol
   mlSol.AddSolution("T", LAGRANGE, FIRST);
@@ -93,10 +97,7 @@ int main(int argc, char** args) {
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("P");
-  mlSol.GenerateBdc("All");
-
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
+  mlSol.GenerateBdc("All", "Steady", & mlProb);
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
@@ -110,15 +111,16 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
-  system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
+  system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  // system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+  system.SetAssembleFunction( femus::AssembleBoussinesqApproximation_AD );
 
   system.SetMaxNumberOfNonLinearIterations(20);
   system.SetMaxNumberOfLinearIterations(3);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
+
   system.SetMgType(V_CYCLE);
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
@@ -127,11 +129,9 @@ int main(int argc, char** args) {
   // initilaize and solve the system
   system.init();
 
-  system.SetSolverFineGrids(GMRES);// do not touch
-  //system.SetSolverFineGrids(MINRES);
+  system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(ILU_PRECOND);// for FEMuS_ASM you can use MLU_PRECOND
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40); //PETSC GMRES tolerances
-  //system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");

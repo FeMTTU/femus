@@ -25,7 +25,7 @@
 
 #include "FE_convergence.hpp"
 
-#include "Solution_functions_over_domains_or_mesh_files1.hpp"
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 #include "adept.h"
 
@@ -65,45 +65,6 @@ void GetExactSolutionGradient(const std::vector < double >& x, std::vector < dou
 };
 
 // ============== Solution set - END ==================
-
-// // // // ============== Solution set L-shape - BEGIN ==================
-// // //
-// // // double GetExactSolutionValue(const std::vector < double >& x) {
-// // //   Domains::L_shaped::Function_NonZero_on_boundary_2 <double> analytical_function_1;
-// // //
-// // //   double FunctionValue = analytical_function_1.value(x);
-// // //   return FunctionValue;
-// // // };
-// // //
-// // // void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-// // //   Domains::L_shaped::Function_NonZero_on_boundary_2 <double> analytical_function_1;
-// // // // // //   unsigned int m = analytical_function_1.gradient(x).size();
-// // //
-// // //   solGrad[0]  = analytical_function_1.gradient(x)[0];
-// // //   solGrad[1] = analytical_function_1.gradient(x)[1];
-// // // };
-// // //
-// // // // ============== Solution set L-shape - END ==================
-
-// // // // ============== Solution set - BEGIN ==================
-// // //
-// // // double GetExactSolutionValue(const std::vector < double >& x) {
-// // //   Domains::square_01by01::Function_NonZero_on_boundary_1 <double> analytical_function_1;
-// // //
-// // //   double FunctionValue = analytical_function_1.value(x);
-// // //   return FunctionValue;
-// // // };
-// // //
-// // // void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-// // //   Domains::square_01by01::Function_NonZero_on_boundary_1 <double> analytical_function_1;
-// // // // // //   unsigned int m = analytical_function_1.gradient(x).size();
-// // //
-// // //   solGrad[0]  = analytical_function_1.gradient(x)[0];
-// // //   solGrad[1] = analytical_function_1.gradient(x)[1];
-// // // };
-// // //
-// // // // ============== Solution set - END ==================
-
 
 
 
@@ -222,7 +183,7 @@ int main(int argc, char** args) {
 
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-    unsigned numberOfUniformLevels = i + 3;
+    unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 

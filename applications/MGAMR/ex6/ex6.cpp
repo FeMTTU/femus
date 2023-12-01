@@ -122,7 +122,7 @@ bool SetRefinementFlag2(const std::vector < double >& x, const int& elemgroupnum
 
 }
 
-void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
+void AssemblePoisson(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
   
@@ -172,7 +172,7 @@ int main(int argc, char** args) {
   // system.SetLinearEquationSolverType(FEMuS_ASM);
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation);
+  system.SetAssembleFunction(AssemblePoisson);
   
   //system.SetMaxNumberOfNonLinearIterations(1);
   //system.SetNonLinearConvergenceTolerance(1.e-8);
@@ -285,7 +285,7 @@ int main(int argc, char** args) {
 
 
 
-void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
+void AssemblePoisson(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem

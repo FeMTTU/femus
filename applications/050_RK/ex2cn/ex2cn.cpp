@@ -72,7 +72,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+void AssembleNavierStokes_WithImposedDomainDisplacement_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
 int main(int argc, char** args) {
@@ -86,8 +86,11 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ( "./input/rectangle2.neu", "seventh", scalingFactor );
+
+  const std::string relative_path_to_build_directory =  "../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/rectangle/minus2p5-plus2p5_minus0p5-plus0p5/rectangle_quad_5x5_Three_boundary_groups.neu";
+
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -156,7 +159,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("P");
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+  system.SetAssembleFunction(AssembleNavierStokes_WithImposedDomainDisplacement_AD);
 
   // initilaize and solve the system
   system.init();
@@ -194,7 +197,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
+void AssembleNavierStokes_WithImposedDomainDisplacement_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem

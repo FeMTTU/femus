@@ -60,7 +60,7 @@ double InitialValueT(const std::vector < double >& x) {
 };
 void PrintConvergenceInfo(unsigned n_timesteps, char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void PrintNonlinearTime(unsigned n_timesteps,char *stdOutfile, char* outfile, const unsigned &numofrefinements);
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 std::pair < std::vector <double>, std::vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);
 
 enum PrecType {
@@ -216,7 +216,7 @@ int main(int argc, char** args) {
   else if(precType == ILU_VTp || precType == ILU_TVp) system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+  system.SetAssembleFunction(AssembleBoussinesqApproximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
@@ -259,7 +259,7 @@ int main(int argc, char** args) {
 
   double dt = 0.05;
   system.SetIntervalTime(dt);
-  unsigned n_timesteps = 20000;
+  unsigned n_timesteps =20000;
  
   Marker marker(x, 0., VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
@@ -317,7 +317,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
+void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
