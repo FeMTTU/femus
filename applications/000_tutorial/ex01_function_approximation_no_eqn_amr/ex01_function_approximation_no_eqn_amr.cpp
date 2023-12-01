@@ -66,8 +66,10 @@ int main(int argc, char** args) {
 
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_4x4_quad_Four_boundary_groups_Four_volume_groups_AMR.neu";
+
+  // // // const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/03_3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/cube_mixed_Two_boundary_groups_Four_volume_groups_AMR.neu";
+
   //mlMsh.ReadCoarseMesh("./input/box.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor); // Let mlMsh read the coarse mesh.
 
