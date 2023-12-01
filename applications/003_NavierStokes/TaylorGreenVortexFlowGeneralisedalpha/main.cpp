@@ -165,7 +165,6 @@ int main(int argc,char **args) {
   // Destroy all the new systems
   ml_prob.clear();
 
-  delete[] infile;
   return 0;
 }
 

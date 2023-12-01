@@ -12,10 +12,18 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelMesh.hpp"
 #include "MultiLevelSolution.hpp"
-#include "MultiLevelProblem.hpp"
+#include "Files.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
+
+
+#include <tuple>
+#include <vector>
+#include <string>
+
+
 
 using namespace femus;
 
@@ -32,6 +40,23 @@ double InitialValueT(const std::vector < double >& x) {
 }
 
 
+// Mesh-dependent functions - BEGIN ===============
+
+bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
+
+  bool refine = false;
+  if ( elemgroupnumber == 6 && level < 1 ) refine = true;
+  if ( elemgroupnumber == 7 && level < 2 ) refine = true;
+  if ( elemgroupnumber == 8 && level < 3 ) refine = true;
+
+  return refine;
+
+}
+
+// Mesh-dependent functions - END ===============
+
+
+
 
 int main(int argc, char** args) {
 
@@ -44,17 +69,84 @@ int main(int argc, char** args) {
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  // read coarse level mesh and generate finers level meshes 
+  
+  // read coarse level mesh and generate finer level meshes 
 
+  typedef std::pair< std::string, std::string > Mesh_file_name_info; 
+  
+
+// === BEGIN  
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_16x16_quad_One_boundary_group.neu";
-  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor); // Let mlMsh read the coarse mesh.
+  
+  
+  const std::string mesh_file_1_path = relative_path_to_build_directory + Files::mesh_folder_path() + 
+  "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
 
+  const std::string mesh_file_1_name = "square_16x16_quad_One_boundary_group.neu";
+  
+  
+  const std::string mesh_file_2_path = relative_path_to_build_directory + Files::mesh_folder_path() +
+  "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
+  
+  const std::string mesh_file_2_name = "square_4x4_quad_Four_boundary_groups_Four_volume_groups_AMR.neu";
+
+  const std::string mesh_file_3_path = relative_path_to_build_directory + Files::mesh_folder_path() + 
+  "01_gambit/03_3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/";
+
+  const std::string mesh_file_3_name = "cube_mixed_Two_boundary_groups_Four_volume_groups_AMR.neu";
+
+  
+  std::vector< Mesh_file_name_info >   meshes_path_and_filename;
+  
+  meshes_path_and_filename.push_back(  Mesh_file_name_info ( mesh_file_1_path, mesh_file_1_name ) );
+  meshes_path_and_filename.push_back(  Mesh_file_name_info ( mesh_file_2_path, mesh_file_2_name ) );
+  meshes_path_and_filename.push_back(  Mesh_file_name_info ( mesh_file_3_path, mesh_file_3_name ) );
+// === END
+  
+  
+// === BEGIN  
+  typedef std::tuple < Mesh_file_name_info, MultiLevelMesh::RefinementFunctionBasedOnVolumeGroups, unsigned, unsigned  >   Mesh_file_with_its_refinement_information;
+
+  constexpr unsigned index_for_mesh_file_info = 0;
+  constexpr unsigned index_for_function_pointer = 1;
+  constexpr unsigned index_for_first_refine_arg = 2;
+  constexpr unsigned index_for_second_refine_arg = 3;
+
+  
+  std::vector< Mesh_file_with_its_refinement_information >  meshes_and_refinements;
+  
+  
+  meshes_and_refinements.push_back( Mesh_file_with_its_refinement_information (meshes_path_and_filename[0], NULL,              3, 3) );
+  meshes_and_refinements.push_back( Mesh_file_with_its_refinement_information (meshes_path_and_filename[1], SetRefinementFlag, 4, 1) );
+  meshes_and_refinements.push_back( Mesh_file_with_its_refinement_information (meshes_path_and_filename[2], SetRefinementFlag, 4, 1) );
+// === END
+
+
+    for (unsigned mesh_file_index = 0; mesh_file_index < meshes_and_refinements.size(); mesh_file_index ++) {
+  
+    
+  const std::string  mesh_full_filename =
+  std::get< index_for_mesh_file_info >( meshes_and_refinements[ mesh_file_index ] ).first + 
+  std::get< index_for_mesh_file_info >( meshes_and_refinements[ mesh_file_index ] ).second;
+  
+  mlMsh.ReadCoarseMesh( mesh_full_filename.c_str(), "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-      probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 3;
-  unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL); 
+      probably in the future it is not going to be an argument of this function   */
+
+  MultiLevelMesh::RefinementFunctionBasedOnVolumeGroups  refinement_function_pointer = std::get< index_for_function_pointer >( meshes_and_refinements[ mesh_file_index ] );
+
+
+// non amr
+  // unsigned numberOfUniformLevels = 3;
+  // unsigned numberOfSelectiveLevels = 0;
+// amr
+  // unsigned numberOfUniformLevels = 1;
+  // unsigned numberOfSelectiveLevels = 3;
+  
+  mlMsh.RefineMesh( std::get< index_for_first_refine_arg > ( meshes_and_refinements[ mesh_file_index ] ), 
+                    std::get< index_for_second_refine_arg >( meshes_and_refinements[ mesh_file_index ] ), 
+                    refinement_function_pointer);
+  
   mlMsh.PrintInfo();
   
   // Mesh - END
@@ -75,26 +167,47 @@ int main(int argc, char** args) {
   mlSol.Initialize("All");    // initialize all variables to zero
 
   mlSol.Initialize("U", InitialValueU);
+  mlSol.Initialize("V", InitialValueU);
+  mlSol.Initialize("W", InitialValueU);
   mlSol.Initialize("P", InitialValueP);
   mlSol.Initialize("T", InitialValueT);    // note that this initialization is the same as piecewise constant element
   // Solution - END
 
-  // print solutions - BEGIN
+
+  // Solution, print - BEGIN
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("U");
-  variablesToBePrinted.push_back("P");
-  variablesToBePrinted.push_back("T");
+  variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
-  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted);
+  vtkIO.SetDebugOutput(false);
+  
+  // Strip extension from filename (to avoid a Paraview message) - BEGIN
+  const size_t lastindex    = (std::get< index_for_mesh_file_info >( meshes_and_refinements[ mesh_file_index ] ).second).find_last_of("."); 
+  const std::string name_without_extension = (std::get< index_for_mesh_file_info >( meshes_and_refinements[ mesh_file_index ] ).second).substr(0, lastindex); 
+  // Strip extension from filename (to avoid a Paraview message) - END
+  
+  vtkIO.Write( name_without_extension,
+               Files::_application_output_directory, 
+               fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], 
+               variablesToBePrinted);
+  vtkIO.Write( name_without_extension,
+               Files::_application_output_directory, 
+               fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], 
+               variablesToBePrinted);
 
-  GMVWriter gmvIO(&mlSol);
-  variablesToBePrinted.push_back("all");
-  gmvIO.SetDebugOutput(true);
-  gmvIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
-  // print solutions - END
+  // // // GMVWriter gmvIO(&mlSol);
+  // // // gmvIO.SetDebugOutput(true);
+  // // // gmvIO.Write(std::get< index_for_mesh_file_info >( meshes_and_refinements[ mesh_file_index ] ).second,
+  // // //             Files::_application_output_directory, 
+  // // //             fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ],
+  // // //             variablesToBePrinted);
+  // Solution, print - END
 
+  
+    }
+    
+    
+  
   return 0;
 }
 

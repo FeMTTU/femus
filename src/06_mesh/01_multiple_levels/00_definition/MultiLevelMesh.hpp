@@ -190,6 +190,9 @@ public:
     const unsigned GetNumberOfLevels() const {
         return _gridn;
     }
+    
+    /** function pointer for refinement function */
+    typedef bool (* RefinementFunctionBasedOnVolumeGroups )(const std::vector < double >& x, const int & ElemGroupNumber, const int &level );
 
 private:
     

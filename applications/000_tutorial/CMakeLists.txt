@@ -4,7 +4,6 @@ get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 
 ADD_SUBDIRECTORY(ex01_function_approximation_no_eqn/)
-ADD_SUBDIRECTORY(ex01_function_approximation_no_eqn_amr/)
 
 ADD_SUBDIRECTORY(ex02_poisson_a_all_dims_dir_neu/)
 ADD_SUBDIRECTORY(ex02_poisson_a_all_dims_dir_neu_multiple_domains/)
