@@ -6,7 +6,7 @@
  * add in mlMsh uniform refined level-meshes;
  * define the multilevel-solution object mlSol associated to mlMsh;
  * add in mlSol different types of finite element solution variables;
- * initialize the solution varables;
+ * initialize the solution variables;
  * define vtk and gmv writer objects associated to mlSol;
  * print vtk and gmv binary-format files in ./output directory.
  **/
@@ -55,7 +55,10 @@ int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
 
+  // Mesh - BEGIN
+  
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
@@ -69,10 +72,15 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
   mlMsh.PrintInfo();
+  
+  // Mesh - END
 
+  
+  // Solution - BEGIN
+  
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
-
+  
   // add variables to mlSol
   //mlSol.AddSolution("U", LAGRANGE, FIRST);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
@@ -98,7 +106,8 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("T");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted);
 
   GMVWriter gmvIO(&mlSol);
   variablesToBePrinted.push_back("all");

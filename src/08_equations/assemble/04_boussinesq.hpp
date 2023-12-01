@@ -1,6 +1,18 @@
 #ifndef __femus_equations_boussinesq_hpp__
 #define __femus_equations_boussinesq_hpp__
 
+/** \file Ex7.cpp
+ *  Weak form of the Boussinesq approximation of the Navier-Stokes Equation
+ *
+ *  \f{eqnarray*}
+ *  && \mathbf{V} \cdot \nabla T - \nabla \cdot\alpha \nabla T = 0 \\
+ *  && \mathbf{V} \cdot \nabla \mathbf{V} - \nabla \cdot \nu (\nabla \mathbf{V} +(\nabla \mathbf{V})^T)
+ *  +\nabla P = \beta T \mathbf{j} \\
+ *  && \nabla \cdot \mathbf{V} = 0
+ *  \f}
+ */
+
+
 
 #include "NonLinearImplicitSystem.hpp"
 #include "Mesh.hpp"
@@ -20,7 +32,18 @@ namespace femus {
 
 
 
-void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
+class boussinesq_equation {
+
+
+public: 
+
+
+     static double Pr;
+     static double Ra;
+  
+  
+
+static void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -38,8 +61,8 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
 
+  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
-  
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
@@ -52,7 +75,6 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
 
 
   // call the adept stack object
-  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
   adept::Stack& s = FemusInit::_adeptStack;
   if(assembleMatrix) s.continue_recording();
   else s.pause_recording();
@@ -186,7 +208,6 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for(unsigned i = 0; i < nDofsV; i++) {
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-
       for(unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
         sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
@@ -202,7 +223,6 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
     // local storage of coordinates
     for(unsigned i = 0; i < nDofsX; i++) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
-
       for(unsigned k = 0; k < dim; k++) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
@@ -257,16 +277,24 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
 
-      double nu = 1.;
-      double alpha = 1.;
-      double beta = 1000.;
+
+
+
+// ---------- NONDIMENSIONALIZATION - BEGIN      
+      const double coeff_in_front_of_diffusion_in_velocity = sqrt(Pr / Ra);
+      const double coeff_in_front_of_diffusion_in_temperature = 1. / sqrt(Ra * Pr);
+      const double coeff_in_front_of_buoyancy_force = 1.;
+// ---------- NONDIMENSIONALIZATION - END      
+
+
+
 
       // *** phiT_i loop ***
       for(unsigned i = 0; i < nDofsT; i++) {
         adept::adouble Temp = 0.;
 
         for(unsigned j = 0; j < dim; j++) {
-          Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
+          Temp +=  coeff_in_front_of_diffusion_in_temperature * phiT_x[i * dim + j] * gradSolT_gss[j];
           Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
         }
 
@@ -280,7 +308,7 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
 
         for(unsigned j = 0; j < dim; j++) {
           for(unsigned  k = 0; k < dim; k++) {
-            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+            NSV[k]   +=  coeff_in_front_of_diffusion_in_velocity * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  ///@todo laplacian or not
             NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
           }
         }
@@ -289,7 +317,7 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k];
         }
 
-        NSV[1] += -beta * solT_gss * phiV[i];
+        NSV[1] += - coeff_in_front_of_buoyancy_force * solT_gss * phiV[i];
 
         for(unsigned  k = 0; k < dim; k++) {
           aResV[k][i] += - NSV[k] * weight;
@@ -366,7 +394,15 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-}
+};
 
+
+
+      double boussinesq_equation::Pr =  1.;    //it is not const, so it can be overwritten by each app
+      double boussinesq_equation::Ra = 1000.;  //it is not const, so it can be overwritten by each app
+
+
+
+}
 
 #endif
