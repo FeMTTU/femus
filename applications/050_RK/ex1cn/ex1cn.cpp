@@ -48,10 +48,11 @@ double InitialValue(const std::vector < double >& x) {
   double pi=acos(-1);  
   return cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]); 
   //return cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] );
+
 }
 
 
-void AssembleAllenCahnProblem_AD(MultiLevelProblem& ml_prob);
+void AssembleAllenCahnProblem_with_Crank_Nicholson_AD(MultiLevelProblem& ml_prob);
 
 
 
@@ -102,11 +103,10 @@ int main(int argc, char** args) {
   // add system Poisson in mlProb as a Non Linear Implicit System
   TransientNonlinearImplicitSystem & system = mlProb.add_system < TransientNonlinearImplicitSystem > ("AllenCahn");
 
-  // add solution "u" to system
   system.AddSolutionToSystemPDE("u");
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleAllenCahnProblem_AD);
+  system.SetAssembleFunction(AssembleAllenCahnProblem_with_Crank_Nicholson_AD);
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(GetTimeStep);
@@ -118,7 +118,7 @@ int main(int argc, char** args) {
    // ******* Print solution *******
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetGraphVariable ("u");
-  mlSol.GetWriter()->SetDebugOutput(false);
+  mlSol.GetWriter()->SetDebugOutput (true);
 
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
@@ -153,7 +153,7 @@ int main(int argc, char** args) {
  * thus
  *                  J w = f(x) - J u0
  **/
-void AssembleAllenCahnProblem_AD(MultiLevelProblem& ml_prob) {
+void AssembleAllenCahnProblem_with_Crank_Nicholson_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -166,7 +166,7 @@ void AssembleAllenCahnProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  TransientNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("AllenCahn");   // pointer to the linear implicit system named "Poisson"
+  TransientNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("AllenCahn");
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -325,7 +325,6 @@ void AssembleAllenCahnProblem_AD(MultiLevelProblem& ml_prob) {
       std::vector < adept::adouble > gradSolu_gss(dim, 0.);
       
       double soluOld_gss = 0;
-      std::vector < double > gradSoluOld_gss(dim, 0.);
             
 
       for (unsigned i = 0; i < nDofu; i++) {
@@ -334,21 +333,18 @@ void AssembleAllenCahnProblem_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned k = 0; k < dim; k++) {
           gradSolu_gss[k] += phi_x[i * dim + k] * solu[i];
-          gradSoluOld_gss[k] += phi_x[i * dim + k] * soluOld[i];
         }
       }
 
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
 
-        adept::adouble graduGradphi = 0.;
-        double graduOldGradphi = 0.;
         double eps=0.01;
-        //double eps=1;
+
+        adept::adouble graduGradphi = 0.;
 
         for (unsigned k = 0; k < dim; k++) {
           graduGradphi   +=   phi_x[i * dim + k] * gradSolu_gss[k];
-          graduOldGradphi   +=   phi_x[i * dim + k] * gradSoluOld_gss[k];
         }
              
         aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  eps*( graduGradphi ) - (solu_gss - solu_gss*solu_gss*solu_gss) * phi[i]  ) * weight;
