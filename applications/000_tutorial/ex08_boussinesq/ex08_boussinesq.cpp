@@ -16,9 +16,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
-#include "NumericVector.hpp"
 #include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
 
@@ -137,7 +135,7 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(GMRES);
 
-  system.SetPreconditionerFineGrids(ILU_PRECOND);// for FEMuS_ASM you can use MLU_PRECOND
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
 
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40); //PETSC GMRES tolerances
 
@@ -159,8 +157,4 @@ int main(int argc, char** args) {
 
   return 0;
 }
-
-
-
-
 

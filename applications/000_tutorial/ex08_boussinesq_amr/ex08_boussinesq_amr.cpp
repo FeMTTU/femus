@@ -63,8 +63,10 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 int main(int argc, char** args) {
 
+  
   boussinesq_equation::Pr = 1.;
   boussinesq_equation::Ra = 1000.;
+  
   
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -84,9 +86,6 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-
-  // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -128,7 +127,7 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  // system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
   system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
   system.SetAssembleFunction( femus::boussinesq_equation::AssembleBoussinesqApproximation_AD );
@@ -138,6 +137,7 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfLinearIterations(3);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
+
 
   system.SetMgType(F_CYCLE);
   system.SetNumberPreSmoothingStep(0);
@@ -149,7 +149,7 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(GMRES);
 
-  system.SetPreconditionerFineGrids(ILU_PRECOND);// for FEMuS_ASM you can use MLU_PRECOND
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
 
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
 
@@ -160,7 +160,6 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(4); // option for FEMuS_ASM
 
   system.MGsolve();
-
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

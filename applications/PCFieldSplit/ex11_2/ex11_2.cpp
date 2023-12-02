@@ -228,8 +228,6 @@ int main(int argc, char** args) {
 
   system0.SetMaxNumberOfNonLinearIterations(10);
   system0.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
   system0.SetMaxNumberOfLinearIterations(1);
   system0.SetAbsoluteLinearConvergenceTolerance(1.e-15);

@@ -1,8 +1,4 @@
-
-
-
-
-/** \file Ex7.cpp
+/** \file Ex11.cpp
  *  \brief This example shows how to set and solve the weak form
  *   of the Boussinesq appoximation of the Navier-Stokes Equation
  *
@@ -27,7 +23,7 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "adept.h"
 
@@ -37,12 +33,18 @@
 
 using namespace femus;
 
+
+
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int faceIndex, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
 
   return dirichlet;
 }
+
+
+unsigned numberOfUniformLevels;
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -70,144 +72,6 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-//   MyVector <double> b;
-//   MyVector <double> c;
-//
-//   std::cout << c << std::endl;
-//
-//   c.resize(10);
-//   for(unsigned i = c.begin(); i < c.end(); i++) {
-//     c[i] = 1.3 * i;
-//   }
-//   std::cout << c << std::endl;
-//
-//   c.scatter();
-//   std::cout << c << std::endl;
-//
-//   std::vector <unsigned> offset;
-//   offset = c.getOffset();
-//
-//   for(unsigned i = 0; i < offset.size(); i++) {
-//     std::cout << i << " " << offset[i] << std::endl;
-//   }
-//   std::cout << std::endl;
-//   for(int i = 0; i < offset.size(); i++) {
-//     offset[i] = 2 * offset[i];
-//   }
-//
-//   for(unsigned i = 0; i < offset.size(); i++) {
-//     std::cout << i << " " << offset[i] << std::endl;
-//   }
-//
-//   b = c;
-//   b.resize(offset, 1);
-//   std::cout << b << std::endl;
-//
-//   std::cout << c << std::endl;
-//
-//   MyVector <unsigned> a;
-//   MyVector <unsigned> d;
-//
-//   std::cout << a << std::endl;
-//
-//   a.resize(10);
-//   for(unsigned i = a.begin(); i < a.end(); i++) {
-//     a[i] = 1.3 * i;
-//   }
-//   std::cout << a << std::endl;
-//
-//   a.scatter();
-//   std::cout << a << std::endl;
-//
-//   offset = a.getOffset();
-//   for(int i = 0; i < offset.size(); i++) {
-//     offset[i] = 2 * offset[i];
-//   }
-//   d = a;
-//   d.resize(offset, 1);
-//   std::cout << d << std::endl;
-//
-//   std::cout << a << std::endl;
-
-/*
-  MyMatrix <double> a;
-
-  std::cout << a << std::endl;
-
-  a.resize(10,5);
-  for(unsigned i = a.begin(); i < a.end(); i++) {
-    for(unsigned j = a.begin(i); j < a.end(i); j++) {
-      a[i][j] = (i*5)+j;
-    }
-  }
-  std::cout << a << std::endl;
-  
-  a.scatter();
-  std::cout << a << std::endl;
-  
-  std::vector <unsigned> offset;
-  offset = a.getOffset();
-  std::cout << std::endl;
-  for(int i = 0; i < offset.size(); i++) {
-    offset[i] = 2 * offset[i];
-  }
- 
-  MyMatrix <double> b(offset,10,1);
-
-  std::cout << b << std::endl;
-  
-
-  MyVector < unsigned > v(10,3);
-  v.scatter();
-  MyMatrix <double> m(v,1);
-  
-  
-  MyVector < unsigned > s(10,3);
-  s[1]=5;
-  s[8]=9;
- 
-  MyMatrix <double> n(s,2);
-  std::cout<<n<<std::endl;
-  n.scatter();
-  std::cout<<n<<std::endl;*/
-  
-
-
- 
-  
-  //  b.resize(offset, 1);
-  // return 0;
-  
-//   std::cout << b << std::endl;
-// 
-//   std::cout << c << std::endl;
-// 
-//   MyVector <unsigned> a;
-//   MyVector <unsigned> d;
-// 
-//   std::cout << a << std::endl;
-// 
-//   a.resize(10);
-//   for(unsigned i = a.begin(); i < a.end(); i++) {
-//     a[i] = 1.3 * i;
-//   }
-//   std::cout << a << std::endl;
-// 
-//   a.scatter();
-//   std::cout << a << std::endl;
-// 
-//   offset = a.getOffset();
-//   for(int i = 0; i < offset.size(); i++) {
-//     offset[i] = 2 * offset[i];
-//   }
-//   d = a;
-//   d.resize(offset, 1);
-//   std::cout << d << std::endl;
-// 
-//   std::cout << a << std::endl;
-
-
-
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
@@ -224,8 +88,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 2;
+  numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels =3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
@@ -247,25 +111,23 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
 
   // add system Poisson in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
+  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("T");
 
-  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
-  system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  // system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleTemperature_AD);
 
-  system.SetMaxNumberOfNonLinearIterations(10);
-  system.SetNonLinearConvergenceTolerance(1.e-8);
+  // system.SetMaxNumberOfNonLinearIterations(10);
+  // system.SetNonLinearConvergenceTolerance(1.e-8);
 
   system.SetMaxNumberOfLinearIterations(10);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
 
-//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
-//   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
@@ -283,6 +145,7 @@ int main(int argc, char** args) {
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
+  
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
@@ -303,10 +166,12 @@ int main(int argc, char** args) {
   vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted);
 
   mlMsh.PrintInfo();
-
-
+  
   return 0;
 }
+
+
+
 
 
 void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
@@ -315,11 +180,8 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  // call the adept stack object
-
-
   //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
+  LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*           msh         = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -344,7 +206,7 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-
+  
   //solution variable
   unsigned solTIndex;
   solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
@@ -448,13 +310,13 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
 
       // *** phiT_i loop ***
       for(unsigned i = 0; i < nDofsT; i++) {
-        adept::adouble Temp = 0.;
+        adept::adouble gradTgradphiT = 0.;
 
         for(unsigned j = 0; j < dim; j++) {
-          Temp +=  phiT_x[i * dim + j] * gradSolT_gss[j];
+          gradTgradphiT +=  phiT_x[i * dim + j] * gradSolT_gss[j];
         }
 
-        aResT[i] += (phiT[i] - Temp) * weight;
+        aResT[i] += (phiT[i] - gradTgradphiT) * weight;
       } // end phiT_i loop
 
     } // end gauss point loop

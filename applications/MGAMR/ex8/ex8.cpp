@@ -17,18 +17,18 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "adept.h"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 #include "PetscMatrix.hpp"
 
+#include "adept.h"
+#include <cstdlib>
 
 #include "../include/LinearImplicitSystemForSSC.hpp"
-
 
 
 using namespace femus;
@@ -130,21 +130,16 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   // add system Poisson in mlProb as a Linear Implicit System  
-  
   LinearImplicitSystemForSSC & system = mlProb.add_system < LinearImplicitSystemForSSC > ("Poisson");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePoisson);
   
-  //system.SetMaxNumberOfNonLinearIterations(1);
-  //system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
   system.SetMaxNumberOfLinearIterations(1); // number of Vcycles
   system.SetAbsoluteLinearConvergenceTolerance(1.e-50);	
@@ -158,7 +153,7 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   
   //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  system.SetPreconditionerFineGrids(LU_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
@@ -191,8 +186,8 @@ int main(int argc, char** args) {
     system.SetSscLevelSmoother(false); 
     system.SetFactorAndScale(false, scale);
   }
-
-  
+ 
+ 
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
   system.SetNumberPostSmoothingStep(1);
   
@@ -224,14 +219,13 @@ int main(int argc, char** args) {
     
     std::cout << "iteration = " <<i<<std::endl;
     
-    //mlSol.Initialize("All");
     
   // ====== BEGIN part to re-implement for SSC MGAMR!!! ================
-   system.SetOuterSolver(PREONLY);
-   system.MGsolve();
+    system.SetOuterSolver(PREONLY);
+    system.MGsolve();
   // ====== END part to re-implement for SSC MGAMR!!! ================
-   
-   
+    
+    
     mlSol.GenerateBdc("All");
     std::ofstream fout;
     if(i==0){

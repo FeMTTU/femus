@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 get_filename_component(APP_FOLDER_NAME_PARENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 
-#all Poisson
+# all Poisson
 
 
 ADD_SUBDIRECTORY(ex1/)

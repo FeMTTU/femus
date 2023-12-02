@@ -1,8 +1,4 @@
-
-
-
-
-/** \file Ex7.cpp
+/** \file Ex11.cpp
  *  \brief This example shows how to set and solve the weak form
  *   of the Boussinesq appoximation of the Navier-Stokes Equation
  *
@@ -17,20 +13,17 @@
  *  \author Eugenio Aulisa
  */
 
-#include "PetscMatrix.hpp"
-#include "PetscVector.hpp"
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
-#include "XDMFWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "adept.h"
-
-
+#include <cstdlib>
 
 #include "../include/LinearImplicitSystemForSSC.hpp"
 
@@ -128,7 +121,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, SECOND);//SECOND);;
+  mlSol.AddSolution("T", LAGRANGE, SECOND);//FIRST);;
 
   mlSol.Initialize("All");
 
@@ -140,7 +133,7 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
 
   // add system Poisson in mlProb as a Linear Implicit System
-  LinearImplicitSystemForSSC & system = mlProb.add_system < LinearImplicitSystemForSSC > ("Temp");
+  LinearImplicitSystemForSSC & system = mlProb.add_system < LinearImplicitSystemForSSC > ("Poisson");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("T");
@@ -155,8 +148,6 @@ int main(int argc, char** args) {
   system.SetAbsoluteLinearConvergenceTolerance(1.e-20);
 
 
-//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
-//   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(V_CYCLE);
 
@@ -226,14 +217,16 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
-  vtkIO.Write(Files::_application_output_directory, "quadratic", variablesToBePrinted);
-  vtkIO.Write(Files::_application_output_directory, "linear", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ], variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], variablesToBePrinted);
 
   mlMsh.PrintInfo();
-
-
+  
   return 0;
 }
+
+
+
 
 
 void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
@@ -242,11 +235,8 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  // call the adept stack object
-
-
   //  extract pointers to the several objects that we are going to use
-  LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("Temp");   // pointer to the linear implicit system named "Poisson"
+  LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*           msh         = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -271,7 +261,7 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-
+  
   //solution variable
   unsigned solTIndex;
   solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object

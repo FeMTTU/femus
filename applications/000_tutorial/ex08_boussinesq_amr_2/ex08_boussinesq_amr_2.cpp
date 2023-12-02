@@ -1,4 +1,4 @@
-/** \file Ex2.cpp
+/** \file Ex7.cpp
  *  \brief This example shows how to set and solve the weak form
  *   of the Boussinesq approximation of the Navier-Stokes Equation
  *
@@ -25,19 +25,17 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int faceIndex, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
 
-  if(!strcmp(SolName, "T")) {
-    if(faceIndex == 2) {
+  if (!strcmp(SolName, "T")) {
+    if (facename == 2) {
       value = 1.;
-    }
-    else if(faceIndex == 3) {
+    } else if (facename == 3) {
       dirichlet = false; //Neumann
     }
-  }
-  else if(!strcmp(SolName, "P")) {
+  } else if (!strcmp(SolName, "P")) {
     dirichlet = false;
   }
 
@@ -64,9 +62,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 }
 
-double InitialValueT(const std::vector < double >& x){
-  return (x[0]+0.5);
-}
 
 
 
@@ -76,7 +71,6 @@ int main(int argc, char** args) {
   
   boussinesq_equation::Pr = 0.4;
   boussinesq_equation::Ra = 40000;
-
   
   
   // init Petsc-MPI communicator
@@ -90,48 +84,41 @@ int main(int argc, char** args) {
   const std::string relative_path_to_build_directory =  "../../../";
   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_2x2_quad_Three_boundary_groups_Four_volume_groups_AMR.neu";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
-
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-//   unsigned numberOfUniformLevels = 3;
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-
-  numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-  // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
-
+  // print mesh info
+  mlMsh.PrintInfo();
 
   MultiLevelSolution mlSol(&mlMsh);
+
+  
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+  
 
   // add variables to mlSol
   mlSol.AddSolution("T", LAGRANGE, SERENDIPITY);//FIRST);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
 
-  if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
+  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
-  //mlSol.AssociatePropertyToSolution("P", "Pressure", false);
-  mlSol.AssociatePropertyToSolution("P", "Pressure", true);
+  mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-  //mlSol.Initialize("T",InitialValueT);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("P");
-  mlSol.GenerateBdc("All");
-
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
+  mlSol.GenerateBdc("All", "Steady", & mlProb);
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
@@ -141,58 +128,50 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
 
-  if(dim == 3) system.AddSolutionToSystemPDE("W");
+  if (dim == 3) system.AddSolutionToSystemPDE("W");
 
   system.AddSolutionToSystemPDE("P");
 
-  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
-  // system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
+  // system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
-  system.SetAssembleFunction(  femus::boussinesq_equation::AssembleBoussinesqApproximation_AD /*AssembleBoussinesqApproximation_AD*/);
+  system.SetAssembleFunction( femus::boussinesq_equation::AssembleBoussinesqApproximation_AD );
 
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(20);
   system.SetNonLinearConvergenceTolerance(1.e-8);
 
   system.SetMaxNumberOfLinearIterations(10);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
-//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-//   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
-
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
-
   system.init();
 
-  //system.SetSolverFineGrids(GMRES);
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetRichardsonScaleFactor(.75);
+
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
   system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(3);
 
-
-  system.SetPrintSolverInfo(false);
+  system.SetNumberOfSchurVariables(1); // option for FEMuS_ASM fot "P"
+  system.SetElementBlockNumber(4); // option for FEMuS_ASM
 
   system.MGsolve();
-
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.SetDebugOutput(true);
-  vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
 
   return 0;
 }

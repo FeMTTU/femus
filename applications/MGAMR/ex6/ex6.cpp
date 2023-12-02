@@ -17,15 +17,16 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-#include "adept.h"
 #include "FieldSplitTree.hpp"
-#include <stdlib.h>
 #include "PetscMatrix.hpp"
 
+#include "adept.h"
+#include <cstdlib>
 
 #include "../include/LinearImplicitSystemForSSC.hpp"
 
@@ -174,10 +175,6 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePoisson);
   
-  //system.SetMaxNumberOfNonLinearIterations(1);
-  //system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
   system.SetMaxNumberOfLinearIterations(1); // number of Vcycles
   system.SetAbsoluteLinearConvergenceTolerance(1.e-50);	
@@ -190,6 +187,8 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
+  // 10 number of richardson iterations
+  
 
   system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
@@ -197,7 +196,7 @@ int main(int argc, char** args) {
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
-  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances
   
 
 
@@ -265,7 +264,6 @@ int main(int argc, char** args) {
       vtkIO.SetDebugOutput( true );
       vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, counter-1);
     }
-
   }
   /////////////////////////////////////ultiLevelProb/////////////////////////
   
@@ -280,10 +278,6 @@ int main(int argc, char** args) {
   
   return 0;
 }
-
-
-
-
 
 void AssemblePoisson(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data

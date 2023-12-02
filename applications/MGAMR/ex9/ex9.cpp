@@ -14,8 +14,8 @@
  */
 
 #include "FemusInit.hpp"
-#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
@@ -26,7 +26,7 @@
 #include "PetscMatrix.hpp"
 
 #include "adept.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 
 using namespace femus;
@@ -112,7 +112,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 5;
+  unsigned numberOfSelectiveLevels = 4;
   
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
   
@@ -138,10 +138,6 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePoisson);
   
-  //system.SetMaxNumberOfNonLinearIterations(1);
-  //system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
   system.SetMaxNumberOfLinearIterations(1); // number of Vcycles
   system.SetAbsoluteLinearConvergenceTolerance(1.e-50);	
@@ -155,7 +151,7 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   
   //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  system.SetPreconditionerFineGrids(LU_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
@@ -221,7 +217,6 @@ int main(int argc, char** args) {
     
     std::cout << "iteration = " <<i<<std::endl;
     
-    //mlSol.Initialize("All");
     system.SetOuterSolver(PREONLY);
     system.MGsolve();
     
