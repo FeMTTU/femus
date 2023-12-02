@@ -87,34 +87,13 @@ public:
 
 
 
-
-// // // // ============== Solution set - BEGIN ==================
-// // //
-// // // double GetExactSolutionValue(const std::vector < double >& x) {
-// // //   Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
-// // //
-// // //   double FunctionValue = analytical_function_1.value(x);
-// // //   return FunctionValue;
-// // // };
-// // //
-// // // void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-// // //   Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
-// // //
-// // //   solGrad[0]  = analytical_function_1.gradient(x)[0];
-// // //   solGrad[1] = analytical_function_1.gradient(x)[1];
-// // // };
-// // //
-// // // // ============== Solution set - END ==================
-
-
-
-//====Setting_initial_conditions_with_analytical_solutions-BEGIN==============================
+//====Set analytical function-BEGIN==============================
 double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
     Math::Function <double> * exact_sol = ml_prob-> get_ml_solution()-> get_analytical_function(name);
 
     double value  = exact_sol-> value(x);
 }
-//====Setting_initial_conditions_with_analytical_solutions-END================================
+//====Set analytical function-END==============================
 
 
 
@@ -137,7 +116,7 @@ double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vecto
 void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
   double pi = acos(-1.);
 
-  std::vector <double> LaplacegradientValue;
+// // //   std::vector <double> LaplacegradientValue;
 
   Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
 
@@ -168,7 +147,7 @@ void GetExactSolutionGradient(const std::vector < double >& x, std::vector < dou
 // // // }
 
 
-//===========NONHOMOGENOUS_BC-BEGIN====================
+//====Set boundary condition-BEGIN==============================
 bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
@@ -184,8 +163,7 @@ bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem *
 
   return dirichlet;
 }
-
-//===========NONHOMOGENOUS_BC-END====================
+//====Set boundary condition-END==============================
 
 
 
@@ -279,13 +257,6 @@ int main(int argc, char** args) {
       MultiLevelSolution mlSol(&mlMsh);
 
 
-
-
-      // add variables to mlSol
-// // //       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
-// // //       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
-
-
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
       Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
       mlSol.set_analytical_function("u", & analytical_function_1);
@@ -328,6 +299,16 @@ int main(int argc, char** args) {
       system.MGsolve();
 
 // // //       // convergence for u
+// // //       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
+// // //
+// // //
+// // //
+// // //
+// // //       l2Norm[i][j]  = norm.first;
+// // //       semiNorm[i][j] = norm.second;
+
+
+      // // //       // convergence for u
 // // //       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
 // // //
 // // //
@@ -335,6 +316,8 @@ int main(int argc, char** args) {
 // // //
 // // //       l2Norm[i][j]  = norm.first;
 // // //       semiNorm[i][j] = norm.second;
+
+
 
 
       // print solutions
