@@ -44,7 +44,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
-unsigned numberOfUniformLevels;
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -88,7 +87,7 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels =3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 

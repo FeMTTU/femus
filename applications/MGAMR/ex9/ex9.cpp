@@ -50,21 +50,10 @@ bool SetBoundaryCondition2(const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
-
-//   if(elemgroupnumber == 7 && level < numberOfUniformLevels + 1){
-//     refine = true;
-//   }
-//   else if(elemgroupnumber == 8 && level < numberOfUniformLevels ){
-//     refine = true;
-//   }
-//   else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
-//     refine = true;
-//   }
 
   
   if(elemgroupnumber == 7 || elemgroupnumber == 9 ){
@@ -111,8 +100,8 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  const unsigned numberOfUniformLevels = 1;
+  const unsigned numberOfSelectiveLevels = 4;
   
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
   

@@ -135,13 +135,13 @@ int main(int argc, char** args) {
   system.SetMaxNumberOfNonLinearIterations(20);
   system.SetNonLinearConvergenceTolerance(1.e-8);
 
-  system.SetMaxNumberOfLinearIterations(3);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
+  system.SetMaxNumberOfLinearIterations(10);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
 
-  system.SetMgType(F_CYCLE);
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetMgType(V_CYCLE);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
 
 
   // initilaize and solve the system
@@ -151,7 +151,7 @@ int main(int argc, char** args) {
 
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");

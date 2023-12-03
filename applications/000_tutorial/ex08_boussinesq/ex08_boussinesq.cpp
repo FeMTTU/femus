@@ -125,7 +125,7 @@ int main(int argc, char** args) {
   system.SetMaxNumberOfLinearIterations(3);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
 
-  system.SetMgType(V_CYCLE);
+  system.SetMgType(F_CYCLE);
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
 
@@ -145,7 +145,6 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1); // option for FEMuS_ASM fot "P"
   system.SetElementBlockNumber(4); // option for FEMuS_ASM
 
-  system.SetOuterSolver(PREONLY);
   system.MGsolve();
 
   // print solutions
