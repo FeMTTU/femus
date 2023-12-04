@@ -55,6 +55,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumb
 
 // Mesh-dependent functions - END ===============
 
+// // // bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+// // //   
+// // //   bool dirichlet = true; //dirichlet
+// // //   value = 0.;
+// // // 
+// // //   return dirichlet;
+// // // }
 
 
 
@@ -72,7 +79,7 @@ int main(int argc, char** args) {
   
   // read coarse level mesh and generate finer level meshes 
 
-  typedef std::pair< std::string, std::string > Mesh_file_name_info; 
+  typedef std::pair< std::string, std::string > Mesh_file_name_info;
   
 
 // === BEGIN  
@@ -170,7 +177,10 @@ int main(int argc, char** args) {
   mlSol.Initialize("V", InitialValueU);
   mlSol.Initialize("W", InitialValueU);
   mlSol.Initialize("P", InitialValueP);
-  mlSol.Initialize("T", InitialValueT);    // note that this initialization is the same as piecewise constant element
+  mlSol.Initialize("T", InitialValueT);
+  
+  // // // mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  // // // mlSol.GenerateBdc("All");
   // Solution - END
 
 
@@ -179,7 +189,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.SetDebugOutput(false);
+  vtkIO.SetDebugOutput(true);
   
   // Strip extension from filename (to avoid a Paraview message) - BEGIN
   const size_t lastindex    = (std::get< index_for_mesh_file_info >( meshes_and_refinements[ mesh_file_index ] ).second).find_last_of("."); 
@@ -210,7 +220,3 @@ int main(int argc, char** args) {
   
   return 0;
 }
-
-
-
-

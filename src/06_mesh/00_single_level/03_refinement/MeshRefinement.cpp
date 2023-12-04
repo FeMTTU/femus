@@ -21,6 +21,8 @@
 #include "Mesh.hpp"
 #include "MeshMetisPartitioning.hpp"
 
+#include <climits>
+
 
 namespace femus {
 

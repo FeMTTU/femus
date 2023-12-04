@@ -26,13 +26,16 @@
 using namespace femus;
 
 bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  
   bool dirichlet = true; //dirichlet
   value = 0.;
 
   if (!strcmp(SolName, "T")) {
     if (facename == 2) {
-      value = 1.;
-    } else if (facename == 3) {
+       dirichlet = true;
+       value = 1.;
+    } 
+    else if (facename == 3) {
       dirichlet = false; //Neumann
     }
   } else if (!strcmp(SolName, "P")) {
@@ -45,13 +48,13 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
-  bool refine = 0;
+  bool refine = false;
 
-  if (elemgroupnumber == 6 && level < 4) refine = 1;
+  if (elemgroupnumber == 6 && level < 4) refine = true;
 
-  if (elemgroupnumber == 7 && level < 5) refine = 1;
+  if (elemgroupnumber == 7 && level < 5) refine = true;
 
-  if (elemgroupnumber == 8 && level < 6) refine = 1;
+  if (elemgroupnumber == 8 && level < 6) refine = true;
 
   return refine;
 
@@ -166,6 +169,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
   vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
 
   return 0;

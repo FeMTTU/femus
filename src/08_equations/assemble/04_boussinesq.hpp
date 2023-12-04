@@ -74,41 +74,29 @@ static void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
 
-  // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
-  if(assembleMatrix) s.continue_recording();
-  else s.pause_recording();
-
-  
   
   //solution variable
-  unsigned solTIndex;
-  solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
-  unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
+  const unsigned solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
+  const unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
 
   std::vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
-
   if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");       // get the position of "V" in the ml_sol object
 
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  const unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
-  unsigned solPIndex;
-  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
-  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
+  const unsigned solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  const unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
-  unsigned solTPdeIndex;
-  solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
+  const unsigned solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
 
   std::vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
-
   if(dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
 
-  unsigned solPPdeIndex;
-  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
+  const unsigned solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
   std::vector < adept::adouble >  solT; // local solution
   std::vector < std::vector < adept::adouble > >  solV(dim);    // local solution
@@ -162,8 +150,16 @@ static void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
   std::vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
+  RES->zero();
   if(assembleMatrix)   KK->zero(); // Set to zero all the entries of the Global Matrix
 
+  
+  // call the adept stack object
+  adept::Stack& s = FemusInit::_adeptStack;
+  if(assembleMatrix) s.continue_recording();
+  else s.pause_recording();
+
+  
   // element loop: each process loops only on the elements that owns
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -234,6 +230,7 @@ static void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
 
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
+
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
@@ -317,7 +314,7 @@ static void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k];
         }
 
-        NSV[1] += - coeff_in_front_of_buoyancy_force * solT_gss * phiV[i];
+        NSV[1] += - coeff_in_front_of_buoyancy_force * solT_gss * phiV[i]; ///@todo gravity direction, specify!!!
 
         for(unsigned  k = 0; k < dim; k++) {
           aResV[k][i] += - NSV[k] * weight;

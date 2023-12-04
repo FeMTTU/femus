@@ -26,6 +26,9 @@
 #include "Mesh.hpp"
 #include "Solution.hpp"
 
+#include "petscsys.h"
+
+#include <climits>
 #include <vector>
 #include <map>
 

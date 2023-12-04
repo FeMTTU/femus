@@ -30,7 +30,6 @@
 #include "FElemTypeEnum.hpp"
 #include "Function.hpp"
 
-#include "petscmat.h"
 
 #include <vector>
 
@@ -147,9 +146,25 @@ namespace femus {
 
 
     public:
+
       /** Vector size: number of added Solutions. */
       std::vector <NumericVector*> _Sol;
 // === Solution, NumericVector - END =================
+
+
+// === INITIALIZATION, ANALYTICAL FUNCTION - BEGIN =================
+public:
+    
+  void set_analytical_function(const char * name,  Math::Function< double > * func_in);
+
+   Math::Function< double > * get_analytical_function(const char * name) const;
+  
+protected:
+    
+   std::vector< Math::Function< double > * >  _analytical_function;
+// === INITIALIZATION, ANALYTICAL FUNCTION - END =================
+
+
 
 // === TIME EVOLUTION (NOT DISCRETIZATION)  - BEGIN =================
 // (why here? or is it only the fact of changing in time or not? or maybe it is just SOLUTION with ITERATION (so you have stages, like a time-dep algorithm or a nonlinear algoritm)
@@ -171,18 +186,6 @@ namespace femus {
       std::vector <unsigned> _SolTmOrder;
 // === TIME EVOLUTION (NOT DISCRETIZATION)  - END =================
 
-// === INITIALIZATION ANALYTICAL FUNCTION - BEGIN =================
-public:
-    
-  void set_analytical_function(const char * name,  Math::Function< double > * func_in);
-
-   Math::Function< double > * get_analytical_function(const char * name) const;
-  
-protected:
-    
-   std::vector< Math::Function< double > * >  _analytical_function;
-// === INITIALIZATION ANALYTICAL FUNCTION - END =================
-    
       
 //=========== 
 ///==== @todo from now on, it is more stuff that shouldn't be in a basic Solution object      
@@ -199,11 +202,11 @@ protected:
 
 
       /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
+      std::vector <NumericVector*> _Bdc;
+      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       std::vector <NumericVector*> _Res;
       /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       std::vector <NumericVector*> _Eps;
-      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
-      std::vector <NumericVector*> _Bdc;
       /** Vector size: number of added Solutions. Tells if the Solution is an unknown to some PDE */
       std::vector <bool> _ResEpsBdcFlag;
 // === Solution as Unknown of System - END =================
@@ -272,8 +275,8 @@ protected:
       /** Build Grad Matrix structure for SolType 0,1,2 */
       void BuildGradMatrixStructure(unsigned SolType);
 
-      std::vector <SparseMatrix*> _GradMat[5];
-      // bool _GradMatFlag[5];
+      std::vector <SparseMatrix*> _GradMat[NFE_FAMS];
+      // bool _GradMatFlag[NFE_FAMS];
 
 // === MESH, AMR - END =================
 

@@ -24,6 +24,7 @@
 #include "SparseMatrix.hpp"
 
 
+#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <ctime>

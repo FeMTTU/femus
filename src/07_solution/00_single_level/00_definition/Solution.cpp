@@ -25,6 +25,7 @@
 
 #include "Solution_config.hpp"
 
+#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <algorithm>
@@ -449,7 +450,7 @@ _analytical_function.resize(new_size);
 //   void Solution::UpdateSolAndRes(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* _EPS,  NumericVector* _RES,
 //                                  const std::vector < std::vector <unsigned> > &KKoffset) {
 // 
-//     PetscScalar zero = 0.;
+//     double zero = 0.;
 // 
 //     for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
 //       unsigned indexSol = SolPdeIndex_in[k];
@@ -501,7 +502,6 @@ _analytical_function.resize(new_size);
 
   void Solution::UpdateSol(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* _EPS, const std::vector < std::vector <unsigned> > &KKoffset) {
 
-    PetscScalar zero = 0.;
 
     for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
       unsigned indexSol = SolPdeIndex_in[k];
@@ -553,7 +553,7 @@ _analytical_function.resize(new_size);
 //--------------------------------------------------------------------------------
   void Solution::UpdateRes(const std::vector <unsigned> & SolPdeIndex_in, NumericVector* _RES, const std::vector < std::vector <unsigned> > &KKoffset) {
 
-    PetscScalar zero = 0.;
+    const double zero = 0.;
 
     for(unsigned k = 0; k < SolPdeIndex_in.size(); k++) {
       unsigned indexSol = SolPdeIndex_in[k];

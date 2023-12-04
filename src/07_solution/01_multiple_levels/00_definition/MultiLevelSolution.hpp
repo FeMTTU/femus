@@ -23,12 +23,12 @@ PURPOSE.  See the above copyright notice for more information.
 #include "Solution.hpp"
 #include "MultiLevelMesh.hpp"
 #include "FElemTypeEnum.hpp"
-#include "BDCTypeEnum.hpp"
 #include "Writer.hpp"
 #include "FunctionBase.hpp"
 
+#include "BDCTypeEnum.hpp"
+
 #include <vector>
-#include <memory>
 
 
 namespace femus {
@@ -215,6 +215,47 @@ private:
     
 // === SPACE DISCRETIZATION (FE) - END =================
 
+// === INITIALIZATION (Initial Conditions) - BEGIN ===============
+public:
+    
+    /** Initial condition function pointer typedef */
+    typedef double (*InitFunc) (const std::vector < double >& x);
+
+    /** duplicate */
+    typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]);
+
+    /** To be Added */
+    void Initialize(const char name[], InitFunc func = NULL);
+
+    void Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem * ml_prob);
+    
+    /** @todo At all levels, initialize Sol. By default, Sol is set to zero. Otherwise, a function is passed. 
+      * In that case, and if the Solution is time-dependent, then both Sol and SolOld are initialized. */
+    void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
+    
+    inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
+    
+    void UpdateSolution(const char name[], InitFunc func, const double& time);
+    
+    
+// === INITIALIZATION (Initial Conditions) - END =================
+    
+// === INITIALIZATION, FUNCTION - BEGIN =================
+public:
+    
+  void set_analytical_function(const char * name,  Math::Function< double > * func_in) {    
+      const unsigned level_to_pick_from = 0; ///@todo
+    GetSolutionLevel(level_to_pick_from)->set_analytical_function(name, func_in);
+  }
+
+   Math::Function< double > * get_analytical_function(const char * name) const {
+             const unsigned level_to_pick_from = 0; ///@todo
+    return GetSolutionLevel(level_to_pick_from)->get_analytical_function(name);
+
+  }
+  
+// === INITIALIZATION, FUNCTION - END =================
+
 
 // === TIME EVOLUTION (NOT DISCRETIZATION) - BEGIN =================
 public:
@@ -234,57 +275,8 @@ private:
     std::vector < int >                      _solTimeOrder;
 // === TIME EVOLUTION (NOT DISCRETIZATION) - END =================
 
-// === INITIALIZATION (Initial Conditions) - BEGIN ===============
-public:
-    
-    /** Initial condition function pointer typedef */
-    typedef double (*InitFunc) (const std::vector < double >& x);
 
-    /** duplicate */
-    typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]);
 
-    /** To be Added */
-    void Initialize(const char name[], InitFunc func = NULL);
-
-    void Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem * ml_prob);
-    
-    /** @todo At all levels, initialize Sol. By default, Sol is set to zero. Otherwise, a function is passed. 
-      * In that case, and if the Solution is time-dependent, then both Sol and SolOld are initialized. */
-    void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
-  
-template < class LIST_OF_CTRL_FACES >
-  void InitializeBasedOnControlFaces(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
-    InitializeBasedOnControlFaces<LIST_OF_CTRL_FACES>(name, NULL, func, ml_prob);
-  }
-    
-    /** A Solution is by default initialized to zero, or by a provided function     */
-template < class LIST_OF_CTRL_FACES >
-  void InitializeBasedOnControlFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob);
-  
-  
-    inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
-    
-    void UpdateSolution(const char name[], InitFunc func, const double& time);
-    
-    
-// === INITIALIZATION (Initial Conditions) - END =================
-    
-// === INITIALIZATION FUNCTION - BEGIN =================
-public:
-    
-  void set_analytical_function(const char * name,  Math::Function< double > * func_in) {    
-      const unsigned level_to_pick_from = 0; ///@todo
-    GetSolutionLevel(level_to_pick_from)->set_analytical_function(name, func_in);
-  }
-
-   Math::Function< double > * get_analytical_function(const char * name) const {
-             const unsigned level_to_pick_from = 0; ///@todo
-    return GetSolutionLevel(level_to_pick_from)->get_analytical_function(name);
-
-  }
-  
-// === INITIALIZATION FUNCTION - END =================
-    
 // === FILE OUTPUT - BEGIN =============
 public:
 
@@ -307,7 +299,7 @@ private:
 // === FILE OUTPUT - END ===============
     
 
-// === RESTART - BEGIN =============
+// === FILE OUTPUT, RESTART - BEGIN =============
 
 public:
     
@@ -317,7 +309,7 @@ public:
     void LoadSolution(const char* filename);
     void LoadSolution(const unsigned &level, const char* filename);
     
-// === RESTART - END =============
+// === FILE OUTPUT, RESTART - END =============
 
     
 //=========== 
@@ -512,7 +504,22 @@ private:
     
 // === FSI - END =================
 
+
     
+// === Optimal control - BEGIN =================
+
+public:
+    
+template < class LIST_OF_CTRL_FACES >
+  void InitializeBasedOnControlFaces(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
+    InitializeBasedOnControlFaces<LIST_OF_CTRL_FACES>(name, NULL, func, ml_prob);
+  }
+    
+    /** A Solution is by default initialized to zero, or by a provided function     */
+template < class LIST_OF_CTRL_FACES >
+  void InitializeBasedOnControlFaces(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob);
+  
+// === Optimal control - END =================
 
 };
 
