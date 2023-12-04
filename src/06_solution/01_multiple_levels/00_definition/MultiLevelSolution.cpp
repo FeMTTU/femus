@@ -43,7 +43,7 @@ namespace femus {
   }
 
 //---------------------------------------------------------------------------------------------------
-  MultiLevelSolution::MultiLevelSolution(MultiLevelMesh* ml_msh) :
+  MultiLevelSolution::MultiLevelSolution(/*const*/ MultiLevelMesh* ml_msh) :
     _gridn(ml_msh->GetNumberOfLevels()),
     _mlMesh(ml_msh) {
       
@@ -92,6 +92,7 @@ namespace femus {
 
 
   void MultiLevelSolution::AddSolutionLevel() {
+    
     // add level solution
     _solution.resize(_gridn + 1);
     _solution[_gridn] = new Solution(_mlMesh->GetLevel(_gridn));
@@ -336,20 +337,20 @@ namespace femus {
 
    std::vector< unsigned > sol_start_end =  solution_start_and_end(std::string (name));
       
+  for (unsigned ig = 0; ig < _gridn; ig++) {
       
-    for(unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
+    for (unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
       const unsigned sol_type = _solType[i];
 
-      for(unsigned ig = 0; ig < _gridn; ig++) {
         
-        const Mesh* msh = _mlMesh->GetLevel(ig);
-
               // initialize vectors - BEGIN -----
         _solution[ig]->ResizeSolutionVector(_solName[i]);
         _solution[ig]->_Sol[i]->zero();
               // initialize vectors - END -----
 
         if(func || funcMLProb) {
+
+        const Mesh* msh = _mlMesh->GetLevel(ig);
 
 
           if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
@@ -418,9 +419,9 @@ namespace femus {
 
         }
         
-      } //end levels
-      
-    }
+      } //end solutions
+    
+  } //end levels
 
     return;
   }
@@ -1214,7 +1215,9 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
     unsigned sol_type = _solType[i];
 
+    
     for(unsigned ig = 0; ig < _gridn; ig++) {
+      
         const Mesh* msh = _mlMesh->GetLevel(ig);
 
       if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
@@ -1246,6 +1249,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
           }
         }
       }
+      
       else if(sol_type < NFE_FAMS) {
         
         for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {

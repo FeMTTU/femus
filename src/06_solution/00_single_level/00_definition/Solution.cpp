@@ -39,8 +39,9 @@ namespace femus {
    *  Constructor
    **/
 // ------------------------------------------------------------------
-  Solution::Solution(Mesh *other_msh) {
-    _msh = other_msh;
+  Solution::Solution(const Mesh *other_msh) :
+    _msh(other_msh)
+   {
 
     for(int i = 0; i < NFE_FAMS; i++) {
       _GradMat[i].resize(_msh->GetDimension());

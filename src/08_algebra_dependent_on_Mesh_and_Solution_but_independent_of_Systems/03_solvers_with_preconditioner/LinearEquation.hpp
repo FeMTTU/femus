@@ -107,7 +107,7 @@ class LinearEquation : public ParallelObject {
  private:
   
   /** Pointer to underlying mesh */
-  Mesh *_msh;
+  const Mesh *_msh;
   
 //==== DOFMAP - END ========
 

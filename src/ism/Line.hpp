@@ -104,7 +104,7 @@ namespace femus {
 
       std::vector< double > _time;
       Solution* _sol;
-      Mesh* _mesh;
+      const Mesh* _mesh;
 
     protected:
       std::vector< unsigned int >::reference sol (const char* arg1);

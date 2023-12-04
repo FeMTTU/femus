@@ -47,7 +47,7 @@ class MultiLevelSolution : public ParallelObject {
 public:
     
     /** Constructor */
-    MultiLevelSolution(MultiLevelMesh *ml_msh);
+    MultiLevelSolution(/*const*/ MultiLevelMesh *ml_msh);
 
     /** Destructor */
     ~MultiLevelSolution();
@@ -90,11 +90,14 @@ public:
     /** To be Added */
     void ResizeSolution_par(const unsigned new_size);
     
-    std::vector< unsigned > solution_start_and_end(const std::string name);
   
     /** Add one Solution to another, at all levels */
     void add_solution(const unsigned index_read, const unsigned index_write);
     
+private:
+  
+    std::vector< unsigned > solution_start_and_end(const std::string name);
+  
 // === BASIC SOL MANIPULATION - END =================
     
 // === NAME & INDEX  - BEGIN =================
@@ -160,8 +163,18 @@ public:
         return _solution[i];
     };
     
+    /** To be Added */
+    MultiLevelMesh * GetMLMesh() {
+        return _mlMesh;
+    };
+    
+    /** To be Added */
+    const MultiLevelMesh * GetMLMesh() const {
+        return _mlMesh;
+    };
+    
     // member data
-    MultiLevelMesh* _mlMesh;
+    /*const*/ MultiLevelMesh * _mlMesh;
 
      // *******************************************************
 

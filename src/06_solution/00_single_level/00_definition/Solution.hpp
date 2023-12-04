@@ -51,7 +51,7 @@ namespace femus {
 // === Constructors / Destructor  - BEGIN =================
     public:
       /* Constructor */
-      Solution(Mesh *other_msh);
+      Solution(const Mesh * other_msh);
 
       /** Destructor */
       ~Solution();
@@ -104,14 +104,19 @@ namespace femus {
 
 // === MESH - BEGIN =================
     public:
-        
-      Mesh * GetMesh() {
+              
+//       Mesh * GetMesh() {
+//         return _msh;
+//       }
+//       
+      const Mesh * GetMesh() const {
         return _msh;
       }
       
     private:
+      
       /** Pointer to underlying mesh object */
-      Mesh *_msh;
+      const Mesh *_msh;
       
 // === MESH - END =================
 

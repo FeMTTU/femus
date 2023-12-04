@@ -40,9 +40,12 @@ namespace femus {
 
 //--------------------------------------------------------------------------------
 
-  LinearEquation::LinearEquation(Solution *other_solution) {
+  LinearEquation::LinearEquation(Solution *other_solution) :
+     _msh ( _solution->GetMesh() )  
+     {
+       
     _solution = other_solution;
-    _msh = _solution->GetMesh();
+    
     _EPS = NULL;
     _EPSC = NULL;
     _RES = NULL;
