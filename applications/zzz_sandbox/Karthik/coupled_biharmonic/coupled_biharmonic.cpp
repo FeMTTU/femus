@@ -28,6 +28,7 @@
 #include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 #include "adept.h"
+// // // extern Domains::square_m05p05::Function_Zero_on_boundary_4<double> analytical_function;
 
 
 #define LIBRARY_OR_USER   1 //0: library; 1: user
@@ -48,7 +49,7 @@ using namespace femus;
 namespace Domains{
 namespace square_m05p05 {
  template < class type = double >
-class Function_Zero_on_boundary_4_laplacian : public Math::Function< type > {
+class Function_Zero_on_boundary_4_Laplacian : public Math::Function< type > {
 
 public:
 
@@ -87,13 +88,51 @@ public:
 
 
 
-//====Set analytical function-BEGIN==============================
-double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
-    Math::Function <double> * exact_sol = ml_prob-> get_ml_solution()-> get_analytical_function(name);
 
-    double value  = exact_sol-> value(x);
+// // // //====Set analytical function-BEGIN==============================
+// // // double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
+// // //     Math::Function <double> * exact_sol = ml_prob-> get_ml_solution()-> get_analytical_function(name);
+// // //
+// // //     double value  = exact_sol-> value(x);
+// // //     return value;
+// // // }
+// // //
+// // //
+// // //
+// // // void GetExactSolutionGradient(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char* name, std::vector<double>& solGrad) {
+// // //     Math::Function<double>* analytical_function_grad = ml_prob->get_ml_solution()->get_analytical_function(name);
+// // //     solGrad = analytical_function_grad->gradient(x);
+// // // };
+// // //
+// // // //====Set analytical function-END==============================
+
+
+ //====Set analytical function working-BEGIN==============================
+double GetExactSolutionValue(const std::vector<double>& x) {
+    // Use your existing logic to get the analytical function
+    // and compute the value
+    Domains::square_m05p05::Function_Zero_on_boundary_4<double> analytical_function;
+    return analytical_function.value(x);
 }
-//====Set analytical function-END==============================
+
+void GetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad) {
+    // Use your existing logic to get the analytical function
+    // and compute the gradient
+    Domains::square_m05p05::Function_Zero_on_boundary_4<double> analytical_function;
+    solGrad = analytical_function.gradient(x);
+}
+ //====Set analytical function working-END==============================
+
+
+// // // template <class Function>
+// // // double GetExactSolutionValue(const std::vector<double>& x, const Function& analytical_function) {
+// // //     return analytical_function.value(x);
+// // // }
+// // //
+// // // template <class Function>
+// // // void GetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad, const Function& analytical_function) {
+// // //     solGrad = analytical_function.gradient(x);
+// // // }
 
 
 
@@ -111,22 +150,6 @@ double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vecto
 // // //
 // // //
 // // // //=====Dirichlet_Nonhomogenous-END==================
-
-
-void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-  double pi = acos(-1.);
-
-// // //   std::vector <double> LaplacegradientValue;
-
-  Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
-
-  unsigned int m = analytical_function_1.gradient(x).size();
-
-  solGrad[0] = analytical_function_1.gradient(x)[0];
-  solGrad[1] = analytical_function_1.gradient(x)[1];
-
-};
-
 
 
 // // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -160,10 +183,12 @@ bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem *
       Math::Function <double> * v = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
     Value = v -> value(x);
   }
-
   return dirichlet;
 }
 //====Set boundary condition-END==============================
+
+
+
 
 
 
@@ -202,10 +227,15 @@ int main(int argc, char** args) {
 
 
    Domains::square_m05p05::Function_Zero_on_boundary_4<>   system_biharmonic_coupled_function_zero_on_boundary_1;
-   Domains::square_m05p05::Function_Zero_on_boundary_4_laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_laplacian;
-   system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_laplacian; //this is the RHS for the auxiliary variable v = -Delta u
+   Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian;
+   system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian; //this is the RHS for the auxiliary variable v = -Delta u
 
    system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
+
+
+
+
+
 
   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
     // ======= System Specifics - END ==================
@@ -262,8 +292,19 @@ int main(int argc, char** args) {
       mlSol.set_analytical_function("u", & analytical_function_1);
 
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
-      Domains::square_m05p05::Function_Zero_on_boundary_4_laplacian<double> analytical_function_1_laplacian;
+      Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<double> analytical_function_1_laplacian;
       mlSol.set_analytical_function("v", & analytical_function_1_laplacian);
+
+
+
+
+
+
+
+
+
+
+
 
       mlSol.Initialize("All");
 
@@ -298,25 +339,16 @@ int main(int argc, char** args) {
 
       system.MGsolve();
 
+
+
 // // //       // convergence for u
-// // //       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
-// // //
-// // //
-// // //
-// // //
-// // //       l2Norm[i][j]  = norm.first;
-// // //       semiNorm[i][j] = norm.second;
+      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u",  GetExactSolutionValue, GetExactSolutionGradient);
 
 
-      // // //       // convergence for u
-// // //       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient );
-// // //
-// // //
-// // //
-// // //
-// // //       l2Norm[i][j]  = norm.first;
-// // //       semiNorm[i][j] = norm.second;
 
+
+      l2Norm[i][j]  = norm.first;
+      semiNorm[i][j] = norm.second;
 
 
 
@@ -334,69 +366,69 @@ int main(int argc, char** args) {
   // FE_convergence::output_convergence_order();
 
 
-// // //   // ======= L2 - BEGIN  ========================
-// // //   std::cout << std::endl;
-// // //   std::cout << std::endl;
-// // //   std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-// // //   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-// // //
-// // //   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
-// // //     std::cout << i + 1 << "\t";
-// // //     std::cout.precision(14);
-// // //
-// // //     for (unsigned j = 0; j < feOrder.size(); j++) {
-// // //       std::cout << l2Norm[i][j] << "\t";
-// // //     }
-// // //
-// // //     std::cout << std::endl;
-// // //
-// // //     if (i < maxNumberOfMeshes - 1) {
-// // //       std::cout.precision(3);
-// // //       std::cout << "\t\t";
-// // //
-// // //       for (unsigned j = 0; j < feOrder.size(); j++) {
-// // //         std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
-// // //       }
-// // //
-// // //       std::cout << std::endl;
-// // //     }
-// // //
-// // //   }
-// // //   // ======= L2 - END  ========================
+  // ======= L2 - BEGIN  ========================
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
+    std::cout << i + 1 << "\t";
+    std::cout.precision(14);
+
+    for (unsigned j = 0; j < feOrder.size(); j++) {
+      std::cout << l2Norm[i][j] << "\t";
+    }
+
+    std::cout << std::endl;
+
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
+
+      for (unsigned j = 0; j < feOrder.size(); j++) {
+        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
+      }
+
+      std::cout << std::endl;
+    }
+
+  }
+  // ======= L2 - END  ========================
 
 
 
-// // //   // ======= H1 - BEGIN  ========================
-// // //
-// // //   std::cout << std::endl;
-// // //   std::cout << std::endl;
-// // //   std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-// // //   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-// // //
-// // //   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
-// // //     std::cout << i + 1 << "\t";
-// // //     std::cout.precision(14);
-// // //
-// // //     for (unsigned j = 0; j < feOrder.size(); j++) {
-// // //       std::cout << semiNorm[i][j] << "\t";
-// // //     }
-// // //
-// // //     std::cout << std::endl;
-// // //
-// // //     if (i < maxNumberOfMeshes - 1) {
-// // //       std::cout.precision(3);
-// // //       std::cout << "\t\t";
-// // //
-// // //       for (unsigned j = 0; j < feOrder.size(); j++) {
-// // //         std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
-// // //       }
-// // //
-// // //       std::cout << std::endl;
-// // //     }
-// // //
-// // //   }
-// // //
-// // //   // ======= H1 - END  ========================
+  // ======= H1 - BEGIN  ========================
+
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
+    std::cout << i + 1 << "\t";
+    std::cout.precision(14);
+
+    for (unsigned j = 0; j < feOrder.size(); j++) {
+      std::cout << semiNorm[i][j] << "\t";
+    }
+
+    std::cout << std::endl;
+
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
+
+      for (unsigned j = 0; j < feOrder.size(); j++) {
+        std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
+      }
+
+      std::cout << std::endl;
+    }
+
+  }
+
+  // ======= H1 - END  ========================
 
 
   return 0;
