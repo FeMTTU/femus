@@ -49,56 +49,6 @@ using namespace femus;
 
 
 
-
-
-// // // //====Set analytical function-BEGIN==============================
-// // // double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
-// // //     Math::Function <double> * exact_sol = ml_prob-> get_ml_solution()-> get_analytical_function(name);
-// // //
-// // //     double value  = exact_sol-> value(x);
-// // //     return value;
-// // // }
-// // //
-// // //
-// // //
-// // // void GetExactSolutionGradient(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char* name, std::vector<double>& solGrad) {
-// // //     Math::Function<double>* analytical_function_grad = ml_prob->get_ml_solution()->get_analytical_function(name);
-// // //     solGrad = analytical_function_grad->gradient(x);
-// // // };
-// // //
-// // // //====Set analytical function-END==============================
-
-
- //====Set analytical function working-BEGIN==============================
-double GetExactSolutionValue(const std::vector<double>& x) {
-    // Use your existing logic to get the analytical function
-    // and compute the value
-    Domains::square_m05p05::Function_Zero_on_boundary_4<double> analytical_function;
-    return analytical_function.value(x);
-}
-
-void GetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad) {
-    // Use your existing logic to get the analytical function
-    // and compute the gradient
-    Domains::square_m05p05::Function_Zero_on_boundary_4<double> analytical_function;
-    solGrad = analytical_function.gradient(x);
-}
- //====Set analytical function working-END==============================
-
-
-// // // template <class Function>
-// // // double GetExactSolutionValue(const std::vector<double>& x, const Function& analytical_function) {
-// // //     return analytical_function.value(x);
-// // // }
-// // //
-// // // template <class Function>
-// // // void GetExactSolutionGradient(const std::vector<double>& x, std::vector<double>& solGrad, const Function& analytical_function) {
-// // //     solGrad = analytical_function.gradient(x);
-// // // }
-
-
-
-
 // // // //=====Dirichlet_Nonhomogenous-BEGIN==================
 // // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name, double & value, const int faceName, const double time){
 // // //     bool dirichlet = true;
@@ -304,9 +254,7 @@ int main(int argc, char** args) {
 
 
 // // //       // convergence for u
-      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u",  GetExactSolutionValue, GetExactSolutionGradient);
-
-      // // // std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u",  & analytical_function_1);
+      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u",  & analytical_function_1);
 
 
 

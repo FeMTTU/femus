@@ -1278,9 +1278,22 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
 //This function does not require an equation
 std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiLevelSolution* ml_sol, 
                                                                     const std::string solution_name,
+                                                                    const Math::Function< double > * function_in,
                                                                     double    (* function_value )  (const std::vector<double> & ),
                                                                     void    (* function_gradient)  (const std::vector < double > & , std::vector < double >&  )
                                                                     ) {      
+  if (function_in == NULL) {
+     if (function_value == NULL) { abort(); }
+     if (function_gradient == NULL) { abort(); }
+  }
+  else 
+  {
+     if (function_value != NULL) { abort(); }
+     if (function_gradient != NULL) { abort(); }
+  }
+  
+  
+  
   
   const unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
   
@@ -1370,13 +1383,16 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiL
       }
 
       std::vector <double> exactGradSol(dim);
-      function_gradient(x_gss, exactGradSol);
+
+      if (function_in != NULL) { exactGradSol = function_in->gradient(x_gss); }
+      else {      function_gradient(x_gss, exactGradSol); }
 
       for (unsigned j = 0; j < dim ; j++) {
         seminorm   += ((gradSolu_gss[j] - exactGradSol[j]) * (gradSolu_gss[j] - exactGradSol[j])) * weight;
       }
 
-      const double exactSol = function_value(x_gss);
+      const double exactSol = (function_in) ? function_in->value(x_gss) : function_value(x_gss);
+      
       l2norm += (exactSol - solu_gss) * (exactSol - solu_gss) * weight;
     } // end gauss point loop
   } //end element loop for each process
@@ -1408,16 +1424,33 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiL
                                                                     ){
    if (unknowns_vec.size() != 1) abort();
                                                                      
- return   GetErrorNorm_L2_H1_with_analytical_sol(ml_sol, unknowns_vec[0]._name, function_value, function_gradient) ;                                                                       
+ return   GetErrorNorm_L2_H1_with_analytical_sol(ml_sol, unknowns_vec[0]._name, NULL, function_value, function_gradient) ;                                                                       
                                                                       
                                                                     }
 
+
+std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiLevelSolution* ml_sol, 
+                                                                    const std::string solution_name,
+                                                                    const Math::Function< double > * function_in
+                                                                    ) {
+                                                                      
+  return GetErrorNorm_L2_H1_with_analytical_sol(ml_sol, solution_name, function_in, NULL, NULL);
+  
+}                                                                    
                                                                     
-// std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(MultiLevelSolution* ml_sol, 
-//                                                                     std::string solution_name,
-//                                                                     Math::Function exact_sol_in
-//                                                                     ){
-// }
+                                                                    
+
+std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiLevelSolution* ml_sol, 
+                                                                    const std::string solution_name,
+                                                                    double    (* function_value )  (const std::vector<double> & ),
+                                                                    void    (* function_gradient)  (const std::vector < double > & , std::vector < double >&  )
+                                                                    ) {
+
+  return GetErrorNorm_L2_H1_with_analytical_sol(ml_sol, solution_name, NULL, function_value, function_gradient);
+  
+}
+
+
 
 
 // ||u_i - u_h||/||u_i-u_(h/2)|| = 2^alpha, alpha is order of conv 
