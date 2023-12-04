@@ -8,6 +8,8 @@
 #include "SparseMatrix.hpp"
 #include "Assemble_jacobian.hpp"
 
+#include "stationary_or_time_dep.hpp"
+
 #include "./elliptic_nonlin_param.hpp"
 
 using namespace femus;
@@ -145,7 +147,7 @@ int main(int argc, char** args) {
 
   //MU
   std::vector<std::string> act_set_flag_name(1);  act_set_flag_name[0] = "act_flag";
-  const unsigned int act_set_fake_time_dep_flag = 2;
+  const unsigned int act_set_fake_time_dep_flag = TIME_DEPENDENT;
   ml_sol.AddSolution(act_set_flag_name[0].c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag, false);
   ml_sol.Initialize(act_set_flag_name[0].c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
@@ -336,7 +338,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
    std::string act_flag_name = "act_flag";
    unsigned int solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
    unsigned int solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
-      if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+      if(sol->GetSolutionTimeOrder(solIndex_act_flag) == TIME_DEPENDENT) {
         *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
       }
 

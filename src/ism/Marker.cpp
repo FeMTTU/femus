@@ -19,7 +19,9 @@
 #include "Marker.hpp"
 #include "Line.hpp"
 #include "NumericVector.hpp"
-#include <math.h>
+#include "stationary_or_time_dep.hpp"
+
+#include <cmath>
 
 #include "PolynomialBases.hpp"
 
@@ -1896,7 +1898,7 @@ namespace femus
 
     bool timeDependent = true;
     for (unsigned  k = 0; k < _dim; k++) {
-      if (sol->GetSolutionTimeOrder(solVIndex[k]) != 2) {
+      if (sol->GetSolutionTimeOrder(solVIndex[k]) != TIME_DEPENDENT) {
         timeDependent = false;
       }
     }

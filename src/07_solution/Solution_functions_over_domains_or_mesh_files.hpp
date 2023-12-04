@@ -42,6 +42,103 @@ public:
       
 };
 
+
+
+template < class type = double >
+class Function_X : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return x[0];
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  =  1.;
+        solGrad[1]  =  0.;
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return  0.; 
+    }
+
+      
+};
+
+
+
+template < class type = double >
+class Function_Y : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return x[1];
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  =  0.;
+        solGrad[1]  =  1.;
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return  0.; 
+    }
+
+      
+};
+
+
+
+template < class type = double >
+class Function_XplusY : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+        
+        return x[0] + x[1];
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  =  1.;
+        solGrad[1]  =  1.;
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+        
+        return  0.; 
+    }
+
+      
+};
+
+
 // Functions for every domain - END ===============================
 
 

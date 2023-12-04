@@ -23,6 +23,7 @@
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 
+#include "stationary_or_time_dep.hpp"
 #include "Solution_config.hpp"
 
 #include <cstring>
@@ -321,7 +322,7 @@ _analytical_function.resize(new_size);
       if(_Bdc[i]) delete _Bdc[i];
     }
 
-    if(_SolTmOrder[i] == 2) {
+    if(_SolTmOrder[i] == TIME_DEPENDENT) {
       if(_SolOld[i]) delete _SolOld[i];
     }
 
@@ -354,7 +355,7 @@ _analytical_function.resize(new_size);
       }
     }
 
-    if(_SolTmOrder[i] == 2) {  // only if the variable is time dependent
+    if(_SolTmOrder[i] == TIME_DEPENDENT) {  // only if the variable is time dependent
       _SolOld[i] = NumericVector::build().release();
       _SolOld[i]->init(*_Sol[i]);
     }
@@ -413,7 +414,7 @@ _analytical_function.resize(new_size);
 
       }
 
-      if(_SolTmOrder[i] == 2) {
+      if(_SolTmOrder[i] == TIME_DEPENDENT) {
         if(_SolOld[i]) delete _SolOld[i];
 
         _SolOld[i] = NULL;
@@ -1339,7 +1340,7 @@ _analytical_function.resize(new_size);
   void Solution::CopySolutionToOldSolution() {
     for(unsigned i = 0; i < _Sol.size(); i++) {
       // Copy the old vector
-      if(_SolTmOrder[i] == 2) {
+      if(_SolTmOrder[i] == TIME_DEPENDENT) {
         *(_SolOld[i]) = *(_Sol[i]);
       }
     }
@@ -1348,7 +1349,7 @@ _analytical_function.resize(new_size);
   void Solution::ResetSolutionToOldSolution() {
     for(unsigned i = 0; i < _Sol.size(); i++) {
       // Copy the old vector
-      if(_SolTmOrder[i] == 2) {
+      if(_SolTmOrder[i] == TIME_DEPENDENT) {
         *(_Sol[i]) = *(_SolOld[i]);
       }
     }

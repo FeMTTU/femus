@@ -151,7 +151,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   std::string act_flag_name = "act_flag";
   unsigned int solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
   unsigned int solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
-     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == TIME_DEPENDENT) {
        *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
      }
   

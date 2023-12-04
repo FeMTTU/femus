@@ -243,7 +243,7 @@ namespace femus {
           else {
             sprintf( buffer, "%s %s", "Eps", _ml_sol->GetSolutionName( i ) );
           }
-          if( name == 0 || ( _debugOutput  && solution->_ResEpsBdcFlag[i] ) ) {
+          if( name == 0 || ( _debugOutput  && solution->is_unknown_of_system(i) ) ) {
             
             
             if( _ml_sol->GetSolutionType( i ) < NFE_FAMS_C_ZERO_LAGRANGE ) { // **********  on the nodes **********

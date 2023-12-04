@@ -106,7 +106,7 @@ namespace femus {
       _solution[_gridn]->_Sol[k]->matrix_mult(*_solution[_gridn - 1]->_Sol[k],
                                               *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
       _solution[_gridn]->_Sol[k]->close();
-      if(_solTimeOrder[k] == 2) {
+      if(_solTimeOrder[k] == TIME_DEPENDENT) {
         _solution[_gridn]->_SolOld[k]->matrix_mult(*_solution[_gridn - 1]->_SolOld[k],
                                                    *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
         _solution[_gridn]->_SolOld[k]->close();
@@ -366,7 +366,7 @@ namespace femus {
 
                   _solution[ig]->_Sol[i]->set(inode_Metis, value);
 
-                  if(_solTimeOrder[i] == 2) {
+                  if(_solTimeOrder[i] == TIME_DEPENDENT) {
                     _solution[ig]->_SolOld[i]->set(inode_Metis, value);
                   }
                 }
@@ -403,7 +403,7 @@ namespace femus {
 
                 _solution[ig]->_Sol[i]->set(solDof, value);
 
-                if(_solTimeOrder[i] == 2) {
+                if(_solTimeOrder[i] == TIME_DEPENDENT) {
                   _solution[ig]->_SolOld[i]->set(solDof, value);
                 }
               }
@@ -412,7 +412,7 @@ namespace femus {
 
           _solution[ig]->_Sol[i]->close();
 
-          if(_solTimeOrder[i] == 2) {
+          if(_solTimeOrder[i] == TIME_DEPENDENT) {
             _solution[ig]->_SolOld[i]->close();
           }
         }
@@ -623,7 +623,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       i_end = _solType.size();
 
       for(unsigned k = i_start; k < i_end; k++) {
-        if(_solution[0]->_ResEpsBdcFlag[k]) {
+        if(_solution[0]->is_unknown_of_system(k) ) {
           sprintf(_bdcType[k], "Steady");        /// @todo since bdc_type is a single string, why do we assume that All variables must be steady? They could also be all Time dependent...
           std::cout << " Set " << std::setw(15) << _bdcType[k] << " Boundary_condition"
                << " for variable " << std::setw(3) << _solName[k] << std::endl;
@@ -638,7 +638,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       i_start = GetIndex(name);
       i_end = i_start + 1u;
 
-      if(_solution[0]->_ResEpsBdcFlag[i_start]) {
+      if(_solution[0]->is_unknown_of_system(i_start) ) {
         if(!strcmp(bdc_type, "Steady")) {
           strcpy(_bdcType[i_start], bdc_type);
         }
@@ -683,7 +683,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int grid0, const double time) {
 
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
-      if(_solution[igridn]->_ResEpsBdcFlag[k]) {
+      if(_solution[igridn]->is_unknown_of_system(k) ) {
         Mesh* msh = _mlMesh->GetLevel(igridn);
 
         std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
@@ -853,7 +853,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     // 1 AMR artificial Dirichlet = 0 BC
     // 0 Dirichlet
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
-      if(_solution[igridn]->_ResEpsBdcFlag[solIndex]) {
+      if(_solution[igridn]->is_unknown_of_system(solIndex) ) {
         Mesh* msh = _mlMesh->GetLevel(igridn);
 
         std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
@@ -918,7 +918,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
                           xyzt[3] = itime[k];
                           ivalue[k] = (*bdcfunc)(xyzt) - value0;
                         }
-                        if(_solTimeOrder[solIndex] == 2) {
+                        if(_solTimeOrder[solIndex] == TIME_DEPENDENT) {
                           _solution[igridn]->_SolOld[solIndex]->set(inode_Metis, value0);
                         }
                         for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++) {
@@ -959,7 +959,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
                       unsigned idof = msh->GetSolutionDof(i, iel, _solType[solIndex]);
 
-                      if(_solTimeOrder[solIndex] == 2) {
+                      if(_solTimeOrder[solIndex] == TIME_DEPENDENT) {
                         _solution[igridn]->_SolOld[solIndex]->set(idof, value0);
                       }
                       for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++) {
@@ -985,7 +985,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
           }
         }
-        if(_solTimeOrder[solIndex] == 2) {
+        if(_solTimeOrder[solIndex] == TIME_DEPENDENT) {
           _solution[igridn]->_SolOld[solIndex]->close();
         }
         for(unsigned k = 0; k < solKiIndex.size(); k++) {

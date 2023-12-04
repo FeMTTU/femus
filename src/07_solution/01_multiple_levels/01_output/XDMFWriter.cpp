@@ -210,7 +210,7 @@ namespace femus {
         //Printing biquadratic solution on the nodes
         if( _ml_sol->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
           std::string solName =  _ml_sol->GetSolutionName( indx );
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
             std::string printName;
             if( name == 0 ) printName = solName;
             else if( name == 1 ) printName = "Bdc" + solName;
@@ -225,7 +225,7 @@ namespace femus {
         }
         else if( _ml_sol->GetSolutionType( indx ) >= 3 ) {   //Printing picewise constant solution on the element
           std::string solName =  _ml_sol->GetSolutionName( indx );
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
             std::string printName;
             if( name == 0 ) printName = solName;
             else if( name == 1 ) printName = "Bdc" + solName;
@@ -341,7 +341,7 @@ namespace femus {
       for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
         unsigned indx = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
         if( _ml_sol->GetSolutionType( indx ) >= 3 ) {
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
             std::string solName =  _ml_sol->GetSolutionName( indx );
             std::string printName;
@@ -386,7 +386,7 @@ namespace femus {
       for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
         unsigned indx = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
         if( _ml_sol->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
             std::string solName =  _ml_sol->GetSolutionName( indx );
             std::string printName;

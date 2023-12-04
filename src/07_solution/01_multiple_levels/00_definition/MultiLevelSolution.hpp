@@ -26,6 +26,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "Writer.hpp"
 #include "FunctionBase.hpp"
 
+#include "stationary_or_time_dep.hpp"
 #include "BDCTypeEnum.hpp"
 
 #include <vector>
@@ -60,13 +61,27 @@ public:
 // === BASIC SOL MANIPULATION - BEGIN =================
 public:
     /** To be Added */
-    void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, unsigned tmorder = 0, const bool &Pde_type = 1);
+    void AddSolution(const char name[],
+                     const FEFamily fefamily,
+                     const FEOrder order,
+                     unsigned tmorder = STATIONARY,
+                     const bool &Pde_type = true);
 
     /** To be Added */
-    void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v,  const FEOrder order_b, unsigned tmorder = 0, const bool &Pde_type = 1);
+    void AddSolution(const char name[], 
+                     const FEFamily fefamily, 
+                     const FEOrder order_v,
+                     const FEOrder order_b,
+                     unsigned tmorder = STATIONARY,
+                     const bool &Pde_type = true);
 
     /** If you want to add a vector whose components are treated the same way */
-    void AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
+    void AddSolutionVector(const unsigned n_components, 
+                           const std::string name, 
+                           const FEFamily fefamily, 
+                           const FEOrder order,
+                           unsigned tmorder = STATIONARY,
+                           const bool &Pde_type = true);
 
     /** To be Added */
     void AddSolutionLevel();
@@ -483,7 +498,7 @@ public:
     
     void SetIfFSI(const bool &FSI = true){
 	_FSI = FSI; 
-	for(unsigned i=0;i<_gridn;i++){
+	for(unsigned i = 0;i<_gridn;i++){
 	  _solution[i]->SetIfFSI(FSI);
 	}
     }
@@ -610,7 +625,7 @@ namespace femus {
 // 
 //                   _solution[ig]->_Sol[i]->set(inode_Metis, value);
 // 
-//                   if(_solTimeOrder[i] == 2) {
+//                   if(_solTimeOrder[i] == TIME_DEPENDENT) {
 //                     _solution[ig]->_SolOld[i]->set(inode_Metis, value);
 //                   }
 //                 }
@@ -692,7 +707,7 @@ namespace femus {
 
                 _solution[ig]->_Sol[i]->set(solDof, value);
 
-                if(_solTimeOrder[i] == 2) {
+                if(_solTimeOrder[i] == TIME_DEPENDENT) {
                   _solution[ig]->_SolOld[i]->set(solDof, value);
                 }
                 
@@ -705,7 +720,7 @@ namespace femus {
 
           _solution[ig]->_Sol[i]->close();
 
-          if(_solTimeOrder[i] == 2) {
+          if(_solTimeOrder[i] == TIME_DEPENDENT) {
             _solution[ig]->_SolOld[i]->close();
           }
         }

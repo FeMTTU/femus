@@ -287,6 +287,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_reference_geom_elements/
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_reference_geom_elements/00_definition/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/02_reference_geom_elements/01_fe/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/07_solution/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/07_solution/00_single_level/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/07_solution/01_multiple_levels/01_output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/08_equations/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/00_enums/08_equations/01_time_dependent/)

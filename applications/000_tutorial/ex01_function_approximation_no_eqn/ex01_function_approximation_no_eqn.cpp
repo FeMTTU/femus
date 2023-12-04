@@ -18,6 +18,8 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
+
 
 #include <tuple>
 #include <vector>
@@ -171,6 +173,17 @@ int main(int argc, char** args) {
   mlSol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSol.AddSolution("T", DISCONTINUOUS_POLYNOMIAL, FIRST);
 
+
+  Domains::Function_X<>  function_x;
+  Domains::Function_Y<>  function_y;
+  Domains::Function_XplusY<>   function_x_plus_y;
+  
+  mlSol.set_analytical_function("U", & function_x_plus_y);
+  mlSol.set_analytical_function("V", & function_x_plus_y);   
+  mlSol.set_analytical_function("W", & function_x_plus_y);   
+  mlSol.set_analytical_function("P", & function_x);   
+  mlSol.set_analytical_function("T", & function_y);   
+  
   mlSol.Initialize("All");    // initialize all variables to zero
 
   mlSol.Initialize("U", InitialValueU);

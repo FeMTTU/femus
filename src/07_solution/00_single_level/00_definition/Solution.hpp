@@ -29,7 +29,7 @@
 #include "Mesh.hpp"
 #include "FElemTypeEnum.hpp"
 #include "Function.hpp"
-
+#include "stationary_or_time_dep.hpp"
 
 #include <vector>
 
@@ -60,13 +60,26 @@ namespace femus {
 // === BASIC SOL MANIPULATION - BEGIN =================
     public:
       /** Add a new variable called 'name' */
-      void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder = 0, const bool &Pde_type = 1);
+      void AddSolution(const char name[], 
+                       const FEFamily fefamily,
+                       const FEOrder order,
+                       const unsigned& tmorder = STATIONARY,
+                       const bool &Pde_type = true);
 
-      void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
-                             const unsigned& tmorder = 0, const bool &Pde_type = 1);
+      void AddSolution(const char name[],
+                       const FEFamily fefamily,
+                       const FEOrder order_v,
+                       const FEOrder order_b,
+                       const unsigned& tmorder = STATIONARY, 
+                       const bool &Pde_type = true);
 
       /** Add a number of solutions */
-      void AddSolution_par(const int n_sols, const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder = 0, const bool &Pde_type = 1);
+      void AddSolution_par(const int n_sols,
+                           const char name[],
+                           const FEFamily fefamily,
+                           const FEOrder order,
+                           const unsigned& tmorder = STATIONARY,
+                           const bool &Pde_type = true);
       
       void ResizeSolution_par(const int new_size);
   
@@ -207,6 +220,11 @@ protected:
       std::vector <NumericVector*> _Res;
       /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       std::vector <NumericVector*> _Eps;
+      
+      bool is_unknown_of_system(const unsigned k) const { return _ResEpsBdcFlag[k]; }
+      
+    private:
+      
       /** Vector size: number of added Solutions. Tells if the Solution is an unknown to some PDE */
       std::vector <bool> _ResEpsBdcFlag;
 // === Solution as Unknown of System - END =================

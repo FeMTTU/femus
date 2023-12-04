@@ -209,7 +209,7 @@ namespace femus {
    
    unsigned VTKWriter::compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const {
        
-       const unsigned print_sol_size = 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i];
+       const unsigned print_sol_size = 1 + 3 * _debugOutput * solution->is_unknown_of_system(i);
        return  print_sol_size;
        
    }

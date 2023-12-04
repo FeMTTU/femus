@@ -436,7 +436,7 @@ static void add_one_times_mu_res_ctrl(const unsigned iproc,
 
   solIndex_act_flag[kdim]  = ml_sol->GetIndex(act_flag_name.c_str());
 
-     if(sol->GetSolutionTimeOrder(solIndex_act_flag[kdim]) == 2) {
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag[kdim]) == TIME_DEPENDENT) {
        *(sol->_SolOld[solIndex_act_flag[kdim]]) = *(sol->_Sol[solIndex_act_flag[kdim]]);
      }
 
