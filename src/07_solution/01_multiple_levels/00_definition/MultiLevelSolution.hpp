@@ -60,6 +60,7 @@ public:
     
 // === BASIC SOL MANIPULATION - BEGIN =================
 public:
+
     /** To be Added */
     void AddSolution(const char name[],
                      const FEFamily fefamily,
@@ -240,19 +241,30 @@ public:
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]);
 
     /** To be Added */
-    void Initialize(const char name[], InitFunc func = NULL);
+    void Initialize(const char * name, InitFunc func = NULL);
 
     void Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem * ml_prob);
     
+    inline void Set(const char * name, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
+    
+    void UpdateSolution(const char * name, InitFunc func, const double& time);
+    
+private:
+  
     /** @todo At all levels, initialize Sol. By default, Sol is set to zero. Otherwise, a function is passed. 
       * In that case, and if the Solution is time-dependent, then both Sol and SolOld are initialized. */
-    void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
+    void Initialize(const char * name, InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
     
-    inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
+  std::vector< double > evaluate_coord_of_dof_carrier_Lagrange(const Mesh * msh, const unsigned iel, const unsigned inode) const;
     
-    void UpdateSolution(const char name[], InitFunc func, const double& time);
-    
-    
+  std::vector< double > evaluate_coord_of_dof_carrier_Discontinuous(const Mesh * msh, const unsigned iel) const;
+  
+  double evaluate_at_dof_carrier(const char * name, 
+                                 InitFunc func,
+                                 InitFuncMLProb funcMLProb, 
+                                 const Math::Function< double > * func_in,
+                                 const MultiLevelProblem * ml_prob,
+                                 const std::vector<double> xx) const;
 // === INITIALIZATION (Initial Conditions) - END =================
     
 // === INITIALIZATION, FUNCTION - BEGIN =================

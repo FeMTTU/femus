@@ -46,7 +46,9 @@ namespace femus {
       _GradMat[i].resize(_msh->GetDimension());
       _AMR_flag = 0;
     }
+    
     _FSI = false;
+    
   }
 
   /**

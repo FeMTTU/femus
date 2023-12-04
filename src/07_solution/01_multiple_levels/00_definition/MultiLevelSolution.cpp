@@ -319,18 +319,18 @@ namespace femus {
   }
 
 // *******************************************************
-  void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
+  void MultiLevelSolution::Initialize(const char * name, InitFunc func) {
     Initialize(name, func, NULL, NULL);
   }
 
-  void MultiLevelSolution::Initialize(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
+  void MultiLevelSolution::Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
     Initialize(name, NULL, func, ml_prob);
   }
   
   
   
   /** A Solution is by default initialized to zero, or by a provided function     */
-  void MultiLevelSolution::Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
+  void MultiLevelSolution::Initialize(const char * name, InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
 
     
 
@@ -338,92 +338,144 @@ namespace femus {
       
       
     for(unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
-      unsigned sol_type = _solType[i];
+      const unsigned sol_type = _solType[i];
 
       for(unsigned ig = 0; ig < _gridn; ig++) {
+        
+        const Mesh* msh = _mlMesh->GetLevel(ig);
 
+              // initialize vectors - BEGIN -----
         _solution[ig]->ResizeSolutionVector(_solName[i]);
         _solution[ig]->_Sol[i]->zero();
+              // initialize vectors - END -----
 
         if(func || funcMLProb) {
-          double value;
+
 
           if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
+
             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-              for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
-                  iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
-                unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, sol_type);
+
+              for(int iel = msh->_elementOffset[isdom];
+                  iel < msh->_elementOffset[isdom + 1]; iel++) {
+                
+                const unsigned nloc_dof = msh->GetElementDofNumber(iel, sol_type);
 
                 for(int j = 0; j < nloc_dof; j++) {
-                  unsigned inode_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
-                  unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
-                  std::vector < double > xx(3);
-                  xx[0] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
-                  xx[1] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
-                  xx[2] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
 
-                  value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
+                  const std::vector< double > xx = evaluate_coord_of_dof_carrier_Lagrange(msh, iel, j);
 
+                  const double value = evaluate_at_dof_carrier(name, func, funcMLProb, NULL, ml_prob, xx);
+                  
+                  const unsigned inode_Metis = msh->GetSolutionDof(j, iel, sol_type);
+                  
                   _solution[ig]->_Sol[i]->set(inode_Metis, value);
 
                   if(_solTimeOrder[i] == TIME_DEPENDENT) {
                     _solution[ig]->_SolOld[i]->set(inode_Metis, value);
                   }
+                  
                 }
+                
               }
+              
             }
+
           }
           else if(sol_type < NFE_FAMS) {
+
             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-              for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
-                  iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
+
+              for(int iel = msh->_elementOffset[isdom];
+                  iel < msh->_elementOffset[isdom + 1]; iel++) {
                   
-                unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, 0);
-              
-              // evaluate at average of biquadratic nodes (element center) - BEGIN -----
-                std::vector < double > xx(3, 0.);
+                const std::vector < double > xx = evaluate_coord_of_dof_carrier_Discontinuous(msh, iel);
 
-                for(int j = 0; j < nloc_dof; j++) {
-                  unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
-                  xx[0] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
-                  xx[1] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
-                  xx[2] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
-                }
-
-                xx[0] /= nloc_dof;
-                xx[1] /= nloc_dof;
-                xx[2] /= nloc_dof;
-              // evaluate at average of biquadratic nodes (element center) - END -----
-
-                value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
+                const double value = evaluate_at_dof_carrier(name, func, funcMLProb, NULL, ml_prob, xx);
                 
-                unsigned placeholder_index = 0/*2*/;
+                const unsigned placeholder_index = 0; ///@todo see how to interpolate disc linear with first derivatives
 
-                unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(placeholder_index, iel, sol_type);
+                const unsigned solDof = msh->GetSolutionDof(placeholder_index, iel, sol_type);
 
                 _solution[ig]->_Sol[i]->set(solDof, value);
 
                 if(_solTimeOrder[i] == TIME_DEPENDENT) {
                   _solution[ig]->_SolOld[i]->set(solDof, value);
                 }
+                
               }
             }
+            
           }
 
+              // close vectors - BEGIN -----
           _solution[ig]->_Sol[i]->close();
 
           if(_solTimeOrder[i] == TIME_DEPENDENT) {
             _solution[ig]->_SolOld[i]->close();
           }
+              // close vectors - END -----
+
         }
         
-      }
+      } //end levels
+      
     }
 
     return;
   }
 
 
+
+  double MultiLevelSolution::evaluate_at_dof_carrier(const char * name,
+                                                     InitFunc func, 
+                                                     InitFuncMLProb funcMLProb, 
+                                                     const Math::Function< double > * func_in,
+                                                     const MultiLevelProblem * ml_prob,
+                                                     const std::vector<double> xx) const {
+
+                  const double value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
+                  
+                  return value;
+  }
+
+
+  
+  std::vector< double > MultiLevelSolution::evaluate_coord_of_dof_carrier_Lagrange(const Mesh * msh, const unsigned iel, const unsigned inode) const {
+    
+                  const unsigned icoord_Metis = msh->GetSolutionDof(inode, iel, CONTINUOUS_BIQUADRATIC);
+                  
+                  std::vector < double > xx(3);
+
+                  xx[0] = (*msh->_topology->_Sol[0])(icoord_Metis);
+                  xx[1] = (*msh->_topology->_Sol[1])(icoord_Metis);
+                  xx[2] = (*msh->_topology->_Sol[2])(icoord_Metis);
+
+                  return xx;
+    
+  }
+  
+  
+  std::vector< double > MultiLevelSolution::evaluate_coord_of_dof_carrier_Discontinuous(const Mesh * msh, const unsigned iel) const {
+
+                const unsigned nloc_dof = msh->GetElementDofNumber(iel, CONTINUOUS_BIQUADRATIC);
+              
+                std::vector < double > xx(3, 0.);
+
+                for(int j = 0; j < nloc_dof; j++) {
+                  const unsigned icoord_Metis = msh->GetSolutionDof(j, iel, CONTINUOUS_BIQUADRATIC);
+                  xx[0] += (*msh->_topology->_Sol[0])(icoord_Metis);
+                  xx[1] += (*msh->_topology->_Sol[1])(icoord_Metis);
+                  xx[2] += (*msh->_topology->_Sol[2])(icoord_Metis);
+                }
+
+                xx[0] /= nloc_dof;
+                xx[1] /= nloc_dof;
+                xx[2] /= nloc_dof;
+
+                  return xx;
+    
+  }
   
   
   std::vector< unsigned >  MultiLevelSolution::solution_start_and_end(const std::string name) {
@@ -694,6 +746,8 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
         }
 
         if(_solType[k] < NFE_FAMS_C_ZERO_LAGRANGE) {  // boundary condition for lagrangian elements
+
+
           //AMR - related - BEGIN
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
@@ -712,6 +766,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
             }
           }
           //AMR - related - END
+          
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
 
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
@@ -725,35 +780,41 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
                 for(unsigned iv = 0; iv < n_face_dofs; iv++) {
 
                   unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
-                  unsigned inode_coord_Metis = msh->GetSolutionDof(i, iel, 2);
 
+                  
                   if(_useParsedBCFunction) {
                     unsigned int faceIndex = boundary_index;
 
                     if(GetBoundaryCondition(k, faceIndex - 1u) == DIRICHLET) {
-                      unsigned inode_Metis = msh->GetSolutionDof(i, iel, _solType[k]);
+                      
+                      const unsigned inode_Metis = msh->GetSolutionDof(i, iel, _solType[k]);
                       _solution[igridn]->_Bdc[k]->set(inode_Metis, 0.);
                       double value = 0.;
 
                       if(!Ishomogeneous(k, faceIndex - 1u)) {
+                        
                         ParsedFunction* bdcfunc = (ParsedFunction*)(GetBdcFunction(k, faceIndex - 1u));
+
+                       const std::vector< double > xx = evaluate_coord_of_dof_carrier_Lagrange(msh, iel, i);
+
                         double xyzt[4];
-                        xyzt[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
-                        xyzt[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
-                        xyzt[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
+                        xyzt[0] = xx[0];
+                        xyzt[1] = xx[1];
+                        xyzt[2] = xx[2];
                         xyzt[3] = time;
+                        
                         value = (*bdcfunc)(xyzt);
+                        
                       }
                       _solution[igridn]->_Sol[k]->set(inode_Metis, value);
                     }
                   }
                   else {
                     double value;
-                    std::vector < double > xx(3);
-                    xx[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
-                    xx[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
-                    xx[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
-                    bool test = (_bdcFuncSetMLProb) ?
+                    
+                  const std::vector< double > xx = evaluate_coord_of_dof_carrier_Lagrange(msh, iel, i);
+
+                  bool test = (_bdcFuncSetMLProb) ?
 
                                 _SetBoundaryConditionFunctionMLProb(_mlBCProblem, xx, _solName[k], value, boundary_index, time) :
                                 _SetBoundaryConditionFunction(xx, _solName[k], value, boundary_index, time);
@@ -816,11 +877,9 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
 
             double value;
-            std::vector < double > xCord (3);
-            unsigned inode_coord_Metis = msh->GetSolutionDof (i, iel, 2);
-            xCord[0] = (*msh->_topology->_Sol[0]) (inode_coord_Metis);
-            xCord[1] = (*msh->_topology->_Sol[1]) (inode_coord_Metis);
-            xCord[2] = (*msh->_topology->_Sol[2]) (inode_coord_Metis);
+            
+            const std::vector< double > xCord = evaluate_coord_of_dof_carrier_Lagrange(msh, iel, i);
+                   
             bool test = (_bdcFuncSetMLProb) ?
                         _SetBoundaryConditionFunctionMLProb (_mlBCProblem, xCord, _solName[solIndex], value, UINT_MAX, 0.) :
                         _SetBoundaryConditionFunction (xCord, _solName[solIndex], value, UINT_MAX, 0.);
@@ -840,6 +899,10 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     }
 
   }
+  
+  
+  
+  
 
   bool PRINT = false;
   void MultiLevelSolution::GenerateRKBdc(
@@ -864,8 +927,11 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
             _solution[igridn]->_Bdc[solKiIndex[k]]->set(j, 2.);
           }
         }
+        
 
         if(_solType[solIndex] < NFE_FAMS_C_ZERO_LAGRANGE) {  // boundary condition for lagrangian elements
+          
+          
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
@@ -892,26 +958,31 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
                 unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[solIndex]);
 
                 for(unsigned iv = 0; iv < nv1; iv++) {
-                  unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
-                  unsigned inode_coord_Metis = msh->GetSolutionDof(i, iel, 2);
-
+                  const unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
+                  const unsigned inode_coord_Metis = msh->GetSolutionDof(i, iel, CONTINUOUS_BIQUADRATIC);
+                  
                   if(_useParsedBCFunction) {
                     unsigned int faceIndex = msh->el->GetBoundaryIndex(iel, jface);
 
                     if(GetBoundaryCondition(solIndex, faceIndex - 1u) == DIRICHLET) {
-                      unsigned inode_Metis = msh->GetSolutionDof(i, iel, _solType[solIndex]);
+                      const unsigned inode_Metis = msh->GetSolutionDof(i, iel, _solType[solIndex]);
                       for(unsigned k = 0; k < solKiIndex.size(); k++) {
                         _solution[igridn]->_Bdc[solKiIndex[k]]->set(inode_Metis, 0.);
                       }
                       std::vector < double > ivalue(solKiIndex.size(), 0.);
 
                       if(!Ishomogeneous(solIndex, faceIndex - 1u)) {
+
                         ParsedFunction* bdcfunc = (ParsedFunction*)(GetBdcFunction(solIndex, faceIndex - 1u));
-                        double xyzt[4];
-                        xyzt[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
-                        xyzt[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
-                        xyzt[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
+
+                       const std::vector< double > xx = evaluate_coord_of_dof_carrier_Lagrange(msh, iel, i);
+
+                       double xyzt[4];
+                        xyzt[0] = xx[0];
+                        xyzt[1] = xx[1];
+                        xyzt[2] = xx[2];
                         xyzt[3] = time0;
+                        
                         double value0 = (*bdcfunc)(xyzt);
 
                         for(unsigned k = 0; k < solKiIndex.size(); k++) {
@@ -933,10 +1004,9 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
                   }
                   else {
                     double value0;
-                    std::vector < double > xx(3);
-                    xx[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
-                    xx[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
-                    xx[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
+                    
+                    const std::vector< double > xx = evaluate_coord_of_dof_carrier_Lagrange(msh, iel, i);
+                  
                     bool test = (_bdcFuncSetMLProb) ?
                                 _SetBoundaryConditionFunctionMLProb(_mlBCProblem, xx, _solName[solIndex], value0, msh->el->GetBoundaryIndex(iel, jface), time0) :
                                 _SetBoundaryConditionFunction(xx, _solName[solIndex], value0, msh->el->GetBoundaryIndex(iel, jface), time0);
@@ -977,6 +1047,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
             }
           }
         }
+        
         if(_fixSolutionAtOnePoint[solIndex] == true  && igridn == 0 && _iproc == 0) {
           for(unsigned k = 0; k < solKiIndex.size(); k++) {
 
@@ -985,9 +1056,12 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
           }
         }
+        
+        
         if(_solTimeOrder[solIndex] == TIME_DEPENDENT) {
           _solution[igridn]->_SolOld[solIndex]->close();
         }
+        
         for(unsigned k = 0; k < solKiIndex.size(); k++) {
           _solution[igridn]->_Sol[solKiIndex[k]]->close();
           _solution[igridn]->_Bdc[solKiIndex[k]]->close();
@@ -1134,51 +1208,64 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     }
   }
 
-  void MultiLevelSolution::UpdateSolution(const char name[], InitFunc func, const double& time) {
+  void MultiLevelSolution::UpdateSolution(const char * name, InitFunc func, const double& time) {
+
     unsigned i = GetIndex(name);
 
     unsigned sol_type = _solType[i];
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
+        const Mesh* msh = _mlMesh->GetLevel(ig);
+
       if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
+
         for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-          for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
-              iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
-            unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, sol_type);
+          for(int iel = msh->_elementOffset[isdom];
+              iel < msh->_elementOffset[isdom + 1]; iel++) {
+            
+            unsigned nloc_dof = msh->GetElementDofNumber(iel, sol_type);
+
             for(int j = 0; j < nloc_dof; j++) {
-              unsigned inode_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
-              unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
-              std::vector < double > xx(4);
-              xx[0] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
-              xx[1] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
-              xx[2] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
-              xx[3] = time;
-              double value = func(xx);
+              
+              const std::vector< double > xx = evaluate_coord_of_dof_carrier_Lagrange(msh, iel, j);
+
+              std::vector < double > xyzt(4);
+              
+              xyzt[0] = xx[0];
+              xyzt[1] = xx[1];
+              xyzt[2] = xx[2];
+              xyzt[3] = time;
+              
+              const double value = func(xyzt);
+              
+              const unsigned inode_Metis = msh->GetSolutionDof(j, iel, sol_type);
+              
               _solution[ig]->_Sol[i]->set(inode_Metis, value);
+              
             }
           }
         }
       }
       else if(sol_type < NFE_FAMS) {
+        
         for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-          for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
-              iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
-            unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, 0);
-            std::vector < double > xx(4, 0.);
+          for(int iel = msh->_elementOffset[isdom];
+              iel < msh->_elementOffset[isdom + 1]; iel++) {
+          
+            const std::vector < double > xx = evaluate_coord_of_dof_carrier_Discontinuous(msh, iel);
 
-            for(int j = 0; j < nloc_dof; j++) {
-              unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
-              xx[0] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
-              xx[1] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
-              xx[2] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
-            }
-            xx[0] /= nloc_dof;
-            xx[1] /= nloc_dof;
-            xx[2] /= nloc_dof;
-            xx[3] = time;
+            std::vector < double > xyzt(4, 0.);
+          
+            xyzt[0] = xx[0];
+            xyzt[1] = xx[1];
+            xyzt[2] = xx[2];
+            xyzt[3] = time;
 
-            double value =  func(xx);
-            unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(2, iel, sol_type);
+            const double value =  func(xyzt);
+            
+            const unsigned placeholder_index = 0; ///@todo see how to interpolate disc linear with first derivatives
+            
+            const unsigned solDof = msh->GetSolutionDof(placeholder_index, iel, sol_type);
             _solution[ig]->_Sol[i]->set(solDof, value);
           }
         }

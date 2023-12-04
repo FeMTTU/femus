@@ -419,7 +419,6 @@ int main(int argc,char **args) {
       PetscPrintf(PETSC_COMM_WORLD, "4: Memory maximum usage after solve: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
     }
 
-    //system.UpdateSolution();
 
     if( (i_time_step+1)%autosave_time_interval == 0) {
       ml_sol.SaveSolution("run", system.GetTime());

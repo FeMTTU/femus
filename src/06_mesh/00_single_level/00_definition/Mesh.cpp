@@ -1031,26 +1031,26 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         
       case CONTINUOUS_LINEAR: { // linear Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
-        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, CONTINUOUS_BIQUADRATIC);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+        if(iNode < _dofOffset[CONTINUOUS_BIQUADRATIC][isdom] + _originalOwnSize[CONTINUOUS_LINEAR][isdom]) {
+          dof = (iNode - _dofOffset[CONTINUOUS_BIQUADRATIC][isdom]) + _dofOffset[CONTINUOUS_LINEAR][isdom];
         }
         else {
-          dof = _ownedGhostMap[0].find(iNode)->second;
+          dof = _ownedGhostMap[CONTINUOUS_LINEAR].find(iNode)->second;
         }
       }
       break;
 
       case CONTINUOUS_SERENDIPITY: { // quadratic Lagrange
         unsigned iNode = el->GetElementDofIndex(iel, i);  //GetMeshDof(iel, i, solType);
-        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, CONTINUOUS_BIQUADRATIC);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+        if(iNode < _dofOffset[CONTINUOUS_BIQUADRATIC][isdom] + _originalOwnSize[CONTINUOUS_SERENDIPITY][isdom]) {
+          dof = (iNode - _dofOffset[CONTINUOUS_BIQUADRATIC][isdom]) + _dofOffset[CONTINUOUS_SERENDIPITY][isdom];
         }
         else {
-          dof = _ownedGhostMap[1].find(iNode)->second;
+          dof = _ownedGhostMap[CONTINUOUS_SERENDIPITY].find(iNode)->second;
         }
       }
       break;
@@ -1065,7 +1065,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         break;
 
       case DISCONTINUOUS_LINEAR: // piecewise linear discontinuous
-        unsigned isdom = BisectionSearch_find_processor_of_dof(iel, 3);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iel, DISCONTINUOUS_CONSTANT);
         unsigned offset = _elementOffset[isdom];
         unsigned offsetp1 = _elementOffset[isdom + 1];
         unsigned ownSize = offsetp1 - offset;
@@ -1086,44 +1086,44 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     switch(solType) {
         
-      case 0: { // linear Lagrange
+      case CONTINUOUS_LINEAR: { // linear Lagrange
         unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
-        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, CONTINUOUS_BIQUADRATIC);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+        if(iNode < _dofOffset[CONTINUOUS_BIQUADRATIC][isdom] + _originalOwnSize[CONTINUOUS_LINEAR][isdom]) {
+          dof = (iNode - _dofOffset[CONTINUOUS_BIQUADRATIC][isdom]) + _dofOffset[CONTINUOUS_LINEAR][isdom];
         }
         else {
-          dof = _ownedGhostMap[0].find(iNode)->second;
+          dof = _ownedGhostMap[CONTINUOUS_LINEAR].find(iNode)->second;
         }
       }
       break;
 
-      case 1: { // quadratic Lagrange
+      case CONTINUOUS_SERENDIPITY: { // quadratic Lagrange
         unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
-        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, 2);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, CONTINUOUS_BIQUADRATIC);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+        if(iNode < _dofOffset[CONTINUOUS_BIQUADRATIC][isdom] + _originalOwnSize[CONTINUOUS_SERENDIPITY][isdom]) {
+          dof = (iNode - _dofOffset[CONTINUOUS_BIQUADRATIC][isdom]) + _dofOffset[CONTINUOUS_SERENDIPITY][isdom];
         }
         else {
-          dof = _ownedGhostMap[1].find(iNode)->second;
+          dof = _ownedGhostMap[CONTINUOUS_SERENDIPITY].find(iNode)->second;
         }
       }
       break;
 
-      case 2: // bi-quadratic Lagrange
+      case CONTINUOUS_BIQUADRATIC: // bi-quadratic Lagrange
         dof = mshc->el->GetChildElementDof(ielc, i0, i1);
         break;
 
-      case 3: // piecewise constant
+      case DISCONTINUOUS_CONSTANT: // piecewise constant
         // in this case use i=0
         dof = mshc->el->GetChildElement(ielc, i0);
         break;
 
-      case 4: // piecewise linear discontinuous
+      case DISCONTINUOUS_LINEAR: // piecewise linear discontinuous
         unsigned iel = mshc->el->GetChildElement(ielc, i0);
-        unsigned isdom = BisectionSearch_find_processor_of_dof(iel, 3);
+        unsigned isdom = BisectionSearch_find_processor_of_dof(iel, DISCONTINUOUS_CONSTANT);
         unsigned offset = _elementOffset[isdom];
         unsigned offsetp1 = _elementOffset[isdom + 1];
         unsigned ownSize = offsetp1 - offset;

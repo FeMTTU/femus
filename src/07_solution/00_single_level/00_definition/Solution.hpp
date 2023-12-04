@@ -287,7 +287,8 @@ protected:
       
       
       
-    public:
+    private:
+
       std::vector < std::vector <NumericVector*> > _GradVec;
 
       /** Build Grad Matrix structure for SolType 0,1,2 */
