@@ -146,23 +146,11 @@ private:
 
 // === NAME & INDEX  - END =================
 
+
+    
 // === MESH, MULTILEVEL - BEGIN =================
 public:
-       /** duplicate of GetSolutionLevel, to be removed @todo */
-    Solution* GetLevel(const unsigned i) {
-        return _solution[i];
-    };
-    
-       /** To be Added */
-    Solution* GetSolutionLevel(const unsigned i) {
-        return _solution[i];
-    };
 
-    /** To be Added */
-    const Solution* GetSolutionLevel(const unsigned i) const {
-        return _solution[i];
-    };
-    
     /** To be Added */
     MultiLevelMesh * GetMLMesh() {
         return _mlMesh;
@@ -178,6 +166,34 @@ public:
 
      // *******************************************************
 
+private:
+    
+    /** Number of levels */
+    unsigned short  _gridn;
+    
+
+// === MESH, MULTILEVEL - END =================
+
+    
+    
+// === SOLUTION, MULTILEVEL - BEGIN =================
+public:
+
+       /** duplicate of GetSolutionLevel, to be removed @todo */
+    Solution* GetLevel(const unsigned i) {
+        return _solution[i];
+    };
+    
+       /** To be Added */
+    Solution* GetSolutionLevel(const unsigned i) {
+        return _solution[i];
+    };
+
+    /** To be Added */
+    const Solution* GetSolutionLevel(const unsigned i) const {
+        return _solution[i];
+    };
+    
     void RefineSolution( const unsigned &gridf );
     void CoarsenSolutionByOneLevel_wrong( const unsigned &gridf );
     void CoarsenSolutionByOneLevel( const unsigned &gridf );
@@ -185,15 +201,13 @@ public:
     void fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in);
         
 private:
-    
+
     /** Vector size: number of levels */
     std::vector < Solution* >  _solution;
     
-    /** Number of levels */
-    unsigned short  _gridn;
-    
+// === SOLUTION, MULTILEVEL - END =================
 
-// === MESH, MULTILEVEL - END =================
+
 
 
 // === SPACE DISCRETIZATION (FE) - BEGIN =================
@@ -529,6 +543,10 @@ public:
     }
       
     bool GetIfFSI(){
+      return _FSI; 
+    }
+    
+    const bool GetIfFSI() const {
       return _FSI; 
     }
     

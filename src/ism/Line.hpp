@@ -103,8 +103,8 @@ namespace femus {
       static const double _c[4][4];
 
       std::vector< double > _time;
-      Solution* _sol;
       const Mesh* _mesh;
+      const Solution* _sol;
 
     protected:
       std::vector< unsigned int >::reference sol (const char* arg1);

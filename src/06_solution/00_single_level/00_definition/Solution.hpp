@@ -105,10 +105,6 @@ namespace femus {
 // === MESH - BEGIN =================
     public:
               
-//       Mesh * GetMesh() {
-//         return _msh;
-//       }
-//       
       const Mesh * GetMesh() const {
         return _msh;
       }
@@ -192,7 +188,7 @@ protected:
       
       void ResetSolutionToOldSolution();
 
-      unsigned GetSolutionTimeOrder(unsigned i) {
+      const unsigned GetSolutionTimeOrder(unsigned i) const {
         return _SolTmOrder[i];
       }
       
@@ -260,7 +256,7 @@ protected:
 	_FSI = FSI; 
       }
       
-      bool GetIfFSI(){
+     const bool GetIfFSI() const {
 	return _FSI; 
       }
       

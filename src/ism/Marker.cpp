@@ -176,7 +176,7 @@ namespace femus
     {0.}
   };
 
-  void Marker::GetElement(const bool &useInitialSearch, const unsigned &initialElem, Solution* sol, const double &s)
+  void Marker::GetElement(const bool &useInitialSearch, const unsigned &initialElem, const Solution* sol, const double &s)
   {
 
     std::vector < unsigned > processorMarkerFlag(_nprocs, 3);
@@ -408,7 +408,7 @@ namespace femus
   }
 
 
-  void Marker::GetElementSerial(unsigned &previousElem, Solution* sol, const double &s)
+  void Marker::GetElementSerial(unsigned &previousElem, const Solution* sol, const double &s)
   {
 
     //std::cout << " SERIALE " << std::endl << std::flush;
@@ -482,7 +482,7 @@ namespace femus
   }
 
 
-  int Marker::FastForward(const unsigned &iel, const unsigned &previousElem, Solution* sol, const double &s)
+  int Marker::FastForward(const unsigned &iel, const unsigned &previousElem, const Solution* sol, const double &s)
   {
 
     short unsigned linear = 0;
@@ -571,7 +571,7 @@ namespace femus
 
 
 
-  unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &previousElem, Solution* sol, const double &s)
+  unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &previousElem, const Solution* sol, const double &s)
   {
 
 
@@ -793,7 +793,7 @@ namespace femus
   }
 
 
-  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const unsigned &previousElem, Solution* sol, const double &s)
+  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const unsigned &previousElem, const Solution* sol, const double &s)
   {
 
     unsigned nDofs = sol->GetMesh()->GetElementDofNumber(currentElem, _solType);
@@ -1129,7 +1129,7 @@ namespace femus
 
 
 
-  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const std::vector <unsigned> &searchHistory, Solution* sol, const double &s)
+  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const std::vector <unsigned> &searchHistory, const Solution* sol, const double &s)
   {
 
     unsigned nDofs = sol->GetMesh()->GetElementDofNumber(currentElem, _solType);
@@ -1486,7 +1486,7 @@ namespace femus
 
 
   void Marker::InverseMapping(const unsigned & iel, const unsigned & solType,
-                              const std::vector< double > &x, std::vector< double > &xi, Solution* sol, const double &s)
+                              const std::vector< double > &x, std::vector< double > &xi, const Solution* sol, const double &s)
   {
 
     //std::cout << " ----------------------  Outputs of the inverse mapping ---------------------- " << std::endl;
@@ -1555,7 +1555,7 @@ namespace femus
 
   }
 
-  void Marker::InverseMappingTEST(std::vector < double > &x, Solution* sol, const double &s)
+  void Marker::InverseMappingTEST(std::vector < double > &x, const Solution* sol, const double &s)
   {
 
     for (int solType = 0; solType < NFE_FAMS_C_ZERO_LAGRANGE; solType++) {
@@ -1645,7 +1645,7 @@ namespace femus
 
 
   //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
-  void Marker::Advection(const unsigned &n, const double& T, Solution* sol)
+  void Marker::Advection(const unsigned &n, const double& T, const Solution* sol)
   {
 
     double s1 = 0.;
@@ -1841,7 +1841,7 @@ namespace femus
   }
 
 
-  void Marker::GetElement(unsigned &previousElem, const unsigned &previousMproc, Solution* sol, const double &s)
+  void Marker::GetElement(unsigned &previousElem, const unsigned &previousMproc, const Solution* sol, const double &s)
   {
 
     unsigned mprocOld = previousMproc;
@@ -1893,7 +1893,7 @@ namespace femus
 
   void Marker::ProjectVelocityCoefficients(const std::vector<unsigned> &solVIndex,
       const unsigned & solVType,  const unsigned & nDofsV,
-      const unsigned & ielType, std::vector < std::vector < std::vector < double > > > &a, Solution* sol)
+      const unsigned & ielType, std::vector < std::vector < std::vector < double > > > &a, const Solution* sol)
   {
 
     bool timeDependent = true;
@@ -1937,7 +1937,7 @@ namespace femus
   void Marker::updateVelocity(std::vector< std::vector <double> > & V,
                               const std::vector < unsigned > &solVIndex, const unsigned & solVType,
                               std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
-                              const bool & pcElemUpdate, Solution* sol)
+                              const bool & pcElemUpdate, const Solution* sol)
   {
 
 
@@ -1963,7 +1963,7 @@ namespace femus
 
   }
 
-  void Marker::FindLocalCoordinates(const unsigned & solType, std::vector < std::vector < std::vector < std::vector < double > > > > &aX, const bool & pcElemUpdate, Solution* sol, const double &s)
+  void Marker::FindLocalCoordinates(const unsigned & solType, std::vector < std::vector < std::vector < std::vector < double > > > > &aX, const bool & pcElemUpdate, const Solution* sol, const double &s)
   {
 
     //BEGIN TO BE REMOVED

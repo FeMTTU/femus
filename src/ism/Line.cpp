@@ -67,9 +67,9 @@ namespace femus {
               const std::vector <MarkerType>& markerType,
               Solution* sol, const unsigned& solType)
      :
-    _mesh ( _sol->GetMesh() )
+    _mesh ( sol->GetMesh() ),
+    _sol ( sol)
               {
-    _sol = sol;
 
     _time.assign (10, 0);
 
@@ -96,10 +96,9 @@ namespace femus {
               const std::vector <MarkerType>& markerType,
               Solution* sol, const unsigned& solType)
   :
-    _mesh ( _sol->GetMesh() )
+    _mesh ( sol->GetMesh() ),
+    _sol ( sol)
  {
-
-    _sol = sol;
 
     _time.assign (10, 0);
 
@@ -126,10 +125,10 @@ namespace femus {
               const std::vector <MarkerType>& markerType,
               Solution* sol, const unsigned& solType)
     :
-    _mesh ( _sol->GetMesh() )
+    _mesh ( sol->GetMesh() ),
+    _sol ( sol)
  {
 
-    _sol = sol;
 
     _time.assign (10, 0);
 
