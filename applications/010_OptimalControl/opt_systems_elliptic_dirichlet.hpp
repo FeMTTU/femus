@@ -262,7 +262,7 @@ public:
     std::vector < std::string > Solname_quantities(n_quantities);
     
         for(unsigned ivar=0; ivar < Solname_quantities.size(); ivar++) {
-            Solname_quantities[ivar] = ml_sol->GetSolutionName(ivar);
+            Solname_quantities[ivar] = ml_sol->GetSolName_from_index(ivar);
         }
  //***************************************************
         

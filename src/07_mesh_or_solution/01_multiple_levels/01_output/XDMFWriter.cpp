@@ -209,7 +209,7 @@ namespace femus {
         unsigned indx = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
         //Printing biquadratic solution on the nodes
         if( _ml_sol->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
-          std::string solName =  _ml_sol->GetSolutionName( indx );
+          std::string solName =  _ml_sol->GetSolName_from_index( indx );
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
             std::string printName;
             if( name == 0 ) printName = solName;
@@ -224,7 +224,7 @@ namespace femus {
           }
         }
         else if( _ml_sol->GetSolutionType( indx ) >= 3 ) {   //Printing picewise constant solution on the element
-          std::string solName =  _ml_sol->GetSolutionName( indx );
+          std::string solName =  _ml_sol->GetSolName_from_index( indx );
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
             std::string printName;
             if( name == 0 ) printName = solName;
@@ -343,7 +343,7 @@ namespace femus {
         if( _ml_sol->GetSolutionType( indx ) >= 3 ) {
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
-            std::string solName =  _ml_sol->GetSolutionName( indx );
+            std::string solName =  _ml_sol->GetSolName_from_index( indx );
             std::string printName;
             if( name == 0 ) {
               solution->_Sol[indx]->localize_to_one( vector2, 0 );
@@ -388,7 +388,7 @@ namespace femus {
         if( _ml_sol->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
-            std::string solName =  _ml_sol->GetSolutionName( indx );
+            std::string solName =  _ml_sol->GetSolName_from_index( indx );
             std::string printName;
             if( name == 0 ) {
               numVector->matrix_mult( *solution->_Sol[indx],

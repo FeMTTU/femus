@@ -567,7 +567,7 @@ namespace femus {
         
         if( 3 <= sol_fe_type ) {
 
-          std::string solName =  _ml_sol->GetSolutionName( solIndex );
+          std::string solName =  _ml_sol->GetSolName_from_index( solIndex );
 
           for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
               
@@ -614,7 +614,7 @@ namespace femus {
         if( sol_fe_type < NFE_FAMS_C_ZERO_LAGRANGE ) {
             
           //BEGIN LAGRANGIAN Fem SOLUTION
-          std::string solName =  _ml_sol->GetSolutionName( solIndex );
+          std::string solName =  _ml_sol->GetSolName_from_index( solIndex );
 
           for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
               

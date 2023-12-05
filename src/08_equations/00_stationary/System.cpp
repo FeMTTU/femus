@@ -104,7 +104,7 @@ void System::AddSolutionToSystemPDEVector(const unsigned n_components, const std
 void System::AddSolutionToSystemPDE(const char solname[]){
   unsigned jsol=0;
   for(unsigned j=0;j<_SolSystemPdeIndex.size();j++){
-    if(strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[j]),solname)) jsol++;
+    if(strcmp(_ml_sol->GetSolName_from_index(_SolSystemPdeIndex[j]),solname)) jsol++;
   }
   if(jsol==_SolSystemPdeIndex.size()){
     _SolSystemPdeIndex.resize(jsol+1u);
@@ -116,7 +116,7 @@ void System::AddSolutionToSystemPDE(const char solname[]){
 unsigned System::GetSolPdeIndex(const char solname[]) {
   //unsigned ipde=GetPdeIndex(pdename);
   unsigned index=0;
-  while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
+  while (strcmp(_ml_sol->GetSolName_from_index(_SolSystemPdeIndex[index]),solname)) {
     index++;
     if (index==_SolSystemPdeIndex.size()) {
       std::cout<<"error! invalid name entry" << std::endl;
@@ -130,7 +130,7 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
 const unsigned System::GetSolPdeIndex(const char solname[]) const {
   //unsigned ipde=GetPdeIndex(pdename);
   unsigned index=0;
-  while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
+  while (strcmp(_ml_sol->GetSolName_from_index(_SolSystemPdeIndex[index]),solname)) {
     index++;
     if (index == _SolSystemPdeIndex.size()) {
       std::cout << "error! invalid name entry" << std::endl;

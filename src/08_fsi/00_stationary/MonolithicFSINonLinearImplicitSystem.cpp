@@ -214,7 +214,7 @@ namespace femus {
       unsigned SolIndex = _SolSystemPdeIndex[k];
       unsigned solPairIndex = _ml_sol->GetSolutionPairIndex(k);
       unsigned SolType = _ml_sol->GetSolutionType(SolIndex);
-      unsigned solPairPdeIndex = GetSolPdeIndex(_ml_sol->GetSolutionName(solPairIndex));
+      unsigned solPairPdeIndex = GetSolPdeIndex(_ml_sol->GetSolName_from_index(solPairIndex));
 
       bool testIfPressure = 0;
       if(_ml_sol->TestIfSolutionIsPressure(SolIndex))   testIfPressure = 1;
@@ -335,7 +335,7 @@ namespace femus {
       unsigned solIndex = _SolSystemPdeIndex[k];
       unsigned solPairIndex = _ml_sol->GetSolutionPairInverseIndex(k);
       
-      unsigned kPair = GetSolPdeIndex(_ml_sol->GetSolutionName(solPairIndex));
+      unsigned kPair = GetSolPdeIndex(_ml_sol->GetSolName_from_index(solPairIndex));
             
       unsigned kOffset = LinSol->KKoffset[k][iproc];
       unsigned kPairOffset = LinSol->KKoffset[kPair][iproc];

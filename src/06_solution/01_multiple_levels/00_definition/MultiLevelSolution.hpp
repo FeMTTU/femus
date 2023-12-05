@@ -108,9 +108,7 @@ public:
         return _solType.size();
     }
     
-    
-    /** To be Added */
-    const char* GetSolutionName(unsigned i) const {
+    const char* GetSolName_from_index(unsigned i) const {
         return _solName[i];
     }
 
@@ -207,22 +205,22 @@ private:
 // === SPACE DISCRETIZATION (FE) - BEGIN =================
 public:
     
-    FEFamily GetSolutionFamily(const unsigned& i){
+    const FEFamily GetSolutionFamily(const unsigned& i) const {
       return _family[i];  
     }
     
     const FEFamily GetSolutionFamily(const std::string & sol_name) const;
     
-    FEOrder GetSolutionOrder(const unsigned& i){
+    const FEOrder GetSolutionOrder(const unsigned& i) const {
       return _order[i];    
     }
     
     const FEOrder GetSolutionOrder(const std::string & sol_name) const;
 
-    /** To be Added */
-    int GetSolutionType(unsigned i) {
-        return _solType[i];
-    }
+    // /** To be Added */
+    // int GetSolutionType(unsigned i) {
+    //     return _solType[i];
+    // }
 
     /** To be Added */
     const int GetSolutionType(unsigned i) const {

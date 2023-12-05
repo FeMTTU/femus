@@ -374,9 +374,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   void Mesh::Topology_FillCoordinates() {
     
     //set coordinates -----------
-    _topology->GetSolutionName("X") = _coords[0];
-    _topology->GetSolutionName("Y") = _coords[1];
-    _topology->GetSolutionName("Z") = _coords[2];
+    _topology->GetSolutionByName("X") = _coords[0];
+    _topology->GetSolutionByName("Y") = _coords[1];
+    _topology->GetSolutionByName("Z") = _coords[2];
     //set coordinates -----------
 
   }
@@ -477,7 +477,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   void Mesh::Topology_FillSolidNodeFlag() {
 
 
-    NumericVector& NodeMaterial =  _topology->GetSolutionName("solidMrk");
+    NumericVector& NodeMaterial =  _topology->GetSolutionByName("solidMrk");
 
     NodeMaterial.zero();
 

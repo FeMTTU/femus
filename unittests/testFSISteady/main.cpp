@@ -143,7 +143,7 @@ int main(int argc, char** args) {
   
   const unsigned level_to_read_for_testing = 3;
 
-  double l2normvarDX = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionName("DX").l2_norm();
+  double l2normvarDX = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionByName("DX").l2_norm();
 
   double l2normvarDXStored = 0.00422796021240;
 
@@ -156,7 +156,7 @@ int main(int argc, char** args) {
     exit(1);
   }
 
-  double l2normvarDY = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionName("DY").l2_norm();
+  double l2normvarDY = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionByName("DY").l2_norm();
 
   double l2normvarDYStored = 0.06728194901640;
 
@@ -168,7 +168,7 @@ int main(int argc, char** args) {
   }
 
 
-  double l2normvarU = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionName("U").l2_norm();
+  double l2normvarU = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionByName("U").l2_norm();
 
   double l2normvarUStored = 43.30221796101648;
 
@@ -179,7 +179,7 @@ int main(int argc, char** args) {
     exit(1);
   }
 
-  double l2normvarV = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionName("V").l2_norm();
+  double l2normvarV = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionByName("V").l2_norm();
 
   double l2normvarVStored = 9.83398554915716;
 
@@ -190,7 +190,7 @@ int main(int argc, char** args) {
     exit(1);
   }
 
-  double l2normvarP = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionName("P").l2_norm();
+  double l2normvarP = ml_sol.GetSolutionLevel(level_to_read_for_testing)->GetSolutionByName("P").l2_norm();
 
   double l2normvarPStored = 5.87173860743601;
 

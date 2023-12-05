@@ -238,7 +238,7 @@ public:
                                                                std::vector <char> & enc) const {
                                
 
-    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
+    //NumericVector& material =  mesh->_topology->GetSolutionByName( "Material" );
 
     // point pointer to common memory area buffer of void type;
     ARRAY_TYPE * var_el = static_cast< ARRAY_TYPE * >( buffer_void );

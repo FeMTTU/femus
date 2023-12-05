@@ -415,7 +415,7 @@ namespace femus {
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
-      std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes << std::endl;
+      std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolName_from_index(indexSol) << " = " << L2normRes << std::endl;
       if(isnan(L2normRes)) {
         std::cout << "Warning the linear solver did not converge.\n";
         std::cout << "A bit flip may have occurred, let's try to restart the solver!" << std::endl;

@@ -471,7 +471,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   ml_sol_bdry_bdry_flag->Initialize(node_based_bdry_bdry_flag_name.c_str());
 
   // ======= COARSE READING and REFINEMENT ========================
-  ml_sol_bdry_bdry_flag->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
+  ml_sol_bdry_bdry_flag->GetSolutionLevel(0)->GetSolutionByName( node_based_bdry_bdry_flag_name ) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, node_mapping_from_mesh_file_to_new);
 
   ml_mesh.GetLevelZero(0)->deallocate_node_mapping(node_mapping_from_mesh_file_to_new);
 

@@ -142,7 +142,7 @@ int main(int argc, char** args) {
 
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-    meshcoarser.FlagElementsToBeRefined(5.1e-3, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));
+    meshcoarser.FlagElementsToBeRefined(5.1e-3, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionByName("Error"));
     mlMsh.AddAMRMeshLevel();
     mlSol.AddSolutionLevel();
     mlSol.RefineSolution(numberOfUniformLevels);

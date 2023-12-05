@@ -136,7 +136,7 @@ namespace femus {
       L2normEpsDividedSol = L2normEps / (L2normSol + mindeltaNormSol);
 
       std::cout << "     ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
-                std::scientific << _ml_sol->GetSolutionName(indexSol) << "= " << L2normEpsDividedSol << \
+                std::scientific << _ml_sol->GetSolName_from_index(indexSol) << "= " << L2normEpsDividedSol << \
                 "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
       nonLinearEps = (nonLinearEps > L2normEpsDividedSol) ? nonLinearEps : L2normEpsDividedSol;
 

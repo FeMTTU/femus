@@ -160,7 +160,7 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
 
     for(unsigned sol = 0; sol <  ml_sol.GetSolutionSize(); sol++) {
-     const std::string sol_name(ml_sol.GetSolutionName(sol));
+     const std::string sol_name(ml_sol.GetSolName_from_index(sol));
   ml_sol.Initialize(sol_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //   ml_sol.Initialize("all"); 
     }

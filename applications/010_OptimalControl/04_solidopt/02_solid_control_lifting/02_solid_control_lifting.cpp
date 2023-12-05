@@ -1021,8 +1021,8 @@ const MultiLevelSolution  Solution_generation_1< real_num >::run_on_single_level
   
   // DX_TOT = DX + DX_CTRL
   for (unsigned d = 0; d < dim; d++)   {
-      /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_tot[d].c_str()) /*)*/  = /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_hom[d].c_str()) /*)*/; 
-      /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_tot[d].c_str()) /*)*/ += /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_ctrl[d].c_str()) /*)*/; 
+      /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionByName( displ_tot[d] ) /*)*/  = /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionByName( displ_hom[d] ) /*)*/; 
+      /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionByName( displ_tot[d] ) /*)*/ += /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionByName( displ_ctrl[d] ) /*)*/; 
   }
   
 

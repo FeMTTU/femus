@@ -199,7 +199,7 @@ int main(int argc, char** args) {
   system2.MGsolve();
   //END Temperature Multilevel Problem
 
-  double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionName("U").l2_norm();
+  double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionByName("U").l2_norm();
 
   double l2normvarUStored = 35.68179309424519;
 
@@ -210,7 +210,7 @@ int main(int argc, char** args) {
     exit(1);
   }
 
-  double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V").l2_norm();
+  double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionByName("V").l2_norm();
 
   double l2normvarVStored = 6.86749406268887;
 
@@ -221,7 +221,7 @@ int main(int argc, char** args) {
     exit(1);
   }
 
-  double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P").l2_norm();
+  double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionByName("P").l2_norm();
 
   double l2normvarPStored = 3.10222750612995;
 
@@ -232,7 +232,7 @@ int main(int argc, char** args) {
     exit(1);
   }
 
-  double l2normvarT = ml_sol.GetSolutionLevel(3)->GetSolutionName("T").l2_norm();
+  double l2normvarT = ml_sol.GetSolutionLevel(3)->GetSolutionByName("T").l2_norm();
 
   double l2normvarTStored = 57.69748694700662;
 

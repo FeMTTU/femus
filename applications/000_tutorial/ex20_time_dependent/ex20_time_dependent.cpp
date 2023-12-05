@@ -281,7 +281,7 @@ int main(int argc,char **args) {
       
   // ======= Check for quenching ==========
     if ( detect_quench == true ) {
-      if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
+      if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionByName( unknown ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
     }
       
   // ======= Print ========================
@@ -315,9 +315,9 @@ int main(int argc,char **args) {
       if ( adapt_flag == 1 ) {
       
         double AdaptStarter = 0.85; // Value of ||u||_\infty at which to start adaptation
-        if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= AdaptStarter ) {
+        if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionByName( unknown ).linfty_norm() >= AdaptStarter ) {
      
-            double NonlinearityTracker = 0.1 * Singularity::derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
+            double NonlinearityTracker = 0.1 * Singularity::derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionByName( unknown ).linfty_norm() ) ;
             double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
             double minTimeStep = 0.001; // Minimum step-size controller
             double NewTimeFixed = std::max( NewTime , minTimeStep );
@@ -331,8 +331,8 @@ int main(int argc,char **args) {
      
      //here is where we store the ends of the simulations
 //      last_sol[i] =  ml_sol;
-//      last_sol[i] = *( ml_sol.GetSolutionLevel( fine_lev ) )/*->GetSolutionName( unknown.c_str() )*/;
-     last_sol[i] =  &( ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() );
+//      last_sol[i] = *( ml_sol.GetSolutionLevel( fine_lev ) )/*->GetSolutionByName( unknown )*/;
+     last_sol[i] =  &( ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionByName( unknown );
   
   }
 

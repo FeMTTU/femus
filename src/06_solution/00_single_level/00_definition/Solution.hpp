@@ -141,13 +141,13 @@ namespace femus {
 // === Solution, NumericVector - BEGIN =================
     public:
       /** Get a const solution (Numeric Vector) by name @todo make the _Sol object private */
-      const NumericVector& GetSolutionName(const char* var) const {
-        return *_Sol[GetIndex(var)];
+      const NumericVector& GetSolutionByName(const std::string var) const {
+        return *_Sol[GetIndex( var.c_str() )];
       }
 
       /** Get a solution (Numeric Vector) by name @todo make the _Sol object private */
-      NumericVector& GetSolutionName(const char* var) {
-        return *_Sol[GetIndex(var)];
+      NumericVector& GetSolutionByName(const std::string var) {
+        return *_Sol[GetIndex( var.c_str() )];
       }
       
       /** Add another solution */

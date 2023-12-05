@@ -232,16 +232,16 @@ namespace femus {
         for( int name = 0; name < 4; name++ ) {
           //BEGIN LAGRANGIAN Fem SOLUTION
           if( name == 0 ) {
-            sprintf( buffer, "%s", _ml_sol->GetSolutionName( i ) );
+            sprintf( buffer, "%s", _ml_sol->GetSolName_from_index( i ) );
           }
           else if( name == 1 ) {
-            sprintf( buffer, "%s %s", "Bdc", _ml_sol->GetSolutionName( i ) );
+            sprintf( buffer, "%s %s", "Bdc", _ml_sol->GetSolName_from_index( i ) );
           }
           else if( name == 2 ) {
-            sprintf( buffer, "%s %s", "Res", _ml_sol->GetSolutionName( i ) );
+            sprintf( buffer, "%s %s", "Res", _ml_sol->GetSolName_from_index( i ) );
           }
           else {
-            sprintf( buffer, "%s %s", "Eps", _ml_sol->GetSolutionName( i ) );
+            sprintf( buffer, "%s %s", "Eps", _ml_sol->GetSolName_from_index( i ) );
           }
           if( name == 0 || ( _debugOutput  && solution->is_unknown_of_system(i) ) ) {
             
