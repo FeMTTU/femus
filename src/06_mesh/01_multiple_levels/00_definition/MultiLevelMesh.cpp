@@ -332,7 +332,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn,
     }
     else{
       Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_IsUserRefinementFunctionDefined = true;
+      Mesh::set_is_refinement_function_defined(true);
     }
     
     //Here there are two alternatives:
@@ -340,7 +340,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn,
     //When igridn is SMALLER THAN OR EQUAL igridr, this loop is ignored
     for (unsigned i = igridr; i < _gridn0; i++) {
         
-      if(Mesh::_IsUserRefinementFunctionDefined == false) {
+      if(Mesh::get_is_refinement_function_defined() == false) {
         std::cout << "Set Refinement Region flag is not defined! " << std::endl;
         exit(1);
       }

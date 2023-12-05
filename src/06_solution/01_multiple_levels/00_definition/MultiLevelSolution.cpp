@@ -95,6 +95,7 @@ namespace femus {
     
     // add level solution
     _solution.resize(_gridn + 1);
+    
     _solution[_gridn] = new Solution(GetMLMesh()->GetLevel(_gridn));
 
     // add all current solutions and initialize to zero
@@ -339,6 +340,11 @@ namespace femus {
       
   for (unsigned ig = 0; ig < _gridn; ig++) {
       
+        const Mesh* msh   = GetMLMesh()->GetLevel(ig);
+        const Mesh* msh_2 = _solution[ig]->GetMesh();
+        
+        if( msh_2 != msh) abort();
+        
     for (unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
       const unsigned sol_type = _solType[i];
 
@@ -349,8 +355,6 @@ namespace femus {
               // initialize vectors - END -----
 
         if(func || funcMLProb) {
-
-        const Mesh* msh = GetMLMesh()->GetLevel(ig);
 
 
           if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
@@ -736,7 +740,9 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int grid0, const double time) {
 
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
+      
       if(_solution[igridn]->is_unknown_of_system(k) ) {
+        
         Mesh* msh = GetMLMesh()->GetLevel(igridn);
 
         std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();

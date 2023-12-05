@@ -673,7 +673,7 @@ namespace femus {
     }
     else {
       _msh[0]->Mesh::_SetRefinementFlag = SetRefinementFlag;
-      _msh[0]->Mesh::_IsUserRefinementFunctionDefined = true;
+      _msh[0]->Mesh::set_is_refinement_function_defined(true);
     }
   }
 

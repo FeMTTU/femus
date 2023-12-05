@@ -82,7 +82,7 @@ namespace femus {
           if((*_mesh._topology->_Sol[ _mesh.GetAmrIndex() ])(iel) > 0.5) {
             numberOfRefinedElement->add(_iproc, 1.);
           }
-          else if(_mesh._IsUserRefinementFunctionDefined) {
+          else if( _mesh.get_is_refinement_function_defined() ) {
             short unsigned ielt = _mesh.GetElementType(iel);
             unsigned nve = _mesh.GetElementDofNumber(iel, 0);
             std::vector < double > x(3, 0.);

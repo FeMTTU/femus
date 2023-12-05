@@ -679,7 +679,14 @@ public:
     
     /** AMR */
     static bool (* _SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level);
-    static bool _IsUserRefinementFunctionDefined;
+    
+    /** AMR */
+    static void set_is_refinement_function_defined(const bool truth_in) {
+      _IsUserRefinementFunctionDefined = truth_in;
+    }
+    static bool get_is_refinement_function_defined() {
+      return _IsUserRefinementFunctionDefined;
+    }
     
     /** AMR */
     bool GetIfHomogeneous() const {
@@ -696,11 +703,6 @@ public:
       return _amrRestriction;
     }
     
-    /** AMR */
-    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() {
-      return _amrSolidMark;
-    }
-    
     /** Get if element is refined*/
     short unsigned GetRefinedElementIndex(const unsigned &iel) const;
     
@@ -708,18 +710,32 @@ public:
   
 private:
     
+    static bool _IsUserRefinementFunctionDefined;
+    
     /** AMR */
     bool _meshIsHomogeneous;
     
     /** AMR: restriction map (vector of 3 FE families: linear, quadratic, biquadratic) */
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
     
-    /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
-    std::vector < std::map < unsigned, bool > > _amrSolidMark;
-
 // === FE DOFMAP, REFINEMENT, AMR - END =================
     
 
+// === FE DOFMAP, REFINEMENT, AMR, FSI - BEGIN =================
+    
+public:
+
+    /** AMR */
+    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() {
+      return _amrSolidMark;
+    }
+    
+private:
+  
+    /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
+    std::vector < std::map < unsigned, bool > > _amrSolidMark;
+
+// === FE DOFMAP, REFINEMENT, AMR, FSI - END =================
     
 };
 
