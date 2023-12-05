@@ -41,7 +41,7 @@ namespace femus {
 //--------------------------------------------------------------------------------
 
   LinearEquation::LinearEquation(Solution *other_solution) :
-     _msh ( _solution->GetMesh() )  
+     _msh ( other_solution->GetMesh() )  
      {
        
     _solution = other_solution;

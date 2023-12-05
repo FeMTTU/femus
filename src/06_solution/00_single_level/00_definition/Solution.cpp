@@ -39,7 +39,7 @@ namespace femus {
    *  Constructor
    **/
 // ------------------------------------------------------------------
-  Solution::Solution(/*const*/ Mesh *other_msh) :
+  Solution::Solution(const Mesh *other_msh) :
     _msh(other_msh)
    {
 

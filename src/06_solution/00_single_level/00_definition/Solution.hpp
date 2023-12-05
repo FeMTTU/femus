@@ -51,7 +51,7 @@ namespace femus {
 // === Constructors / Destructor  - BEGIN =================
     public:
       /* Constructor */
-      Solution(/*const*/ Mesh * other_msh);
+      Solution(const Mesh * other_msh);
 
       /** Destructor */
       ~Solution();
@@ -105,10 +105,6 @@ namespace femus {
 // === MESH - BEGIN =================
     public:
               
-      Mesh * GetMesh() {
-        return _msh;
-      }
-      
       const Mesh * GetMesh() const {
         return _msh;
       }
@@ -116,16 +112,12 @@ namespace femus {
     private:
       
       /** Pointer to underlying mesh object */
-      /*const*/ Mesh * _msh;
+      const Mesh * _msh;
       
 // === MESH - END =================
 
 // === SPACE DISCRETIZATION (FE) - BEGIN =================
     public:
-      
-      unsigned GetSolutionType(const unsigned &index ) {
-	return _SolType[index];
-      }
       
      const unsigned GetSolutionType(const unsigned &index ) const {
 	return _SolType[index];
@@ -165,7 +157,7 @@ namespace femus {
 
     public:
 
-      /** Vector size: number of added Solutions. */
+      /** @todo make private (long task) - Vector size: number of added Solutions. */
       std::vector <NumericVector*> _Sol;
 // === Solution, NumericVector - END =================
 
@@ -196,7 +188,7 @@ protected:
         return _SolTmOrder[i];
       }
       
-      /** Vector size: number of added Solutions. Used only if the Solution is time-dependent */
+      /** @todo make private - Vector size: number of added Solutions. Used only if the Solution is time-dependent */
       std::vector <NumericVector*> _SolOld;
 
     private:
@@ -219,11 +211,11 @@ protected:
       void UpdateRes(const std::vector <unsigned> & SolPdeIndex_in, NumericVector* _RES, const std::vector <std::vector <unsigned> > &KKoffset);
 
 
-      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
+      /** @todo make private - Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       std::vector <NumericVector*> _Bdc;
-      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
+      /** @todo make private - Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       std::vector <NumericVector*> _Res;
-      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
+      /**  @todo make private - Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       std::vector <NumericVector*> _Eps;
       
       bool is_unknown_of_system(const unsigned k) const { return _ResEpsBdcFlag[k]; }
@@ -241,7 +233,8 @@ protected:
       void RemoveNullSpace(const unsigned &index) {
         _removeNullSpace[index] = true ;
       }
-      bool GetIfRemoveNullSpace(const unsigned &index) {
+      
+      bool GetIfRemoveNullSpace(const unsigned &index) const {
         return _removeNullSpace[index];
       }
       
@@ -256,7 +249,7 @@ protected:
 // === FSI - BEGIN =================
     public:
 
-    void SetIfFSI(const bool &FSI = true){
+    void SetIfFSI(const bool &FSI) {
 	_FSI = FSI; 
       }
       
