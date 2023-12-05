@@ -255,7 +255,7 @@ int main(int argc,char **args) {
 //   system.SetDebugNonlinear(true);
   //**************
   
-  const unsigned fine_lev = ml_sol._mlMesh->GetNumberOfLevels() - 1;
+  const unsigned fine_lev = ml_sol.GetMLMesh()->GetNumberOfLevels() - 1;
   
   const double total_time = 1.;  
   

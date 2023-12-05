@@ -816,10 +816,10 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
 
 void UpdateMesh (MultiLevelSolution& mlSol) {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1u;
 
   Solution* sol  = mlSol.GetSolutionLevel (level);
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
   elem* myel =  msh->el;
 
   const unsigned dim = msh->GetDimension();

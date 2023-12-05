@@ -268,8 +268,8 @@ int main (int argc, char** argv) {
 void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolGlobal) {
 
   //using the same mesh for FETI and global solutions
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
 
   Solution* sol  = mlSol.GetSolutionLevel (level);
   Solution* solGlobal = mlSolGlobal.GetSolutionLevel (level);

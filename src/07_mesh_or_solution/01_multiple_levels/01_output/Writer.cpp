@@ -39,7 +39,7 @@ namespace femus {
 
   Writer::Writer (MultiLevelSolution* ml_sol) :
     _ml_sol (ml_sol),
-    _ml_mesh (ml_sol->_mlMesh) {
+    _ml_mesh (ml_sol->GetMLMesh()) {
       
     _gridn = _ml_mesh->GetNumberOfLevels();
     

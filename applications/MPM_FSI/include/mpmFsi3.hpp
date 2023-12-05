@@ -1179,8 +1179,8 @@ unsigned getNumberOfLayers(const double & a, const double & fac, const bool inve
 
 void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line & fluidLine) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   Solution* sol  = mlSol.GetSolutionLevel(level);
 
   unsigned solIndexNodeFlag = sol->GetIndex("NodeFlag");
@@ -1371,8 +1371,8 @@ void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line &
 
 void ProjectGridVelocity(MultiLevelSolution &mlSol) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   Solution* sol  = mlSol.GetSolutionLevel(level);
   const unsigned dim = msh->GetDimension();
 
@@ -1682,8 +1682,8 @@ void ProjectGridVelocity(MultiLevelSolution &mlSol) {
 
 void ProjectGridVelocity2(MultiLevelSolution & mlSol) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   Solution* sol  = mlSol.GetSolutionLevel(level);
   const unsigned dim = msh->GetDimension();
 
@@ -2200,8 +2200,8 @@ bool CheckInclusion3D(Solution* sol, const unsigned &elemToCheck, const unsigned
 
 void FindLocalCoordinates(std::vector<double> & xi, std::vector < std::vector < std::vector < double > > >  & aX, const bool & pcElemUpdate, MultiLevelSolution & mlSol, const unsigned &elementToCheck, const std::vector <double> &xToCheck, const std::vector<std::vector<double>> & xElement) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   Solution* sol  = mlSol.GetSolutionLevel(level);
   const unsigned dim = msh->GetDimension();
   unsigned solXType = 2;

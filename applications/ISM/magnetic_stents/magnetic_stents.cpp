@@ -823,10 +823,10 @@ bool SetBoundaryConditionMagneticStents ( const std::vector < double >& x, const
 void UpdateMeshCoordinates ( MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol )
 {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution* solution  = mlSol.GetSolutionLevel ( level );
-  Mesh* msh0 = mlSol._mlMesh->GetLevel ( level );
+  Mesh* msh0 = mlSol.GetMLMesh()->GetLevel ( level );
 
   Mesh* msh = mlMesh.GetLevel ( level );
 

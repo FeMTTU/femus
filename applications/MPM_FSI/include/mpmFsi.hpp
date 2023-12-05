@@ -1270,8 +1270,8 @@ unsigned getNumberOfLayers (const double &a, const double &fac, const bool inver
 
 void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine) {
   
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
   Solution* sol  = mlSol.GetSolutionLevel (level);
   
   unsigned solIndexNodeFlag, solTypeNodeFlag, solIndexNodeDistF, solIndexNodeDistS;
@@ -1434,8 +1434,8 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
 
 void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine) {
   
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
   Solution* sol  = mlSol.GetSolutionLevel (level);
   
   unsigned solIndexNodeFlag = sol->GetIndex ("NodeFlag");
@@ -1594,8 +1594,8 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
 
 // void GetPressureNeighbor (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine) {
 //
-//   const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-//   Mesh* msh = mlSol._mlMesh->GetLevel (level);
+//   const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+//   Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
 //   Solution* sol  = mlSol.GetSolutionLevel (level);
 //
 //   unsigned solIndexPNs = sol->GetIndex ("PNs");

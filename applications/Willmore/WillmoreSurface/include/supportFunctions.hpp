@@ -3,10 +3,10 @@
 
  void GetElementNearVertexNumber(MultiLevelSolution &mlSol){
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution* sol = mlSol.GetSolutionLevel (level);
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
 
   unsigned DIM = 3u;
   unsigned solIndex = mlSol.GetIndex ("ENVN");
@@ -40,10 +40,10 @@
 // Eugenio's standard FEMuS function.
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward) {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution* solution  = mlSol.GetSolutionLevel (level);
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
 
   unsigned DIM = 3u;
   std::vector < unsigned > solDxIndex (DIM);
@@ -157,10 +157,10 @@ void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vect
 
 double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution* sol  = mlSol.GetSolutionLevel(level);
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   elem* el =  msh->el;
 
   // Convenience variables to encode the dimension.

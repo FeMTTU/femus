@@ -887,10 +887,10 @@ void SetNeumannFactor(MultiLevelSolution* ml_sol) {
   
   //pointers and references
     
-  unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = ml_sol->GetMLMesh()->GetNumberOfLevels() - 1;
   
   Solution  *sol = ml_sol->GetSolutionLevel(level);
-  Mesh      *msh = ml_sol->_mlMesh->GetLevel(level);
+  Mesh      *msh = ml_sol->GetMLMesh()->GetLevel(level);
   
   elem* el = msh->el;   // pointer to the elem object in msh (level)
   

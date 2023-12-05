@@ -381,7 +381,7 @@ int main(int argc, char** args) {
    
   unsigned sizeTUVP = sizeT + sizeU +sizeV +sizeP;
     
-  Solution* sol = mlSol.GetLevel(numberOfUniformLevels-1);
+  const Solution* sol = mlSol.GetLevel(numberOfUniformLevels-1);
     
   for(unsigned i=0; i< sizeTUVP; i++){
     system.SetOuterSolver(PREONLY);  

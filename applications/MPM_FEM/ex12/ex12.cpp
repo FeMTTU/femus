@@ -334,9 +334,9 @@ double GetExactSolutionLaplace (const std::vector < double >& x) {
 
 
 std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlSol) {
-  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = mlSol->GetMLMesh()->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
-  Mesh*          msh          = mlSol->_mlMesh->GetLevel (level);   // pointer to the mesh (level) object
+  Mesh*          msh          = mlSol->GetMLMesh()->GetLevel (level);   // pointer to the mesh (level) object
   elem*          el         = msh->el;  // pointer to the elem object in msh (level)
   Solution*    sol        = mlSol->GetSolutionLevel (level);   // pointer to the solution (level) object
 
@@ -461,7 +461,7 @@ void BuidProjection (MultiLevelProblem& ml_prob, const unsigned &level) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   MultiLevelSolution*  mlSol = ml_prob._ml_sol;
-  //unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  //unsigned level = mlSol->GetMLMesh()->GetNumberOfLevels() - 1u;
 
   Solution* sol = ml_prob._ml_sol->GetSolutionLevel (level);
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);

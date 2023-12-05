@@ -528,10 +528,10 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
   double treshold = a - b * exp (-c * time);
   std::cout << "time = " << time << " treshold = " << treshold << std::endl;
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel (level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel (level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel (level);
   unsigned iproc  = msh->processor_id();
 
   unsigned soluIndex = mlSol.GetIndex ("u");
@@ -677,10 +677,10 @@ bool CheckIfPositiveDefinite (double K[6]) {
 
 void GetKFromFileISO (MultiLevelSolution &mlSol, const unsigned & split, const unsigned &patient) {
 
-  unsigned Level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned Level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel (Level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel (Level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel (Level);
 
   std::ostringstream filename;
   filename << "./input/CroppedMD_Data0" << patient << ".txt";
@@ -800,10 +800,10 @@ void GetKFromFileISO (MultiLevelSolution &mlSol, const unsigned & split, const u
 
 void GetKFromFileANISO (MultiLevelSolution &mlSol) {
 
-  unsigned Level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned Level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel (Level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel (Level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel (Level);
 
   std::ostringstream filename;
   std::ostringstream fileAD;

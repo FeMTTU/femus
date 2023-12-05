@@ -217,17 +217,17 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
           
             unsigned  t_med_flag_of_node_bdry_bdry_for_control_face;
           
-    for (unsigned m = 0; m < ml_sol->_mlMesh->_group_info_all_meshes.size(); m++)   {
+    for (unsigned m = 0; m < ml_sol->GetMLMesh()->_group_info_all_meshes.size(); m++)   {
     
                 //find its corresponding node_node group
                  unsigned gr_node_node;
-          for ( unsigned gr = 0; gr < ml_sol->_mlMesh->_group_info_all_meshes[m].size(); gr++) {
-                      if ( ml_sol->_mlMesh->_group_info_all_meshes[m][gr]._user_defined_flag  == ctrl_faces_VS_their_nodes[ t_face_that_I_want ]) {
+          for ( unsigned gr = 0; gr < ml_sol->GetMLMesh()->_group_info_all_meshes[m].size(); gr++) {
+                      if ( ml_sol->GetMLMesh()->_group_info_all_meshes[m][gr]._user_defined_flag  == ctrl_faces_VS_their_nodes[ t_face_that_I_want ]) {
                           gr_node_node = gr;
                       }
           }
                 
-                t_med_flag_of_node_bdry_bdry_for_control_face = ml_sol->_mlMesh->_group_info_all_meshes[m][gr_node_node]._med_flag;
+                t_med_flag_of_node_bdry_bdry_for_control_face = ml_sol->GetMLMesh()->_group_info_all_meshes[m][gr_node_node]._med_flag;
                 
      }    
   //t_med_flag_of_node_bdry_bdry_for_control_face END

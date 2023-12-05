@@ -466,10 +466,10 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
   double treshold = a - b * exp (-c * time);
   std::cout << "time = " << time << " treshold = " << treshold << std::endl;
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel (level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel (level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel (level);
   unsigned iproc  = msh->processor_id();
 
   unsigned soluIndex = mlSol.GetIndex ("u");

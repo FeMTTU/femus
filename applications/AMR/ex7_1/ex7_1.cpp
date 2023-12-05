@@ -833,11 +833,11 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
   error_vec->zero();
   solution_vec->zero();
 
-  unsigned gridn = ml_sol._mlMesh->GetNumberOfLevels();
+  unsigned gridn = ml_sol.GetMLMesh()->GetNumberOfLevels();
 
   for(int ilevel = gridn - 1; ilevel < gridn; ilevel++) {
     Solution*      solution  = ml_sol.GetSolutionLevel(ilevel);
-    Mesh*          msh	     = ml_sol._mlMesh->GetLevel(ilevel);
+    Mesh*          msh	     = ml_sol.GetMLMesh()->GetLevel(ilevel);
     unsigned 	   iproc     = msh->processor_id();
 
 
@@ -893,9 +893,9 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
         }
       }
 
-      for(unsigned ig = 0; ig < ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig = 0; ig < ml_sol.GetMLMesh()->_finiteElement[ielt][SolOrder]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives ***
-        ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
+        ml_sol.GetMLMesh()->_finiteElement[ielt][SolOrder]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
         //current solution
         double SolT = 0;
         std::vector < double > gradSolT(dim, 0.);

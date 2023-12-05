@@ -975,10 +975,10 @@ void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::ve
   vol->zero();
   vol0->zero();
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution* solution  = mlSol.GetSolutionLevel(level);
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
 
 
   const unsigned dim = msh->GetDimension();
@@ -1072,7 +1072,7 @@ void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::ve
       }
 
 
-      for (unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < mlSol.GetMLMesh()->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives ***
         msh->_finiteElement[ielt][solVType]->Jacobian(x0, ig, weight0, phiV, gradphiV, nablaphiV);
         msh->_finiteElement[ielt][solVType]->Jacobian(x, ig, weight, phiV, gradphiV, nablaphiV);
@@ -1138,10 +1138,10 @@ void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::ve
 void UpdateMeshCoordinates(MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol)
 {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution* solution  = mlSol.GetSolutionLevel(level);
-  Mesh* msh0 = mlSol._mlMesh->GetLevel(level);
+  Mesh* msh0 = mlSol.GetMLMesh()->GetLevel(level);
 
   Mesh* msh = mlMesh.GetLevel(level);
 

@@ -133,7 +133,7 @@ int main(int argc, char** args) {
   
   unsigned nprocs = msh->n_processors();
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];;  
-  Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
+  const Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
     
   for(unsigned i = 0; i< sizeU; i++){
     system.SetOuterSolver(PREONLY);  

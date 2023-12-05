@@ -958,7 +958,7 @@ namespace femus {
     adept::Stack& adeptStack = FemusInit::_adeptStack;
 
     Solution* mysolution = mlSol.GetSolutionLevel (level);
-    Mesh* mymsh =  mlSol._mlMesh->GetLevel (level);
+    Mesh* mymsh =  mlSol.GetMLMesh()->GetLevel (level);
     elem* myel  =  mymsh->el;
 
     unsigned indLmbd = mlSol.GetIndex ("lmbd");

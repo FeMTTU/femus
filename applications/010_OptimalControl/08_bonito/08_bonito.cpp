@@ -330,10 +330,10 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
 void BuildU(MultiLevelSolution& mlSol) {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel (level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel (level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel (level);
   unsigned iproc  = msh->processor_id();
   
 //   double q_step = 1. / sqrt( N );

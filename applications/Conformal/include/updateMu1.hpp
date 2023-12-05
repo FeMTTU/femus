@@ -4,10 +4,10 @@
 void UpdateMu(MultiLevelSolution& mlSol) {
 
   //MultiLevelSolution*  mlSol = ml_prob._ml_sol;
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1u;
 
   Solution* sol = mlSol.GetSolutionLevel(level);
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   elem* el = msh->el;
 
   //unsigned  dim = msh->GetDimension();

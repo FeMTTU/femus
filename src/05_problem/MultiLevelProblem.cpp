@@ -163,7 +163,7 @@ void MultiLevelProblem::clear_systems() {
  void MultiLevelProblem::SetMultiLevelMeshAndSolution(MultiLevelSolution * ml_sol) {
      
 				      _ml_sol = ml_sol;
-				      _ml_msh = ml_sol->_mlMesh;
+				      _ml_msh = ml_sol->GetMLMesh();
 				       _gridn = _ml_msh->GetNumberOfLevels();
      
  }

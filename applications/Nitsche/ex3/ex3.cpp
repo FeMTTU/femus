@@ -815,10 +815,10 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
 
 void BuildFlag(MultiLevelSolution& mlSol) {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel(level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel(level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel(level);
   unsigned iproc  = msh->processor_id();
 
   unsigned eflagIndex = mlSol.GetIndex("eflag");
@@ -878,10 +878,10 @@ void BuildFlag(MultiLevelSolution& mlSol) {
 
 void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel(level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel(level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel(level);
   unsigned iproc  = msh->processor_id();
 
   unsigned eflagIndex = mlSol.GetIndex("eflag");

@@ -217,7 +217,7 @@ int main(int argc, char** args) {
      
     if (i < maxNumberOfMeshes - gap/*1*/) {
         //restrict the fine solution at the current level  ==================
-//     for(unsigned short j = 0; j < ml_sol._mlMesh->GetNumberOfLevels(); j++) { //all levels
+//     for(unsigned short j = 0; j < ml_sol.GetMLMesh()->GetNumberOfLevels(); j++) { //all levels
       const unsigned coarse = i;
       const unsigned fine   = coarse + gap;
     for (unsigned nf = 0; nf < gap; nf++) {
@@ -244,9 +244,9 @@ int main(int argc, char** args) {
               ml_sol_finest->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
               ml_sol_finest->GenerateBdc( unknowns[j]._name.c_str() );
               
-//       assert( ml_sol._mlMesh->GetNumberOfLevels() == ml_sol_finest->_mlMesh->GetNumberOfLevels() - 1 );
+//       assert( ml_sol.GetMLMesh()->GetNumberOfLevels() == ml_sol_finest->GetMLMesh()->GetNumberOfLevels() - 1 );
 
-//     for(unsigned short k = 0; k < ml_sol._mlMesh->GetNumberOfLevels(); k++) { //all levels (only one)
+//     for(unsigned short k = 0; k < ml_sol.GetMLMesh()->GetNumberOfLevels(); k++) { //all levels (only one)
     //       _solution[k]->CopySolutionToOldSolution();  //started from here
               
        const unsigned level_index_current = 0;

@@ -294,12 +294,12 @@ int main (int argc, char** argv) {
 
 void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
   Solution* sol  = mlSol.GetSolutionLevel (level);
 
-  const unsigned levelFine = mlSolFine._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* mshFine = mlSolFine._mlMesh->GetLevel (levelFine);
+  const unsigned levelFine = mlSolFine.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* mshFine = mlSolFine.GetMLMesh()->GetLevel (levelFine);
   Solution* solFine  = mlSolFine.GetSolutionLevel (levelFine);
 
   const unsigned  dim = msh->GetDimension();
@@ -922,12 +922,12 @@ void BuildElementSkipFlags (MultiLevelMesh & mlMsh, std::vector<unsigned> &eleme
 
 void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
   Solution* sol  = mlSol.GetSolutionLevel (level);
 
-  const unsigned levelFine = mlSolFine._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* mshFine = mlSolFine._mlMesh->GetLevel (levelFine);
+  const unsigned levelFine = mlSolFine.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* mshFine = mlSolFine.GetMLMesh()->GetLevel (levelFine);
   Solution* solFine  = mlSolFine.GetSolutionLevel (levelFine);
 
   const unsigned  dim = msh->GetDimension();

@@ -96,16 +96,12 @@ public:
     
 private:
   
-    std::vector< unsigned > solution_start_and_end(const std::string name);
+    std::vector< unsigned > solution_start_and_end(const std::string name) const;
   
 // === BASIC SOL MANIPULATION - END =================
     
 // === NAME & INDEX  - BEGIN =================
 public:
-    /** To be Added */
-    unsigned GetSolutionSize() {
-        return _solType.size();
-    }
 
     /** To be Added */
     const unsigned GetSolutionSize() const {
@@ -114,17 +110,17 @@ public:
     
     
     /** To be Added */
-    char* GetSolutionName(unsigned i) {
+    const char* GetSolutionName(unsigned i) const {
         return _solName[i];
     }
 
     /** To be Added */
-    std::vector <char*>  GetSolName() {
+    const std::vector <char*>  GetSolName() const {
         return _solName;
     }
     
     /** To be Added */
-    std::vector <std::string>  GetSolName_string_vec() {
+    const std::vector <std::string>  GetSolName_string_vec() const {
         
         std::vector <std::string> solName_strings(_solName.size());
         
@@ -160,13 +156,11 @@ public:
     const MultiLevelMesh * GetMLMesh() const {
         return _mlMesh;
     };
-    
-    // member data
-    /*const*/ MultiLevelMesh * _mlMesh;
-
-     // *******************************************************
 
 private:
+  
+    // member data
+    /*const*/ MultiLevelMesh * _mlMesh;
     
     /** Number of levels */
     unsigned short  _gridn;
@@ -180,7 +174,7 @@ private:
 public:
 
        /** duplicate of GetSolutionLevel, to be removed @todo */
-    Solution* GetLevel(const unsigned i) {
+    const Solution* GetLevel(const unsigned i) const {
         return _solution[i];
     };
     
@@ -539,11 +533,7 @@ public:
 	_FSI = FSI; 
 	for(unsigned i = 0;i<_gridn;i++){
 	  _solution[i]->SetIfFSI(FSI);
-	}
-    }
-      
-    bool GetIfFSI(){
-      return _FSI; 
+	 }
     }
     
     const bool GetIfFSI() const {
@@ -652,17 +642,17 @@ namespace femus {
           if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
               abort();
 //             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-//               for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
-//                   iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
-//                 unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, sol_type);
+//               for(int iel = GetMLMesh()->GetLevel(ig)->_elementOffset[isdom];
+//                   iel < GetMLMesh()->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
+//                 unsigned nloc_dof = GetMLMesh()->GetLevel(ig)->GetElementDofNumber(iel, sol_type);
 // 
 //                 for(int j = 0; j < nloc_dof; j++) {
-//                   unsigned inode_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
-//                   unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
+//                   unsigned inode_Metis = GetMLMesh()->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
+//                   unsigned icoord_Metis = GetMLMesh()->GetLevel(ig)->GetSolutionDof(j, iel, 2);
 //                   std::vector < double > xx(3);
-//                   xx[0] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
-//                   xx[1] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
-//                   xx[2] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
+//                   xx[0] = (*GetMLMesh()->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+//                   xx[1] = (*GetMLMesh()->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+//                   xx[2] = (*GetMLMesh()->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
 // 
 //                   value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
 // 
@@ -681,12 +671,12 @@ namespace femus {
               
                const unsigned solType_coords = CONTINUOUS_BIQUADRATIC;
 
-              const unsigned dim = _mlMesh->GetDimension();
+              const unsigned dim = GetMLMesh()->GetDimension();
               
-  CurrentElem < double > geom_element_iel(dim, _mlMesh->GetLevel(ig) );
+  CurrentElem < double > geom_element_iel(dim, GetMLMesh()->GetLevel(ig) );
   
-              for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[_iproc];
-                  iel < _mlMesh->GetLevel(ig)->_elementOffset[_iproc + 1]; iel++) {
+              for(int iel = GetMLMesh()->GetLevel(ig)->_elementOffset[_iproc];
+                  iel < GetMLMesh()->GetLevel(ig)->_elementOffset[_iproc + 1]; iel++) {
                   value = 0.;
 
 // ------- - BEGIN
@@ -698,10 +688,10 @@ namespace femus {
 // ------- - END
 
               
-	  for(unsigned iface = 0; iface < _mlMesh->GetLevel(ig)->GetElementFaceNumber(iel); iface++) {
+	  for(unsigned iface = 0; iface < GetMLMesh()->GetLevel(ig)->GetElementFaceNumber(iel); iface++) {
        
           
-        const int bdry_index = _mlMesh->GetLevel(ig)->el->GetFaceElementIndex(iel, iface);
+        const int bdry_index = GetMLMesh()->GetLevel(ig)->el->GetFaceElementIndex(iel, iface);
         
         if (bdry_index < 0) {
         const unsigned int face_index_in_domain = - ( bdry_index + 1);
@@ -711,7 +701,7 @@ namespace femus {
  
        geom_element_iel.set_elem_center_bdry_3d();
 
-       const unsigned ielGeom_bdry = _mlMesh->GetLevel(ig)->GetElementFaceType(iel, iface);    
+       const unsigned ielGeom_bdry = GetMLMesh()->GetLevel(ig)->GetElementFaceType(iel, iface);    
         //compute face element center - END
         
 
@@ -746,7 +736,7 @@ namespace femus {
                 
                 unsigned placeholder_index = 0/*2*/;
 
-                unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(placeholder_index, iel, sol_type);
+                unsigned solDof = GetMLMesh()->GetLevel(ig)->GetSolutionDof(placeholder_index, iel, sol_type);
 
                 _solution[ig]->_Sol[i]->set(solDof, value);
 

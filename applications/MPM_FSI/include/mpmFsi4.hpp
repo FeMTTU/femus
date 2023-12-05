@@ -1104,8 +1104,8 @@ unsigned getNumberOfLayers(const double & a, const double & fac, const bool inve
 
 void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line & fluidLine) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   Solution* sol  = mlSol.GetSolutionLevel(level);
 
   unsigned solIndexNodeFlag = sol->GetIndex("NodeFlag");
@@ -1313,8 +1313,8 @@ void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line &
 
 void ProjectGridVelocity(MultiLevelSolution &mlSol) {
 
-  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  const unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   Solution* sol  = mlSol.GetSolutionLevel(level);
   const unsigned dim = msh->GetDimension();
 

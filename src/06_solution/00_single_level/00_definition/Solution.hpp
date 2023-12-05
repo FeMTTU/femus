@@ -261,6 +261,7 @@ protected:
       }
       
     private:
+
       bool _FSI;
 
 // === FSI - END =================
@@ -279,16 +280,16 @@ protected:
       bool FlagAMRRegionBasedOnErroNorm(const std::vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType);
       bool FlagAMRRegionBasedOnErroNormAdaptive(const std::vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, 
 						const unsigned& normType, const double &neighborThresholdValue);
+
       /** Init and set to zero The AMR Eps vector */
       void InitAMREps();
+
+    private:
       
       /** Vector size: number of added Solutions. */
       std::vector <NumericVector*> _AMREps;
+      
       bool _AMR_flag;
-      
-      
-      
-    private:
 
       std::vector < std::vector <NumericVector*> > _GradVec;
 

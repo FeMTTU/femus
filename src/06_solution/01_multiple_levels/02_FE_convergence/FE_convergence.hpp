@@ -516,10 +516,10 @@ template < class real_num>
   //norms that we are computing here //first L2, then H1 - END ============
   
   
-  unsigned level = ml_sol_single_level->_mlMesh->GetNumberOfLevels() - 1u; //this is supposed to be zero because a single level is used
+  unsigned level = ml_sol_single_level->GetMLMesh()->GetNumberOfLevels() - 1u; //this is supposed to be zero because a single level is used
   
   //  extract pointers to the several objects that we are going to use
-  Mesh*     msh = ml_sol_single_level->_mlMesh->GetLevel(level);
+  const Mesh*     msh = ml_sol_single_level->GetMLMesh()->GetLevel(level);
   const Solution* sol = ml_sol_single_level->GetSolutionLevel(level);
 
   const unsigned  dim = msh->GetDimension();
@@ -1019,7 +1019,7 @@ template < class real_num>
         }         
                  
               // ======= store the last computed solution to prepare the next iteration (the current level i is now overwritten) ========================
-              const unsigned level_to_pick_from = ml_sol_single_level->_mlMesh->GetNumberOfLevels() - 1;
+              const unsigned level_to_pick_from = ml_sol_single_level->GetMLMesh()->GetNumberOfLevels() - 1;
             ml_sol_all_levels_needed_for_incremental->fill_at_level_from_level(lev, level_to_pick_from, *ml_sol_single_level);
         
                  
@@ -1295,10 +1295,10 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiL
   
   
   
-  const unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
+  const unsigned level = ml_sol->GetMLMesh()->GetNumberOfLevels() - 1u;
   
   //  extract pointers to the several objects that we are going to use
-  const Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
+  const Mesh*     msh = ml_sol->GetMLMesh()->GetLevel(level);    // pointer to the mesh (level) object
   const elem*     el  = msh->el;  // pointer to the elem object in msh (level)
   const Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
@@ -1463,10 +1463,10 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
   
   if (unknowns_vec.size() != 1) abort();
   
-  unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = ml_sol->GetMLMesh()->GetNumberOfLevels() - 1u;
   
   //  extract pointers to the several objects that we are going to use
-  Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*     msh = ml_sol->GetMLMesh()->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)
   Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 

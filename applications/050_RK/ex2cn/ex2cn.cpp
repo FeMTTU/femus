@@ -578,10 +578,10 @@ double GetSolutionFluxes(MultiLevelSolution& mlSol){
   MyVector<double> pFlux(1,0);
   pFlux.stack();
   
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution* solution  = mlSol.GetSolutionLevel(level);
-  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
   elem* myel =  msh->el;
   
   const unsigned dim = msh->GetDimension();

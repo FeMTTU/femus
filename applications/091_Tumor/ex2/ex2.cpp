@@ -567,10 +567,10 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
   double treshold = a - b * exp (-c * time);
   std::cout << "time = " << time << " treshold = " << treshold << std::endl;
 
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel (level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel (level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel (level);
   unsigned iproc  = msh->processor_id();
 
   unsigned soluIndex = mlSol.GetIndex ("u");
@@ -688,14 +688,14 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 void ProjectK (MultiLevelSolution &mlCubeSol, MultiLevelSolution &mlSphereSol) {
 
 
-  unsigned cLevel = mlCubeSol._mlMesh->GetNumberOfLevels() - 1;
-  unsigned sLevel = mlSphereSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned cLevel = mlCubeSol.GetMLMesh()->GetNumberOfLevels() - 1;
+  unsigned sLevel = mlSphereSol.GetMLMesh()->GetNumberOfLevels() - 1;
 
   Solution *cSol  = mlCubeSol.GetSolutionLevel (cLevel);
-  Mesh     *cMsh   = mlCubeSol._mlMesh->GetLevel (cLevel);
+  Mesh     *cMsh   = mlCubeSol.GetMLMesh()->GetLevel (cLevel);
 
   Solution *sSol  = mlSphereSol.GetSolutionLevel (sLevel);
-  Mesh     *sMsh   = mlSphereSol._mlMesh->GetLevel (sLevel);
+  Mesh     *sMsh   = mlSphereSol.GetMLMesh()->GetLevel (sLevel);
 
   unsigned iproc  = cMsh->processor_id();
   unsigned nprocs  = cMsh->n_processors();
@@ -775,10 +775,10 @@ void ProjectK (MultiLevelSolution &mlCubeSol, MultiLevelSolution &mlSphereSol) {
 
 void getKFromFile (MultiLevelSolution &mlSol){
   
-  unsigned Level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned Level = mlSol.GetMLMesh()->GetNumberOfLevels() - 1;
     
   Solution *sol  = mlSol.GetSolutionLevel (Level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel (Level);
+  Mesh     *msh   = mlSol.GetMLMesh()->GetLevel (Level);
   
   std::ifstream fin;
   

@@ -1132,9 +1132,9 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
   
     static double ErrorNormArray[ns_state_only::no_of_norms];
     
-  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = mlSol->GetMLMesh()->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
-  Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*     msh = mlSol->GetMLMesh()->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)
   Solution* sol = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
 

@@ -51,7 +51,7 @@ namespace femus {
     _solution.resize(_gridn);
 
     for(unsigned i = 0; i < _gridn; i++) {
-      _solution[i] = new Solution(_mlMesh->GetLevel(i));
+      _solution[i] = new Solution(GetMLMesh()->GetLevel(i));
     }
 
     _bdcFuncSet = false;
@@ -95,7 +95,7 @@ namespace femus {
     
     // add level solution
     _solution.resize(_gridn + 1);
-    _solution[_gridn] = new Solution(_mlMesh->GetLevel(_gridn));
+    _solution[_gridn] = new Solution(GetMLMesh()->GetLevel(_gridn));
 
     // add all current solutions and initialize to zero
     for(unsigned i = 0; i < _solName.size(); i++) {
@@ -105,11 +105,11 @@ namespace femus {
     for(unsigned k = 0; k < _solName.size(); k++) {
       _solution[_gridn]->ResizeSolutionVector(_solName[k]);
       _solution[_gridn]->_Sol[k]->matrix_mult(*_solution[_gridn - 1]->_Sol[k],
-                                              *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
+                                              *GetMLMesh()->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
       _solution[_gridn]->_Sol[k]->close();
       if(_solTimeOrder[k] == TIME_DEPENDENT) {
         _solution[_gridn]->_SolOld[k]->matrix_mult(*_solution[_gridn - 1]->_SolOld[k],
-                                                   *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
+                                                   *GetMLMesh()->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
         _solution[_gridn]->_SolOld[k]->close();
       }
     }
@@ -350,7 +350,7 @@ namespace femus {
 
         if(func || funcMLProb) {
 
-        const Mesh* msh = _mlMesh->GetLevel(ig);
+        const Mesh* msh = GetMLMesh()->GetLevel(ig);
 
 
           if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
@@ -479,7 +479,7 @@ namespace femus {
   }
   
   
-  std::vector< unsigned >  MultiLevelSolution::solution_start_and_end(const std::string name) {
+  std::vector< unsigned >  MultiLevelSolution::solution_start_and_end(const std::string name) const {
 
       std::vector< unsigned > sol_start_end(2, 0);
 
@@ -587,7 +587,7 @@ namespace femus {
     _useParsedBCFunction = true;
 
     int nvars = _solType.size();
-    int nfaces = _mlMesh->GetLevel(0)->GetBoundaryInfo().size();
+    int nfaces = GetMLMesh()->GetLevel(0)->GetBoundaryInfo().size();
     _boundaryConditions.resize(nvars);
     _isHomogeneous.resize(nvars);
     _nonHomogeneousBCFunction.resize(nvars);
@@ -620,16 +620,16 @@ namespace femus {
     }
 
     std::map<unsigned int, std::string>::iterator iter;
-    iter = _mlMesh->GetLevel(0)->GetBoundaryInfo().begin();
+    iter = GetMLMesh()->GetLevel(0)->GetBoundaryInfo().begin();
 
-    for(iter = _mlMesh->GetLevel(0)->GetBoundaryInfo().begin(); iter != _mlMesh->GetLevel(0)->GetBoundaryInfo().end(); ++iter) {
+    for(iter = GetMLMesh()->GetLevel(0)->GetBoundaryInfo().begin(); iter != GetMLMesh()->GetLevel(0)->GetBoundaryInfo().end(); ++iter) {
       if(iter->second.compare(facename) == 0) {
         iface = iter->first;
         break;
       }
     }
 
-    if(iter == _mlMesh->GetLevel(0)->GetBoundaryInfo().end()) {
+    if(iter == GetMLMesh()->GetLevel(0)->GetBoundaryInfo().end()) {
       std::cout << " Error: the facename " << facename << " does not exist!" << std::endl;
       exit(1);
     }
@@ -737,7 +737,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
       if(_solution[igridn]->is_unknown_of_system(k) ) {
-        Mesh* msh = _mlMesh->GetLevel(igridn);
+        Mesh* msh = GetMLMesh()->GetLevel(igridn);
 
         std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
@@ -854,7 +854,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     unsigned solType = GetSolutionType(solIndex);
 
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
-      Mesh* msh = _mlMesh->GetLevel(igridn);
+      Mesh* msh = GetMLMesh()->GetLevel(igridn);
       for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
 
         short unsigned ielGroup = msh->GetElementGroup(iel);
@@ -918,7 +918,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     // 0 Dirichlet
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
       if(_solution[igridn]->is_unknown_of_system(solIndex) ) {
-        Mesh* msh = _mlMesh->GetLevel(igridn);
+        Mesh* msh = GetMLMesh()->GetLevel(igridn);
 
         std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
@@ -1125,7 +1125,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     for(int gridf = level; gridf < _gridn; gridf++) {
       for(unsigned i = 0; i < _solName.size(); i++) {
         _solution[gridf]->_Sol[i]->matrix_mult(*_solution[gridf - 1]->_Sol[i],
-                                               *_mlMesh->GetLevel(gridf)->GetCoarseToFineProjection(_solType[i]));
+                                               *GetMLMesh()->GetLevel(gridf)->GetCoarseToFineProjection(_solType[i]));
         _solution[gridf]->_Sol[i]->close();
       }
     }
@@ -1139,7 +1139,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   /** Refine the solution at (gridf) level from (gridf - 1) */
   void MultiLevelSolution::RefineSolution(const unsigned &gridf) {
 
-    Mesh *msh = _mlMesh->GetLevel(gridf);
+    Mesh *msh = GetMLMesh()->GetLevel(gridf);
 
     for(unsigned k = 0; k < _solType.size(); k++) {
 
@@ -1156,7 +1156,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   void MultiLevelSolution::CoarsenSolutionByOneLevel_wrong(const unsigned &grid_fine)  {
 
 
-    Mesh *msh = _mlMesh->GetLevel(grid_fine);
+    Mesh *msh = GetMLMesh()->GetLevel(grid_fine);
     const unsigned grid_coarse = grid_fine - 1;
 
     for(unsigned k = 0; k < _solType.size(); k++) {
@@ -1171,7 +1171,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   void MultiLevelSolution::CoarsenSolutionByOneLevel(const unsigned &grid_fine)  {
 
     const unsigned grid_coarse = grid_fine - 1;
-    Mesh *msh = _mlMesh->GetLevel(grid_coarse);
+    Mesh *msh = GetMLMesh()->GetLevel(grid_coarse);
 
     //loop over the coarse elements
     //loop over the dofs of each coarse element
@@ -1218,7 +1218,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     
     for(unsigned ig = 0; ig < _gridn; ig++) {
       
-        const Mesh* msh = _mlMesh->GetLevel(ig);
+        const Mesh* msh = GetMLMesh()->GetLevel(ig);
 
       if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
 

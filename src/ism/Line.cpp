@@ -65,7 +65,7 @@ namespace femus {
 
   Line::Line (const std::vector < std::vector < double > > x, const std::vector < double > &mass,
               const std::vector <MarkerType>& markerType,
-              Solution* sol, const unsigned& solType)
+              const Solution* sol, const unsigned& solType)
      :
     _mesh ( sol->GetMesh() ),
     _sol ( sol)
@@ -94,7 +94,7 @@ namespace femus {
 
   Line::Line (const std::vector < std::vector < double > > x,
               const std::vector <MarkerType>& markerType,
-              Solution* sol, const unsigned& solType)
+              const Solution* sol, const unsigned& solType)
   :
     _mesh ( sol->GetMesh() ),
     _sol ( sol)
@@ -123,7 +123,7 @@ namespace femus {
   Line::Line (const std::vector < std::vector < double > > x,
               const std::vector < std::vector < std::vector < double > > > &tangent,
               const std::vector <MarkerType>& markerType,
-              Solution* sol, const unsigned& solType)
+              const Solution* sol, const unsigned& solType)
     :
     _mesh ( sol->GetMesh() ),
     _sol ( sol)
