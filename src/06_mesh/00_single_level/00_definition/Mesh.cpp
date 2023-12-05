@@ -1781,7 +1781,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
 
   
-  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) {
+  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) const {
       
     xv.resize(_dimension);
     unsigned ndofs = el->GetElementDofNumber(iel, solType);

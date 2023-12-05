@@ -862,7 +862,7 @@ namespace femus
               }
 
               std::vector < std::vector <double > > xv;
-              msh->GetElementNodeCoordinates(xv, iel);
+              msh->GetElementNodeCoordinates(xv, iel, CONTINUOUS_BIQUADRATIC);
               unsigned ndofs = xv[0].size();
 
               double r;

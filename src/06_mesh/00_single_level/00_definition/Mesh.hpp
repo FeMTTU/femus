@@ -656,7 +656,7 @@ public:
     /** Only for parallel @todo this should be in a separate FSI environment */
     bool GetSolidMark(const unsigned &inode) const;
     
-    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType = 2);
+    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) const;
 
 
   
