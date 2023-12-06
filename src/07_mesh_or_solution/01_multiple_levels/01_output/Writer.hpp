@@ -60,6 +60,9 @@ namespace femus {
     /** runtime selection of writer for MLmesh */
     static std::unique_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
 
+  private:
+    
+    void initialize_flags();
 // === Constructors / Destructor  - END =================
 
     
@@ -117,6 +120,16 @@ namespace femus {
     unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
     
     std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+
+    static const std::string _name_bdc;
+    static const std::string _name_res;
+    static const std::string _name_eps;
+
+    static constexpr unsigned _index_sol = 0;
+    static constexpr unsigned _index_bdc = 1;
+    static constexpr unsigned _index_res = 2;
+    static constexpr unsigned _index_eps = 3;
+    
 // === Debug, Solutions that are Unknowns - END =================
 
 // === Debug - END =================
@@ -131,7 +144,7 @@ namespace femus {
   protected:
     
     /** a flag to move the output mesh */
-    int _moving_mesh;
+    bool _moving_mesh;
     
     /** the displacement variables for moving mesh */
     std::vector<std::string> _moving_vars;
@@ -167,6 +180,11 @@ namespace femus {
 
 
   protected:
+
+// === Mesh or Solution - BEGIN =================
+    std::string get_filename_prefix() const; 
+// === Mesh or Solution - END =================
+
     
 // === Solution, FE index for printing - BEGIN =================
     unsigned fe_index(const std::string & order_str) const;
@@ -195,6 +213,10 @@ namespace femus {
     
   };
 
+  
+  
+  
+  
 } //end namespace femus
 
 

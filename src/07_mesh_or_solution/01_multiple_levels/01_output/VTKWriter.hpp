@@ -128,7 +128,7 @@ public:
                              const Solution * solution, const unsigned name, const unsigned i,  float * const var_el) const;
                              
     template < class ARRAY_TYPE >     
-    void print_element_based_fields(const std::string field_string,  const std::string field_datatype, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, const unsigned fe_index, std::vector <char> & enc ) const;
+    void print_Mesh_related_Element_based_fields(const std::string field_string,  const std::string field_datatype, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, const unsigned fe_index, std::vector <char> & enc ) const;
     
     template < class ARRAY_TYPE >     
     void print_data_array(const std::string field_string, 
@@ -242,7 +242,7 @@ public:
    
 
  template < class ARRAY_TYPE >     
-  void VTKWriter::print_element_based_fields(const std::string field_string, const std::string field_datatype,
+  void VTKWriter::print_Mesh_related_Element_based_fields(const std::string field_string, const std::string field_datatype,
                                                                std::ofstream & fout, std::ofstream & Pfout,
                                                                void* buffer_void,
                                                                const unsigned elemetOffset, const unsigned elemetOffsetp1,
@@ -251,8 +251,6 @@ public:
                                                                const unsigned fe_index,
                                                                std::vector <char> & enc) const {
                                
-
-    //NumericVector& material =  mesh->_topology->GetSolutionByName( "Material" );
 
     // point pointer to common memory area buffer of void type;
     ARRAY_TYPE * var_el = static_cast< ARRAY_TYPE * >( buffer_void );
@@ -264,6 +262,7 @@ public:
     else if (field_string == "TYPE")               { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementType(iel); icount++; }       }
     else if (field_string == "Level")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->el->GetElementLevel(iel); icount++; }  }
     else if (field_string == "Metis partition")    { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = _iproc; icount++; }  }
+    
     else if (field_string == "types")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  short unsigned ielt = mesh->GetElementType( iel );
                                                                                                                         var_el[icount] = femusToVtkCellType[fe_index][ielt];
                                                                                                                         icount++; 

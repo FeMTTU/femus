@@ -49,11 +49,8 @@ namespace femus {
     // ********** linear -> index==0 *** quadratic -> index==1 **********
     unsigned index = ( strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) ) ? FILES_CONTINUOUS_QUADRATIC : FILES_CONTINUOUS_LINEAR;
 
-    std::string filename_prefix;
-    if( _ml_sol != NULL )
-      filename_prefix = "sol";
-    else
-      filename_prefix = "mesh";
+    const std::string filename_prefix = get_filename_prefix();
+
 
     std::ostringstream filename;
     filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".gmv";
@@ -76,6 +73,7 @@ namespace femus {
 
     Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
     const Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
+
     unsigned nvt = mesh->GetTotalNumberOfDofs( index );
     unsigned nel = mesh->GetNumberOfElements();
     unsigned dim = mesh->GetDimension();
@@ -221,65 +219,59 @@ namespace femus {
 
     //BEGIN SOLUTION
     if( _ml_sol != NULL )  {
+
       bool printAll = 0;
       for( unsigned ivar = 0; ivar < vars.size(); ivar++ ) {
         printAll += !( vars[ivar].compare( "All" ) ) + !( vars[ivar].compare( "all" ) ) + !( vars[ivar].compare( "ALL" ) );
       }
+
       for( unsigned ivar = 0; ivar < !printAll * vars.size() + printAll * _ml_sol->GetSolutionSize(); ivar++ ) {
         unsigned i = ( printAll == 0 ) ? _ml_sol->GetIndex( vars[ivar].c_str() ) : ivar;
 
         for( int name = 0; name < 4; name++ ) {
-          //BEGIN LAGRANGIAN Fem SOLUTION
-          if( name == 0 ) {
-            sprintf( buffer, "%s", _ml_sol->GetSolName_from_index( i ) );
-          }
-          else if( name == 1 ) {
-            sprintf( buffer, "%s %s", "Bdc", _ml_sol->GetSolName_from_index( i ) );
-          }
-          else if( name == 2 ) {
-            sprintf( buffer, "%s %s", "Res", _ml_sol->GetSolName_from_index( i ) );
-          }
-          else if( name == 3 ) {
-            sprintf( buffer, "%s %s", "Eps", _ml_sol->GetSolName_from_index( i ) );
-          }
           
-          if( name == 0 || ( _debugOutput  && solution->is_unknown_of_system(i) ) ) {
+            const std::string printName = print_sol_bdc_res_eps_name( _ml_sol->GetSolName_from_index( i ) , name);
+
+          
+          if( name == _index_sol || ( _debugOutput  && solution->is_unknown_of_system(i) ) ) {
             
             
+              //BEGIN LAGRANGIAN Fem SOLUTION
             if( _ml_sol->GetSolutionType( i ) < NFE_FAMS_C_ZERO_LAGRANGE ) { // **********  on the nodes **********
-              fout.write( ( char* ) buffer, sizeof( char ) * 8 );
+              fout.write( ( char* ) printName.c_str(), sizeof( char ) * 8 );
               fout.write( ( char* ) &one, sizeof( unsigned ) );
-              if( name == 0 ) {
+              if( name == _index_sol ) {
                 numVector->matrix_mult( *solution->_Sol[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
               }
-              else if( name == 1 ) {
+              else if( name == _index_bdc ) {
                 numVector->matrix_mult( *solution->_Bdc[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
               }
-              else if( name == 2 ) {
+              else if( name == _index_res ) {
                 numVector->matrix_mult( *solution->_Res[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
               }
-              else {
+              else if( name == _index_eps ) {
                 numVector->matrix_mult( *solution->_Eps[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
               }
               numVector->localize_to_one( vector1, 0 );
               fout.write( ( char* ) &vector1[0], nvt * sizeof( double ) );
-              //END LAGRANGIAN Fem SOLUTION
             }
-            else {
+              //END LAGRANGIAN Fem SOLUTION
+
               //BEGIN DISCONTINUOUS Fem SOLUTION
-              fout.write( ( char* ) buffer, sizeof( char ) * 8 );
+            else if( _ml_sol->GetSolutionType( i ) < NFE_FAMS ) { // **********  on the elements **********
+              fout.write( ( char* )  printName.c_str(), sizeof( char ) * 8 );
               fout.write( ( char* ) &zero, sizeof( unsigned ) );
 
-              if( name == 0 ) {
+              if( name == _index_sol ) {
                 solution->_Sol[i]->localize_to_one( vector2, 0 );
               }
-              else if( name == 1 ) {
+              else if( name == _index_bdc ) {
                 solution->_Bdc[i]->localize_to_one( vector2, 0 );
               }
-              else if( name == 2 ) {
+              else if( name == _index_res ) {
                 solution->_Res[i]->localize_to_one( vector2, 0 );
               }
-              else {
+              else if( name == _index_eps ) {
                 solution->_Eps[i]->localize_to_one( vector2, 0 );
               }
               vector1.resize( nel );
@@ -288,9 +280,11 @@ namespace femus {
               }
 
               fout.write( ( char* ) &vector1[0], nel * sizeof( double ) );
-              //END DISCONTINUOUS Fem SOLUTION
             }
+              //END DISCONTINUOUS Fem SOLUTION
+
           }
+          
         }
       }
     }

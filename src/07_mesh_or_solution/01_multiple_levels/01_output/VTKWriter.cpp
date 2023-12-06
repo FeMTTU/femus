@@ -170,10 +170,11 @@ namespace femus {
               unsigned placeholder_index = 0;
               unsigned iel_Metis = mesh->GetSolutionDof(placeholder_index, iel, _ml_sol->GetSolutionType( i ) );
               
-              if( name == 0 )                 var_el[icount] = ( *solution->_Sol[i] )( iel_Metis );
-              else if( name == 1 )            var_el[icount] = ( *solution->_Bdc[i] )( iel_Metis );
-              else if( name == 2 )            var_el[icount] = ( *solution->_Res[i] )( iel_Metis );
-              else                            var_el[icount] = ( *solution->_Eps[i] )( iel_Metis );
+              if( name == _index_sol )                 var_el[icount] = ( *solution->_Sol[i] )( iel_Metis );
+              else if( name == _index_bdc )            var_el[icount] = ( *solution->_Bdc[i] )( iel_Metis );
+              else if( name == _index_res )            var_el[icount] = ( *solution->_Res[i] )( iel_Metis );
+              else if( name == _index_eps )            var_el[icount] = ( *solution->_Eps[i] )( iel_Metis );
+              
               icount++;
               
             }
@@ -255,19 +256,16 @@ namespace femus {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
-        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],
-                            *mesh->GetQitoQjProjection( index, 2 ) );
+        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],    *mesh->GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
           const unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],
-                              *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
         }
       }
       
       else {
         const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
     // num_vec_aux_for_node_fields - END -------------------------
       
@@ -282,8 +280,7 @@ namespace femus {
     // num_vec_aux_for_node_fields - BEGIN -------------------------
         const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
     // num_vec_aux_for_node_fields - END -------------------------
 
     // var_coord - BEGIN -------------------------
@@ -306,18 +303,15 @@ namespace femus {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
-        num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],
-                            *mesh-> GetQitoQjProjection( index, 2 ) );
+          num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],  *mesh-> GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
-          unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar],
-                              *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
+          const unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
         }
       }
       else {
-        unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+        const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
     // num_vec_aux_for_node_fields - END -------------------------
       
@@ -336,8 +330,7 @@ namespace femus {
     // num_vec_aux_for_node_fields - BEGIN -------------------------
         const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
 
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
     // num_vec_aux_for_node_fields - END -------------------------
         
     // var_coord - BEGIN -------------------------
@@ -371,9 +364,7 @@ namespace femus {
                          const std::vector < std::string >& vars,
                          const unsigned time_step ) {
        
-    std::string filename_prefix;
-    if( _ml_sol != NULL ) filename_prefix = "sol";
-    else filename_prefix = "mesh";
+    const std::string filename_prefix = get_filename_prefix();
     
       const std::string suffix_pre_extension = "";
     
@@ -388,9 +379,7 @@ namespace femus {
                         const std::vector < std::string >& vars,
                         const unsigned time_step ) {
        
-    std::string filename_prefix;
-    if( _ml_sol != NULL ) filename_prefix = "sol";
-    else filename_prefix = "mesh";
+    const std::string filename_prefix = get_filename_prefix();
     
       const std::string suffix_pre_extension = "";
     
@@ -489,9 +478,8 @@ namespace femus {
     
     
     
-    //------------- NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
+    //------------- Mesh, NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
     Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
-    Solution * solution;     if( _ml_sol != NULL ) { solution = _ml_sol->GetSolutionLevel( my_level - 1 ); }
     
 
     // count the own element dofs on all levels -------------
@@ -528,8 +516,12 @@ namespace femus {
     const size_t cch = b64::b64_encode( &buffer_char[0], buffer_size , NULL, 0 );
     std::vector <char> enc;
     enc.resize( cch );
-    //------------- NODE and ELEMENT INFO - END ----------------------------------------------------------------------------------
+    //------------- Mesh, NODE and ELEMENT INFO - END ----------------------------------------------------------------------------------
     
+    
+    //------------- Solution, INFO - BEGIN ----------------------------------------------------------------------------------
+    Solution * solution;     if( _ml_sol != NULL ) { solution = _ml_sol->GetSolutionLevel( my_level - 1 ); }
+    //------------- Solution, INFO - END ----------------------------------------------------------------------------------
     
     
     //---- NumericVector used for node-based fields - BEGIN -------------------------------------------------------------------------------------------
@@ -582,11 +574,11 @@ namespace femus {
 
     //-------------------------------------------------------------------------------------------------
     //printing offset
-    print_element_based_fields< int >("offsets", "Int32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_off, mesh, index, enc);
+    print_Mesh_related_Element_based_fields< int >("offsets", "Int32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_off, mesh, index, enc);
 
     //--------------------------------------------------------------------------------------------------
     //Element format type
-    print_element_based_fields< unsigned short >("types", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_type, mesh, index, enc);
+    print_Mesh_related_Element_based_fields< unsigned short >("types", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_type, mesh, index, enc);
     
 
     fout  << "      </Cells>" << std::endl;
@@ -601,15 +593,15 @@ namespace femus {
 
     //---------------------------- PARALLEL PARTITION, MATERIAL, GROUP, FE TYPE, LEVEL - BEGIN -----------------------
     
-    print_element_based_fields< unsigned short >("Metis partition", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_reg, mesh, index, enc);
+    print_Mesh_related_Element_based_fields< unsigned short >("Metis partition", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_reg, mesh, index, enc);
 
-    print_element_based_fields< float >("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
+    print_Mesh_related_Element_based_fields< float >("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
-    print_element_based_fields< float >("Group", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
+    print_Mesh_related_Element_based_fields< float >("Group", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
-    print_element_based_fields< float >("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
+    print_Mesh_related_Element_based_fields< float >("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
-    print_element_based_fields< float >("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
+    print_Mesh_related_Element_based_fields< float >("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
     //---------------------------- PARALLEL PARTITION, MATERIAL, GROUP, FE TYPE, LEVEL - END -----------------------
     
@@ -688,7 +680,7 @@ namespace femus {
 
           for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
               
-            std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
            
 
          //--------- fill var_nd ------------
@@ -696,16 +688,16 @@ namespace femus {
             unsigned offset_iprc = mesh->dofmap_get_dof_offset(index, _iproc);
             unsigned nvt_ig = mesh->dofmap_get_own_size(index, _iproc);
 
-            if( name == 0 )
+            if( name == _index_sol )
               num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
-            else if( name == 1 )
+            else if( name == _index_bdc )
               num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
-            else if( name == 2 )
+            else if( name == _index_res )
               num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
-            else
+            else if( name == _index_eps )
               num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
 

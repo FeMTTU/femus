@@ -139,9 +139,7 @@ namespace femus {
 
     //BEGIN XMF FILE PRINT
 
-    std::string filename_prefix;
-    if( _ml_sol != NULL ) filename_prefix = "sol";
-    else filename_prefix = "mesh";
+    const std::string filename_prefix = get_filename_prefix();
 
     std::ostringstream xdmf_filename;
     xdmf_filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".xmf";
@@ -210,11 +208,9 @@ namespace femus {
         if( _ml_sol->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
           std::string solName =  _ml_sol->GetSolName_from_index( indx );
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
-            std::string printName;
-            if( name == 0 ) printName = solName;
-            else if( name == 1 ) printName = "Bdc" + solName;
-            else if( name == 2 ) printName = "Res" + solName;
-            else if( name == 3 ) printName = "Eps" + solName;
+            
+            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            
             fout << "<Attribute Name=\"" << printName << "\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
             fout << "<DataItem DataType=\"Double\" Precision=\"8\" Dimensions=\"" << nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
             fout << hdf5_filename2.str() << ":/" << printName << std::endl;
@@ -225,11 +221,9 @@ namespace femus {
         else if( _ml_sol->GetSolutionType( indx ) >= 3 ) {   //Printing picewise constant solution on the element
           std::string solName =  _ml_sol->GetSolName_from_index( indx );
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
-            std::string printName;
-            if( name == 0 ) printName = solName;
-            else if( name == 1 ) printName = "Bdc" + solName;
-            else if( name == 2 ) printName = "Res" + solName;
-            else if( name == 3 ) printName = "Eps" + solName;
+            
+            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+
             fout << "<Attribute Name=\"" << printName << "\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
             fout << "<DataItem DataType=\"Double\" Precision=\"8\" Dimensions=\"" << nel << "  1\"" << "  Format=\"HDF\">" << std::endl;
             fout << hdf5_filename2.str() << ":/" << printName << std::endl;
@@ -342,23 +336,21 @@ namespace femus {
         if( _ml_sol->GetSolutionType( indx ) >= 3 ) {
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
-            std::string solName =  _ml_sol->GetSolName_from_index( indx );
-            std::string printName;
-            if( name == 0 ) {
+            const std::string solName =  _ml_sol->GetSolName_from_index( indx );
+            
+            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+
+            if( name == _index_sol ) {
               solution->_Sol[indx]->localize_to_one( vector2, 0 );
-              printName = solName;
             }
-            else if( name == 1 ) {
+            else if( name == _index_bdc ) {
               solution->_Bdc[indx]->localize_to_one( vector2, 0 );
-              printName = "Bdc" + solName;
             }
-            else if( name == 2 ) {
+            else if( name == _index_res ) {
               solution->_Res[indx]->localize_to_one( vector2, 0 );
-              printName = "Res" + solName;
             }
-            else if( name == 3 ) {
+            else if( name == _index_eps ) {
               solution->_Eps[indx]->localize_to_one( vector2, 0 );
-              printName = "Eps" + solName;
             }
 
             vector1.resize( nel );
@@ -388,26 +380,25 @@ namespace femus {
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
             std::string solName =  _ml_sol->GetSolName_from_index( indx );
-            std::string printName;
-            if( name == 0 ) {
+
+            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            
+            
+            if( name == _index_sol ) {
               numVector->matrix_mult( *solution->_Sol[indx],
                                       *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
-              printName = solName;
             }
-            else if( name == 1 ) {
+            else if( name == _index_bdc ) {
               numVector->matrix_mult( *solution->_Bdc[indx],
                                       *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
-              printName = "Bdc" + solName;
             }
-            else if( name == 2 ) {
+            else if( name == _index_res ) {
               numVector->matrix_mult( *solution->_Res[indx],
                                       *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
-              printName = "Res" + solName;
             }
-            else if( name == 3 ) {
+            else if( name == _index_eps ) {
               numVector->matrix_mult( *solution->_Eps[indx],
                                       *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
-              printName = "Eps" + solName;
             }
 
             numVector->localize_to_one( vector1, 0 );
