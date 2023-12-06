@@ -112,7 +112,6 @@ public:
                                         const std::string order,
                                         const std::string suffix_pre_extension ) const;
                                         
-    unsigned fe_index(const std::string & order_str) const;
 
     std::map < unsigned, unsigned > ghost_map_proc(const Mesh * mesh, const unsigned index) const;
     
@@ -123,11 +122,7 @@ public:
     bool print_all_sols(const std::vector < std::string >& vars) const;
   
     unsigned compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars) const;
-
-    std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
-  
-    unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
-   
+     
     void fill_sol_on_elements(const Mesh * mesh, 
                              const unsigned elementOffset, const unsigned elementOffsetp1, 
                              const Solution * solution, const unsigned name, const unsigned i,  float * const var_el) const;

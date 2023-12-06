@@ -239,9 +239,10 @@ namespace femus {
           else if( name == 2 ) {
             sprintf( buffer, "%s %s", "Res", _ml_sol->GetSolName_from_index( i ) );
           }
-          else {
+          else if( name == 3 ) {
             sprintf( buffer, "%s %s", "Eps", _ml_sol->GetSolName_from_index( i ) );
           }
+          
           if( name == 0 || ( _debugOutput  && solution->is_unknown_of_system(i) ) ) {
             
             

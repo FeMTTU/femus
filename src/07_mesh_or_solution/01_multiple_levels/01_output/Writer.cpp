@@ -21,14 +21,10 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
-#include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
-#include "SparseMatrix.hpp"
 #include "ElemType.hpp"
-#include "NumericVector.hpp"
+#include "FElemTypeEnum_list.hpp"
 
-
-#include "mpi.h"
 
 
 
@@ -134,6 +130,46 @@ namespace femus {
     _graph = false;
     _surfaceVariables = surfaceVariable;
   }
+
+
+  
+   std::string Writer::print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const {
+       
+            std::string printName;
+
+            if( name == 0 ) printName = solName;
+            else if( name == 1 ) printName = "Bdc" + solName;
+            else if( name == 2 ) printName = "Res" + solName;
+            else if( name == 3 ) printName = "Eps" + solName;
+            else { abort(); }
+
+       return printName;     
+   }
+   
+   
+  
+   unsigned Writer::compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const {
+       
+       const bool is_unknown = solution->is_unknown_of_system(i);
+
+       const bool is_debug   = _debugOutput;       
+       
+       const unsigned print_sol_size = 1 + 3 * is_debug * is_unknown;
+       return  print_sol_size;
+       
+   }
+   
+   
+    unsigned Writer::fe_index(const std::string & order_str) const {
+        
+        unsigned index = 0;
+        
+    if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) )           {  index = 0;  }
+    else if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ].c_str() ) )   {  index = 1;  }
+    else if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index = 2;  }
+    
+        return index;
+    }
 
 
 } //end namespace femus

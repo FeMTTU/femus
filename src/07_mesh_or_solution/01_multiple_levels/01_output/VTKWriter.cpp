@@ -21,7 +21,6 @@
 #include "NumericVector.hpp"
 #include "Files.hpp"
 
-#include "FElemTypeEnum_list.hpp"
 
 
 namespace femus {
@@ -104,16 +103,6 @@ namespace femus {
    }
      
  
-    unsigned VTKWriter::fe_index(const std::string & order_str) const {
-        
-        unsigned index = 0;
-        
-    if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) )           {  index = 0;  }
-    else if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ].c_str() ) )   {  index = 1;  }
-    else if( !strcmp( order_str.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index = 2;  }
-    
-        return index;
-    }
     
     
     std::map < unsigned, unsigned > VTKWriter::ghost_map_proc(const Mesh * mesh, const unsigned index) const {
@@ -211,25 +200,10 @@ namespace femus {
    
    
    
-   std::string VTKWriter::print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const {
-       
-            std::string printName;
 
-            if( name == 0 ) printName = solName;
-            else if( name == 1 ) printName = "Bdc" + solName;
-            else if( name == 2 ) printName = "Res" + solName;
-            else printName = "Eps" + solName;
-            
-       return printName;     
-   }
    
    
-   unsigned VTKWriter::compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const {
-       
-       const unsigned print_sol_size = 1 + 3 * _debugOutput * solution->is_unknown_of_system(i);
-       return  print_sol_size;
-       
-   }
+
    
    
    bool VTKWriter::print_all_sols(const std::vector < std::string >& vars) const {

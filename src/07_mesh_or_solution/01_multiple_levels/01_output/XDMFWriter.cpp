@@ -214,7 +214,7 @@ namespace femus {
             if( name == 0 ) printName = solName;
             else if( name == 1 ) printName = "Bdc" + solName;
             else if( name == 2 ) printName = "Res" + solName;
-            else printName = "Eps" + solName;
+            else if( name == 3 ) printName = "Eps" + solName;
             fout << "<Attribute Name=\"" << printName << "\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
             fout << "<DataItem DataType=\"Double\" Precision=\"8\" Dimensions=\"" << nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
             fout << hdf5_filename2.str() << ":/" << printName << std::endl;
@@ -229,7 +229,7 @@ namespace femus {
             if( name == 0 ) printName = solName;
             else if( name == 1 ) printName = "Bdc" + solName;
             else if( name == 2 ) printName = "Res" + solName;
-            else printName = "Eps" + solName;
+            else if( name == 3 ) printName = "Eps" + solName;
             fout << "<Attribute Name=\"" << printName << "\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
             fout << "<DataItem DataType=\"Double\" Precision=\"8\" Dimensions=\"" << nel << "  1\"" << "  Format=\"HDF\">" << std::endl;
             fout << hdf5_filename2.str() << ":/" << printName << std::endl;
@@ -356,7 +356,7 @@ namespace femus {
               solution->_Res[indx]->localize_to_one( vector2, 0 );
               printName = "Res" + solName;
             }
-            else {
+            else if( name == 3 ) {
               solution->_Eps[indx]->localize_to_one( vector2, 0 );
               printName = "Eps" + solName;
             }
@@ -404,7 +404,7 @@ namespace femus {
                                       *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
               printName = "Res" + solName;
             }
-            else {
+            else if( name == 3 ) {
               numVector->matrix_mult( *solution->_Eps[indx],
                                       *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
               printName = "Eps" + solName;

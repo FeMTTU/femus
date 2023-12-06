@@ -206,9 +206,9 @@ protected:
 //       /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
 //       void UpdateSolAndRes(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* EPS, NumericVector* RES, const std::vector < std::vector <unsigned> > &KKoffset);
 
-      void UpdateSol(const std::vector <unsigned> & SolPdeIndex_in,  NumericVector* EPS, const std::vector <std::vector <unsigned> > &KKoffset);
+      void UpdateSol(const std::vector <unsigned> & SolPdeIndex_in, NumericVector* EPS, const std::vector <std::vector <unsigned> > & KKoffset);
       /** */
-      void UpdateRes(const std::vector <unsigned> & SolPdeIndex_in, NumericVector* _RES, const std::vector <std::vector <unsigned> > &KKoffset);
+      void UpdateRes(const std::vector <unsigned> & SolPdeIndex_in, NumericVector* _RES, const std::vector <std::vector <unsigned> > & KKoffset);
 
 
       /** @todo make private - Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */

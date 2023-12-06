@@ -35,6 +35,7 @@ namespace femus {
   //------------------------------------------------------------------------------
   class MultiLevelMesh;
   class MultiLevelSolution;
+  class Solution;
   
 
   class Writer : public ParallelObject {
@@ -111,6 +112,13 @@ namespace femus {
   protected:
     
       bool _debugOutput;
+      
+// === Debug, Solutions that are Unknowns - BEGIN =================
+    unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
+    
+    std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+// === Debug, Solutions that are Unknowns - END =================
+
 // === Debug - END =================
     
     
@@ -159,6 +167,10 @@ namespace femus {
 
 
   protected:
+    
+// === Solution, FE index for printing - BEGIN =================
+    unsigned fe_index(const std::string & order_str) const;
+// === Solution, FE index for printing - END =================
 
 // === Solution - BEGIN =================
     /** the multilevelsolution pointer */
@@ -181,7 +193,6 @@ namespace femus {
     static const unsigned FemusToVTKorToXDMFConn[27];
 // === Geometric Element, Connectivities - END =================
     
-
   };
 
 } //end namespace femus
