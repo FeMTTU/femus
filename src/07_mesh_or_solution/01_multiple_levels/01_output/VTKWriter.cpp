@@ -285,14 +285,14 @@ namespace femus {
         num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],
                             *mesh->GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
-          unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
+          const unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
           num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],
                               *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
         }
       }
       
       else {
-        unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
+        const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
         num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
@@ -307,7 +307,7 @@ namespace femus {
       if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i) { //_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
 
     // num_vec_aux_for_node_fields - BEGIN -------------------------
-        unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
+        const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         
         num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
@@ -327,7 +327,7 @@ namespace femus {
     
     
     //var_coord: add ghost nodes - BEGIN -------------------------
-    unsigned offset_ig = 3 * nvtOwned;
+    const unsigned offset_ig = 3 * nvtOwned;
 
     for( int i = 0; i < 3; i++ ) {
       
@@ -361,7 +361,8 @@ namespace femus {
       if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ) { //&& mesh->GetDimension() > i )  {
         
     // num_vec_aux_for_node_fields - BEGIN -------------------------
-        unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
+        const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
+
         num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
     // num_vec_aux_for_node_fields - END -------------------------
@@ -526,16 +527,16 @@ namespace femus {
     const unsigned nel = elemetOffsetp1 - elemetOffset;
     
     //count the own node dofs on all levels -------------
-    unsigned nvtOwned = mesh->dofmap_get_own_size(index, _iproc);
+    const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _iproc);
     
     // count the ghost node dofs on all levels -------------
     const std::map < unsigned, unsigned > ghostMap = ghost_map_proc(mesh, index);
 
     // count the total node dofs (own + ghost) on all levels -------------
-    unsigned nvt = nvtOwned + ghostMap.size();
+    const unsigned nvt = nvtOwned + ghostMap.size();
     
 
-    unsigned size_conn = size_connectivity_proc(mesh, index);
+    const unsigned size_conn = size_connectivity_proc(mesh, index);
     
     const unsigned dim_array_coord [] = { nvt * 3 * static_cast<unsigned>(sizeof( float )) };
     const unsigned dim_array_conn[]   = { size_conn * static_cast<unsigned>(sizeof( int )) };
@@ -546,13 +547,12 @@ namespace femus {
     const unsigned dim_array_ndvar [] = { nvt * static_cast<unsigned>(sizeof( float )) };
 
     // initialize common buffer_void memory
-    unsigned buffer_size = ( dim_array_coord[0] > dim_array_conn[0] ) ? dim_array_coord[0] : dim_array_conn[0];  // maximum size
+    const unsigned buffer_size = ( dim_array_coord[0] > dim_array_conn[0] ) ? dim_array_coord[0] : dim_array_conn[0];  // maximum size
     void* buffer_void = new char [buffer_size];   /// @todo is this deleted? I don't think so
     char* buffer_char = static_cast <char*>( buffer_void );
 
     // size of the base64-encoded data
-    size_t cch;
-    cch = b64::b64_encode( &buffer_char[0], buffer_size , NULL, 0 );
+    const size_t cch = b64::b64_encode( &buffer_char[0], buffer_size , NULL, 0 );
     std::vector <char> enc;
     enc.resize( cch );
     //------------- NODE and ELEMENT INFO - END ----------------------------------------------------------------------------------
