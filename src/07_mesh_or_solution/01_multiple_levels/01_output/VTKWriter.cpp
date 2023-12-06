@@ -73,6 +73,24 @@ namespace femus {
     }
     
     
+    void VTKWriter::pieces_list_sources(std::ofstream & Pfout,
+                                        const std::string dirnamePVTK,
+                                        const std::string filename_prefix,
+                                        const std::string level_name,
+                                        const unsigned time_step,
+                                        const std::string order,
+                                        const std::string suffix_pre_extension
+                                        ) const {
+      
+    for( int jproc = 0; jproc < _nprocs; jproc++ ) {
+      Pfout << "    <Piece Source=\"" << dirnamePVTK
+            << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order <<  suffix_pre_extension << ".vtu"
+            << "\"/>" << std::endl;
+      }
+    
+    }
+    
+    
     void VTKWriter::piece_iproc_begin(std::ofstream & fout, const unsigned n_nodes, const unsigned n_elements) const {
          
         fout  << "    <Piece NumberOfPoints= \"" << n_nodes << "\" NumberOfCells= \"" << n_elements << "\" >" << std::endl;
@@ -254,11 +272,11 @@ namespace femus {
     
     
     // point pointer to common memory area buffer of void type;
-    float* var_coord = static_cast<float*>( buffer_void );
+    float * var_coord = static_cast<float*>( buffer_void );
     
-    //print own nodes - BEGIN -------------------------
+    //var_coord: add own nodes - BEGIN -------------------------
 
-    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
+    const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
     
     for( int i = 0; i < 3; i++ ) {
       
@@ -305,10 +323,10 @@ namespace femus {
       
       
     }
-    //print own nodes - END -------------------------
+    //var_coord: add own nodes - END -------------------------
     
     
-    //print ghost nodes - BEGIN -------------------------
+    //var_coord: add ghost nodes - BEGIN -------------------------
     unsigned offset_ig = 3 * nvtOwned;
 
     for( int i = 0; i < 3; i++ ) {
@@ -357,7 +375,7 @@ namespace femus {
       }
       
     }
-    //print ghost nodes - END -------------------------
+    //var_coord: add ghost nodes - END -------------------------
     
 
     print_data_array_vector< float >("coordinates", "Float32", 3, fout, Pfout, dim_array_coord, var_coord, enc);
@@ -438,12 +456,12 @@ namespace femus {
     // *********** level - END ************
        
     // *********** FE index - BEGIN ************
-    unsigned index = fe_index(order);
+    const unsigned index = fe_index(order);
     // *********** FE index - END ************
 
 
     // *********** open vtu streams - BEGIN *************
-    std::string dirnamePVTK = "VTKParallelFiles/";
+    const std::string dirnamePVTK = "VTKParallelFiles/";
     Files files;
     files.CheckDir( output_path, "" );
     files.CheckDir( output_path, dirnamePVTK );
@@ -487,18 +505,19 @@ namespace femus {
     
     // *********** write pvtu header - BEGIN ***********
     vtk_unstructured_header_parallel_wrapper(Pfout);
-    
-    for( int jproc = 0; jproc < _nprocs; jproc++ ) {
-      Pfout << "    <Piece Source=\"" << dirnamePVTK
-            << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order <<  suffix_pre_extension << ".vtu"
-            << "\"/>" << std::endl;
-    }
     // *********** write pvtu header - END ***********
+    
+    
+    //----------- ALL IPROCS - BEGIN ------------------------------------------------------------------------------------
+   pieces_list_sources(Pfout, dirnamePVTK, filename_prefix, level_name, time_step, order, suffix_pre_extension);
+    //----------- ALL IPROCS - END ------------------------------------------------------------------------------------
 
     
+    
+    
     //------------- NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
-    Mesh* mesh = _ml_mesh->GetLevel( my_level - 1 );
-    Solution* solution;     if( _ml_sol != NULL ) { solution = _ml_sol->GetSolutionLevel( my_level - 1 ); }
+    Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
+    Solution * solution;     if( _ml_sol != NULL ) { solution = _ml_sol->GetSolutionLevel( my_level - 1 ); }
     
 
     // count the own element dofs on all levels -------------
@@ -574,8 +593,8 @@ namespace femus {
     // print coordinates - END ****************************************************************************************
     
     
-    //----- Printing of element connectivity - offset - format type  * - BEGIN ------------------------------------------------------------------------------------------
-    // Printing of element connectivity - offset - format type  *
+    //----- Printing of element connectivity - offset - format type  * - BEGIN ----------------------------------------
+
     fout  << "      <Cells>" << std::endl;
     Pfout << "    <PCells>" << std::endl;
     
@@ -599,15 +618,15 @@ namespace femus {
 
     fout  << "      </Cells>" << std::endl;
     Pfout << "    </PCells>" << std::endl;
-    //----- Printing of element connectivity - offset - format type  * - END ------------------------------------------------------------------------------------------
-    //--------------------------------------------------------------------------------------------------
+    //----- Printing of element connectivity - offset - format type  * - END ------------------------------------------
+
 
     // /Print Cell Data - BEGIN ****************************************************************************
     fout  << "      <CellData Scalars=\"scalars\">" << std::endl;
     Pfout << "    <PCellData Scalars=\"scalars\">" << std::endl;
     
 
-    //------------------------------------------- PARALLEL PARTITION, MATERIAL, GROUP, FE TYPE, LEVEL ---------------------------------------------------------
+    //---------------------------- PARALLEL PARTITION, MATERIAL, GROUP, FE TYPE, LEVEL - BEGIN -----------------------
     
     print_element_based_fields< unsigned short >("Metis partition", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_reg, mesh, index, enc);
 
@@ -618,15 +637,15 @@ namespace femus {
     print_element_based_fields< float >("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
     print_element_based_fields< float >("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
-    // /Print Cell Data - END ****************************************************************************
 
+    //---------------------------- PARALLEL PARTITION, MATERIAL, GROUP, FE TYPE, LEVEL - END -----------------------
     
 
 
-    //------------------------------------------- SOLUTIONS - BEGIN ---------------------------------------------------------
    const bool print_all = print_all_sols(vars);
     
     
+    //------------------------------------------- SOLUTIONS on ELEMENTS - BEGIN ---------------------------------------------------------
     
     if( _ml_sol != NULL ) {
         
@@ -661,10 +680,16 @@ namespace femus {
       //Print Solution (on elements) - END ***************************************************************
       
     } //end _ml_sol != NULL
+    
+    //------------------------------------------- SOLUTIONS on ELEMENTS - END ---------------------------------------------------------
 
     fout  << "      </CellData>" << std::endl;
     Pfout << "    </PCellData>" << std::endl;
-    //   //------------------------------------------------------------------------------------------------
+
+    // /Print Cell Data - END ****************************************************************************
+
+
+    //------------------------------------------- SOLUTIONS on NODES - BEGIN ---------------------------------------------------------
 
     if( _ml_sol != NULL ) {
         
@@ -729,20 +754,23 @@ namespace femus {
           }
         } //endif
       } // end for sol
-      // / Print Solution (on nodes) - END ********************************************************************
       
       delete [] var_nd;
+      // / Print Solution (on nodes) - END ********************************************************************
+
       
       fout  << "      </PointData>" << std::endl;
       Pfout << "    </PPointData>" << std::endl;
       
     }  //end _ml_sol != NULL
-    //------------------------------------------- SOLUTIONS - END ---------------------------------------------------------
 
-    //------------------------------------------------------------------------------------------------
+    //------------------------------------------- SOLUTIONS on NODES - END ---------------------------------------------------------
+
+
 
     piece_iproc_end(fout);
     //----------- IPROC - END ------------------------------------------------------------------------------------
+
 
     // *********** write vtu footer and close stream - BEGIN ************
     vtk_unstructured_footer_iproc(fout);

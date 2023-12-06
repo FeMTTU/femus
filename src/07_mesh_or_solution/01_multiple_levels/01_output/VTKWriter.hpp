@@ -103,7 +103,15 @@ public:
     void piece_iproc_begin(std::ofstream & fout, const unsigned n_nodes, const unsigned n_elements) const;
   
     void piece_iproc_end(std::ofstream & fout) const;
-
+    
+    void pieces_list_sources(std::ofstream & Pfout,
+                                        const std::string dirnamePVTK,
+                                        const std::string filename_prefix,
+                                        const std::string level_name,
+                                        const unsigned time_step,
+                                        const std::string order,
+                                        const std::string suffix_pre_extension ) const;
+                                        
     unsigned fe_index(const std::string & order_str) const;
 
     std::map < unsigned, unsigned > ghost_map_proc(const Mesh * mesh, const unsigned index) const;
