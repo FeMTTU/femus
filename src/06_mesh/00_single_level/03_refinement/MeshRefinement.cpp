@@ -278,7 +278,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
             int value = elc->GetFaceElementIndex(iel, iface);
 
             if(value < -1)
-              for(unsigned jface = 0; jface < _mesh.GetFaceIndex(); jface++)
+              for(unsigned jface = 0; jface < _mesh.GetRefFaceIndex(); jface++)
                 _mesh.el->SetFaceElementIndex(jel + coarse2FineFaceMapping[elt][iface][jface][0], coarse2FineFaceMapping[elt][iface][jface][1], value);
           }
 

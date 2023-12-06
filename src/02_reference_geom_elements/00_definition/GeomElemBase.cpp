@@ -25,9 +25,15 @@
 
 namespace femus {
 
+// definition needed for static constexpr - BEGIN
 
+      constexpr unsigned GeomElemBase::_n_face_types_max;
+      constexpr unsigned GeomElemBase::_index_for_quadrilateral_faces;
+      constexpr unsigned GeomElemBase::_index_for_all_faces          ;
 
-     const unsigned GeomElemBase::_max_space_dimension = 3;
+      constexpr unsigned GeomElemBase::_max_space_dimension;
+
+// definition needed for static constexpr - END
 
 
 //this build class allows me to return a pointer to a child of this class

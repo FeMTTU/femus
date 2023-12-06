@@ -71,7 +71,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/02_2d/rectangle/minus4-plus4_minus0p5-plus0p5/rectangle_quad_16x2.neu";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "01_gambit/2d/rectangle/minus4-plus4_minus0p5-plus0p5/rectangle_quad_16x2.neu";
 
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
   

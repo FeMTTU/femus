@@ -120,7 +120,7 @@ const unsigned MultiLevelMesh::GetDimension() const {
     
 //---------------------------------------------------------------------------------------------
 
-void MultiLevelMesh::PrintInfo() {
+void MultiLevelMesh::PrintInfo() const {
     
     std::cout << " Number of uniform mesh refinement: " << _gridn << std::endl;
     for(int i = 0; i < _gridn; i++) {
@@ -258,7 +258,7 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
   
   MED_IO  med_io(*GetLevel(0)/* coarse or whatever?*/);
   
-  const std::string mesh_file_location = Files::get_input_file_with_prefix(_mesh_filename, relative_path_to_input_folder)/*relative_path_to_input_folder + Files::_application_input_directory + ml_sol->GetMLMesh()->_mesh_filename*/;
+  const std::string mesh_file_location = Files::get_input_file_with_prefix(get_mesh_filename(), relative_path_to_input_folder)/*relative_path_to_input_folder + Files::_application_input_directory + ml_sol->GetMLMesh()->get_mesh_filename() */;
   ;
   
     hid_t  file_id = med_io.open_mesh_file( mesh_file_location );

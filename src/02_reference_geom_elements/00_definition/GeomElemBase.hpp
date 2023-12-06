@@ -32,14 +32,14 @@ public:
 // Independent of Nodal Connectivity - BEGIN ===
 public:
     
-    static const unsigned _max_space_dimension;
+    static constexpr unsigned _max_space_dimension = 3;
     
     virtual unsigned int get_dimension() const = 0;
     
     virtual unsigned int n_nodes_linear() const = 0;
     
-    virtual const unsigned int num_non_triangular_faces() const = 0;
-    virtual const unsigned int num_triangular_faces() const = 0;
+    virtual const unsigned int num_quadrilateral_faces() const = 0;
+    virtual const unsigned int num_non_quadrilateral_faces() const = 0;
     
     
      static const unsigned get_n_face_types_max()       {  return _n_face_types_max; }
@@ -51,14 +51,17 @@ public:
       void set_faceNumber_offsets()  {
           
       _faceNumber_offsets[0] =   0;
-      _faceNumber_offsets[1] = num_non_triangular_faces();
-      _faceNumber_offsets[2] = num_non_triangular_faces() + num_triangular_faces();
+      _faceNumber_offsets[1] = num_quadrilateral_faces();
+      _faceNumber_offsets[2] = num_quadrilateral_faces() + num_non_quadrilateral_faces();
       
       }
     
+     static constexpr unsigned _n_face_types_max = 2;
+     static constexpr unsigned _index_for_quadrilateral_faces = 0;
+     static constexpr unsigned _index_for_all_faces           = 1;
+    
    private:
   
-    static constexpr const unsigned _n_face_types_max = 2;
 
       /** this is only needed in 3d to handle faces of different types (wedges, pyramides, ...)
        * 0 = begin non-triangular faces
@@ -107,6 +110,9 @@ public:
     
     
 };
+
+
+
 
 
 } //end namespace femus

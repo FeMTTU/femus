@@ -18,6 +18,7 @@
 
 
 #include "GeomElTypeEnum.hpp"
+#include "GeomElemBase.hpp"
 #include "FElemTypeEnum_list.hpp"
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
@@ -58,7 +59,7 @@ namespace femus {
   public:
     
       /** To be Added */
-      const unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = 1) const   {    return GetNFC(_elementType[iel] , type);  }
+      const unsigned GetElementFaceNumber(const unsigned& iel, const unsigned& type = GeomElemBase::_index_for_all_faces) const   {    return GetNFC(_elementType[iel] , type);  }
   
       const unsigned GetNFC(const unsigned& elementType, const unsigned& type) const  {    return NFC[elementType][type];  }
   
@@ -67,16 +68,16 @@ namespace femus {
       const unsigned GetNRE(const unsigned& elementType) const  { return NRE[elementType]; }
       
       const unsigned GetReferenceElementDirection(const unsigned& elementType, const unsigned dir, const unsigned node) const { 
-        return referenceElementDirection[elementType][dir][node]; }
+        return directions_of_reference_element[elementType][dir][node]; }
       
   private:
 
   /**
    * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
    * The 1st number is the quadrilaterals
-   * The 2nd number is the total number of faces, such that the difference "2nd - 1st" is the number of triangular faces
+   * The 2nd number is the total number of faces, "quadrilaterals + non-quadrilaterals", such that the difference "2nd - 1st" is the number of non-quadrilateral faces
    **/
-  const unsigned NFC[N_GEOM_ELS][2] = {
+  const unsigned NFC[N_GEOM_ELS][ GeomElemBase::_n_face_types_max ] = {
     {6, 6},
     {0, 4},
     {3, 5},
@@ -128,7 +129,7 @@ namespace femus {
   const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
 
   
-  const unsigned referenceElementDirection[N_GEOM_ELS][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
+  const unsigned directions_of_reference_element[N_GEOM_ELS][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
   {
     {23, 21}, {20, 22}, {24, 25}
   },
@@ -149,13 +150,13 @@ namespace femus {
   }
 };
 
-// const unsigned referenceElementPoint[6]={26,0,12,8,0,2};
+// const unsigned origin_of_reference_element[6]={26,0,12/*?*/,8,0,2};
 
 // === Geometric Element, Single - END =================
     
 
 
-// === Basic, Dimension - BEGIN =================
+// === Mesh, Basic, Dimension - BEGIN =================
   public:
       /** To be Added */
       unsigned GetDimension() const { return _dim; }
@@ -164,12 +165,12 @@ namespace femus {
 
       /** Dimension of the underlying Mesh */
       unsigned _dim;
-// === Basic, Dimension - END =================
+// === Mesh, Basic, Dimension - END =================
 
       
       
 
-// === Elements - BEGIN ===========================================================
+// === Mesh, Elements - BEGIN ===========================================================
     public:
       
       //Elem
@@ -459,11 +460,11 @@ namespace femus {
 
       
       
-// === Elements - END ===========================================================
+// === Mesh, Elements - END ===========================================================
 
       
       
-// === Nodes - BEGIN ===========================================================
+// === Mesh, Nodes - BEGIN ===========================================================
       
       
 // === Nodes, Number - BEGIN =================
@@ -506,7 +507,7 @@ namespace femus {
 // === Nodes, for Each Node give the Elements having that Node as a vertex (temporary then deleted) - END =================      
 
 
-// === Nodes - END ===========================================================
+// === Mesh, Nodes - END ===========================================================
 
 
 // =========       
@@ -581,7 +582,7 @@ namespace femus {
 
       
 
-// === DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - BEGIN =================
+// === Mesh, DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - BEGIN =================
   public:
       
       /** To be Added */
@@ -616,10 +617,10 @@ namespace femus {
     
      /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
-// === DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - END =================
+// === Mesh, DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - END =================
 
       
-// === DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - BEGIN =================
+// === Mesh, DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - BEGIN =================
   public:
 
       void AllocateChildrenElementDof(const unsigned int& refindex, const Mesh* msh);
@@ -633,17 +634,17 @@ namespace femus {
      
       /** This is only going to all levels except the finest one */
       MyMatrix <unsigned> _childElemDof;
-// === DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - END =================
+// === Mesh, DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - END =================
 
       
 
 
       
-// === Refinement, AMR - BEGIN =================
+// === Mesh, Refinement, AMR - BEGIN =================
     public:
       
       void GetAMRRestriction(Mesh *msh) const;
-// === Refinement, AMR - END =================
+// === Mesh, Refinement, AMR - END =================
       
 
   };

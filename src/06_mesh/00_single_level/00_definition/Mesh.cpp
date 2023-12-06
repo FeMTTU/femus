@@ -43,7 +43,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   unsigned Mesh::_dimension = 2;                                    ///@todo I don't like the default dimension to be 2
   unsigned Mesh::_ref_index = 4; // 8*DIM[2]+4*DIM[1]+2*DIM[0];     ///@todo I don't like the default dimension to be 2
-  unsigned Mesh::_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];    ///@todo I don't like the default dimension to be 2
+  unsigned Mesh::_ref_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];    ///@todo I don't like the default dimension to be 2
 
 
 // === Constructors / Destructor - BEGIN =================
@@ -890,8 +890,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
   void Mesh::set_node_counts() {
       
-    SetNumberOfNodes(_dofOffset[2][_nprocs]);
-    el->SetNodeNumber(_dofOffset[2][_nprocs]);
+    SetNumberOfNodes(_dofOffset[ CONTINUOUS_BIQUADRATIC ][_nprocs]);
+    el->SetNodeNumber(_dofOffset[CONTINUOUS_BIQUADRATIC ][_nprocs]);
 
   }
   
@@ -1142,9 +1142,11 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
       
     if(itype < NFE_FAMS_C_ZERO_LAGRANGE && jtype < NFE_FAMS_C_ZERO_LAGRANGE) {
+      
       if(!_ProjQitoQj[itype][jtype]) {
         BuildQitoQjProjection(itype, jtype);
       }
+      
     }
     else {
       std::cout << "Wrong argument range in function"
@@ -1386,10 +1388,10 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     if(!_ProjCoarseToFine[solType]) {
 
     // ------------------- Sparsity pattern size - BEGIN
-      int nf     = _dofOffset[solType][_nprocs];
-      int nc     = _coarseMsh->_dofOffset[solType][_nprocs];
-      int nf_loc = _ownSize[solType][_iproc];
-      int nc_loc = _coarseMsh->_ownSize[solType][_iproc];
+      const int nf     = _dofOffset[solType][_nprocs];
+      const int nc     = _coarseMsh->_dofOffset[solType][_nprocs];
+      const int nf_loc = _ownSize[solType][_iproc];
+      const int nc_loc = _coarseMsh->_ownSize[solType][_iproc];
 
       //build matrix sparsity pattern size
       NumericVector* NNZ_d = NumericVector::build().release();
@@ -1414,7 +1416,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
-          short unsigned ielt = _coarseMsh->GetElementType(iel);
+          const short unsigned ielt = _coarseMsh->GetElementType(iel);
             Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs, GetFiniteElement(ielt, solType) );
         }
       }
@@ -1422,7 +1424,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       NNZ_d->close();
       NNZ_o->close();
 
-      unsigned offset = _dofOffset[solType][_iproc];
+      const unsigned offset = _dofOffset[solType][_iproc];
       std::vector <int> nnz_d(nf_loc);
       std::vector <int> nnz_o(nf_loc);
 
@@ -1445,7 +1447,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       // loop on the coarse grid
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
-          short unsigned ielt = _coarseMsh->GetElementType(iel);
+          const short unsigned ielt = _coarseMsh->GetElementType(iel);
             Build_Prolongation_OneElement_OneFEFamily(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs, GetFiniteElement(ielt, solType) );
         }
       }
@@ -1665,7 +1667,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     //intialize to UINT_MAX
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
-      unsigned elementType = el->GetElementType(iel);
+      const unsigned elementType = el->GetElementType(iel);
 
       if(elementType == 1 || elementType == 2) {
         for(unsigned inode = el->GetElementDofNumber(iel, 2) - _numberOfMissedBiquadraticNodes[elementType];
@@ -1677,17 +1679,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     // generate face dofs for tet and wedge elements
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
-      unsigned elementType = el->GetElementType(iel);
+      const unsigned elementType = el->GetElementType(iel);
 
       if(elementType == 1 || elementType == 2) {
         for(unsigned iface = el->GetElementFaceNumber(iel, 0); iface < el->GetElementFaceNumber(iel, 1); iface++) {       //on all the faces that are triangles
-          unsigned inode = el->GetElementDofNumber(iel, 1) + iface;
+          const unsigned inode = el->GetElementDofNumber(iel, 1) + iface;
 
           if(UINT_MAX == el->GetElementDofIndex(iel, inode)) {
             el->SetElementDofIndex(iel, inode, nnodes);
-            unsigned i1 = el->GetFaceVertexIndex(iel, iface, 0);
-            unsigned i2 = el->GetFaceVertexIndex(iel, iface, 1);
-            unsigned i3 = el->GetFaceVertexIndex(iel, iface, 2);
+            const unsigned i1 = el->GetFaceVertexIndex(iel, iface, 0);
+            const unsigned i2 = el->GetFaceVertexIndex(iel, iface, 1);
+            const unsigned i3 = el->GetFaceVertexIndex(iel, iface, 2);
             bool faceHasBeenFound = false;
 
             for(unsigned jel = iel + 1; jel < el->GetElementNumber(); jel++) {
@@ -1695,9 +1697,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                 unsigned jnode = el->GetElementDofNumber(jel, 1) + jface;
 
                 if(UINT_MAX == el->GetElementDofIndex(jel, jnode)) {
-                  unsigned j1 = el->GetFaceVertexIndex(jel, jface, 0);
-                  unsigned j2 = el->GetFaceVertexIndex(jel, jface, 1);
-                  unsigned j3 = el->GetFaceVertexIndex(jel, jface, 2);
+                  const unsigned j1 = el->GetFaceVertexIndex(jel, jface, 0);
+                  const unsigned j2 = el->GetFaceVertexIndex(jel, jface, 1);
+                  const unsigned j3 = el->GetFaceVertexIndex(jel, jface, 2);
 
                   if((i1 == j1 || i1 == j2 || i1 == j3) &&
                       (i2 == j1 || i2 == j2 || i2 == j3) &&

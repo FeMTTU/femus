@@ -20,6 +20,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "ParallelObject.hpp"
+#include "GeomElemBase.hpp"
 #include "Elem.hpp"
 
 #include "ElemTypeEnum.hpp"
@@ -54,7 +55,7 @@ class elem_type;
 
 class Mesh : public ParallelObject {
 
-// =========================
+
 // === Constructors / Destructor - BEGIN =================
 // =========================
 public:
@@ -70,8 +71,58 @@ public:
 // === Constructors / Destructor - END =================
 
     
-// =========================
-// === BASIC, Debug - BEGIN =================
+
+// === Geometric Element, Single - BEGIN =================
+ public:
+   
+    /** */
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type = GeomElemBase::_index_for_all_faces) const;
+
+    unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = GeomElemBase::_index_for_all_faces) const;
+    
+    /**  */
+    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
+
+    /**  */
+    unsigned GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const;
+    
+    
+// === Geometric Element, Single - END =================
+
+    
+// === Geometric Element, Single, REFINEMENT - BEGIN =================
+ public:
+    
+    void SetRefinementCellAndFaceIndices(const unsigned &dim) {
+
+      Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
+      Mesh::_ref_face_index = pow(2, dim -1u);
+    }
+
+    /** MESH */
+    const unsigned GetRefIndex() const {
+      return Mesh::_ref_index;
+    }
+
+    /** MESH */
+    const unsigned GetRefFaceIndex() const {
+      return Mesh::_ref_face_index;
+    }
+    
+ private:
+   
+    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
+    static unsigned _ref_index;
+    
+    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
+    static unsigned _ref_face_index;
+
+    
+// === Geometric Element, Single, REFINEMENT - END =================
+    
+
+
+// === Mesh, BASIC, Debug - BEGIN =================
 // =========================
  public:
     
@@ -81,10 +132,10 @@ public:
 private:
     
     void PrintInfoElements() const;
-// === BASIC, Debug - END =================
+// === Mesh, BASIC, Debug - END =================
 
 
-// === BASIC, Dimension - BEGIN =================
+// === Mesh, BASIC, Dimension - BEGIN =================
  public:
    
     /** MESH: Get the dimension of the problem (1D, 2D, 3D) */
@@ -101,10 +152,10 @@ private:
    
     /** MESH: dimension of the problem */
     static unsigned _dimension;
-// === BASIC, Dimension - END =================
+// === Mesh, BASIC, Dimension - END =================
 
 
-// === BASIC, CharacteristicLength - BEGIN =================
+// === Mesh, BASIC, CharacteristicLength - BEGIN =================
 // =========================
 public:
     
@@ -125,60 +176,11 @@ private:
     double _cLength;
 
     
-// === BASIC, CharacteristicLength - END =================
+// === Mesh, BASIC, CharacteristicLength - END =================
 
-    
 
-// === Geometric Element, Single - BEGIN =================
- public:
-   
-    /** */
-    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type = 1) const;
 
-    unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = 1) const;
-    
-    /**  */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
-
-    /**  */
-    unsigned GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const;
-    
-    
-// === Geometric Element, Single - END =================
-
-    
-// === Geometric Element, Single, REFINEMENT - BEGIN =================
- public:
-    
-    void SetRefinementCellAndFaceIndices(const unsigned &dim) {
-
-      Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
-      Mesh::_face_index = pow(2, dim -1u);
-    }
-
-    /** MESH */
-    const unsigned GetRefIndex() const {
-      return Mesh::_ref_index;
-    }
-
-    /** MESH */
-    const unsigned GetFaceIndex() const {
-      return Mesh::_face_index;
-    }
-    
- private:
-   
-    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
-    static unsigned _ref_index;
-    
-    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
-    static unsigned _face_index;
-
-    
-// === Geometric Element, Single, REFINEMENT - END =================
-    
-
-// === Elements - BEGIN ====================================================
+// === Mesh, Elements - BEGIN ====================================================
 
     
 // === Elements, List - BEGIN =================
@@ -251,11 +253,11 @@ private:
     
 // === Elements, Material - END =================
     
-// === Elements - END ====================================================
+// === Mesh, Elements - END ====================================================
 
 
 
-// === Nodes - BEGIN ====================================================
+// === Mesh, Nodes - BEGIN ====================================================
 
     
 // === Nodes, number - BEGIN =================
@@ -289,12 +291,12 @@ private:
     std::vector < std::vector < double > > _coords;
 // === Nodes, coordinates read from coarse file (temporary, then use _topology) - END =================
     
-// === Nodes - END ====================================================
+// === Mesh, Nodes - END ====================================================
     
     
     
     
-// === COARSE MESH GENERATION - BEGIN =================
+// === Mesh, COARSE GENERATION - BEGIN =================
     
 // === COARSE MESH GENERATION, from FILEs - BEGIN =================
 
@@ -360,11 +362,11 @@ private:
     
 // === COARSE MESH GENERATION, for all - END =================
 
-// === COARSE MESH GENERATION - END =================
+// === Mesh, COARSE GENERATION - END =================
 
     
-// =========================
-// === Level, Current - BEGIN  =================
+
+// === Mesh, Level, Current - BEGIN  =================
 // =========================
 public:
 
@@ -386,11 +388,11 @@ public:
     /** MESH: level of mesh in the multi-level hierarchy */
     unsigned _level;
     
-// === Level, Current - END  =================
+// === Mesh, Level, Current - END  =================
 
     
 
-// === Here starts the FE stuff -  ====================================================
+// === Here starts the FE stuff - BEGIN ====================================================
 
     
  
@@ -423,7 +425,7 @@ public:
     
 
     
-// =========================
+
 // === PARTITIONING, and FE DOFMAP (from Mesh to Unknowns) - BEGIN =================
 // =========================
 public:
@@ -437,7 +439,7 @@ public:
 // === PARTITIONING, and FE DOFMAP (from Mesh to Unknowns) - END =================
 
 
-// =========================
+
 // === FE DOFMAP - BEGIN =================
 // =========================
 public:
@@ -533,7 +535,7 @@ private:
 
 // === FE DOFMAP - END =================
     
-// =========================
+
 // === FE DOFMAP & REFINEMENT - BEGIN =================
 // =========================
 public:
@@ -580,7 +582,7 @@ private:
     
 // === FE DOFMAP & REFINEMENT - END =================
     
-// =========================
+
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
 // =========================
 public:
@@ -621,7 +623,7 @@ private:
    
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
     
-// =========================
+
 // === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================
 // =========================
 public:
@@ -672,7 +674,6 @@ private:
 // === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - END =================
 
 
-// =========================
 // === FE DOFMAP, REFINEMENT, AMR - BEGIN =================
 // =========================
 public:
@@ -736,6 +737,11 @@ private:
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
 // === FE DOFMAP, REFINEMENT, AMR, FSI - END =================
+
+
+// === Here starts the FE stuff - END ====================================================
+
+
     
 };
 

@@ -89,18 +89,18 @@ int main(int argc, char** args) {
   
   
   const std::string mesh_file_1_path = relative_path_to_build_directory + Files::mesh_folder_path() + 
-  "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
+  "01_gambit/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
 
   const std::string mesh_file_1_name = "square_16x16_quad_One_boundary_group.neu";
   
   
   const std::string mesh_file_2_path = relative_path_to_build_directory + Files::mesh_folder_path() +
-  "01_gambit/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
+  "01_gambit/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
   
   const std::string mesh_file_2_name = "square_4x4_quad_Four_boundary_groups_Four_volume_groups_AMR.neu";
 
   const std::string mesh_file_3_path = relative_path_to_build_directory + Files::mesh_folder_path() + 
-  "01_gambit/03_3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/";
+  "01_gambit/3d/cube/minus0p5-plus0p5_minus0p5-plus0p5_minus0p5-plus0p5/";
 
   const std::string mesh_file_3_name = "cube_mixed_Two_boundary_groups_Four_volume_groups_AMR.neu";
 

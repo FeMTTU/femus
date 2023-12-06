@@ -117,7 +117,7 @@ int main(int argc, char** args) {
   const std::string infile = Files::get_input_file_with_prefix(femus::ctrl::mesh_input, "../../../");
 
   
-  ml_mesh._mesh_filename = ctrl::mesh_input;
+  ml_mesh.set_mesh_filename( ctrl::mesh_input );
   
   const double Lref = 1.;
 

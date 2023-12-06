@@ -75,7 +75,7 @@ public:
     const unsigned GetDimension() const;
 
     /** Print the mesh info for each level */
-    void PrintInfo();
+    void PrintInfo() const;
     
 //==== Basic - END  ======== 
 
@@ -137,8 +137,14 @@ public:
 //====================
 public:
     
+    const std::string get_mesh_filename() const { return _mesh_filename; }
+
+    void set_mesh_filename(const std::string str_in) { _mesh_filename = str_in; }
     
-    std::string  _mesh_filename; //
+private:
+    
+    
+    std::string  _mesh_filename;
 
     
 //==== Coarse level, File input - END  ======== 
@@ -182,11 +188,6 @@ public:
     }
 
     /** Get the number of grid */
-    unsigned GetNumberOfLevels() {
-        return _gridn;
-    }
-
-    /** Get the number of grid */
     const unsigned GetNumberOfLevels() const {
         return _gridn;
     }
@@ -209,11 +210,13 @@ private:
     
     /** Number of levels for _level0 */
     unsigned short _gridn0;
+
     /** Number of levels for _level */
     unsigned short _gridn;
 
     /** Array of meshes, with all levels from the beginning of mesh generation. These are the only ones that are dynamically allocated with "new Mesh" */
     std::vector <Mesh*> _level0;
+
     /** Array of meshes, only the ones that survive after EraseCoarseLevels. This is only a copy of pointers */
     std::vector <Mesh*> _level;
 
@@ -256,6 +259,7 @@ public:
     
     void InitializeQuadratureWithFEEvalsOnExistingCoarseMeshGeomElements(const char * GaussOrder);
   
+    /** @todo make private - long task */
     elem_type *_finiteElement[N_GEOM_ELS][NFE_FAMS];
     
 private:
