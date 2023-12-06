@@ -232,9 +232,149 @@ namespace femus {
       return ( !print_all ) * vars.size() + print_all * _ml_sol->GetSolutionSize();
 
    }
+
    
-   
-   void VTKWriter::Write(const std::string output_path, 
+
+  void VTKWriter::print_coordinates(std::ofstream & fout, 
+                                    std::ofstream & Pfout,
+                                    NumericVector * num_vec_aux_for_node_fields,
+                                    std::vector <char> & enc,
+                                    void * buffer_void,
+                                    const unsigned * dim_array_coord,
+                                    /*const*/ Mesh * mesh,
+                                    const Solution * solution,
+                                    const unsigned index,
+                                    const unsigned nvtOwned,
+                                    const std::map<unsigned, unsigned>  &  ghostMap) const
+                                    {
+                                      
+
+    fout  << "     <Points>" << std::endl;
+    Pfout << "    <PPoints>" << std::endl;
+    
+    
+    // point pointer to common memory area buffer of void type;
+    float* var_coord = static_cast<float*>( buffer_void );
+    
+    //print own nodes - BEGIN -------------------------
+
+    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
+    
+    for( int i = 0; i < 3; i++ ) {
+      
+    // num_vec_aux_for_node_fields - BEGIN -------------------------
+      if( !_surface ) {
+        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],
+                            *mesh->GetQitoQjProjection( index, 2 ) );
+        if( _graph && i == 2 ) {
+          unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],
+                              *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
+        }
+      }
+      
+      else {
+        unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
+                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+      }
+    // num_vec_aux_for_node_fields - END -------------------------
+      
+    // var_coord - BEGIN -------------------------
+      for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
+        var_coord[ ii * 3 + i] = ( *num_vec_aux_for_node_fields )( ii +  dofOffset );
+      }
+    // var_coord - END -------------------------
+      
+      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i) { //_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
+
+    // num_vec_aux_for_node_fields - BEGIN -------------------------
+        unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
+        
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
+                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+    // num_vec_aux_for_node_fields - END -------------------------
+
+    // var_coord - BEGIN -------------------------
+        for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
+          var_coord[ii * 3 + i] += ( *num_vec_aux_for_node_fields )( ii +  dofOffset );
+        }
+    // var_coord - END -------------------------
+        
+      }
+      
+      
+    }
+    //print own nodes - END -------------------------
+    
+    
+    //print ghost nodes - BEGIN -------------------------
+    unsigned offset_ig = 3 * nvtOwned;
+
+    for( int i = 0; i < 3; i++ ) {
+      
+    // num_vec_aux_for_node_fields - BEGIN -------------------------
+      if( !_surface ) {
+        num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],
+                            *mesh-> GetQitoQjProjection( index, 2 ) );
+        if( _graph && i == 2 ) {
+          unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar],
+                              *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
+        }
+      }
+      else {
+        unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
+                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+      }
+    // num_vec_aux_for_node_fields - END -------------------------
+      
+    // var_coord - BEGIN -------------------------
+      for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
+        var_coord[ offset_ig + 3 * it->second + i ] = ( *num_vec_aux_for_node_fields )( it->first );
+      }
+    // var_coord - END -------------------------
+      
+    }
+
+    for( int i = 0; i < 3; i++ ) { // if moving mesh
+
+      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ) { //&& mesh->GetDimension() > i )  {
+        
+    // num_vec_aux_for_node_fields - BEGIN -------------------------
+        unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
+                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+    // num_vec_aux_for_node_fields - END -------------------------
+        
+    // var_coord - BEGIN -------------------------
+        for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
+          var_coord[ offset_ig + 3 * it->second + i ] += ( *num_vec_aux_for_node_fields )( it->first );
+        }
+    // var_coord - END -------------------------
+        
+      }
+      
+    }
+    //print ghost nodes - END -------------------------
+    
+
+    print_data_array_vector< float >("coordinates", "Float32", 3, fout, Pfout, dim_array_coord, var_coord, enc);
+    
+    
+    fout  << "      </Points>" << std::endl;
+    Pfout << "    </PPoints>" << std::endl;
+    // print coordinates - END ****************************************************************************************
+                                      
+                                      
+  }
+
+
+
+
+
+ void VTKWriter::Write(const std::string output_path, 
                          const std::string order,
                          const std::vector < std::string >& vars,
                          const unsigned time_step ) {
@@ -419,90 +559,21 @@ namespace femus {
     //----------- IPROC - BEGIN ------------------------------------------------------------------------------------
     piece_iproc_begin(fout, nvt, nel);
 
+    
     // print coordinates - BEGIN ****************************************************************************************
-    fout  << "     <Points>" << std::endl;
-    Pfout << "    <PPoints>" << std::endl;
-    
-            //--------- fill coord ------------
-    // point pointer to common memory area buffer of void type;
-    float* var_coord = static_cast<float*>( buffer_void );
-    
-    //print own nodes -------------------------
-
-    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
-    
-    for( int i = 0; i < 3; i++ ) {
-      if( !_surface ) {
-        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],
-                            *mesh->GetQitoQjProjection( index, 2 ) );
-        if( _graph && i == 2 ) {
-          unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],
-                              *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
-        }
-      }
-      else {
-        unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
-      }
-      for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
-        var_coord[ ii * 3 + i] = ( *num_vec_aux_for_node_fields )( ii +  dofOffset );
-      }
-      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i){//_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
-        unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
-        for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
-          var_coord[ii * 3 + i] += ( *num_vec_aux_for_node_fields )( ii +  dofOffset );
-        }
-      }
-    }
-    
-    
-    //print ghost nodes -------------------------
-    unsigned offset_ig = 3 * nvtOwned;
-
-    for( int i = 0; i < 3; i++ ) {
-      if( !_surface ) {
-        num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],
-                            *mesh-> GetQitoQjProjection( index, 2 ) );
-        if( _graph && i == 2 ) {
-          unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar],
-                              *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
-        }
-      }
-      else {
-        unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
-      }
-      for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-        var_coord[ offset_ig + 3 * it->second + i ] = ( *num_vec_aux_for_node_fields )( it->first );
-      }
-    }
-
-    for( int i = 0; i < 3; i++ ) { // if moving mesh
-      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ){ //&& mesh->GetDimension() > i )  {
-        unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
-                            *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
-        for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-          var_coord[ offset_ig + 3 * it->second + i ] += ( *num_vec_aux_for_node_fields )( it->first );
-        }
-      }
-    }
-            //--------- fill coord ------------
-
-
-    print_data_array_vector< float >("coordinates", "Float32", 3, fout, Pfout, dim_array_coord, var_coord, enc);
-    
-    
-    fout  << "      </Points>" << std::endl;
-    Pfout << "    </PPoints>" << std::endl;
+    print_coordinates(fout, Pfout,
+                      num_vec_aux_for_node_fields,
+                      enc,
+                      buffer_void,
+                      dim_array_coord,
+                      mesh,
+                      solution,
+                      index,
+                      nvtOwned,
+                      ghostMap);
     // print coordinates - END ****************************************************************************************
-
+    
+    
     //----- Printing of element connectivity - offset - format type  * - BEGIN ------------------------------------------------------------------------------------------
     // Printing of element connectivity - offset - format type  *
     fout  << "      <Cells>" << std::endl;
@@ -559,7 +630,7 @@ namespace femus {
     
     if( _ml_sol != NULL ) {
         
-      //Print Solution (on elements) ***************************************************************
+      //Print Solution (on elements) - BEGIN ***************************************************************
       for( unsigned i = 0; i < compute_print_sol_size(print_all, vars); i++ ) {
           
         const unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
@@ -587,6 +658,7 @@ namespace femus {
           }
         }
       }
+      //Print Solution (on elements) - END ***************************************************************
       
     } //end _ml_sol != NULL
 
@@ -600,7 +672,7 @@ namespace femus {
       Pfout << "    <PPointData Scalars=\"scalars\"> " << std::endl;
       
       
-      // / Print Solution (on nodes) ********************************************************************
+      // / Print Solution (on nodes) - BEGIN ********************************************************************
       //Loop on variables
 
       // point pointer to common memory area buffer of void type;
@@ -657,6 +729,7 @@ namespace femus {
           }
         } //endif
       } // end for sol
+      // / Print Solution (on nodes) - END ********************************************************************
       
       delete [] var_nd;
       
@@ -674,12 +747,12 @@ namespace femus {
     // *********** write vtu footer and close stream - BEGIN ************
     vtk_unstructured_footer_iproc(fout);
     fout.close();
-    // *********** write vtu footer - END ************
+    // *********** write vtu footer and close stream - END ************
 
     // *********** write pvtu footer and close stream - BEGIN ***********
     vtk_unstructured_footer_parallel_wrapper(Pfout);
     Pfout.close();
-    // *********** write pvtu footer - END ***********
+    // *********** write pvtu footer and close stream - END ***********
 
 
     //-----------------------------------------------------------------------------------------------------

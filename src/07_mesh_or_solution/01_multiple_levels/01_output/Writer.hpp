@@ -44,7 +44,7 @@ namespace femus {
   public:
     
     /** Constructor. */
-    Writer(MultiLevelSolution * ml_sol);
+    Writer(/*const*/ MultiLevelSolution * ml_sol);
 
     /** Constructor. */
     Writer(MultiLevelMesh * ml_mesh);
@@ -162,7 +162,7 @@ namespace femus {
 
 // === Solution - BEGIN =================
     /** the multilevelsolution pointer */
-    MultiLevelSolution* _ml_sol;
+    /*const*/ MultiLevelSolution* _ml_sol;
 // === Solution - END =================
 
 // === Mesh - BEGIN =================

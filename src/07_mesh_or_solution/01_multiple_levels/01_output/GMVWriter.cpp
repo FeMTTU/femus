@@ -76,7 +76,7 @@ namespace femus {
     }
 
     Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
-    Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
+    const Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
     unsigned nvt = mesh->GetTotalNumberOfDofs( index );
     unsigned nel = mesh->GetNumberOfElements();
     unsigned dim = mesh->GetDimension();

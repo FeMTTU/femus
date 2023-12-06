@@ -144,6 +144,17 @@ public:
                                const ARRAY_TYPE * var_el,
                                std::vector <char> & enc) const;
 
+    void print_coordinates(std::ofstream & fout, 
+                                    std::ofstream & Pfout,
+                                    NumericVector * num_vec_aux_for_node_fields,
+                                    std::vector <char> & enc,
+                                    void * buffer_void,
+                                    const unsigned * dim_array_coord,
+                                    /*const*/ Mesh * mesh,
+                                    const Solution * solution,
+                                    const unsigned index,
+                                    const unsigned nvtOwned,
+                                    const std::map<unsigned, unsigned>  &  ghostMap) const;
 
     /** [Lagrange linear/quadratic/biquadratic][geom_elem_type]  */
     static short unsigned int femusToVtkCellType[3][6];
