@@ -23,6 +23,7 @@
 #include "Mesh.hpp"
 
 #include <b64/b64.h>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -39,7 +40,6 @@ namespace femus {
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class MultiLevelProblem;
 class Mesh;
 
 

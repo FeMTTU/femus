@@ -18,7 +18,6 @@
 //----------------------------------------------------------------------------
 #include "GMVWriter.hpp"
 #include "MultiLevelSolution.hpp"
-#include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "FElemTypeEnum_list.hpp"
 #include "Files.hpp"

@@ -29,7 +29,6 @@ namespace femus {
   //------------------------------------------------------------------------------
   // Forward declarations
   //------------------------------------------------------------------------------
-  class MultiLevelProblem;
 
 
   class GMVWriter : public Writer {

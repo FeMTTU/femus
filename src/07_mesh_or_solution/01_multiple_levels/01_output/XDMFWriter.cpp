@@ -18,7 +18,6 @@
 //----------------------------------------------------------------------------
 #include "XDMFWriter.hpp"
 #include "MultiLevelSolution.hpp"
-#include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "LinearEquationSolver.hpp"
 
