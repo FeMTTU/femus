@@ -251,13 +251,13 @@ namespace femus {
 
     //BEGIN COORDINATES
     for( int i = 0; i < 3; i++ ) {
-      numVector->matrix_mult( *mesh->_topology->_Sol[i], *mesh->GetQitoQjProjection( index_nd, 2 ) );
+      numVector->matrix_mult( *mesh->_topology->_Sol[i], *mesh->_fe_proj_matrices.GetQitoQjProjection( index_nd, 2, * mesh ) );
       numVector->localize_to_one( vector1, 0 );
 
       if( _ml_sol != NULL && _moving_mesh && dim > i ) {
         unsigned varind_DXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         numVector->matrix_mult( *solution->_Sol[varind_DXDYDZ],
-                                *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( varind_DXDYDZ ) ) );
+                                *mesh->_fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( varind_DXDYDZ ), * mesh ) );
         numVector->localize_to_one( vector2, 0 );
         if( _iproc == 0 ) {
           for( unsigned ii = 0; ii < nvt; ii++ ) vector1[ii] += vector2[ii];
@@ -386,19 +386,19 @@ namespace femus {
             
             if( name == _index_sol ) {
               numVector->matrix_mult( *solution->_Sol[indx],
-                                      *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
+                                      *mesh->_fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
             }
             else if( name == _index_bdc ) {
               numVector->matrix_mult( *solution->_Bdc[indx],
-                                      *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
+                                      *mesh->_fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
             }
             else if( name == _index_res ) {
               numVector->matrix_mult( *solution->_Res[indx],
-                                      *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
+                                      *mesh->_fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
             }
             else if( name == _index_eps ) {
               numVector->matrix_mult( *solution->_Eps[indx],
-                                      *mesh->GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ) ) );
+                                      *mesh->_fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
             }
 
             numVector->localize_to_one( vector1, 0 );

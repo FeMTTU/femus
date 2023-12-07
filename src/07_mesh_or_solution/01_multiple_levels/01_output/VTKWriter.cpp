@@ -256,16 +256,16 @@ namespace femus {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
-        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],    *mesh->GetQitoQjProjection( index, 2 ) );
+        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],    *mesh->_fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh ) );
         if( solution != NULL && _graph && i == 2 ) {
           const unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],  *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ), * mesh ) );
         }
       }
       
       else if (_surface && solution != NULL ) {
         const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ), * mesh ) );
       }
     // num_vec_aux_for_node_fields - END -------------------------
       
@@ -280,7 +280,7 @@ namespace femus {
     // num_vec_aux_for_node_fields - BEGIN -------------------------
         const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],  *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ), * mesh ) );
     // num_vec_aux_for_node_fields - END -------------------------
 
     // var_coord - BEGIN -------------------------
@@ -303,15 +303,15 @@ namespace femus {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
-          num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],  *mesh-> GetQitoQjProjection( index, 2 ) );
+          num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],  *mesh->_fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh ) );
         if( solution != NULL &&  _graph && i == 2 ) {
           const unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ), * mesh ) );
         }
       }
       else if (_surface && solution != NULL ) {
         const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],  *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ), * mesh ) );
       }
     // num_vec_aux_for_node_fields - END -------------------------
       
@@ -330,7 +330,7 @@ namespace femus {
     // num_vec_aux_for_node_fields - BEGIN -------------------------
         const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
 
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ), * mesh ) );
     // num_vec_aux_for_node_fields - END -------------------------
         
     // var_coord - BEGIN -------------------------
@@ -689,13 +689,13 @@ namespace femus {
             unsigned nvt_ig = mesh->dofmap_get_own_size(index, _iproc);
 
             if( name == _index_sol )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ), * mesh ) );
             else if( name == _index_bdc )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ), * mesh ) );
             else if( name == _index_res )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ), * mesh ) );
             else if( name == _index_eps )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ), * mesh ) );
 
             for( unsigned ii = 0; ii < nvt_ig; ii++ ) {
               var_nd[ ii ] = ( *num_vec_aux_for_node_fields )( ii + offset_iprc );

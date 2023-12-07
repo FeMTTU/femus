@@ -28,6 +28,9 @@
 #include "ElemType.hpp"
 #include "FElemTypeEnum_list.hpp"
 
+#include "fe_projection_matrices.hpp"
+
+
 #include "Solution.hpp"
 
 
@@ -512,7 +515,7 @@ public:
     
     std::vector < int > dofmap_get_ghost_dofs(const unsigned soltype, const unsigned proc_id) const { return  _ghostDofs[soltype][proc_id]; }
 
-    /** FE: DofMap: Number of dofs per FE family and per processor (incremental count) @todo this should be private */
+    /** FE: DofMap: Number of dofs per FE family and per processor (incremental count) @todo this should be private - long task */
     std::vector < unsigned > _dofOffset[NFE_FAMS];
     
 private:
@@ -584,42 +587,9 @@ private:
     
 
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
-// =========================
 public:
-    
-    /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
-    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
 
-    
-private:
-    
-    /** FE: Build the projection matrix between Lagrange FEM at the same level mesh*/
-    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-    
-    /** for solution printing */
-    void Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& Mesh,
-                                  const int& iel, 
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const unsigned& itype,
-                                  const elem_type * elem_type_in_jtype,
-                                  const unsigned ndofs_itype_in) const;
-
-        
-    /** for solution printing */
-    void Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(const Mesh& mesh,
-                             const int& iel,
-                             SparseMatrix* Projmat,
-                             NumericVector* NNZ_d,
-                             NumericVector* NNZ_o,
-                             const unsigned& itype,
-                             const elem_type * elem_type_in_jtype,
-                             const unsigned ndofs_itype_in) const;
-
-
-    /** FE: The projection matrix between Lagrange FEM at the same level mesh */
-    SparseMatrix* _ProjQitoQj[NFE_FAMS_C_ZERO_LAGRANGE][NFE_FAMS_C_ZERO_LAGRANGE];
-
+    FE_Proj_Matrices   _fe_proj_matrices;
    
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
     

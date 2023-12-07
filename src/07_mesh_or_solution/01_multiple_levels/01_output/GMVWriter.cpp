@@ -107,21 +107,21 @@ namespace femus {
 
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
-        numVector->matrix_mult( *mesh->_topology->_Sol[i],   *mesh->GetQitoQjProjection( index, 2 ) );
+        numVector->matrix_mult( *mesh->_topology->_Sol[i],   *mesh->_fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh) );
         if( _graph && i == 2 ) {
           const unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
-          numVector->matrix_mult( *solution->_Sol[indGraphVar],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
+          numVector->matrix_mult( *solution->_Sol[indGraphVar],  *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ), * mesh ) );
         }
       }
       else {
         const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        numVector->matrix_mult( *solution->_Sol[indSurfVar],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+        numVector->matrix_mult( *solution->_Sol[indSurfVar],  *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ), * mesh ) );
       }
 
       numVector->localize_to_one( vector1, 0 );
       if( _ml_sol != NULL && _moving_mesh  && dim > i )  {
         const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        numVector->matrix_mult( *solution->_Sol[indDXDYDZ], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+        numVector->matrix_mult( *solution->_Sol[indDXDYDZ], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ), * mesh ) );
         numVector->localize_to_one( vector2, 0 );
         if( _iproc == 0 ) {
           for( unsigned i = 0; i < nvt; i++ )
@@ -237,16 +237,16 @@ namespace femus {
               fout.write( ( char* ) printName.c_str(), sizeof( char ) * 8 );
               fout.write( ( char* ) &one, sizeof( unsigned ) );
               if( name == _index_sol ) {
-                numVector->matrix_mult( *solution->_Sol[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
+                numVector->matrix_mult( *solution->_Sol[i], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ), * mesh ) );
               }
               else if( name == _index_bdc ) {
-                numVector->matrix_mult( *solution->_Bdc[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
+                numVector->matrix_mult( *solution->_Bdc[i], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ), * mesh ) );
               }
               else if( name == _index_res ) {
-                numVector->matrix_mult( *solution->_Res[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
+                numVector->matrix_mult( *solution->_Res[i], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ), * mesh ) );
               }
               else if( name == _index_eps ) {
-                numVector->matrix_mult( *solution->_Eps[i], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ) ) );
+                numVector->matrix_mult( *solution->_Eps[i], *mesh->_fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( i ), * mesh ) );
               }
               numVector->localize_to_one( vector1, 0 );
               fout.write( ( char* ) &vector1[0], nvt * sizeof( double ) );
