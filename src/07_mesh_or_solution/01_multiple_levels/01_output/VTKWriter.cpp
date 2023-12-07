@@ -520,7 +520,7 @@ namespace femus {
     
     
     //------------- Solution, INFO - BEGIN ----------------------------------------------------------------------------------
-    Solution * solution;     if( _ml_sol != NULL ) { solution = _ml_sol->GetSolutionLevel( my_level - 1 ); }
+    const Solution * solution = ( _ml_sol != NULL ) ? _ml_sol->GetSolutionLevel( my_level - 1 )  :  NULL;
     //------------- Solution, INFO - END ----------------------------------------------------------------------------------
     
     
@@ -689,17 +689,13 @@ namespace femus {
             unsigned nvt_ig = mesh->dofmap_get_own_size(index, _iproc);
 
             if( name == _index_sol )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex],
-                                  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else if( name == _index_bdc )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex],
-                                  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else if( name == _index_res )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex],
-                                  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else if( name == _index_eps )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex],
-                                  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
 
             for( unsigned ii = 0; ii < nvt_ig; ii++ ) {
               var_nd[ ii ] = ( *num_vec_aux_for_node_fields )( ii + offset_iprc );
