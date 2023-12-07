@@ -107,25 +107,21 @@ namespace femus {
 
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
-        numVector->matrix_mult( *mesh->_topology->_Sol[i],
-                                *mesh->GetQitoQjProjection( index, 2 ) );
+        numVector->matrix_mult( *mesh->_topology->_Sol[i],   *mesh->GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
-          unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
-          numVector->matrix_mult( *solution->_Sol[indGraphVar],
-                                  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
+          const unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
+          numVector->matrix_mult( *solution->_Sol[indGraphVar],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
         }
       }
       else {
-        unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        numVector->matrix_mult( *solution->_Sol[indSurfVar],
-                                *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
+        const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
+        numVector->matrix_mult( *solution->_Sol[indSurfVar],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
 
       numVector->localize_to_one( vector1, 0 );
       if( _ml_sol != NULL && _moving_mesh  && dim > i )  {
-        unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        numVector->matrix_mult( *solution->_Sol[indDXDYDZ],
-                                *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
+        const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
+        numVector->matrix_mult( *solution->_Sol[indDXDYDZ], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
         numVector->localize_to_one( vector2, 0 );
         if( _iproc == 0 ) {
           for( unsigned i = 0; i < nvt; i++ )

@@ -172,6 +172,9 @@ int main(int argc, char** args) {
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
 
+  VTKWriter vtkIO_mesh(&mlMsh);
+  vtkIO_mesh.Write(Files::_application_output_directory, fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], variablesToBePrinted);
+  
   return 0;
 }
 

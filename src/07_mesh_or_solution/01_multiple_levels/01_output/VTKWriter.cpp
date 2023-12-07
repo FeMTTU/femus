@@ -257,13 +257,13 @@ namespace femus {
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
         num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],    *mesh->GetQitoQjProjection( index, 2 ) );
-        if( _graph && i == 2 ) {
+        if( solution != NULL && _graph && i == 2 ) {
           const unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
           num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
         }
       }
       
-      else {
+      else if (_surface && solution != NULL ) {
         const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
         num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
@@ -275,7 +275,7 @@ namespace femus {
       }
     // var_coord - END -------------------------
       
-      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i) { //_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
+      if( solution != NULL && _moving_mesh  && _moving_vars.size() > i) { //_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
 
     // num_vec_aux_for_node_fields - BEGIN -------------------------
         const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
@@ -304,12 +304,12 @@ namespace femus {
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
           num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],  *mesh-> GetQitoQjProjection( index, 2 ) );
-        if( _graph && i == 2 ) {
+        if( solution != NULL &&  _graph && i == 2 ) {
           const unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
           num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar], *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
         }
       }
-      else {
+      else if (_surface && solution != NULL ) {
         const unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
         num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],  *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
@@ -325,7 +325,7 @@ namespace femus {
 
     for( int i = 0; i < 3; i++ ) { // if moving mesh
 
-      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ) { //&& mesh->GetDimension() > i )  {
+      if( solution != NULL && _moving_mesh  && _moving_vars.size() > i ) { //&& mesh->GetDimension() > i )  {
         
     // num_vec_aux_for_node_fields - BEGIN -------------------------
         const unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
