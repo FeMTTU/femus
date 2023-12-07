@@ -537,7 +537,7 @@ private:
 // === FE DOFMAP - END =================
     
 
-// === FE DOFMAP & REFINEMENT - BEGIN =================
+// === FE DOFMAP, REFINEMENT - BEGIN =================
 // =========================
 public:
     
@@ -581,58 +581,8 @@ private:
     SparseMatrix* _ProjCoarseToFine[NFE_FAMS];
 
     
-// === FE DOFMAP & REFINEMENT - END =================
+// === FE DOFMAP, REFINEMENT - END =================
     
-    
-
-// === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================
-// =========================
-public:
-    /** MESH: Coordinates and other stuff */
-    Solution* _topology;
-    
-    /** MESH: Topology */
-    const unsigned GetXIndex()          const { return _xIndex; }
-    const unsigned GetYIndex()          const { return _yIndex; }
-    const unsigned GetZIndex()          const { return _zIndex; }
-    const unsigned GetAmrIndex()        const { return _amrIndex; }
-    const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; }
-    
-    void build_dofmap_all_fe_families_and_elem_and_node_structures();
-    
-    void BuildElementAndNodeStructures();
-  
-    void BuildTopologyStructures();
-    
-    void Topology_InitializeCoordinates();
-    
-    void Topology_FillCoordinates();
-    
-    void Topology_InitializeAMR();
-    
-    /** FSI:  */
-    void Topology_InitializeSolidNodeFlag();
-    
-    /** FSI: Allocate memory for adding fluid or solid mark @todo this should be in a separate FSI environment */
-    void Topology_FillSolidNodeFlag();
-    
-    /** Only for parallel @todo this should be in a separate FSI environment */
-    bool GetSolidMark(const unsigned &inode) const;
-    
-    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) const;
-
-
-  
-private:
-    
-    // indices of the topology parallel vectors
-    static const unsigned _xIndex = 0;
-    static const unsigned _yIndex = 1;
-    static const unsigned _zIndex = 2;
-    static const unsigned _amrIndex = 3;
-    static const unsigned _solidMarkIndex = 4;
-
-// === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - END =================
 
 
 // === FE DOFMAP, REFINEMENT, AMR - BEGIN =================
@@ -681,6 +631,75 @@ private:
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
     
 // === FE DOFMAP, REFINEMENT, AMR - END =================
+    
+    
+// === FE DOFMAP, TOPOLOGY  - this needs the FE dofmap - BEGIN =================
+public:
+    /** MESH: Coordinates and other stuff */
+    Solution* _topology;
+    
+    void build_dofmap_all_fe_families_and_elem_and_node_structures();
+    
+    void BuildElementAndNodeStructures();
+
+// === FE DOFMAP, TOPOLOGY  - this needs the FE dofmap - END =================
+
+
+
+// === FE DOFMAP, TOPOLOGY: Coordinates - BEGIN =================
+
+public:
+    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) const;
+    
+    void Topology_InitializeCoordinates();
+    
+    void Topology_FillCoordinates();
+    
+    /** MESH: Topology */
+    const unsigned GetXIndex()          const { return _xIndex; }
+    const unsigned GetYIndex()          const { return _yIndex; }
+    const unsigned GetZIndex()          const { return _zIndex; }
+    
+private:
+    
+    // indices of the topology parallel vectors
+    static const unsigned _xIndex = 0;
+    static const unsigned _yIndex = 1;
+    static const unsigned _zIndex = 2;
+
+// === FE DOFMAP, TOPOLOGY: Coordinates - END =================
+
+
+// === FE DOFMAP, TOPOLOGY: Refinement, AMR - BEGIN =================
+public:
+    void Topology_InitializeAMR();
+    
+    const unsigned GetAmrIndex()        const { return _amrIndex; }
+
+private:
+    static const unsigned _amrIndex = 3;
+    
+// === FE DOFMAP, TOPOLOGY: Refinement, AMR - END =================
+
+// === FE DOFMAP, TOPOLOGY: SolidMark  - BEGIN =================
+public:
+    const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; }
+
+    /** FSI:  */
+    void Topology_InitializeSolidNodeFlag();
+    
+    /** FSI: Allocate memory for adding fluid or solid mark @todo this should be in a separate FSI environment */
+    void Topology_FillSolidNodeFlag();
+    
+    /** Only for parallel @todo this should be in a separate FSI environment */
+    bool GetSolidMark(const unsigned &inode) const;
+    
+    
+private:
+    static const unsigned _solidMarkIndex = 4;
+
+// === FE DOFMAP, TOPOLOGY: SolidMark  - END =================
+
     
 
 // === FE DOFMAP, REFINEMENT, AMR, FSI - BEGIN =================

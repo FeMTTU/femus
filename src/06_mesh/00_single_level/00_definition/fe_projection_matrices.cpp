@@ -39,7 +39,7 @@ namespace femus {
     
     
  
-  SparseMatrix* FE_Proj_Matrices::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype, Mesh & mesh_in) {
+  SparseMatrix* FE_Proj_Matrices::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype, const Mesh & mesh_in) {
       
     if(itype < NFE_FAMS_C_ZERO_LAGRANGE && jtype < NFE_FAMS_C_ZERO_LAGRANGE) {
       

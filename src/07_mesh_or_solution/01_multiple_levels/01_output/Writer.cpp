@@ -37,7 +37,7 @@ namespace femus {
 
   const unsigned Writer::FemusToVTKorToXDMFConn[27] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 21, 20, 22, 24, 25, 26};
 
-  Writer::Writer (/*const*/ MultiLevelSolution* ml_sol) :
+  Writer::Writer (const MultiLevelSolution* ml_sol) :
     _ml_sol (ml_sol),
     _ml_mesh (ml_sol->GetMLMesh())
 {
@@ -50,7 +50,7 @@ namespace femus {
   
   
 
-  Writer::Writer (MultiLevelMesh* ml_mesh) :
+  Writer::Writer (const MultiLevelMesh* ml_mesh) :
     _ml_sol (NULL), 
     _ml_mesh (ml_mesh) {
       
@@ -76,7 +76,7 @@ namespace femus {
   
 
   
-  std::unique_ptr<Writer> Writer::build (const WriterEnum format, MultiLevelSolution * ml_sol)  {
+  std::unique_ptr<Writer> Writer::build (const WriterEnum format, const MultiLevelSolution * ml_sol)  {
 
     switch (format) {
       case VTK: {
@@ -101,7 +101,7 @@ namespace femus {
 
   }
 
-  std::unique_ptr<Writer> Writer::build (const WriterEnum format, MultiLevelMesh * ml_mesh)  {
+  std::unique_ptr<Writer> Writer::build (const WriterEnum format, const MultiLevelMesh * ml_mesh)  {
 
     switch (format) {
       case VTK: {

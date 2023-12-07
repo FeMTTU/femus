@@ -47,20 +47,20 @@ namespace femus {
   public:
     
     /** Constructor. */
-    Writer(/*const*/ MultiLevelSolution * ml_sol);
+    Writer(const MultiLevelSolution * ml_sol);
 
     /** Constructor. */
-    Writer(MultiLevelMesh * ml_mesh);
+    Writer(const MultiLevelMesh * ml_mesh);
 
     /** Destructor */
     virtual ~Writer();
 
     
     /** runtime selection of writer for MLsol */
-    static std::unique_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
+    static std::unique_ptr<Writer> build(const WriterEnum format, const MultiLevelSolution * ml_sol);
 
     /** runtime selection of writer for MLmesh */
-    static std::unique_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
+    static std::unique_ptr<Writer> build(const WriterEnum format, const MultiLevelMesh * ml_mesh);
 
   private:
     
@@ -193,13 +193,13 @@ namespace femus {
 // === Solution, FE index for printing - END =================
 
 // === Solution - BEGIN =================
-    /** the multilevelsolution pointer */
-    /*const*/ MultiLevelSolution* _ml_sol;
+    /** the multilevelsolution pointer: it is const, so it does not modify the object that is printed */
+    const  MultiLevelSolution* _ml_sol;
 // === Solution - END =================
 
 // === Mesh - BEGIN =================
-    /** the multilevel mesh */
-    MultiLevelMesh* _ml_mesh;
+    /** the multilevel mesh: it is const, so it does not modify the object that is printed */
+    const MultiLevelMesh* _ml_mesh;
 // === Mesh - END =================
 
 

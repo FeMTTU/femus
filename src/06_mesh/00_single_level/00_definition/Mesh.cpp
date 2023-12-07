@@ -290,8 +290,18 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     
     //------
     
-    BuildTopologyStructures();  //needs dofmap
+//==== BuildTopologyStructures - BEGIN ======== 
+    //needs dofmap
+    Topology_InitializeCoordinates();
+    Topology_FillCoordinates();
+
+    Topology_InitializeSolidNodeFlag();
+    Topology_FillSolidNodeFlag();
     
+    Topology_InitializeAMR();
+//==== BuildTopologyStructures - END ======== 
+    
+
     InitializeAmrRestriction(false);       /** @todo is it really needed here? */
     
   }
@@ -324,21 +334,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   }
   
-  
-  
-  
-  void Mesh::BuildTopologyStructures() {
-      
 
-    Topology_InitializeCoordinates();
-    Topology_FillCoordinates();
-
-    Topology_InitializeAMR();
-    Topology_InitializeSolidNodeFlag();
-    Topology_FillSolidNodeFlag();
-
-
-  }
 
 
  /// this needs all the dof maps, for the continuous Lagrange elements

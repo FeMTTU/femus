@@ -49,10 +49,10 @@ public:
 
 // === Constructors / Destructor  - BEGIN =================
     /** Constructor. */
-    VTKWriter(MultiLevelSolution * ml_sol);
+    VTKWriter(const MultiLevelSolution * ml_sol);
 
     /** Constructor. */
-    VTKWriter(MultiLevelMesh * ml_mesh);
+    VTKWriter(const MultiLevelMesh * ml_mesh);
 
     /** Destructor */
     virtual ~VTKWriter();
@@ -153,7 +153,7 @@ public:
                                     std::vector <char> & enc,
                                     void * buffer_void,
                                     const unsigned * dim_array_coord,
-                                    /*const*/ Mesh * mesh,
+                                    const Mesh * mesh,
                                     const Solution * solution,
                                     const unsigned index,
                                     const unsigned nvtOwned,

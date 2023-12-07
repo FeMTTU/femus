@@ -25,7 +25,7 @@ public:
     ~FE_Proj_Matrices();
     
     /**  FE: Get the projection matrix between Lagrange FEM at the same level mesh*/
-    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype, Mesh & mesh_in);
+    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype, const Mesh & mesh_in);
 
     
 private:

@@ -77,10 +77,10 @@ namespace femus {
   
   
   
-  XDMFWriter::XDMFWriter( MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
+  XDMFWriter::XDMFWriter(const MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
   }
 
-  XDMFWriter::XDMFWriter( MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
+  XDMFWriter::XDMFWriter(const MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
   }
 
   XDMFWriter::~XDMFWriter() {}
@@ -104,8 +104,8 @@ namespace femus {
     else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ].c_str() ) )   {  index_nd = 1;  }
     else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index_nd = 2;  }
 
-    Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
-    Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
+    const Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
+    const Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
 
     /// @todo I assume that the mesh is not mixed
     std::string type_elem;

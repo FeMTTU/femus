@@ -32,10 +32,10 @@
 
 namespace femus {
 
-  GMVWriter::GMVWriter( MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
+  GMVWriter::GMVWriter(const MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
   }
 
-  GMVWriter::GMVWriter( MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
+  GMVWriter::GMVWriter(const MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
   }
 
   GMVWriter::~GMVWriter() {
@@ -71,7 +71,7 @@ namespace femus {
       }
     }
 
-    Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
+    const Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
     const Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
 
     unsigned nvt = mesh->GetTotalNumberOfDofs( index );

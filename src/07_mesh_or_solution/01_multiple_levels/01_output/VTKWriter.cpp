@@ -29,10 +29,10 @@ namespace femus {
   short unsigned int VTKWriter::femusToVtkCellType[3][6] = {{12, 10, 13, 9, 5, 3}, {25, 24, 26, 23, 22, 21}, {29, 24, 32, 28, 34, 21}};
   //http://www.vtk.org/doc/nightly/html/vtkCellType_8h.html#ab1d6fd1f3177b8a2a32bb018807151f8aff535f3b1a33b5e51d1ef1e3aed69447
 
-  VTKWriter::VTKWriter( MultiLevelSolution* ml_sol ): Writer( ml_sol ) {
+  VTKWriter::VTKWriter(const MultiLevelSolution* ml_sol ): Writer( ml_sol ) {
   }
 
-  VTKWriter::VTKWriter( MultiLevelMesh* ml_mesh ): Writer( ml_mesh ) {
+  VTKWriter::VTKWriter(const MultiLevelMesh* ml_mesh ): Writer( ml_mesh ) {
   }
 
   VTKWriter::~VTKWriter(){}
@@ -233,7 +233,7 @@ namespace femus {
                                     std::vector <char> & enc,
                                     void * buffer_void,
                                     const unsigned * dim_array_coord,
-                                    /*const*/ Mesh * mesh,
+                                    const Mesh * mesh,
                                     const Solution * solution,
                                     const unsigned index,
                                     const unsigned nvtOwned,
@@ -479,7 +479,7 @@ namespace femus {
     
     
     //------------- Mesh, NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
-    Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
+    const Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
     
 
     // count the own element dofs on all levels -------------

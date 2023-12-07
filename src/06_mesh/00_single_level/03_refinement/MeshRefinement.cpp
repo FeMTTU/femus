@@ -457,9 +457,9 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //==== BuildTopologyStructures - BEGIN ======== 
 //====================================
     
+//====  Topology, Coordinates - BEGIN ======== 
     _mesh.Topology_InitializeCoordinates();
 
-//====  Topology, Coordinates - BEGIN ======== 
     // build Mesh coordinates by projecting the coarse coordinates
     unsigned solType = CONTINUOUS_BIQUADRATIC;
 
@@ -472,9 +472,10 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====  Topology, Coordinates - END ======== 
 
     
-    _mesh.Topology_InitializeAMR();
     _mesh.Topology_InitializeSolidNodeFlag();
     _mesh.Topology_FillSolidNodeFlag();
+
+    _mesh.Topology_InitializeAMR();
 
 //====================================
 //==== BuildTopologyStructures - END ======== 
