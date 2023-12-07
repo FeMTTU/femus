@@ -22,6 +22,8 @@
 #include "ParallelObject.hpp"
 #include "WriterEnum.hpp"
 
+#include "fe_projection_matrices.hpp"
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -210,6 +212,15 @@ namespace femus {
     /** map from femus connectivity to vtk-connectivity for paraview visualization */
     static const unsigned FemusToVTKorToXDMFConn[27];
 // === Geometric Element, Connectivities - END =================
+
+
+
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
+
+    FE_Proj_Matrices   _fe_proj_matrices;
+   
+// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
+
     
   };
 

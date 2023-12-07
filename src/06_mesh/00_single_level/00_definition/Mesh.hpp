@@ -28,8 +28,6 @@
 #include "ElemType.hpp"
 #include "FElemTypeEnum_list.hpp"
 
-#include "fe_projection_matrices.hpp"
-
 
 #include "Solution.hpp"
 
@@ -43,14 +41,14 @@
 namespace femus {
 
 
-class NumericVector;
-class SparseMatrix;
+class elem;
+class elem_type;
 
 class Solution;
 
-class elem;
+class NumericVector;
+class SparseMatrix;
 
-class elem_type;
 
 /**
  * The mesh class
@@ -585,13 +583,6 @@ private:
     
 // === FE DOFMAP & REFINEMENT - END =================
     
-
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
-public:
-
-    FE_Proj_Matrices   _fe_proj_matrices;
-   
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
     
 
 // === FE DOFMAP, TOPOLOGY: Coordinates, Refinement - Adaptive, SolidMark (a bit of everything) - this needs the FE dofmap - BEGIN =================

@@ -157,7 +157,7 @@ public:
                                     const Solution * solution,
                                     const unsigned index,
                                     const unsigned nvtOwned,
-                                    const std::map<unsigned, unsigned>  &  ghostMap) const;
+                                    const std::map<unsigned, unsigned>  &  ghostMap);
 
     /** [Lagrange linear/quadratic/biquadratic][geom_elem_type]  */
     static short unsigned int femusToVtkCellType[3][6];
