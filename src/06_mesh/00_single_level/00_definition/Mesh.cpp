@@ -295,10 +295,11 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     Topology_InitializeCoordinates();
     Topology_FillCoordinates();
 
+    Topology_InitializeAMR();  // needs to be here because the order of AddSolution is that 
+    
     Topology_InitializeSolidNodeFlag();
     Topology_FillSolidNodeFlag();
     
-    Topology_InitializeAMR();
 //==== BuildTopologyStructures - END ======== 
     
 
