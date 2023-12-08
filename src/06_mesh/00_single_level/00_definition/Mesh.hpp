@@ -28,6 +28,7 @@
 #include "ElemType.hpp"
 #include "FElemTypeEnum_list.hpp"
 
+#include "fe_prolongation_matrices.hpp"
 
 #include "Solution.hpp"
 
@@ -625,48 +626,10 @@ private:
     
 // === FE DOFMAP, REFINEMENT - BEGIN =================
 // =========================
-public:
+ public:
     
-    /** MESH: Set the coarser mesh from which this mesh is generated */
-    void SetCoarseMesh( Mesh* otherCoarseMsh ){
-      _coarseMsh = otherCoarseMsh;
-    }
-
-    /**  FE: Get the coarse to the fine projection matrix and use it to restrict only on coarse nodes i.e. projection*/
-    SparseMatrix* GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType);
-
-    /**  FE: Get the coarse to the fine projection matrix*/
-    SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);
-
-private:
-  
-    /** Pointer to the coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
-    Mesh* _coarseMsh;
-    
-    /** FE: Build the coarse to the fine projection matrix */
-    void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
-    
-    void Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily(const Mesh& meshf,
-                                  const Mesh& meshc,
-                                  const int& ielc,
-                                  NumericVector* NNZ_d,
-                                  NumericVector* NNZ_o,
-                                  const char is_fine_or_coarse [],
-                                  const elem_type * elem_type_in) const;
-
-    void Build_Prolongation_OneElement_OneFEFamily(const Mesh& meshf,
-                             const Mesh& meshc,
-                             const int& ielc,
-                             SparseMatrix* Projmat, 
-                             const char is_fine_or_coarse [],
-                             const elem_type * elem_type_in) const;
-
-    
-    
-    /** FE: The coarse to the fine projection matrix */
-    SparseMatrix* _ProjCoarseToFine[NFE_FAMS];
-
-    
+ FE_Prolongation_Matrices   _fe_prol_matrices;
+ 
 // === FE DOFMAP, REFINEMENT - END =================
     
 
