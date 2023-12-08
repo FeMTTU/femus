@@ -720,7 +720,7 @@ namespace femus
     _elementNearFace.clearBroadcast();
   }
 
-  void elem::GetAMRRestriction(Mesh *msh) const
+  void elem::GetAMRRestriction(Mesh *msh, const elem *el_in) const
   {
 
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & restriction = msh->GetAmrRestrictionMap();
@@ -735,18 +735,20 @@ namespace femus
     std::vector < std::vector < MyMatrix<unsigned> > > levelInterfaceSolidMark;
     std::vector < std::vector < MyMatrix< double > > > interfaceNodeCoordinates;
 
-    interfaceElement.resize(_level + 1);
-    interfaceLocalDof.resize(_level + 1);
+    const unsigned level_of_list = GetLevelOfRefinementForList();
+    
+    interfaceElement.resize(level_of_list + 1);
+    interfaceLocalDof.resize(level_of_list + 1);
     interfaceDof.resize(NFE_FAMS_C_ZERO_LAGRANGE);
     levelInterfaceSolidMark.resize(NFE_FAMS_C_ZERO_LAGRANGE);
     for (unsigned i = 0; i < NFE_FAMS_C_ZERO_LAGRANGE; i++) {
-      interfaceDof[i].resize(_level + 1);
-      levelInterfaceSolidMark[i].resize(_level + 1);
+      interfaceDof[i].resize(level_of_list + 1);
+      levelInterfaceSolidMark[i].resize(level_of_list + 1);
     }
-    interfaceNodeCoordinates.resize(_level + 1);
+    interfaceNodeCoordinates.resize(level_of_list + 1);
     unsigned dim = msh->GetDimension();
 
-    for (unsigned ilevel = 0; ilevel <= _level; ilevel++) {
+    for (unsigned ilevel = 0; ilevel <= level_of_list; ilevel++) {
       //BEGIN interface element search
       interfaceElement[ilevel] = MyVector <unsigned> (_elementOwned);
       unsigned counter = 0;
@@ -834,8 +836,8 @@ namespace femus
     }
 
     for (unsigned soltype = 0; soltype < NFE_FAMS_C_ZERO_LAGRANGE; soltype++) {
-      for (int ilevel = 0; ilevel < _level; ilevel++) {
-        for (int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
+      for (int ilevel = 0; ilevel < level_of_list; ilevel++) {
+        for (int jlevel = ilevel + 1; jlevel <= level_of_list; jlevel++) {
           for (unsigned lproc = 0; lproc < _nprocs; lproc++) {
             interfaceDof[soltype][jlevel].broadcast(lproc);
             levelInterfaceSolidMark[soltype][jlevel].broadcast(lproc);

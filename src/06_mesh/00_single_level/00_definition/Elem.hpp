@@ -304,6 +304,11 @@ namespace femus {
       
 // === Elements, Level - BEGIN =================
   public:
+    
+      const unsigned GetLevelOfRefinementForList() const {
+        return _level;
+      }
+      
       void SetElementLevel(const unsigned& iel, const short unsigned& level) {
         _elementLevel[iel] = level;
       }
@@ -643,7 +648,7 @@ namespace femus {
 // === Mesh, Refinement, AMR - BEGIN =================
     public:
       
-      void GetAMRRestriction(Mesh *msh) const;
+      void GetAMRRestriction(Mesh *msh, const elem *el_in) const;
 // === Mesh, Refinement, AMR - END =================
       
 
