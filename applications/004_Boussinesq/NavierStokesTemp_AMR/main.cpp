@@ -422,14 +422,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   std::vector < unsigned > SolPdeIndex(dim+1);
   std::vector < unsigned > SolIndex(dim+1);
 
-  //const char coordinate_name[3][2] = {"X","Y","Z"};
-  //vector < unsigned > coordinate_Index(dim);
   std::vector< std::vector < double> > coordinates(dim);
 
   for(unsigned ivar=0; ivar<dim; ivar++) {
     SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
     SolIndex[ivar]=ml_sol->GetIndex(&Solname[ivar][0]);
-    //coordinate_Index[ivar]=ivar;//ml_prob.GetIndex(&coordinate_name[ivar][0]);
   }
   SolPdeIndex[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[3][0]);
   SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);
@@ -745,11 +742,6 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
 
   //coordinates
   std::vector< std::vector < double> > coordinates(dim);
-  //const char coordinate_name[3][2] = {"X","Y","Z"};
-  //vector < unsigned > coordinate_Index(dim);
-//   for(unsigned ivar=0; ivar<dim; ivar++) {
-//     coordinate_Index[ivar]=ivar;//ml_prob.GetIndex(coordinate_name[ivar]);
-//   }
 
   // declare
   std::vector< int > metis_node;

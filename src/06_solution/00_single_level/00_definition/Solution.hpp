@@ -66,7 +66,13 @@ namespace femus {
                        const unsigned& tmorder = STATIONARY,
                        const bool &Pde_type = true);
 
-      void AddSolution(const char name[],
+      void AddSolution(const std::string name, 
+                       const FEFamily fefamily,
+                       const FEOrder order,
+                       const unsigned& tmorder = STATIONARY,
+                       const bool &Pde_type = true);
+
+      void AddSolution(const std::string name,
                        const FEFamily fefamily,
                        const FEOrder order_v,
                        const FEOrder order_b,
@@ -84,6 +90,9 @@ namespace femus {
       void ResizeSolution_par(const int new_size);
   
       /** Resize the solution vector */
+      void ResizeSolutionVector(const std::string name);
+      
+      /** Resize the solution vector */
       void ResizeSolutionVector(const char name[]);
 
       /** Free the solution vectors */
@@ -96,6 +105,9 @@ namespace femus {
         /** Get the index of the variable -name- */
       unsigned GetIndex(const char name[]) const;
       
+        /** Get the index of the variable -name- */
+      unsigned GetIndex(const std::string name) const {  GetIndex( name.c_str() ); }
+
     private:
         
       /** Vector size: number of added Solutions. Solution name */

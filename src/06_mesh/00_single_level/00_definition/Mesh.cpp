@@ -38,7 +38,9 @@ namespace femus {
   
 bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) = NULL; 
 
-
+    const std::string Mesh::_solidMark_name = "solidMrk";
+    const std::string Mesh::_amrIndex_name = "AMR";
+    
   bool Mesh::_IsUserRefinementFunctionDefined = false;
 
   unsigned Mesh::_dimension = 2;                                    ///@todo I don't like the default dimension to be 2
@@ -318,7 +320,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     if(amr) {
       
-      GetMeshElements()->GetAMRRestriction(this, this->GetMeshElements());
+      GetMeshElements()->GetAMRRestrictionAndAMRSolidMark(this, this->GetMeshElements());
 //       for(unsigned soltype = 0; soltype < NFE_FAMS_C_ZERO_LAGRANGE; soltype++) {
 //         std::cout << "solution type = " << soltype << std::endl;
 //         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = _mesh.GetAmrRestrictionMap()[soltype].begin(); it1 != _mesh.GetAmrRestrictionMap()[soltype].end(); it1++) {
@@ -376,9 +378,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 /// This needs the dof maps, for the discontinuous Lagrange elements
   void Mesh::Topology_InitializeAMR() {
       
-    _topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
+    _topology->AddSolution(_amrIndex_name, DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
 
-    _topology->ResizeSolutionVector("AMR");
+    _topology->ResizeSolutionVector(_amrIndex_name);
 
   }
   
@@ -386,9 +388,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 /// This needs the dof maps, for the continuous Lagrange elements
   void Mesh::Topology_InitializeSolidNodeFlag() {
       
-    _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
+    _topology->AddSolution(_solidMark_name, LAGRANGE, SECOND, 1, 0);
     
-    _topology->ResizeSolutionVector("solidMrk");
+    _topology->ResizeSolutionVector(_solidMark_name);
 
   }
   
@@ -466,7 +468,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   void Mesh::Topology_FillSolidNodeFlag() {
 
 
-    NumericVector& NodeMaterial =  _topology->GetSolutionByName("solidMrk");
+    NumericVector& NodeMaterial =  _topology->GetSolutionByName(_solidMark_name);
 
     NodeMaterial.zero();
 

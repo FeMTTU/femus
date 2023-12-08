@@ -1310,11 +1310,7 @@ void AssembleMatrixResT ( MultiLevelProblem &ml_prob ) {
 
   //coordinates
   std::vector < std::vector < double> > coordinates ( dim );
-  //const char coordinate_name[3][2] = {"X","Y","Z"};
-  //std::vector < unsigned > coordinate_Index(dim);
-//   for(unsigned ivar=0; ivar<dim; ivar++) {
-//     coordinate_Index[ivar]=ivar;//ml_prob.GetIndex(coordinate_name[ivar]);
-//   }
+
 
   // declare
   std::vector < int > metis_node;

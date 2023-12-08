@@ -62,6 +62,15 @@ namespace femus {
     }
   }
 
+  void Solution::AddSolution(const std::string name, const FEFamily fefamily, const FEOrder order,
+                             const unsigned& tmorder, const bool &Pde_type) {
+    
+    AddSolution(name.c_str(), fefamily, order, tmorder, Pde_type);
+    
+  }
+ 
+
+
   /**
    * Add a new variable called 'name'
    */
@@ -121,7 +130,7 @@ _analytical_function.resize(new_size);
   /**
    * Weak galerkin
    */
-  void Solution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
+  void Solution::AddSolution(const std::string name, const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
                              const unsigned& tmorder, const bool &Pde_type) {
 
     unsigned n = _Sol.size();
@@ -178,7 +187,7 @@ _analytical_function.resize(new_size);
     
 // ID related---
     _SolName[n] = new char [SOL_MAXIMUM_NCHARS];
-    strcpy(_SolName[n], name);
+    strcpy(_SolName[n], name.c_str());
 
 //   FE related---  
     _family[n] = fefamily;
@@ -306,6 +315,17 @@ _analytical_function.resize(new_size);
 
     return index;
   }
+
+  /**
+   * Allocate memory for the variable called name
+   **/
+// ------------------------------------------------------------------
+  void Solution::ResizeSolutionVector(const std::string name) {
+    
+    ResizeSolutionVector(name.c_str() );
+
+  }
+
 
   /**
    * Allocate memory for the variable called name
@@ -596,7 +616,7 @@ _analytical_function.resize(new_size);
     const unsigned  dim = _msh->GetDimension();
 
     Solution* AMR = _msh->_topology;
-    unsigned  AMRIndex = AMR->GetIndex("AMR");
+    const unsigned  AMRIndex = AMR->GetIndex( _msh->GetAmrIndexName() );
     AMR->_Sol[AMRIndex]->zero();
 
     NumericVector *counter_vec;
@@ -814,7 +834,7 @@ _analytical_function.resize(new_size);
     const unsigned  dim = _msh->GetDimension();
 
     Solution* AMR = _msh->_topology;
-    unsigned  AMRIndex = AMR->GetIndex("AMR");
+    const unsigned  AMRIndex = AMR->GetIndex( _msh->GetAmrIndexName() );
     AMR->_Sol[AMRIndex]->zero();
 
     if(AMRthreshold.size() != solIndex.size()) {
@@ -1081,7 +1101,7 @@ _analytical_function.resize(new_size);
 //   }
 //
 //   Solution* AMR = _msh->_topology;
-//   unsigned  AMRIndex= AMR->GetIndex("AMR");
+//   unsigned  AMRIndex= AMR->GetIndex( GetAmrIndexName() );
 //   AMR->_Sol[AMRIndex]->zero();
 //
 //   unsigned nel= _msh->GetNumberOfElements();
@@ -1173,7 +1193,7 @@ _analytical_function.resize(new_size);
 //     }
 //
 //     Solution* AMR = _msh->_topology;
-//     unsigned  AMRIndex = AMR->GetIndex("AMR");
+//     unsigned  AMRIndex = AMR->GetIndex( GetAmrIndexName() );
 //
 //     AMR->_Sol[AMRIndex]->zero();
 //

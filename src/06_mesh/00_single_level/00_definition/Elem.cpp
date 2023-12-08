@@ -720,7 +720,7 @@ namespace femus
     _elementNearFace.clearBroadcast();
   }
 
-  void elem::GetAMRRestriction(Mesh *msh, const elem *el_in) const
+  void elem::GetAMRRestrictionAndAMRSolidMark(Mesh *msh, const elem *el_in) const
   {
 
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & restriction = msh->GetAmrRestrictionMap();

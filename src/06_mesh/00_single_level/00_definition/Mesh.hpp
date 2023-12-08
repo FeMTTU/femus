@@ -682,9 +682,11 @@ public:
     void Topology_InitializeAMR();
     
     const unsigned GetAmrIndex()        const { return _amrIndex; }
+    const std::string GetAmrIndexName() const { return _amrIndex_name; }
 
 private:
     static const unsigned _amrIndex = 3;
+    static const std::string _amrIndex_name;
     
 // === FE DOFMAP, TOPOLOGY: Refinement, AMR - END =================
 
@@ -704,7 +706,8 @@ public:
     
 private:
     static const unsigned _solidMarkIndex = 4;
-
+    static const std::string _solidMark_name;
+    
 // === FE DOFMAP, TOPOLOGY: SolidMark  - END =================
 
     

@@ -196,12 +196,6 @@ int main(int argc,char **args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   
-//       std::vector < std::string > surfaceVariables;
-//       surfaceVariables.push_back("X");
-//       surfaceVariables.push_back("Y");
-//       surfaceVariables.push_back("Z");
-// 
-//     ml_sol.GetWriter()->SetSurfaceVariables(surfaceVariables);
 
 #if FEMUS_TEST_MESH_PRINT != 0
 /// The print doesn't need a solution object anymore 

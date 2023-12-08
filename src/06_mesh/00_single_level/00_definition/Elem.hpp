@@ -648,7 +648,7 @@ namespace femus {
 // === Mesh, Refinement, AMR - BEGIN =================
     public:
       
-      void GetAMRRestriction(Mesh *msh, const elem *el_in) const;
+      void GetAMRRestrictionAndAMRSolidMark(Mesh *msh, const elem *el_in) const;
 // === Mesh, Refinement, AMR - END =================
       
 
