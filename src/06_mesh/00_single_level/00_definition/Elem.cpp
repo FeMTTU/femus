@@ -726,7 +726,7 @@ namespace femus
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & restriction = msh->GetAmrRestrictionMap();
     restriction.resize(NFE_FAMS_C_ZERO_LAGRANGE);
 
-    std::vector < std::map < unsigned, bool > > &interfaceSolidMark = msh->GetAmrSolidMark();
+    std::vector < std::map < unsigned, bool > > & interfaceSolidMark = msh->GetAmrSolidMark();
     interfaceSolidMark.resize(NFE_FAMS_C_ZERO_LAGRANGE);
 
     std::vector < MyVector<unsigned> > interfaceElement;

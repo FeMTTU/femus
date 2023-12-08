@@ -454,8 +454,6 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
   
     
 //====================================
-//==== BuildTopologyStructures - BEGIN ======== 
-//====================================
     
 //====  Topology, Coordinates - BEGIN ======== 
     _mesh.Topology_InitializeCoordinates();
@@ -472,18 +470,19 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====  Topology, Coordinates - END ======== 
 
     
+//====  Topology, Solidnodeflag - BEGIN ======== 
     _mesh.Topology_InitializeSolidNodeFlag();
     _mesh.Topology_FillSolidNodeFlag();
+//====  Topology, Solidnodeflag - END ======== 
 
+//====  Topology, AMR - BEGIN ======== 
     _mesh.Topology_InitializeAMR();
+//====  Topology, AMR - END ======== 
 
-//====================================
-//==== BuildTopologyStructures - END ======== 
-//====================================
     
     
 //==== AMR (only uses Topology in one point, does not modify it) - BEGIN ========
-    _mesh.InitializeAmrRestriction(AMR); 
+    _mesh.InitializeAndPossiblyFillAmrRestriction(AMR); 
 //==== AMR (only uses Topology in one point, does not modify it) - END ======== 
     
     

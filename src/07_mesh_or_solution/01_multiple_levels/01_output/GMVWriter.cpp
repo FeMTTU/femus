@@ -149,7 +149,6 @@ namespace femus {
       mesh->el->LocalizeElement_Level_Type_Group_Material(isdom);
       if( _iproc == 0 ) {
         for( unsigned ii = mesh->_elementOffset[isdom]; ii < mesh->_elementOffset[isdom + 1]; ii++ ) {
-          //short unsigned ielt = static_cast < short unsigned >( vector1[ii] + 0.25 );
 	  short unsigned ielt = mesh->GetElementType(ii);
           if( ielt == 0 )
             sprintf( buffer, "phex%d", eltp[index][0] );

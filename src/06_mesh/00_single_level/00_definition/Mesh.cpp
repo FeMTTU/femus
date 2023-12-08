@@ -289,25 +289,30 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     
     
     //------
+
     
-//==== BuildTopologyStructures - BEGIN ======== 
     //needs dofmap
+//====  Topology, Coordinates - BEGIN ======== 
     Topology_InitializeCoordinates();
     Topology_FillCoordinates();
+//====  Topology, Coordinates - END ======== 
 
+//====  Topology, Solidnodeflag - BEGIN ======== 
     Topology_InitializeSolidNodeFlag();
     Topology_FillSolidNodeFlag();
+//====  Topology, Solidnodeflag - END ======== 
     
+//====  Topology, AMR - BEGIN ======== 
     Topology_InitializeAMR();
-//==== BuildTopologyStructures - END ======== 
+//====  Topology, AMR - END ======== 
     
 
-    InitializeAmrRestriction(false);       /** @todo is it really needed here? */
+    InitializeAndPossiblyFillAmrRestriction(false);       /** @todo is it really needed here? */
     
   }
 
   
-  void Mesh::InitializeAmrRestriction(const bool amr) {
+  void Mesh::InitializeAndPossiblyFillAmrRestriction(const bool amr) {
 
     if(amr) {
       

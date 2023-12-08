@@ -625,7 +625,7 @@ public:
     /** Get if element is refined*/
     short unsigned GetRefinedElementIndex(const unsigned &iel) const;
     
-    void InitializeAmrRestriction(const bool amr);
+    void InitializeAndPossiblyFillAmrRestriction(const bool amr);
   
 private:
     
