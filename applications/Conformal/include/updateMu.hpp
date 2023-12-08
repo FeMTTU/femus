@@ -90,7 +90,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       unsigned idof = msh->GetSolutionDof(i, iel, solTypeDx);
       unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
       for(unsigned K = 0; K < DIM; K++) {
-        xHat[K][i] = (*msh->_topology->_Sol[K])(xDof);
+        xHat[K][i] = (*msh->GetTopology()->_Sol[K])(xDof);
         solx[K][i] = xHat[K][i] + (*sol->_Sol[indexDx[K]])(idof);
       }
     }
@@ -358,7 +358,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       for(unsigned i = 0; i < nDofs2; i++) {
         unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
         for(unsigned K = 0; K < DIM; K++) {
-          xHat[K][i] = (*msh->_topology->_Sol[K])(xDof);
+          xHat[K][i] = (*msh->GetTopology()->_Sol[K])(xDof);
         }
       }
 
@@ -443,7 +443,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
         unsigned idof = msh->GetSolutionDof(i, iel, solType2);
         unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
         for(unsigned K = 0; K < DIM; K++) {
-          xHat[K][i] = (*msh->_topology->_Sol[K])(xDof);
+          xHat[K][i] = (*msh->GetTopology()->_Sol[K])(xDof);
         }
         sol2[i] = (*sol->_Sol[indexMuN2])(idof);
         solTheta2[i] = (*sol->_Sol[indexTheta2])(idof);

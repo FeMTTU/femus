@@ -1123,9 +1123,9 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
       for ( unsigned i = 0; i < ndofD; i++ ) {
         unsigned idof = msh->GetSolutionDof ( i, iel, solDType );
         for ( unsigned d = 0; d < dim; d++ ) {
-          x0[d][i] = ( *msh->_topology->_Sol[d] ) ( idof );
+          x0[d][i] = ( *msh->GetTopology()->_Sol[d] ) ( idof );
 
-          x[d][i] = ( *msh->_topology->_Sol[d] ) ( idof ) +
+          x[d][i] = ( *msh->GetTopology()->_Sol[d] ) ( idof ) +
                     ( *solution->_Sol[solDIndex[d]] ) ( idof );
         }
       }

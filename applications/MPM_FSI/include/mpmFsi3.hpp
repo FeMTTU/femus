@@ -313,7 +313,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
     for(unsigned i = 0; i < nDofs; i++) {
       unsigned idofX = msh->GetSolutionDof(i, iel, 2);
       for(unsigned  k = 0; k < dim; k++) {
-        vxHat[k][i] = (*msh->_topology->_Sol[k])(idofX) + solDOld[k][i];
+        vxHat[k][i] = (*msh->GetTopology()->_Sol[k])(idofX) + solDOld[k][i];
         vx[k][i] = vxHat[k][i] + solD[k][i];
       }
     }
@@ -918,7 +918,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & solidLine, Li
             solDOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]])(idof);
             solD[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - solDOld[i][inode];
             //moving domain
-            vxHat[i][inode] = (*msh->_topology->_Sol[i])(idofX) + solDOld[i][inode];
+            vxHat[i][inode] = (*msh->GetTopology()->_Sol[i])(idofX) + solDOld[i][inode];
           }
         }
 
@@ -1017,7 +1017,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & solidLine, Li
             solDOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]])(idof);
             solD[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - solDOld[i][inode];
             //moving domain
-            vxHat[i][inode] = (*msh->_topology->_Sol[i])(idofX) + solDOld[i][inode];
+            vxHat[i][inode] = (*msh->GetTopology()->_Sol[i])(idofX) + solDOld[i][inode];
           }
         }
 
@@ -1101,7 +1101,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & solidLine, Li
             solDOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]])(idof);
             solD[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - solDOld[i][inode];
             //moving domain
-            vxHat[i][inode] = (*msh->_topology->_Sol[i])(idofX) + solDOld[i][inode];
+            vxHat[i][inode] = (*msh->GetTopology()->_Sol[i])(idofX) + solDOld[i][inode];
           }
         }
       }
@@ -1226,7 +1226,7 @@ void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line &
           sol->_Sol[solIndexNodeFlag]->set(idof[i], 1.);
           unsigned idofX = msh->GetSolutionDof(i, iel, 2);   //local 2 global solution
           for(int k = 0; k < dim; k++) {
-            vxHat[k][i] = (*msh->_topology->_Sol[k])(idofX);
+            vxHat[k][i] = (*msh->GetTopology()->_Sol[k])(idofX);
           }
         }
       }
@@ -1282,7 +1282,7 @@ void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line &
             idof[i] = msh->GetSolutionDof(i, iel, solType);
             unsigned idofX = msh->GetSolutionDof(i, iel, 2);   //local 2 global solution
             for(int k = 0; k < dim; k++) {
-              vxHat[k][i] = (*msh->_topology->_Sol[k])(idofX);
+              vxHat[k][i] = (*msh->GetTopology()->_Sol[k])(idofX);
             }
           }
         }
@@ -1440,7 +1440,7 @@ void ProjectGridVelocity(MultiLevelSolution &mlSol) {
       for(unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_SolOld[indexSolV[k]])(idof[i]);
         for(unsigned  k = 0; k < dim; k++) {
-          xp[i][k] = (*msh->_topology->_Sol[k])(idofX);     // coordinates of the reference configuration;
+          xp[i][k] = (*msh->GetTopology()->_Sol[k])(idofX);     // coordinates of the reference configuration;
           vx[k][i] = xp[i][k] + (*sol->_Sol[indexSolD[k]])(idof[i]);     // coordinates of the deformed configuration
         }
         nodeFlag[i] = ((*sol->_Sol[indexNodeFlag])(idof[i]) > 0.5) ? true : false;
@@ -1571,7 +1571,7 @@ void ProjectGridVelocity(MultiLevelSolution &mlSol) {
     if(static_cast < unsigned >(floor((*sol->_Sol[indexNodeFlag])(i) + 0.5)) == 0) {
       idof[c1] = i;
       for(unsigned k = 0; k < dim; k++) {
-        xp0[c1 * dim + k] = (*msh->_topology->_Sol[k])(i);
+        xp0[c1 * dim + k] = (*msh->GetTopology()->_Sol[k])(i);
       }
       c1++;
       if(c1 == c0) break;
@@ -1643,7 +1643,7 @@ void ProjectGridVelocity(MultiLevelSolution &mlSol) {
             unsigned jdofX = msh->GetSolutionDof(j, jel, 2);
             for(unsigned  k = 0; k < dim; k++) {
               solV[k][j] = (*sol->_SolOld[indexSolV[k]])(jdof);     //velocity to be projected
-              vx[k][j] = (*msh->_topology->_Sol[k])(jdofX) + (*sol->_Sol[indexSolD[k]])(jdof);         // coordinates of the deformed configuration
+              vx[k][j] = (*msh->GetTopology()->_Sol[k])(jdofX) + (*sol->_Sol[indexSolD[k]])(jdof);         // coordinates of the deformed configuration
             }
           }
           std::vector <double> xi = p.GetMarkerLocalCoordinates();
@@ -1725,7 +1725,7 @@ void ProjectGridVelocity2(MultiLevelSolution & mlSol) {
 
   for(unsigned i = msh->_dofOffset[solXType][iproc]; i < msh->_dofOffset[solXType][iproc + 1]; i++) {
     for(unsigned k = 0; k < dim; k++) {
-      particleCoordAndMore[i][k] = (*msh->_topology->_Sol[k])(i);
+      particleCoordAndMore[i][k] = (*msh->GetTopology()->_Sol[k])(i);
     }
     particleCoordAndMore[i][dim] = iproc; //proc that contains dof i
   }

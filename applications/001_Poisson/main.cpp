@@ -373,7 +373,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
       unsigned inode_coord_metis = mymsh->GetSolutionDof(i, iel, 2);
 
       for (unsigned ivar = 0; ivar < dim; ivar++) {
-        coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
+        coordinates[ivar][i] = (*mymsh->GetTopology()->_Sol[ivar])(inode_coord_metis);
       }
 
       if (i < nve) {
@@ -515,7 +515,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
               unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
 
               for (unsigned ivar = 0; ivar < dim; ivar++) {
-                coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
+                coordinates[ivar][i] = (*mymsh->GetTopology()->_Sol[ivar])(inode_coord_metis);
               }
             }
 
@@ -575,7 +575,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
               unsigned inode = mymsh->GetSolutionDof(ilocal, iel, 2);
 
               for (unsigned idim = 0; idim < dim; idim++) {
-                coordinates[idim][i] = (*mymsh->_topology->_Sol[idim])(inode);
+                coordinates[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(inode);
               }
             }
 

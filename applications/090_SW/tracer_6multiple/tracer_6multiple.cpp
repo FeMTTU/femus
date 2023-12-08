@@ -1040,7 +1040,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
     for (unsigned j = 0; j < 2; j++) {
       unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof
-      x[j] = (*msh->_topology->_Sol[0]) (xDof);     // global extraction and local storage for the element coordinates
+      x[j] = (*msh->GetTopology()->_Sol[0]) (xDof);     // global extraction and local storage for the element coordinates
     }
 
     double dx = x[1] - x[0];
@@ -1915,7 +1915,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       for (unsigned j = 0; j < 2; j++) {
         unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof
-        x[j] = (*msh->_topology->_Sol[0]) (xDof);     // global extraction and local storage for the element coordinates
+        x[j] = (*msh->GetTopology()->_Sol[0]) (xDof);     // global extraction and local storage for the element coordinates
       }
 
       double dx = x[1] - x[0];
@@ -2603,7 +2603,7 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
 
     for (unsigned j = 0; j < 2; j++) {
       unsigned xDof  = msh->GetSolutionDof (j, i, 2);   // global to global mapping between coordinates node and coordinate dof
-      x[j] = (*msh->_topology->_Sol[0]) (xDof);     // global extraction and local storage for the element coordinates
+      x[j] = (*msh->GetTopology()->_Sol[0]) (xDof);     // global extraction and local storage for the element coordinates
     }
 
     double dx = x[1] - x[0];

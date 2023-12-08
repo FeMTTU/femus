@@ -177,7 +177,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         SolDdOld[k][i] = (*mysolution->_SolOld[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         sysDof[i + k * nDofsD] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel);    // global to global mapping between solution node and pdeSys dof
-        vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX);
+        vx_hat[k][i] = (*mymsh->GetTopology()->_Sol[k])(idofX);
         vx[k][i] = vx_hat[k][i] + SolDd[k][i];
         if( material == 4 ) {
           SolVdOld[k][i] = (*mysolution->_Sol[indexSolV[k]])(idof);
@@ -410,7 +410,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
             aRhs[j][i] = 0.;
 
             //Fixed coordinates (Reference frame)
-            vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX) + SolDdOld[j][i];
+            vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(idofX) + SolDdOld[j][i];
             //vx[j][i] = vx_hat[j][i] + SolDd[j][i];
           }
         }
@@ -762,7 +762,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - SolDdOld[i][inode];
             
             //moving domain
-            vx_hat[i][inode] = (*mymsh->_topology->_Sol[i])(idofX) + SolDdOld[i][inode];
+            vx_hat[i][inode] = (*mymsh->GetTopology()->_Sol[i])(idofX) + SolDdOld[i][inode];
           }
         }
         //END

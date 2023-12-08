@@ -327,8 +327,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-        solxHat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + solDx[K][i];
+        solxHat[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + solDx[K][i];
       }
     }
 
@@ -650,10 +650,10 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
         if (counter < 1) {
-          x[k][i] = (*msh->_topology->_Sol[k]) (iXDof);
+          x[k][i] = (*msh->GetTopology()->_Sol[k]) (iXDof);
         }
         else {
-          x[k][i] = (*msh->_topology->_Sol[k]) (iXDof);// + solDx[k][i];
+          x[k][i] = (*msh->GetTopology()->_Sol[k]) (iXDof);// + solDx[k][i];
         }
       }
     }
@@ -818,7 +818,7 @@ void UpdateScale (MultiLevelProblem& ml_prob, const double &elScalingFactor) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       unsigned iDxDof  = msh->GetSolutionDof (i, iel, solDxType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (iXDof) + (*sol->_Sol[solDxIndex[k]]) (iDxDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (iXDof) + (*sol->_Sol[solDxIndex[k]]) (iDxDof);
       }
     }
 

@@ -450,7 +450,7 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned idim = 0; idim < dim; idim++) {
-        x[idim][i] = (*msh->_topology->_Sol[idim]) (xDof);     // global extraction and local storage for the element coordinates
+        x[idim][i] = (*msh->GetTopology()->_Sol[idim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -543,7 +543,7 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
             unsigned inode = msh->GetSolutionDof (ilocal, iel, 2);
 
             for (unsigned idim = 0; idim < dim; idim++) {
-              x[idim][i] = (*msh->_topology->_Sol[idim]) (inode);
+              x[idim][i] = (*msh->GetTopology()->_Sol[idim]) (inode);
             }
           }
 
@@ -696,7 +696,7 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned idim = 0; idim < dim; idim++) {
-        x[idim][i] = (*msh->_topology->_Sol[idim]) (xDof);     // global extraction and local storage for the element coordinates
+        x[idim][i] = (*msh->GetTopology()->_Sol[idim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 

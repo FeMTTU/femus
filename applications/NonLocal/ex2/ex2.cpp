@@ -409,7 +409,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x1[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);
+        x1[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);
       }
     }
 
@@ -567,7 +567,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
       soluNonLocFine[i] = (*solFine->_Sol[soluIndexFine]) (solDof);
       unsigned xDof  = mshFine->GetSolutionDof (i, ielFine, xType);
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        xFine[jdim][i] = (*mshFine->_topology->_Sol[jdim]) (xDof);
+        xFine[jdim][i] = (*mshFine->GetTopology()->_Sol[jdim]) (xDof);
       }
     }
 
@@ -616,7 +616,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
           unsigned solDof = msh->GetSolutionDof (jdof, ielCoarse, soluType);
           soluNonLocCoarse[jdof] = (*sol->_Sol[soluIndex]) (solDof);
           for (unsigned k = 0; k < dim; k++) {
-            xCoarse[k][jdof] = (*sol->GetMesh()->_topology->_Sol[k]) (xDof);
+            xCoarse[k][jdof] = (*sol->GetMesh()->GetTopology()->_Sol[k]) (xDof);
           }
         }
 

@@ -464,7 +464,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
       unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
       for(unsigned ivar = 0; ivar < dim; ivar++) {
           //Fixed coordinates (Reference frame)
-	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
+	coords_hat[ivar][i] = (*msh->GetTopology()->_Sol[ivar])(coordsDof);
       }
     }
 

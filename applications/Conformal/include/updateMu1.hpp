@@ -100,7 +100,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       unsigned idof = msh->GetSolutionDof(i, iel, solTypeDx);
       unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
       for(unsigned K = 0; K < DIM; K++) {
-        solx[K][i] = (*msh->_topology->_Sol[K])(xDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K])(xDof);
         solNx[K][i] = solx[K][i]  + (*sol->_Sol[indexDx[K]])(idof);
       }
     }

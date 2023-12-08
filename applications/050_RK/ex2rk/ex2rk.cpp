@@ -457,7 +457,7 @@ void AssembleNavierStokes_WithImposedDomainDisplacement_AD (MultiLevelProblem& m
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned coordXDof  = msh->GetSolutionDof (i, iel, coordXType);   // local to global mapping between coordinates node and coordinate dof
       for (unsigned k = 0; k < dim; k++) {
-        xHat[k][i] = (*msh->_topology->_Sol[k]) (coordXDof);     // global extraction and local storage for the element coordinates
+        xHat[k][i] = (*msh->GetTopology()->_Sol[k]) (coordXDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -681,7 +681,7 @@ double GetSolutionFluxes (MultiLevelSolution& mlSol) {
           unsigned int ilocal = msh->GetLocalFaceVertexIndex (iel, jface, i);
           unsigned idof = msh->GetSolutionDof (ilocal, iel, 2);
           for (unsigned d = 0; d < dim; d++) {
-            x[d][i] = (*msh->_topology->_Sol[d]) (idof) + (*solution->_Sol[indVar[d + dim]]) (idof);;
+            x[d][i] = (*msh->GetTopology()->_Sol[d]) (idof) + (*solution->_Sol[indVar[d + dim]]) (idof);;
             sol[d][i] = (*solution->_Sol[indVar[d]]) (idof);;
           }
         }

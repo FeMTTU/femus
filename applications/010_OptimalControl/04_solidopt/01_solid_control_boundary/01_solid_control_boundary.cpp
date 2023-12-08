@@ -612,7 +612,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
       unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
       for(unsigned ivar = 0; ivar < dim; ivar++) {
           //Fixed coordinates (Reference frame)
-	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
+	coords_hat[ivar][i] = (*msh->GetTopology()->_Sol[ivar])(coordsDof);
       }
     }
 
@@ -693,7 +693,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 		for(unsigned i=0; i < nve_bd; i++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
 		    unsigned      iDof = msh->GetSolutionDof(i_vol, iel, coordsType);
-		    for(unsigned idim=0; idim<dim; idim++) { coords_hat_bd[idim][i]=(*msh->_topology->_Sol[idim])(iDof); }
+		    for(unsigned idim=0; idim<dim; idim++) { coords_hat_bd[idim][i]=(*msh->GetTopology()->_Sol[idim])(iDof); }
 		}
 		
 //========= initialize gauss quantities on the boundary ============================================
@@ -1496,7 +1496,7 @@ real_num   integral_g_dot_n = 0.;
       unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
       for(unsigned ivar = 0; ivar < dim; ivar++) {
           //Fixed coordinates (Reference frame)
-	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
+	coords_hat[ivar][i] = (*msh->GetTopology()->_Sol[ivar])(coordsDof);
       }
     }
 
@@ -1569,7 +1569,7 @@ real_num   integral_g_dot_n = 0.;
 		for(unsigned i=0; i < nve_bd; i++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
 		    unsigned      iDof = msh->GetSolutionDof(i_vol, iel, coordsType);
-		    for(unsigned idim=0; idim<dim; idim++) { coords_hat_bd[idim][i]=(*msh->_topology->_Sol[idim])(iDof); }
+		    for(unsigned idim=0; idim<dim; idim++) { coords_hat_bd[idim][i]=(*msh->GetTopology()->_Sol[idim])(iDof); }
 		}
 		
 //========= initialize gauss quantities on the boundary ============================================

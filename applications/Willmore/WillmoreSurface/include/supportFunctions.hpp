@@ -231,8 +231,8 @@ double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
 
       for (unsigned K = 0; K < DIM; K++) {
-        solxOld[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_SolOld[solDxIndex[K]]) (iDDof);
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
+        solxOld[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + (*sol->_SolOld[solDxIndex[K]]) (iDDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
       }
     }
 

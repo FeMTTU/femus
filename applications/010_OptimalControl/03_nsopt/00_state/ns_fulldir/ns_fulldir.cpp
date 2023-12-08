@@ -488,7 +488,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+        coordX[k][i] = (*msh->GetTopology()->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -821,7 +821,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
    for( unsigned i=0;i<nDofsX;i++) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
       for(unsigned ivar = 0; ivar < dim; ivar++) {
-	coordX[ivar][i] = (*msh->_topology->_Sol[ivar])(coordXDof);
+	coordX[ivar][i] = (*msh->GetTopology()->_Sol[ivar])(coordXDof);
       }
     }
 
@@ -1247,7 +1247,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+        coordX[k][i] = (*msh->GetTopology()->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
     

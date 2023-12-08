@@ -297,7 +297,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       unsigned idof = msh->GetSolutionDof(i, iel, solTypeDx);
       unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
       for(unsigned K = 0; K < DIM; K++) {
-        xHat[K][i] = (*msh->_topology->_Sol[K])(xDof);
+        xHat[K][i] = (*msh->GetTopology()->_Sol[K])(xDof);
         solx[K][i] = xHat[K][i] + (*sol->_Sol[indexDx[K]])(idof);
       }
     }
@@ -554,7 +554,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       for(unsigned i = 0; i < nDofs2; i++) {
         unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
         for(unsigned K = 0; K < DIM; K++) {
-          xHat[K][i] = (*msh->_topology->_Sol[K])(xDof);
+          xHat[K][i] = (*msh->GetTopology()->_Sol[K])(xDof);
         }
       }
 
@@ -639,7 +639,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
         unsigned idof = msh->GetSolutionDof(i, iel, solType2);
         unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
         for(unsigned K = 0; K < DIM; K++) {
-          xHat[K][i] = (*msh->_topology->_Sol[K])(xDof);
+          xHat[K][i] = (*msh->GetTopology()->_Sol[K])(xDof);
         }
         sol2[i] = (*sol->_Sol[indexMuN2])(idof);
         solTheta2[i] = (*sol->_Sol[indexTheta2])(idof);
@@ -875,7 +875,7 @@ void AssembleShearMinimization(MultiLevelProblem& ml_prob) {
     for(unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof(i, iel, xType);
       for(unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k])(iXDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k])(iXDof);
       }
     }
 
@@ -1127,7 +1127,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       unsigned iXDof  = msh->GetSolutionDof(i, iel, xType);
 
       for(unsigned K = 0; K < DIM; K++) {
-        xhat[K][i] = (*msh->_topology->_Sol[K])(iXDof);
+        xhat[K][i] = (*msh->GetTopology()->_Sol[K])(iXDof);
         //solDx[K][i] = (*sol->_Sol[solDxIndex[K]]) (iDDof);
         solx[K][i] = xhat[K][i];// + solDx[K][i];
         solNDx[K][i] = (*sol->_Sol[solNDxIndex[K]])(iDDof);

@@ -222,7 +222,7 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDof; i++) {
       unsigned solDof  = msh->GetSolutionDof (i, iel, solu1Type);
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-      xCoords[i] = (*msh->_topology->_Sol[0]) (xDof);
+      xCoords[i] = (*msh->GetTopology()->_Sol[0]) (xDof);
 
       if (xCoords[i] < rightBound) sol->_Sol[u1FlagIndex]->add (solDof, 1.);
 
@@ -237,7 +237,7 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofmu; i++) {
         unsigned solDof  = msh->GetSolutionDof (i, iel, solmuType);
         unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-        xCoords1[i] = (*msh->_topology->_Sol[0]) (xDof);
+        xCoords1[i] = (*msh->GetTopology()->_Sol[0]) (xDof);
 
         if (xCoords1[i] < rightBound && xCoords1[i] > leftBound)  sol->_Sol[muFlagIndex]->add (solDof, 1.);
       }
@@ -365,7 +365,7 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
 
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
           for (unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
+            x2[k][j] = (*msh->GetTopology()->_Sol[k]) (xDof);
             x2Temp[k][j] = x2[k][j];
             x2Tempp[k][j] = x2[k][j];
           }
@@ -448,7 +448,7 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
 
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
           for (unsigned k = 0; k < dim; k++) {
-            x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+            x1[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
             x1Temp[k][i] = x1[k][i];
           }
         }
@@ -462,7 +462,7 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
 
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
           for (unsigned k = 0; k < dim; k++) {
-            x1Tempp[k][i] = (*msh->_topology->_Sol[k]) (xDof);;
+            x1Tempp[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);;
           }
         }
 
@@ -491,7 +491,7 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
             unsigned xDof  = msh->GetSolutionDof (midpointDof, iel, xType);
 
             for (unsigned k = 0; k < dim; k++) {
-              xg1[ig][k] = (*msh->_topology->_Sol[k]) (xDof);
+              xg1[ig][k] = (*msh->GetTopology()->_Sol[k]) (xDof);
 //                                 std::cout<< xg1[ig][k] << std::endl;
             }
 
@@ -903,7 +903,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
 
           for (unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
+            x2[k][j] = (*msh->GetTopology()->_Sol[k]) (xDof);
           }
         }
 
@@ -946,7 +946,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
 
           for (unsigned k = 0; k < dim; k++) {
-            x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+            x1[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
           }
         }
 
@@ -976,7 +976,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             unsigned xDof  = msh->GetSolutionDof (midpointDof, iel, xType);
 
             for (unsigned k = 0; k < dim; k++) {
-              xg1[ig][k] = (*msh->_topology->_Sol[k]) (xDof);
+              xg1[ig][k] = (*msh->GetTopology()->_Sol[k]) (xDof);
 //                                 std::cout<< xg1[ig][k] << std::endl;
             }
 

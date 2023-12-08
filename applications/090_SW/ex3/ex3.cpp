@@ -335,7 +335,7 @@ void ETD(MultiLevelProblem& ml_prob)
     
     for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-      x[i] = (*msh->_topology->_Sol[0])(xDof);      // global extraction and local storage for the element coordinates
+      x[i] = (*msh->GetTopology()->_Sol[0])(xDof);      // global extraction and local storage for the element coordinates
     }
     
 

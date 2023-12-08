@@ -328,7 +328,7 @@ namespace femus
           }
 
           meshVelOldNode[j][i] = ( *mysolution->_SolOld[indVAR2[j]] )( idof );
-          vx_hat[j][i] = ( *mymsh->_topology->_Sol[j] )( idof );
+          vx_hat[j][i] = ( *mymsh->GetTopology()->_Sol[j] )( idof );
         }
       }
 
@@ -390,7 +390,7 @@ namespace femus
                   unsigned idof = mymsh->GetSolutionDof( ilocal, iel, 2 );
 
                   for ( unsigned idim = 0; idim < dim; idim++ ) {
-                    vx_face[idim][i]    = ( *mymsh->_topology->_Sol[idim] )( idof ) +
+                    vx_face[idim][i]    = ( *mymsh->GetTopology()->_Sol[idim] )( idof ) +
                                           ( ( 1. - s[tip] ) * Soli_old[indexVAR[idim]][ilocal] + s[tip] * Soli[indexVAR[idim]][ilocal] );
                   }
                 }
@@ -1057,7 +1057,7 @@ namespace femus
 
         for ( int j = 0; j < geoDim; j++ ) {
           //coordinates
-          vx[j][i] = ( *mymsh->_topology->_Sol[j] )( inodeVx_Metis ) + ( *mysolution->_Sol[indVAR[j]] )( inodeVx_Metis );
+          vx[j][i] = ( *mymsh->GetTopology()->_Sol[j] )( inodeVx_Metis ) + ( *mysolution->_Sol[indVAR[j]] )( inodeVx_Metis );
         }
       }
 

@@ -361,7 +361,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
         unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          x1[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);
+          x1[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);
         }
       }
 
@@ -523,7 +523,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
         unsigned xDof  = mshFine->GetSolutionDof (i, ielFine, xType);
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          xFine[jdim][i] = (*mshFine->_topology->_Sol[jdim]) (xDof);
+          xFine[jdim][i] = (*mshFine->GetTopology()->_Sol[jdim]) (xDof);
         }
       }
 
@@ -571,8 +571,8 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
             unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof (0, ielCoarse, 2);
             unsigned  xRightDof = sol->GetMesh()->GetSolutionDof (1, ielCoarse, 2);
 
-            xCoarse[0][0] = (*sol->GetMesh()->_topology->_Sol[0]) (xLeftDof);
-            xCoarse[0][1] = (*sol->GetMesh()->_topology->_Sol[0]) (xRightDof);
+            xCoarse[0][0] = (*sol->GetMesh()->GetTopology()->_Sol[0]) (xLeftDof);
+            xCoarse[0][1] = (*sol->GetMesh()->GetTopology()->_Sol[0]) (xRightDof);
 
             if ( (x_gss_fine > xCoarse[0][0] && x_gss_fine < xCoarse[0][1]) || fabs (x_gss_fine - xCoarse[0][0]) < 1.e-10 || fabs (x_gss_fine - xCoarse[0][1]) < 1.e-10) {
 
@@ -638,7 +638,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 //
 //     unsigned xDof = msh->GetSolutionDof (0, iel, soluType);
 //
-//     double x = (*msh->_topology->_Sol[0]) (xDof);
+//     double x = (*msh->GetTopology()->_Sol[0]) (xDof);
 //
 //     double u = (*sol->_Sol[soluIndex]) (xDof);
 //
@@ -652,7 +652,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
 //   for (unsigned idof = msh->_dofOffset[0][iproc]; idof < msh->_dofOffset[0][iproc + 1]; idof++) {
 //
-//     double x = (*msh->_topology->_Sol[0]) (idof);
+//     double x = (*msh->GetTopology()->_Sol[0]) (idof);
 //
 //     double u = (*sol->_Sol[soluIndex]) (idof);
 //
@@ -691,9 +691,9 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
 
 
-    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+    double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+    double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->GetTopology()->_Sol[0]) (xMidDof);
 
     std::cout.precision (16);
     std::cout << "xMin prima del move= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
@@ -716,9 +716,9 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
 
-    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+    double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+    double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->GetTopology()->_Sol[0]) (xMidDof);
 
 //     if (fabs (xMid) <= 1.e-14) {
 //       elementToSkip = iel;
@@ -731,9 +731,9 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
 
     if (nodeShiftFlags[xMinDof] == 0 && iprocOwnsXmin) {
 
-      if (xMin < 0.) msh->_topology->_Sol[0]->set (xMinDof, xMin + 0.5 * meshSize);
+      if (xMin < 0.) msh->GetTopology()->_Sol[0]->set (xMinDof, xMin + 0.5 * meshSize);
 
-      else msh->_topology->_Sol[0]->set (xMinDof, xMin - 0.5 * meshSize);
+      else msh->GetTopology()->_Sol[0]->set (xMinDof, xMin - 0.5 * meshSize);
 
       nodeShiftFlags[xMinDof] = 1;
 
@@ -741,9 +741,9 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
 
     if (nodeShiftFlags[xMaxDof] == 0 && iprocOwnsXmax) {
 
-      if (xMax < 0.) msh->_topology->_Sol[0]->set (xMaxDof, xMax + 0.5 * meshSize);
+      if (xMax < 0.) msh->GetTopology()->_Sol[0]->set (xMaxDof, xMax + 0.5 * meshSize);
 
-      else msh->_topology->_Sol[0]->set (xMaxDof, xMax - 0.5 * meshSize);
+      else msh->GetTopology()->_Sol[0]->set (xMaxDof, xMax - 0.5 * meshSize);
 
       nodeShiftFlags[xMaxDof] = 1;
 
@@ -751,7 +751,7 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
 
   }
 
-  msh->_topology->_Sol[0]->close();
+  msh->GetTopology()->_Sol[0]->close();
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -760,14 +760,14 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
 
 
-    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+    double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
 
-    msh->_topology->_Sol[0]->set (xMidDof, 0.5 * (xMin + xMax));
+    msh->GetTopology()->_Sol[0]->set (xMidDof, 0.5 * (xMin + xMax));
 
   }
 
-  msh->_topology->_Sol[0]->close();
+  msh->GetTopology()->_Sol[0]->close();
 
   leftBound += 0.5 * meshSize;
   rightBound -= 0.5 * meshSize;
@@ -780,9 +780,9 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
 
 
-    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+    double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+    double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->GetTopology()->_Sol[0]) (xMidDof);
 
     std::cout.precision (16);
     std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
@@ -815,9 +815,9 @@ void ShiftTheExtrema (MultiLevelMesh & mlMsh, const double & meshSize, const dou
 //     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
 //
 //
-//     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-//     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-//     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+//     double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+//     double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
+//     double xMid = (*msh->GetTopology()->_Sol[0]) (xMidDof);
 //
 //     std::cout << "xMin prima dello shift= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
 //
@@ -835,22 +835,22 @@ void ShiftTheExtrema (MultiLevelMesh & mlMsh, const double & meshSize, const dou
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
 
-    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+    double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
 
     if (fabs (xMin - (leftBound - delta1Mesh)) <= 1.e-10) {
-      msh->_topology->_Sol[0]->set (xMinDof, xMin + delta1Shift);
-      msh->_topology->_Sol[0]->set (xMidDof, 0.5 * (xMin + delta1Shift + xMax));
+      msh->GetTopology()->_Sol[0]->set (xMinDof, xMin + delta1Shift);
+      msh->GetTopology()->_Sol[0]->set (xMidDof, 0.5 * (xMin + delta1Shift + xMax));
     }
 
     if (fabs (xMax - (rightBound + delta2Mesh)) <= 1.e-10) {
-      msh->_topology->_Sol[0]->set (xMaxDof, xMax - delta2Shift);
-      msh->_topology->_Sol[0]->set (xMidDof, 0.5 * (xMin + xMax - delta2Shift));
+      msh->GetTopology()->_Sol[0]->set (xMaxDof, xMax - delta2Shift);
+      msh->GetTopology()->_Sol[0]->set (xMidDof, 0.5 * (xMin + xMax - delta2Shift));
     }
 
   }
 
-  msh->_topology->_Sol[0]->close();
+  msh->GetTopology()->_Sol[0]->close();
 
 //   //         //BEGIN TO REMOVE
 //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -860,9 +860,9 @@ void ShiftTheExtrema (MultiLevelMesh & mlMsh, const double & meshSize, const dou
 //     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
 //
 //
-//     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-//     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-//     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+//     double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+//     double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
+//     double xMid = (*msh->GetTopology()->_Sol[0]) (xMidDof);
 //
 //     std::cout << "xMin dopo lo shift= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
 //
@@ -890,8 +890,8 @@ void BuildElementSkipFlags (MultiLevelMesh & mlMsh, std::vector<unsigned> &eleme
     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
 
-    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+    double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
 
     if (fabs (xMax - xMin) <= 1.e-14) elementSkipFlags[iel] = 1;
 
@@ -909,8 +909,8 @@ void BuildElementSkipFlags (MultiLevelMesh & mlMsh, std::vector<unsigned> &eleme
 //     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
 //     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
 //
-//     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-//     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+//     double xMin = (*msh->GetTopology()->_Sol[0]) (xMinDof);
+//     double xMax = (*msh->GetTopology()->_Sol[0]) (xMaxDof);
 //
 //     std::cout << xMin << " , " << xMax << " , " << "flag = " << elementSkipFlags[iel] << std::endl ;
 //
@@ -980,7 +980,7 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
           unsigned solDof = msh->GetSolutionDof (jdof, ielLocal, soluType);
           soluLocLocal[jdof] = (*sol->_Sol[soluIndexLocal]) (solDof);
           for (unsigned k = 0; k < dim; k++) {
-            xLocal[k][jdof] = (*sol->GetMesh()->_topology->_Sol[k]) (xDof);
+            xLocal[k][jdof] = (*sol->GetMesh()->GetTopology()->_Sol[k]) (xDof);
           }
         }
 
@@ -1025,7 +1025,7 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
           soluNonLocFine[i] = (*solFine->_Sol[soluIndexFine]) (solDof);
           unsigned xDof  = mshFine->GetSolutionDof (i, ielFine, xType);
           for (unsigned jdim = 0; jdim < dim; jdim++) {
-            xFine[jdim][i] = (*mshFine->_topology->_Sol[jdim]) (xDof);
+            xFine[jdim][i] = (*mshFine->GetTopology()->_Sol[jdim]) (xDof);
           }
         }
 

@@ -391,7 +391,7 @@ void AssembleStandardProblem (MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -537,7 +537,7 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -657,7 +657,7 @@ std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlS
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -790,7 +790,7 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 
@@ -856,7 +856,7 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 
@@ -984,7 +984,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 

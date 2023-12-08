@@ -638,9 +638,9 @@ void AssembleMatrixResFSI(MultiLevelProblem& ml_prob) {
 
       for (int j = 0; j < dim; j++) {
         //Updated coordinates (Moving frame)
-        vx[j][i] = (*mymsh->_topology->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
+        vx[j][i] = (*mymsh->GetTopology()->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
         //Fixed coordinates (Reference frame)
-        vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(inode_Metis);
+        vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(inode_Metis);
         // displacement dofs
         dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, kel);
         // velocity dofs

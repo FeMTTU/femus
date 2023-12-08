@@ -1938,7 +1938,7 @@ public:
                 unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
                 unsigned iDof = msh->GetSolutionDof(i_vol, iel, solType_coords);
                 for(unsigned idim=0; idim<dim; idim++) {
-                    coords_at_dofs_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
+                    coords_at_dofs_bdry[idim][i]=(*msh->GetTopology()->_Sol[idim])(iDof);
                 }
             }
 
@@ -2216,7 +2216,7 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
             unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords);  // global to global mapping between coordinates node and coordinate dof
 
             for (unsigned jdim = 0; jdim < dim; jdim++) {
-                coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+                coords_at_dofs[jdim][i] = (*msh->GetTopology()->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
             }
         }
 

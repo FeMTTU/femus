@@ -396,8 +396,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-        solxHat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + solDx[K][i];
+        solxHat[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + solDx[K][i];
       }
     }
 
@@ -755,7 +755,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (iXDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (iXDof);
       }
     }
 
@@ -850,6 +850,6 @@ void UpdateMesh (MultiLevelSolution& mlSol) {
   if (dim == 3) solUIndex[2] = mlSol.GetIndex ("U3"); // get the position of "DY" in the ml_sol
 
   for (unsigned k = 0; k < dim; k++) {
-    (*msh->_topology->_Sol[k]).add (*sol->_Sol[solUIndex[k]]);
+    (*msh->GetTopology()->_Sol[k]).add (*sol->_Sol[solUIndex[k]]);
   }
 }

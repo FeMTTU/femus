@@ -336,7 +336,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     std::vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
       unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
-      x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
+      x[j] = ( *msh->GetTopology()->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
     }
     double dx = x[1] - x[0];
 
@@ -536,10 +536,10 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     std::vector <double> xp ( 2 );
     for ( unsigned j = 0; j < 2; j++ ) {
       unsigned xDofm  = msh->GetSolutionDof ( j, i - 1, 2 ); // global to global mapping between coordinates node and coordinate dof
-      xm[j] = ( *msh->_topology->_Sol[0] ) ( xDofm ); // global extraction and local storage for the element coordinates
+      xm[j] = ( *msh->GetTopology()->_Sol[0] ) ( xDofm ); // global extraction and local storage for the element coordinates
 
       unsigned xDofp  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
-      xp[j] = ( *msh->_topology->_Sol[0] ) ( xDofp ); // global extraction and local storage for the element coordinates
+      xp[j] = ( *msh->GetTopology()->_Sol[0] ) ( xDofp ); // global extraction and local storage for the element coordinates
     }
     double dxm = xm[1] - xm[0];
     double dxp = xp[1] - xp[0];

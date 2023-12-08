@@ -342,8 +342,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-        solxHat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + solDx[K][i];
+        solxHat[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + solDx[K][i];
       }
     }
 
@@ -612,7 +612,7 @@ void UpdateMu (MultiLevelSolution& mlSol) {
       unsigned idof = msh->GetSolutionDof (i, iel, solTypeDx);
       unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof) + (*sol->_Sol[solDx[k]]) (idof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof) + (*sol->_Sol[solDx[k]]) (idof);
       }
     }
 
@@ -842,7 +842,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (iXDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (iXDof);
       }
     }
 
@@ -1007,7 +1007,7 @@ void UpdateMuOld (MultiLevelSolution& mlSol) {
       unsigned idof = msh->GetSolutionDof (i, iel, solTypeDx);
       unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof) + (*sol->_Sol[solDx[k]]) (idof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof) + (*sol->_Sol[solDx[k]]) (idof);
       }
     }
 
@@ -1147,7 +1147,7 @@ void UpdateMuOld (MultiLevelSolution& mlSol) {
     for (unsigned i = 0; i < nDofs2; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 
@@ -1211,7 +1211,7 @@ void UpdateMuOld (MultiLevelSolution& mlSol) {
     for (unsigned i = 0; i < nDofs2; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 

@@ -298,7 +298,7 @@ namespace femus
           aRhs[indexVAR[j + dim]][i] = 0.;
 
           //Fixed coordinates (Reference frame)
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(idof);
           // displacement dofs
           dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
           // velocity dofs
@@ -365,8 +365,8 @@ namespace femus
                 unsigned idof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal]; //TODO
-                  vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
+                  vx_face[idim][i]    = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal]; //TODO
+                  vx_face_old[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
                 }
               }
 
@@ -1368,7 +1368,7 @@ namespace femus
             aRhs[indexVAR[j + k * dim]][i] = 0.;
             dofsVAR[j + k * dim][i] = myLinEqSolver->GetSystemDof(indVAR[j + k * dim], indexVAR[j + k * dim], i, iel);
           }
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(idof);
         }
       }
 
@@ -1426,8 +1426,8 @@ namespace femus
                 unsigned idof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal]; //TODO
-                  vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal];
+                  vx_face[idim][i]    = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal]; //TODO
+                  vx_face_old[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal];
                 }
               }
 
@@ -2369,10 +2369,10 @@ namespace femus
         unsigned inodeVx_Metis = mymsh->GetSolutionDof(i, iel, SolTypeVx);
         for (int j = 0; j < geoDim; j++) {
           //coordinates
-//           vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) +
+//           vx[j][i] = (*mymsh->GetTopology()->_Sol[j])(inodeVx_Metis) +
 //                      (!meshIsCurrupted) * (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis) +
 //                      meshIsCurrupted * (*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
-          vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
+          vx[j][i] = (*mymsh->GetTopology()->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
         }
       }
       // ------------------------------------
@@ -2728,10 +2728,10 @@ namespace femus
         for (int j = 0; j < geoDim; j++) {
           //coordinates
 
-          vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
+          vx[j][i] = (*mymsh->GetTopology()->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
 
           if (meshIsCurrupted) {
-            vx1[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
+            vx1[j][i] = (*mymsh->GetTopology()->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
           }
         }
       }
@@ -3119,7 +3119,7 @@ namespace femus
 
     for (unsigned idof = msh->_dofOffset[SolType][iproc]; idof < msh->_dofOffset[SolType][iproc + 1]; idof++) {
       for (unsigned k = 0; k < dim; k++) {
-        x[k] = (*msh->_topology->_Sol[k])(idof);
+        x[k] = (*msh->GetTopology()->_Sol[k])(idof);
         dx[k] = (*sol->_Sol[indVAR[k]])(idof);
         dxOld[k] = (*sol->_SolOld[indVAR[k]])(idof);
       }
@@ -3482,7 +3482,7 @@ namespace femus
             dofsVAR[j + k * dim][i] = myLinEqSolver->GetSystemDof(indVAR[j + k * dim], indexVAR[j + k * dim], i, iel);
           }
           meshVelOldNode[j][i] = (*mysolution->_SolOld[indVAR2[j]])(idof);
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(idof);
         }
       }
 
@@ -3540,8 +3540,8 @@ namespace femus
                 unsigned idof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal]; //TODO
-                  vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal];
+                  vx_face[idim][i]    = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal]; //TODO
+                  vx_face_old[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal];
                 }
               }
 

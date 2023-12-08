@@ -171,7 +171,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 //         sol->_Bdc[soluIndex]->set (solDof, 0.);
 //
 //         for (unsigned jdim = 0; jdim < dim; jdim++) {
-//           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
+//           dofCoordinates[jdim] = (*msh->GetTopology()->_Sol[jdim]) (xDof);
 //         }
 //
 //         double bdFunctionValue;
@@ -221,7 +221,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
 
           for (unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
+            x2[k][j] = (*msh->GetTopology()->_Sol[k]) (xDof);
           }
         }
 
@@ -264,7 +264,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
 
           for (unsigned k = 0; k < dim; k++) {
-            x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+            x1[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
           }
         }
 
@@ -294,7 +294,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             unsigned xDof  = msh->GetSolutionDof (midpointDof, iel, xType);
 
             for (unsigned k = 0; k < dim; k++) {
-              xg1[ig][k] = (*msh->_topology->_Sol[k]) (xDof);
+              xg1[ig][k] = (*msh->GetTopology()->_Sol[k]) (xDof);
 //                                 std::cout<< xg1[ig][k] << std::endl;
             }
 
@@ -581,7 +581,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 //         sol->_Bdc[soluIndex]->set (solDof, 0.);
 //
 //         for (unsigned jdim = 0; jdim < dim; jdim++) {
-//           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
+//           dofCoordinates[jdim] = (*msh->GetTopology()->_Sol[jdim]) (xDof);
 //         }
 //
 //         double bdFunctionValue;
@@ -628,7 +628,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x1[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+        x1[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -834,7 +834,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
 //         sol->_Bdc[soluIndex]->set (solDof, 0.);
 //
 //         for (unsigned jdim = 0; jdim < dim; jdim++) {
-//           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
+//           dofCoordinates[jdim] = (*msh->GetTopology()->_Sol[jdim]) (xDof);
 //         }
 //
 //         double bdFunctionValue;
@@ -884,7 +884,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
 
           for (unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
+            x2[k][j] = (*msh->GetTopology()->_Sol[k]) (xDof);
           }
         }
 
@@ -927,7 +927,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
 
           for (unsigned k = 0; k < dim; k++) {
-            x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+            x1[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
           }
         }
 
@@ -957,7 +957,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
             unsigned xDof  = msh->GetSolutionDof (midpointDof, iel, xType);
 
             for (unsigned k = 0; k < dim; k++) {
-              xg1[ig][k] = (*msh->_topology->_Sol[k]) (xDof);
+              xg1[ig][k] = (*msh->GetTopology()->_Sol[k]) (xDof);
 //                                 std::cout<< xg1[ig][k] << std::endl;
             }
 

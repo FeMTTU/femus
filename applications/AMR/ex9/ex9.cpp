@@ -578,7 +578,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob)
       metis_node[i] = mymsh->GetSolutionDof(i, iel, order_ind);
 
       for (unsigned ivar = 0; ivar < dim; ivar++) {
-        coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
+        coordinates[ivar][i] = (*mymsh->GetTopology()->_Sol[ivar])(inode_coord_metis);
       }
 
       KK_dof[i] = mylsyspde->GetSystemDof(SolIndex, SolPdeIndex, i, iel);
@@ -672,7 +672,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob)
 //             unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
 //
 //             for (unsigned ivar = 0; ivar < dim; ivar++) {
-//               coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
+//               coordinates[ivar][i] = (*mymsh->GetTopology()->_Sol[ivar])(inode_coord_metis);
 //             }
 //           }
 //
@@ -812,7 +812,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
         metis_node[i] = msh->GetSolutionDof(i, iel, SolOrder);
 
         for (unsigned idim = 0; idim < dim; idim++) {
-          coordinates[idim][i] = (*msh->_topology->_Sol[idim])(inode_coord_metis);
+          coordinates[idim][i] = (*msh->GetTopology()->_Sol[idim])(inode_coord_metis);
         }
       }
 

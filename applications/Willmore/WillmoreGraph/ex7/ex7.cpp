@@ -344,7 +344,7 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // local to global mapping between coordinates node and coordinate dof
 
       for (unsigned idim = 0; idim < dim; idim++) {
-        x[idim][i] = (*msh->_topology->_Sol[idim]) (xDof);     // global extraction and local storage for the element coordinates
+        x[idim][i] = (*msh->GetTopology()->_Sol[idim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 

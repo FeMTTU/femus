@@ -524,7 +524,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
           unsigned int ilocal = msh->GetLocalFaceVertexIndex(iel, jface, i);
           unsigned idof = msh->GetSolutionDof(ilocal, iel, 2);
           for(unsigned d = 0; d < dim; d++) {
-            x[d][i] = (*msh->_topology->_Sol[d])(idof) + (*solution->_Sol[indVar[d + dim]])(idof);;
+            x[d][i] = (*msh->GetTopology()->_Sol[d])(idof) + (*solution->_Sol[indVar[d + dim]])(idof);;
             sol[d][i] = (*solution->_Sol[indVar[d]])(idof);;
           }
         }

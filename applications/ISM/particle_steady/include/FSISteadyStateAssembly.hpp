@@ -226,7 +226,7 @@ namespace femus
           aRhs[indexVAR[j + dim]][i] = 0.;
 
           //Fixed coordinates (Reference frame)
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(iDof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(iDof);
           // displacement dofs
           dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
           // velocity dofs
@@ -280,7 +280,7 @@ namespace femus
                 unsigned iDof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i] = (*mymsh->_topology->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
+                  vx_face[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
                 }
               }
 
@@ -957,7 +957,7 @@ namespace femus
           aRhs[indexVAR[j + dim]][i] = 0.;
 
           //Fixed coordinates (Reference frame)
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(iDof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(iDof);
           // displacement dofs
           dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
           // velocity dofs
@@ -1011,7 +1011,7 @@ namespace femus
                 unsigned iDof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i] = (*mymsh->_topology->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
+                  vx_face[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
                 }
               }
 
@@ -1512,7 +1512,7 @@ namespace femus
         unsigned inodeVx_Metis = mymsh->GetSolutionDof ( i, iel, SolTypeVx );
         for ( int j = 0; j < geoDim; j++ ) {
           //coordinates
-          vx[j][i] = ( *mymsh->_topology->_Sol[j] ) ( inodeVx_Metis ) +
+          vx[j][i] = ( *mymsh->GetTopology()->_Sol[j] ) ( inodeVx_Metis ) +
                      ( *mysolution->_Sol[indVAR[j]] ) ( inodeVx_Metis );
         }
       }

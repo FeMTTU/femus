@@ -99,7 +99,7 @@ void AssembleSolidDisp(MultiLevelProblem& ml_prob) {
       
       for(unsigned  k = 0; k < dim; k++) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
-        vx[k][i] = (*mymsh->_topology->_Sol[k])(idofX);
+        vx[k][i] = (*mymsh->GetTopology()->_Sol[k])(idofX);
         sysDof[k * nDofsD + i] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel); //local 2 global Pde
       }
     }
@@ -359,7 +359,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         SolDdOld[k][i] = (*mysolution->_SolOld[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         sysDof[i + k * nDofsD] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel);    // global to global mapping between solution node and pdeSys dof
-        vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX); 
+        vx_hat[k][i] = (*mymsh->GetTopology()->_Sol[k])(idofX); 
         vx_tilde[k][i] = vx_hat[k][i] + SolDdOld[k][i]; 
         if( material == 4 ) {
           SolVdOld[k][i] = (*mysolution->_Sol[indexSolV[k]])(idof);
@@ -605,7 +605,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
             dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indexSolD[j], indexPdeD[j], i, iel); //local 2 global Pde
             aRhs[j][i] = 0.;
             
-            vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX) + SolDdOld[j][i];
+            vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(idofX) + SolDdOld[j][i];
           }
         }
         
@@ -1104,7 +1104,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - SolDdOld[i][inode];
             
             //moving domain
-            vx_hat[i][inode] = (*mymsh->_topology->_Sol[i])(idofX) + SolDdOld[i][inode];
+            vx_hat[i][inode] = (*mymsh->GetTopology()->_Sol[i])(idofX) + SolDdOld[i][inode];
           }
         }
         //END

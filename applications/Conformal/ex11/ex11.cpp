@@ -254,8 +254,8 @@ void ProjectSolution(MultiLevelSolution& mlSol) {
       unsigned idof = msh->GetSolutionDof(i, iel, solType);
       unsigned xdof = msh->GetSolutionDof(i, iel, 2);
 
-      double Yhat = (*msh->_topology->_Sol[1])(xdof);
-      double Zhat = (*msh->_topology->_Sol[2])(xdof);
+      double Yhat = (*msh->GetTopology()->_Sol[1])(xdof);
+      double Zhat = (*msh->GetTopology()->_Sol[2])(xdof);
 
       double DY  = (*sol->_Sol[indexDx[1]])(idof);
       double DZ  = (*sol->_Sol[indexDx[2]])(idof);

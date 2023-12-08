@@ -412,7 +412,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     // local storage of coordinates
     for (unsigned i = 0; i < coords_at_dofs[jdim].size(); i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, SolFEType_domain[jdim]);  // global to global mapping between coordinates node and coordinate dof
-        coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        coords_at_dofs[jdim][i] = (*msh->GetTopology()->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -878,7 +878,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       unsigned xDof  = msh->GetSolutionDof(i, iel, SolFEType_domain);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        coords_at_dofs[jdim][i] = (*msh->GetTopology()->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 

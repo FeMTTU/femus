@@ -447,7 +447,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);   // global to global mapping between coordinates node and coordinate dof
 
           for (unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+            x2[k][j] = (*msh->GetTopology()->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
           }
         }
       }
@@ -500,7 +500,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
           for (unsigned k = 0; k < dim; k++) {
-            x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+            x1[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
           }
         }
 
@@ -674,7 +674,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
             unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
             for (unsigned jdim = 0; jdim < dim; jdim++) {
-              x1[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+              x1[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
             }
           }
 
@@ -743,7 +743,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
         unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          x1[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+          x1[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
         }
       }
 
@@ -811,7 +811,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
           for (unsigned jdim = 0; jdim < dim; jdim++) {
-            x1[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+            x1[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
           }
         }
 
@@ -923,7 +923,7 @@ void GetCoefficientsForQuantityOfInterest (MultiLevelProblem& ml_prob, std::vect
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -1559,8 +1559,8 @@ void GetHistogramAndKDE (std::vector< std::vector <double > > & sgmQoIStandardiz
         unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof (0, iel, 2);
         unsigned  xRightDof = sol->GetMesh()->GetSolutionDof (1, iel, 2);
 
-        double xLeft = (*sol->GetMesh()->_topology->_Sol[0]) (xLeftDof);
-        double xRight = (*sol->GetMesh()->_topology->_Sol[0]) (xRightDof);
+        double xLeft = (*sol->GetMesh()->GetTopology()->_Sol[0]) (xLeftDof);
+        double xRight = (*sol->GetMesh()->GetTopology()->_Sol[0]) (xRightDof);
 
         if (sgmQoIStandardized[m][0] > xLeft && sgmQoIStandardized[m][0] <= xRight) {
 
@@ -1625,7 +1625,7 @@ void GetHistogramAndKDE (std::vector< std::vector <double > > & sgmQoIStandardiz
           unsigned idofVx = msh->GetSolutionDof (inode, iel, 2);
 
           for (int jdim = 0; jdim < dim; jdim++) {
-            vx[jdim][inode] = (*msh->_topology->_Sol[jdim]) (idofVx);
+            vx[jdim][inode] = (*msh->GetTopology()->_Sol[jdim]) (idofVx);
           }
         }
 
@@ -1697,8 +1697,8 @@ void GetHistogramAndKDE (std::vector< std::vector <double > > & sgmQoIStandardiz
           unsigned  xLeftDof = solFinest->GetMesh()->GetSolutionDof (0, iel, 2);
           unsigned  xRightDof = solFinest->GetMesh()->GetSolutionDof (1, iel, 2);
 
-          double xLeft = (*solFinest->GetMesh()->_topology->_Sol[0]) (xLeftDof);
-          double xRight = (*solFinest->GetMesh()->_topology->_Sol[0]) (xRightDof);
+          double xLeft = (*solFinest->GetMesh()->GetTopology()->_Sol[0]) (xLeftDof);
+          double xRight = (*solFinest->GetMesh()->GetTopology()->_Sol[0]) (xRightDof);
 
           if (sgmQoIStandardizedFinest[m][0] > xLeft && sgmQoIStandardizedFinest[m][0] <= xRight) {
             double histoValue = 1. / measureFinest;
@@ -1785,7 +1785,7 @@ void GetKDEIntegral (MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, 2);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        xLocal[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
+        xLocal[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -1868,8 +1868,8 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
         unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof (0, iel, 2);
         unsigned  xRightDof = sol->GetMesh()->GetSolutionDof (1, iel, 2);
 
-        double xLeft = (*sol->GetMesh()->_topology->_Sol[0]) (xLeftDof);
-        double xRight = (*sol->GetMesh()->_topology->_Sol[0]) (xRightDof);
+        double xLeft = (*sol->GetMesh()->GetTopology()->_Sol[0]) (xLeftDof);
+        double xRight = (*sol->GetMesh()->GetTopology()->_Sol[0]) (xRightDof);
 
         if (sgmQoIStandardized[m][0] > xLeft && sgmQoIStandardized[m][0] <= xRight) {
 
@@ -1924,8 +1924,8 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
           unsigned  xLeftDof = solFinest->GetMesh()->GetSolutionDof (0, iel, 2);
           unsigned  xRightDof = solFinest->GetMesh()->GetSolutionDof (1, iel, 2);
 
-          double xLeft = (*solFinest->GetMesh()->_topology->_Sol[0]) (xLeftDof);
-          double xRight = (*solFinest->GetMesh()->_topology->_Sol[0]) (xRightDof);
+          double xLeft = (*solFinest->GetMesh()->GetTopology()->_Sol[0]) (xLeftDof);
+          double xRight = (*solFinest->GetMesh()->GetTopology()->_Sol[0]) (xRightDof);
 
           if (sgmQoIStandardized[m][0] > xLeft && sgmQoIStandardized[m][0] <= xRight) {
             solHISTOFSample = (*solFinest->_Sol[solIndexHISTO]) (iel);
@@ -1967,7 +1967,7 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
           unsigned idofVx = msh->GetSolutionDof (inode, iel, 2);
 
           for (int jdim = 0; jdim < dim; jdim++) {
-            vx[jdim][inode] = (*msh->_topology->_Sol[jdim]) (idofVx);
+            vx[jdim][inode] = (*msh->GetTopology()->_Sol[jdim]) (idofVx);
           }
         }
 

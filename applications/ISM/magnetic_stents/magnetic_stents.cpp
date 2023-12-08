@@ -844,14 +844,14 @@ void UpdateMeshCoordinates ( MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol
 
   for ( unsigned k = 0; k < dim; k++ ) {
 
-    ( *msh->_topology->_Sol[k] ).zero();
-    ( *msh->_topology->_Sol[k] ).close();
+    ( *msh->GetTopology()->_Sol[k] ).zero();
+    ( *msh->GetTopology()->_Sol[k] ).close();
 
-    ( *msh->_topology->_Sol[k] ).add ( ( *msh0->_topology->_Sol[k] ) );
-    ( *msh->_topology->_Sol[k] ).close();
+    ( *msh->GetTopology()->_Sol[k] ).add ( ( *msh0->GetTopology()->_Sol[k] ) );
+    ( *msh->GetTopology()->_Sol[k] ).close();
 
-    ( *msh->_topology->_Sol[k] ).add ( ( *solution->_Sol[indVAR[k]] ) );
-    ( *msh->_topology->_Sol[k] ).close();
+    ( *msh->GetTopology()->_Sol[k] ).add ( ( *solution->_Sol[indVAR[k]] ) );
+    ( *msh->GetTopology()->_Sol[k] ).close();
 
   }
 

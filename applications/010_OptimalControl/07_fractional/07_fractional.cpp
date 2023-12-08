@@ -469,7 +469,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         for(unsigned j = 0; j < nDofx2; j++) {
           unsigned xDof  = msh->GetSolutionDof(j, jel, xType);  // global to global mapping between coordinates node and coordinate dof
           for(unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
+            x2[k][j] = (*msh->GetTopology()->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
         for(unsigned j = 0; j < nDof2; j++) {
@@ -592,7 +592,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         for(unsigned i = 0; i < nDofx1; i++) {
           unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
           for(unsigned k = 0; k < dim; k++) {
-            x1[k][i] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
+            x1[k][i] = (*msh->GetTopology()->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
 // ---
@@ -1347,7 +1347,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
         for(unsigned j = 0; j < nDofx2; j++) {
           unsigned xDof  = msh->GetSolutionDof(j, jel, xType);  // global to global mapping between coordinates node and coordinate dof
           for(unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
+            x2[k][j] = (*msh->GetTopology()->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
         for(unsigned j = 0; j < nDof2; j++) {
@@ -1420,7 +1420,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
         for(unsigned i = 0; i < nDofx1; i++) {
           unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
           for(unsigned k = 0; k < dim; k++) {
-            x1[k][i] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
+            x1[k][i] = (*msh->GetTopology()->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
         for(unsigned i = 0; i < nDof1; i++) {

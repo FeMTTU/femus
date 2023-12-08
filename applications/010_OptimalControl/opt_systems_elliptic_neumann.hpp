@@ -207,7 +207,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->GetTopology()->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -343,7 +343,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
+		      x_bdry[idim][i]=(*msh->GetTopology()->_Sol[idim])(iDof);
 		  }
 		}
 
@@ -956,7 +956,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->GetTopology()->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -1085,7 +1085,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		      x_bdry[idim][i] = (*msh->_topology->_Sol[idim])(iDof);
+		      x_bdry[idim][i] = (*msh->GetTopology()->_Sol[idim])(iDof);
 		  }
 		}
  //*****************x dofs on the boundary, end********************************** 

@@ -305,8 +305,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-        solxHat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + solDx[K][i];
+        solxHat[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + solDx[K][i];
       }
     }
 

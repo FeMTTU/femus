@@ -471,7 +471,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);  //local to global coordinate dof
 
       for(unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);  //global to local coordinate value
+        coordX[k][i] = (*msh->GetTopology()->_Sol[k])(coordXDof);  //global to local coordinate value
       }
     }
 

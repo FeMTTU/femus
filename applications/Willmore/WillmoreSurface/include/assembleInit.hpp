@@ -118,7 +118,7 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
 
       for (unsigned K = 0; K < DIM; K++) {
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
       }
     }
 
@@ -458,7 +458,7 @@ void AssembleSystemW (MultiLevelProblem& ml_prob) {
       unsigned iDDof = msh->GetSolutionDof (i, iel, solxType);
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
+        solx[K][i] = (*msh->GetTopology()->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
       }
     }
 

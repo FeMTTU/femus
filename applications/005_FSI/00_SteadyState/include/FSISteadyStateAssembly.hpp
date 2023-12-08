@@ -221,7 +221,7 @@ namespace femus {
           aRhs[indexVAR[j + dim]][i] = 0.;
 
           //Fixed coordinates (Reference frame)
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(iDof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(iDof);
           // displacement dofs
           dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
           // velocity dofs
@@ -276,7 +276,7 @@ namespace femus {
                 unsigned iDof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i] = (*mymsh->_topology->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
+                  vx_face[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
                 }
               }
 
@@ -882,7 +882,7 @@ namespace femus {
           aRhs[indexVAR[j + dim]][i] = 0.;
 
           //Fixed coordinates (Reference frame)
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(iDof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(iDof);
           // displacement dofs
           dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
           // velocity dofs
@@ -936,7 +936,7 @@ namespace femus {
                 unsigned iDof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i] = (*mymsh->_topology->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
+                  vx_face[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
                 }
               }
 
@@ -1358,7 +1358,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
   for (unsigned lev = 1; lev < _element_faces.size(); lev++) {
       
     std::vector < double > coarseLocalizedAmrVector;
-    ml_msh.GetLevel(lev - 1)->_topology->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
+    ml_msh.GetLevel(lev - 1)->GetTopology()->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
 
     const unsigned n_elems = ml_msh.GetLevel(lev)->GetNumberOfElements();
@@ -1552,7 +1552,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 //        face_center = geom_element.get_elem_center_bdry_3d(); //old method
        
         for (unsigned d = 0; d < face_center.size(); d++) {
-                        face_center[d] = (*ml_msh.GetLevel(lev)->_topology->_Sol[d])(idof);
+                        face_center[d] = (*ml_msh.GetLevel(lev)->GetTopology()->_Sol[d])(idof);
         }
         
          const int face_flag_wet  = find_faces_for_integration_based_on_face_center (dimension, face_center);

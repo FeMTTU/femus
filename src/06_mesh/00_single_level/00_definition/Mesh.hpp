@@ -539,23 +539,23 @@ private:
 // === FE DOFMAP - END =================
     
     
-// === FE DOFMAP, TOPOLOGY  - this needs the FE dofmap - BEGIN =================
+// === FE DOFMAP, TOPOLOGY - BEGIN =================
 public:
   
   Solution * GetTopologyToModify() { return _topology; }
   
   const Solution * GetTopology() const { return _topology; }
   
-    /** MESH: Coordinates and other stuff */
-    Solution* _topology;
-    
     void dofmap_build_all_fe_families_and_elem_and_node_structures();
     
     void BuildElementAndNodeStructures();
 
 private:
+  
+    /** MESH: Coordinates and other stuff */
+    Solution* _topology;
 
-// === FE DOFMAP, TOPOLOGY  - this needs the FE dofmap - END =================
+// === FE DOFMAP, TOPOLOGY - END =================
 
 
 

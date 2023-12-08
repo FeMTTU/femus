@@ -318,7 +318,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolGlobal) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x1[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);
+        x1[jdim][i] = (*msh->GetTopology()->_Sol[jdim]) (xDof);
       }
     }
 

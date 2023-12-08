@@ -265,7 +265,7 @@ namespace femus {
           aRhs[indexVAR[j + dim]][i] = 0.;
 
           //Fixed coordinates (Reference frame)
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
+          vx_hat[j][i] = (*mymsh->GetTopology()->_Sol[j])(idof);
           // displacement dofs
           dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
           // velocity dofs
@@ -326,8 +326,8 @@ namespace femus {
                 unsigned idof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal];
-                  vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
+                  vx_face[idim][i]    = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal];
+                  vx_face_old[idim][i] = (*mymsh->GetTopology()->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
                 }
               }
 

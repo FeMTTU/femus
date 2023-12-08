@@ -299,7 +299,7 @@ void AssembleAllenCahnProblem_with_Implicit_Runge_Kutta_AD (MultiLevelProblem& m
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
+        x[k][i] = (*msh->GetTopology()->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 

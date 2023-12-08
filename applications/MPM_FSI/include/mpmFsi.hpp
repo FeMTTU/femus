@@ -206,7 +206,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofsDV; i++) {
       unsigned idofX = msh->GetSolutionDof (i, iel, 2);
       for (unsigned  k = 0; k < dim; k++) {
-        vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX);
+        vxHat[k][i] = (*msh->GetTopology()->_Sol[k]) (idofX);
         vx[k][i] = vxHat[k][i] + solD[k][i];
       }
     }
@@ -416,7 +416,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             sysDofsAllD[k * nDofs + i ] = myLinEqSolver->GetSystemDof (indexSolD[k], indexPdeD[k], i, iel);
             sysDofsAllV[k * nDofs + i ] = myLinEqSolver->GetSystemDof (indexSolV[k], indexPdeV[k], i, iel);
             
-            vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX) + solDOld[k][i];
+            vxHat[k][i] = (*msh->GetTopology()->_Sol[k]) (idofX) + solDOld[k][i];
           }
         }
         
@@ -760,7 +760,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDofsDV; i++) {
           unsigned idofX = msh->GetSolutionDof (i, iel, 2);
           for (unsigned  k = 0; k < dim; k++) {
-            vx[k][i] = (*msh->_topology->_Sol[k]) (idofX) + solD[k][i];
+            vx[k][i] = (*msh->GetTopology()->_Sol[k]) (idofX) + solD[k][i];
           }
         }
         
@@ -1067,7 +1067,7 @@ void GridToParticlesProjection (MultiLevelProblem & ml_prob, Line & solidLine, L
             solDOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]]) (idof);
             solD[i][inode] = (*mysolution->_Sol[indexSolD[i]]) (idof) - solDOld[i][inode];
             //moving domain
-            vxHat[i][inode] = (*msh->_topology->_Sol[i]) (idofX) + solDOld[i][inode];
+            vxHat[i][inode] = (*msh->GetTopology()->_Sol[i]) (idofX) + solDOld[i][inode];
           }
         }
         
@@ -1197,7 +1197,7 @@ void GridToParticlesProjection (MultiLevelProblem & ml_prob, Line & solidLine, L
             solDOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]]) (idof);
             solD[i][inode] = (*mysolution->_Sol[indexSolD[i]]) (idof) - solDOld[i][inode];
             //moving domain
-            vxHat[i][inode] = (*msh->_topology->_Sol[i]) (idofX) + solDOld[i][inode];
+            vxHat[i][inode] = (*msh->GetTopology()->_Sol[i]) (idofX) + solDOld[i][inode];
           }
         }
       }
@@ -1322,7 +1322,7 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
         for (unsigned inode = 0; inode < nDofs; inode++) {
           unsigned idofX = msh->GetSolutionDof (inode, iel, 2); //local 2 global solution
           for (int k = 0; k < dim; k++) {
-            vxHat[k][inode] = (*msh->_topology->_Sol[k]) (idofX);
+            vxHat[k][inode] = (*msh->GetTopology()->_Sol[k]) (idofX);
           }
         }
         
@@ -1381,7 +1381,7 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
         for (unsigned inode = 0; inode < nDofs; inode++) {
           unsigned idofX = msh->GetSolutionDof (inode, iel, 2); //local 2 global solution
           for (int k = 0; k < dim; k++) {
-            vxHat[k][inode] = (*msh->_topology->_Sol[k]) (idofX);
+            vxHat[k][inode] = (*msh->GetTopology()->_Sol[k]) (idofX);
           }
         }
         
@@ -1481,7 +1481,7 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
           //sol->_Sol[solIndexNodeFlag]->set (idof[i], 1.);
           unsigned idofX = msh->GetSolutionDof (i, iel, 2); //local 2 global solution
           for (int k = 0; k < dim; k++) {
-            vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX);
+            vxHat[k][i] = (*msh->GetTopology()->_Sol[k]) (idofX);
           }
         }
       }
@@ -1537,7 +1537,7 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
   //             idof[i] = msh->GetSolutionDof (i, iel, solType);
   //             unsigned idofX = msh->GetSolutionDof (i, iel, 2); //local 2 global solution
   //             for (int k = 0; k < dim; k++) {
-  //               vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX);
+  //               vxHat[k][i] = (*msh->GetTopology()->_Sol[k]) (idofX);
   //             }
   //           }
   //         }

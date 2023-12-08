@@ -395,7 +395,7 @@ std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlS
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
@@ -541,7 +541,7 @@ void BuidProjection (MultiLevelProblem& ml_prob, const unsigned &level) {
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 
@@ -607,7 +607,7 @@ void BuidProjection (MultiLevelProblem& ml_prob, const unsigned &level) {
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 
@@ -804,7 +804,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofsU; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+        x[k][i] = (*msh->GetTopology()->_Sol[k]) (xDof);
       }
     }
 
@@ -1160,7 +1160,7 @@ void Assemble (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofsV; i++) {
       unsigned coordXDof  = msh->GetSolutionDof (i, iel, coordXType);   // local to global mapping between coordinates node and coordinate dof
       for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k]) (coordXDof);     // global extraction and local storage for the element coordinates
+        coordX[k][i] = (*msh->GetTopology()->_Sol[k]) (coordXDof);     // global extraction and local storage for the element coordinates
       }
     }
 
