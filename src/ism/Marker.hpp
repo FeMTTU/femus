@@ -84,12 +84,12 @@ namespace femus {
 
       double GetCoordinates (const Solution *sol, const unsigned &k, const unsigned &i , const double &s) {
         if (!sol->GetIfFSI()) {
-          return (*sol->GetMesh()->_topology->_Sol[k]) (i);
+          return (*sol->GetMesh()->GetTopology()->_Sol[k]) (i);
         }
         else {
           const char varname[3][3] = {"DX", "DY", "DZ"};
           unsigned solIndex = sol->GetIndex (&varname[k][0]);
-          return (*sol->GetMesh()->_topology->_Sol[k]) (i)
+          return (*sol->GetMesh()->GetTopology()->_Sol[k]) (i)
                  + (1. - s) * (*sol->_SolOld[solIndex]) (i)
                  + s * (*sol->_Sol[solIndex]) (i);
         }

@@ -107,7 +107,7 @@ namespace femus {
 
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
-        numVector->matrix_mult( *mesh->_topology->_Sol[i],   * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh) );
+        numVector->matrix_mult( *mesh->GetTopology()->_Sol[i],   * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh) );
         if( _graph && i == 2 ) {
           const unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
           numVector->matrix_mult( *solution->_Sol[indGraphVar],  * _fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ), * mesh ) );
@@ -142,7 +142,7 @@ namespace femus {
 
     unsigned topology[27];
 
-    //mesh->_topology->_Sol[mesh->GetTypeIndex()]->localize_to_one( vector1, 0 );
+    //mesh->GetTopology()->_Sol[mesh->GetTypeIndex()]->localize_to_one( vector1, 0 );
 
     for( unsigned isdom = 0; isdom < _nprocs; isdom++ ) {
       mesh->el->LocalizeElementDof( isdom );

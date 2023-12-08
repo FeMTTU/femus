@@ -251,7 +251,7 @@ namespace femus {
 
     //BEGIN COORDINATES
     for( int i = 0; i < 3; i++ ) {
-      numVector->matrix_mult( *mesh->_topology->_Sol[i], * _fe_proj_matrices.GetQitoQjProjection( index_nd, 2, * mesh ) );
+      numVector->matrix_mult( *mesh->GetTopology()->_Sol[i], * _fe_proj_matrices.GetQitoQjProjection( index_nd, 2, * mesh ) );
       numVector->localize_to_one( vector1, 0 );
 
       if( _ml_sol != NULL && _moving_mesh && dim > i ) {

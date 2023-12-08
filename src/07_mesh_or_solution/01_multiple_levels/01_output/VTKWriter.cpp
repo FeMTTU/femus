@@ -256,7 +256,7 @@ namespace femus {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
-        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],    * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh )  );
+        num_vec_aux_for_node_fields->matrix_mult( *mesh->GetTopology()->_Sol[i],    * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh )  );
         if( solution != NULL && _graph && i == 2 ) {
           const unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
           num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],  * _fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ), * mesh ) );
@@ -303,7 +303,7 @@ namespace femus {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
       if( !_surface ) {
-          num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],  * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh ) );
+          num_vec_aux_for_node_fields->matrix_mult( *mesh->GetTopology()->_Sol[i],  * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh ) );
         if( solution != NULL &&  _graph && i == 2 ) {
           const unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
           num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar], * _fe_proj_matrices.GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ), * mesh ) );

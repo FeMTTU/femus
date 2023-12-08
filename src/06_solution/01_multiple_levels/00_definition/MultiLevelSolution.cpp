@@ -452,9 +452,9 @@ namespace femus {
                   
                   std::vector < double > xx(3);
 
-                  xx[0] = (*msh->_topology->_Sol[0])(icoord_Metis);
-                  xx[1] = (*msh->_topology->_Sol[1])(icoord_Metis);
-                  xx[2] = (*msh->_topology->_Sol[2])(icoord_Metis);
+                  xx[0] = (*msh->GetTopology()->_Sol[0])(icoord_Metis);
+                  xx[1] = (*msh->GetTopology()->_Sol[1])(icoord_Metis);
+                  xx[2] = (*msh->GetTopology()->_Sol[2])(icoord_Metis);
 
                   return xx;
     
@@ -469,9 +469,9 @@ namespace femus {
 
                 for(int j = 0; j < nloc_dof; j++) {
                   const unsigned icoord_Metis = msh->GetSolutionDof(j, iel, CONTINUOUS_BIQUADRATIC);
-                  xx[0] += (*msh->_topology->_Sol[0])(icoord_Metis);
-                  xx[1] += (*msh->_topology->_Sol[1])(icoord_Metis);
-                  xx[2] += (*msh->_topology->_Sol[2])(icoord_Metis);
+                  xx[0] += (*msh->GetTopology()->_Sol[0])(icoord_Metis);
+                  xx[1] += (*msh->GetTopology()->_Sol[1])(icoord_Metis);
+                  xx[2] += (*msh->GetTopology()->_Sol[2])(icoord_Metis);
                 }
 
                 xx[0] /= nloc_dof;

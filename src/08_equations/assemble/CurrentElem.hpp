@@ -281,7 +281,7 @@ template < typename real_num_mov >
       unsigned xDof  = _mesh_new->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
           
 
-        _coords_at_dofs_3d[jdim][i] = (*_mesh_new->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        _coords_at_dofs_3d[jdim][i] = (*_mesh_new->GetTopology()->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
     
@@ -346,7 +346,7 @@ template < typename real_num_mov >
     for (unsigned i = 0; i < coords_at_dofs_in[jdim].size(); i++) {
       unsigned xDof  = _mesh_new->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-        coords_at_dofs_in[jdim][i] = (*_mesh_new->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        coords_at_dofs_in[jdim][i] = (*_mesh_new->GetTopology()->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -380,7 +380,7 @@ template < typename real_num_mov >
 		  unsigned int i_vol = _mesh_new->GetLocalFaceVertexIndex(iel, jface, i_bdry);
                   unsigned iDof = _mesh_new->GetSolutionDof(i_vol, iel, solType_coords);
 		  for(unsigned idim=0; idim < space_dim; idim++) {
-		      _coords_at_dofs_bdry_3d[idim][i_bdry] = (*_mesh_new->_topology->_Sol[idim])(iDof);
+		      _coords_at_dofs_bdry_3d[idim][i_bdry] = (*_mesh_new->GetTopology()->_Sol[idim])(iDof);
 		  }
 
           
@@ -400,7 +400,7 @@ template < typename real_num_mov >
 		for(unsigned i_bdry = 0; i_bdry < _coords_at_dofs_bdry_3d[idim].size(); i_bdry++) {
 		  unsigned int i_vol = _mesh_new->GetLocalFaceVertexIndex(iel, jface, i_bdry);
                   unsigned iDof = _mesh_new->GetSolutionDof(i_vol, iel, solType_coords);
-		      _coords_at_dofs_bdry_3d[idim][i_bdry] = (*_mesh_new->_topology->_Sol[idim])(iDof);
+		      _coords_at_dofs_bdry_3d[idim][i_bdry] = (*_mesh_new->GetTopology()->_Sol[idim])(iDof);
 		  }
 		}  
       

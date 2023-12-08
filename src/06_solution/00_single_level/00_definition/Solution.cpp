@@ -39,7 +39,7 @@ namespace femus {
    *  Constructor
    **/
 // ------------------------------------------------------------------
-  Solution::Solution(const Mesh *other_msh) :
+  Solution::Solution(/*const*/ Mesh *other_msh) :
     _msh(other_msh)
    {
 
@@ -615,7 +615,7 @@ _analytical_function.resize(new_size);
     unsigned    iproc = _msh->processor_id(); // get the process_id (for parallel computation)
     const unsigned  dim = _msh->GetDimension();
 
-    Solution* AMR = _msh->_topology;
+    Solution* AMR = _msh->GetTopologyToModify();
     const unsigned  AMRIndex = AMR->GetIndex( _msh->GetAmrIndexName() );
     AMR->_Sol[AMRIndex]->zero();
 
@@ -682,7 +682,7 @@ _analytical_function.resize(new_size);
           unsigned iDof  = _msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
           for(unsigned j = 0; j < dim; j++) {
-            x[j][i] = (*_msh->_topology->_Sol[j])(iDof);      // global extraction and local storage for the element coordinates
+            x[j][i] = (*_msh->GetTopology()->_Sol[j])(iDof);      // global extraction and local storage for the element coordinates
           }
         }
 
@@ -756,7 +756,7 @@ _analytical_function.resize(new_size);
             unsigned iDof  = _msh->GetSolutionDof(i, iel, xType); // global to global mapping between coordinates node and coordinate dof
 
             for(unsigned j = 0; j < dim; j++) {
-              x[j][i] = (*_msh->_topology->_Sol[j])(iDof); // global extraction and local storage for the element coordinates
+              x[j][i] = (*_msh->GetTopology()->_Sol[j])(iDof); // global extraction and local storage for the element coordinates
             }
           }
 
@@ -833,7 +833,7 @@ _analytical_function.resize(new_size);
     unsigned    iproc = _msh->processor_id(); // get the process_id (for parallel computation)
     const unsigned  dim = _msh->GetDimension();
 
-    Solution* AMR = _msh->_topology;
+    Solution* AMR = _msh->GetTopologyToModify();
     const unsigned  AMRIndex = AMR->GetIndex( _msh->GetAmrIndexName() );
     AMR->_Sol[AMRIndex]->zero();
 
@@ -896,7 +896,7 @@ _analytical_function.resize(new_size);
           unsigned iDof  = _msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
           for(unsigned j = 0; j < dim; j++) {
-            x[j][i] = (*_msh->_topology->_Sol[j])(iDof);      // global extraction and local storage for the element coordinates
+            x[j][i] = (*_msh->GetTopology()->_Sol[j])(iDof);      // global extraction and local storage for the element coordinates
           }
         }
 
@@ -988,7 +988,7 @@ _analytical_function.resize(new_size);
             unsigned iDof  = _msh->GetSolutionDof(i, iel, xType); // global to global mapping between coordinates node and coordinate dof
 
             for(unsigned j = 0; j < dim; j++) {
-              x[j][i] = (*_msh->_topology->_Sol[j])(iDof); // global extraction and local storage for the element coordinates
+              x[j][i] = (*_msh->GetTopology()->_Sol[j])(iDof); // global extraction and local storage for the element coordinates
             }
           }
 
@@ -1100,7 +1100,7 @@ _analytical_function.resize(new_size);
 //     SolEndInd[k]   = END_IDX[SolType[k]];
 //   }
 //
-//   Solution* AMR = _msh->_topology;
+//   Solution* AMR = _msh->GetTopology();
 //   unsigned  AMRIndex= AMR->GetIndex( GetAmrIndexName() );
 //   AMR->_Sol[AMRIndex]->zero();
 //
@@ -1192,7 +1192,7 @@ _analytical_function.resize(new_size);
 //       }
 //     }
 //
-//     Solution* AMR = _msh->_topology;
+//     Solution* AMR = _msh->GetTopology();
 //     unsigned  AMRIndex = AMR->GetIndex( GetAmrIndexName() );
 //
 //     AMR->_Sol[AMRIndex]->zero();
@@ -1321,7 +1321,7 @@ _analytical_function.resize(new_size);
           column_dofs[i] = _msh->GetSolutionDof(i, iel, SolType);
 
           for(unsigned ivar = 0; ivar < dim; ivar++) {
-            coordinates[ivar][i] = (*_msh->_topology->_Sol[ivar])(inode_coord_metis);
+            coordinates[ivar][i] = (*_msh->GetTopology()->_Sol[ivar])(inode_coord_metis);
           }
         }
 

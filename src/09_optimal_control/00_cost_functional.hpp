@@ -796,7 +796,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
             unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords); // global to global mapping between coordinates node and coordinate dof
 
             for (unsigned jdim = 0; jdim < dim; jdim++) {
-                coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);  // global extraction and local storage for the element coordinates
+                coords_at_dofs[jdim][i] = (*msh->GetTopology()->_Sol[jdim])(xDof);  // global extraction and local storage for the element coordinates
             }
         }
 

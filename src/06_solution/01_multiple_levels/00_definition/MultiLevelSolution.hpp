@@ -648,9 +648,9 @@ namespace femus {
 //                   unsigned inode_Metis = GetMLMesh()->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
 //                   unsigned icoord_Metis = GetMLMesh()->GetLevel(ig)->GetSolutionDof(j, iel, 2);
 //                   std::vector < double > xx(3);
-//                   xx[0] = (*GetMLMesh()->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
-//                   xx[1] = (*GetMLMesh()->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
-//                   xx[2] = (*GetMLMesh()->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
+//                   xx[0] = (*GetMLMesh()->GetLevel(ig)->GetTopology()->_Sol[0])(icoord_Metis);
+//                   xx[1] = (*GetMLMesh()->GetLevel(ig)->GetTopology()->_Sol[1])(icoord_Metis);
+//                   xx[2] = (*GetMLMesh()->GetLevel(ig)->GetTopology()->_Sol[2])(icoord_Metis);
 // 
 //                   value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
 // 

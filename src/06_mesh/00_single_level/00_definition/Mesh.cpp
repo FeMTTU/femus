@@ -327,7 +327,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     if(amr) {
       
-      /*GetMeshElements()->*/GetAMRRestrictionAndAMRSolidMark(this, this->GetMeshElements() );
+      GetAMRRestrictionAndAMRSolidMark(this, GetMeshElements() );
 //       for(unsigned soltype = 0; soltype < NFE_FAMS_C_ZERO_LAGRANGE; soltype++) {
 //         std::cout << "solution type = " << soltype << std::endl;
 //         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = _mesh.GetAmrRestrictionMap()[soltype].begin(); it1 != _mesh.GetAmrRestrictionMap()[soltype].end(); it1++) {
@@ -1392,7 +1392,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
 
   short unsigned Mesh::GetRefinedElementIndex(const unsigned& iel) const {
-    return static_cast <short unsigned>((*_topology->_Sol[_amrIndex])(iel) + 0.25);
+    return static_cast <short unsigned>((*GetTopology()->_Sol[_amrIndex])(iel) + 0.25);
   }
 
   short unsigned Mesh::GetElementGroup(const unsigned int& iel) const {
@@ -1408,7 +1408,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
 
   bool Mesh::GetSolidMark(const unsigned int& inode) const {
-    return static_cast <short unsigned>((*_topology->_Sol[_solidMarkIndex])(inode) + 0.25);
+    return static_cast <short unsigned>((*GetTopology()->_Sol[_solidMarkIndex])(inode) + 0.25);
   }
 
 
@@ -1586,7 +1586,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     for(unsigned j = 0; j < ndofs; j++) {
       unsigned xdof  = GetSolutionDof(j, iel, solType);
       for(int d = 0; d < _dimension; d++) {
-        xv[d][j] = (*_topology->_Sol[d])(xdof);
+        xv[d][j] = (*GetTopology()->_Sol[d])(xdof);
       }
     }
     
@@ -1595,7 +1595,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
 
   
-  void /*elem::*/GetAMRRestrictionAndAMRSolidMark(Mesh *msh, const elem *el_in) /*const*/
+  void Mesh::GetAMRRestrictionAndAMRSolidMark(Mesh *msh, const elem *el_in)
   {
 
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & restriction = msh->GetAmrRestrictionMap();
@@ -1707,7 +1707,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
           unsigned jnode = interfaceLocalDof[ilevel][i][j];
           unsigned xDof  = msh->GetSolutionDof(jnode, iel, 2);
           for (unsigned k = 0; k < dim; k++) {
-            interfaceNodeCoordinates[ilevel][k][i][j] = (*msh->_topology->_Sol[k])(xDof);
+            interfaceNodeCoordinates[ilevel][k][i][j] = (*msh->GetTopology()->_Sol[k])(xDof);
           }
         }
       }

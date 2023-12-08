@@ -71,7 +71,7 @@ namespace femus {
     if(type == 0) {   // Flag all element
       for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
-          _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
+          _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
           numberOfRefinedElement->add(_iproc, 1.);
         }
       }
@@ -79,7 +79,7 @@ namespace femus {
     else if(type == 1) {   // Flag AMR elements
       for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
-          if((*_mesh._topology->_Sol[ _mesh.GetAmrIndex() ])(iel) > 0.5) {
+          if((*_mesh.GetTopology()->_Sol[ _mesh.GetAmrIndex() ])(iel) > 0.5) {
             numberOfRefinedElement->add(_iproc, 1.);
           }
           else if( _mesh.get_is_refinement_function_defined() ) {
@@ -89,9 +89,9 @@ namespace femus {
 
             for(unsigned i = 0; i < nve; i++) {
               unsigned inode_metis = _mesh.GetSolutionDof(i, iel, 2);
-              x[0] += (*_mesh._topology->_Sol[0])(inode_metis);
-              x[1] += (*_mesh._topology->_Sol[1])(inode_metis);
-              x[2] += (*_mesh._topology->_Sol[2])(inode_metis);
+              x[0] += (*_mesh.GetTopology()->_Sol[0])(inode_metis);
+              x[1] += (*_mesh.GetTopology()->_Sol[1])(inode_metis);
+              x[2] += (*_mesh.GetTopology()->_Sol[2])(inode_metis);
             }
 
             x[0] /= nve;
@@ -99,28 +99,28 @@ namespace femus {
             x[2] /= nve;
 
             if(_mesh._SetRefinementFlag(x, _mesh.GetElementGroup(iel), _mesh.GetLevel())) {
-              _mesh._topology->_Sol[ _mesh.GetAmrIndex() ]->set(iel, 1.);
+              _mesh.GetTopology()->_Sol[ _mesh.GetAmrIndex() ]->set(iel, 1.);
               numberOfRefinedElement->add(_iproc, 1.);
             }
           }
         }
         else {
-          _mesh._topology->_Sol[ _mesh.GetAmrIndex() ]->set(iel, 0.);
+          _mesh.GetTopology()->_Sol[ _mesh.GetAmrIndex() ]->set(iel, 0.);
         }
       }
     }
     else if(type == 2) {   // Flag only even elements (for debugging purposes)
       for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
-          if((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && iel % 2 == 0) {
-            _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
+          if((*_mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && iel % 2 == 0) {
+            _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
             numberOfRefinedElement->add(_iproc, 1.);
           }
         }
       }
     }
 
-    _mesh._topology->_Sol[_mesh.GetAmrIndex()]->close();
+    _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->close();
     //END flag element to be refined
 
     //BEGIN update elem
@@ -151,14 +151,14 @@ namespace femus {
     //BEGIN flag element to be refined
     for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
       if(_mesh.el->GetIfElementCanBeRefined(iel)) {
-        if((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && error(iel) > treshold) {
-          _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
+        if((*_mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && error(iel) > treshold) {
+          _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
           numberOfRefinedElement->add(_iproc, 1.);
         }
       }
     }
 
-    _mesh._topology->_Sol[_mesh.GetAmrIndex()]->close();
+    _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->close();
     //END flag element to be refined
 
     //BEGIN update elem
@@ -223,7 +223,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     unsigned elementOffsetCoarseP1 = mshc->_elementOffset[_iproc + 1];
 
     std::vector < double > coarseLocalizedAmrVector;
-    mshc->_topology->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
+    mshc->GetTopology()->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
     mshc->el->AllocateChildrenElement   (_mesh.GetRefIndex(), mshc);
     mshc->el->AllocateChildrenElementDof(_mesh.GetRefIndex(), mshc);
@@ -461,12 +461,12 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     // build Mesh coordinates by projecting the coarse coordinates
     unsigned solType = CONTINUOUS_BIQUADRATIC;
 
-    _mesh._topology->_Sol[0]->matrix_mult(*mshc->_topology->_Sol[0], *_mesh.GetCoarseToFineProjection(solType));
-    _mesh._topology->_Sol[1]->matrix_mult(*mshc->_topology->_Sol[1], *_mesh.GetCoarseToFineProjection(solType));
-    _mesh._topology->_Sol[2]->matrix_mult(*mshc->_topology->_Sol[2], *_mesh.GetCoarseToFineProjection(solType));
-    _mesh._topology->_Sol[0]->close();
-    _mesh._topology->_Sol[1]->close();
-    _mesh._topology->_Sol[2]->close();
+    _mesh.GetTopology()->_Sol[0]->matrix_mult(*mshc->GetTopology()->_Sol[0], *_mesh.GetCoarseToFineProjection(solType));
+    _mesh.GetTopology()->_Sol[1]->matrix_mult(*mshc->GetTopology()->_Sol[1], *_mesh.GetCoarseToFineProjection(solType));
+    _mesh.GetTopology()->_Sol[2]->matrix_mult(*mshc->GetTopology()->_Sol[2], *_mesh.GetCoarseToFineProjection(solType));
+    _mesh.GetTopology()->_Sol[0]->close();
+    _mesh.GetTopology()->_Sol[1]->close();
+    _mesh.GetTopology()->_Sol[2]->close();
 //====  Topology, Coordinates - END ======== 
 
     
