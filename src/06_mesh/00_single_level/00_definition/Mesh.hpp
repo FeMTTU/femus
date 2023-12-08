@@ -666,6 +666,9 @@ public:
     const unsigned GetXIndex()          const { return _xIndex; }
     const unsigned GetYIndex()          const { return _yIndex; }
     const unsigned GetZIndex()          const { return _zIndex; }
+    const std::string Get_X_Name() const { return _x_name; }
+    const std::string Get_Y_Name() const { return _y_name; }
+    const std::string Get_Z_Name() const { return _z_name; }
     
 private:
     
@@ -673,7 +676,9 @@ private:
     static const unsigned _xIndex = 0;
     static const unsigned _yIndex = 1;
     static const unsigned _zIndex = 2;
-
+    static const std::string _x_name;
+    static const std::string _y_name;  
+    static const std::string _z_name;  
 // === FE DOFMAP, TOPOLOGY: Coordinates - END =================
 
 

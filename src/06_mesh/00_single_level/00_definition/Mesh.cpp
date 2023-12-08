@@ -38,8 +38,11 @@ namespace femus {
   
 bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber,const int &level) = NULL; 
 
-    const std::string Mesh::_solidMark_name = "solidMrk";
+    const std::string Mesh::_x_name = "X";
+    const std::string Mesh::_y_name = "Y";  
+    const std::string Mesh::_z_name = "Z";  
     const std::string Mesh::_amrIndex_name = "AMR";
+    const std::string Mesh::_solidMark_name = "solidMrk";
     
   bool Mesh::_IsUserRefinementFunctionDefined = false;
 
@@ -351,13 +354,13 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       
     _topology = new Solution(this);
 
-    _topology->AddSolution("X", LAGRANGE, SECOND, 1, 0);
-    _topology->AddSolution("Y", LAGRANGE, SECOND, 1, 0);
-    _topology->AddSolution("Z", LAGRANGE, SECOND, 1, 0);
+    _topology->AddSolution(_x_name, LAGRANGE, SECOND, 1, 0);
+    _topology->AddSolution(_y_name, LAGRANGE, SECOND, 1, 0);
+    _topology->AddSolution(_z_name, LAGRANGE, SECOND, 1, 0);
 
-    _topology->ResizeSolutionVector("X");  //needs dofmap
-    _topology->ResizeSolutionVector("Y");  //needs dofmap
-    _topology->ResizeSolutionVector("Z");  //needs dofmap
+    _topology->ResizeSolutionVector(_x_name);  //needs dofmap
+    _topology->ResizeSolutionVector(_y_name);  //needs dofmap
+    _topology->ResizeSolutionVector(_z_name);  //needs dofmap
 
   }
   
@@ -365,9 +368,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   void Mesh::Topology_FillCoordinates() {
     
     //set coordinates -----------
-    _topology->GetSolutionByName("X") = _coords[0];
-    _topology->GetSolutionByName("Y") = _coords[1];
-    _topology->GetSolutionByName("Z") = _coords[2];
+    _topology->GetSolutionByName(_x_name) = _coords[0];
+    _topology->GetSolutionByName(_y_name) = _coords[1];
+    _topology->GetSolutionByName(_z_name) = _coords[2];
     //set coordinates -----------
 
   }
