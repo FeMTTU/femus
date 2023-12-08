@@ -745,6 +745,20 @@ private:
     
 };
 
+
+// === Mesh, Refinement, AMR - BEGIN =================
+    // public:
+      
+      void GetAMRRestrictionAndAMRSolidMark(Mesh *msh, const elem *el_in) 
+      // const
+      ;
+// === Mesh, Refinement, AMR - END =================
+
+
+
+
+
+
 } //end namespace femus
 
 

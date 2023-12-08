@@ -9,6 +9,9 @@
 #include "Files.hpp"
 #include "MED_IO.hpp"
 
+#include "PolynomialBases.hpp"
+
+
 #include "fractional_functions.hpp"
 
 

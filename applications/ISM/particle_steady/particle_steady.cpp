@@ -15,6 +15,9 @@
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
 #include "Line.hpp"
+#include "PolynomialBases.hpp"
+
+
 #include "adept.h"
 #include <cmath>
 

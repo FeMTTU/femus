@@ -25,6 +25,7 @@
 #include "LinearEquationSolver.hpp"
 #include "Marker.hpp"
 #include "Line.hpp"
+#include "PolynomialBases.hpp"
 
 #include "adept.h"
 

@@ -14,6 +14,8 @@
 #include "Parameter.hpp"
 
 #include "NumericVector.hpp"
+#include "PolynomialBases.hpp"
+
 #include "adept.h"
 
 #include "../include/mpmFem.hpp"

@@ -24,6 +24,7 @@
 
 #include "Marker.hpp"
 #include "Line.hpp"
+#include "PolynomialBases.hpp"
 
 #include "Fluid.hpp"
 #include "Solid.hpp"

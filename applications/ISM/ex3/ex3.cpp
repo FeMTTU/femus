@@ -9,6 +9,8 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "MyVector.hpp"
 
+#include "PolynomialBases.hpp"
+
 using namespace femus;
 
 

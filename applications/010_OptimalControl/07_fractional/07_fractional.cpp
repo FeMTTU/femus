@@ -9,16 +9,19 @@
 
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
-#include "adept.h"
 
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"
 
-#include "petsc.h"
-#include "petscmat.h"
 #include "PetscMatrix.hpp"
 
+#include "PolynomialBases.hpp"
+
 #include "Assemble_jacobian.hpp"
+
+#include "adept.h"
+#include "petsc.h"
+#include "petscmat.h"
 
 
 using namespace femus;

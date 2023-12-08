@@ -15,6 +15,8 @@
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
 #include "Line.hpp"
+#include "PolynomialBases.hpp"
+
 #include "adept.h"
 //<<<<<<< HEAD
 #include "include/CFDSteadyStateAssembly.hpp"

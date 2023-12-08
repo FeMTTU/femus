@@ -24,6 +24,8 @@
 
 #include "Marker.hpp"
 #include "Line.hpp"
+#include "PolynomialBases.hpp"
+
 
 using namespace femus;
 

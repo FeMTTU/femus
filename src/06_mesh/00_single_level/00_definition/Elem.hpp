@@ -22,7 +22,6 @@
 #include "FElemTypeEnum_list.hpp"
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
-#include "PolynomialBases.hpp"
 
 
 #include <vector>
@@ -49,9 +48,6 @@ namespace femus {
 
       //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
       elem(elem* elc, const unsigned dim_in, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
-
-      /** destructor */
-      ~elem();
 // === Constructors / Destructor - END =================
 
 
@@ -283,12 +279,16 @@ namespace femus {
   public:
     
       void SetElementOffsets(const std::vector < unsigned > & elementOffset, const unsigned &iproc, const unsigned &nprocs) {
+        
         _elementOffset = elementOffset;
         _elementOwned = elementOffset[iproc + 1] - elementOffset[iproc];
-        _iproc = iproc;
-        _nprocs = nprocs;
+
+        SetProcs(iproc, nprocs);
+        
       }
       
+     unsigned get_n_elements_owned() const { return _elementOwned; }
+     
     private:
 
       unsigned _iproc;
@@ -297,6 +297,11 @@ namespace femus {
       /** @todo Same as in Mesh, see if we can avoid duplication */
       std::vector < unsigned > _elementOffset;
       unsigned _elementOwned;
+      
+      void SetProcs(const unsigned &iproc, const unsigned &nprocs) {
+        _iproc = iproc;
+        _nprocs = nprocs;
+      }
 
 // === Elements, Subdomains - END =================
 
@@ -324,10 +329,12 @@ namespace femus {
       const bool GetIfFatherHasBeenRefined(const unsigned& iel) const {
         return GetIfElementCanBeRefined(iel);
       }
+      
+      const MyVector<short unsigned> &  GetElementLevelArray() const { return _elementLevel; } 
     
   private:
     
-      MyVector< short unsigned> _elementLevel;
+      MyVector<short unsigned> _elementLevel;
       
       /** Pointer to the list of coarser elements */
       elem* _coarseElem;
@@ -401,6 +408,8 @@ namespace femus {
       void ShrinkToFitElementNearFace();
       void LocalizeElementNearFace(const unsigned& jproc);
       void FreeLocalizedElementNearFace();
+
+      const MyMatrix <int> &  GetElementNearFaceArray() const { return _elementNearFace; } 
 
       MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; } 
 
@@ -515,8 +524,8 @@ namespace femus {
 // === Mesh, Nodes - END ===========================================================
 
 
-// =========       
-// ========= Previously, it was all info of geometric elements. From now on, there is also FE information ==========      
+     
+// ========= Previously, it was all info of geometric elements. From now on, there is also FE information - BEGIN ==========      
 // =========      
 
 
@@ -641,23 +650,11 @@ namespace femus {
       MyMatrix <unsigned> _childElemDof;
 // === Mesh, DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - END =================
 
-      
 
-
-      
-// === Mesh, Refinement, AMR - BEGIN =================
-    public:
-      
-      void GetAMRRestrictionAndAMRSolidMark(Mesh *msh, const elem *el_in) const;
-// === Mesh, Refinement, AMR - END =================
-      
+// ========= Previously, it was all info of geometric elements. From now on, there is also FE information - END ==========      
 
   };
   
-
-
-
-
 
 
 } //end namespace femus
