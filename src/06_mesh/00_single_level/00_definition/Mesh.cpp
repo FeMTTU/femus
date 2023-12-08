@@ -297,15 +297,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     Topology_FillCoordinates();
 //====  Topology, Coordinates - END ======== 
 
+
+//====  Topology, AMR - BEGIN ======== 
+    Topology_InitializeAMR();  // needs to be here because the order of AddSolution is that 
+//====  Topology, AMR - END ======== 
+    
+
 //====  Topology, Solidnodeflag - BEGIN ======== 
     Topology_InitializeSolidNodeFlag();
     Topology_FillSolidNodeFlag();
 //====  Topology, Solidnodeflag - END ======== 
-    
-//====  Topology, AMR - BEGIN ======== 
-    Topology_InitializeAMR();
-//====  Topology, AMR - END ======== 
-    
+
 
     InitializeAndPossiblyFillAmrRestriction(false);       /** @todo is it really needed here? */
     

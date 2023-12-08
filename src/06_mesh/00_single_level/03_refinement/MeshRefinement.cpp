@@ -470,14 +470,16 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 //====  Topology, Coordinates - END ======== 
 
     
-//====  Topology, Solidnodeflag - BEGIN ======== 
-    _mesh.Topology_InitializeSolidNodeFlag();
-    _mesh.Topology_FillSolidNodeFlag();
-//====  Topology, Solidnodeflag - END ======== 
 
 //====  Topology, AMR - BEGIN ======== 
     _mesh.Topology_InitializeAMR();
 //====  Topology, AMR - END ======== 
+
+    
+//====  Topology, Solidnodeflag - BEGIN ======== 
+    _mesh.Topology_InitializeSolidNodeFlag();
+    _mesh.Topology_FillSolidNodeFlag();
+//====  Topology, Solidnodeflag - END ======== 
 
     
     
