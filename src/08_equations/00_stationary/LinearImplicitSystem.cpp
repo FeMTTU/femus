@@ -910,8 +910,8 @@ namespace femus {
 
     LinearEquationSolver* LinSol = _LinSolver[level];
 
-    Mesh* mesh = _msh[level];
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = mesh->GetAmrRestrictionMap();
+    const Mesh* mesh = _msh[level];
+    const std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = mesh->GetAmrRestrictionMap();
 
     int n = LinSol->KKIndex[LinSol->KKIndex.size() - 1u];
     int n_loc = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
@@ -939,7 +939,7 @@ namespace femus {
         else {
           double cnt_d = 0;
           double cnt_o = 0;
-          for(std::map<unsigned, double> ::iterator it = amrRestriction[solType][i].begin(); it != amrRestriction[solType][i].end(); it++) {
+          for(std::map<unsigned, double> ::const_iterator it = amrRestriction[solType].at(i).begin(); it != amrRestriction[solType].at(i).end(); it++) {
             if(it->first >= solOffset && it->first < solOffsetp1) {
               cnt_d++;
             }
@@ -993,11 +993,11 @@ namespace femus {
           _PPamr[level]->insert_row(irow, 1, col, &value);
         }
         else {
-          int ncols = amrRestriction[solType][i].size();
+          int ncols = amrRestriction[solType].at(i).size();
           std::vector <int> col(ncols);
           std::vector <double> value(ncols);
           unsigned j = 0;
-          for(std::map<unsigned, double> ::iterator it = amrRestriction[solType][i].begin(); it != amrRestriction[solType][i].end(); it++) {
+          for(std::map<unsigned, double> ::const_iterator it = amrRestriction[solType].at(i).begin(); it != amrRestriction[solType].at(i).end(); it++) {
             if(it->first >= solOffset && it->first < solOffsetp1) {
               col[j] = kOffset + (it->first - solOffset);
             }

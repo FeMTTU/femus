@@ -192,7 +192,7 @@ int main(int argc, char** args) {
     
   ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
     
-  ml_mesh.GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
+  ml_mesh.GetLevelZero(0)->dofmap_build_all_fe_families_and_elem_and_node_structures();
  
 
   ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();

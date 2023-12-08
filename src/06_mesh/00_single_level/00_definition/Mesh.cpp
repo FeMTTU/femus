@@ -848,7 +848,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   }
   
  
-  void Mesh::build_dofmap_all_fe_families_and_elem_and_node_structures() {
+  void Mesh::dofmap_build_all_fe_families_and_elem_and_node_structures() {
       
             dofmap_all_fe_families_initialize();
 

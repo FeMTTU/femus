@@ -23,10 +23,6 @@
 
 #ifdef HAVE_PETSC
 
-// C++ includes
-#include <map>
-#include <vector>
-#include <cstdio>
 // Local includes
 #include "NumericVector.hpp"
 #include "PetscMacro.hpp"
@@ -39,6 +35,11 @@ EXTERN_C_FOR_PETSC_BEGIN
 EXTERN_C_FOR_PETSC_END
 
 #include <mpi.h>
+
+// C++ includes
+#include <map>
+#include <vector>
+#include <cstdio>
 
 
 namespace femus {

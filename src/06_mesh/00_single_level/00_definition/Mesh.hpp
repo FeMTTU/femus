@@ -431,11 +431,13 @@ public:
 // =========================
 public:
 
-    void PartitionElements_and_FillDofMapAllFEFamilies();
+    std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
+    
+private:
+  
+  void PartitionElements_and_FillDofMapAllFEFamilies();
     
     std::vector < unsigned > PartitionForElements() const;
-    
-    std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
     
 // === PARTITIONING, and FE DOFMAP (from Mesh to Unknowns) - END =================
 
@@ -615,6 +617,11 @@ public:
       return _amrRestriction;
     }
     
+    /** AMR */
+    const std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() const {
+      return _amrRestriction;
+    }
+    
     /** Get if element is refined*/
     short unsigned GetRefinedElementIndex(const unsigned &iel) const;
     
@@ -638,7 +645,7 @@ public:
     /** MESH: Coordinates and other stuff */
     Solution* _topology;
     
-    void build_dofmap_all_fe_families_and_elem_and_node_structures();
+    void dofmap_build_all_fe_families_and_elem_and_node_structures();
     
     void BuildElementAndNodeStructures();
 
@@ -711,6 +718,11 @@ public:
       return _amrSolidMark;
     }
     
+    /** AMR */
+    const std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() const {
+      return _amrSolidMark;
+    }
+
 private:
   
     /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */

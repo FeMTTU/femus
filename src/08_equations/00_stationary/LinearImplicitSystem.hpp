@@ -444,11 +444,11 @@ class FieldSplitTree;
 
     protected:
       
+      virtual void BuildAmrProlongatorMatrix (unsigned level);
+
       /** Prolongator and Restrictor for AMR */
       std::vector < SparseMatrix* > _PPamr, _RRamr;
       
-      virtual void BuildAmrProlongatorMatrix (unsigned level);
-
 //==== Solver, Multigrid, AMR, Prol/Rest Operators - END ========
 
 

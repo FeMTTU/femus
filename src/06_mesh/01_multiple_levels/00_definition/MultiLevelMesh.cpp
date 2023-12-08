@@ -191,7 +191,7 @@ void MultiLevelMesh::ReadCoarseMesh(const std::string mesh_file, const double Lr
   
   ReadCoarseMeshFileReadingBeforePartitioning(mesh_file.c_str(), Lref, read_groups, read_boundary_groups);
     
-  GetLevelZero(0)->build_dofmap_all_fe_families_and_elem_and_node_structures();
+  GetLevelZero(0)->dofmap_build_all_fe_families_and_elem_and_node_structures();
  
   BuildFETypesBasedOnExistingCoarseMeshGeomElements();
   
