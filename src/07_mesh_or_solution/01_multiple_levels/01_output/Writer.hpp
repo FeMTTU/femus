@@ -193,6 +193,8 @@ namespace femus {
 // === Solution, FE index for printing - END =================
 
 // === Solution - BEGIN =================
+    const Solution * get_solution(const unsigned level_in) const;
+    
     /** the multilevelsolution pointer: it is const, so it does not modify the object that is printed */
     const  MultiLevelSolution* _ml_sol;
 // === Solution - END =================

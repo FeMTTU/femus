@@ -442,7 +442,7 @@ namespace femus {
 
     
     //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
-    const Solution * solution = ( _ml_sol != NULL ) ? _ml_sol->GetSolutionLevel( my_level - 1 )  :  NULL;
+    const Solution * solution = get_solution(my_level);
     //------------- Solution, def - END ----------------------------------------------------------------------------------
 
     

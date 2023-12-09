@@ -144,7 +144,11 @@ namespace femus {
   }
 
 
-  
+    const Solution * Writer::get_solution(const unsigned level_in) const {
+      return  ( _ml_sol != NULL ) ? _ml_sol->GetSolutionLevel( level_in - 1 )  :  NULL;
+    }
+
+    
    std::string Writer::print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const {
        
             std::string printName;
