@@ -72,8 +72,6 @@ namespace femus {
       
       static void write( const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn ); ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
       
-      /*static*/ void  read_system_solutions( const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn );                     ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader//
-
       //hdf5 - BEGIN ------------------------------------
       static hid_t print_Dhdf5( hid_t file, const std::string& name, hsize_t* dimsf, double* data );
       static hid_t print_Ihdf5( hid_t file, const std::string& name, hsize_t* dimsf, int* data );

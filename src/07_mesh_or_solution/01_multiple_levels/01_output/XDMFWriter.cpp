@@ -1177,52 +1177,6 @@ namespace femus {
   }
 
 
-// ===================================================
-/// This function reads the system solution from namefile.h5
-//TODO this must be modified in order to take into account KK element dofs
-  void XDMFWriter::read_system_solutions( const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn ) {
-//this is done in parallel
-
-    std::cout << "read_system_solutions still has to be written for CONSTANT elements, BEWARE!!! ==============================  " << std::endl;
-
-    const uint Level = mesh->_NoLevels - 1;
-
-    const uint offset   =       mesh->_NoNodesXLev[mesh->_NoLevels - 1];
-
-    // file to read
-    double* sol = new double[offset]; // temporary vector
-    hid_t  file_id = H5Fopen( namefile.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
-
-    // reading loop over system varables
-    for( uint ivar = 0; ivar < dofmap->_nvars[LL] + dofmap->_nvars[QQ]; ivar++ ) {
-      uint el_nds = mesh->_elnodes[VV][QQ];
-      if( ivar >= dofmap->_nvars[QQ] ) el_nds = mesh->_elnodes[VV][LL];
-      // reading ivar param
-      std::ostringstream grname;
-      grname << eqn->_var_names[ivar] << "_" << "LEVEL" << Level;
-      XDMFWriter::read_Dhdf5( file_id, grname.str(), sol );
-      double Irefval = 1. / eqn->_refvalue[ivar]; // units
-
-      // storing  ivar variables (in parallell)
-      for( int iel = 0; iel <  mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels]
-           - mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1]; iel++ ) {
-        uint elem_gidx = ( iel + mesh->_off_el[VV][mesh->_iproc * mesh->_NoLevels + mesh->_NoLevels - 1] ) * _ml_mesh->GetLevel(0)->GetMeshElements()->GetNVE( mesh->_geomelem_flag[mesh->get_dim() - 1] , CONTINUOUS_BIQUADRATIC);
-        for( uint i = 0; i < el_nds; i++ ) {  // linear and quad
-          int k = mesh->_el_map[VV][elem_gidx + i]; // the global node
-          eqn->_LinSolver[mesh->_NoLevels - 1]->_EPS->set( dofmap->GetDof( mesh->_NoLevels - 1, QQ, ivar, k ), sol[k]*Irefval );   // set the field
-        }
-      }
-    }
-
-    eqn->_LinSolver[mesh->_NoLevels - 1]->_EPS->localize( * eqn->_LinSolver[mesh->_NoLevels - 1]->_EPSC );
-    // clean
-    H5Fclose( file_id );
-    delete []sol;
-
-    return;
-  }
-
-
 
 // =====================================================================
 /// This function  defines the boundary conditions for  DA systems:
