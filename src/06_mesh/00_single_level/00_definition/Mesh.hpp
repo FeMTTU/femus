@@ -625,9 +625,12 @@ private:
 
     
 // === FE DOFMAP, REFINEMENT - BEGIN =================
-// =========================
  public:
-    
+
+ FE_Prolongation_Matrices & get_prol_matrices() { return _fe_prol_matrices; }
+
+ private:
+  
  FE_Prolongation_Matrices   _fe_prol_matrices;
  
 // === FE DOFMAP, REFINEMENT - END =================

@@ -108,11 +108,11 @@ namespace femus {
     for(unsigned k = 0; k < _solName.size(); k++) {
       _solution[_gridn]->ResizeSolutionVector(_solName[k]);
       _solution[_gridn]->_Sol[k]->matrix_mult(*_solution[_gridn - 1]->_Sol[k],
-                                              * mesh_current->_fe_prol_matrices.GetCoarseToFineProjection(_solType[k], * mesh_current ));
+                                              * mesh_current->get_prol_matrices().GetCoarseToFineProjection(_solType[k], * mesh_current ));
       _solution[_gridn]->_Sol[k]->close();
       if(_solTimeOrder[k] == TIME_DEPENDENT) {
         _solution[_gridn]->_SolOld[k]->matrix_mult(*_solution[_gridn - 1]->_SolOld[k],
-                                                   * mesh_current->_fe_prol_matrices.GetCoarseToFineProjection(_solType[k], * mesh_current));
+                                                   * mesh_current->get_prol_matrices().GetCoarseToFineProjection(_solType[k], * mesh_current));
         _solution[_gridn]->_SolOld[k]->close();
       }
     }
@@ -1134,7 +1134,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       Mesh * meshf = GetMLMesh()->GetLevel(gridf);
       for(unsigned i = 0; i < _solName.size(); i++) {
         _solution[gridf]->_Sol[i]->matrix_mult(*_solution[gridf - 1]->_Sol[i],
-                                               * meshf->_fe_prol_matrices.GetCoarseToFineProjection( _solType[i], * meshf) );
+                                               * meshf->get_prol_matrices().GetCoarseToFineProjection( _solType[i], * meshf) );
         _solution[gridf]->_Sol[i]->close();
       }
     }
@@ -1154,7 +1154,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
       unsigned solType = _solType[k];
       _solution[gridf]->_Sol[k]->matrix_mult(*_solution[gridf - 1]->_Sol[k],
-                                             * msh->_fe_prol_matrices.GetCoarseToFineProjection(solType, *msh));
+                                             * msh->get_prol_matrices().GetCoarseToFineProjection(solType, *msh));
       _solution[gridf]->_Sol[k]->close();
     }
   }
@@ -1171,7 +1171,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     for(unsigned k = 0; k < _solType.size(); k++) {
 
       unsigned solType = _solType[k];
-      _solution[grid_coarse]->_Sol[k]->matrix_mult_transpose(*(_solution[grid_fine]->_Sol[k]), *(msh->_fe_prol_matrices.GetCoarseToFineProjectionRestrictionOnCoarse(solType, *msh)));
+      _solution[grid_coarse]->_Sol[k]->matrix_mult_transpose(*(_solution[grid_fine]->_Sol[k]), *(msh->get_prol_matrices().GetCoarseToFineProjectionRestrictionOnCoarse(solType, *msh)));
       _solution[grid_coarse]->_Sol[k]->close();
     }
 
