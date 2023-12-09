@@ -223,6 +223,7 @@ class FieldSplitTree;
       double _totalSolverTime;
       double _totalAssemblyTime;
 
+      void SetDebugFlag(bool & flag_to_set, const bool my_value);
 //==== Solver, Debug - END ========
 
 

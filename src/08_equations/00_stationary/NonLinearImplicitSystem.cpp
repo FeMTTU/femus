@@ -103,8 +103,7 @@ namespace femus {
   // ********************************************
   void NonLinearImplicitSystem::SetDebugNonlinear(const bool my_value) {
       
-        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_nonlinear = my_value;
-        else {std::cout << "SetWriter first" << std::endl; abort(); }
+    SetDebugFlag(_debug_nonlinear, my_value);
         
  }
   

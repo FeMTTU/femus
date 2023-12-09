@@ -86,7 +86,14 @@ namespace femus {
 
   void LinearImplicitSystem::SetDebugLinear(const bool my_value) {
 
-    if(this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_linear = my_value;
+    SetDebugFlag(_debug_linear, my_value);
+    
+  }
+
+  
+  void LinearImplicitSystem::SetDebugFlag(bool & flag_to_set, const bool my_value) {
+
+    if(this->GetMLProb()._ml_sol->GetWriter() != NULL)   {     flag_to_set = my_value; }
     else {
       std::cout << "SetWriter first" << std::endl;
       abort();
@@ -94,6 +101,7 @@ namespace femus {
 
   }
 
+  
 
   // ********************************************
 
