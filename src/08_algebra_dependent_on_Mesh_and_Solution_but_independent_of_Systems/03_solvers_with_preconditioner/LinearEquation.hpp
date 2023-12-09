@@ -59,7 +59,7 @@ class LinearEquation : public ParallelObject {
 
   /** To be Added */
   void InitPde(const std::vector <unsigned> &_SolPdeIndex,
-               const std::vector <int> &SolType,
+               const std::vector <unsigned> &SolType,
                const std::vector <char*> &SolName,
                std::vector <NumericVector*> *Bdc_other,
                const unsigned &other_gridn,
@@ -252,7 +252,7 @@ class LinearEquation : public ParallelObject {
   unsigned GetIndex(const char name[]);
 
   /** size: number of Solutions */
-  std::vector <int> _SolType;
+  std::vector <unsigned> _SolType;
   /** size: number of Solutions */
   std::vector <char*> _SolName;
   

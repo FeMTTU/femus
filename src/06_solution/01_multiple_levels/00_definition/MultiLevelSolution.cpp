@@ -505,34 +505,15 @@ namespace femus {
   
 //---------------------------------------------------------------------------------------------------
   unsigned MultiLevelSolution::GetIndex(const char name[]) const {
-    unsigned index = 0;
-
-    while(strcmp(_solName[index], name)) {
-      index++;
-
-      if(index == _solType.size()) {
-        std::cout << "error! invalid solution name: " << name << " in entry GetIndex(...)" << std::endl;
-        abort();
-      }
-    }
-
-    return index;
+    
+    return _solution[_sol_level_to_pick_from]->GetIndex(name);
+    
   }
 
 // *******************************************************
-  unsigned MultiLevelSolution::GetSolutionType(const char name[]) {
-    unsigned index = 0;
+  unsigned MultiLevelSolution::GetSolutionType(const char name[]) const {
 
-    while(strcmp(_solName[index], name)) {
-      index++;
-
-      if(index == _solType.size()) {
-        std::cout << "error! invalid name entry GetSolType(...)" << std::endl;
-        abort();
-      }
-    }
-
-    return _solType[index];
+    return _solution[_sol_level_to_pick_from]->GetSolutionType(name);
   }
 
 

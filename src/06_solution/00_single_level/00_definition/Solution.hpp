@@ -134,6 +134,8 @@ namespace femus {
      const unsigned GetSolutionType(const unsigned &index ) const {
 	return _SolType[index];
       }
+
+    unsigned GetSolutionType(const char name[]) const;
       
     /// compute the sequential index for the FE family 
     static int compute_fe_sol_type( const FEFamily fefamily,  const FEOrder order_v, const FEOrder order_b) {
@@ -143,7 +145,7 @@ namespace femus {
     private:
                 
       /** Vector size: number of added Solutions. Tells the FE index */
-      std::vector <int>      _SolType;
+      std::vector < unsigned >      _SolType;
       /** Vector size: number of added Solutions. FE family */
       std::vector <FEFamily> _family;
       /** Vector size: number of added Solutions. FE order within a family */

@@ -307,14 +307,31 @@ _analytical_function.resize(new_size);
     while(strcmp(_SolName[index], name)) {
       index++;
 
-      if(index == _Res.size()) {
-        std::cout << "error! invalid name entry GetIndex(...)" << std::endl;
-        exit(0);
+      if(index == _SolType.size()) {
+        std::cout << "error! invalid solution name: " << name << " in entry GetIndex(...)" << std::endl;
+        abort();
       }
     }
 
     return index;
   }
+  
+
+    unsigned Solution::GetSolutionType(const char name[]) const {
+    unsigned index = 0;
+
+    while(strcmp(_SolName[index], name)) {
+      index++;
+
+      if(index == _SolType.size()) {
+        std::cout << "error! invalid name entry GetSolType(...)" << std::endl;
+        abort();
+      }
+    }
+
+    return _SolType[index];
+  }
+
 
   /**
    * Allocate memory for the variable called name

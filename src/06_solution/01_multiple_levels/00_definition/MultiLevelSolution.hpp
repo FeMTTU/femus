@@ -197,6 +197,9 @@ private:
     /** Vector size: number of levels */
     std::vector < Solution* >  _solution;
     
+    /** For the properties that are level-independent */
+    static constexpr unsigned  _sol_level_to_pick_from = 0;
+    
 // === SOLUTION, MULTILEVEL - END =================
 
 
@@ -217,24 +220,17 @@ public:
     
     const FEOrder GetSolutionOrder(const std::string & sol_name) const;
 
-    // /** To be Added */
-    // int GetSolutionType(unsigned i) {
-    //     return _solType[i];
-    // }
 
     /** To be Added */
-    const int GetSolutionType(unsigned i) const {
+    const unsigned GetSolutionType(const unsigned i) const {
         return _solType[i];
     }
     
     /** To be Added */
-    unsigned GetSolutionType(const char name[]);
+    unsigned GetSolutionType(const char name[]) const;
 
     /** To be Added */
-    unsigned GetSolType(const char name[]);
-
-    /** To be Added */
-    std::vector <int>  GetSolType() {
+    std::vector <unsigned>  GetSolType() const {
         return _solType;
     }
     
@@ -242,7 +238,7 @@ public:
 private:
     
     /** Vector size: number of added solutions. Tells the FE index */
-    std::vector < int >                      _solType;
+    std::vector < unsigned >                      _solType;
     /** Vector size: number of added solutions. */
     std::vector < FEFamily >                 _family;
     /** Vector size: number of added solutions. */

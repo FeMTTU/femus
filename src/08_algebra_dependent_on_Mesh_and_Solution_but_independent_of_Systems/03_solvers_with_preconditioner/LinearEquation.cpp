@@ -194,7 +194,7 @@ namespace femus {
   
 //--------------------------------------------------------------------------------
   void LinearEquation::InitPde(const std::vector <unsigned> &SolPdeIndex_other, 
-                               const  std::vector <int> &SolType_other,
+                               const std::vector <unsigned> &SolType_other,
                                const std::vector <char*> &SolName_other,
                                std::vector <NumericVector*> *Bdc_other,
                                const unsigned &other_gridn, 
