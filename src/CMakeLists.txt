@@ -63,7 +63,7 @@ SET(femus_src
 05_problem/MultiLevelProblem.cpp
 06_mesh/00_single_level/00_definition/Mesh.cpp
 06_mesh/00_single_level/00_definition/Elem.cpp
-06_mesh/00_single_level/00_definition/fe_projection_matrices.cpp
+06_mesh/00_single_level/00_definition/fe_projection_matrices_Lagrange_continuous.cpp
 06_mesh/00_single_level/00_definition/fe_prolongation_matrices.cpp
 06_mesh/00_single_level/01_input/01_from_external_file/GambitIO.cpp
 06_mesh/00_single_level/01_input/01_from_external_file/MED_IO.cpp

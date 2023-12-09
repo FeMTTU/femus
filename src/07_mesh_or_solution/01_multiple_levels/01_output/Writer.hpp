@@ -22,7 +22,7 @@
 #include "ParallelObject.hpp"
 #include "WriterEnum.hpp"
 
-#include "fe_projection_matrices.hpp"
+#include "fe_projection_matrices_Lagrange_continuous.hpp"
 
 #include <vector>
 #include <string>
