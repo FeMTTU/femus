@@ -79,12 +79,22 @@ public:
                const std::vector < std::string >& vars = std::vector < std::string > (), 
                const unsigned time_step = 0);
   
+    void Write(const unsigned my_level, 
+               const std::string init_string, 
+               const std::string output_path,
+               const std::string suffix_pre_extension, 
+               const std::string order,
+               const std::vector < std::string >& vars = std::vector < std::string > (), 
+               const unsigned time_step = 0);
+
     /** write output function with arbitrary level (starting at 1) and arbitrary initial string and arbitrary suffix before the extension */
     void Write(const unsigned my_level, 
                const std::string init_string, 
                const std::string output_path,
                const std::string suffix_pre_extension, 
                const std::string order,
+                        const Mesh * mesh_in,
+                        const Solution * solution_in,
                const std::vector < std::string >& vars = std::vector < std::string > (), 
                const unsigned time_step = 0);
 // === Write - END =================
@@ -121,7 +131,7 @@ public:
    
     bool print_all_sols(const std::vector < std::string >& vars) const;
   
-    unsigned compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars) const;
+    unsigned compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars, const Solution * solution) const;
      
     void fill_sol_on_elements(const Mesh * mesh, 
                              const unsigned elementOffset, const unsigned elementOffsetp1, 

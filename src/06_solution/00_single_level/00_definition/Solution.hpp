@@ -102,6 +102,12 @@ namespace femus {
 // === NAME & INDEX  - BEGIN =================
   public:
 
+    /** To be Added */
+    const unsigned GetSolutionSize() const {
+        return _SolName.size();
+    }
+
+
     const char* GetSolName_from_index(unsigned i) const {
         return _SolName[i];
     }

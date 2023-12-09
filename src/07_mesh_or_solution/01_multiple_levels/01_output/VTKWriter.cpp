@@ -219,9 +219,9 @@ namespace femus {
    }
    
    
-   unsigned VTKWriter::compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars) const {
+   unsigned VTKWriter::compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars, const Solution * solution) const {
        
-      return ( !print_all ) * vars.size() + print_all * _ml_sol->GetSolutionSize();
+      return ( !print_all ) * vars.size() + print_all * solution->GetSolutionSize();
 
    }
 
@@ -275,7 +275,7 @@ namespace femus {
       }
     // var_coord - END -------------------------
       
-      if( solution != NULL && _moving_mesh  && _moving_vars.size() > i) { //_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
+      if( solution != NULL && _moving_mesh  && _moving_vars.size() > i) { // if moving mesh
 
     // num_vec_aux_for_node_fields - BEGIN -------------------------
         const unsigned indDXDYDZ = solution->GetIndex( _moving_vars[i].c_str() );
@@ -407,7 +407,25 @@ namespace femus {
                         const std::string suffix_pre_extension,
                         const std::string order,
                         const std::vector < std::string >& vars, 
-                        const unsigned time_step ) {
+                        const unsigned time_step) {
+    
+    Write(my_level, filename_prefix, output_path, suffix_pre_extension, order, NULL, NULL, vars, time_step);
+    
+  }
+
+
+
+
+  void VTKWriter::Write(const unsigned my_level, 
+                        const std::string filename_prefix, 
+                        const std::string output_path,
+                        const std::string suffix_pre_extension,
+                        const std::string order,
+                        const Mesh * mesh_in,
+                        const Solution * solution_in,
+                        const std::vector < std::string >& vars, 
+                        const unsigned time_step
+) {
 
       
     // *********** level - BEGIN ************
@@ -418,6 +436,16 @@ namespace femus {
     std::string level_name(level_name_stream.str());   
     // *********** level - END ************
        
+    //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
+    const Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
+    //------------- Mesh, def - END ----------------------------------------------------------------------------------
+
+    
+    //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
+    const Solution * solution = ( _ml_sol != NULL ) ? _ml_sol->GetSolutionLevel( my_level - 1 )  :  NULL;
+    //------------- Solution, def - END ----------------------------------------------------------------------------------
+
+    
     // *********** FE index - BEGIN ************
     const unsigned index = fe_index(order);
     // *********** FE index - END ************
@@ -476,12 +504,8 @@ namespace femus {
     //----------- ALL IPROCS - END ------------------------------------------------------------------------------------
 
     
-    
-    
-    //------------- Mesh, NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
-    const Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
-    
 
+    //------------- Mesh, NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
     // count the own element dofs on all levels -------------
     const unsigned elemetOffset = mesh->_elementOffset[_iproc];
     const unsigned elemetOffsetp1 = mesh->_elementOffset[_iproc + 1];
@@ -518,10 +542,6 @@ namespace femus {
     enc.resize( cch );
     //------------- Mesh, NODE and ELEMENT INFO - END ----------------------------------------------------------------------------------
     
-    
-    //------------- Solution, INFO - BEGIN ----------------------------------------------------------------------------------
-    const Solution * solution = ( _ml_sol != NULL ) ? _ml_sol->GetSolutionLevel( my_level - 1 )  :  NULL;
-    //------------- Solution, INFO - END ----------------------------------------------------------------------------------
     
     
     //---- NumericVector used for node-based fields - BEGIN -------------------------------------------------------------------------------------------
@@ -615,7 +635,7 @@ namespace femus {
     if( solution != NULL ) {
         
       //Print Solution (on elements) - BEGIN ***************************************************************
-      for( unsigned i = 0; i < compute_print_sol_size(print_all, vars); i++ ) {
+      for( unsigned i = 0; i < compute_print_sol_size(print_all, vars, solution); i++ ) {
           
         const unsigned solIndex = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
         const unsigned sol_fe_type = solution->GetSolutionType( solIndex );
@@ -668,7 +688,7 @@ namespace femus {
       // point pointer to common memory area buffer of void type;
       float* var_nd = static_cast<float*>( buffer_void );
       
-      for( unsigned i = 0; i < compute_print_sol_size(print_all, vars); i++ ) {
+      for( unsigned i = 0; i < compute_print_sol_size(print_all, vars, solution); i++ ) {
           
         const unsigned solIndex = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
         const unsigned sol_fe_type = solution->GetSolutionType( solIndex );

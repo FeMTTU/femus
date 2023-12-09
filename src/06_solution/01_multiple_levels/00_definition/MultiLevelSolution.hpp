@@ -105,7 +105,7 @@ public:
 
     /** To be Added */
     const unsigned GetSolutionSize() const {
-        return _solType.size();
+        return _solution[_sol_level_to_pick_from]->GetSolutionSize();
     }
     
     const char* GetSolName_from_index(unsigned i) const {
