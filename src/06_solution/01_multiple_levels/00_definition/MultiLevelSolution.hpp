@@ -109,7 +109,7 @@ public:
     }
     
     const char* GetSolName_from_index(unsigned i) const {
-        return _solName[i];
+        return _solution[_sol_level_to_pick_from]->GetSolName_from_index(i);
     }
 
     /** To be Added */

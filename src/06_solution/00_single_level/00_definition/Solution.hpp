@@ -102,6 +102,10 @@ namespace femus {
 // === NAME & INDEX  - BEGIN =================
   public:
 
+    const char* GetSolName_from_index(unsigned i) const {
+        return _SolName[i];
+    }
+
         /** Get the index of the variable -name- */
       unsigned GetIndex(const char name[]) const;
       
