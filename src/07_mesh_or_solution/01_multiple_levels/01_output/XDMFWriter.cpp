@@ -18,6 +18,8 @@
 //----------------------------------------------------------------------------
 #include "XDMFWriter.hpp"
 #include "MultiLevelSolution.hpp"
+#include "MultiLevelProblem.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "NumericVector.hpp"
 #include "LinearEquationSolver.hpp"
 
@@ -105,6 +107,8 @@ namespace femus {
     else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index_nd = 2;  }
 
     const Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
+    
+    
     const Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
 
     /// @todo I assume that the mesh is not mixed
@@ -200,13 +204,13 @@ namespace femus {
     fout << "</DataItem>" << std::endl;
     fout << "</Attribute>" << std::endl;
 
-    if( _ml_sol != NULL ) {
+    if( solution != NULL ) {
       // Solution Variables
-      for( unsigned i = 0; i < ( 1 - print_all ) * vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
-        unsigned indx = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
+      for( unsigned i = 0; i < ( 1 - print_all ) * vars.size() + print_all * solution->GetSolutionSize(); i++ ) {
+        unsigned indx = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
         //Printing biquadratic solution on the nodes
-        if( _ml_sol->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
-          std::string solName =  _ml_sol->GetSolName_from_index( indx );
+        if( solution->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
+          std::string solName =  solution->GetSolName_from_index( indx );
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
             
             const std::string printName = print_sol_bdc_res_eps_name(solName, name);
@@ -218,8 +222,8 @@ namespace femus {
             fout << "</Attribute>" << std::endl;
           }
         }
-        else if( _ml_sol->GetSolutionType( indx ) >= 3 ) {   //Printing picewise constant solution on the element
-          std::string solName =  _ml_sol->GetSolName_from_index( indx );
+        else if( solution->GetSolutionType( indx ) >= 3 ) {   //Printing picewise constant solution on the element
+          std::string solName =  solution->GetSolName_from_index( indx );
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
             
             const std::string printName = print_sol_bdc_res_eps_name(solName, name);
@@ -254,10 +258,10 @@ namespace femus {
       numVector->matrix_mult( *mesh->GetTopology()->_Sol[i], * _fe_proj_matrices.GetQitoQjProjection( index_nd, 2, * mesh ) );
       numVector->localize_to_one( vector1, 0 );
 
-      if( _ml_sol != NULL && _moving_mesh && dim > i ) {
-        unsigned varind_DXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
+      if( solution != NULL && _moving_mesh && dim > i ) {
+        unsigned varind_DXDYDZ = solution->GetIndex( _moving_vars[i].c_str() );
         numVector->matrix_mult( *solution->_Sol[varind_DXDYDZ],
-                                * _fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( varind_DXDYDZ ), * mesh ) );
+                                * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( varind_DXDYDZ ), * mesh ) );
         numVector->localize_to_one( vector2, 0 );
         if( _iproc == 0 ) {
           for( unsigned ii = 0; ii < nvt; ii++ ) vector1[ii] += vector2[ii];
@@ -329,14 +333,14 @@ namespace femus {
     //END METIS PARTITIONING
 
     //BEGIN SOLUTION
-    if( _ml_sol != NULL )  {
+    if( solution != NULL )  {
       //BEGIN DISCONTINUOUS Fem SOLUTION
-      for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
-        unsigned indx = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
-        if( _ml_sol->GetSolutionType( indx ) >= 3 ) {
+      for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * solution->GetSolutionSize(); i++ ) {
+        unsigned indx = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
+        if( solution->GetSolutionType( indx ) >= 3 ) {
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
-            const std::string solName =  _ml_sol->GetSolName_from_index( indx );
+            const std::string solName =  solution->GetSolName_from_index( indx );
             
             const std::string printName = print_sol_bdc_res_eps_name(solName, name);
 
@@ -355,7 +359,7 @@ namespace femus {
 
             vector1.resize( nel );
             for( unsigned ii = 0; ii < nel; ii++ ) {
-              vector1[ii] = vector2[ mesh->GetSolutionDof( 0, ii, _ml_sol->GetSolutionType( indx ) ) ];
+              vector1[ii] = vector2[ mesh->GetSolutionDof( 0, ii, solution->GetSolutionType( indx ) ) ];
             }
 
             if( _iproc == 0 ) {
@@ -374,31 +378,31 @@ namespace femus {
       //END DISCONTINUOUS Fem SOLUTION
 
       //BEGIN LAGRANGIAN Fem SOLUTION
-      for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
-        unsigned indx = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
-        if( _ml_sol->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
+      for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * solution->GetSolutionSize(); i++ ) {
+        unsigned indx = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
+        if( solution->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
 
-            std::string solName =  _ml_sol->GetSolName_from_index( indx );
+            std::string solName =  solution->GetSolName_from_index( indx );
 
             const std::string printName = print_sol_bdc_res_eps_name(solName, name);
             
             
             if( name == _index_sol ) {
               numVector->matrix_mult( *solution->_Sol[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
+                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
             else if( name == _index_bdc ) {
               numVector->matrix_mult( *solution->_Bdc[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
+                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
             else if( name == _index_res ) {
               numVector->matrix_mult( *solution->_Res[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
+                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
             else if( name == _index_eps ) {
               numVector->matrix_mult( *solution->_Eps[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, _ml_sol->GetSolutionType( indx ), * mesh ) );
+                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
 
             numVector->localize_to_one( vector1, 0 );

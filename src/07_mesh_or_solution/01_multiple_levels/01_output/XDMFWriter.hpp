@@ -19,20 +19,25 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FemusConfig.hpp"
 #include "Writer.hpp"
-#include "MultiLevelMeshTwo.hpp"
-#include "MultiLevelProblem.hpp"
+#include "FemusConfig.hpp"
+#include "GeomElTypeEnum.hpp"
 
 #ifdef HAVE_HDF5
+
+#include "hdf5.h"
+
+
 
 namespace femus {
 
   class DofMap;
   class MultiLevelMeshTwo;
   class SystemTwo;
-
-
+  class ElemStoBase;
+  
+  class MultiLevelProblem;
+  
 
   class XDMFWriter : public Writer {
 
