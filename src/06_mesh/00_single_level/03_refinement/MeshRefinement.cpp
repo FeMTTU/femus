@@ -461,9 +461,9 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     // build Mesh coordinates by projecting the coarse coordinates
     unsigned solType = CONTINUOUS_BIQUADRATIC;
 
-    _mesh.GetTopology()->_Sol[0]->matrix_mult(*mshc->GetTopology()->_Sol[0], *_mesh._fe_prol_matrices.GetCoarseToFineProjection(solType));
-    _mesh.GetTopology()->_Sol[1]->matrix_mult(*mshc->GetTopology()->_Sol[1], *_mesh._fe_prol_matrices.GetCoarseToFineProjection(solType));
-    _mesh.GetTopology()->_Sol[2]->matrix_mult(*mshc->GetTopology()->_Sol[2], *_mesh._fe_prol_matrices.GetCoarseToFineProjection(solType));
+    _mesh.GetTopology()->_Sol[0]->matrix_mult(*mshc->GetTopology()->_Sol[0], *_mesh._fe_prol_matrices.GetCoarseToFineProjection(solType, _mesh));
+    _mesh.GetTopology()->_Sol[1]->matrix_mult(*mshc->GetTopology()->_Sol[1], *_mesh._fe_prol_matrices.GetCoarseToFineProjection(solType, _mesh));
+    _mesh.GetTopology()->_Sol[2]->matrix_mult(*mshc->GetTopology()->_Sol[2], *_mesh._fe_prol_matrices.GetCoarseToFineProjection(solType, _mesh));
     _mesh.GetTopology()->_Sol[0]->close();
     _mesh.GetTopology()->_Sol[1]->close();
     _mesh.GetTopology()->_Sol[2]->close();

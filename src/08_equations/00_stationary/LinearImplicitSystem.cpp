@@ -450,7 +450,7 @@ namespace femus {
       unsigned solType = _ml_sol->GetSolutionType(SolIndex);
 
       _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf - 1]->_Sol[SolIndex],
-                                                    *_msh[gridf]->_fe_prol_matrices.GetCoarseToFineProjection(solType));
+                                                    *_msh[gridf]->_fe_prol_matrices.GetCoarseToFineProjection(solType, *(_msh[gridf]) ));
       _solution[gridf]->_Sol[SolIndex]->close();
     }
   }

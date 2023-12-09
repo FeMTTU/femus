@@ -59,7 +59,7 @@ class Mesh : public ParallelObject {
 
 
 // === Constructors / Destructor - BEGIN =================
-// =========================
+
 public:
 
     /** Constructor */
@@ -421,7 +421,7 @@ public:
     const elem_type *_finiteElement[N_GEOM_ELS][NFE_FAMS];
     
     
-    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType) const;
+    basis * GetBasis(const short unsigned &ielType, const short unsigned &solType) const;
 
 // === Geometric Element, FE, Single (FE for single geometric element) - END =================
     
