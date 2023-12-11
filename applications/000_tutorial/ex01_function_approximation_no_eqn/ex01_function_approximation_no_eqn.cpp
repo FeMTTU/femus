@@ -213,17 +213,24 @@ int main(int argc, char** args) {
                Files::_application_output_directory, 
                fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ], 
                variablesToBePrinted);
+
   vtkIO.Write( name_without_extension,
                Files::_application_output_directory, 
                fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ], 
                variablesToBePrinted);
 
-  // // // GMVWriter gmvIO(&mlSol);
-  // // // gmvIO.SetDebugOutput(true);
-  // // // gmvIO.Write(std::get< index_for_mesh_file_info >( meshes_and_refinements[ mesh_file_index ] ).second,
-  // // //             Files::_application_output_directory, 
-  // // //             fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ],
-  // // //             variablesToBePrinted);
+  GMVWriter gmvIO(&mlSol);
+  gmvIO.SetDebugOutput(true);
+
+  gmvIO.Write(name_without_extension,
+              Files::_application_output_directory, 
+              fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ],
+              variablesToBePrinted);
+
+  gmvIO.Write(name_without_extension,
+              Files::_application_output_directory, 
+              fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ],
+              variablesToBePrinted);
   // Solution, print - END
 
   

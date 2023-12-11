@@ -73,14 +73,14 @@ public:
                const unsigned time_step = _time_step_index_default);
   
     /** write output function with fixed level and arbitrary initial string */
-    void Write(const std::string init_string, 
+    void Write(const std::string filename_prefix, 
                const std::string output_path,
                const std::string order,
                const std::vector < std::string >& vars = std::vector < std::string > (), 
                const unsigned time_step = _time_step_index_default);
   
     void Write(const unsigned my_level, 
-               const std::string init_string, 
+               const std::string filename_prefix, 
                const std::string output_path,
                const std::string suffix_pre_extension, 
                const std::string order,

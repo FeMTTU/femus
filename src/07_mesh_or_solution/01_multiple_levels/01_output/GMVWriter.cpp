@@ -48,12 +48,28 @@ namespace femus {
                          const std::vector<std::string>& vars,
                          const unsigned time_step ) {
   
-    Write(_gridn, output_path, order, vars, time_step);
+    const Solution * solution = get_solution(_gridn);
+
+    const std::string filename_prefix = get_filename_prefix(solution);
+    
+    Write(_gridn, filename_prefix, output_path, order, vars, time_step);
 
   }
+  
+  
+  void GMVWriter::Write(const std::string filename_prefix, 
+                        const std::string output_path,
+                        const std::string order,
+                        const std::vector<std::string>& vars, 
+                        const unsigned time_step ) {
 
-
+     Write(_gridn, filename_prefix, output_path, order, vars, time_step);
+ }
+  
+  
+  
   void GMVWriter::Write(const unsigned level_in, 
+                        const std::string filename_prefix, 
                         const std::string output_path,
                          const std::string order,
                          const std::vector<std::string>& vars, 
@@ -66,8 +82,6 @@ namespace femus {
     //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
     const Solution * solution = get_solution(level_in);
     //------------- Solution, def - END ----------------------------------------------------------------------------------
-
-    const std::string filename_prefix = get_filename_prefix(solution);
 
 
     //------------- File stream - BEGIN ----------------------------------------------------------------------------------
