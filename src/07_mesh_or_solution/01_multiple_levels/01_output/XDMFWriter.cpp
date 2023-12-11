@@ -115,7 +115,7 @@ namespace femus {
     else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index_nd = 2;  }
 
     
-    const Mesh* mesh = _ml_mesh->GetLevel( level_in - 1 );
+    const Mesh* mesh =  get_mesh(level_in);
     
     
     const Solution * solution = get_solution(level_in);
@@ -221,7 +221,7 @@ namespace femus {
         //Printing biquadratic solution on the nodes
         if( solution->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
           std::string solName =  solution->GetSolName_from_index( indx );
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
+          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
             
             const std::string printName = print_sol_bdc_res_eps_name(solName, name);
             
@@ -232,9 +232,9 @@ namespace femus {
             fout << "</Attribute>" << std::endl;
           }
         }
-        else if( solution->GetSolutionType( indx ) >= 3 ) {   //Printing picewise constant solution on the element
+        else if( solution->GetSolutionType( indx ) >= NFE_FAMS_C_ZERO_LAGRANGE ) {   //Printing picewise constant solution on the element
           std::string solName =  solution->GetSolName_from_index( indx );
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
+          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
             
             const std::string printName = print_sol_bdc_res_eps_name(solName, name);
 
@@ -347,8 +347,8 @@ namespace femus {
       //BEGIN DISCONTINUOUS Fem SOLUTION
       for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * solution->GetSolutionSize(); i++ ) {
         unsigned indx = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
-        if( solution->GetSolutionType( indx ) >= 3 ) {
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
+        if( solution->GetSolutionType( indx ) >= NFE_FAMS_C_ZERO_LAGRANGE ) {
+          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
 
             const std::string solName =  solution->GetSolName_from_index( indx );
             
@@ -391,7 +391,7 @@ namespace femus {
       for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * solution->GetSolutionSize(); i++ ) {
         unsigned indx = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
         if( solution->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->is_unknown_of_system(i); name++ ) {
+          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
 
             std::string solName =  solution->GetSolName_from_index( indx );
 

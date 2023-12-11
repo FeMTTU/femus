@@ -63,9 +63,55 @@ namespace femus {
 // === Constructors / Destructor  - END =================
 
 
-  protected:
+
+// === Write - BEGIN =================
+    
+  public:
+    /** at finest level: write output function */
+    virtual void Write(const std::string output_path,
+                       const std::string order,
+                       const std::vector < std::string > & vars = std::vector < std::string > (), 
+                       const unsigned time_step = _time_step_index_default)  = 0;
+    
+    /** at finest level: write output function with fixed level and arbitrary initial string */
+    virtual void Write(const std::string init_string,
+                       const std::string output_path, 
+                       const std::string order,
+                       const std::vector < std::string >& vars = std::vector < std::string > (), 
+                       const unsigned time_step = _time_step_index_default)  = 0;
+                       
+    /** at finest level:    */
+    virtual void Write(const std::string init_string,
+                       const std::string output_path, 
+                       const std::string suffix_pre_extension, 
+                       const std::string order,
+                       const std::vector < std::string >& vars = std::vector < std::string > (), 
+                       const unsigned time_step = _time_step_index_default)  = 0;
+
+    /**  at arbitrary level: write output function with arbitrary level */
+    virtual void Write(const unsigned my_level, 
+                       const std::string output_path, 
+                       const std::string order,
+                       const std::vector < std::string >& vars = std::vector < std::string > (), 
+                       const unsigned time_step = _time_step_index_default)  = 0;
+  
+    /**  at arbitrary level: write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
+    virtual void Write(const unsigned my_level, 
+                       const std::string init_string, 
+                       const std::string output_path,
+                       const std::string suffix_pre_extension, 
+                       const std::string order,
+                       const std::vector < std::string >& vars = std::vector < std::string > (), 
+                       const unsigned time_step = _time_step_index_default)  = 0;
+
+// === Write - END =================
+
+
+
 
 // === Solution - BEGIN =================
+  protected:
+
     const Solution * get_solution(const unsigned level_in) const;
     
     /** the multilevelsolution pointer: it is const, so it does not modify the object that is printed */
@@ -73,14 +119,20 @@ namespace femus {
 // === Solution - END =================
 
 // === Mesh - BEGIN =================
+  protected:
+
+    const Mesh * get_mesh(const unsigned level_in) const;
+    
     /** the multilevel mesh: it is const, so it does not modify the object that is printed */
     const MultiLevelMesh* _ml_mesh;
 // === Mesh - END =================
 
 
 // === Mesh, Level - BEGIN =================
+  protected:
+
     /** Number of mesh levels */
-    int _gridn;
+    const unsigned int _gridn;
 // === Mesh, Level - END =================
 
   };

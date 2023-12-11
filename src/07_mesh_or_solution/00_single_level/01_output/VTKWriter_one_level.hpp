@@ -56,25 +56,6 @@ public:
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================
-    /** write output function */
-    void Write(const std::string output_path, 
-               const std::string order,
-               const std::vector < std::string > & vars = std::vector < std::string > (), 
-               const unsigned time_step = _time_step_index_default) ;
-    
-    /** write output function with arbitrary level */
-    void Write(const unsigned my_level, 
-               const std::string output_path, 
-               const std::string order,
-               const std::vector < std::string >& vars = std::vector < std::string > (), 
-               const unsigned time_step = _time_step_index_default);
-  
-    /** write output function with fixed level and arbitrary initial string */
-    void Write(const std::string init_string, 
-               const std::string output_path,
-               const std::string order,
-               const std::vector < std::string >& vars = std::vector < std::string > (), 
-               const unsigned time_step = _time_step_index_default);
   
     void Write(const unsigned my_level, 
                const std::string init_string, 
@@ -83,6 +64,14 @@ public:
                const std::string order,
                const std::vector < std::string >& vars = std::vector < std::string > (), 
                const unsigned time_step = _time_step_index_default);
+
+    /** write output function with arbitrary level */
+    void Write(const unsigned my_level, 
+               const std::string output_path, 
+               const std::string order,
+               const std::vector < std::string >& vars = std::vector < std::string > (), 
+               const unsigned time_step = _time_step_index_default);
+  
 // === Write - END =================
 
   private:

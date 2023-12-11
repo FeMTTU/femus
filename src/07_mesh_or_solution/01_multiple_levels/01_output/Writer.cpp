@@ -34,24 +34,16 @@ namespace femus {
   Writer::Writer (const MultiLevelSolution* ml_sol) : 
   Writer_one_level(),
     _ml_sol (ml_sol),
-    _ml_mesh (ml_sol->GetMLMesh())
-{
-      
-    _gridn = _ml_mesh->GetNumberOfLevels();
-        
-  }
+    _ml_mesh (ml_sol->GetMLMesh()),
+    _gridn(ml_sol->GetMLMesh()->GetNumberOfLevels())  {  }
   
   
 
   Writer::Writer (const MultiLevelMesh* ml_mesh) :
   Writer_one_level(),
     _ml_sol (NULL), 
-    _ml_mesh (ml_mesh) {
-      
-    _gridn = _ml_mesh->GetNumberOfLevels();
-    
-      
-  }
+    _ml_mesh (ml_mesh),
+    _gridn(ml_mesh->GetNumberOfLevels()) {  }
 
   
 
@@ -110,8 +102,13 @@ namespace femus {
 
     const Solution * Writer::get_solution(const unsigned level_in) const {
       return  ( _ml_sol != NULL ) ? _ml_sol->GetSolutionLevel( level_in - 1 )  :  NULL;
-    }  
-  
+    }
+    
+    const Mesh * Writer::get_mesh(const unsigned level_in) const {
+      if (_ml_mesh == NULL) abort();
+      return _ml_mesh->GetLevel( level_in - 1 );
+    }
+
   
 } //end namespace femus
 

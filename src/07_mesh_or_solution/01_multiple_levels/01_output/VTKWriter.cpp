@@ -399,7 +399,20 @@ namespace femus {
       
        Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
    }
-   
+
+
+  void VTKWriter::Write(const std::string filename_prefix, 
+                        const std::string output_path,
+                        const std::string suffix_pre_extension,
+                        const std::string order,
+                        const std::vector < std::string >& vars, 
+                        const unsigned time_step) {
+    
+        Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
+ }
+  
+  
+  
   
   void VTKWriter::Write(const unsigned my_level, 
                         const std::string filename_prefix, 
@@ -410,7 +423,7 @@ namespace femus {
                         const unsigned time_step) {
     
     //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
-    const Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
+    const Mesh * mesh = get_mesh(my_level);
     //------------- Mesh, def - END ----------------------------------------------------------------------------------
 
     

@@ -69,21 +69,8 @@ namespace femus {
 // === Write - BEGIN =================
   public:
     
-    /** write output function */
-    virtual void Write(const std::string output_path,
-                       const std::string order,
-                       const std::vector < std::string > & vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
-    
     /** write output function with arbitrary level */
     virtual void Write(const unsigned my_level, 
-                       const std::string output_path, 
-                       const std::string order,
-                       const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
-  
-    /** write output function with fixed level and arbitrary initial string */
-    virtual void Write(const std::string init_string,
                        const std::string output_path, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
@@ -100,40 +87,34 @@ namespace femus {
 
 // === Write - END =================
 
-    
-    
-// === Debug - BEGIN =================
-  public:
-    
-      /** Set if to print or not to print the debugging variables */
-      void SetDebugOutput( bool value ) {
-        _debugOutput = value;
-      }
-    
+
+
+// === Mesh or Solution - BEGIN =================
   protected:
-    
-      bool _debugOutput;
-      
-// === Debug, Solutions that are Unknowns - BEGIN =================
-    unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
-    
-    std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+    std::string get_filename_prefix(const Solution * solution) const; 
+// === Mesh or Solution - END =================
 
-    static const std::string _name_bdc;
-    static const std::string _name_res;
-    static const std::string _name_eps;
 
-    static constexpr unsigned _index_sol = 0;
-    static constexpr unsigned _index_bdc = 1;
-    static constexpr unsigned _index_res = 2;
-    static constexpr unsigned _index_eps = 3;
-    
-// === Debug, Solutions that are Unknowns - END =================
 
-// === Debug - END =================
-    
-    
-// === Moving Mesh - BEGIN =================
+// === Mesh - BEGIN =================
+  protected:
+    /** the mesh: it is const, so it does not modify the object that is printed */
+    const Mesh* _mesh;
+// === Mesh - END =================
+
+
+// === Mesh, Geometric Element, Connectivities - BEGIN =================
+  protected:
+    /** map from femus connectivity to vtk-connectivity for paraview visualization */
+    static const unsigned FemusToVTKorToXDMFConn[27];
+// === Mesh, Geometric Element, Connectivities - END =================
+
+
+
+// === Mesh, displacement - BEGIN =================
+
+
+// === Mesh displacement: Moving Mesh - BEGIN =================
   public:
     
     /** set moving mesh */
@@ -146,10 +127,10 @@ namespace femus {
     
     /** the displacement variables for moving mesh */
     std::vector<std::string> _moving_vars;
-// === Moving Mesh - END =================
+// === Mesh displacement: Moving Mesh - END =================
     
 
-// === Graph Variables - BEGIN =================
+// === Mesh displacement: Graph Variables - BEGIN =================
   public:
     
     void SetGraphVariable(const std::string &GraphVaraible);
@@ -160,10 +141,10 @@ namespace femus {
     bool _graph;
     std::string _graphVariable;
 
-// === Graph Variables - END =================
+// === Mesh displacement: Graph Variables - END =================
 
     
-// === Surface Variable - BEGIN =================
+// === Mesh displacement: Surface Variable - BEGIN =================
   public:
     
     ///@todo seems to be unused
@@ -175,54 +156,67 @@ namespace femus {
     
     bool _surface;
     std::vector < std::string > _surfaceVariables;
-// === Surface Variable - END =================
-    
+// === Mesh displacement: Surface Variable - END =================
 
 
+// === Mesh, displacement - END =================
+
+
+// === Solution - BEGIN =================
   protected:
-
-// === Mesh or Solution - BEGIN =================
-    std::string get_filename_prefix(const Solution * solution) const; 
-// === Mesh or Solution - END =================
-
     
 // === Solution, FE index for printing - BEGIN =================
     unsigned fe_index(const std::string & order_str) const;
 // === Solution, FE index for printing - END =================
 
-// === Solution - BEGIN =================
-    const Solution * get_solution(const unsigned level_in) const;
-    
-    /** the multilevelsolution pointer: it is const, so it does not modify the object that is printed */
+    /** thesolution pointer: it is const, so it does not modify the object that is printed */
     const  Solution* _sol;
 // === Solution - END =================
 
-// === Mesh - BEGIN =================
-    /** the multilevel mesh: it is const, so it does not modify the object that is printed */
-    const Mesh* _mesh;
-// === Mesh - END =================
-
-
-// === Geometric Element, Connectivities - BEGIN =================
-    /** map from femus connectivity to vtk-connectivity for paraview visualization */
-    static const unsigned FemusToVTKorToXDMFConn[27];
-// === Geometric Element, Connectivities - END =================
-
-
-
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
+// === Solution, FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - BEGIN =================
+  protected:
 
     FE_Proj_Matrices   _fe_proj_matrices;
    
-// === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
+// === Solution, FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
 
-// === Time step, default, Level - BEGIN =================
+    
+// === Solution, Debug, Solutions that are Unknowns - BEGIN =================
   public:
-  // protected:
+    
+      /** Set if to print or not to print the debugging variables */
+      void SetDebugOutput( bool value ) {
+        _debugOutput = value;
+      }
+    
+  protected:
+    
+      bool _debugOutput;
+      
+      
+    unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
+    
+    std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+
+    static const std::string _name_bdc;
+    static const std::string _name_res;
+    static const std::string _name_eps;
+
+    static constexpr unsigned _index_sol = 0;
+    static constexpr unsigned _index_bdc = 1;
+    static constexpr unsigned _index_res = 2;
+    static constexpr unsigned _index_eps = 3;
+
+// === Solution, Debug, Solutions that are Unknowns - END =================
+    
+
+
+// === Time step, default - BEGIN =================
+ protected:
     
     static constexpr unsigned _time_step_index_default = 0;
     
-// === Time step, default, Level - END =================
+// === Time step, default - END =================
   
 
 
