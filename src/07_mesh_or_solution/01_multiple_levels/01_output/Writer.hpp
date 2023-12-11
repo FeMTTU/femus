@@ -75,14 +75,14 @@ namespace femus {
     virtual void Write(const std::string output_path,
                        const std::string order,
                        const std::vector < std::string > & vars = std::vector < std::string > (), 
-                       const unsigned time_step = 0)  = 0;
+                       const unsigned time_step = _time_step_index_default)  = 0;
     
     /** write output function with arbitrary level */
     virtual void Write(const unsigned my_level, 
                        const std::string output_path, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = 0)
+                       const unsigned time_step = _time_step_index_default)
         { abort(); };
   
     /** write output function with fixed level and arbitrary initial string */
@@ -90,7 +90,7 @@ namespace femus {
                        const std::string output_path, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = 0) 
+                       const unsigned time_step = _time_step_index_default) 
         { abort(); };
   
     /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
@@ -100,7 +100,7 @@ namespace femus {
                        const std::string suffix_pre_extension, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = 0)
+                       const unsigned time_step = _time_step_index_default)
         { abort(); };
 // === Write - END =================
 
@@ -170,7 +170,9 @@ namespace femus {
 // === Surface Variable - BEGIN =================
   public:
     
+    ///@todo seems to be unused
     void SetSurfaceVariables( std::vector < std::string > &surfaceVariable );
+    ///@todo seems to be unused
     void UnsetSurfaceVariables(){ _surface = false;};
     
   protected:
@@ -223,7 +225,15 @@ namespace femus {
    
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
 
+// === Time step, default, Level - BEGIN =================
+  protected:
     
+    static constexpr unsigned _time_step_index_default = 0;
+    
+// === Time step, default, Level - END =================
+  
+
+
   };
 
   

@@ -46,12 +46,18 @@ namespace femus {
                          const std::vector<std::string>& vars, 
                          const unsigned time_step ) {
 
-    // ********** linear -> index==0 *** quadratic -> index==1 **********
-    unsigned index = ( strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) ) ? FILES_CONTINUOUS_QUADRATIC : FILES_CONTINUOUS_LINEAR;
+    //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
+    const Mesh * mesh = _ml_mesh->GetLevel( _gridn - 1 );
+    //------------- Mesh, def - END ----------------------------------------------------------------------------------
+    
+    //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
+    const Solution * solution = get_solution(_gridn);
+    //------------- Solution, def - END ----------------------------------------------------------------------------------
 
     const std::string filename_prefix = get_filename_prefix();
 
 
+    //------------- File stream - BEGIN ----------------------------------------------------------------------------------
     std::ostringstream filename;
     filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".gmv";
 
@@ -70,14 +76,12 @@ namespace femus {
         abort();
       }
     }
+    //------------- File stream - END ----------------------------------------------------------------------------------
 
-    //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
-    const Mesh * mesh = _ml_mesh->GetLevel( _gridn - 1 );
-    //------------- Mesh, def - END ----------------------------------------------------------------------------------
-    
-    //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
-    const Solution * solution = get_solution(_gridn);
-    //------------- Solution, def - END ----------------------------------------------------------------------------------
+
+    // ********** linear -> index==0 *** quadratic -> index==1 **********
+    const unsigned index = ( strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_LINEAR ].c_str() ) ) ? FILES_CONTINUOUS_QUADRATIC : FILES_CONTINUOUS_LINEAR;
+
 
     unsigned nvt = mesh->GetTotalNumberOfDofs( index );
     unsigned nel = mesh->GetNumberOfElements();

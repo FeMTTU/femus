@@ -63,21 +63,21 @@ public:
     void Write(const std::string output_path, 
                const std::string order,
                const std::vector < std::string > & vars = std::vector < std::string > (), 
-               const unsigned time_step = 0) ;
+               const unsigned time_step = _time_step_index_default) ;
     
     /** write output function with arbitrary level */
     void Write(const unsigned my_level, 
                const std::string output_path, 
                const std::string order,
                const std::vector < std::string >& vars = std::vector < std::string > (), 
-               const unsigned time_step = 0);
+               const unsigned time_step = _time_step_index_default);
   
     /** write output function with fixed level and arbitrary initial string */
     void Write(const std::string init_string, 
                const std::string output_path,
                const std::string order,
                const std::vector < std::string >& vars = std::vector < std::string > (), 
-               const unsigned time_step = 0);
+               const unsigned time_step = _time_step_index_default);
   
     void Write(const unsigned my_level, 
                const std::string init_string, 
@@ -85,9 +85,13 @@ public:
                const std::string suffix_pre_extension, 
                const std::string order,
                const std::vector < std::string >& vars = std::vector < std::string > (), 
-               const unsigned time_step = 0);
+               const unsigned time_step = _time_step_index_default);
+// === Write - END =================
 
-    /** write output function with arbitrary level (starting at 1) and arbitrary initial string and arbitrary suffix before the extension */
+  private:
+
+
+      /** write output function with arbitrary level (starting at 1) and arbitrary initial string and arbitrary suffix before the extension */
     void Write(const unsigned my_level, 
                const std::string init_string, 
                const std::string output_path,
@@ -95,13 +99,10 @@ public:
                const std::string order,
                         const Mesh * mesh_in,
                         const Solution * solution_in,
-               const std::vector < std::string >& vars = std::vector < std::string > (), 
-               const unsigned time_step = 0);
-// === Write - END =================
+               const std::vector < std::string >& vars, 
+               const unsigned time_step);
     
-  
-  private:
-      
+
     void vtk_unstructured_header_parallel_wrapper(std::ofstream & Pfout) const;
     
     void vtk_unstructured_footer_parallel_wrapper(std::ofstream & Pfout) const;
