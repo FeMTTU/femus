@@ -45,9 +45,10 @@ class Mesh;
 
 class VTKWriter : public Writer {
 
-public:
 
 // === Constructors / Destructor  - BEGIN =================
+public:
+
     /** Constructor. */
     VTKWriter(const MultiLevelSolution * ml_sol);
 
@@ -59,6 +60,8 @@ public:
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================
+public:
+
     /** write output function */
     void Write(const std::string output_path, 
                const std::string order,

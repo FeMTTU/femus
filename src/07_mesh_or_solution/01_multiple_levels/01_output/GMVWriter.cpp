@@ -32,14 +32,11 @@
 
 namespace femus {
 
-  GMVWriter::GMVWriter(const MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
-  }
+  GMVWriter::GMVWriter(const MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {  }
 
-  GMVWriter::GMVWriter(const MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
-  }
+  GMVWriter::GMVWriter(const MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {  }
 
-  GMVWriter::~GMVWriter() {
-  }
+  GMVWriter::~GMVWriter() {  }
 
  
 
@@ -52,7 +49,9 @@ namespace femus {
 
     const std::string filename_prefix = get_filename_prefix(solution);
     
-    Write(_gridn, filename_prefix, output_path, order, vars, time_step);
+    const std::string suffix_pre_extension = "";
+    
+    Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step);
 
   }
   
@@ -63,7 +62,10 @@ namespace femus {
                         const std::vector<std::string>& vars, 
                         const unsigned time_step ) {
 
-     Write(_gridn, filename_prefix, output_path, order, vars, time_step);
+    const std::string suffix_pre_extension = "";
+
+    Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step);
+
  }
   
   
@@ -71,6 +73,7 @@ namespace femus {
   void GMVWriter::Write(const unsigned level_in, 
                         const std::string filename_prefix, 
                         const std::string output_path,
+                        const std::string suffix_pre_extension, 
                          const std::string order,
                          const std::vector<std::string>& vars, 
                          const unsigned time_step ) {
@@ -86,7 +89,7 @@ namespace femus {
 
     //------------- File stream - BEGIN ----------------------------------------------------------------------------------
     std::ostringstream filename;
-    filename << output_path << "/" << filename_prefix << ".level" << level_in << "." << time_step << "." << order << ".gmv";
+    filename << output_path << "/" << filename_prefix << ".level" << level_in << "." << time_step << "." << order << suffix_pre_extension << ".gmv";
 
     std::ofstream fout;
 
