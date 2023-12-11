@@ -251,7 +251,7 @@ int main(int argc, char** args) {
        
            ml_mesh.GetLevelZero(0)->BuildElementAndNodeStructures();
  
-           ml_mesh.GetLevelZero(0)->SetCharacteristicLengthOfCoarsestLevel();
+           ml_mesh.GetLevelZero(0)->ComputeCharacteristicLength();
 
            ml_mesh.GetLevelZero(0)->PrintInfo();
            

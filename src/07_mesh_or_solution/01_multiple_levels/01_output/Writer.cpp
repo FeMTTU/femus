@@ -188,10 +188,10 @@ namespace femus {
     }
 
     
-    std::string Writer::get_filename_prefix() const {
+    std::string Writer::get_filename_prefix(const Solution * solution) const {
       
       std::string filename_prefix;
-      if( _ml_sol != NULL ) filename_prefix = "sol";
+      if( solution != NULL ) filename_prefix = "sol";
       else filename_prefix = "mesh";
     
     return filename_prefix;

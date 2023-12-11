@@ -87,12 +87,21 @@ namespace femus {
 
   XDMFWriter::~XDMFWriter() {}
 
+  void XDMFWriter::Write(const std::string output_path, 
+                         const std::string order,
+                         const std::vector<std::string>& vars, 
+                         const unsigned time_step ) {
+    
+    Write(_gridn, output_path, order, vars, time_step);
+    
+  }
   
   
-  void XDMFWriter::Write( const std::string output_path, 
-                          const std::string order,
-                          const std::vector<std::string>& vars, 
-                          const unsigned time_step ) {
+  void XDMFWriter::Write(const unsigned level_in,
+                         const std::string output_path, 
+                         const std::string order,
+                         const std::vector<std::string>& vars, 
+                         const unsigned time_step ) {
 
 #ifdef HAVE_HDF5
 
@@ -106,10 +115,12 @@ namespace femus {
     else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_QUADRATIC ].c_str() ) )   {  index_nd = 1;  }
     else if( !strcmp( order.c_str(), fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ].c_str() ) ) {  index_nd = 2;  }
 
-    const Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
+    
+    const Mesh* mesh = _ml_mesh->GetLevel( level_in - 1 );
     
     
-    const Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
+    const Solution * solution = get_solution(level_in);
+
 
     /// @todo I assume that the mesh is not mixed
     std::string type_elem;
@@ -143,10 +154,10 @@ namespace femus {
 
     //BEGIN XMF FILE PRINT
 
-    const std::string filename_prefix = get_filename_prefix();
+    const std::string filename_prefix = get_filename_prefix(solution);
 
     std::ostringstream xdmf_filename;
-    xdmf_filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".xmf";
+    xdmf_filename << output_path << "/" << filename_prefix << ".level" << level_in << "." << time_step << "." << order << ".xmf";
 
     std::ofstream fout;
 
@@ -167,7 +178,7 @@ namespace femus {
     // The HDF5 file name
     std::ostringstream hdf5_filename;
     std::ostringstream hdf5_filename2;
-    hdf5_filename2 << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".h5";
+    hdf5_filename2 << filename_prefix << ".level" << level_in << "." << time_step << "." << order << ".h5";
     hdf5_filename << output_path << "/" <<  hdf5_filename2.str();
 
     // head ************************************************
@@ -435,7 +446,7 @@ namespace femus {
     return;
   }
 
-  void XDMFWriter::write_solution_wrapper( const std::string output_path, const char type[] ) const {
+  void XDMFWriter::write_solution_wrapper( const std::string output_path, const char type[], const unsigned level_in ) const {
 
 #ifdef HAVE_HDF5
 
@@ -446,7 +457,7 @@ namespace femus {
 
     // Print The Xdmf transient wrapper
     std::ostringstream filename;
-    filename << output_path << "/sol.level" << _gridn << "." << type << ".xmf";
+    filename << output_path << "/sol.level" << level_in << "." << type << ".xmf";
 
     std::ofstream ftr_out;
     ftr_out.open( filename.str().c_str() );
@@ -463,7 +474,7 @@ namespace femus {
     // time loop for grid sequence
     for( unsigned time_step = time_step0; time_step < time_step0 + ntime_steps; time_step++ ) {
       if( !( time_step % print_step ) ) {
-        filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << type << ".xmf";
+        filename << output_path << "/sol.level" << level_in << "." << time_step << "." << type << ".xmf";
         ftr_out << "<xi:include href=\"" << filename.str().c_str() << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
         ftr_out << "<xi:include href=\"" << filename.str() << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
         ftr_out << "<xi:fallback/>\n";

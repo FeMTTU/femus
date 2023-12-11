@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef __femus_solution_GMVWriter_hpp__
-#define __femus_solution_GMVWriter_hpp__
+#ifndef __femus_solution_GMVWriter_one_level_hpp__
+#define __femus_solution_GMVWriter_one_level_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "Writer.hpp"
+#include "Writer_one_level.hpp"
 
 
 namespace femus {
@@ -31,19 +31,19 @@ namespace femus {
   //------------------------------------------------------------------------------
 
 
-  class GMVWriter : public Writer {
+  class GMVWriter_one_level : public Writer_one_level {
 
   public:
 
 // === Constructors / Destructor  - BEGIN =================
       /** Constructor. */
-      GMVWriter(const MultiLevelSolution * ml_sol);
+      GMVWriter_one_level(const MultiLevelSolution * ml_sol);
 
       /** Constructor. */
-      GMVWriter(const MultiLevelMesh * ml_mesh);
+      GMVWriter_one_level(const MultiLevelMesh * ml_mesh);
 
       /** Destructor */
-      virtual ~GMVWriter();
+      virtual ~GMVWriter_one_level();
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================

@@ -41,25 +41,38 @@ namespace femus {
   GMVWriter::~GMVWriter() {
   }
 
+ 
+
   void GMVWriter::Write( const std::string output_path,
+                         const std::string order,
+                         const std::vector<std::string>& vars,
+                         const unsigned time_step ) {
+  
+    Write(_gridn, output_path, order, vars, time_step);
+
+  }
+
+
+  void GMVWriter::Write(const unsigned level_in, 
+                        const std::string output_path,
                          const std::string order,
                          const std::vector<std::string>& vars, 
                          const unsigned time_step ) {
 
     //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
-    const Mesh * mesh = _ml_mesh->GetLevel( _gridn - 1 );
+    const Mesh * mesh = _ml_mesh->GetLevel( level_in - 1 );
     //------------- Mesh, def - END ----------------------------------------------------------------------------------
     
     //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
-    const Solution * solution = get_solution(_gridn);
+    const Solution * solution = get_solution(level_in);
     //------------- Solution, def - END ----------------------------------------------------------------------------------
 
-    const std::string filename_prefix = get_filename_prefix();
+    const std::string filename_prefix = get_filename_prefix(solution);
 
 
     //------------- File stream - BEGIN ----------------------------------------------------------------------------------
     std::ostringstream filename;
-    filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".gmv";
+    filename << output_path << "/" << filename_prefix << ".level" << level_in << "." << time_step << "." << order << ".gmv";
 
     std::ofstream fout;
 

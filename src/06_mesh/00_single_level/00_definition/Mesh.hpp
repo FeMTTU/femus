@@ -128,7 +128,7 @@ public:
 // =========================
  public:
     
-    /** Print the mesh info for this level */
+    /** Print the mesh info */
     void PrintInfo() const;
 
 private:
@@ -165,7 +165,7 @@ public:
       _cLength = cLength;
     }
     
-    void SetCharacteristicLengthOfCoarsestLevel();
+    void ComputeCharacteristicLength();
     
     double GetCharacteristicLength() const {
       return _cLength;
@@ -368,7 +368,7 @@ private:
 
     
 
-// === Mesh, Level, Current - BEGIN  =================
+// === Mesh, Level, Current (when the Mesh is part of a multilevel hierarchy) - BEGIN  =================
 // =========================
 public:
 
@@ -390,7 +390,7 @@ public:
     /** MESH: level of mesh in the multi-level hierarchy */
     unsigned _level;
     
-// === Mesh, Level, Current - END  =================
+// === Mesh, Level, Current (when the Mesh is part of a multilevel hierarchy) - END  =================
 
     
 

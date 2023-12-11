@@ -364,11 +364,13 @@ namespace femus {
                          const std::vector < std::string >& vars,
                          const unsigned time_step ) {
        
-    const std::string filename_prefix = get_filename_prefix();
+    const Solution * solution = get_solution(_gridn);
+
+    const std::string filename_prefix = get_filename_prefix(solution);
     
-      const std::string suffix_pre_extension = "";
+    const std::string suffix_pre_extension = "";
     
-       Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
+    Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
 
    }
    
@@ -379,7 +381,9 @@ namespace femus {
                         const std::vector < std::string >& vars,
                         const unsigned time_step ) {
        
-    const std::string filename_prefix = get_filename_prefix();
+    const Solution * solution = get_solution(my_level);
+
+    const std::string filename_prefix = get_filename_prefix(solution);
     
       const std::string suffix_pre_extension = "";
     
@@ -428,9 +432,7 @@ namespace femus {
 ) {
 
       
-    // *********** level - BEGIN ************
-    if (my_level < 1 || my_level > _gridn) { std::cout << "Level index in this routine is from 1 to num_levels" << std::endl; abort(); }  
-      
+    // *********** level - BEGIN ************      
     std::ostringstream level_name_stream;    
     level_name_stream << ".level" << my_level;
     std::string level_name(level_name_stream.str());   

@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef __femus_solution_XDMFWriter_hpp__
-#define __femus_solution_XDMFWriter_hpp__
+#ifndef __femus_solution_XDMFWriter_one_level_hpp__
+#define __femus_solution_XDMFWriter_one_level_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "Writer.hpp"
+#include "Writer_one_level.hpp"
 #include "FemusConfig.hpp"
 #include "GeomElTypeEnum.hpp"
 
@@ -39,19 +39,19 @@ namespace femus {
   class MultiLevelProblem;
   
 
-  class XDMFWriter : public Writer {
+  class XDMFWriter_one_level : public Writer_one_level {
 
     public:
 
 // === Constructors / Destructor  - BEGIN =================
       /** Constructor. */
-      XDMFWriter(const MultiLevelSolution* ml_sol );
+      XDMFWriter_one_level(const Solution* ml_sol );
 
       /** Constructor. */
-      XDMFWriter(const MultiLevelMesh* ml_mesh );
+      XDMFWriter_one_level(const Mesh* ml_mesh );
 
       /** Destructor */
-      virtual ~XDMFWriter();
+      virtual ~XDMFWriter_one_level();
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================

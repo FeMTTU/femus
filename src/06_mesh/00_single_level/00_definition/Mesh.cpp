@@ -266,7 +266,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     BuildElementAndNodeStructures();
    
 //====  CharacteristicLength ======== 
-    SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
+    ComputeCharacteristicLength();  //doesn't need dofmap
 
 //====  Print Info ======== 
     PrintInfo();  //needs dofmap
@@ -391,7 +391,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
 
   
-  void Mesh::SetCharacteristicLengthOfCoarsestLevel() {
+  void Mesh::ComputeCharacteristicLength() {
       
     //compute max and min coords -----------
     std::vector < double > xMax(3, 0.);
@@ -452,7 +452,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     BuildElementAndNodeStructures();
     
 //====  CharacteristicLength ======== 
-    SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
+    ComputeCharacteristicLength();  //doesn't need dofmap
 
 //====  Print Info ======== 
     PrintInfo();  //needs dofmap
@@ -865,7 +865,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
            BuildElementAndNodeStructures();
 
 //====  CharacteristicLength ======== 
-           SetCharacteristicLengthOfCoarsestLevel();  //doesn't need dofmap
+           ComputeCharacteristicLength();  //doesn't need dofmap
 
 //====  Print Info ======== 
            PrintInfo();  //needs dofmap

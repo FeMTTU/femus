@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __femus_solution_Writer_hpp__
-#define __femus_solution_Writer_hpp__
+#ifndef __femus_solution_Writer_one_level_hpp__
+#define __femus_solution_Writer_one_level_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -40,20 +40,20 @@ namespace femus {
   class Solution;
   
 
-  class Writer : public ParallelObject {
+  class Writer_one_level : public ParallelObject {
 
 
 // === Constructors / Destructor  - BEGIN =================
   public:
     
     /** Constructor. */
-    Writer(const MultiLevelSolution * ml_sol);
+    Writer_one_level(const MultiLevelSolution * ml_sol);
 
     /** Constructor. */
-    Writer(const MultiLevelMesh * ml_mesh);
+    Writer_one_level(const MultiLevelMesh * ml_mesh);
 
     /** Destructor */
-    virtual ~Writer();
+    virtual ~Writer_one_level();
 
     
     /** runtime selection of writer for MLsol */
