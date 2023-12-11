@@ -42,8 +42,6 @@ namespace femus {
       /** Constructor. */
       GMVWriter(const MultiLevelMesh * ml_mesh);
 
-      /** Destructor */
-      virtual ~GMVWriter();
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================

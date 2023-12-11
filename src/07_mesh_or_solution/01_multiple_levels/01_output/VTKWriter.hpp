@@ -55,8 +55,6 @@ public:
     /** Constructor. */
     VTKWriter(const MultiLevelMesh * ml_mesh);
 
-    /** Destructor */
-    virtual ~VTKWriter();
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================

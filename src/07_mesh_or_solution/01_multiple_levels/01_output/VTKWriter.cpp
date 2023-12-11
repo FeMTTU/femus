@@ -29,13 +29,9 @@ namespace femus {
   short unsigned int VTKWriter::femusToVtkCellType[3][6] = {{12, 10, 13, 9, 5, 3}, {25, 24, 26, 23, 22, 21}, {29, 24, 32, 28, 34, 21}};
   //http://www.vtk.org/doc/nightly/html/vtkCellType_8h.html#ab1d6fd1f3177b8a2a32bb018807151f8aff535f3b1a33b5e51d1ef1e3aed69447
 
-  VTKWriter::VTKWriter(const MultiLevelSolution* ml_sol ): Writer( ml_sol ) {
-  }
+  VTKWriter::VTKWriter(const MultiLevelSolution* ml_sol ): Writer( ml_sol ) {  }
 
-  VTKWriter::VTKWriter(const MultiLevelMesh* ml_mesh ): Writer( ml_mesh ) {
-  }
-
-  VTKWriter::~VTKWriter(){}
+  VTKWriter::VTKWriter(const MultiLevelMesh* ml_mesh ): Writer( ml_mesh ) {  }
 
   
     void VTKWriter::vtk_unstructured_header_parallel_wrapper(std::ofstream & Pfout) const {
@@ -413,7 +409,16 @@ namespace femus {
                         const std::vector < std::string >& vars, 
                         const unsigned time_step) {
     
-    Write(my_level, filename_prefix, output_path, suffix_pre_extension, order, NULL, NULL, vars, time_step);
+    //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
+    const Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
+    //------------- Mesh, def - END ----------------------------------------------------------------------------------
+
+    
+    //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
+    const Solution * solution = get_solution(my_level);
+    //------------- Solution, def - END ----------------------------------------------------------------------------------
+
+    Write(my_level, filename_prefix, output_path, suffix_pre_extension, order, mesh, solution, vars, time_step);
     
   }
 
@@ -431,21 +436,22 @@ namespace femus {
                         const unsigned time_step
 ) {
 
-      
+    //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
+    const Mesh * mesh = mesh_in;
+    //------------- Mesh, def - END ----------------------------------------------------------------------------------
+
+    
+    //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
+    const Solution * solution = solution_in;
+    //------------- Solution, def - END ----------------------------------------------------------------------------------
+
+
     // *********** level - BEGIN ************      
     std::ostringstream level_name_stream;    
     level_name_stream << ".level" << my_level;
     std::string level_name(level_name_stream.str());   
     // *********** level - END ************
        
-    //------------- Mesh, def - BEGIN ----------------------------------------------------------------------------------
-    const Mesh * mesh = _ml_mesh->GetLevel( my_level - 1 );
-    //------------- Mesh, def - END ----------------------------------------------------------------------------------
-
-    
-    //------------- Solution, def - BEGIN ----------------------------------------------------------------------------------
-    const Solution * solution = get_solution(my_level);
-    //------------- Solution, def - END ----------------------------------------------------------------------------------
 
     
     // *********** FE index - BEGIN ************

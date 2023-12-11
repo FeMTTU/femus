@@ -36,8 +36,6 @@ namespace femus {
 
   GMVWriter::GMVWriter(const MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {  }
 
-  GMVWriter::~GMVWriter() {  }
-
  
 
   void GMVWriter::Write( const std::string output_path,

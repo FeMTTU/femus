@@ -80,6 +80,7 @@ SET(femus_src
 06_mesh/gencase_deprecated/GenCase.cpp
 06_solution/00_single_level/00_definition/Solution.cpp
 06_solution/01_multiple_levels/00_definition/MultiLevelSolution.cpp
+07_mesh_or_solution/00_single_level/01_output/Writer_one_level.cpp
 07_mesh_or_solution/01_multiple_levels/01_output/Writer.cpp
 07_mesh_or_solution/01_multiple_levels/01_output/VTKWriter.cpp
 07_mesh_or_solution/01_multiple_levels/01_output/GMVWriter.cpp

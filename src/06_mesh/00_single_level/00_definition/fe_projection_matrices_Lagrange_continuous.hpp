@@ -11,9 +11,9 @@
 namespace femus {
     
 class elem_type;
+class Mesh;
 class NumericVector;
 class SparseMatrix;
-class Mesh;
 
 
   class FE_Proj_Matrices : public ParallelObject { 

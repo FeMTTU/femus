@@ -40,7 +40,6 @@ namespace femus {
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class Mesh;
 
 
 class VTKWriter_one_level : public Writer_one_level {
@@ -49,13 +48,11 @@ public:
 
 // === Constructors / Destructor  - BEGIN =================
     /** Constructor. */
-    VTKWriter_one_level(const MultiLevelSolution * ml_sol);
+    VTKWriter_one_level(const Solution * ml_sol);
 
     /** Constructor. */
-    VTKWriter_one_level(const MultiLevelMesh * ml_mesh);
+    VTKWriter_one_level(const Mesh * ml_mesh);
 
-    /** Destructor */
-    virtual ~VTKWriter_one_level();
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================

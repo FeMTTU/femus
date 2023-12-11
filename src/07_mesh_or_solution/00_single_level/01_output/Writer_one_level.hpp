@@ -35,8 +35,7 @@ namespace femus {
   //------------------------------------------------------------------------------
   // Forward declarations
   //------------------------------------------------------------------------------
-  class MultiLevelMesh;
-  class MultiLevelSolution;
+  class Mesh;
   class Solution;
   
 
@@ -46,21 +45,20 @@ namespace femus {
 // === Constructors / Destructor  - BEGIN =================
   public:
     
-    /** Constructor. */
-    Writer_one_level(const MultiLevelSolution * ml_sol);
+    Writer_one_level();
 
-    /** Constructor. */
-    Writer_one_level(const MultiLevelMesh * ml_mesh);
-
-    /** Destructor */
-    virtual ~Writer_one_level();
-
-    
-    /** runtime selection of writer for MLsol */
-    static std::unique_ptr<Writer> build(const WriterEnum format, const MultiLevelSolution * ml_sol);
-
-    /** runtime selection of writer for MLmesh */
-    static std::unique_ptr<Writer> build(const WriterEnum format, const MultiLevelMesh * ml_mesh);
+// // //     /** Constructor. */
+// // //     Writer_one_level(const Solution * ml_sol);
+// // // 
+// // //     /** Constructor. */
+// // //     Writer_one_level(const Mesh * ml_mesh);
+// // // 
+// // //     
+// // //     /** runtime selection of writer for MLsol */
+// // //     static std::unique_ptr< Writer_one_level > build(const WriterEnum format, const Solution * ml_sol);
+// // // 
+// // //     /** runtime selection of writer for MLmesh */
+// // //     static std::unique_ptr< Writer_one_level > build(const WriterEnum format, const Mesh * ml_mesh);
 
   private:
     
@@ -82,16 +80,14 @@ namespace femus {
                        const std::string output_path, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)
-        { abort(); };
+                       const unsigned time_step = _time_step_index_default)  = 0;
   
     /** write output function with fixed level and arbitrary initial string */
     virtual void Write(const std::string init_string,
                        const std::string output_path, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default) 
-        { abort(); };
+                       const unsigned time_step = _time_step_index_default)  = 0;
   
     /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
     virtual void Write(const unsigned my_level, 
@@ -100,8 +96,8 @@ namespace femus {
                        const std::string suffix_pre_extension, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)
-        { abort(); };
+                       const unsigned time_step = _time_step_index_default)  = 0;
+
 // === Write - END =================
 
     
@@ -198,18 +194,13 @@ namespace femus {
     const Solution * get_solution(const unsigned level_in) const;
     
     /** the multilevelsolution pointer: it is const, so it does not modify the object that is printed */
-    const  MultiLevelSolution* _ml_sol;
+    const  Solution* _sol;
 // === Solution - END =================
 
 // === Mesh - BEGIN =================
     /** the multilevel mesh: it is const, so it does not modify the object that is printed */
-    const MultiLevelMesh* _ml_mesh;
+    const Mesh* _mesh;
 // === Mesh - END =================
-
-
-// === Mesh, Level - BEGIN =================
-    int _gridn;
-// === Mesh, Level - END =================
 
 
 // === Geometric Element, Connectivities - BEGIN =================
@@ -226,7 +217,8 @@ namespace femus {
 // === FE DOFMAP & PROJECTION at SAME LEVEL (needed for node-based printing, Only Lagrange) - END =================
 
 // === Time step, default, Level - BEGIN =================
-  protected:
+  public:
+  // protected:
     
     static constexpr unsigned _time_step_index_default = 0;
     

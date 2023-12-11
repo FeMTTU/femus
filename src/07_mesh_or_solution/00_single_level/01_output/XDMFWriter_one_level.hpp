@@ -49,9 +49,6 @@ namespace femus {
 
       /** Constructor. */
       XDMFWriter_one_level(const Mesh* ml_mesh );
-
-      /** Destructor */
-      virtual ~XDMFWriter_one_level();
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================

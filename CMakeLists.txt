@@ -353,6 +353,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/06_solution/00_single_level/00_defin
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/06_solution/01_multiple_levels/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/06_solution/01_multiple_levels/00_definition/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/06_solution/01_multiple_levels/02_FE_convergence/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/07_mesh_or_solution/00_single_level/01_output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/07_mesh_or_solution/01_multiple_levels/01_output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_algebra_dependent_on_Mesh_and_Solution_but_independent_of_Systems/03_solvers_with_preconditioner/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/08_algebra_dependent_on_Mesh_and_Solution_but_independent_of_Systems/03_solvers_with_preconditioner/petsc_asm/)
