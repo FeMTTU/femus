@@ -24,9 +24,314 @@
 
 #include "FE_convergence.hpp"
 
+//Additional includes
 
+// #include "Solution_functions_over_domains_or_mesh_files.hpp"
+// #include "../tutorial_common.hpp"
 
 using namespace femus;
+
+
+namespace  Domains  {
+
+namespace  square_m05p05  {
+
+//  [[deprecated("Use calcSomethingDifferently(int).")]]
+ template < class type = double >
+class Function_Zero_on_boundary_4_laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+// [[deprecated()]]
+        solGrad[0]  =  -pi * sin(pi * x[0]) * cos(pi * x[1]);
+// [[deprecated()]]
+solGrad[1]  =  -pi * cos(pi * x[0]) * sin(pi * x[1]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+// [[deprecated()]]
+return  -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+
+  private:
+
+   static constexpr double pi = acos(-1.);
+
+     };
+
+   }
+
+
+namespace  square_01by01  {
+
+
+
+template < class type = double >
+class Function_NonZero_on_boundary_1_laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+        return x[0] * x[0] * (1. - x[0]) + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+        return   - 2. * x[0] +  2. * (1. - x[0])  -  2. * x[0]  - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+
+  private:
+
+   static constexpr double pi = acos(-1.);
+
+};
+
+
+
+template < class type = double >
+class Function_Zero_on_boundary_1_laplacian : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+    return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
+        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+    return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+    }
+
+
+
+};
+
+
+
+//this solution shows SUPERCONVERGENCE for SERENDIPITY FE, and it is like SUPER PERFECT for BIQUADRATIC FE... it is because of the MESH!
+template < class type = double >
+class Function_Zero_on_boundary_2_laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+        return  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
+        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+        return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
+    }
+
+
+
+};
+
+
+//this solution does not have SUPERCONVERGENCE even with the straight mesh
+template < class type = double >
+class Function_Zero_on_boundary_3_laplacian : public Math::Function< type > {
+
+public:
+
+// manufactured Laplacian =============
+    type value(const std::vector < type >& x) const {
+
+        return    x[0] *  x[0] * (1. - x[0]) * x[1] * (1. - x[1]) ;
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
+        solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+        return     x[0] *  (  -2. *  x[1] * (1. - x[1])   ) + 2. *  (1. - 2. * x[0]) *  x[1] * (1. - x[1])   +  x[0] * ( -2. *  x[0] * (1. - x[0])) ;
+    }
+
+
+
+};
+
+
+template < class type = double >
+class Function_Zero_on_boundary_4_laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+        return + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
+    }
+
+
+
+  private:
+
+   static constexpr double pi = acos(-1.);
+
+};
+
+template < class type = double >
+class Function_Zero_on_boundary_5_laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+        return  cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = - pi * sin(pi * x[0]) * cos(pi * x[1]);
+        solGrad[1]  = - pi * cos(pi * x[0]) * sin(pi * x[1]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+        return  -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+
+  private:
+
+   static constexpr double pi = acos(-1.);
+
+};
+
+
+template < class type = double >
+class Function_Zero_on_boundary_5_Laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+        return  -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
+        solGrad[1]  = 2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+        return  4. * pi * pi * pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+    }
+
+
+
+  private:
+
+   static constexpr double pi = acos(-1.);
+
+};
+
+
+
+} //end namespace
+
+
+ }
 
 
 
@@ -143,7 +448,7 @@ static void natural_loop_u_2d3d(const MultiLevelProblem *    ml_prob,
                        std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > >  elem_all,
                        const unsigned dim,
                        const unsigned space_dim,
-                       const unsigned max_size
+                       const unsigned maxSize
                     ) {
                 std::vector <std::vector <double>> JacI_iqp_bdry(space_dim);
                 std::vector <std::vector <double>> Jac_iqp_bdry(dim-1);
@@ -158,15 +463,15 @@ static void natural_loop_u_2d3d(const MultiLevelProblem *    ml_prob,
                 std::vector <double> phi_u_bdry;
                 std::vector <double> phi_u_x_bdry;
 
-                phi_u_bdry.reserve(max_size);
-                phi_u_x_bdry.reserve(max_size *space_dim);
+                phi_u_bdry.reserve(maxSize);
+                phi_u_x_bdry.reserve(maxSize *space_dim);
 
                 std::vector <double> phi_coords_bdry;
                 std::vector <double> phi_coords_x_bdry;
 
-                phi_coords_bdry.reserve(max_size);
+                phi_coords_bdry.reserve(maxSize);
 
-                phi_coords_x_bdry.reserve(max_size * space_dim);
+                phi_coords_x_bdry.reserve(maxSize * space_dim);
 
                 double grad_u_dot_n = 0.;
                 for (unsigned jface = 0; jface < msh -> GetElementFaceNumber(iel); jface++) {
@@ -272,7 +577,7 @@ static void natural_loop_V_2d3d(const MultiLevelProblem *    ml_prob,
                        const unsigned int space_dim,
                        const unsigned maxSize
                     ) {
-  
+
        std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
        std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
        for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {
@@ -413,58 +718,150 @@ static void natural_loop_V_2d3d(const MultiLevelProblem *    ml_prob,
 //Boundary_integral-END
 
 
-// template < class real_num, class real_num_mov >
 
 
+//====Setting_initial_conditions_with_analytical_solutions-BEGIN==============================
+double Solutions_set_initial_conditions_with_analytical_sol(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
+    Math::Function <double> * exact_sol = ml_prob-> get_ml_solution()-> get_analytical_function(name);
+
+    double value  = exact_sol-> value(x);
+}
+//====Setting_initial_conditions_with_analytical_solutions-END================================
 
 
+//================MANUFACTURED_SOLUTION-BEGIN===================
+double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
+    Math::Function< double > *  exact_sol =  ml_prob->get_ml_solution()->get_analytical_function(name);
+
+double value = exact_sol->value(x);
+
+   return value;
 };
 
 
-void GetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+void GetExactSolutionGradient(const MultiLevelProblem * ml_prob, std::vector < double >& x, std::vector < double >& gradientValue, const char * name) {
+
+    Math::Function <double > * gradient_value = ml_prob -> get_ml_solution() -> get_analytical_function(name);
+
+    gradientValue[0] = gradient_value -> gradient(x)[0];
+
+    gradientValue[1] = gradient_value -> gradient(x)[1];
+
+
 };
 
 
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+double GetExactSolutionLaplace(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
+
+    Math::Function< double > *  laplace_value =  ml_prob->get_ml_solution()->get_analytical_function(name);
+
+
+    double LaplacianValue = laplace_value -> laplacian(x);
+
+    return LaplacianValue;
+
 };
 
 
-
+/*
 // for v - BEGIN ----
-double LaplaceGetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);       // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
+double LaplaceGetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
+
+    double pi = acos(-1.);
+
+    Math::Function< double > *  laplace_value =  ml_prob->get_ml_solution()->get_analytical_function(name);
+
+    double LaplaceExactSolution = laplace_value -> laplacian(x);
+
+    return -2.* pi * pi *LaplaceExactSolution;
+
 };
 
-void LaplaceGetExactSolutionGradient(const std::vector < double >& x, std::vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] =  2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
+
+void LaplaceGetExactSolutionGradient(const MultiLevelProblem * ml_prob, std::vector < double >& x, std::vector < double >& gradientValue, const char * name) {
+
+    double pi = acos(-1.);
+
+    Math::Function <double > * gradient_value = ml_prob -> get_ml_solution() -> get_analytical_function(name);
+
+    gradientValue[0] = gradient_value -> gradient(x)[0];
+
+    gradientValue[1] = gradient_value -> gradient(x)[1];
+
+    std::vector <double> LaplacegradientValue;
+
+    LaplacegradientValue[0] = -2.* pi * pi *gradientValue[0];
+    LaplacegradientValue[1] = -2.* pi * pi *gradientValue[1];
+
 };
-// for v - END ----
+//for v - END ----*/
+
+//================MANUFACTURED_SOLUTION-END===================
+
+
+//===========Boundary_Conditions-BEGIN================
 
 
 
+//===========HOMOGENOUS_Dirichlet-BEGIN====================
 bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
   return dirichlet;
 }
+//===========HOMOGENOUS_Dirichlet-END====================
+
+
+
+//===========NONHOMOGENOUS_Dirichlet_BC-BEGIN====================
+bool SetBoundaryConditionNonhomogenous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time) {
+  bool dirichlet = true;
+
+  if (!strcmp(SolName, "u")) {
+      Math::Function <double> * u = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
+      // strcmp compares two string in lexiographic sense.
+    Value = u -> value(x);
+  }
+  else if (!strcmp(SolName, "v")) {
+      Math::Function <double> * v = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
+    Value = v -> value(x);
+  }
+
+  return dirichlet;
+}
+
+//===========NONHOMOGENOUS_Dirichlet__BC-END====================
+
+//===========Neumann-BEGIN==================
+bool SetBoundaryConditionNeumann(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time){
+    bool neumann = true;
+
+    if (!strcmp(SolName, "u")) {
+      Math::Function <double> * gradient_value = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
+      // strcmp compares two string in lexiographic sense.
+    Value = gradient_value -> gradient(x)[0];
+
+    }
+
+    return neumann;
+}
+
+
+//==========Neumann-END===============
+
+
+
+//===========Boundary_Conditions-END================
+
 
 void AssembleU_AD(MultiLevelProblem& ml_prob);
 void AssembleV_AD(MultiLevelProblem& ml_prob);
 
 
-// template < class real_num, class real_num_mov >
+// template <class system_type, class real_num, class real_num_mov >
+
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -473,13 +870,18 @@ int main(int argc, char** args) {
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
+
+  //define mutlilevel problem
+//   MultiLevelProblem ml_prob;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   const std::string relative_path_to_build_directory =  "../../../";
-  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
-  
+//   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";
+
+
       std::string fe_quad_rule("seventh");
-  
+
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 
   unsigned maxNumberOfMeshes = 5;
@@ -516,18 +918,37 @@ int main(int argc, char** args) {
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
 
+
       // add variables to mlSol
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
+
+//       Domains::square_m05p05::Function_Zero_on_boundary_4_laplacian <double> analytical_function_1;
+
+
+      Domains::square_01by01::Function_NonZero_on_boundary_1_laplacian <double> analytical_function_1;
+      mlSol.set_analytical_function("u", & analytical_function_1);
+
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
+
+//       Domains::square_m05p05::Function_Zero_on_boundary_4_laplacian<double> analytical_function_1_laplacian;
+      Domains::square_01by01::Function_NonZero_on_boundary_1_laplacian <double> analytical_function_1_laplacian;
+
+      mlSol.set_analytical_function("v", & analytical_function_1_laplacian);
+
       mlSol.Initialize("All");
 
       // define the multilevel problem attach the mlSol object to it
       MultiLevelProblem ml_prob(&mlSol);
-      
-      // attach the boundary condition function and generate boundary data
-      mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+
+// attach the boundary condition function and generate boundary data
+//       mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+      mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionNeumann);
+//       mlSol.AttachSetBoundaryConditionFunction(bc_all_dirichlet_homogeneous);
+//       mlSol.AttachSetBoundaryConditionFunction(Solutions_set_boundary_conditions_all_dirichlet_nonhomogenous);
       mlSol.GenerateBdc("u", "Steady", & ml_prob);
       mlSol.GenerateBdc("v", "Steady", & ml_prob);
+
+
 
       // ======= Problem, Quad Rule - BEGIN ========================
       ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
@@ -555,7 +976,7 @@ int main(int argc, char** args) {
       systemU.MGsolve(); //then solve for u using v
 
       // convergence for u
-      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", GetExactSolutionValue, GetExactSolutionGradient);
+       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", & analytical_function_1);
       // // convergence for v
       // std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "v", LaplaceGetExactSolutionValue, LaplaceGetExactSolutionGradient );
 
@@ -601,9 +1022,9 @@ int main(int argc, char** args) {
 
   }
   // ======= L2 - END  ========================
-
-
-
+// // //
+// // //
+// // //
   // ======= H1 - BEGIN  ========================
 
   std::cout << std::endl;
@@ -725,7 +1146,7 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    
+
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
 
     short unsigned ielGeom = msh->GetElementType(iel);
@@ -811,11 +1232,9 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
           Laplace   +=  - phi_x[i * dim + jdim] * solvGauss_x[jdim];
         }
 
-        double exactSolValue = GetExactSolutionValue(xGauss);
-        double pi = acos(-1.);
-        double pi2 = pi * pi;
+        double exactSolValue =  ml_prob. get_ml_solution()-> get_analytical_function("v")->laplacian(xGauss);
 
-        double f = exactSolValue * 4.* pi2 * pi2 * phi[i] ;
+        double f = exactSolValue * phi[i] ;
         aRes[i] += (f -  Laplace) * weight;
 
       } // end phi_i loop
@@ -951,12 +1370,12 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
 
   std::vector < std::vector < /*const*/ elem_type_templ_base <double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
-  
-  
-  
+
+
+
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    
+
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
 
     short unsigned ielGeom = msh->GetElementType(iel);
@@ -1046,6 +1465,8 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           Laplace   +=  - phi_x[i * dim + jdim] * soluGauss_x[jdim];
         }
+
+        double exactSolValue =  ml_prob. get_ml_solution()-> get_analytical_function("u")->laplacian(xGauss);
 
         double f = solvGauss  * phi[i] ;
         aRes[i] += (f - Laplace) * weight;
