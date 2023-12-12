@@ -91,7 +91,7 @@ namespace femus {
     
     const Solution * solution = get_solution(_gridn);
     
-    const std::string filename_prefix = get_filename_prefix(solution);
+    const std::string filename_prefix = _writer_one_level.get_filename_prefix(solution);
     
     Write(_gridn, filename_prefix, output_path, "", order, vars, time_step);
     
@@ -127,7 +127,7 @@ namespace femus {
 
     /// @todo I assume that the mesh is not mixed
     std::string type_elem;
-    unsigned iel0 = mesh->_elementOffset[_iproc];
+    unsigned iel0 = mesh->_elementOffset[_writer_one_level.processor_id()];
     unsigned elemtype = mesh->GetElementType( iel0 );
 
     type_elem = XDMFWriter::type_el[index_nd][elemtype];
@@ -138,7 +138,7 @@ namespace femus {
       abort();
     }
 
-    unsigned nvt = mesh->dofmap_get_dof_offset(index_nd, _nprocs);
+    unsigned nvt = mesh->dofmap_get_dof_offset(index_nd, _writer_one_level.n_processors());
     unsigned nel = mesh->GetNumberOfElements();
     unsigned dim = mesh->GetDimension();
     unsigned maxDim = ( nvt > ( dim + 1 ) * nel ) ? nvt : ( dim + 1 ) * nel;
@@ -153,7 +153,7 @@ namespace femus {
     vector2.reserve( maxDim );
 
     NumericVector* numVector = NumericVector::build().release();
-    numVector->init( nvt, mesh->dofmap_get_own_size(index_nd, _iproc), true, AUTOMATIC );
+    numVector->init( nvt, mesh->dofmap_get_own_size(index_nd, _writer_one_level.processor_id()), true, AUTOMATIC );
 
     //BEGIN XMF FILE PRINT
 
@@ -162,7 +162,7 @@ namespace femus {
 
     std::ofstream fout;
 
-    if( _iproc != 0 ) {
+    if( _writer_one_level.processor_id() != 0 ) {
       fout.rdbuf();   //redirect to dev_null
     }
     else {
@@ -223,9 +223,9 @@ namespace femus {
         //Printing biquadratic solution on the nodes
         if( solution->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
           std::string solName =  solution->GetSolName_from_index( indx );
-          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
+          for( int name = 0; name < _writer_one_level.compute_sol_bdc_res_eps_size(solution, i); name++ ) {
             
-            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            const std::string printName = Writer_one_level::print_sol_bdc_res_eps_name(solName, name);
             
             fout << "<Attribute Name=\"" << printName << "\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
             fout << "<DataItem DataType=\"Double\" Precision=\"8\" Dimensions=\"" << nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
@@ -236,9 +236,9 @@ namespace femus {
         }
         else if( solution->GetSolutionType( indx ) >= NFE_FAMS_C_ZERO_LAGRANGE ) {   //Printing picewise constant solution on the element
           std::string solName =  solution->GetSolName_from_index( indx );
-          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
+          for( int name = 0; name < _writer_one_level.compute_sol_bdc_res_eps_size(solution, i); name++ ) {
             
-            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            const std::string printName = Writer_one_level::print_sol_bdc_res_eps_name(solName, name);
 
             fout << "<Attribute Name=\"" << printName << "\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
             fout << "<DataItem DataType=\"Double\" Precision=\"8\" Dimensions=\"" << nel << "  1\"" << "  Format=\"HDF\">" << std::endl;
@@ -259,7 +259,7 @@ namespace femus {
 
     //BEGIN HD5 FILE PRINT
     hid_t file_id;
-    if( _iproc == 0 ) file_id = H5Fcreate( hdf5_filename.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
+    if( _writer_one_level.processor_id() == 0 ) file_id = H5Fcreate( hdf5_filename.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
     hsize_t dimsf[2];
     herr_t status;
     hid_t dataspace;
@@ -267,20 +267,20 @@ namespace femus {
 
     //BEGIN COORDINATES
     for( int i = 0; i < 3; i++ ) {
-      numVector->matrix_mult( *mesh->GetTopology()->_Sol[i], * _fe_proj_matrices.GetQitoQjProjection( index_nd, 2, * mesh ) );
+      numVector->matrix_mult( *mesh->GetTopology()->_Sol[i], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index_nd, 2, * mesh ) );
       numVector->localize_to_one( vector1, 0 );
 
-      if( solution != NULL && _moving_mesh && dim > i ) {
-        unsigned varind_DXDYDZ = solution->GetIndex( _moving_vars[i].c_str() );
+      if( solution != NULL && _writer_one_level._moving_mesh && dim > i ) {
+        unsigned varind_DXDYDZ = solution->GetIndex( _writer_one_level._moving_vars[i].c_str() );
         numVector->matrix_mult( *solution->_Sol[varind_DXDYDZ],
-                                * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( varind_DXDYDZ ), * mesh ) );
+                                * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( varind_DXDYDZ ), * mesh ) );
         numVector->localize_to_one( vector2, 0 );
-        if( _iproc == 0 ) {
+        if( _writer_one_level.processor_id() == 0 ) {
           for( unsigned ii = 0; ii < nvt; ii++ ) vector1[ii] += vector2[ii];
         }
       }
 
-      if( _iproc == 0 ) {
+      if( _writer_one_level.processor_id() == 0 ) {
         dimsf[0] = nvt ;
         dimsf[1] = 1;
         std::ostringstream Name;
@@ -297,12 +297,12 @@ namespace femus {
 
     //BEGIN CONNETTIVITY
     unsigned icount = 0;
-    for( unsigned isdom = 0; isdom < _nprocs; isdom++ ) {
+    for( unsigned isdom = 0; isdom < _writer_one_level.n_processors(); isdom++ ) {
       mesh->el->LocalizeElementDof( isdom );
-      if( _iproc == 0 ) {
+      if( _writer_one_level.processor_id() == 0 ) {
         for( unsigned iel = mesh->_elementOffset[isdom]; iel < mesh->_elementOffset[isdom + 1]; iel++ ) {
           for( unsigned j = 0; j < ndofs; j++ ) {
-            unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
+            unsigned vtk_loc_conn = Writer_one_level::FemusToVTKorToXDMFConn[j];
             var_conn[icount] = mesh->GetSolutionDof( vtk_loc_conn, iel, index_nd );
             icount++;
           }
@@ -311,7 +311,7 @@ namespace femus {
       mesh->el->FreeLocalizedElementDof();
     }
 
-    if(_iproc == 0) {
+    if(_writer_one_level.processor_id() == 0) {
       dimsf[0] = nel * ndofs ;
       dimsf[1] = 1;
       dataspace = H5Screate_simple( 2, dimsf, NULL );
@@ -325,9 +325,9 @@ namespace femus {
     //END CONNETTIVITY
 
     //BEGIN METIS PARTITIONING
-    if( _iproc == 0 ) {
+    if( _writer_one_level.processor_id() == 0 ) {
       unsigned icount = 0;
-      for( int isdom = 0; isdom < _nprocs; isdom++ ) {
+      for( int isdom = 0; isdom < _writer_one_level.n_processors(); isdom++ ) {
         for( unsigned ii = mesh->_elementOffset[isdom]; ii < mesh->_elementOffset[isdom + 1]; ii++ ) {
           vector1[icount] = isdom;
           icount++;
@@ -350,22 +350,22 @@ namespace femus {
       for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * solution->GetSolutionSize(); i++ ) {
         unsigned indx = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
         if( solution->GetSolutionType( indx ) >= NFE_FAMS_C_ZERO_LAGRANGE ) {
-          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
+          for( int name = 0; name < _writer_one_level.compute_sol_bdc_res_eps_size(solution, i); name++ ) {
 
             const std::string solName =  solution->GetSolName_from_index( indx );
             
-            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            const std::string printName = Writer_one_level::print_sol_bdc_res_eps_name(solName, name);
 
-            if( name == _index_sol ) {
+            if( name == Writer_one_level::_index_sol ) {
               solution->_Sol[indx]->localize_to_one( vector2, 0 );
             }
-            else if( name == _index_bdc ) {
+            else if( name == Writer_one_level::_index_bdc ) {
               solution->_Bdc[indx]->localize_to_one( vector2, 0 );
             }
-            else if( name == _index_res ) {
+            else if( name == Writer_one_level::_index_res ) {
               solution->_Res[indx]->localize_to_one( vector2, 0 );
             }
-            else if( name == _index_eps ) {
+            else if( name == Writer_one_level::_index_eps ) {
               solution->_Eps[indx]->localize_to_one( vector2, 0 );
             }
 
@@ -374,7 +374,7 @@ namespace femus {
               vector1[ii] = vector2[ mesh->GetSolutionDof( 0, ii, solution->GetSolutionType( indx ) ) ];
             }
 
-            if( _iproc == 0 ) {
+            if( _writer_one_level.processor_id() == 0 ) {
               dimsf[0] = nel;
               dimsf[1] = 1;
               dataspace = H5Screate_simple( 2, dimsf, NULL );
@@ -393,33 +393,33 @@ namespace femus {
       for( unsigned i = 0; i < ( 1 - print_all ) *vars.size() + print_all * solution->GetSolutionSize(); i++ ) {
         unsigned indx = ( print_all == 0 ) ? solution->GetIndex( vars[i].c_str() ) : i;
         if( solution->GetSolutionType( indx ) < NFE_FAMS_C_ZERO_LAGRANGE ) {
-          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
+          for( int name = 0; name < _writer_one_level.compute_sol_bdc_res_eps_size(solution, i); name++ ) {
 
             std::string solName =  solution->GetSolName_from_index( indx );
 
-            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            const std::string printName = Writer_one_level::print_sol_bdc_res_eps_name(solName, name);
             
             
-            if( name == _index_sol ) {
+            if( name == Writer_one_level::_index_sol ) {
               numVector->matrix_mult( *solution->_Sol[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
+                                      * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
-            else if( name == _index_bdc ) {
+            else if( name == Writer_one_level::_index_bdc ) {
               numVector->matrix_mult( *solution->_Bdc[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
+                                      * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
-            else if( name == _index_res ) {
+            else if( name == Writer_one_level::_index_res ) {
               numVector->matrix_mult( *solution->_Res[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
+                                      * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
-            else if( name == _index_eps ) {
+            else if( name == Writer_one_level::_index_eps ) {
               numVector->matrix_mult( *solution->_Eps[indx],
-                                      * _fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
+                                      * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index_nd, solution->GetSolutionType( indx ), * mesh ) );
             }
 
             numVector->localize_to_one( vector1, 0 );
 
-            if( _iproc == 0 ) {
+            if( _writer_one_level.processor_id() == 0 ) {
               dimsf[0] = nvt;
               dimsf[1] = 1;
               dataspace = H5Screate_simple( 2, dimsf, NULL );
@@ -436,7 +436,7 @@ namespace femus {
     }
     //END SOLUTION
 
-    if( _iproc == 0 ) H5Fclose( file_id );
+    if( _writer_one_level.processor_id() == 0 ) H5Fclose( file_id );
 
     //END HD5 FILE PRINT
 

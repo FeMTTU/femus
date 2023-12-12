@@ -76,7 +76,7 @@ namespace femus {
                                         const std::string suffix_pre_extension
                                         ) const {
       
-    for( int jproc = 0; jproc < _nprocs; jproc++ ) {
+    for( int jproc = 0; jproc < _writer_one_level.n_processors(); jproc++ ) {
       Pfout << "    <Piece Source=\"" << dirnamePVTK
             << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order <<  suffix_pre_extension << ".vtu"
             << "\"/>" << std::endl;
@@ -103,10 +103,10 @@ namespace femus {
     
     std::map < unsigned, unsigned > VTKWriter::ghost_map_proc(const Mesh * mesh, const unsigned index) const {
 
-    unsigned elementOffset = mesh->_elementOffset[_iproc];
-    unsigned elementOffsetp1 = mesh->_elementOffset[_iproc + 1];
+    unsigned elementOffset = mesh->_elementOffset[_writer_one_level.processor_id()];
+    unsigned elementOffsetp1 = mesh->_elementOffset[_writer_one_level.processor_id() + 1];
     
-    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
+    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _writer_one_level.processor_id());
     
     unsigned ghostMapCounter = 0;
      
@@ -133,18 +133,18 @@ namespace femus {
 
   void VTKWriter::fill_connectivity_proc(const Mesh * mesh, const unsigned index, const std::map<unsigned, unsigned>  &  ghostMap,  int * const var_conn) const {
        
-    const unsigned elementOffset = mesh->_elementOffset[_iproc];
-    const unsigned elementOffsetp1 = mesh->_elementOffset[_iproc + 1];
+    const unsigned elementOffset = mesh->_elementOffset[_writer_one_level.processor_id()];
+    const unsigned elementOffsetp1 = mesh->_elementOffset[_writer_one_level.processor_id() + 1];
     
-    const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
-    const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _iproc);
+    const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _writer_one_level.processor_id());
+    const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _writer_one_level.processor_id());
     
     // point pointer to common memory area buffer of void type;
     unsigned icount = 0;
     
     for(unsigned iel = elementOffset; iel < elementOffsetp1; iel++ ) {
       for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
-        unsigned loc_vtk_conn = (mesh->GetElementType( iel ) == 0)? FemusToVTKorToXDMFConn[j] : j;
+        unsigned loc_vtk_conn = (mesh->GetElementType( iel ) == 0)? Writer_one_level::FemusToVTKorToXDMFConn[j] : j;
         unsigned jdof = mesh->GetSolutionDof( loc_vtk_conn, iel, index );
         var_conn[icount] = ( jdof >= dofOffset ) ? jdof - dofOffset : nvtOwned + ghostMap.find(jdof)->second;
         icount++;
@@ -166,10 +166,10 @@ namespace femus {
               unsigned placeholder_index = 0;
               unsigned iel_Metis = mesh->GetSolutionDof(placeholder_index, iel, solution->GetSolutionType( i ) );
               
-              if( name == _index_sol )                 var_el[icount] = ( *solution->_Sol[i] )( iel_Metis );
-              else if( name == _index_bdc )            var_el[icount] = ( *solution->_Bdc[i] )( iel_Metis );
-              else if( name == _index_res )            var_el[icount] = ( *solution->_Res[i] )( iel_Metis );
-              else if( name == _index_eps )            var_el[icount] = ( *solution->_Eps[i] )( iel_Metis );
+              if( name == Writer_one_level::_index_sol )                 var_el[icount] = ( *solution->_Sol[i] )( iel_Metis );
+              else if( name == Writer_one_level::_index_bdc )            var_el[icount] = ( *solution->_Bdc[i] )( iel_Metis );
+              else if( name == Writer_one_level::_index_res )            var_el[icount] = ( *solution->_Res[i] )( iel_Metis );
+              else if( name == Writer_one_level::_index_eps )            var_el[icount] = ( *solution->_Eps[i] )( iel_Metis );
               
               icount++;
               
@@ -184,7 +184,7 @@ namespace femus {
        
       unsigned counter = 0;
       
-      for(unsigned iel = mesh->_elementOffset[_iproc]; iel < mesh->_elementOffset[_iproc + 1]; iel++ ) {
+      for(unsigned iel = mesh->_elementOffset[_writer_one_level.processor_id()]; iel < mesh->_elementOffset[_writer_one_level.processor_id() + 1]; iel++ ) {
 
         for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
             counter++;
@@ -246,22 +246,22 @@ namespace femus {
     
     //var_coord: add own nodes - BEGIN -------------------------
 
-    const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _iproc);
+    const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _writer_one_level.processor_id());
     
     for( int i = 0; i < 3; i++ ) {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
-      if( !_surface ) {
-        num_vec_aux_for_node_fields->matrix_mult( *mesh->GetTopology()->_Sol[i],    * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh )  );
-        if( solution != NULL && _graph && i == 2 ) {
-          const unsigned indGraph = solution->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],  * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indGraph ), * mesh ) );
+      if( ! _writer_one_level.is_surface() ) {
+        num_vec_aux_for_node_fields->matrix_mult( *mesh->GetTopology()->_Sol[i],    * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh )  );
+        if( solution != NULL && _writer_one_level._graph && i == 2 ) {
+          const unsigned indGraph = solution->GetIndex( _writer_one_level._graphVariable.c_str() );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],  * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indGraph ), * mesh ) );
         }
       }
       
-      else if (_surface && solution != NULL ) {
-        const unsigned indSurfVar = solution->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar], * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indSurfVar ), * mesh ) );
+      else if (_writer_one_level.is_surface() && solution != NULL ) {
+        const unsigned indSurfVar = solution->GetIndex( _writer_one_level._surfaceVariables[i].c_str() );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indSurfVar ), * mesh ) );
       }
     // num_vec_aux_for_node_fields - END -------------------------
       
@@ -271,12 +271,12 @@ namespace femus {
       }
     // var_coord - END -------------------------
       
-      if( solution != NULL && _moving_mesh  && _moving_vars.size() > i) { // if moving mesh
+      if( solution != NULL && _writer_one_level._moving_mesh  && _writer_one_level._moving_vars.size() > i) { // if moving mesh
 
     // num_vec_aux_for_node_fields - BEGIN -------------------------
-        const unsigned indDXDYDZ = solution->GetIndex( _moving_vars[i].c_str() );
+        const unsigned indDXDYDZ = solution->GetIndex( _writer_one_level._moving_vars[i].c_str() );
         
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],  * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indDXDYDZ ), * mesh ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],  * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indDXDYDZ ), * mesh ) );
     // num_vec_aux_for_node_fields - END -------------------------
 
     // var_coord - BEGIN -------------------------
@@ -298,16 +298,16 @@ namespace femus {
     for( int i = 0; i < 3; i++ ) {
       
     // num_vec_aux_for_node_fields - BEGIN -------------------------
-      if( !_surface ) {
-          num_vec_aux_for_node_fields->matrix_mult( *mesh->GetTopology()->_Sol[i],  * _fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh ) );
-        if( solution != NULL &&  _graph && i == 2 ) {
-          const unsigned indGraphVar = solution->GetIndex( _graphVariable.c_str() );
-          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar], * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indGraphVar ), * mesh ) );
+      if( ! _writer_one_level.is_surface() ) {
+          num_vec_aux_for_node_fields->matrix_mult( *mesh->GetTopology()->_Sol[i],  * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, 2, * mesh ) );
+        if( solution != NULL &&  _writer_one_level._graph && i == 2 ) {
+          const unsigned indGraphVar = solution->GetIndex( _writer_one_level._graphVariable.c_str() );
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indGraphVar ), * mesh ) );
         }
       }
-      else if (_surface && solution != NULL ) {
-        const unsigned indSurfVar = solution->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],  * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indSurfVar ), * mesh ) );
+      else if ( _writer_one_level.is_surface() && solution != NULL ) {
+        const unsigned indSurfVar = solution->GetIndex( _writer_one_level._surfaceVariables[i].c_str() );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],  * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indSurfVar ), * mesh ) );
       }
     // num_vec_aux_for_node_fields - END -------------------------
       
@@ -321,12 +321,12 @@ namespace femus {
 
     for( int i = 0; i < 3; i++ ) { // if moving mesh
 
-      if( solution != NULL && _moving_mesh  && _moving_vars.size() > i ) { //&& mesh->GetDimension() > i )  {
+      if( solution != NULL && _writer_one_level._moving_mesh  && _writer_one_level._moving_vars.size() > i ) { //&& mesh->GetDimension() > i )  {
         
     // num_vec_aux_for_node_fields - BEGIN -------------------------
-        const unsigned indDXDYDZ = solution->GetIndex( _moving_vars[i].c_str() );
+        const unsigned indDXDYDZ = solution->GetIndex( _writer_one_level._moving_vars[i].c_str() );
 
-        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ], * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indDXDYDZ ), * mesh ) );
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( indDXDYDZ ), * mesh ) );
     // num_vec_aux_for_node_fields - END -------------------------
         
     // var_coord - BEGIN -------------------------
@@ -362,7 +362,7 @@ namespace femus {
        
     const Solution * solution = get_solution(_gridn);
 
-    const std::string filename_prefix = get_filename_prefix(solution);
+    const std::string filename_prefix = _writer_one_level.get_filename_prefix(solution);
     
     const std::string suffix_pre_extension = "";
     
@@ -452,7 +452,7 @@ namespace femus {
 
     
     // *********** FE index - BEGIN ************
-    const unsigned index = fe_index(order);
+    const unsigned index = Writer_one_level::fe_index(order);
     // *********** FE index - END ************
 
 
@@ -465,7 +465,7 @@ namespace femus {
     std::ofstream fout;
 
     std::ostringstream filename;
-    filename << output_path << "./" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << suffix_pre_extension << ".vtu";
+    filename << output_path << "./" << dirnamePVTK << filename_prefix << level_name << "." << _writer_one_level.processor_id() << "." << time_step << "." << order << suffix_pre_extension << ".vtu";
 
     fout.open( filename.str().c_str() );
     if( !fout.is_open() ) {
@@ -477,7 +477,7 @@ namespace femus {
 
     // *********** open pvtu stream - BEGIN *************
     std::ofstream Pfout;
-    if( _iproc != 0 ) {
+    if( _writer_one_level.processor_id() != 0 ) {
       Pfout.rdbuf();   //redirect to dev_null
     }
     else {
@@ -512,12 +512,12 @@ namespace femus {
 
     //------------- Mesh, NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
     // count the own element dofs on all levels -------------
-    const unsigned elemetOffset = mesh->_elementOffset[_iproc];
-    const unsigned elemetOffsetp1 = mesh->_elementOffset[_iproc + 1];
+    const unsigned elemetOffset = mesh->_elementOffset[_writer_one_level.processor_id()];
+    const unsigned elemetOffsetp1 = mesh->_elementOffset[_writer_one_level.processor_id() + 1];
     const unsigned nel = elemetOffsetp1 - elemetOffset;
     
     //count the own node dofs on all levels -------------
-    const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _iproc);
+    const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _writer_one_level.processor_id());
     
     // count the ghost node dofs on all levels -------------
     const std::map < unsigned, unsigned > ghostMap = ghost_map_proc(mesh, index);
@@ -553,14 +553,14 @@ namespace femus {
     NumericVector* num_vec_aux_for_node_fields;
     num_vec_aux_for_node_fields = NumericVector::build().release();
 
-    if( n_processors() == 1 ) { // IF SERIAL
-      num_vec_aux_for_node_fields->init( mesh->dofmap_get_dof_offset(index, _nprocs),
-                                         mesh->dofmap_get_dof_offset(index, _nprocs), false, SERIAL );
+    if( _writer_one_level.n_processors() == 1 ) { // IF SERIAL
+      num_vec_aux_for_node_fields->init( mesh->dofmap_get_dof_offset(index, _writer_one_level.n_processors()),
+                                         mesh->dofmap_get_dof_offset(index, _writer_one_level.n_processors()), false, SERIAL );
     }
     else { // IF PARALLEL
-      num_vec_aux_for_node_fields->init( mesh->dofmap_get_dof_offset(index, _nprocs),
-                                         mesh->dofmap_get_own_size(index, _iproc),
-                                         mesh->dofmap_get_ghost_dofs(index, _iproc), false, GHOSTED );
+      num_vec_aux_for_node_fields->init( mesh->dofmap_get_dof_offset(index, _writer_one_level.n_processors()),
+                                         mesh->dofmap_get_own_size(index, _writer_one_level.processor_id()),
+                                         mesh->dofmap_get_ghost_dofs(index, _writer_one_level.processor_id()), false, GHOSTED );
     }
     //---- NumericVector used for node-based fields - END -------------------------------------------------------------------------------------------
 
@@ -649,9 +649,9 @@ namespace femus {
 
           std::string solName =  solution->GetSolName_from_index( solIndex );
 
-          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
+          for( int name = 0; name < _writer_one_level.compute_sol_bdc_res_eps_size(solution, i); name++ ) {
               
-            std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            std::string printName = Writer_one_level::print_sol_bdc_res_eps_name(solName, name);
             
 
             //--------- fill var_el ------------
@@ -703,24 +703,24 @@ namespace femus {
           //BEGIN LAGRANGIAN Fem SOLUTION
           std::string solName =  solution->GetSolName_from_index( solIndex );
 
-          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
+          for( int name = 0; name < _writer_one_level.compute_sol_bdc_res_eps_size(solution, i); name++ ) {
               
-            const std::string printName = print_sol_bdc_res_eps_name(solName, name);
+            const std::string printName = Writer_one_level::print_sol_bdc_res_eps_name(solName, name);
            
 
          //--------- fill var_nd ------------
             //print own dofs -------------------------
-            unsigned offset_iprc = mesh->dofmap_get_dof_offset(index, _iproc);
-            unsigned nvt_ig = mesh->dofmap_get_own_size(index, _iproc);
+            unsigned offset_iprc = mesh->dofmap_get_dof_offset(index, _writer_one_level.processor_id());
+            unsigned nvt_ig = mesh->dofmap_get_own_size(index, _writer_one_level.processor_id());
 
-            if( name == _index_sol )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex], * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
-            else if( name == _index_bdc )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex], * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
-            else if( name == _index_res )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex], * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
-            else if( name == _index_eps )
-              num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex], * _fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
+            if( name == Writer_one_level::_index_sol )
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
+            else if( name == Writer_one_level::_index_bdc )
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
+            else if( name == Writer_one_level::_index_res )
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
+            else if( name == Writer_one_level::_index_eps )
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex], * _writer_one_level._fe_proj_matrices.GetQitoQjProjection( index, solution->GetSolutionType( solIndex ), * mesh ) );
 
             for( unsigned ii = 0; ii < nvt_ig; ii++ ) {
               var_nd[ ii ] = ( *num_vec_aux_for_node_fields )( ii + offset_iprc );

@@ -41,6 +41,10 @@ namespace femus {
 
   class Writer_one_level : public ParallelObject {
 
+friend class Writer;  //Writer can access the members here that are otherwise protected/private
+friend class VTKWriter;
+friend class GMVWriter;
+friend class XDMFWriter;
 
 // === Constructors / Destructor  - BEGIN =================
   public:
@@ -68,14 +72,7 @@ namespace femus {
     
 // === Write - BEGIN =================
   public:
-    
-    // /** write output function with arbitrary level */
-    // virtual void Write(const unsigned my_level, 
-    //                    const std::string output_path, 
-    //                    const std::string order,
-    //                    const std::vector < std::string >& vars = std::vector < std::string > (), 
-    //                    const unsigned time_step = _time_step_index_default)  = 0;
-  
+
     /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
     virtual void Write(const unsigned my_level, 
                        const std::string filename_prefix, 
@@ -83,7 +80,7 @@ namespace femus {
                        const std::string suffix_pre_extension, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
+                       const unsigned time_step = _time_step_index_default)  /*= 0*/ { abort(); };
 
 // === Write - END =================
 
@@ -118,7 +115,7 @@ namespace femus {
   public:
     
     /** set moving mesh */
-    void SetMovingMesh(std::vector<std::string>& movvars_in);
+    void SetMovingMesh(const std::vector<std::string>& movvars_in);
 
   protected:
     
@@ -147,6 +144,7 @@ namespace femus {
 // === Mesh displacement: Surface Variable - BEGIN =================
   public:
     
+    const bool is_surface() const { return _surface; }
     ///@todo seems to be unused
     void SetSurfaceVariables( std::vector < std::string > &surfaceVariable );
     ///@todo seems to be unused
@@ -166,7 +164,7 @@ namespace femus {
   protected:
     
 // === Solution, FE index for printing - BEGIN =================
-    unsigned fe_index(const std::string & order_str) const;
+    static unsigned fe_index(const std::string & order_str);
 // === Solution, FE index for printing - END =================
 
     /** thesolution pointer: it is const, so it does not modify the object that is printed */
@@ -185,7 +183,7 @@ namespace femus {
   public:
     
       /** Set if to print or not to print the debugging variables */
-      void SetDebugOutput( bool value ) {
+      void SetDebugOutput(const bool value ) {
         _debugOutput = value;
       }
     
@@ -196,7 +194,7 @@ namespace femus {
       
     unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
     
-    std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+    static std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name);
 
     static const std::string _name_bdc;
     static const std::string _name_res;

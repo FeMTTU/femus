@@ -41,7 +41,7 @@ namespace femus {
   class Solution;
   
 
-  class Writer : public Writer_one_level {
+  class Writer {
 
 
 // === Constructors / Destructor  - BEGIN =================
@@ -71,14 +71,14 @@ namespace femus {
     virtual void Write(const std::string output_path,
                        const std::string order,
                        const std::vector < std::string > & vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
+                       const unsigned time_step = Writer_one_level::_time_step_index_default)  = 0;
     
     /** at finest level: write output function with fixed level and arbitrary initial string */
     virtual void Write(const std::string filename_prefix,
                        const std::string output_path, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
+                       const unsigned time_step = Writer_one_level::_time_step_index_default)  = 0;
                        
     /** at finest level:    */
     virtual void Write(const std::string filename_prefix,
@@ -86,7 +86,7 @@ namespace femus {
                        const std::string suffix_pre_extension, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
+                       const unsigned time_step = Writer_one_level::_time_step_index_default)  = 0;
 // === Write, at finest level - END =================
 
 // === Write, at arbitrary level - BEGIN =================
@@ -100,7 +100,7 @@ namespace femus {
                        const std::string suffix_pre_extension, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
+                       const unsigned time_step = Writer_one_level::_time_step_index_default)  = 0;
 // === Write, at arbitrary level - END =================
 
 
@@ -133,7 +133,25 @@ namespace femus {
     const  MultiLevelSolution* _ml_sol;
 // === Solution - END =================
 
+  protected:
 
+  Writer_one_level  _writer_one_level;    
+    
+  public:
+    
+// === Interface with underlying functions =================
+
+      void SetDebugOutput( const bool value ) {
+         _writer_one_level.SetDebugOutput(value);
+      }
+      
+    void SetGraphVariable(const std::string &GraphVariable) {
+         _writer_one_level.SetGraphVariable(GraphVariable);
+    }
+    void SetMovingMesh(const std::vector<std::string>& movvars_in) {
+         _writer_one_level.SetMovingMesh(movvars_in);
+    }
+    
   };
 
   

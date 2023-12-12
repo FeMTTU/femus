@@ -57,7 +57,7 @@ namespace femus {
 
 
 
-  void Writer_one_level::SetMovingMesh (std::vector<std::string>& movvars_in) {
+  void Writer_one_level::SetMovingMesh (const std::vector<std::string>& movvars_in) {
     _moving_mesh = true;
     _moving_vars = movvars_in;
   }
@@ -77,7 +77,7 @@ namespace femus {
 
 
     
-   std::string Writer_one_level::print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const {
+   std::string Writer_one_level::print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) {
        
             std::string printName;
 
@@ -104,7 +104,7 @@ namespace femus {
    }
    
    
-    unsigned Writer_one_level::fe_index(const std::string & order_str) const {
+    unsigned Writer_one_level::fe_index(const std::string & order_str) {
         
         unsigned index = 0;
         
