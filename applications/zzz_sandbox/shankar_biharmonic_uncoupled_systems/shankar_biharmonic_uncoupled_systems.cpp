@@ -728,20 +728,6 @@ double Solutions_set_initial_conditions_with_analytical_sol(const MultiLevelProb
 }
 //====Setting_initial_conditions_with_analytical_solutions-END================================
 
-/*
-//=====Dirichlet_Nonhomogenous-BEGIN==================
-bool Solutions_set_boundary_conditions_all_dirichlet_nonhomogenous(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name, double & value, const int faceName, const double time){
-    bool dirichlet = true;
-
-    Math::Function <double> * exact_sol = ml_prob -> get_ml_solution() -> get_analytical_function(name);
-
-    value = exact_sol-> value(x);
-
-    return dirichlet;
-}
-
-
-//=====Dirichlet_Nonhomogenous-END==================*/
 
 //================MANUFACTURED_SOLUTION-BEGIN===================
 double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
@@ -817,19 +803,19 @@ void LaplaceGetExactSolutionGradient(const MultiLevelProblem * ml_prob, std::vec
 //===========Boundary_Conditions-BEGIN================
 
 
-/*
-//===========HOMOGENOUS-BEGIN====================
+
+//===========HOMOGENOUS_Dirichlet-BEGIN====================
 bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
 }
-//===========HOMOGENOUS-END====================*/
+//===========HOMOGENOUS_Dirichlet-END====================
 
 
 
 //===========NONHOMOGENOUS_Dirichlet_BC-BEGIN====================
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time) {
+bool SetBoundaryConditionNonhomogenous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time) {
   bool dirichlet = true;
 
   if (!strcmp(SolName, "u")) {
@@ -856,51 +842,14 @@ bool SetBoundaryConditionNeumann(const MultiLevelProblem * ml_prob, const std::v
       // strcmp compares two string in lexiographic sense.
     Value = gradient_value -> gradient(x)[0];
 
+    }
+
     return neumann;
 }
 
 
 //==========Neumann-END===============
 
-
-
-//============Neumann_Boundary_Condition=BEGIN===================
-
-bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
-
-  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
-
-   bool dirichlet = false;
-  value = 0.;
-
-
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 2) {
-      dirichlet = true;
-        value = 0;
-  }
-
- else  if (face_name == 3) {
-      dirichlet = true;
-        value = 0.;
-  }
-  else if (face_name == 4) {
-      dirichlet = true;
-        value = 0.;
-  }
-
-
-
-   return dirichlet;
-
-}
-
-
-
-//============Neumann_Boundary_Condition=END===================
 
 
 //===========Boundary_Conditions-END================
