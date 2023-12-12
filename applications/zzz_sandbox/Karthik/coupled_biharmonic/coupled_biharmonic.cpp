@@ -25,8 +25,7 @@
 
 #include "FE_convergence.hpp"
 
-// // // #include "Solution_functions_over_domains_or_mesh_files.hpp"
-#include "Solution_functions_over_domains_or_mesh_files1.hpp"
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 #include "adept.h"
 // // // extern Domains::square_m05p05::Function_Zero_on_boundary_4<double> analytical_function;
@@ -143,39 +142,25 @@ using namespace femus;
 
 //====Set boundary condition Dirichlet-Neumann-BEGIN==============================
 
-bool SetBoundaryCondition_bc_all_neumann_dirichlet(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char SolName[], double& Gradient, const int facename, const double time) {
-    bool condition = true;
+bool SetBoundaryCondition_bc_all_neumann_dirichlet(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char SolName[], double& value, const int facename, const double time) {
+    bool is_dirichlet = true;
 
     if (!strcmp(SolName, "u")) {
         // Assuming "u" corresponds to your first variable
         Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-
-        switch (facename) {
-            case 1: // Face 1
-                Gradient = u->gradient(x)[0];
-                break;
-            case 2: // Face 2
-                Gradient = u->gradient(x)[0];
-                break;
-            case 3: // Face 3
-                Gradient = u->gradient(x)[0];
-                break;
-            case 4: // Face 4
-                Gradient = u->gradient(x)[0];
-                break;
-            default:
-                condition = false; // Invalid face number
-        }
+           is_dirichlet = true;
+           value = u->value(x);
     } else if (!strcmp(SolName, "v")) {
         // Assuming "v" corresponds to your second variable
-
+           is_dirichlet = true;
         Math::Function<double>* v = ml_prob->get_ml_solution()->get_analytical_function(SolName);
         Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function("u");
         // Set Dirichlet condition for "v" as the Laplacian of "u"
-        Gradient = u->laplacian(x);
+        // value = u->laplacian(x);
+        value = v->value(x);
     }
 
-    return condition;
+    return is_dirichlet;
 }
 //====Set boundary condition Dirichlet-Neumann-END==============================
 
@@ -221,8 +206,8 @@ int main(int argc, char** args) {
   system_biharmonic_coupled._boundary_conditions_types_and_values             =  SetBoundaryCondition_bc_all_neumann_dirichlet;
 
 
-   Domains::square_m05p05::Function_Zero_on_boundary_4<>   system_biharmonic_coupled_function_zero_on_boundary_1;
-   Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian;
+   Domains::square_m05p05::Function_NonZero_on_boundary_4<>   system_biharmonic_coupled_function_zero_on_boundary_1;
+   Domains::square_m05p05::Function_NonZero_on_boundary_4_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian;
    system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian; //this is the RHS for the auxiliary variable v = -Delta u
 
    system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
@@ -278,12 +263,12 @@ int main(int argc, char** args) {
 
 
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
-      Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
-      mlSol.set_analytical_function("u", & analytical_function_1);
+
+      mlSol.set_analytical_function("u", & system_biharmonic_coupled_function_zero_on_boundary_1);
 
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
-      Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<double> analytical_function_1_laplacian;
-      mlSol.set_analytical_function("v", & analytical_function_1_laplacian);
+
+      mlSol.set_analytical_function("v", & system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian);
 
 
       mlSol.Initialize("All");
@@ -320,7 +305,7 @@ int main(int argc, char** args) {
 
 
 // // //       // convergence for u
-      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u",  & analytical_function_1);
+      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u",  & system_biharmonic_coupled_function_zero_on_boundary_1);
 
 
 
@@ -333,8 +318,9 @@ int main(int argc, char** args) {
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
 
+      std::string  an_func = "test";
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(an_func, Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
 
     }
   }
