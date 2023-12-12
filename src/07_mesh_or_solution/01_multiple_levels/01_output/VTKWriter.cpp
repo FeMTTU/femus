@@ -370,22 +370,6 @@ namespace femus {
 
    }
    
-
-  void VTKWriter::Write(const unsigned my_level,
-                        const std::string output_path,
-                        const std::string order,
-                        const std::vector < std::string >& vars,
-                        const unsigned time_step ) {
-       
-    const Solution * solution = get_solution(my_level);
-
-    const std::string filename_prefix = get_filename_prefix(solution);
-    
-      const std::string suffix_pre_extension = "";
-    
-       Write(my_level, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
-       
-   }
    
    
    
@@ -410,10 +394,27 @@ namespace femus {
     
         Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
  }
+
+
   
+  void VTKWriter::Write(const unsigned my_level,
+                        const std::string output_path,
+                        const std::string order,
+                        const std::vector < std::string >& vars,
+                        const unsigned time_step ) {
+       
+    const Solution * solution = get_solution(my_level);
+
+    const std::string filename_prefix = get_filename_prefix(solution);
+    
+      const std::string suffix_pre_extension = "";
+    
+       Write(my_level, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
+       
+   }
   
-  
-  
+
+
   void VTKWriter::Write(const unsigned my_level, 
                         const std::string filename_prefix, 
                         const std::string output_path,

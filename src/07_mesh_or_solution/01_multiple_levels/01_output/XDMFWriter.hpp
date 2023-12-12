@@ -41,9 +41,9 @@ namespace femus {
 
   class XDMFWriter : public Writer {
 
-    public:
 
 // === Constructors / Destructor  - BEGIN =================
+    public:
       /** Constructor. */
       XDMFWriter(const MultiLevelSolution* ml_sol );
 
@@ -52,23 +52,17 @@ namespace femus {
 
 // === Constructors / Destructor  - END =================
 
-// === Write - BEGIN =================
+
+// === Write, at finest level - BEGIN =================
+    public:
       /** write output function */
       void Write( const std::string output_path, 
                   const std::string order, 
                   const std::vector < std::string >& vars = std::vector < std::string > (), 
                   const unsigned time_step = _time_step_index_default) ;
-// === Write - END =================
-    private:
-      
-  void Write(const unsigned level_in,
-                         const std::string output_path, 
-                         const std::string order,
-                         const std::vector<std::string>& vars, 
-                         const unsigned time_step );
-        
-  
-  void Write(const std::string init_string,
+
+
+  void Write(const std::string filename_prefix,
                        const std::string output_path, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
@@ -76,21 +70,38 @@ namespace femus {
         { abort(); };
 
       /** at finest level:    */
-     void Write(const std::string init_string,
+     void Write(const std::string filename_prefix,
                        const std::string output_path, 
                        const std::string suffix_pre_extension, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)        { abort(); }
+                       const unsigned time_step = _time_step_index_default)
+        { abort(); }
+// === Write, at finest level - END =================
 
+
+
+// === Write, at arbitrary level - BEGIN =================
+  private:
+      
+  void Write(const unsigned level_in,
+                         const std::string output_path, 
+                         const std::string order,
+                         const std::vector<std::string>& vars, 
+                         const unsigned time_step );
+        
     void Write(const unsigned level_in, 
-                       const std::string init_string, 
+                       const std::string filename_prefix, 
                        const std::string output_path,
                        const std::string suffix_pre_extension, 
                        const std::string order,
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
                        const unsigned time_step = _time_step_index_default)
         { abort(); };
+// === Write, at arbitrary level - END =================
+
+
+
 
     public:
       /** write a wrapper file for paraview to open all the files of a history together */
@@ -230,8 +241,6 @@ namespace femus {
       static const std::string _bdry_suffix;
 
       static const std::string _auxiliary_dtd_file;
-      
-
 
   };
 

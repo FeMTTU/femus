@@ -79,11 +79,9 @@ namespace femus {
   
   
   
-  XDMFWriter::XDMFWriter(const MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {
-  }
+  XDMFWriter::XDMFWriter(const MultiLevelSolution* ml_sol ) : Writer( ml_sol ) {  }
 
-  XDMFWriter::XDMFWriter(const MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {
-  }
+  XDMFWriter::XDMFWriter(const MultiLevelMesh* ml_mesh ) : Writer( ml_mesh ) {  }
 
 
   void XDMFWriter::Write(const std::string output_path, 

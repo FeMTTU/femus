@@ -33,9 +33,10 @@ namespace femus {
 
   class GMVWriter_one_level : public Writer_one_level {
 
-  public:
 
 // === Constructors / Destructor  - BEGIN =================
+  public:
+
       /** Constructor. */
       GMVWriter_one_level(const Solution * ml_sol);
 

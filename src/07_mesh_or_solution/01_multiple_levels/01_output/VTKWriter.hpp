@@ -57,7 +57,8 @@ public:
 
 // === Constructors / Destructor  - END =================
 
-// === Write - BEGIN =================
+
+// === Write, at finest level - BEGIN =================
 public:
 
     /** write output function */
@@ -66,13 +67,6 @@ public:
                const std::vector < std::string > & vars = std::vector < std::string > (), 
                const unsigned time_step = _time_step_index_default) ;
     
-    /** write output function with arbitrary level */
-    void Write(const unsigned my_level, 
-               const std::string output_path, 
-               const std::string order,
-               const std::vector < std::string >& vars = std::vector < std::string > (), 
-               const unsigned time_step = _time_step_index_default);
-  
     /** write output function with fixed level and arbitrary initial string */
     void Write(const std::string filename_prefix, 
                const std::string output_path,
@@ -86,22 +80,32 @@ public:
                         const std::string order,
                         const std::vector < std::string >& vars, 
                         const unsigned time_step);
+// === Write, at finest level - END =================
 
-      void Write(const unsigned my_level,
+
+// === Write, at arbitrary level - BEGIN =================
+private:
+    /** write output function with arbitrary level */
+    void Write(const unsigned level_in, 
+               const std::string output_path, 
+               const std::string order,
+               const std::vector < std::string >& vars = std::vector < std::string > (), 
+               const unsigned time_step = _time_step_index_default);
+
+  
+      void Write(const unsigned level_in,
                const std::string filename_prefix,
                const std::string output_path,
                const std::string suffix_pre_extension,
                const std::string order,
                const std::vector < std::string >& vars = std::vector < std::string > (),
                const unsigned time_step = _time_step_index_default);
-// === Write - END =================
 
-  private:
 
 
       /** write output function with arbitrary level (starting at 1) and arbitrary initial string and arbitrary suffix before the extension */
-    void Write(const unsigned my_level, 
-               const std::string init_string, 
+    void Write(const unsigned level_in, 
+               const std::string filename_prefix, 
                const std::string output_path,
                const std::string suffix_pre_extension, 
                const std::string order,
@@ -109,8 +113,11 @@ public:
                         const Solution * solution_in,
                const std::vector < std::string >& vars, 
                const unsigned time_step);
+// === Write, at arbitrary level - END =================
     
 
+  private:
+      
     void vtk_unstructured_header_parallel_wrapper(std::ofstream & Pfout) const;
     
     void vtk_unstructured_footer_parallel_wrapper(std::ofstream & Pfout) const;

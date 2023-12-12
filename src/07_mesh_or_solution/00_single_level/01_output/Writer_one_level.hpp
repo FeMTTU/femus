@@ -78,7 +78,7 @@ namespace femus {
   
     /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
     virtual void Write(const unsigned my_level, 
-                       const std::string init_string, 
+                       const std::string filename_prefix, 
                        const std::string output_path,
                        const std::string suffix_pre_extension, 
                        const std::string order,

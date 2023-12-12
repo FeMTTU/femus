@@ -41,9 +41,9 @@ namespace femus {
 
   class XDMFWriter_one_level : public Writer_one_level {
 
-    public:
 
 // === Constructors / Destructor  - BEGIN =================
+    public:
       /** Constructor. */
       XDMFWriter_one_level(const Solution* ml_sol );
 
@@ -52,12 +52,12 @@ namespace femus {
 // === Constructors / Destructor  - END =================
 
 // === Write - BEGIN =================
+    public:
       /** write output function */
       void Write( const std::string output_path, 
                   const std::string order, 
                   const std::vector < std::string >& vars = std::vector < std::string > (), 
                   const unsigned time_step = _time_step_index_default) ;
-// === Write - END =================
     private:
       
   void Write(const unsigned level_in,
@@ -65,6 +65,9 @@ namespace femus {
                          const std::string order,
                          const std::vector<std::string>& vars, 
                          const unsigned time_step );
+// === Write - END =================
+
+
 
     public:
       /** write a wrapper file for paraview to open all the files of a history together */
