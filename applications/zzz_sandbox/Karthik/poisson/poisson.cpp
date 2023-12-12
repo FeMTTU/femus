@@ -103,10 +103,10 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
       //value = -1. * x[1] * ( 1. - x[1]) ;
   }
   else if (face_name == 2) {
-      dirichlet = false;
+      dirichlet = true;
         value = 0.;
       // dirichlet = false;
-       value = -1. * x[1] * ( 1. - x[1]) ;
+// // //        value = -1. * x[1] * ( 1. - x[1]) ;
   }
 
  else  if (face_name == 3) {
@@ -118,13 +118,8 @@ bool square__laplacian__bc(const MultiLevelProblem * ml_prob, const std::vector 
   else if (face_name == 4) {
       //dirichlet = false;
       //  value = 0.;
+      dirichlet = false;
       value = -1. * x[0] * ( 1. - x[0]);
-       dirichlet = false;
-       // // // value = -M_PI * sin( M_PI * x[0] );
-//        dirichlet = false;
-//        value = -M_PI * sin( M_PI * x[0] ) - 0.2 * (5. * M_PI) * sin( 5. * M_PI * x[0] );
-//        dirichlet = false;
-//        value = -2. * M_PI * sin( 2. * M_PI * x[0] );
 
   }
 
@@ -278,7 +273,7 @@ int main(int argc, char** args) {
   // ======= Mesh, Coarse reading - END ==================
 
   // ======= Mesh: Refinement - BEGIN  ==================
-  unsigned numberOfUniformLevels = /*1*/6;
+  unsigned numberOfUniformLevels = /*1*/3;
   unsigned numberOfSelectiveLevels = 0/*0*/;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // ======= Mesh: Refinement - END  ==================
