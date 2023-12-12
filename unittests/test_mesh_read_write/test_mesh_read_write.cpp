@@ -218,7 +218,7 @@ int main(int argc,char **args) {
   for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
      for(std::vector< std::string >::iterator print_fe_it = std::begin(print_fe_order); print_fe_it != std::end(print_fe_order); ++ print_fe_it) {
 
-        writer_sol_ptr->Write(l+1, input_files[m], output_dir, "", (*print_fe_it).c_str(), variablesToBePrinted);
+        writer_sol_ptr->Write(input_files[m], output_dir, "", (*print_fe_it).c_str(), variablesToBePrinted, l+1);
   
 //   ml_sol.SetWriter(XDMF); 
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol

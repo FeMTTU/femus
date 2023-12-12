@@ -89,14 +89,20 @@ namespace femus {
                          const std::vector<std::string>& vars, 
                          const unsigned time_step ) {
     
-    Write(_gridn, output_path, order, vars, time_step);
+    const Solution * solution = get_solution(_gridn);
+    
+    const std::string filename_prefix = get_filename_prefix(solution);
+    
+    Write(_gridn, filename_prefix, output_path, "", order, vars, time_step);
     
   }
   
   
-  void XDMFWriter::Write(const unsigned level_in,
-                         const std::string output_path, 
-                         const std::string order,
+  void XDMFWriter::Write(const unsigned level_in, 
+                       const std::string filename_prefix, 
+                       const std::string output_path,
+                       const std::string suffix_pre_extension, 
+                       const std::string order,
                          const std::vector<std::string>& vars, 
                          const unsigned time_step ) {
 
@@ -150,8 +156,6 @@ namespace femus {
     numVector->init( nvt, mesh->dofmap_get_own_size(index_nd, _iproc), true, AUTOMATIC );
 
     //BEGIN XMF FILE PRINT
-
-    const std::string filename_prefix = get_filename_prefix(solution);
 
     std::ostringstream xdmf_filename;
     xdmf_filename << output_path << "/" << filename_prefix << ".level" << level_in << "." << time_step << "." << order << ".xmf";
@@ -442,6 +446,9 @@ namespace femus {
 
     return;
   }
+
+
+
 
   void XDMFWriter::write_solution_wrapper( const std::string output_path, const char type[], const unsigned level_in ) const {
 

@@ -485,7 +485,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
   std::vector < std::string > variablesToBePrinted_aux;
   variablesToBePrinted_aux.push_back(node_based_bdry_bdry_flag_name/*"all"*/);
   for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
-  ml_sol_bdry_bdry_flag->GetWriter()->Write(l+1, "aux", files.GetOutputPath(), "", "biquadratic", variablesToBePrinted_aux);
+  ml_sol_bdry_bdry_flag->GetWriter()->Write("aux", files.GetOutputPath(), "", "biquadratic", variablesToBePrinted_aux, l+1);
    }
  
  

@@ -69,12 +69,12 @@ namespace femus {
 // === Write - BEGIN =================
   public:
     
-    /** write output function with arbitrary level */
-    virtual void Write(const unsigned my_level, 
-                       const std::string output_path, 
-                       const std::string order,
-                       const std::vector < std::string >& vars = std::vector < std::string > (), 
-                       const unsigned time_step = _time_step_index_default)  = 0;
+    // /** write output function with arbitrary level */
+    // virtual void Write(const unsigned my_level, 
+    //                    const std::string output_path, 
+    //                    const std::string order,
+    //                    const std::vector < std::string >& vars = std::vector < std::string > (), 
+    //                    const unsigned time_step = _time_step_index_default)  = 0;
   
     /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
     virtual void Write(const unsigned my_level, 
