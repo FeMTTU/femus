@@ -242,9 +242,6 @@ int main ( int argc, char **args ) {
   gmvio.Write ( Files::_application_output_directory, "biquadratic", print_vars );
   // gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
 
-  //   XDMFWriter xdmfio(ml_sol);
-  //   xdmfio.write(files.GetOutputPath(),"biquadratic",print_vars);
-
   //Destroy all the new systems
   ml_prob.clear();
 

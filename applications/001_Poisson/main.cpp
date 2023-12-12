@@ -269,8 +269,6 @@ int main(int argc, char** argv) {
   gmvio.SetDebugOutput(true);
   gmvio.Write(Files::_application_output_directory, "biquadratic", print_vars);
 
-  //XDMFWriter xdmfio(&ml_sol);
-  //xdmfio.Pwrite(Files::_application_output_directory,"biquadratic",print_vars);
 
   //Destroy all the new systems
   ml_prob.clear();

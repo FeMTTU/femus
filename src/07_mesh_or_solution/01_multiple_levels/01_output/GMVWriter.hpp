@@ -60,6 +60,8 @@ namespace femus {
                  const std::vector < std::string > & vars = std::vector < std::string > (), 
                  const unsigned time_step = _time_step_index_default);
 
+private:
+  
       /** at finest level:    */
      void Write(const std::string filename_prefix,
                        const std::string output_path, 

@@ -443,9 +443,6 @@ int main(int argc, char** argv) {
   //GMVWriter gmvio(&ml_sol);
   //gmvio.ParallelWrite(Files::_application_output_directory,"biquadratic",print_vars);
 
-  //
-  //     XDMFWriter xdmfio(ml_sol);
-  //     xdmfio.write("biquadratic",print_vars);
 
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);

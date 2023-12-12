@@ -258,10 +258,6 @@ int main( int argc, char** args ) {
   gmvIO.SetDebugOutput( true );
   gmvIO.Write( Files::_application_output_directory, "biquadratic", variablesToBePrinted );
 
-  XDMFWriter xdmfIO( &mlSol );
-  xdmfIO.SetDebugOutput( true );
-  xdmfIO.Write( Files::_application_output_directory, "biquadratic", variablesToBePrinted );
-
 
 
   return 0;

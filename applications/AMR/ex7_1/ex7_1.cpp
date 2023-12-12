@@ -403,11 +403,6 @@ int main(int argc, char** argv) {
         //GMVWriter gmvio(&ml_sol);
         //gmvio.ParallelWrite(Files::_application_output_directory,"biquadratic",print_vars);
 
-        //
-        //     XDMFWriter xdmfio(ml_sol);
-        //     xdmfio.write("biquadratic",print_vars);
-
-       
 
 
         levels[H][k][j] = ml_msh.GetNumberOfLevels();

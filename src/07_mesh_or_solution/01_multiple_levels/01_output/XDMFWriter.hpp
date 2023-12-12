@@ -54,7 +54,8 @@ namespace femus {
 
 
 // === Write, at finest level - BEGIN =================
-    public:
+  public:
+
       /** write output function */
       void Write( const std::string output_path, 
                   const std::string order, 
@@ -68,6 +69,8 @@ namespace femus {
                        const std::vector < std::string >& vars = std::vector < std::string > (), 
                        const unsigned time_step = _time_step_index_default)
         { abort(); };
+
+  private:
 
       /** at finest level:    */
      void Write(const std::string filename_prefix,
