@@ -179,7 +179,7 @@ private:
       Mesh::_dimension = dim;
     }
 
-    /** MESH: dimension of the problem */
+    /** MESH: dimension of the problem @todo I would make it not static */
     static unsigned _dimension;
 // === Mesh, BASIC, Dimension - END =================
 
@@ -423,7 +423,7 @@ public:
 
     
 
-// === Here starts the FE stuff - BEGIN ====================================================
+// === FE stuff - BEGIN ====================================================
 
     
  
@@ -586,22 +586,21 @@ private:
 
 // === FE DOFMAP, TOPOLOGY: Coordinates - BEGIN =================
 
-public:
-    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) const;
-    
-    void Topology_InitializeCoordinates();
-    
-    void Topology_FillCoordinates();
-    
+private:
     /** MESH: Topology */
     const unsigned GetXIndex()          const { return _xIndex; }
     const unsigned GetYIndex()          const { return _yIndex; }
     const unsigned GetZIndex()          const { return _zIndex; }
+    
     const std::string Get_X_Name() const { return _x_name; }
     const std::string Get_Y_Name() const { return _y_name; }
     const std::string Get_Z_Name() const { return _z_name; }
     
-private:
+    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) const;
+
+    void Topology_InitializeCoordinates();
+    
+    void Topology_FillCoordinates();
     
     // indices of the topology parallel vectors
     static const unsigned _xIndex = 0;
@@ -615,12 +614,13 @@ private:
 
 // === FE DOFMAP, TOPOLOGY: Refinement, AMR - BEGIN =================
 public:
-    void Topology_InitializeAMR();
     
     const unsigned GetAmrIndex()        const { return _amrIndex; }
     const std::string GetAmrIndexName() const { return _amrIndex_name; }
 
 private:
+    void Topology_InitializeAMR();
+
     static const unsigned _amrIndex = 3;
     static const std::string _amrIndex_name;
     
@@ -628,6 +628,13 @@ private:
 
 // === FE DOFMAP, TOPOLOGY: SolidMark  - BEGIN =================
 public:
+
+    /** Only for parallel @todo this should be in a separate FSI environment */
+    bool GetSolidMark(const unsigned &inode) const;
+    
+    
+private:
+
     const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; }
 
     /** FSI:  */
@@ -636,11 +643,6 @@ public:
     /** FSI: Allocate memory for adding fluid or solid mark @todo this should be in a separate FSI environment */
     void Topology_FillSolidNodeFlag();
     
-    /** Only for parallel @todo this should be in a separate FSI environment */
-    bool GetSolidMark(const unsigned &inode) const;
-    
-    
-private:
     static const unsigned _solidMarkIndex = 4;
     static const std::string _solidMark_name;
     
@@ -665,7 +667,7 @@ private:
 // =========================
 public:
     
-    /** AMR */
+    /** AMR @todo I would make it not static */
     static bool (* _SetRefinementFlag)(const std::vector < double >& x, const int &ElemGroupNumber, const int &level);
     
     /** AMR */
@@ -682,16 +684,6 @@ public:
     }
 
     /** AMR */
-    void SetIfHomogeneous(const bool &value) {
-      _meshIsHomogeneous = value ;
-    }
-
-    /** AMR */
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() {
-      return _amrRestriction;
-    }
-    
-    /** AMR */
     const std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() const {
       return _amrRestriction;
     }
@@ -699,10 +691,20 @@ public:
     /** Get if element is refined*/
     short unsigned GetRefinedElementIndex(const unsigned &iel) const;
     
-    void InitializeAndPossiblyFillAmrRestriction(const bool amr);
-  
 private:
     
+    void InitializeAndPossiblyFillAmrRestriction(const bool amr);
+  
+    /** AMR */
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap() {
+      return _amrRestriction;
+    }
+    
+    /** AMR */
+    void SetIfHomogeneous(const bool &value) {
+      _meshIsHomogeneous = value ;
+    }
+
     static bool _IsUserRefinementFunctionDefined;
     
     /** AMR */
@@ -720,24 +722,24 @@ private:
 public:
 
     /** AMR */
-    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() {
-      return _amrSolidMark;
-    }
-    
-    /** AMR */
     const std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() const {
       return _amrSolidMark;
     }
 
 private:
   
+    /** AMR */
+    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark() {
+      return _amrSolidMark;
+    }
+    
     /** AMR: solid mark map (vector of 3 FE families: linear, quadratic, biquadratic) */
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
 // === FE DOFMAP, REFINEMENT, AMR, FSI - END =================
 
 
-// === Here starts the FE stuff - END ====================================================
+// === FE stuff - END ====================================================
 
 
     

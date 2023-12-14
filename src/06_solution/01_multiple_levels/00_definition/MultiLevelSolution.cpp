@@ -726,9 +726,9 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       
       if(_solution[igridn]->is_unknown_of_system(k) ) {
         
-        Mesh* msh = GetMLMesh()->GetLevel(igridn);
+        const Mesh* msh = GetMLMesh()->GetLevel(igridn);
 
-        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
+        const std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
         for(unsigned j = msh->dofmap_get_dof_offset(_solType[k], _iproc); j < msh->dofmap_get_dof_offset(_solType[k], _iproc + 1); j++) {
@@ -748,7 +748,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
                   unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
                   unsigned idof = msh->GetSolutionDof(i, iel, _solType[k]);
                   if(amrRestriction[_solType[k]].find(idof) != amrRestriction[_solType[k]].end() &&
-                      amrRestriction[_solType[k]][idof][idof] == 0) {
+                      amrRestriction[_solType[k]].at(idof).at(idof) == 0) {
                     _solution[igridn]->_Bdc[k]->set(idof, 1.);
                   }
                 }
@@ -907,9 +907,9 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
     // 0 Dirichlet
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
       if(_solution[igridn]->is_unknown_of_system(solIndex) ) {
-        Mesh* msh = GetMLMesh()->GetLevel(igridn);
+        const Mesh* msh = GetMLMesh()->GetLevel(igridn);
 
-        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
+        const std::vector < std::map < unsigned,  std::map < unsigned, double  > > > & amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
         for(unsigned j = msh->dofmap_get_dof_offset(_solType[solIndex], _iproc); j < msh->dofmap_get_dof_offset(_solType[solIndex], _iproc + 1); j++) {
@@ -931,7 +931,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
                   unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
                   unsigned idof = msh->GetSolutionDof(i, iel, _solType[solIndex]);
                   if(amrRestriction[_solType[solIndex]].find(idof) != amrRestriction[_solType[solIndex]].end() &&
-                      amrRestriction[_solType[solIndex]][idof][idof] == 0) {
+                      amrRestriction[_solType[solIndex]].at(idof).at(idof) == 0) {
                     for(unsigned k = 0; k < solKiIndex.size(); k++) {
                       _solution[igridn]->_Bdc[solKiIndex[k]]->set(idof, 1.);
                     }
