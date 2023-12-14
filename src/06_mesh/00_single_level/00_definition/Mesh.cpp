@@ -51,8 +51,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   bool Mesh::_IsUserRefinementFunctionDefined = false;
 
   unsigned Mesh::_dimension = 2;                                    ///@todo I don't like the default dimension to be 2
-  unsigned Mesh::_ref_index = 4; // 8*DIM[2]+4*DIM[1]+2*DIM[0];     ///@todo I don't like the default dimension to be 2
-  unsigned Mesh::_ref_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];    ///@todo I don't like the default dimension to be 2
 
 
 // === Constructors / Destructor - BEGIN =================

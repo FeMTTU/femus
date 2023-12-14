@@ -742,7 +742,7 @@ void ProjectK (MultiLevelSolution &mlCubeSol, MultiLevelSolution &mlSphereSol) {
 
 
       std::vector <double> xi = i.GetMarkerLocalCoordinates();
-      basis* base = cMsh->GetBasis (ielGeom, cKType);
+      basis* base = cMsh->GetFiniteElement(ielGeom, cKType)->GetBasis();
 
       phi.resize (nDofK);
       for (unsigned i = 0; i < nDofK; i++) {

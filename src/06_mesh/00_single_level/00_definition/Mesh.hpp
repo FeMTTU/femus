@@ -123,28 +123,28 @@ public:
  public:
     
     /** It would private if we put Solution as another friend of Mesh, but maybe it is too much for now */
-    static const unsigned GetRefIndex() {
-      return Mesh::_ref_index;
+    const unsigned GetRefIndex() const {
+      return _ref_index;
     }
 
     
  private:
    
     /** MESH */
-    static const unsigned GetRefFaceIndex() {
-      return Mesh::_ref_face_index;
+    const unsigned GetRefFaceIndex() const {
+      return _ref_face_index;
     }
     
-    static void SetRefinementCellAndFaceIndices(const unsigned &dim) {
-      Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
-      Mesh::_ref_face_index = pow(2, dim -1u);
+     void SetRefinementCellAndFaceIndices(const unsigned &dim) {
+      _ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
+      _ref_face_index = pow(2, dim -1u);
     }
 
-    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
-    static unsigned _ref_index;
+    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE // 8*DIM[2]+4*DIM[1]+2*DIM[0]; */
+    unsigned _ref_index;
     
-    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point */
-    static unsigned _ref_face_index;
+    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point // 4*DIM[2]+2*DIM[1]+1*DIM[0]; */
+    unsigned _ref_face_index;
 
     
 // === Geometric Element, Single, REFINEMENT - END =================
