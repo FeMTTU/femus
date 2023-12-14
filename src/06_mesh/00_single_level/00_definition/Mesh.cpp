@@ -1310,11 +1310,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     
   }
   
-  
 
-  basis* Mesh::GetBasis(const short unsigned& ielType, const short unsigned& solType)  const {
-    return _finiteElement[ielType][solType]->GetBasis();
-  }
 
   
   void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) const {
@@ -1537,7 +1533,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
                           for (unsigned j = interfaceDof[soltype][ilevel].begin(i); j < interfaceDof[soltype][ilevel].end(i); j++) {
                             unsigned jloc = interfaceLocalDof[ilevel][i][j];
 
-                            basis* base = msh->GetBasis(ielType, soltype);
+                            const basis* base = msh->GetFiniteElement(ielType, soltype)->GetBasis();
                             double value = base->eval_phi(jloc, xi);
 
                             if (fabs(value) >= 1.0e-10) {

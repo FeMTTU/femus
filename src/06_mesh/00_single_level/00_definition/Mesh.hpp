@@ -32,6 +32,9 @@
 
 #include "Solution.hpp"
 
+#include "MeshGeneration.hpp"
+
+
 
 #include <cassert>
 #include <vector>
@@ -56,6 +59,30 @@ class SparseMatrix;
 */
 
 class Mesh : public ParallelObject {
+
+// === Friend functions and classes - BEGIN =================
+/// These classes can access stuff that otherwise is protected/private
+friend   void MeshTools::Generation::BuildBox ( Mesh& mesh,
+		      std::vector < std::vector < double> > &coords,
+                      const unsigned int nx,
+                      const unsigned int ny,
+                      const unsigned int nz,
+                      const double xmin, const double xmax,
+                      const double ymin, const double ymax,
+                      const double zmin, const double zmax,
+                      const ElemType type,
+                      std::vector<bool> &type_elem_flag );
+
+friend class MED_IO;
+friend class GambitIO;
+
+friend class MeshPartitioning;
+friend class MeshMetisPartitioning;
+
+friend class MeshRefinement;
+
+friend class MultiLevelMesh;
+// === Friend functions and classes - END =================
 
 
 // === Constructors / Destructor - BEGIN =================
@@ -95,24 +122,24 @@ public:
 // === Geometric Element, Single, REFINEMENT - BEGIN =================
  public:
     
-    void SetRefinementCellAndFaceIndices(const unsigned &dim) {
+    /** It would private if we put Solution as another friend of Mesh, but maybe it is too much for now */
+    static const unsigned GetRefIndex() {
+      return Mesh::_ref_index;
+    }
 
+    
+ private:
+   
+    /** MESH */
+    static const unsigned GetRefFaceIndex() {
+      return Mesh::_ref_face_index;
+    }
+    
+    static void SetRefinementCellAndFaceIndices(const unsigned &dim) {
       Mesh::_ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
       Mesh::_ref_face_index = pow(2, dim -1u);
     }
 
-    /** MESH */
-    const unsigned GetRefIndex() const {
-      return Mesh::_ref_index;
-    }
-
-    /** MESH */
-    const unsigned GetRefFaceIndex() const {
-      return Mesh::_ref_face_index;
-    }
-    
- private:
-   
     /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE */
     static unsigned _ref_index;
     
@@ -125,8 +152,8 @@ public:
 
 
 // === Mesh, BASIC, Debug - BEGIN =================
-// =========================
- public:
+
+public:
     
     /** Print the mesh info */
     void PrintInfo() const;
@@ -145,35 +172,35 @@ private:
       return Mesh::_dimension;
     }
 
+ private:
+   
     /** MESH: Set the dimension of the problem (1D, 2D, 3D) */
     void SetDimension(const unsigned &dim) {
       Mesh::_dimension = dim;
     }
 
- private:
-   
     /** MESH: dimension of the problem */
     static unsigned _dimension;
 // === Mesh, BASIC, Dimension - END =================
 
 
 // === Mesh, BASIC, CharacteristicLength - BEGIN =================
-// =========================
+
 public:
     
-    void SetCharacteristicLength(const double & cLength){
-      _cLength = cLength;
-    }
-    
+    /// @todo This soon will be private
     void ComputeCharacteristicLength();
     
+private:
+
     double GetCharacteristicLength() const {
       return _cLength;
     };
 
+    void SetCharacteristicLength(const double & cLength){
+      _cLength = cLength;
+    }
     
-private:
-
     /** Order of the domain size */
     double _cLength;
 
@@ -202,11 +229,6 @@ private:
 // === Elements, Number - BEGIN =================
  public:
    
-    /** Set the number of element */
-    void SetNumberOfElements(const unsigned &nelem) {
-      _nelem = nelem;
-    }
-
     /** Get the number of element */
     unsigned GetNumberOfElements() const {
       return _nelem;
@@ -214,6 +236,11 @@ private:
     
  private:
     
+    /** Set the number of element */
+    void SetNumberOfElements(const unsigned &nelem) {
+      _nelem = nelem;
+    }
+
     /** MESH: number of elements */
     int _nelem;
 // === Elements, Number - END =================
@@ -265,11 +292,6 @@ private:
 // === Nodes, number - BEGIN =================
  public:
    
-    /** Set the number of nodes */
-    void SetNumberOfNodes(const unsigned &nnodes) {
-      _nnodes = nnodes;
-    };
-
     /** Get the number of nodes */
     unsigned GetNumberOfNodes() const {
       return _nnodes;
@@ -277,6 +299,11 @@ private:
 
  private:
    
+    /** Set the number of nodes */
+    void SetNumberOfNodes(const unsigned &nnodes) {
+      _nnodes = nnodes;
+    };
+
     /** MESH: number of nodes */
     unsigned _nnodes;
     
@@ -304,14 +331,16 @@ private:
 
  public:
 
-    /** Only file reading */
-    void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
-
       /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
 
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file, with option to not read groups */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag, const bool read_groups, const bool read_boundary_groups);
+
+private:
+  
+    /** Only file reading */
+    void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
 
     void ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
@@ -335,15 +364,15 @@ private:
 
  public:
    
-  void SetBoundaryInfo(const unsigned int flag_int, const std::string flag_string) {   
-    _boundaryinfo.insert(std::pair<unsigned int, std::string>(flag_int, flag_string) );
-   }
-   
   std::map<unsigned int, std::string> GetBoundaryInfo() const {   
      return _boundaryinfo;
    }
 
  private:
+   
+  void SetBoundaryInfo(const unsigned int flag_int, const std::string flag_string) {   
+    _boundaryinfo.insert(std::pair<unsigned int, std::string>(flag_int, flag_string) );
+   }
    
     /** Boundary names for faces, this is only filled in the above function so far */
     std::map<unsigned int, std::string> _boundaryinfo;
@@ -369,13 +398,8 @@ private:
     
 
 // === Mesh, Level, Current (when the Mesh is part of a multilevel hierarchy) - BEGIN  =================
-// =========================
-public:
 
-    /** MESH: Set the grid number */
-    void SetLevel(const unsigned &i) {
-        _level = i;
-    };
+public:
 
     /** MESH: Get the grid number */
     unsigned GetLevel() const {
@@ -387,6 +411,11 @@ public:
     
     void PrintInfoLevel() const;
     
+    /** MESH: Set the grid number */
+    void SetLevel(const unsigned &i) {
+        _level = i;
+    };
+
     /** MESH: level of mesh in the multi-level hierarchy */
     unsigned _level;
     
@@ -419,9 +448,6 @@ public:
     
     /** FE: Finite Element families, for each Geometric Element @todo this one day should be private */
     const elem_type *_finiteElement[N_GEOM_ELS][NFE_FAMS];
-    
-    
-    basis * GetBasis(const short unsigned &ielType, const short unsigned &solType) const;
 
 // === Geometric Element, FE, Single (FE for single geometric element) - END =================
     
@@ -429,17 +455,15 @@ public:
     
 
 // === PARTITIONING, and FE DOFMAP (from Mesh to Unknowns) - BEGIN =================
-// =========================
-public:
 
-    std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
-    
 private:
   
   void PartitionElements_and_FillDofMapAllFEFamilies();
     
-    std::vector < unsigned > PartitionForElements() const;
+  std::vector < unsigned > PartitionForElements() const;
     
+  std::vector < unsigned > PartitionForElements_refinement(const bool AMR, const Mesh* mshc) const;
+
 // === PARTITIONING, and FE DOFMAP (from Mesh to Unknowns) - END =================
 
 

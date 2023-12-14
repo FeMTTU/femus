@@ -639,7 +639,7 @@ namespace femus
     MyVector <unsigned> rowSize(_elementOffset, 0);
     
     for (unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
-      unsigned elementType = msh->GetElementType(i);
+      const unsigned elementType = GetElementType(i);
       rowSize[i] = (msh->GetRefinedElementIndex(i) == 1) ? refindex * NVE[elementType][2] : NVE[elementType][2];  //for every element, establish if it is refined or not, and return the number of DofCarriers of all its children
     }
     _childElemDof = MyMatrix <unsigned> (rowSize, 0);
