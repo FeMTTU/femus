@@ -203,6 +203,12 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     
 //==== info from the coarse mesh - BEGIN ==============================
     
+    const unsigned dim = mshc->GetDimension();
+    
+    // geom el, refinement - BEGIN ********************
+    _mesh.SetRefinementCellAndFaceIndices(dim);
+    // geom el, refinement - END ******************** 
+
     _mesh.get_prol_matrices().SetCoarseMesh(mshc);
 
     elem* elc = mshc->el;
