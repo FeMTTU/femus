@@ -66,54 +66,6 @@ bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem *
 
 
 
-
-// // // bool SetBoundaryCondition_bc_all_neumann(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char SolName[], std::vector<double>& Gradient, const int facename, const double time) {
-// // //     bool neumann = true; // Neumann condition
-// // //
-// // //     if (!strcmp(SolName, "u")) {
-// // //         Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //         // Get the gradient of the exact solution at the boundary
-// // //         Gradient = u->gradient(x);
-// // //     } else if (!strcmp(SolName, "v")) {
-// // //         Math::Function<double>* v = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //         // Get the gradient of the exact solution at the boundary
-// // //         Gradient = v->gradient(x);
-// // //     }
-// // //
-// // //     return neumann;
-// // // }
-
-// // // //====Set boundary condition Dirichlet-Neumann-BEGIN==============================
-// // //
-// // // bool SetBoundaryCondition_bc_all_neumann_dirichlet(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char SolName[], double& value, const int facename, const double time) {
-// // //     bool is_dirichlet = true;
-// // //
-// // //     if (!strcmp(SolName, "u")) {
-// // //         // Assuming "u" corresponds to your first variable
-// // //         Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //            is_dirichlet = true;
-// // //            value = u->value(x);
-// // //     } else if (!strcmp(SolName, "v")) {
-// // //         // Assuming "v" corresponds to your second variable
-// // //            is_dirichlet = true;
-// // //         Math::Function<double>* v = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //         Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function("u");
-// // //         // Set Dirichlet condition for "v" as the Laplacian of "u"
-// // //         // value = u->laplacian(x);
-// // //         value = v->value(x);
-// // //     }
-// // //
-// // //     return is_dirichlet;
-// // // }
-// // // //====Set boundary condition Dirichlet-Neumann-END==============================
-
-
-
-
-
-
-
-
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -143,10 +95,6 @@ int main(int argc, char** args) {
   system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation :: AssembleBilaplaceProblem_AD;
 
   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
-
-// // //   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_neumann;
-
-// // //   system_biharmonic_coupled._boundary_conditions_types_and_values             =  SetBoundaryCondition_bc_all_neumann_dirichlet;
 
 
    Domains::square_m05p05::Function_NonZero_on_boundary_4<>   system_biharmonic_coupled_function_zero_on_boundary_1;
