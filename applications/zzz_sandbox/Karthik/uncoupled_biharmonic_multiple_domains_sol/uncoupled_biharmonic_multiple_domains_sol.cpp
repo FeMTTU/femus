@@ -463,7 +463,6 @@ static void natural_loop_V_2d3d(const MultiLevelProblem *    ml_prob,
 //Boundary_integral-END
 
 
-// template < class real_num, class real_num_mov >
 
 //====Setting_initial_conditions_with_analytical_solutions-BEGIN==============================
 double Solutions_set_initial_conditions_with_analytical_sol(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
