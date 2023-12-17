@@ -21,14 +21,12 @@
 #include "VTKWriter.hpp"
 #include "NumericVector.hpp"
 
-#include "biharmonic_coupled.hpp"
-
 #include "FE_convergence.hpp"
 
 #include "Solution_functions_over_domains_or_mesh_files.hpp"
 
 #include "adept.h"
-// // // extern Domains::square_m05p05::Function_Zero_on_boundary_4<double> analytical_function;
+
 
 
 #define LIBRARY_OR_USER   1 //0: library; 1: user
@@ -143,8 +141,6 @@ bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem *
 
 
 
-
-
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -167,7 +163,12 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
 
-  std::string system_common_name = "Biharmonic";
+
+
+
+  std::string system_common_name1 = "Biharmonic1";
+  std::string system_common_name2 = "Biharmonic2";
+
   std::vector <system_specifics>  my_specifics;
 
   system_specifics app_square_m05p05_1;
@@ -180,20 +181,16 @@ int main(int argc, char** args) {
 
 
 
+  // ======= square 1 - BEGIN  ==================
 
-  //  //assignment_square - BEGIN
-  app_square_m05p05_1._system_name = system_common_name;
+  app_square_m05p05_1._system_name = system_common_name1;
 
   app_square_m05p05_1._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
   app_square_m05p05_1._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
 
-  app_square_m05p05_1._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation::AssembleBilaplaceProblem_AD;
+   app_square_m05p05_1._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation::AssembleBilaplaceProblem_AD;
 
-
-// // //    const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
-
-
-     app_square_m05p05_1._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
+   app_square_m05p05_1._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
 
 
    Domains::square_m05p05::Function_Zero_on_boundary_4<>   app_square_function_zero_on_boundary_4_1;
@@ -202,24 +199,16 @@ int main(int argc, char** args) {
    app_square_m05p05_1._assemble_function_for_rhs        = & app_square_function_zero_laplacian_1;
    app_square_m05p05_1._true_solution_function           = & app_square_function_zero_on_boundary_4_1;
 
+    // ======= square 1 - END  ==================
 
 
-   //assignment_square - END
+    // ======= square 2 - BEGIN  ==================
 
-
-
-
-     //  //assignment_square - BEGIN
-   app_square_m05p05_2._system_name = system_common_name;
+   app_square_m05p05_2._system_name = system_common_name2;
 
    app_square_m05p05_2._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
-//    /*/*const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";*/*/
    app_square_m05p05_2._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
-  app_square_m05p05_1._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation::AssembleBilaplaceProblem_AD;
-
-
-
-
+   app_square_m05p05_2._assemble_function =NAMESPACE_FOR_BIHARMONIC_COUPLED:: biharmonic_coupled_equation::AssembleBilaplaceProblem_AD;
 
    app_square_m05p05_2._boundary_conditions_types_and_values         = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
 
@@ -229,10 +218,7 @@ int main(int argc, char** args) {
    app_square_m05p05_2._assemble_function_for_rhs        = & app_square_function_nonzero_laplacian_2;
    app_square_m05p05_2._true_solution_function           = & app_square_function_zero_on_boundary_4_2;
 
-
-
-   //assignment_square - END
-
+    // ======= square 2 - END  ==================
 
 
   my_specifics.push_back(app_square_m05p05_1);
@@ -242,42 +228,8 @@ int main(int argc, char** args) {
 
 
 
+ // ======= App loop - BEGIN  ==================
 
-// // //     // ======= System Specifics - BEGIN  ==================
-// // //   system_specifics  system_biharmonic_coupled;   //me
-// // //
-// // //   // =========Mesh file - BEGIN ==================
-// // //   system_biharmonic_coupled._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
-// // // // // // // //   const std::string relative_path_to_build_directory =  "../../../../";
-// // //   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/";
-// // //   system_biharmonic_coupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
-// // //  // =========Mesh file - END ==================
-// // //
-// // //
-// // //   system_biharmonic_coupled._system_name = "Biharmonic";
-// // //   system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation :: AssembleBilaplaceProblem_AD;
-// // //
-// // //   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
-// // //
-// // // // // //   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_neumann;
-// // //
-// // // // // //   system_biharmonic_coupled._boundary_conditions_types_and_values             =  SetBoundaryCondition_bc_all_neumann_dirichlet;
-// // //
-// // //
-// // //    Domains::square_m05p05::Function_NonZero_on_boundary_4<>   system_biharmonic_coupled_function_zero_on_boundary_1;
-// // //    Domains::square_m05p05::Function_NonZero_on_boundary_4_Laplacian<>   system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian;
-// // //    system_biharmonic_coupled._assemble_function_for_rhs   = & system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian; //this is the RHS for the auxiliary variable v = -Delta u
-// // //
-// // //    system_biharmonic_coupled._true_solution_function      = & system_biharmonic_coupled_function_zero_on_boundary_1;
-// // //
-// // //
-// // //
-// // //   ///@todo if this is not set, nothing happens here. It is used to compute absolute errors
-// // //     // ======= System Specifics - END ==================
-
-
-
-   //begin app loop
   for (unsigned int app = 0; app < my_specifics.size(); app++)  {
 
 
@@ -312,23 +264,9 @@ int main(int argc, char** args) {
 
 
     double scalingFactor = 1.;
-      ml_mesh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
+    ml_mesh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
 
 
-
-
-
-
-// // // // // //   // define multilevel mesh
-// // // // // //   MultiLevelMesh mlMsh;
-// // // // // //   // read coarse level mesh and generate finers level meshes
-// // // // // //   double scalingFactor = 1.;
-// // // // // //
-// // // // // //   const std::string mesh_file_total = system_biharmonic_coupled._mesh_files_path_relative_to_executable[0] + "/" + system_biharmonic_coupled._mesh_files[0];
-
-
-
-// // // // // //   mlMsh.ReadCoarseMesh(mesh_file_total.c_str(), "seventh", scalingFactor);
 
   unsigned maxNumberOfMeshes = 5;
 
@@ -368,23 +306,19 @@ int main(int argc, char** args) {
       MultiLevelSolution mlSol(&ml_mesh);
 
 
-      mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
+      mlSol.SetWriter(VTK);
+      mlSol.GetWriter()->SetDebugOutput(true);
 
+      ml_prob.SetMultiLevelMeshAndSolution(& mlSol);
+
+
+
+      mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
       mlSol.set_analytical_function("u",  my_specifics[app]._true_solution_function);
 
 
-// // // // //             mlSol.set_analytical_function("u", & system_biharmonic_coupled_function_zero_on_boundary_1);
-
-
-
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
-
       mlSol.set_analytical_function("v",  my_specifics[app]._assemble_function_for_rhs);
-
-
-// // // // //             mlSol.set_analytical_function("v", & system_biharmonic_coupled_function_zero_on_boundary_1_Laplacian);
-
-
 
       mlSol.Initialize("All");
 
@@ -394,33 +328,30 @@ int main(int argc, char** args) {
       MultiLevelProblem ml_prob(&mlSol);
 
       ml_prob.set_app_specs_pointer(& my_specifics[app]);
-      // ======= Problem, Files ========================
-//       ml_prob.SetFilesHandler(&files);
-
-      // attach the boundary condition function and generate boundary data
-// // // // //       mlSol.AttachSetBoundaryConditionFunction( system_biharmonic_coupled._boundary_conditions_types_and_values );
 
       mlSol.AttachSetBoundaryConditionFunction(my_specifics[app]._boundary_conditions_types_and_values);
-      NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > (my_specifics[app]._system_name);
 
 
       mlSol.GenerateBdc("u", "Steady", & ml_prob);
       mlSol.GenerateBdc("v", "Steady", & ml_prob);
 
+
+
       ml_prob.clear_systems();
 
+      NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > (my_specifics[app]._system_name);
 
-      // add system Biharmonic in ml_prob as a Linear Implicit System
+
+      system.SetDebugNonlinear(true);
+
 
       // add solution "u" to system
       system.AddSolutionToSystemPDE("u");
       system.AddSolutionToSystemPDE("v");
 
+
       // attach the assembling function to system
       system.SetAssembleFunction(my_specifics[app]._assemble_function);
-
-
-// // //             system.SetAssembleFunction(AssembleBilaplaceProblem_AD);
 
       // initialize and solve the system
       system.init();
@@ -428,16 +359,7 @@ int main(int argc, char** args) {
       system.MGsolve();
 
 
-
-// // //       // convergence for u
-// // // // //       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(& mlSol, "u",  & system_biharmonic_coupled_function_zero_on_boundary_1);
-
-
-             std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u",my_specifics[app]._true_solution_function );
-
-
-
-
+      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u",my_specifics[app]._true_solution_function );
 
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
@@ -459,9 +381,6 @@ int main(int argc, char** args) {
 
       VTKWriter vtkIO(&mlSol);
       vtkIO.Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files[m], files.GetOutputPath(), print_order, variablesToBePrinted);
-
-
-
 
 
     }
@@ -540,6 +459,7 @@ int main(int argc, char** args) {
 
 } //end app loop
 
+ // ======= App loop - END  ==================
 
 
   return 0;
