@@ -117,6 +117,135 @@ public:
 
 };
 
+template < class type = double >
+class Function_NonZero_on_boundary_1 : public Math::Function< type > {
+
+
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+    // for a quarter-circle in Quadrant 1
+
+    double xx = x[0];
+    double yy = x[1];
+
+    return  xx * yy * (1.0 + (xx*xx + yy*yy) ); // forced to be zero on the x and y axis, and the circle edge
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+    double xx = x[0];
+    double yy = x[1];
+
+        solGrad[0]  = yy * (1.0 + (xx*xx + yy*yy) ) + xx * yy * (2. * xx);
+        solGrad[1]  = xx * (1.0 + (xx*xx + yy*yy) ) + yy * xx * (2. * yy);
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+    double xx = x[0];
+    double yy = x[1];
+
+    return  12. * xx * yy;
+    }
+
+
+
+};
+
+
+template < class type = double >
+class Function_NonZero_on_boundary_1_Laplacian : public Math::Function< type > {
+
+public:
+
+    type value(const std::vector < type >& x) const {
+
+        return  12. *x[0] * x[1];
+    }
+
+
+    std::vector < type >  gradient(const std::vector < type >& x) const {
+
+        std::vector < type > solGrad(x.size(), 0.);
+
+        solGrad[0]  = 12. * x[1];
+        solGrad[1]  = 12. * x[0];
+
+        return solGrad;
+    }
+
+
+    type laplacian(const std::vector < type >& x) const {
+
+        return  0.;
+    }
+
+
+};
+
+
+
+template <class type = double>
+class Function_NonZero_on_boundary_2 : public Math::Function<type> {
+
+public:
+    type value(const std::vector<type>& x) const {
+// // //         double xx = x[0];
+// // //         double yy = x[1];
+
+        return x[0] * x[1] * cos(x[0] * x[0] + x[1] * x[1]);
+    }
+
+    std::vector<type> gradient(const std::vector<type>& x) const {
+        std::vector<type> solGrad(x.size(), 0.);
+
+// // //         double xx = x[0];
+// // //         double yy = x[1];
+
+        solGrad[0] = x[1] * cos(x[0] * x[0] + x[1] * x[1]) - 2. * x[0] * x[0] * x[1] * sin(x[0] * x[0] + x[1] * x[1]);
+        solGrad[1] = x[0] * cos(x[0] * x[0] + x[1] * x[1]) - 2. * x[0] * x[1] * x[1] * sin(x[0] * x[0] + x[1] * x[1]);
+
+        return solGrad;
+    }
+
+    type laplacian(const std::vector<type>& x) const {
+
+        return -8. * x[0] * x[1] * x[1] * x[1] * cos( x[0] * x[0]+ x[1] * x[1]) - 12. * x[0]*x[1]*sin(x[0] * x[0] + x[1] * x[1]);
+    }
+};
+
+template <class type = double>
+class Function_NonZero_on_boundary_2_Laplacian : public Math::Function<type> {
+
+public:
+    type value(const std::vector<type>& x) const {
+        return -8. * x[0] * x[1] * x[1] * x[1] * cos( x[0] * x[0]+ x[1] * x[1]) - 12. * x[0]*x[1]*sin(x[0] * x[0] + x[1] * x[1]);
+    }
+
+    std::vector<type> gradient(const std::vector<type>& x) const {
+        std::vector<type> solGrad(x.size(), 0.);
+
+        solGrad[0] = 16. * x[0] * x[0] * x[1] * x[1] * x[1] * sin(x[0] * x[0] + x[1] * x[1]) - 8. * x[1] * x[1] * x[1] * cos(x[0] * x[0] + x[1] * x[1]) - 24. * x[0] * x[0] * x[1] * cos(x[0] * x[0] + x[1] * x[1])- 12. * x[1] * sin(x[0] * x[0] + x[1] * x[1]);
+        solGrad[1] = 16. * x[0] * x[1] * x[1] * x[1] * x[1] * sin(x[0] * x[0] + x[1] * x[1]) - 48. * x[0] * x[1] * x[1] * cos(x[0] * x[0] + x[1] * x[1])- 12. * x[0] * sin(x[0] * x[0] + x[1] * x[1]);
+
+        return solGrad;
+    }
+
+    type laplacian(const std::vector<type>& x) const {
+        return 64. * x[0] * x[1] * x[1] * x[1] * x[1] * x[1] * sin(x[0] * x[0] + x[1] * x[1]) + 320. * x[0] * x[1] * x[1] * x[1] * sin(x[0] * x[0] + x[1] * x[1]) - 240. * x[0] * x[1] * cos(x[0] * x[0] + x[1] * x[1]);
+    }
+};
+
+
 
 
 }
@@ -214,7 +343,7 @@ int main(int argc, char** args) {
   system_specifics app_square_m05p05_2;
 
   system_specifics quarter_circle;
-// // //   system_specifics quarter_circle_Nzero;
+  system_specifics quarter_circle_Nzero;
 
 
 
@@ -281,28 +410,28 @@ int main(int argc, char** args) {
     // ======= quarter_circle - END  ==================
 
 
-// // //     // ======= quarter_circle_Nzero - BEGIN  ==================
-// // //
-// // //    quarter_circle._system_name = "Coupled_Biharmonic4";
-// // //
-// // //    quarter_circle_Nzero._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
-// // //    quarter_circle_Nzero._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/circle_quarter/");
-// // //    quarter_circle_Nzero._assemble_function =NAMESPACE_FOR_BIHARMONIC_COUPLED:: biharmonic_coupled_equation::AssembleBilaplaceProblem_AD;
-// // //
-// // //    quarter_circle_Nzero._boundary_conditions_types_and_values         = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
-// // //
-// // //    Domains::quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
-// // //    Domains::quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1_Laplacian<>   app_quarter_circle_function_zero_on_boundary_1_laplacian;
-// // //
-// // //    quarter_circle_Nzero._assemble_function_for_rhs        = & app_quarter_circle_function_zero_on_boundary_1_laplacian;
-// // //    quarter_circle_Nzero._true_solution_function           = & app_quarter_circle_function_zero_on_boundary_1;
-// // //
-// // //     // ======= quarter_circle_Nzero - END  ==================
+    // ======= quarter_circle_Nzero - BEGIN  ==================
+
+   quarter_circle_Nzero._system_name = "Coupled_Biharmonic4";
+
+   quarter_circle_Nzero._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
+   quarter_circle_Nzero._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/circle_quarter/");
+   quarter_circle_Nzero._assemble_function =NAMESPACE_FOR_BIHARMONIC_COUPLED:: biharmonic_coupled_equation::AssembleBilaplaceProblem_AD;
+
+   quarter_circle_Nzero._boundary_conditions_types_and_values         = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
+
+   Domains::quarter_circle_centered_at_0_by_0::Function_NonZero_on_boundary_2<>     app_quarter_circle_function_nonzero_on_boundary_1;
+   Domains::quarter_circle_centered_at_0_by_0::Function_NonZero_on_boundary_2_Laplacian<>   app_quarter_circle_function_nonzero_on_boundary_1_laplacian;
+
+   quarter_circle_Nzero._assemble_function_for_rhs        = & app_quarter_circle_function_nonzero_on_boundary_1_laplacian;
+   quarter_circle_Nzero._true_solution_function           = & app_quarter_circle_function_nonzero_on_boundary_1;
+
+    // ======= quarter_circle_Nzero - END  ==================
 
   my_specifics.push_back(app_square_m05p05_1);
   my_specifics.push_back(app_square_m05p05_2);
   my_specifics.push_back(quarter_circle);
-// // //   my_specifics.push_back(quarter_circle_Nzero);
+  my_specifics.push_back(quarter_circle_Nzero);
 
 
  // ======= App loop - BEGIN  ==================
