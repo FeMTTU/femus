@@ -115,11 +115,6 @@ public:
     }
 
 
-
-  private:
-
-   static constexpr double pi = acos(-1.);
-
 };
 
 
@@ -219,6 +214,7 @@ int main(int argc, char** args) {
   system_specifics app_square_m05p05_2;
 
   system_specifics quarter_circle;
+// // //   system_specifics quarter_circle_Nzero;
 
 
 
@@ -266,7 +262,7 @@ int main(int argc, char** args) {
     // ======= square 2 - END  ==================
 
 
-    // ======= annulus - BEGIN  ==================
+    // ======= quarter_circle - BEGIN  ==================
 
    quarter_circle._system_name = "Coupled_Biharmonic3";
 
@@ -282,12 +278,31 @@ int main(int argc, char** args) {
    quarter_circle._assemble_function_for_rhs        = & app_quarter_circle_function_zero_on_boundary_1_laplacian;
    quarter_circle._true_solution_function           = & app_quarter_circle_function_zero_on_boundary_1;
 
-    // ======= annulus - END  ==================
+    // ======= quarter_circle - END  ==================
+
+
+// // //     // ======= quarter_circle_Nzero - BEGIN  ==================
+// // //
+// // //    quarter_circle._system_name = "Coupled_Biharmonic4";
+// // //
+// // //    quarter_circle_Nzero._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
+// // //    quarter_circle_Nzero._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/circle_quarter/");
+// // //    quarter_circle_Nzero._assemble_function =NAMESPACE_FOR_BIHARMONIC_COUPLED:: biharmonic_coupled_equation::AssembleBilaplaceProblem_AD;
+// // //
+// // //    quarter_circle_Nzero._boundary_conditions_types_and_values         = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
+// // //
+// // //    Domains::quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
+// // //    Domains::quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1_Laplacian<>   app_quarter_circle_function_zero_on_boundary_1_laplacian;
+// // //
+// // //    quarter_circle_Nzero._assemble_function_for_rhs        = & app_quarter_circle_function_zero_on_boundary_1_laplacian;
+// // //    quarter_circle_Nzero._true_solution_function           = & app_quarter_circle_function_zero_on_boundary_1;
+// // //
+// // //     // ======= quarter_circle_Nzero - END  ==================
 
   my_specifics.push_back(app_square_m05p05_1);
   my_specifics.push_back(app_square_m05p05_2);
   my_specifics.push_back(quarter_circle);
-
+// // //   my_specifics.push_back(quarter_circle_Nzero);
 
 
  // ======= App loop - BEGIN  ==================
