@@ -855,15 +855,15 @@ int main(int argc, char** args) {
 
 
   my_specifics.push_back(app_segment);
-  my_specifics.push_back(app_square);
-  my_specifics.push_back(app_semicircle);
-  my_specifics.push_back(app_quarter_circle);
-  my_specifics.push_back(app_annulus);
-  my_specifics.push_back(app_semiannulus);
-  my_specifics.push_back(app_cube);
-  my_specifics.push_back(app_cylinder);
-  my_specifics.push_back(app_quarter_cylinder);
-  my_specifics.push_back(app_prism_annular_base);
+  // my_specifics.push_back(app_square);
+  // my_specifics.push_back(app_semicircle);
+  // my_specifics.push_back(app_quarter_circle);
+  // my_specifics.push_back(app_annulus);
+  // my_specifics.push_back(app_semiannulus);
+  // my_specifics.push_back(app_cube);
+  // my_specifics.push_back(app_cylinder);
+  // my_specifics.push_back(app_quarter_cylinder);
+  // my_specifics.push_back(app_prism_annular_base);
 
     // ======= App Specifics for all mesh files - END  ==================
 
@@ -1477,7 +1477,7 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
 
         double exactSolValue =  ml_prob. get_ml_solution()-> get_analytical_function("u")->laplacian(xGauss);
 
-        double f = exactSolValue  * phi[i] ;
+        const double f = solvGauss/*exactSolValue*/  * phi[i] ;
         aRes[i] += (f - Laplace) * weight;
 
       } // end phi_i loop
