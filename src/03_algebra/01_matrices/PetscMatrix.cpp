@@ -76,7 +76,7 @@ namespace femus {
 
       // Create matrix.  Revisit later to do preallocation and make more efficient
       ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global,
-                              n_nz, PETSC_NULL, &_mat);
+                              n_nz, PETSC_NULLPTR, &_mat);
       CHKERRABORT (MPI_COMM_WORLD, ierr);
       ierr = MatSetFromOptions (_mat);
       CHKERRABORT (MPI_COMM_WORLD, ierr);
@@ -94,7 +94,7 @@ namespace femus {
       ierr = MatSetType (_mat, MATMPIAIJ); // Automatically chooses seqaij or mpiaij
       CHKERRABORT (MPI_COMM_WORLD, ierr);
 
-      ierr = MatMPIAIJSetPreallocation (_mat, nnz, PETSC_NULL, noz, PETSC_NULL);
+      ierr = MatMPIAIJSetPreallocation (_mat, nnz, PETSC_NULLPTR, noz, PETSC_NULLPTR);
       CHKERRABORT (MPI_COMM_WORLD, ierr);
 
     }
@@ -124,7 +124,7 @@ namespace femus {
         std::cout << "A_" << k / nc << k % nc << " ";
       }
       else {
-        KK[k] = PETSC_NULL;
+        KK[k] = PETSC_NULLPTR;
         std::cout << "  0  ";
       }
     }
@@ -228,7 +228,7 @@ namespace femus {
       assert ( (m_local == m_global) && (n_local == n_global));
       if (n_nz.empty())
         ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global,
-                                PETSC_DEFAULT, (int*) PETSC_NULL, &_mat);
+                                PETSC_DEFAULT, (int*) PETSC_NULLPTR, &_mat);
       else
         ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global,
                                 PETSC_DEFAULT, (int*) &n_nz[0], &_mat);
@@ -245,8 +245,8 @@ namespace femus {
 //       ierr = MatCreateMPIAIJ(MPI_COMM_WORLD,
 //                              m_local, n_local,
 //                              m_global, n_global,
-//                              PETSC_NULL, (int*) PETSC_NULL,
-//                              PETSC_NULL, (int*) PETSC_NULL,
+//                              PETSC_NULLPTR, (int*) PETSC_NULLPTR,
+//                              PETSC_NULLPTR, (int*) PETSC_NULLPTR,
 //                              &_mat
 //                             );
 
@@ -270,8 +270,8 @@ namespace femus {
 //       ierr = MatCreateMPIAIJ(MPI_COMM_WORLD,
 //                              m_local, n_local,
 //                              m_global, n_global,
-//                              PETSC_NULL, (int*) &n_nz[0],
-//                              PETSC_NULL, (int*) &n_oz[0],
+//                              PETSC_NULLPTR, (int*) &n_nz[0],
+//                              PETSC_NULLPTR, (int*) &n_oz[0],
 //                              &_mat
 //                             );
 
@@ -372,11 +372,11 @@ namespace femus {
       assert ( (m_l == m) && (n_l == n));
       if (n_nz.empty())
 //         ierr = MatCreateSeqAIJ(MPI_COMM_WORLD, m_global, n_global, //TODO eugenio
-//                                PETSC_NULL, (int*) PETSC_NULL, &_mat);
-        ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global, PETSC_DEFAULT, PETSC_NULL, &_mat); //TODO eugenio
+//                                PETSC_NULLPTR, (int*) PETSC_NULLPTR, &_mat);
+        ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global, PETSC_DEFAULT, PETSC_NULLPTR, &_mat); //TODO eugenio
       else
 //         ierr = MatCreateSeqAIJ(MPI_COMM_WORLD, m_global, n_global, //TODO eugenio
-//                                PETSC_NULL, (int*) &n_nz[0], &_mat);
+//                                PETSC_NULLPTR, (int*) &n_nz[0], &_mat);
         ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global, PETSC_DEFAULT, &n_nz[0], &_mat); //TODO eugenio
       CHKERRABORT (MPI_COMM_WORLD, ierr);
 
@@ -389,20 +389,20 @@ namespace femus {
 //         ierr = MatCreateAIJ(MPI_COMM_WORLD, //TODO eugenio
 //                             m_local, n_local,
 //                             m_global, n_global,
-//                             PETSC_NULL, (int*) PETSC_NULL,
-//                             PETSC_NULL, (int*) PETSC_NULL, &_mat);
+//                             PETSC_NULLPTR, (int*) PETSC_NULLPTR,
+//                             PETSC_NULLPTR, (int*) PETSC_NULLPTR, &_mat);
 
         ierr = MatCreateAIJ (MPI_COMM_WORLD, //TODO eugenio
                              m_local, n_local,
                              m_global, n_global,
-                             PETSC_DEFAULT, PETSC_NULL,
-                             PETSC_DEFAULT, PETSC_NULL, &_mat);
+                             PETSC_DEFAULT, PETSC_NULLPTR,
+                             PETSC_DEFAULT, PETSC_NULLPTR, &_mat);
       else
 //         ierr = MatCreateAIJ(MPI_COMM_WORLD, //TODO eugenio
 //                             m_local, n_local,
 //                             m_global, n_global,
-//                             PETSC_NULL, (int*) &n_nz[0],
-//                             PETSC_NULL, (int*) &n_oz[0], &_mat);
+//                             PETSC_NULLPTR, (int*) &n_nz[0],
+//                             PETSC_NULLPTR, (int*) &n_oz[0], &_mat);
 
         ierr = MatCreateAIJ (MPI_COMM_WORLD, //TODO eugenio
                              m_local, n_local,
@@ -441,7 +441,7 @@ namespace femus {
     semiparallel_only();
     int ierr = 0;
     if (!rows.empty()) ierr = MatZeroRows (_mat, rows.size(), &rows[0], diag_value, 0, 0); // add,0,0,)    !!!!
-    else   ierr = MatZeroRows (_mat, 0, PETSC_NULL, diag_value, 0, 0);                    // add,0,0,)    !!!!
+    else   ierr = MatZeroRows (_mat, 0, PETSC_NULLPTR, diag_value, 0, 0);                    // add,0,0,)    !!!!
     CHKERRABORT (MPI_COMM_WORLD, ierr);
   }
 
@@ -1042,7 +1042,7 @@ namespace femus {
     int ierr;
 #if PETSC_VERSION_LESS_THAN(3,0,0)
     if (&petsc_dest == this)
-      ierr = MatTranspose (_mat, PETSC_NULL);
+      ierr = MatTranspose (_mat, PETSC_NULLPTR);
     else
       ierr = MatTranspose (_mat, &petsc_dest._mat);
     CHKERRABORT (MPI_COMM_WORLD, ierr);

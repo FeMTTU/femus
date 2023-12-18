@@ -120,7 +120,7 @@ namespace femus {
       ///    Return the value of the entry  (i,j). Do not use
       double operator() (const int i, const int j) const;
       /// Return the row values
-      int MatGetRowM (const int i_val, int cols[] = PETSC_NULL , double vals[] = PETSC_NULL);
+      int MatGetRowM (const int i_val, int cols[] = PETSC_NULLPTR , double vals[] = PETSC_NULLPTR);
 
       // Setting -------------------------------------
       /** @deprecated */
@@ -409,7 +409,7 @@ namespace femus {
     ierr  = MatRestoreRow (_mat, i_val, &ncols, &petsc_cols, &petsc_row);
     CHKERRABORT (MPI_COMM_WORLD, ierr);
     // print row
-    if (&cols[0] != PETSC_NULL)   for (int j = 0; j < ncols; j++)  {
+    if (&cols[0] != PETSC_NULLPTR)   for (int j = 0; j < ncols; j++)  {
         cols[j] = petsc_cols[j];
         vals[j] = petsc_row[j];
       }

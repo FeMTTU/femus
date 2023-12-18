@@ -289,7 +289,7 @@ namespace femus {
 
     KSP* subksps;
     
-    //PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+    //PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULLPTR, &subksps);
     
     PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
     

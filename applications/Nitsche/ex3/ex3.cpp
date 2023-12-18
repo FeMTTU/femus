@@ -60,7 +60,7 @@ int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
 
-  SlepcInitialize(&argc, &args, PETSC_NULL, PETSC_NULL);
+  SlepcInitialize(&argc, &args, PETSC_NULLPTR, PETSC_NULLPTR);
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   // define multilevel mesh

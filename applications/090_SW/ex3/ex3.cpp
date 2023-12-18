@@ -103,7 +103,7 @@ void ETD(MultiLevelProblem& ml_prob);
 int main(int argc, char** args)
 {
 
-  SlepcInitialize(&argc, &args, PETSC_NULL, PETSC_NULL);
+  SlepcInitialize(&argc, &args, PETSC_NULLPTR, PETSC_NULLPTR);
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -513,7 +513,7 @@ void ETD(MultiLevelProblem& ml_prob)
 //   FNSetType(f2, FNRATIONAL);
 //   double coeff1[1] = { -1};
 //   FNRationalSetNumerator(f2, 1, coeff1);
-//   FNRationalSetDenominator(f2, 0, PETSC_NULL);
+//   FNRationalSetDenominator(f2, 0, PETSC_NULLPTR);
 // 
 //   FNSetType( f3, FNCOMBINE );
 // 
@@ -522,7 +522,7 @@ void ETD(MultiLevelProblem& ml_prob)
 //   FNSetType(f4, FNRATIONAL);
 //   double coeff2[2] = {1., 0.};
 //   FNRationalSetNumerator(f4, 2, coeff2);
-//   FNRationalSetDenominator(f4, 0, PETSC_NULL);
+//   FNRationalSetDenominator(f4, 0, PETSC_NULLPTR);
 // 
 //   FNSetType( f, FNCOMBINE );
 // 

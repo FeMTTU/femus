@@ -272,7 +272,7 @@ namespace femus {
     KSP* subksps;
     int nlocal;
 
-    ierr = PCASMGetSubKSP(pc, &nlocal, PETSC_NULL, &subksps);
+    ierr = PCASMGetSubKSP(pc, &nlocal, PETSC_NULLPTR, &subksps);
     CHKERRABORT(MPI_COMM_WORLD, ierr);
 
     PetscReal epsilon = 1.e-16;
@@ -332,11 +332,11 @@ namespace femus {
 //   int n_local;
 // //
 // //   // The global number of the first block on this processor.
-// //   // This is not used, so we just pass PETSC_NULL instead.
+// //   // This is not used, so we just pass PETSC_NULLPTR instead.
 // //   // int first_local;
 // //
 // //   // Fill array of local KSP contexts
-//   ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULL, &subksps);
+//   ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULLPTR, &subksps);
 //   CHKERRABORT(MPI_COMM_WORLD, ierr);
 // //
 // //   // Loop over sub-ksp objects, set ILU preconditioner

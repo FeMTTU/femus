@@ -62,7 +62,7 @@ int main ( int argc, char** argv )
 {
 
     PetscErrorCode ierr;
-    ierr = SlepcInitialize ( &argc, &argv, PETSC_NULL, PETSC_NULL );
+    ierr = SlepcInitialize ( &argc, &argv, PETSC_NULLPTR, PETSC_NULLPTR );
 
     // init Petsc-MPI communicator
     FemusInit mpinit ( argc, argv, MPI_COMM_WORLD );

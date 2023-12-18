@@ -595,7 +595,7 @@ void PetscVector::localize(
 
   // Create the index set & scatter object
   if (idx.empty())  ierr = ISCreateGeneral(MPI_COMM_WORLD,n_sl+this->local_size(),
-                             PETSC_NULL, PETSC_USE_POINTER, &is);
+                             PETSC_NULLPTR, PETSC_USE_POINTER, &is);
   else  ierr = ISCreateGeneral(MPI_COMM_WORLD,n_sl+this->local_size(),
                                  &idx[0],  PETSC_USE_POINTER,&is);
   CHKERRABORT(MPI_COMM_WORLD,ierr);

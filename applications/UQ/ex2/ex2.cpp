@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 
   //BEGIN eigenvalue problem instances
   PetscErrorCode ierr;
-  ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
+  ierr = SlepcInitialize(&argc, &argv, PETSC_NULLPTR, PETSC_NULLPTR);
 
 //   numberOfEigPairs = 5; //number of eigenpairs desired
 

@@ -540,7 +540,7 @@ namespace femus {
     // boundary between processors.
     //assert(n_local == 0 || n_local == n || !ghost.empty());
 
-    PetscInt* petsc_ghost = ghost.empty() ? PETSC_NULL :
+    PetscInt* petsc_ghost = ghost.empty() ? PETSC_NULLPTR :
                             const_cast<int*> (reinterpret_cast<const PetscInt*> (&ghost[0]));
 
     // Clear initialized vectors

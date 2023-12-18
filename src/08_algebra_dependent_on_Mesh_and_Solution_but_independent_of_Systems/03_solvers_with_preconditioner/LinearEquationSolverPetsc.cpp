@@ -703,7 +703,7 @@ namespace femus {
       // behavior is for PETSc to allocate (internally) an array
       // of size 1000 to hold the residual norm history.
       ierr = KSPSetResidualHistory (_ksp,
-                                    PETSC_NULL,   // pointer to the array which holds the history
+                                    PETSC_NULLPTR,   // pointer to the array which holds the history
                                     PETSC_DECIDE, // size of the array holding the history
                                     PETSC_TRUE);  // Whether or not to reset the history for each solve.
       CHKERRABORT (MPI_COMM_WORLD, ierr);
