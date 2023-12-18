@@ -24,37 +24,33 @@
 
 #include "FE_convergence.hpp"
 
-//Additional includes
-
 #include "Solution_functions_over_domains_or_mesh_files.hpp"
-// #include "../tutorial_common.hpp"
+
+
 
 using namespace femus;
 
 
-namespace  Domains  {
+namespace Domains {
 
 namespace  square_m05p05  {
-
-//  [[deprecated("Use calcSomethingDifferently(int).")]]
- template < class type = double >
-class Function_Zero_on_boundary_4_laplacian : public Math::Function< type > {
+template < class type = double >
+class Function_Zero_on_boundary_4_Laplacian : public Math::Function< type > {
 
 public:
 
     type value(const std::vector < type >& x) const {
 
-  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+        return  -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
     }
 
 
     std::vector < type >  gradient(const std::vector < type >& x) const {
 
         std::vector < type > solGrad(x.size(), 0.);
-// [[deprecated()]]
-        solGrad[0]  =  -pi * sin(pi * x[0]) * cos(pi * x[1]);
-// [[deprecated()]]
-solGrad[1]  =  -pi * cos(pi * x[0]) * sin(pi * x[1]);
+
+        solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
+        solGrad[1]  = 2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
 
         return solGrad;
     }
@@ -62,8 +58,7 @@ solGrad[1]  =  -pi * cos(pi * x[0]) * sin(pi * x[1]);
 
     type laplacian(const std::vector < type >& x) const {
 
-// [[deprecated()]]
-return  -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+        return  4. * pi * pi * pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
     }
 
 
@@ -72,15 +67,15 @@ return  -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * 
 
    static constexpr double pi = acos(-1.);
 
-     };
+};
 
-   }
+}
 
- }
+}
 
 
 
-//Boundary_integral-BEGIN
+//=================Boundary_integral-BEGIN==========================
 using namespace femus;
 
 namespace biharmonic{
@@ -460,31 +455,7 @@ static void natural_loop_V_2d3d(const MultiLevelProblem *    ml_prob,
 
 };
 
-//Boundary_integral-END
-
-
-// template < class real_num, class real_num_mov >
-
-//====Setting_initial_conditions_with_analytical_solutions-BEGIN==============================
-double Solutions_set_initial_conditions_with_analytical_sol(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
-    Math::Function <double> * exact_sol = ml_prob-> get_ml_solution()-> get_analytical_function(name);
-
-    double value  = exact_sol-> value(x);
-}
-//====Setting_initial_conditions_with_analytical_solutions-END================================
-
-
-//=====Dirichlet_Nonhomogenous-BEGIN==================
-bool Solutions_set_boundary_conditions_all_dirichlet_nonhomogenous(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name, double & value, const int faceName, const double time){
-    bool dirichlet = true;
-
-    Math::Function <double> * exact_sol = ml_prob -> get_ml_solution() -> get_analytical_function(name);
-
-    value = exact_sol-> value(x);
-
-    return dirichlet;
-}
-
+//=================Boundary_integral-END==========================
 
 
 
@@ -508,8 +479,6 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <
 //===========NONHOMOGENOUS_BC-END====================
 
 
-
-
 void AssembleU_AD(MultiLevelProblem& ml_prob);
 void AssembleV_AD(MultiLevelProblem& ml_prob);
 
@@ -523,19 +492,38 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
 
+    // ======= Files - BEGIN  ========================
+  const bool use_output_time_folder = false; // This allows you to run the code multiple times without overwriting. This will generate an output folder each time you run.
+  const bool redirect_cout_to_file = false; // puts the output in a log file instead of the term
+  Files files;
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
+
+  // ======= Files - END  ========================
+
+  system_specifics  system_biharmonic_uncoupled;   //me
+
+
+  system_biharmonic_uncoupled._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
+  const std::string relative_path_to_build_directory =  "../../../../";
+  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
+  system_biharmonic_uncoupled._mesh_files_path_relative_to_executable.push_back(mesh_file);
+
+
+  system_biharmonic_uncoupled._system_name = "Biharmonic_uncoupled";
+
+  Domains::square_m05p05::Function_Zero_on_boundary_4<>   system_biharmonic_uncoupled_function_zero_on_boundary_1;
+  Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<>   system_biharmonic_uncoupled_function_zero_on_boundary_1_Laplacian;
+
+
+
   // define multilevel mesh
   MultiLevelMesh mlMsh;
 
-  //define mutlilevel problem
-//   MultiLevelProblem ml_prob;
-  // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  const std::string relative_path_to_build_directory =  "../../../../";
-  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
-  
-      std::string fe_quad_rule("seventh");
-  
-  mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
+
+  std::string fe_quad_rule("seventh");
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), "seventh", scalingFactor);
 
   unsigned maxNumberOfMeshes = 5;
 
@@ -574,12 +562,10 @@ int main(int argc, char** args) {
 
       // add variables to mlSol
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
-      Domains::square_m05p05::Function_Zero_on_boundary_4 <double> analytical_function_1;
-      mlSol.set_analytical_function("u", & analytical_function_1);
+      mlSol.set_analytical_function("u", & system_biharmonic_uncoupled_function_zero_on_boundary_1);
 
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
-      Domains::square_m05p05::Function_Zero_on_boundary_4_laplacian<double> analytical_function_1_laplacian;
-      mlSol.set_analytical_function("v", &analytical_function_1);
+      mlSol.set_analytical_function("v", & system_biharmonic_uncoupled_function_zero_on_boundary_1_Laplacian);
 
       mlSol.Initialize("All");
 
@@ -620,7 +606,7 @@ int main(int argc, char** args) {
       systemU.MGsolve(); //then solve for u using v
 
       // convergence for u
-      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", &analytical_function_1);
+      std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", &system_biharmonic_uncoupled_function_zero_on_boundary_1);
 
 
       l2Norm[i][j]  = norm.first;
@@ -704,6 +690,8 @@ int main(int argc, char** args) {
 }
 
 
+
+// ======= Assembly for U and V - BEGIN  ========================
 
 // - Delta v = f
 void AssembleV_AD(MultiLevelProblem& ml_prob) {
@@ -922,7 +910,6 @@ void AssembleV_AD(MultiLevelProblem& ml_prob) {
 
   KK->close();
 
-  // ***************** END ASSEMBLY *******************
 }
 
 
@@ -1156,6 +1143,7 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
 
 }
 
+//=================Assembly for U and V -END==========================
 
 
 
