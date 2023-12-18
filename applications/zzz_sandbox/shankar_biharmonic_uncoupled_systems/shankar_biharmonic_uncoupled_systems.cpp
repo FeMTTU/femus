@@ -25,315 +25,12 @@
 #include "FE_convergence.hpp"
 
 //Additional includes
+#include "00_system_specifics.hpp"
 
-// #include "Solution_functions_over_domains_or_mesh_files.hpp"
-// #include "../tutorial_common.hpp"
+#include "Solution_functions_over_domains_or_mesh_files.hpp"
+
 
 using namespace femus;
-
-
-namespace  Domains  {
-
-namespace  square_m05p05  {
-
-//  [[deprecated("Use calcSomethingDifferently(int).")]]
- template < class type = double >
-class Function_Zero_on_boundary_4_laplacian : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-
-  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-// [[deprecated()]]
-        solGrad[0]  =  -pi * sin(pi * x[0]) * cos(pi * x[1]);
-// [[deprecated()]]
-solGrad[1]  =  -pi * cos(pi * x[0]) * sin(pi * x[1]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-// [[deprecated()]]
-return  -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-    }
-
-
-
-  private:
-
-   static constexpr double pi = acos(-1.);
-
-     };
-
-   }
-
-
-namespace  square_01by01  {
-
-
-
-template < class type = double >
-class Function_NonZero_on_boundary_1_laplacian : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-
-        return x[0] * x[0] * (1. - x[0]) + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  =  - x[0] * x[0] +  (1. - x[0]) * 2. * x[0]  + pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
-        solGrad[1]  =                                              pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-        return   - 2. * x[0] +  2. * (1. - x[0])  -  2. * x[0]  - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
-    }
-
-
-
-  private:
-
-   static constexpr double pi = acos(-1.);
-
-};
-
-
-
-template < class type = double >
-class Function_Zero_on_boundary_1_laplacian : public Math::Function< type > {
-
-
-
-public:
-
-    type value(const std::vector < type >& x) const {
-
-    return x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
-        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-    return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-    }
-
-
-
-};
-
-
-
-//this solution shows SUPERCONVERGENCE for SERENDIPITY FE, and it is like SUPER PERFECT for BIQUADRATIC FE... it is because of the MESH!
-template < class type = double >
-class Function_Zero_on_boundary_2_laplacian : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-
-        return  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  = (1. - 2. * x[0]) *  x[1] * (1. - x[1]);
-        solGrad[1]  = (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-        return -2. * ( x[0] * (1. - x[0])  + x[1] * (1. - x[1]) );
-    }
-
-
-
-};
-
-
-//this solution does not have SUPERCONVERGENCE even with the straight mesh
-template < class type = double >
-class Function_Zero_on_boundary_3_laplacian : public Math::Function< type > {
-
-public:
-
-// manufactured Laplacian =============
-    type value(const std::vector < type >& x) const {
-
-        return    x[0] *  x[0] * (1. - x[0]) * x[1] * (1. - x[1]) ;
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  =  x[0] * (1. - 2. * x[0]) *  x[1] * (1. - x[1]) +  x[0] * (1. - x[0]) * x[1] * (1. - x[1]);
-        solGrad[1]  =  x[0] * (1. - 2. * x[1]) *  x[0] * (1. - x[0]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-        return     x[0] *  (  -2. *  x[1] * (1. - x[1])   ) + 2. *  (1. - 2. * x[0]) *  x[1] * (1. - x[1])   +  x[0] * ( -2. *  x[0] * (1. - x[0])) ;
-    }
-
-
-
-};
-
-
-template < class type = double >
-class Function_Zero_on_boundary_4_laplacian : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-
-        return + sin( pi * (x[0]) ) * sin( pi * (x[1]) );
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
-        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
-    }
-
-
-
-  private:
-
-   static constexpr double pi = acos(-1.);
-
-};
-
-template < class type = double >
-class Function_Zero_on_boundary_5_laplacian : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-
-        return  cos(pi * x[0]) * cos(pi * x[1]);
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  = - pi * sin(pi * x[0]) * cos(pi * x[1]);
-        solGrad[1]  = - pi * cos(pi * x[0]) * sin(pi * x[1]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-        return  -2.*pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-    }
-
-
-
-  private:
-
-   static constexpr double pi = acos(-1.);
-
-};
-
-
-template < class type = double >
-class Function_Zero_on_boundary_5_Laplacian : public Math::Function< type > {
-
-public:
-
-    type value(const std::vector < type >& x) const {
-
-        return  -2.* pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-    }
-
-
-    std::vector < type >  gradient(const std::vector < type >& x) const {
-
-        std::vector < type > solGrad(x.size(), 0.);
-
-        solGrad[0]  = 2. * pi * pi * pi * sin(pi * x[0]) * cos(pi * x[1]);
-        solGrad[1]  = 2. * pi * pi * pi * cos(pi * x[0]) * sin(pi * x[1]);
-
-        return solGrad;
-    }
-
-
-    type laplacian(const std::vector < type >& x) const {
-
-        return  4. * pi * pi * pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-    }
-
-
-
-  private:
-
-   static constexpr double pi = acos(-1.);
-
-};
-
-
-
-} //end namespace
-
-
- }
-
-
 
 //Boundary_integral-BEGIN
 using namespace femus;
@@ -719,22 +416,12 @@ static void natural_loop_V_2d3d(const MultiLevelProblem *    ml_prob,
 
 
 
-
-//====Setting_initial_conditions_with_analytical_solutions-BEGIN==============================
-double Solutions_set_initial_conditions_with_analytical_sol(const MultiLevelProblem * ml_prob, const std::vector <double> & x, const char * name){
-    Math::Function <double> * exact_sol = ml_prob-> get_ml_solution()-> get_analytical_function(name);
-
-    double value  = exact_sol-> value(x);
-}
-//====Setting_initial_conditions_with_analytical_solutions-END================================
-
-
 //================MANUFACTURED_SOLUTION-BEGIN===================
 double GetExactSolutionValue(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
 
     Math::Function< double > *  exact_sol =  ml_prob->get_ml_solution()->get_analytical_function(name);
 
-double value = exact_sol->value(x);
+    double value = exact_sol->value(x);
 
    return value;
 };
@@ -802,19 +489,11 @@ void LaplaceGetExactSolutionGradient(const MultiLevelProblem * ml_prob, std::vec
 
 //===========Boundary_Conditions-BEGIN================
 
-
-
-//===========HOMOGENOUS_Dirichlet-BEGIN====================
-bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = true; //dirichlet
-  value = 0.;
-  return dirichlet;
-}
-//===========HOMOGENOUS_Dirichlet-END====================
-
-
-
 //===========NONHOMOGENOUS_Dirichlet_BC-BEGIN====================
+namespace boundaryConditions {
+
+    namespace NonhomogenousCondition{
+
 bool SetBoundaryConditionNonhomogenous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time) {
   bool dirichlet = true;
 
@@ -830,26 +509,11 @@ bool SetBoundaryConditionNonhomogenous(const MultiLevelProblem * ml_prob, const 
 
   return dirichlet;
 }
-
-//===========NONHOMOGENOUS_Dirichlet__BC-END====================
-
-//===========Neumann-BEGIN==================
-bool SetBoundaryConditionNeumann(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time){
-    bool neumann = true;
-
-    if (!strcmp(SolName, "u")) {
-      Math::Function <double> * gradient_value = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
-      // strcmp compares two string in lexiographic sense.
-    Value = gradient_value -> gradient(x)[0];
-
     }
 
-    return neumann;
 }
 
-
-//==========Neumann-END===============
-
+//===========NONHOMOGENOUS_Dirichlet__BC-END====================
 
 
 //===========Boundary_Conditions-END================
@@ -867,35 +531,390 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  //Multilevelproblem
+  MultiLevelProblem ml_prob;
 
-  // define multilevel mesh
-  MultiLevelMesh mlMsh;
 
-  //define mutlilevel problem
-//   MultiLevelProblem ml_prob;
-  // read coarse level mesh and generate finers level meshes
-  double scalingFactor = 1.;
+
+
+
+  //=======Files-BEGIN=======
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
+  Files files;
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
+
+
+  //======Problem, files-BEGIN========
+  ml_prob.SetFilesHandler(& files);
+   //======Problem, files-END========
+
+
+  //=========Problem, Quad Rule-BEGIN=======
+  std::string fe_quad_rule("seventh");
+  //=========Problem, Quad Rule-END=========
+
+  //Start defining applications for each manufactured solution
+//   //==========APP_SPECIFICS-BEGIN===========
+//   std::string system_common_name = "Poisson";
+//
+//   std::vector <system_specifics>  my_specifics;
+//
+//   system_specifics app_square_01by01;
+//
+//   system_specifics app_square_m05p05;
+//
+//   system_specifics app_square_01by01_2;
+//
+//   system_specifics  app_cylinder;
+//
+// //   system_specifics app_circle;
+//
+//   const std::string relative_path_to_build_directory =  "../../../";
+//
+//   //==========app_square_01by01-BEGIN=======
+//   app_square_01by01._system_name = "Poisson1";
+//
+//   app_square_01by01._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
+//
+//   app_square_01by01._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
+//
+//   Domains::square_01by01::Function_Zero_on_boundary_1<>  app_square_function_zero_on_boundary_1;
+//
+//   app_square_01by01._true_solution_function = & app_square_function_zero_on_boundary_1;
+//
+//   app_square_01by01._assemble_function_for_rhs = & app_square_function_zero_on_boundary_1;
+//
+//   app_square_01by01._boundary_conditions_types_and_values = boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+//
+//   //==========app_square_01by01-END=======
+//
+//
+//
+//   //==========app_square_m05p05-BEGIN=======
+//   app_square_m05p05._system_name = "Poisson2";
+//
+//   app_square_m05p05._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
+//
+//   app_square_m05p05._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
+//
+//   Domains::square_01by01::Function_Zero_on_boundary_4<>  app_square_function_zero_on_boundary_4;
+//
+//   app_square_m05p05._true_solution_function = & app_square_function_zero_on_boundary_4;
+//
+//   app_square_m05p05._assemble_function_for_rhs = & app_square_function_zero_on_boundary_4;
+//
+//   app_square_m05p05._boundary_conditions_types_and_values = boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+//
+//   //==========app_square_01by01-END=======
+//
+//
+//
+//
+//   //===========app_square_01by01_2-BEGIN======
+//   app_square_01by01_2._system_name = "Poisson3";
+//
+//   app_square_01by01_2._mesh_files.push_back("square_0-1x0-1_divisions_2x2.med");
+//
+//   app_square_01by01_2._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/0-1x0-1/");
+//
+//   Domains::square_01by01::Function_Zero_on_boundary_2<>  app_square_function_zero_on_boundary_2;
+//
+//   app_square_01by01_2._true_solution_function = & app_square_function_zero_on_boundary_2;
+//
+//   app_square_01by01_2._assemble_function_for_rhs = & app_square_function_zero_on_boundary_2;
+//
+//   app_square_01by01_2._boundary_conditions_types_and_values = boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+//
+//   //===========app_square_01by01_2-END======
+//
+//
+// /*
+//   //===========App_circle-BEGIN========
+//
+//   app_circle._mesh_files.push_back("disk_quad.med");
+//
+//   app_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/circle/");
+//
+//   Domains::circle::Function_Zero_on_boundary_1<>  app_circle_function_zero_on_boundary_1;
+//
+//   app_circle._true_solution_function = & app_circle_function_zero_on_boundary_1;
+//
+//   app_circle._assemble_function_for_rhs = & app_circle_function_zero_on_boundary_1;
+//
+//   //===========App_circle-END==========*/
+//
+//
+//
+//
+// /*
+//  //============App_cylinder-BEGIN========
+//   app_cylinder._mesh_files.push_back("assignment_cylinder_hexahedral.med");
+//
+//   app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/cylinder/");
+//
+//   Domains::cylinder_along_z_with_base_centered_at_1_by_1::Function_Zero_on_boundary_1<>  app_cylinder_function_zero_on_boundary_1;
+//
+//   app_cylinder._true_solution_function = & app_cylinder_function_zero_on_boundary_1;
+//
+//   app_cylinder._assemble_function_for_rhs = & app_cylinder_function_zero_on_boundary_1;
+//
+//   //===========App_cylinder-END==========*/
+//
+//
+//
+//
+//
+//   my_specifics.push_back(app_square_01by01);
+//
+//   my_specifics.push_back(app_square_m05p05);
+//
+//    my_specifics.push_back(app_square_01by01_2);
+//
+// //   my_specifics.push_back(app_cylinder);
+//
+// //   my_specifics.push_back(app_circle);
+//
+// //===========APP_SPECIFICS-END============
+
+
+
+    // ======= App Specifics for all mesh files - BEGIN  ==================
+//   std::string system_common_name = "Laplace";
+  std::vector< system_specifics >   my_specifics;
+
+  system_specifics  app_segment;   //me
+
+  system_specifics  app_square;   //me
+//   system_specifics  app_circle;   //Gayani
+  system_specifics  app_semicircle;   //Himali
+  system_specifics  app_quarter_circle;      //Max
+  system_specifics  app_annulus;       //Jon
+  system_specifics  app_semiannulus;        //Fahad
+
+  system_specifics  app_cube;   //me
+  system_specifics  app_cylinder;            //Aman
+//   system_specifics  app_semicylinder;   //Rifat
+  system_specifics  app_quarter_cylinder; //Armando   //coarser mesh to be done
+  system_specifics  app_prism_annular_base;  //Abu
+
   const std::string relative_path_to_build_directory =  "../../../";
-//   const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/minus0p5-plus0p5_minus0p5-plus0p5/square_-0p5-0p5x-0p5-0p5_divisions_2x2.med";
-  const std::string mesh_file = relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/02_2d/square/0-1x0-1/square_0-1x0-1_divisions_2x2.med";
+
+  //segment - BEGIN
+  app_segment._system_name = "Segment";
+  app_segment._mesh_files.push_back("segment_16_dir_neu.med");
+  app_segment._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/1d/segment/0-1/");
+
+  app_segment._boundary_conditions_types_and_values             = boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::segment_0x1::Function_Zero_on_boundary_1<>   app_segment_function_zero_on_boundary_1;
+  app_segment._assemble_function_for_rhs   = & app_segment_function_zero_on_boundary_1;
+  app_segment._true_solution_function      = & app_segment_function_zero_on_boundary_1;
+  //segment - END
 
 
-      std::string fe_quad_rule("seventh");
+ //assignment_square - BEGIN
+  app_square._system_name = "Square";
+  app_square._mesh_files.push_back("square_0-1x0-1_divisions_2x2.med");
+  app_square._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/0-1x0-1/");
 
-  mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
+  app_square._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
 
-  unsigned maxNumberOfMeshes = 5;
+  Domains::square_01by01::Function_Zero_on_boundary_1<>   app_square_function_zero_on_boundary_1;
+  app_square._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_1;
+  app_square._true_solution_function           = & app_square_function_zero_on_boundary_1;
+ //assignment_square - END
 
-  std::vector < std::vector < double > > l2Norm;
-  l2Norm.resize(maxNumberOfMeshes);
 
-  std::vector < std::vector < double > > semiNorm;
-  semiNorm.resize(maxNumberOfMeshes);
+  //assignment_semicircle - BEGIN
+  app_semicircle._system_name = "Semi_circle";
+  // app_semicircle._mesh_files.push_back("assignment_semicircle_triangular.med");
+  app_semicircle._mesh_files.push_back("assignment_semicircle_quadrilateral.med");
+  app_semicircle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/circle_semi/");
 
-    std::vector<FEOrder> feOrder;
-    feOrder.push_back(FIRST);
-    feOrder.push_back(SERENDIPITY);
-    feOrder.push_back(SECOND);
+  app_semicircle._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::semicircle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_semicircle_function_zero_on_boundary_1;
+  app_semicircle._assemble_function_for_rhs = & app_semicircle_function_zero_on_boundary_1;
+  app_semicircle._true_solution_function    = & app_semicircle_function_zero_on_boundary_1;
+  //assignment_semicircle - END
+
+
+  //assignment_quarter_circle - BEGIN
+  app_quarter_circle._system_name = "Quarter_circle";
+  app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_triangular.med");
+  app_quarter_circle._mesh_files.push_back("assignment_quarter_circle_quadrilateral.med");
+  app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/circle_quarter/");
+  app_quarter_circle._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/circle_quarter/");
+
+  app_quarter_circle._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::quarter_circle_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_quarter_circle_function_zero_on_boundary_1;
+  app_quarter_circle._assemble_function_for_rhs = & app_quarter_circle_function_zero_on_boundary_1;
+  app_quarter_circle._true_solution_function    = & app_quarter_circle_function_zero_on_boundary_1;
+  //assignment_quarter_circle - END
+
+
+  //assignment_annulus - BEGIN
+  app_annulus._system_name = "Annulus";
+  //   app_annulus._mesh_files.push_back("assignment_annulus_triangular.med");
+  app_annulus._mesh_files.push_back("assignment_annulus_quadrilateral.med");
+  app_annulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/annulus/");
+
+  app_annulus._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::annulus_centered_at_0_by_0::Function_Zero_on_boundary_1<>     app_annulus_function_zero_on_boundary_1;
+  app_annulus._assemble_function_for_rhs = & app_annulus_function_zero_on_boundary_1;
+  app_annulus._true_solution_function    = & app_annulus_function_zero_on_boundary_1;
+  //assignment_annulus - END
+
+
+  //assignment_semiannulus - BEGIN
+  app_semiannulus._system_name = "Semi_annulus";
+  app_semiannulus._mesh_files.push_back("assignment_semiannulus_triangular.med");
+  app_semiannulus._mesh_files.push_back("assignment_semiannulus_quadrilateral.med");
+  app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/annulus_semi/");
+  app_semiannulus._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/annulus_semi/");
+
+  app_semiannulus._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::semiannulus_centered_at_0_by_0_cut_along_y::Function_Zero_on_boundary_1<>     app_semiannulus_function_zero_on_boundary_1;
+  app_semiannulus._assemble_function_for_rhs = & app_semiannulus_function_zero_on_boundary_1;
+  app_semiannulus._true_solution_function    = & app_semiannulus_function_zero_on_boundary_1;
+  //assignment_semiannulus - END
+
+
+ //assignment_cube - BEGIN
+  app_cube._system_name = "Cube";
+  app_cube._mesh_files.push_back("cube_hexahedral_divisions_2x2x2.med");
+  app_cube._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/cube/0-1x0-1x0-1/");
+
+  app_cube._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::cube_01_by_01_by_01::Function_Zero_on_boundary_1<>   app_cube_function_zero_on_boundary_1;
+  app_cube._assemble_function_for_rhs              = & app_cube_function_zero_on_boundary_1;
+  app_cube._true_solution_function                 = & app_cube_function_zero_on_boundary_1;
+ //assignment_cube - END
+
+
+
+  //assignment_cylinder - BEGIN
+  app_cylinder._system_name = "Cylinder";
+  app_cylinder._mesh_files.push_back("assignment_cylinder_tetrahedral.med");
+  app_cylinder._mesh_files.push_back("assignment_cylinder_hexahedral.med");
+  app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/cylinder/");
+  app_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/cylinder/");
+
+  app_cylinder._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::cylinder_along_z_with_base_centered_at_1_by_1::Function_Zero_on_boundary_1<>   app_cylinder_function_zero_on_boundary_1;
+  app_cylinder._assemble_function_for_rhs                                    = & app_cylinder_function_zero_on_boundary_1;
+  app_cylinder._true_solution_function                                       = & app_cylinder_function_zero_on_boundary_1;
+  //assignment_cylinder - END
+
+
+  //assignment_quarter_cylinder - BEGIN
+  app_quarter_cylinder._system_name = "Quarter_circle";
+
+  app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_tetrahedral.med");
+  app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral.med");
+//   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral_0.med");
+//   app_quarter_cylinder._mesh_files.push_back("assignment_quarter_cylinder_hexahedral_1.med");
+  app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/cylinder_quarter/");
+  app_quarter_cylinder._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/cylinder_quarter/");
+
+  app_quarter_cylinder._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::quarter_cylinder_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_quarter_cylinder_function_zero_on_boundary_1;
+  app_quarter_cylinder._assemble_function_for_rhs                                    = & app_quarter_cylinder_function_zero_on_boundary_1;
+  app_quarter_cylinder._true_solution_function                                       = & app_quarter_cylinder_function_zero_on_boundary_1;
+  //assignment_quarter_cylinder - END
+
+
+
+
+  //assignment_tetra_prism_annular_base - BEGIN
+  app_prism_annular_base._system_name = "Annular_Base";
+  app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_tetrahedral.med");
+  app_prism_annular_base._mesh_files.push_back("assignment_prism_annular_base_hexahedral.med");
+  app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/prism_annular_base/");
+  app_prism_annular_base._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/3d/prism_annular_base/");
+
+  app_prism_annular_base._boundary_conditions_types_and_values             =boundaryConditions::NonhomogenousCondition::SetBoundaryConditionNonhomogenous;
+
+  Domains::prism_annular_base_along_z_with_base_centered_at_0_by_0::Function_Zero_on_boundary_1<>   app_prism_annular_base_function_zero_on_boundary_1;
+  app_prism_annular_base._assemble_function_for_rhs                                    = & app_prism_annular_base_function_zero_on_boundary_1;
+  app_prism_annular_base._true_solution_function                                       = & app_prism_annular_base_function_zero_on_boundary_1;
+  //assignment_tetra_prism_annular_base - END
+
+
+
+
+
+
+
+  my_specifics.push_back(app_segment);
+  my_specifics.push_back(app_square);
+  my_specifics.push_back(app_semicircle);
+  my_specifics.push_back(app_quarter_circle);
+  my_specifics.push_back(app_annulus);
+  my_specifics.push_back(app_semiannulus);
+  my_specifics.push_back(app_cube);
+  my_specifics.push_back(app_cylinder);
+  my_specifics.push_back(app_quarter_cylinder);
+  my_specifics.push_back(app_prism_annular_base);
+
+    // ======= App Specifics for all mesh files - END  ==================
+
+
+  //Application loop
+  for (unsigned int app = 0; app < my_specifics.size(); app++) {
+
+      //=======Problem, App===============
+      ml_prob.set_app_specs_pointer(&my_specifics[app]);
+
+       // define multilevel mesh
+      MultiLevelMesh mlMsh;
+
+      //Mesh Reading loop
+      for(unsigned int m=0; m< my_specifics[app]._mesh_files.size(); m++){
+          // ======= Mesh, Coarse reading - BEGIN ==================
+            double Lref = 1.;
+
+            const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
+            const bool read_boundary_groups = true;
+
+
+            const std::string mesh_file = my_specifics[app]._mesh_files_path_relative_to_executable[m] + my_specifics[app]._mesh_files[m];
+
+            mlMsh.ReadCoarseMeshFileReadingBeforePartitioning(mesh_file.c_str(), Lref, read_groups, read_boundary_groups);
+
+            mlMsh.GetLevelZero(0)->dofmap_build_all_fe_families_and_elem_and_node_structures();
+
+
+            mlMsh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
+
+            mlMsh.PrepareNewLevelsForRefinement();
+            // ======= Mesh, Coarse reading - END ==================
+
+            // read coarse level mesh and generate finers level meshes
+            double scalingFactor = 1.;
+
+            mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
+
+            unsigned maxNumberOfMeshes = 5;
+
+            std::vector < std::vector < double > > l2Norm;
+            l2Norm.resize(maxNumberOfMeshes);
+
+            std::vector < std::vector < double > > semiNorm;
+            semiNorm.resize(maxNumberOfMeshes);
+
+                std::vector<FEOrder> feOrder;
+                feOrder.push_back(FIRST);
+                feOrder.push_back(SERENDIPITY);
+                feOrder.push_back(SECOND);
 
 
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
@@ -918,33 +937,21 @@ int main(int argc, char** args) {
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
 
-
-      // add variables to mlSol
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
 
-//       Domains::square_m05p05::Function_Zero_on_boundary_4_laplacian <double> analytical_function_1;
-
-
-      Domains::square_01by01::Function_NonZero_on_boundary_1_laplacian <double> analytical_function_1;
-      mlSol.set_analytical_function("u", & analytical_function_1);
+      mlSol.set_analytical_function("u",  my_specifics[app]._true_solution_function);
 
       mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
 
-//       Domains::square_m05p05::Function_Zero_on_boundary_4_laplacian<double> analytical_function_1_laplacian;
-      Domains::square_01by01::Function_NonZero_on_boundary_1_laplacian <double> analytical_function_1_laplacian;
-
-      mlSol.set_analytical_function("v", & analytical_function_1_laplacian);
+      mlSol.set_analytical_function("v",my_specifics[app]._assemble_function_for_rhs);
 
       mlSol.Initialize("All");
 
       // define the multilevel problem attach the mlSol object to it
       MultiLevelProblem ml_prob(&mlSol);
 
-// attach the boundary condition function and generate boundary data
-//       mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-      mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionNeumann);
-//       mlSol.AttachSetBoundaryConditionFunction(bc_all_dirichlet_homogeneous);
-//       mlSol.AttachSetBoundaryConditionFunction(Solutions_set_boundary_conditions_all_dirichlet_nonhomogenous);
+      // Attach the boundary conditions
+      mlSol.AttachSetBoundaryConditionFunction(my_specifics[app]._boundary_conditions_types_and_values);
       mlSol.GenerateBdc("u", "Steady", & ml_prob);
       mlSol.GenerateBdc("v", "Steady", & ml_prob);
 
@@ -959,10 +966,11 @@ int main(int argc, char** args) {
       NonLinearImplicitSystem& systemU = ml_prob.add_system < NonLinearImplicitSystem > ("PoissonU");
       NonLinearImplicitSystem& systemV = ml_prob.add_system < NonLinearImplicitSystem > ("PoissonV");
 
-
       // add solution "u" to system
       systemU.AddSolutionToSystemPDE("u");
       systemV.AddSolutionToSystemPDE("v");
+
+
 
       // attach the assembling function to system
       systemU.SetAssembleFunction(AssembleU_AD);
@@ -976,23 +984,25 @@ int main(int argc, char** args) {
       systemU.MGsolve(); //then solve for u using v
 
       // convergence for u
-       std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u", & analytical_function_1);
+//        std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "u",my_specifics[app]._true_solution_function );
+
       // // convergence for v
       // std::pair< double , double > norm = GetErrorNorm_L2_H1_with_analytical_sol(&mlSol, "v", LaplaceGetExactSolutionValue, LaplaceGetExactSolutionGradient );
 
+//       l2Norm[i][j]  = norm.first;
+//       semiNorm[i][j] = norm.second;
 
-      l2Norm[i][j]  = norm.first;
-      semiNorm[i][j] = norm.second;
       // print solutions
+      const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
-
+      vtkIO.Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files[m], files.GetOutputPath(), print_order, variablesToBePrinted);
     }
   }
 
+/*
   // ======= L2 - BEGIN  ========================
   std::cout << std::endl;
   std::cout << std::endl;
@@ -1022,9 +1032,7 @@ int main(int argc, char** args) {
 
   }
   // ======= L2 - END  ========================
-// // //
-// // //
-// // //
+
   // ======= H1 - BEGIN  ========================
 
   std::cout << std::endl;
@@ -1055,9 +1063,10 @@ int main(int argc, char** args) {
 
   }
 
-  // ======= H1 - END  ========================
+  // ======= H1 - END  ========================*/
+  }
 
-
+}
   return 0;
 }
 
@@ -1468,7 +1477,7 @@ void AssembleU_AD(MultiLevelProblem& ml_prob) {
 
         double exactSolValue =  ml_prob. get_ml_solution()-> get_analytical_function("u")->laplacian(xGauss);
 
-        double f = solvGauss  * phi[i] ;
+        double f = exactSolValue  * phi[i] ;
         aRes[i] += (f - Laplace) * weight;
 
       } // end phi_i loop
