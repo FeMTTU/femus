@@ -320,7 +320,7 @@ int main(int argc, char** args) {
 
   // ======= Files - BEGIN  ========================
   const bool use_output_time_folder = false; // This allows you to run the code multiple times without overwriting. This will generate an output folder each time you run.
-  const bool redirect_cout_to_file = false; // puts the output in a log file instead of the term
+  const bool redirect_cout_to_file = true; // puts the output in a log file instead of the term
   Files files;
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -364,9 +364,9 @@ int main(int argc, char** args) {
 
 
    Domains::square_m05p05::Function_Zero_on_boundary_4<>   app_square_function_zero_on_boundary_4_1;
-   Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<>   app_square_function_zero_laplacian_1;
+   Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<>   app_square_function_zero_on_boundary_4_1_laplacian;
 
-   app_square_m05p05_1._assemble_function_for_rhs        = & app_square_function_zero_laplacian_1;
+   app_square_m05p05_1._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_4_1_laplacian;
    app_square_m05p05_1._true_solution_function           = & app_square_function_zero_on_boundary_4_1;
 
     // ======= square 1 - END  ==================
@@ -383,9 +383,9 @@ int main(int argc, char** args) {
    app_square_m05p05_2._boundary_conditions_types_and_values         = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
 
    Domains::square_m05p05::Function_NonZero_on_boundary_4<>   app_square_function_zero_on_boundary_4_2;
-   Domains::square_m05p05::Function_NonZero_on_boundary_4_Laplacian<>   app_square_function_nonzero_laplacian_2;
+   Domains::square_m05p05::Function_NonZero_on_boundary_4_Laplacian<>   app_square_function_zero_on_boundary_4_2_laplacian;
 
-   app_square_m05p05_2._assemble_function_for_rhs        = & app_square_function_nonzero_laplacian_2;
+   app_square_m05p05_2._assemble_function_for_rhs        = & app_square_function_zero_on_boundary_4_2_laplacian;
    app_square_m05p05_2._true_solution_function           = & app_square_function_zero_on_boundary_4_2;
 
     // ======= square 2 - END  ==================
