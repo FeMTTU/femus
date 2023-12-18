@@ -47,127 +47,22 @@ using namespace femus;
 
 
 
-// // // //====Set boundary condition-BEGIN==============================
-// // // bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time) {
-// // //   bool dirichlet = true; //dirichlet
-// // //
-// // //   if (!strcmp(SolName, "u")) {
-// // //       Math::Function <double> * u = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
-// // //       // strcmp compares two string in lexiographic sense.
-// // //     Value = u -> value(x);
-// // //   }
-// // //   else if (!strcmp(SolName, "v")) {
-// // //       Math::Function <double> * v = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
-// // //     Value = v -> value(x);
-// // //   }
-// // //   return dirichlet;
-// // // }
-// // // //====Set boundary condition-END==============================
+//====Set boundary condition-BEGIN==============================
+bool SetBoundaryCondition_bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& Value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
 
-
-
-
-
-// // // bool SetBoundaryCondition_bc_all_neumann(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char SolName[], std::vector<double>& Gradient, const int facename, const double time) {
-// // //     bool neumann = true; // Neumann condition
-// // //
-// // //     if (!strcmp(SolName, "u")) {
-// // //         Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //         // Get the gradient of the exact solution at the boundary
-// // //         Gradient = u->gradient(x);
-// // //     } else if (!strcmp(SolName, "v")) {
-// // //         Math::Function<double>* v = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //         // Get the gradient of the exact solution at the boundary
-// // //         Gradient = v->gradient(x);
-// // //     }
-// // //
-// // //     return neumann;
-// // // }
-
-
-// // // //====Set boundary condition Neumann-BEGIN==============================
-// // //
-// // // bool SetBoundaryCondition_bc_all_neumann(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char SolName[], double& Gradient, const int facename, const double time) {
-// // //     bool neumann = true; // Neumann condition
-// // //
-// // //     if (!strcmp(SolName, "u")) {
-// // //
-// // //         Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //
-// // //         switch (facename) {
-// // //             case 1: // Face 1
-// // //                 Gradient = u->gradient(x)[0];
-// // //                 break;
-// // //             case 2: // Face 2
-// // //                 Gradient = u->gradient(x)[0];
-// // //                 break;
-// // //             case 3: // Face 3
-// // //                 Gradient = u->gradient(x)[0];
-// // //                 break;
-// // //             case 4: // Face 4
-// // //                 Gradient = u->gradient(x)[0];
-// // //                 break;
-// // //             default:
-// // //                 neumann = false; // Invalid face number
-// // //         }
-// // //     } else if (!strcmp(SolName, "v")) {
-// // //
-// // //         Math::Function<double>* v = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-// // //
-// // // // // //         Domains::square_m05p05::Function_Zero_on_boundary_4_Laplacian<double> v_laplacian_function;
-// // //
-// // //         switch (facename) {
-// // //             case 1: // Face 1
-// // //                 Gradient = v -> gradient(x)[0];
-// // //                 break;
-// // //             case 2: // Face 2
-// // //                 Gradient = v ->gradient(x)[0];
-// // //                 break;
-// // //             case 3: // Face 3
-// // //                 Gradient = v ->gradient(x)[0];
-// // //                 break;
-// // //             case 4: // Face 4
-// // //                 Gradient = v ->gradient(x)[0];
-// // //                 break;
-// // //             default:
-// // //                 neumann = false; // Invalid face number
-// // //         }
-// // //     }
-// // //
-// // //     return neumann;
-// // // }
-// // //
-// // // //====Set boundary condition Neumann-END==============================
-
-
-//====Set boundary condition Dirichlet-Neumann-BEGIN==============================
-
-bool SetBoundaryCondition_bc_all_neumann_dirichlet(const MultiLevelProblem* ml_prob, const std::vector<double>& x, const char SolName[], double& value, const int facename, const double time) {
-    bool is_dirichlet = true;
-
-    if (!strcmp(SolName, "u")) {
-        // Assuming "u" corresponds to your first variable
-        Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-           is_dirichlet = true;
-           value = u->value(x);
-    } else if (!strcmp(SolName, "v")) {
-        // Assuming "v" corresponds to your second variable
-           is_dirichlet = true;
-        Math::Function<double>* v = ml_prob->get_ml_solution()->get_analytical_function(SolName);
-        Math::Function<double>* u = ml_prob->get_ml_solution()->get_analytical_function("u");
-        // Set Dirichlet condition for "v" as the Laplacian of "u"
-        // value = u->laplacian(x);
-        value = v->value(x);
-    }
-
-    return is_dirichlet;
+  if (!strcmp(SolName, "u")) {
+      Math::Function <double> * u = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
+      // strcmp compares two string in lexiographic sense.
+    Value = u -> value(x);
+  }
+  else if (!strcmp(SolName, "v")) {
+      Math::Function <double> * v = ml_prob -> get_ml_solution() -> get_analytical_function(SolName);
+    Value = v -> value(x);
+  }
+  return dirichlet;
 }
-//====Set boundary condition Dirichlet-Neumann-END==============================
-
-
-
-
-
+//====Set boundary condition-END==============================
 
 
 
@@ -199,11 +94,7 @@ int main(int argc, char** args) {
   system_biharmonic_coupled._system_name = "Biharmonic";
   system_biharmonic_coupled._assemble_function = NAMESPACE_FOR_BIHARMONIC_COUPLED :: biharmonic_coupled_equation :: AssembleBilaplaceProblem_AD;
 
-// // //   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
-
-// // //   system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_neumann;
-
-  system_biharmonic_coupled._boundary_conditions_types_and_values             =  SetBoundaryCondition_bc_all_neumann_dirichlet;
+  system_biharmonic_coupled._boundary_conditions_types_and_values             = SetBoundaryCondition_bc_all_dirichlet_homogeneous;
 
 
    Domains::square_m05p05::Function_NonZero_on_boundary_4<>   system_biharmonic_coupled_function_zero_on_boundary_1;
