@@ -9,7 +9,7 @@
 
 
 # these variables must be in sync with the configure_femus script
-PETSC_VERSION_GIT_TAG=
+PETSC_VERSION_GIT_TAG=v3.20.2
 #v3.16.4
 # this is the tag in the petsc repo. You can directly find the one you want here: https://gitlab.com/petsc/petsc/-/tags
 COMMON_PETSC_DIRNAME=petsc$PETSC_VERSION_GIT_TAG
