@@ -166,8 +166,8 @@ int main(int argc, char** args) {
 
 
 
-  std::string system_common_name1 = "Biharmonic1";
-  std::string system_common_name2 = "Biharmonic2";
+// // //   std::string system_common_name1 = "Coupled_Biharmonic1";
+// // //   std::string system_common_name2 = "Coupled_Biharmonic2";
 
   std::vector <system_specifics>  my_specifics;
 
@@ -183,7 +183,7 @@ int main(int argc, char** args) {
 
   // ======= square 1 - BEGIN  ==================
 
-  app_square_m05p05_1._system_name = system_common_name1;
+  app_square_m05p05_1._system_name = "Coupled_Biharmonic1";
 
   app_square_m05p05_1._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
   app_square_m05p05_1._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
@@ -204,7 +204,7 @@ int main(int argc, char** args) {
 
     // ======= square 2 - BEGIN  ==================
 
-   app_square_m05p05_2._system_name = system_common_name2;
+   app_square_m05p05_2._system_name = "Coupled_Biharmonic2";
 
    app_square_m05p05_2._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
    app_square_m05p05_2._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
@@ -223,8 +223,6 @@ int main(int argc, char** args) {
 
   my_specifics.push_back(app_square_m05p05_1);
   my_specifics.push_back(app_square_m05p05_2);
-
-
 
 
 
@@ -364,15 +362,6 @@ int main(int argc, char** args) {
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
 
-
-
-//       /*/*/*/*/*/*print solutions
-//       std::vector < std::string > variablesToBePrinted;
-//       variablesToBePrinted.push_back("All");
-//
-//       std::string  an_func = "test";
-//       VTKWriter vtkIO(&mlSol);
-//       vtkIO.Write(an_func, Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);*/*/*/*/*/*/
 
       // print solutions
       const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];

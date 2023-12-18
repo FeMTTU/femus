@@ -507,8 +507,8 @@ int main(int argc, char** args) {
 
 
 
-  std::string system_name1 = "UBiharmonic1";
-  std::string system_name2 = "UBiharmonic2";
+// // //   std::string system_common_name1 = "Uncoupled_Biharmonic1";
+// // //   std::string system_common_name2 = "Uncoupled_Biharmonic2";
 
   std::vector <system_specifics>  my_specifics;
 
@@ -520,7 +520,7 @@ int main(int argc, char** args) {
 
   // ======= square 1 - BEGIN  ==================
 
-  app_square_m05p05_1._system_name = system_name1;
+  app_square_m05p05_1._system_name = "Uncoupled_Biharmonic1";
 
   app_square_m05p05_1._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
   app_square_m05p05_1._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
@@ -537,7 +537,7 @@ int main(int argc, char** args) {
 
       // ======= square 2 - BEGIN  ==================
 
-   app_square_m05p05_2._system_name = system_name2;
+   app_square_m05p05_2._system_name = "Uncoupled_Biharmonic2";
 
    app_square_m05p05_2._mesh_files.push_back("square_-0p5-0p5x-0p5-0p5_divisions_2x2.med");
    app_square_m05p05_2._mesh_files_path_relative_to_executable.push_back(relative_path_to_build_directory + Files::mesh_folder_path() + "00_salome/2d/square/minus0p5-plus0p5_minus0p5-plus0p5/");
@@ -558,7 +558,7 @@ int main(int argc, char** args) {
   for (unsigned int app = 0; app < my_specifics.size(); app++)  {
 
 
-  ml_prob.set_app_specs_pointer(&my_specifics[app]);
+// // //   ml_prob.set_app_specs_pointer(&my_specifics[app]);
 
     // ======= Mesh - BEGIN  ==================
   MultiLevelMesh ml_mesh;
@@ -646,7 +646,7 @@ int main(int argc, char** args) {
       // define the multilevel problem attach the mlSol object to it
       MultiLevelProblem ml_prob(&mlSol);
 
-// // //       ml_prob.set_app_specs_pointer(& my_specifics[app]);
+      ml_prob.set_app_specs_pointer(& my_specifics[app]);
 
       
 // attach the boundary condition function and generate boundary data
@@ -655,7 +655,7 @@ int main(int argc, char** args) {
       mlSol.GenerateBdc("u", "Steady", & ml_prob);
       mlSol.GenerateBdc("v", "Steady", & ml_prob);
 
-// // //       ml_prob.clear_systems();
+      ml_prob.clear_systems();
 
 
       // ======= Problem, Quad Rule - BEGIN ========================
@@ -689,21 +689,15 @@ int main(int argc, char** args) {
 
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
+
+
       // print solutions
+      const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(Files::_application_output_directory, "biquadratic", variablesToBePrinted, i);
-
-
-// // //       // print solutions
-// // //       const std::string print_order = fe_fams_for_files[ FILES_CONTINUOUS_BIQUADRATIC ];
-// // //       std::vector < std::string > variablesToBePrinted;
-// // //       variablesToBePrinted.push_back("All");
-// // //
-// // //       VTKWriter vtkIO(&mlSol);
-// // //       vtkIO.Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files[m], files.GetOutputPath(), print_order, variablesToBePrinted);
+      vtkIO.Write(my_specifics[app]._system_name + "_" + my_specifics[app]._mesh_files[m], files.GetOutputPath(), print_order, variablesToBePrinted);
 
     }
   }
