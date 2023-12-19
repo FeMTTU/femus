@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
   
 
   ADD_SUBDIRECTORY(ex_petscDebug_test_solvers_for_laplacian/)

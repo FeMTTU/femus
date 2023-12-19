@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 
 PROJECT(fsi_td_3d_turek_hron_richter_benchmark_bdc)
 
