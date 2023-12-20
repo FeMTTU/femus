@@ -930,9 +930,9 @@ else if (volume_or_boundary == 1 )	{
     
     
 if (convergence_rate_computation_method == 0)  return norms_inexact_dofs;
-if (convergence_rate_computation_method == 1)  return norms_exact_function_at_qp;
+else if (convergence_rate_computation_method == 1)  return norms_exact_function_at_qp;
 // if (convergence_rate_computation_method == 1)  return   norms_exact_function_at_dofs; //@todo this one does not work in the ABSOLUTE case but only in the INCREMENTAL case
-
+else  abort();
  
 } 
  

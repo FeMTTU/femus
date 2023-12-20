@@ -129,8 +129,9 @@ bool bc_all_dirichlet_homogeneous(const MultiLevelProblem * ml_prob, const std::
  if (ml_prob->GetMLMesh()->GetDimension() != 2 )  abort();
   
 
+bool dirichlet = true;
 
-//  return dirichlet;
+return dirichlet;
     
 }
 
@@ -402,9 +403,10 @@ namespace semicylinder {
 
     if (ml_prob->GetMLMesh()->GetDimension() != 3 )  abort();
 
+ 
+   bool dirichlet = true;   
     
-    
-//       return dirichlet; 
+    return dirichlet; 
     
 }
 
