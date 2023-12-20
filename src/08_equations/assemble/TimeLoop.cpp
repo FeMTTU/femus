@@ -283,8 +283,8 @@ void TimeLoop::TransientSetup(const MultiLevelProblem & eqnmap)  {
 
             std::cout <<cp_cmd_xmf	 << std::endl;
             std::cout <<cp_cmd_h5  << std::endl;
-            system(cp_cmd_xmf.c_str() );
-            system(cp_cmd_h5.c_str() );
+            const int sys_out  = system(cp_cmd_xmf.c_str() );
+            const int sys_out2 = system(cp_cmd_h5.c_str() );
 
 	    //TODO why did I not the CopyFile function from Files?
         }

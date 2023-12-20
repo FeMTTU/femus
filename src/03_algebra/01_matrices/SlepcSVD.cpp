@@ -43,12 +43,12 @@ SlepcSVD::~SlepcSVD() {
 
 
 void SlepcSVD::set_operator(Mat A) {
-  SVDSetOperator(m_svd, A);
+  SVDSetOperators(m_svd, A, PETSC_NULLPTR);
 }
 
 void SlepcSVD::set_operator(SparseMatrix* Amat) {
   Mat A = (static_cast< PetscMatrix* >(Amat))->mat();
-  SVDSetOperator(m_svd, A);
+  SVDSetOperators(m_svd, A, PETSC_NULLPTR);
 }
 
 

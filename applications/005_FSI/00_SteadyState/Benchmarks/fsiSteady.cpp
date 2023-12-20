@@ -524,7 +524,7 @@ void PrintMumpsInfo(const std::string output_path, const char *stdOutfile, const
   char outFileName[MAX_CHAR_LENGTH];
   
   std::ostringstream info_file_stream; info_file_stream << mesh_file << routine_file_suffix;
-  sprintf(outFileName, strcat(output_path_char, info_file_stream.str().c_str()));
+  strcpy(outFileName, strcat(output_path_char, info_file_stream.str().c_str()) );
   
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
@@ -593,7 +593,7 @@ void PrintConvergenceInfo(const std::string output_path, const char *stdOutfile,
   char outFileName[MAX_CHAR_LENGTH];
   
   std::ostringstream info_file_stream; info_file_stream << mesh_file << routine_file_suffix;
-  sprintf(outFileName, strcat(output_path_char, info_file_stream.str().c_str()));
+  strcpy(outFileName, strcat(output_path_char, info_file_stream.str().c_str()) );
 
 
   outf.open(outFileName, std::ofstream::app);
@@ -674,7 +674,7 @@ void PrintMultigridTime(const std::string output_path, const char *stdOutfile, c
   char outFileName[MAX_CHAR_LENGTH];
 
   std::ostringstream info_file_stream; info_file_stream << mesh_file << routine_file_suffix;
-  sprintf(outFileName, strcat(output_path_char, info_file_stream.str().c_str()));
+  strcpy(outFileName, strcat(output_path_char, info_file_stream.str().c_str()) );
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl;
