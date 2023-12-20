@@ -490,7 +490,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 
     ierr = EPSGetConverged ( eps, &convergedSolns );
     CHKERRABORT ( MPI_COMM_WORLD, ierr );
-    ierr = PetscPrintf ( PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns );
+    ierr = PetscPrintf ( PETSC_COMM_WORLD, " Number of converged eigenpairs: %d\n\n", convergedSolns );
     CHKERRABORT ( MPI_COMM_WORLD, ierr );
 
     if ( convergedSolns > 0 ) {
