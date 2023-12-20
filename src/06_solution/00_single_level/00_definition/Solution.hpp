@@ -116,7 +116,7 @@ namespace femus {
       unsigned GetIndex(const char name[]) const;
       
         /** Get the index of the variable -name- */
-      unsigned GetIndex(const std::string name) const {  GetIndex( name.c_str() ); }
+      unsigned GetIndex(const std::string name) const {  return GetIndex( name.c_str() ); }
 
     private:
         
