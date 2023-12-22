@@ -169,18 +169,18 @@ private:
    
     /** MESH: Get the dimension of the problem (1D, 2D, 3D) */
     const unsigned GetDimension() const {
-      return Mesh::_dimension;
+      return _dimension;
     }
 
  private:
    
     /** MESH: Set the dimension of the problem (1D, 2D, 3D) */
     void SetDimension(const unsigned &dim) {
-      Mesh::_dimension = dim;
+      _dimension = dim;
     }
 
-    /** MESH: dimension of the problem @todo I would make it not static */
-    static unsigned _dimension;
+    /** MESH: dimension of the problem */
+    unsigned _dimension;
 // === Mesh, BASIC, Dimension - END =================
 
 

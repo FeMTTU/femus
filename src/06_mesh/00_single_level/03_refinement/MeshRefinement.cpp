@@ -205,6 +205,8 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     
     const unsigned dim = mshc->GetDimension();
     
+    _mesh.SetDimension(dim);
+
     // geom el, refinement - BEGIN ********************
     _mesh.SetRefinementCellAndFaceIndices(dim);
     // geom el, refinement - END ******************** 

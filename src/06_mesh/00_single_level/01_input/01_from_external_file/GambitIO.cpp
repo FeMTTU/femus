@@ -126,7 +126,7 @@ namespace femus {
       std::cout << "error control data mesh" << std::endl;
       exit(0);
     }
-//   std::cout << "***************" << _dimension << std::endl;
+
     inf.close();
     
     // read control data - END **************** A   

@@ -456,16 +456,16 @@ namespace femus
                   unsigned j3 = GetFaceVertexIndex(jel, jface, 2);
                   unsigned j4 = GetFaceVertexIndex(jel, jface, 3);
                   
-                  const bool faces_coincide_three_dim = (GetDimension()/*Mesh::_dimension*/ == 3 &&
+                  const bool faces_coincide_three_dim = ( GetDimension() == 3 &&
                                          (i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
                                          (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
                                          (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4));
                   
-                  const bool faces_coincide_two_dim = (GetDimension()/*Mesh::_dimension*/ == 2 &&
+                  const bool faces_coincide_two_dim = ( GetDimension() == 2 &&
                                        (i1 == j1 || i1 == j2) &&
                                        (i2 == j1 || i2 == j2));
                   
-                  const bool faces_coincide_one_dim = (GetDimension()/*Mesh::_dimension*/ == 1 && (i1 == j1));
+                  const bool faces_coincide_one_dim = ( GetDimension() == 1 && (i1 == j1));
 
                   if(faces_coincide_three_dim
                       ||

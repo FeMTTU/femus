@@ -50,8 +50,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     
   bool Mesh::_IsUserRefinementFunctionDefined = false;
 
-  unsigned Mesh::_dimension = 2;                                    ///@todo I don't like the default dimension to be 2
-
 
 // === Constructors / Destructor - BEGIN =================
 
