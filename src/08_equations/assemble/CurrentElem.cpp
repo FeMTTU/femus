@@ -333,7 +333,7 @@ template < typename real_num_mov >
   
 //       unsigned nel    = mymsh->GetNumberOfElements();
 
-//          elem * myel = _mesh_new->el;
+//          elem * myel = _mesh_new->GetMeshElements();
 //         unsigned kel    = _mesh_new->IS_Mts2Gmt_elem[_iel]; 
 //     short unsigned kelt = myel->GetElementType(kel);
 

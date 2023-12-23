@@ -320,7 +320,7 @@ void AssembleBloodCell (MultiLevelProblem& ml_prob) {
 
   // Point to the mesh and element objects.
   Mesh *msh = ml_prob._ml_msh->GetLevel (level);
-  elem *el = msh->el;
+  elem *el = msh->GetMeshElements();
 
   // Point to mlSol, solution (level), and equation (level) objects.
   MultiLevelSolution *mlSol = ml_prob._ml_sol;

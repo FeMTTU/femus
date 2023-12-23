@@ -409,7 +409,7 @@ void AssembleMatrixResNS(MultiLevelProblem& ml_prob) {
 
 
   Mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
-  elem*		 myel		= mymsh->el;
+  elem*		 myel		= mymsh->GetMeshElements();
   SparseMatrix*	 myKK		= mylsyspde->_KK;
   NumericVector* myRES 		= mylsyspde->_RES;
 
@@ -751,7 +751,7 @@ void AssembleMatrixResT(MultiLevelProblem& ml_prob) {
   Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];
   Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
-  elem*          myel		       = mymsh->el;
+  elem*          myel		       = mymsh->GetMeshElements();
   SparseMatrix*  myKK		       = mylsyspde->_KK;
   NumericVector* myRES		       = mylsyspde->_RES;
   MultiLevelSolution* ml_sol           = ml_prob._ml_sol;

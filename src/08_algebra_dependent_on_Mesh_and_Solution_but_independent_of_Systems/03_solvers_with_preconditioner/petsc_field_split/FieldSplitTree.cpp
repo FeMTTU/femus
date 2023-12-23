@@ -658,8 +658,8 @@ namespace femus {
       // ***************** NODE/ELEMENT SEARCH *******************
       for (int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
-        for (unsigned j = 0; j < msh->el->GetElementNearElementSize (iel, !FastVankaBlock); j++) {
-          unsigned jel = msh->el->GetElementNearElement (iel, j);
+        for (unsigned j = 0; j < msh->GetMeshElements()->GetElementNearElementSize (iel, !FastVankaBlock); j++) {
+          unsigned jel = msh->GetMeshElements()->GetElementNearElement (iel, j);
           if (jel >= ElemOffset && jel < ElemOffsetp1) {
             if (indexc[jel - ElemOffset] == ElemOffsetSize) {
               indexci[Csize] = jel - ElemOffset;

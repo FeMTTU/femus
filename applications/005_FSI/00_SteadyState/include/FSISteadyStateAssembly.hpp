@@ -24,7 +24,7 @@ namespace femus {
     Solution*	                mysolution      = ml_sol->GetSolutionLevel(level);
     LinearEquationSolver*       myLinEqSolver   = my_nnlin_impl_sys._LinSolver[level];
     Mesh*		        mymsh		= ml_prob._ml_msh->GetLevel(level);
-    elem*		        myel		= mymsh->el;
+    elem*		        myel		= mymsh->GetMeshElements();
     SparseMatrix*	        myKK		= myLinEqSolver->_KK;
     NumericVector*	        myRES		= myLinEqSolver->_RES;
 
@@ -264,7 +264,7 @@ namespace femus {
 
           // look for boundary faces
           if (myel->GetFaceElementIndex(iel, jface) < 0) {
-            unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
+            unsigned int face = -(mymsh->GetMeshElements()->GetFaceElementIndex(iel, jface) + 1);
 
             if ( !ml_sol->GetBdcFunction()(xx, "U", tau, face, 0.) && tau != 0.) {
                 
@@ -685,7 +685,7 @@ namespace femus {
     Solution*                   mysolution      = ml_sol->GetSolutionLevel(level);
     LinearEquationSolver*       myLinEqSolver   = my_nnlin_impl_sys._LinSolver[level];
     Mesh*                       mymsh           = ml_prob._ml_msh->GetLevel(level);
-    elem*                       myel            = mymsh->el;
+    elem*                       myel            = mymsh->GetMeshElements();
     SparseMatrix*               myKK            = myLinEqSolver->_KK;
     NumericVector*              myRES           = myLinEqSolver->_RES;
 
@@ -925,7 +925,7 @@ namespace femus {
 
           // look for boundary faces
           if (myel->GetFaceElementIndex(iel, jface) < 0) {
-            unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
+            unsigned int face = -(mymsh->GetMeshElements()->GetFaceElementIndex(iel, jface) + 1);
 
             if ( !ml_sol->GetBdcFunction()(xx, "U", tau, face, 0.) && tau != 0.) {
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
@@ -1609,7 +1609,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 //   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -1768,10 +1768,10 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
        const unsigned nve_bdry_u = msh->GetElementFaceDofNumber(iel,jface,solType_u[POS_U]);
        
 // // // 	    // look for boundary faces
-// // //             const int bdry_index = msh->el->GetFaceElementIndex(iel,jface);
+// // //             const int bdry_index = msh->GetMeshElements()->GetFaceElementIndex(iel,jface);
 // // //             
 // // // 	    if( bdry_index < 0) {
-// // // 	      unsigned int face = msh->el->GetBoundaryIndex(iel,jface);
+// // // 	      unsigned int face = msh->GetMeshElements()->GetBoundaryIndex(iel,jface);
 // // // 	      
 // // // 		
 // // // // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){

@@ -70,7 +70,7 @@ static void natural_loop_1dU(const MultiLevelProblem *    ml_prob,
        std::vector <  double > xx_face_elem_center(3, 0.);
           xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
 
-       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       const int boundary_index = msh->GetMeshElements()->GetFaceElementIndex(iel, jface);
 
        if ( boundary_index < 0) { //I am on the boundary
 
@@ -166,7 +166,7 @@ static void natural_loop_2d3dU(const MultiLevelProblem *    ml_prob,
        std::vector <  double > xx_face_elem_center(3, 0.);
        xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
 
-       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       const int boundary_index = msh->GetMeshElements()->GetFaceElementIndex(iel, jface);
 
        if ( boundary_index < 0) { //I am on the boundary
 
@@ -285,7 +285,7 @@ static void natural_loop_1dV(const MultiLevelProblem *    ml_prob,
        std::vector <  double > xx_face_elem_center(3, 0.);
           xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
 
-       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       const int boundary_index = msh->GetMeshElements()->GetFaceElementIndex(iel, jface);
 
        if ( boundary_index < 0) { //I am on the boundary
 
@@ -381,7 +381,7 @@ static void natural_loop_2d3dV(const MultiLevelProblem *    ml_prob,
        std::vector <  double > xx_face_elem_center(3, 0.);
        xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
 
-       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       const int boundary_index = msh->GetMeshElements()->GetFaceElementIndex(iel, jface);
 
        if ( boundary_index < 0) { //I am on the boundary
 
@@ -491,7 +491,7 @@ static void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
+  elem*          el         = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*  ml_sol        = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object

@@ -48,7 +48,7 @@
 
           
 	    // look for boundary faces
-            const int bdry_index = msh->el->GetFaceElementIndex(iel, iface);
+            const int bdry_index = msh->GetMeshElements()->GetFaceElementIndex(iel, iface);
             
 	    if( bdry_index < 0) {
 	      const unsigned int face_in_rectangle_domain = - ( bdry_index + 1);

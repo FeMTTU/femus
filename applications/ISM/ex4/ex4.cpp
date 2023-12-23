@@ -322,7 +322,7 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*           msh         = mlProb._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*           el          = msh->el;  // pointer to the elem object in msh (level)
+  elem*           el          = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*   mlSol   = mlProb._ml_sol;  // pointer to the multilevel solution object
   Solution*   sol         = mlProb._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object

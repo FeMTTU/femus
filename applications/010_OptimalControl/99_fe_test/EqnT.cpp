@@ -38,7 +38,7 @@
 
 // ==========================================  
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
-  elem		*myel		=  mymsh->el;
+  elem		*myel		=  mymsh->GetMeshElements();
   const unsigned myproc  = mymsh->processor_id();
 	
 // ==========================================  

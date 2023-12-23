@@ -337,7 +337,7 @@ std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlS
   unsigned level = mlSol->GetMLMesh()->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*          msh          = mlSol->GetMLMesh()->GetLevel (level);   // pointer to the mesh (level) object
-  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
+  elem*          el         = msh->GetMeshElements();  // pointer to the elem object in msh (level)
   Solution*    sol        = mlSol->GetSolutionLevel (level);   // pointer to the solution (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -465,7 +465,7 @@ void BuidProjection (MultiLevelProblem& ml_prob, const unsigned &level) {
 
   Solution* sol = ml_prob._ml_sol->GetSolutionLevel (level);
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);
-  elem* el = msh->el;
+  elem* el = msh->GetMeshElements();
 
   unsigned  dim = msh->GetDimension();
   unsigned  dim2 = dim * dim;
@@ -689,7 +689,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
 
   Solution* solution = ml_prob._ml_sol->GetSolutionLevel (level);
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);
-  elem* el = msh->el;
+  elem* el = msh->GetMeshElements();
 
   unsigned  dim = msh->GetDimension();
   unsigned  dim2 = dim * dim;
@@ -1003,7 +1003,7 @@ void ProjectSolutionIntoGradient (MultiLevelProblem& ml_prob, const unsigned &le
 
   Solution* sol = ml_prob._ml_sol->GetSolutionLevel (level);
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);
-  elem* el = msh->el;
+  elem* el = msh->GetMeshElements();
 
   unsigned  dim = msh->GetDimension();
 
@@ -1038,7 +1038,7 @@ void Assemble (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*          msh          = ml_prob._ml_msh->GetLevel (level);   // pointer to the mesh (level) object
-  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
+  elem*          el         = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*  mlSol        = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        = ml_prob._ml_sol->GetSolutionLevel (level);   // pointer to the solution (level) object

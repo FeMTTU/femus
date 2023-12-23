@@ -34,7 +34,7 @@ namespace femus
 
     LinearEquationSolver * myLinEqSolver = my_nnlin_impl_sys._LinSolver[level];
     Mesh	*	mymsh		=  ml_prob._ml_msh->GetLevel(level);
-    elem	*	myel		=  mymsh->el;
+    elem	*	myel		=  mymsh->GetMeshElements();
     SparseMatrix	* myKK		=  myLinEqSolver->_KK;
     NumericVector	* myRES		=  myLinEqSolver->_RES;
 
@@ -350,7 +350,7 @@ namespace femus
           // look for boundary faces
           if (myel->GetFaceElementIndex(iel, jface) < 0) {
 
-            unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
+            unsigned int face = - (mymsh->GetMeshElements()->GetFaceElementIndex(iel, jface) + 1);
             double tau = 0.;
             double tau_old = 0.;
             if ((!ml_sol->GetBdcFunction()(xx, "P", tau, face, time) &&
@@ -1120,7 +1120,7 @@ namespace femus
 
     Solution *mysolution = mlSol.GetSolutionLevel(level);
     Mesh *mymsh	=  mlSol.GetMLMesh()->GetLevel(level);
-    elem *myel	=  mymsh->el;
+    elem *myel	=  mymsh->GetMeshElements();
 
     unsigned indLmbd = mlSol.GetIndex("lmbd");
 

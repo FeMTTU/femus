@@ -746,7 +746,7 @@ _analytical_function.resize(new_size);
       volume = parallelVec->l1_norm();
 
       for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
-        if(_msh->el->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
+        if(_msh->GetMeshElements()->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
 
           double ielErrNorm2 = 0.;
           double ielVolume = 0.;
@@ -810,13 +810,13 @@ _analytical_function.resize(new_size);
             counter_vec->add(_iproc, 1.);
 
 // 	    for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
-// 	      unsigned inode = _msh->el->GetElementDofIndex(iel, i);
-// 	      const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
+// 	      unsigned inode = _msh->GetMeshElements()->GetElementDofIndex(iel, i);
+// 	      const std::vector < unsigned > & localElementNearVertexNumber = _msh->GetMeshElements()->GetLocalElementNearVertex(inode);
 // 	      unsigned nve = localElementNearVertexNumber.size();
 // 	      for(unsigned j = 0; j < nve; j++) {
 // 		unsigned jel = localElementNearVertexNumber[j];
 // 		if(jel >= _msh->_elementOffset[iproc] && jel < _msh->_elementOffset[iproc + 1]) {
-// 		  if(_msh->el->GetIfElementCanBeRefined(jel) && (*AMR->_Sol[AMRIndex])(jel) == 0.) {
+// 		  if(_msh->GetMeshElements()->GetIfElementCanBeRefined(jel) && (*AMR->_Sol[AMRIndex])(jel) == 0.) {
 // 		    AMR->_Sol[AMRIndex]->set(jel, 1.);
 // 		    counter_vec->add(_iproc, 1.);
 // 		  }
@@ -945,7 +945,7 @@ _analytical_function.resize(new_size);
 
           volume += weight;
 
-          if(_msh->el->GetIfElementCanBeRefined(iel)) {
+          if(_msh->GetMeshElements()->GetIfElementCanBeRefined(iel)) {
             volumeRefined += weight;
           }
         }
@@ -978,7 +978,7 @@ _analytical_function.resize(new_size);
       
       
       for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
-        if(_msh->el->GetIfElementCanBeRefined(iel)) {
+        if(_msh->GetMeshElements()->GetIfElementCanBeRefined(iel)) {
 
 //           double ielErrNorm2 = 0.;
 //           double ielVolume = 0.;
@@ -1043,10 +1043,10 @@ _analytical_function.resize(new_size);
             volumeTestFalse += ielVolume[iel-offset];
 
             if( ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset] ) {
-              for(unsigned j = 1; j < _msh->el->GetElementNearElementSize(iel,1);j++){
-		unsigned jel = _msh->el->GetElementNearElement(iel,j);
+              for(unsigned j = 1; j < _msh->GetMeshElements()->GetElementNearElementSize(iel,1);j++){
+		unsigned jel = _msh->GetMeshElements()->GetElementNearElement(iel,j);
 		if(jel >= _msh->_elementOffset[iproc] && jel<_msh->_elementOffset[iproc + 1] ){
-		  if(_msh->el->GetIfElementCanBeRefined(jel)){
+		  if(_msh->GetMeshElements()->GetIfElementCanBeRefined(jel)){
 		    if(jel > iel) {
                       AMR->_Sol[AMRIndex]->set(jel, 2.);
                     }

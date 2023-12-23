@@ -29,7 +29,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
+  elem*          el         = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*  mlSol        = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
@@ -193,7 +193,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
 
       
-       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       const int boundary_index = msh->GetMeshElements()->GetFaceElementIndex(iel, jface);
        
        if ( boundary_index < 0) { //I am on the boundary
 

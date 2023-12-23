@@ -535,7 +535,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
 
   Solution* solution  = mlSol.GetSolutionLevel(level);
   Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
-  elem* myel =  msh->el;
+  elem* myel =  msh->GetMeshElements();
 
   const unsigned dim = msh->GetDimension();
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));

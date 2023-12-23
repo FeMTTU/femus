@@ -142,7 +142,7 @@ namespace femus {
     unsigned nel = mesh->GetNumberOfElements();
     unsigned dim = mesh->GetDimension();
     unsigned maxDim = ( nvt > ( dim + 1 ) * nel ) ? nvt : ( dim + 1 ) * nel;
-    unsigned ndofs = mesh->el->GetNVE( elemtype, index_nd );
+    unsigned ndofs = mesh->GetMeshElements()->GetNVE( elemtype, index_nd );
 
     std::vector < int > var_conn( nel * ndofs );
 
@@ -298,7 +298,7 @@ namespace femus {
     //BEGIN CONNETTIVITY
     unsigned icount = 0;
     for( unsigned isdom = 0; isdom < _writer_one_level.n_processors(); isdom++ ) {
-      mesh->el->LocalizeElementDof( isdom );
+      mesh->GetMeshElements()->LocalizeElementDof( isdom );
       if( _writer_one_level.processor_id() == 0 ) {
         for( unsigned iel = mesh->_elementOffset[isdom]; iel < mesh->_elementOffset[isdom + 1]; iel++ ) {
           for( unsigned j = 0; j < ndofs; j++ ) {
@@ -308,7 +308,7 @@ namespace femus {
           }
         }
       }
-      mesh->el->FreeLocalizedElementDof();
+      mesh->GetMeshElements()->FreeLocalizedElementDof();
     }
 
     if(_writer_one_level.processor_id() == 0) {

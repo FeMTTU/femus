@@ -315,11 +315,11 @@ void CurrentQuantity::GetElemDofs()  {
 // void CurrentQuantity::GetElemDofs_two()  {
 // 
 //       unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex(_qtyptr->_name));  
-//       unsigned nve2       = _currEl._mesh_new->el->GetElementDofNumber(kel,SolType2);
+//       unsigned nve2       = _currEl._mesh_new->GetMeshElements()->GetElementDofNumber(kel,SolType2);
 // 
 //   
 //       for (unsigned i=0;i<nve2;i++) {
-// 	unsigned inode=_currEl._mesh_new->el->GetMeshDof(kel,i,SolType2);
+// 	unsigned inode=_currEl._mesh_new->GetMeshElements()->GetMeshDof(kel,i,SolType2);
 // 	unsigned inode_Metis=_currEl._mesh_new->GetSolutionDof(inode,SolType2);
 // 	for(int j=0; j<_currEl._mesh_new->GetDimension(); j++) {
 

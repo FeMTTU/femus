@@ -374,7 +374,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   const char* 			pdename         = mlPdeSys->name().c_str();
 
   Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
-  elem*          		el     		= msh->el;
+  elem*          		el     		= msh->GetMeshElements();
 
   MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
   Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 
@@ -1052,7 +1052,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob,
   const unsigned 		level 		= mlPdeSys->GetLevelToAssemble();
 
   Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
-  elem*          		el     		= msh->el;
+  elem*          		el     		= msh->GetMeshElements();
 
   MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
   Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 

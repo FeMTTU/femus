@@ -191,7 +191,7 @@ static void assemble_ns_dirichlet_control_pure_boundary(MultiLevelProblem& ml_pr
 
   //Mesh
   Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
-  elem*		 el	= msh->el;
+  elem*		 el	= msh->GetMeshElements();
   const unsigned dim 	= msh->GetDimension();
   unsigned dim2     = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   unsigned nel		= msh->GetNumberOfElements();
@@ -776,7 +776,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
             const int bdry_index = el->GetFaceElementIndex(iel, jface);
             
 	    if( bdry_index < 0) {
-	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel, jface) + 1);
+	      unsigned int face_in_rectangle_domain = -( msh->GetMeshElements()->GetFaceElementIndex(iel, jface) + 1);
 
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"u_0",tau,face,0.) && tau!=0.){
           if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
@@ -1481,7 +1481,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
 
-        std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->el, iel, iface);
+        std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->GetMeshElements(), iel, iface);
 
         const int  iface_is_a_boundary_control  = pair_control_iface.first;
 
@@ -1576,7 +1576,7 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
   unsigned level = ml_sol->GetMLMesh()->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = ml_sol->GetMLMesh()->GetLevel(level);    // pointer to the mesh (level) object
-  elem*     el  = msh->el;  // pointer to the elem object in msh (level)
+  elem*     el  = msh->GetMeshElements();  // pointer to the elem object in msh (level)
   Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -1997,7 +1997,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
    const unsigned level = mlPdeSys->GetLevelToAssemble();
  
   Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
+  elem*          el         	= msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*  ml_sol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
@@ -2724,7 +2724,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_nonAD(MultiLevelProbl
 
   //Mesh
   Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
-  elem*		 el	= msh->el;
+  elem*		 el	= msh->GetMeshElements();
   const unsigned dim 	= msh->GetDimension();
   unsigned dim2     = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   unsigned nel		= msh->GetNumberOfElements();
@@ -3883,7 +3883,7 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
   unsigned level = ml_sol->GetMLMesh()->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = ml_sol->GetMLMesh()->GetLevel(level);    // pointer to the mesh (level) object
-  elem*     el  = msh->el;  // pointer to the elem object in msh (level)
+  elem*     el  = msh->GetMeshElements();  // pointer to the elem object in msh (level)
   Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)

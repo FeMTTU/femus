@@ -784,7 +784,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
   unsigned level = ml_prob._ml_msh->GetNumberOfLevels() - 1u;
 
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);   // pointer to the mesh (level) object
-  elem* el = msh->el;  // pointer to the elem object in msh (level)
+  elem* el = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* sol = ml_prob._ml_sol->GetSolutionLevel (level);   // pointer to the solution (level) object
@@ -2464,7 +2464,7 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
   unsigned level = ml_prob._ml_msh->GetNumberOfLevels() - 1u;
 
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);   // pointer to the mesh (level) object
-  elem* el = msh->el;  // pointer to the elem object in msh (level)
+  elem* el = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* sol = ml_prob._ml_sol->GetSolutionLevel (level);   // pointer to the solution (level) object

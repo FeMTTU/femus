@@ -233,7 +233,7 @@ void ProjectSolution(MultiLevelSolution& mlSol) {
 
   Solution* sol = mlSol.GetSolutionLevel(level);
   Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
-  elem* el = msh->el;
+  elem* el = msh->GetMeshElements();
 
   //unsigned  dim = msh->GetDimension();
   unsigned dim = 2;

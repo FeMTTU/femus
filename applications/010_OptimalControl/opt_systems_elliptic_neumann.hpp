@@ -31,7 +31,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+  elem*                     el = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
@@ -323,7 +323,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
             std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
 	    // look for boundary faces
 	    if(el->GetFaceElementIndex(iel,jface) < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      unsigned int face = -( msh->GetMeshElements()->GetFaceElementIndex(iel,jface)+1);
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
@@ -779,7 +779,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+  elem*                     el = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
@@ -1064,7 +1064,7 @@ static void assemble_elliptic_neumann_control(MultiLevelProblem& ml_prob) {
             std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
 	    // look for boundary faces
 	    if(el->GetFaceElementIndex(iel,jface) < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      unsigned int face = -( msh->GetMeshElements()->GetFaceElementIndex(iel,jface)+1);
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){

@@ -685,7 +685,7 @@ namespace femus {
 	  for(unsigned iface = 0; iface < GetMLMesh()->GetLevel(ig)->GetElementFaceNumber(iel); iface++) {
        
           
-        const int bdry_index = GetMLMesh()->GetLevel(ig)->el->GetFaceElementIndex(iel, iface);
+        const int bdry_index = GetMLMesh()->GetLevel(ig)->GetMeshElements()->GetFaceElementIndex(iel, iface);
         
         if (bdry_index < 0) {
         const unsigned int face_index_in_domain = - ( bdry_index + 1);

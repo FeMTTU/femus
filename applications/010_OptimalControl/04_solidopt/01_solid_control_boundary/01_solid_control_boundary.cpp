@@ -337,7 +337,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   const char* 			pdename         = mlPdeSys->name().c_str();
 
   Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
-  elem*          		el     		= msh->el;
+  elem*          		el     		= msh->GetMeshElements();
 
   MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
   Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 
@@ -678,7 +678,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 	  std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
 	  // look for boundary faces
 	  if(el->GetFaceElementIndex(iel,jface) < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      unsigned int face = -( msh->GetMeshElements()->GetFaceElementIndex(iel,jface)+1);
 	      if(  face == CTRL_FACE_IDX) { //control face
 //=================================================== 
 		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
@@ -1036,7 +1036,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                 
            	  if(el->GetFaceElementIndex(iel,jface) < 0) {  //I am on the boundary
 
-                    unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+                    unsigned int face = -( msh->GetMeshElements()->GetFaceElementIndex(iel,jface)+1);
                         if(  face == CTRL_FACE_IDX) { //I am a control face
               
 		unsigned nve_bd = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA
@@ -1311,7 +1311,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob,
   const unsigned 		level 		= mlPdeSys->GetLevelToAssemble();
 
   Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
-  elem*          		el     		= msh->el;
+  elem*          		el     		= msh->GetMeshElements();
 
   MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
   Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 
@@ -1561,7 +1561,7 @@ real_num   integral_g_dot_n = 0.;
 	  std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
 	  // look for boundary faces
 	  if(el->GetFaceElementIndex(iel,jface) < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      unsigned int face = -( msh->GetMeshElements()->GetFaceElementIndex(iel,jface)+1);
 	      if(  face == CTRL_FACE_IDX) { //control face
 //=================================================== 
 		unsigned nve_bd = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA

@@ -42,7 +42,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel (level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel (level);
@@ -400,7 +400,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel (level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel (level);
@@ -626,7 +626,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel (level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel (level);

@@ -161,7 +161,7 @@ double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
 
   Solution* sol  = mlSol.GetSolutionLevel(level);
   Mesh* msh = mlSol.GetMLMesh()->GetLevel(level);
-  elem* el =  msh->el;
+  elem* el =  msh->GetMeshElements();
 
   // Convenience variables to encode the dimension.
   const unsigned dim = 2;

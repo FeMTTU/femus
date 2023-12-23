@@ -45,7 +45,7 @@ static void natural_loop_1d(const MultiLevelProblem *    ml_prob,
        std::vector <  double > xx_face_elem_center(3, 0.);
           xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
 
-       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       const int boundary_index = msh->GetMeshElements()->GetFaceElementIndex(iel, jface);
 
        if ( boundary_index < 0) { //I am on the boundary
 
@@ -146,7 +146,7 @@ static void natural_loop_2d3d(const MultiLevelProblem *    ml_prob,
        std::vector <  double > xx_face_elem_center(3, 0.);
        xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
 
-       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       const int boundary_index = msh->GetMeshElements()->GetFaceElementIndex(iel, jface);
 
        if ( boundary_index < 0) { //I am on the boundary
 
@@ -254,7 +254,7 @@ static void equation_with_dirichlet_or_neumann_bc(MultiLevelProblem& ml_prob) {
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);

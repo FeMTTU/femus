@@ -31,7 +31,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   LinearEquationSolver* myLinEqSolver = my_nnlin_impl_sys._LinSolver[level];  // pointer to the equation (level) object
 
   Mesh* mymsh = ml_prob._ml_msh->GetLevel(level);     // pointer to the mesh (level) object
-  elem* myel = mymsh->el;   // pointer to the elem object in msh (level)
+  elem* myel = mymsh->GetMeshElements();   // pointer to the elem object in msh (level)
   SparseMatrix* myKK = myLinEqSolver->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* myRES =  myLinEqSolver->_RES;  // pointer to the global residual vector object in pdeSys (level)
   bool assembleMatrix = my_nnlin_impl_sys.GetAssembleMatrix();
@@ -676,7 +676,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   Solution* mysolution = ml_sol->GetSolutionLevel(level);     // pointer to the solution (level) object
 
   Mesh* mymsh = ml_prob._ml_msh->GetLevel(level);     // pointer to the mesh (level) object
-  elem* myel = mymsh->el;   // pointer to the elem object in msh (level)
+  elem* myel = mymsh->GetMeshElements();   // pointer to the elem object in msh (level)
 
   double dt =  my_nnlin_impl_sys.GetIntervalTime();
 

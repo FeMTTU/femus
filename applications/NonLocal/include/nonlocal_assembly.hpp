@@ -96,7 +96,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel (level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel (level);
@@ -199,15 +199,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
     double xMin = x1[0][0];
 
     if ( (xMax < leftBound || fabs (xMax - leftBound) < 1.e-10) && (xMin > (leftBound - delta1) || fabs (xMin - (leftBound - delta1)) < 1.e-10)) {
-      msh->el->SetElementGroup (iel, 5);
+      msh->GetMeshElements()->SetElementGroup (iel, 5);
     }
 
-    else if ( (xMax < 0. || fabs (xMax) < 1.e-10) && (xMin > leftBound || fabs (xMin - leftBound) < 1.e-10)) msh->el->SetElementGroup (iel, 7);
+    else if ( (xMax < 0. || fabs (xMax) < 1.e-10) && (xMin > leftBound || fabs (xMin - leftBound) < 1.e-10)) msh->GetMeshElements()->SetElementGroup (iel, 7);
 
-    else if ( (xMax < rightBound || fabs (xMax - rightBound) < 1.e-10) && (xMin > 0. || fabs (xMin) < 1.e-10)) msh->el->SetElementGroup (iel, 8);
+    else if ( (xMax < rightBound || fabs (xMax - rightBound) < 1.e-10) && (xMin > 0. || fabs (xMin) < 1.e-10)) msh->GetMeshElements()->SetElementGroup (iel, 8);
 
     else if ( (xMax < (rightBound + delta2) || fabs (xMax - (rightBound + delta2)) < 1.e-10) && (xMin > rightBound || fabs (xMin - rightBound) < 1.e-10)) {
-      msh->el->SetElementGroup (iel, 6);
+      msh->GetMeshElements()->SetElementGroup (iel, 6);
     }
 
   }
@@ -517,7 +517,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel (level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel (level);
@@ -746,7 +746,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel (level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel (level);
@@ -849,15 +849,15 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
     double xMin = x1[0][0];
 
     if ( (xMax < leftBound || fabs (xMax - leftBound) < 1.e-10) && (xMin > (leftBound - delta1) || fabs (xMin - (leftBound - delta1)) < 1.e-10)) {
-      msh->el->SetElementGroup (iel, 5);
+      msh->GetMeshElements()->SetElementGroup (iel, 5);
     }
 
-    else if ( (xMax < 0. || fabs (xMax) < 1.e-10) && (xMin > leftBound || fabs (xMin - leftBound) < 1.e-10)) msh->el->SetElementGroup (iel, 7);
+    else if ( (xMax < 0. || fabs (xMax) < 1.e-10) && (xMin > leftBound || fabs (xMin - leftBound) < 1.e-10)) msh->GetMeshElements()->SetElementGroup (iel, 7);
 
-    else if ( (xMax < rightBound || fabs (xMax - rightBound) < 1.e-10) && (xMin > 0. || fabs (xMin) < 1.e-10)) msh->el->SetElementGroup (iel, 8);
+    else if ( (xMax < rightBound || fabs (xMax - rightBound) < 1.e-10) && (xMin > 0. || fabs (xMin) < 1.e-10)) msh->GetMeshElements()->SetElementGroup (iel, 8);
 
     else if ( (xMax < (rightBound + delta2) || fabs (xMax - (rightBound + delta2)) < 1.e-10) && (xMin > rightBound || fabs (xMin - rightBound) < 1.e-10)) {
-      msh->el->SetElementGroup (iel, 6);
+      msh->GetMeshElements()->SetElementGroup (iel, 6);
     }
 
   }

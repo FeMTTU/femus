@@ -145,7 +145,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   LinearEquationSolver* myLinEqSolver = my_nnlin_impl_sys._LinSolver[level];  // pointer to the equation (level) object
 
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);    // pointer to the mesh (level) object
-  elem* el = msh->el;   // pointer to the elem object in msh (level)
+  elem* el = msh->GetMeshElements();   // pointer to the elem object in msh (level)
   SparseMatrix* myKK = myLinEqSolver->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* myRES =  myLinEqSolver->_RES;  // pointer to the global residual vector object in pdeSys (level)
 
@@ -933,7 +933,7 @@ void GridToParticlesProjection (MultiLevelProblem & ml_prob, Line & solidLine, L
   Solution* mysolution = mlSol->GetSolutionLevel (level);    // pointer to the solution (level) object
 
   Mesh* msh = ml_prob._ml_msh->GetLevel (level);    // pointer to the mesh (level) object
-  elem* el = msh->el;   // pointer to the elem object in msh (level)
+  elem* el = msh->GetMeshElements();   // pointer to the elem object in msh (level)
 
   double dt =  my_nnlin_impl_sys.GetIntervalTime();
   const unsigned dim = msh->GetDimension();
@@ -1966,7 +1966,7 @@ bool CheckInclusion2D (Solution* sol, const unsigned &elemToCheck, const unsigne
             }
             else {
               unsigned nodeIndex = (solXType == 0) ? i : i / 2;
-              unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, nodeIndex) - 1);
+              unsigned nextElem = (sol->GetMesh()->GetMeshElements()->GetFaceElementIndex (elemToCheck, nodeIndex) - 1);
               if (nextElem != previousElem) {
                 nextElementFound = true;
               }
@@ -1989,7 +1989,7 @@ bool CheckInclusion2D (Solution* sol, const unsigned &elemToCheck, const unsigne
             }
             else {
               unsigned nodeIndex = (solXType == 0) ? i : i / 2;
-              unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, nodeIndex) - 1);
+              unsigned nextElem = (sol->GetMesh()->GetMeshElements()->GetFaceElementIndex (elemToCheck, nodeIndex) - 1);
               if (nextElem != previousElem) {
                 nextElementFound = true;
               }
@@ -2158,7 +2158,7 @@ bool CheckInclusion3D (Solution* sol, const unsigned &elemToCheck, const unsigne
                   }
                   else {
                     //     std::cout << "r is in triangle " << itri << std::endl;
-                    unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, iface) - 1);
+                    unsigned nextElem = (sol->GetMesh()->GetMeshElements()->GetFaceElementIndex (elemToCheck, iface) - 1);
                     if (nextElem != previousElem) {
                       nextElementFound = true;
                     }
@@ -2177,7 +2177,7 @@ bool CheckInclusion3D (Solution* sol, const unsigned &elemToCheck, const unsigne
                   }
                   else {
                     //     std::cout << "r is in triangle " << itri << std::endl;
-                    unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, iface) - 1);
+                    unsigned nextElem = (sol->GetMesh()->GetMeshElements()->GetFaceElementIndex (elemToCheck, iface) - 1);
                     if (nextElem != previousElem) {
                       nextElementFound = true;
                     }
@@ -2205,7 +2205,7 @@ bool CheckInclusion3D (Solution* sol, const unsigned &elemToCheck, const unsigne
           }
           else {
             //    std::cout << "r is in triangle " << itri << std::endl;
-            unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, iface) - 1);
+            unsigned nextElem = (sol->GetMesh()->GetMeshElements()->GetFaceElementIndex (elemToCheck, iface) - 1);
             if (nextElem != previousElem) {
               nextElementFound = true;
             }

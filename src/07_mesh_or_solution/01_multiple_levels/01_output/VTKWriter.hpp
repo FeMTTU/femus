@@ -281,7 +281,7 @@ private:
     if      (field_string == "Material")           { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementMaterial(iel); icount++; }   }
     else if (field_string == "Group")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementGroup(iel); icount++; }      }
     else if (field_string == "TYPE")               { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementType(iel); icount++; }       }
-    else if (field_string == "Level")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->el->GetElementLevel(iel); icount++; }  }
+    else if (field_string == "Level")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetMeshElements()->GetElementLevel(iel); icount++; }  }
     else if (field_string == "Metis partition")    { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = _writer_one_level.processor_id(); icount++; }  }
     
     else if (field_string == "types")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  short unsigned ielt = mesh->GetElementType( iel );

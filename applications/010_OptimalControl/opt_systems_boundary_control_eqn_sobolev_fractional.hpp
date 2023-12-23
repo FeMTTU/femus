@@ -243,7 +243,7 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
             unsigned jel_geom_type = msh->GetElementType(jel);
             unsigned jel_geom_type_face = msh->GetElementFaceType(jel, jface);
 
-            unsigned jel_n_faces_faces  =  msh->el->GetNFC(jel_geom_type, jel_geom_type_face); /* ElementFaceFaceNumber */
+            unsigned jel_n_faces_faces  =  msh->GetMeshElements()->GetNFC(jel_geom_type, jel_geom_type_face); /* ElementFaceFaceNumber */
 
          double mixed_denominator_numerical = 0.;
          
@@ -252,18 +252,18 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
 
               // look for boundary faces - BEGIN
               
-              unsigned jel_n_dofs_bdry_bdry =  msh->el->GetNFACENODES(jel_geom_type_face, e_bdry_bdry, solType_coords);
+              unsigned jel_n_dofs_bdry_bdry =  msh->GetMeshElements()->GetNFACENODES(jel_geom_type_face, e_bdry_bdry, solType_coords);
 
               // look for boundary of boundary faces - BEGIN
                   std::vector < int > nodes_face_face_flags(jel_n_dofs_bdry_bdry, 0); 
               
               for(unsigned jdof_bdry_bdry = 0; jdof_bdry_bdry < jel_n_dofs_bdry_bdry; jdof_bdry_bdry++) { 
                   
-                unsigned jnode_bdry_bdry     = msh->el->GetIG(jel_geom_type_face, e_bdry_bdry, jdof_bdry_bdry); // face-to-element local node mapping.
-                unsigned jnode_bdry_bdry_vol = msh->el->GetIG(jel_geom_type, jface, jnode_bdry_bdry);
+                unsigned jnode_bdry_bdry     = msh->GetMeshElements()->GetIG(jel_geom_type_face, e_bdry_bdry, jdof_bdry_bdry); // face-to-element local node mapping.
+                unsigned jnode_bdry_bdry_vol = msh->GetMeshElements()->GetIG(jel_geom_type, jface, jnode_bdry_bdry);
                 
               // nodes_face_face_flags  -----
-                unsigned node_global = msh->el->GetElementDofIndex(jel, jnode_bdry_bdry_vol);
+                unsigned node_global = msh->GetMeshElements()->GetElementDofIndex(jel, jnode_bdry_bdry_vol);
                 nodes_face_face_flags[jdof_bdry_bdry] = (*sol->_Sol[sol_node_flag_index])(node_global);
               }
               
@@ -282,8 +282,8 @@ template < class LIST_OF_CTRL_FACES, class DOMAIN_CONTAINING_CTRL_FACES >
               
               for(unsigned jdof_bdry_bdry = 0; jdof_bdry_bdry < jel_n_dofs_bdry_bdry; jdof_bdry_bdry++) { 
                   
-                unsigned jnode_bdry_bdry     = msh->el->GetIG(jel_geom_type_face, e_bdry_bdry, jdof_bdry_bdry); // face-to-element local node mapping.
-                unsigned jnode_bdry_bdry_vol = msh->el->GetIG(jel_geom_type, jface, jnode_bdry_bdry);
+                unsigned jnode_bdry_bdry     = msh->GetMeshElements()->GetIG(jel_geom_type_face, e_bdry_bdry, jdof_bdry_bdry); // face-to-element local node mapping.
+                unsigned jnode_bdry_bdry_vol = msh->GetMeshElements()->GetIG(jel_geom_type, jface, jnode_bdry_bdry);
                 
                 for(unsigned k = 0; k < dim; k++) {
                   radius_centered_at_x_qp_of_iface_bdry_bdry[k][jdof_bdry_bdry] = geom_element_jel.get_coords_at_dofs_3d()[k][jnode_bdry_bdry_vol] - x_qp_of_iface[k];
@@ -719,7 +719,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // ---  - BEGIN
          unsigned short  jel_geommm;
       if (iproc == jproc) {
-       jel_geommm = msh->el->GetElementType(jel);
+       jel_geommm = msh->GetMeshElements()->GetElementType(jel);
 //         std::cout  << " current_proc " << iproc << " from external_proc " << jproc << " elem " << jel << " (before bcast) "  << jel_geommm << std::endl;
 //         geom_element_jel.set_geom_type(jel);
 //         jel_geom = geom_element_jel.geom_type();
@@ -931,7 +931,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 
        if(jproc == iproc) {
            
-           std::pair< int, unsigned int > pair_control_jface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, jel, jface);
+           std::pair< int, unsigned int > pair_control_jface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->GetMeshElements(), jel, jface);
            
            jface_is_a_boundary_control  = pair_control_jface.first;
            jface_boundary_control_index = pair_control_jface.second;
@@ -1165,7 +1165,7 @@ unsigned nDof_iel_vec = 0;
        int iface_is_a_boundary_control;
        unsigned int iface_boundary_control_index;
 
-           std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->el, iel, iface);
+           std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< LIST_OF_CTRL_FACES >(msh->GetMeshElements(), iel, iface);
            
            iface_is_a_boundary_control  = pair_control_iface.first;
            iface_boundary_control_index = pair_control_iface.second;
@@ -1342,7 +1342,7 @@ unsigned nDof_iel_vec = 0;
               for (unsigned c = 0; c < n_components_ctrl; c++) {
                  for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_qp_of_iface.size(); l_bdry++) { //dofs of test function
                		    unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
-               		    unsigned int l_vol_jel = msh->el->GetIG(jel_geommm, jface, l_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, l_bdry)*/;
+               		    unsigned int l_vol_jel = msh->GetMeshElements()->GetIG(jel_geommm, jface, l_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, l_bdry)*/;
 
               const unsigned res_pos_iel = assemble_jacobian<double,double>::res_row_index(nDof_iel, c, l_vol_iel);
               const unsigned res_pos_jel = assemble_jacobian<double,double>::res_row_index(nDof_jel, c, l_vol_jel);
@@ -1360,7 +1360,7 @@ unsigned nDof_iel_vec = 0;
                   if (e == c) {
                       for(unsigned m_bdry = 0; m_bdry < phi_ctrl_jel_bdry_qp_of_jface[qp_of_jface].size(); m_bdry++) { //dofs of unknown function
                		    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
-               		    unsigned int m_vol_jel = msh->el->GetIG(jel_geommm, jface, m_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, m_bdry)*/;
+               		    unsigned int m_vol_jel = msh->GetMeshElements()->GetIG(jel_geommm, jface, m_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, m_bdry)*/;
 
                     const unsigned jac_pos_iel_iel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_iel);
                     const unsigned jac_pos_iel_jel = assemble_jacobian< double, double >::jac_row_col_index(nDof_iel, nDof_iel_vec, c, e, l_vol_iel, m_vol_jel);

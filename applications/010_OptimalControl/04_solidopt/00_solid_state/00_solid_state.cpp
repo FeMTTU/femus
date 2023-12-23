@@ -286,7 +286,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix(); 
 
   Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
-  elem*          		el     		= msh->el;
+  elem*          		el     		= msh->GetMeshElements();
 
   MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
   Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 

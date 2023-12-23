@@ -1063,7 +1063,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     switch(solType) {
         
       case CONTINUOUS_LINEAR: { // linear Lagrange
-        unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
+        unsigned iNode = mshc->GetMeshElements()->GetChildElementDof(ielc, i0, i1);
         unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, CONTINUOUS_BIQUADRATIC);
 
         if(iNode < _dofOffset[CONTINUOUS_BIQUADRATIC][isdom] + _originalOwnSize[CONTINUOUS_LINEAR][isdom]) {
@@ -1076,7 +1076,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       break;
 
       case CONTINUOUS_SERENDIPITY: { // quadratic Lagrange
-        unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
+        unsigned iNode = mshc->GetMeshElements()->GetChildElementDof(ielc, i0, i1);
         unsigned isdom = BisectionSearch_find_processor_of_dof(iNode, CONTINUOUS_BIQUADRATIC);
 
         if(iNode < _dofOffset[CONTINUOUS_BIQUADRATIC][isdom] + _originalOwnSize[CONTINUOUS_SERENDIPITY][isdom]) {
@@ -1089,16 +1089,16 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
       break;
 
       case CONTINUOUS_BIQUADRATIC: // bi-quadratic Lagrange
-        dof = mshc->el->GetChildElementDof(ielc, i0, i1);
+        dof = mshc->GetMeshElements()->GetChildElementDof(ielc, i0, i1);
         break;
 
       case DISCONTINUOUS_CONSTANT: // piecewise constant
         // in this case use i=0
-        dof = mshc->el->GetChildElement(ielc, i0);
+        dof = mshc->GetMeshElements()->GetChildElement(ielc, i0);
         break;
 
       case DISCONTINUOUS_LINEAR: // piecewise linear discontinuous
-        unsigned iel = mshc->el->GetChildElement(ielc, i0);
+        unsigned iel = mshc->GetMeshElements()->GetChildElement(ielc, i0);
         unsigned isdom = BisectionSearch_find_processor_of_dof(iel, DISCONTINUOUS_CONSTANT);
         unsigned offset = _elementOffset[isdom];
         unsigned offsetp1 = _elementOffset[isdom + 1];

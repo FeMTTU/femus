@@ -769,7 +769,7 @@ else if (volume_or_boundary == 1 )	{
  
 // ----------
 
-		            const int bdry_index_j = msh->el->GetFaceElementIndex(iel, iface);
+		            const int bdry_index_j = msh->GetMeshElements()->GetFaceElementIndex(iel, iface);
 
 	    if(  bdry_index_j < 0 ) {
 
@@ -1053,7 +1053,7 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
   
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
 
   MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -1299,7 +1299,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiL
   
   //  extract pointers to the several objects that we are going to use
   const Mesh*     msh = ml_sol->GetMLMesh()->GetLevel(level);    // pointer to the mesh (level) object
-  const elem*     el  = msh->el;  // pointer to the elem object in msh (level)
+  const elem*     el  = msh->GetMeshElements();  // pointer to the elem object in msh (level)
   const Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -1467,7 +1467,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
   
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = ml_sol->GetMLMesh()->GetLevel(level);    // pointer to the mesh (level) object
-  elem*     el  = msh->el;  // pointer to the elem object in msh (level)
+  elem*     el  = msh->GetMeshElements();  // pointer to the elem object in msh (level)
   Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem

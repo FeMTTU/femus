@@ -213,7 +213,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     _mesh.get_prol_matrices().SetCoarseMesh(mshc);
 
-    elem* elc = mshc->el;
+    elem* elc = mshc->GetMeshElements();
 
     _mesh.SetFiniteElementPtr(otherFiniteElement);
     
@@ -233,8 +233,8 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
     std::vector < double > coarseLocalizedAmrVector;
     mshc->GetTopology()->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
-    mshc->el->AllocateChildrenElement   (_mesh.GetRefIndex(), mshc);
-    mshc->el->AllocateChildrenElementDof(_mesh.GetRefIndex(), mshc);
+    mshc->GetMeshElements()->AllocateChildrenElement   (_mesh.GetRefIndex(), mshc);
+    mshc->GetMeshElements()->AllocateChildrenElementDof(_mesh.GetRefIndex(), mshc);
 
     _mesh.el = new elem(elc, mshc->GetDimension(), _mesh.GetRefIndex(), coarseLocalizedAmrVector);
 

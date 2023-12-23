@@ -235,7 +235,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
   // Pointers to the mesh (level) object and elem object in mesh (level).
   Mesh *msh = ml_prob._ml_msh->GetLevel (level);
-  elem *el = msh->el;
+  elem *el = msh->GetMeshElements();
 
   // Pointers to the multilevel solution, solution (level) and equation (level).
   MultiLevelSolution *mlSol = ml_prob._ml_sol;
@@ -673,7 +673,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh *msh = ml_prob._ml_msh->GetLevel (level);   // pointer to the mesh (level) object
-  elem *el = msh->el;  // pointer to the elem object in msh (level)
+  elem *el = msh->GetMeshElements();  // pointer to the elem object in msh (level)
 
   MultiLevelSolution *mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution *sol = ml_prob._ml_sol->GetSolutionLevel (level);   // pointer to the solution (level) object
@@ -837,7 +837,7 @@ void UpdateMesh (MultiLevelSolution& mlSol) {
 
   Solution* sol  = mlSol.GetSolutionLevel (level);
   Mesh* msh = mlSol.GetMLMesh()->GetLevel (level);
-  elem* myel =  msh->el;
+  elem* myel =  msh->GetMeshElements();
 
   const unsigned dim = msh->GetDimension();
 

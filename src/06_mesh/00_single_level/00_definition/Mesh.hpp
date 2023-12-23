@@ -184,28 +184,6 @@ private:
 // === Mesh, BASIC, Dimension - END =================
 
 
-// === Mesh, BASIC, CharacteristicLength, uses _coords - BEGIN =================
-
-private:
-
-    double GetCharacteristicLength() const {
-      return _cLength;
-    };
-
-    void ComputeCharacteristicLength();
-
-    void SetCharacteristicLength(const double & cLength){
-      _cLength = cLength;
-    }
-    
-    /** Order of the domain size */
-    double _cLength;
-
-    
-// === Mesh, BASIC, CharacteristicLength, uses _coords - END =================
-
-
-
 // === Mesh, Elements - BEGIN ====================================================
 
     
@@ -216,8 +194,10 @@ private:
     inline elem * GetMeshElements() const {
       return el;
     }
-    
-    /** MESH: list of all elements @todo should be private */
+
+private:
+
+    /** MESH: list of all elements */
     elem *el;
    
 // === Elements, List - END =================
@@ -316,7 +296,32 @@ private:
     /** MESH: node coordinates for each space dimension  @todo beware: this is only filled at coarse reading, then use GetTopology() for the coordinates! */
     std::vector < std::vector < double > > _coords;
 // === Nodes, coordinates read from coarse file (temporary, then use GetTopology()) - END =================
-    
+
+
+
+
+// === Mesh, BASIC, CharacteristicLength, uses _coords - BEGIN =================
+
+private:
+
+    double GetCharacteristicLength() const {
+      return _cLength;
+    };
+
+    void ComputeCharacteristicLength();
+
+    void SetCharacteristicLength(const double & cLength){
+      _cLength = cLength;
+    }
+
+    /** Order of the domain size */
+    double _cLength;
+
+
+// === Mesh, BASIC, CharacteristicLength, uses _coords - END =================
+
+
+
 // === Mesh, Nodes - END ====================================================
     
     

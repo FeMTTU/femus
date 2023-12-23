@@ -372,7 +372,7 @@ void AssembleMatrixResFSI(MultiLevelProblem& ml_prob) {
 
   LinearEquationSolver*  myLinEqSolver	              = my_nnlin_impl_sys._LinSolver[level];
   Mesh*		mymsh		=  ml_prob._ml_msh->GetLevel(level);
-  elem*		myel		=  mymsh->el;
+  elem*		myel		=  mymsh->GetMeshElements();
   SparseMatrix*	myKK		=  myLinEqSolver->_KK;
   NumericVector* myRES		=  myLinEqSolver->_RES;
   std::vector <int>&	myKKIndex	=  myLinEqSolver->KKIndex;

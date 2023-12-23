@@ -356,7 +356,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob) {
   const char* pdename                         = mlPdeSys->name().c_str();
 
   Mesh*		 msh    	   = ml_prob._ml_msh->GetLevel(level);
-  elem*		 myel		   = msh->el;
+  elem*		 myel		   = msh->GetMeshElements();
   SparseMatrix*	 JAC	   = pdeSys->_KK;
   NumericVector* RES 	   = pdeSys->_RES;
 
@@ -606,7 +606,7 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
   const char* pdename                         = mlPdeSys->name().c_str();
 
   Mesh*		 msh    	   = ml_prob._ml_msh->GetLevel(level);
-  elem*		 myel		   = msh->el;
+  elem*		 myel		   = msh->GetMeshElements();
   SparseMatrix*	 JAC	   = pdeSys->_KK;
   NumericVector* RES 	   = pdeSys->_RES;
 

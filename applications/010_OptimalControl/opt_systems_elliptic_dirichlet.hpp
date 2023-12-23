@@ -99,7 +99,7 @@ public:
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
-  elem*                     el = msh->el;
+  elem*                     el = msh->GetMeshElements();
   
   MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -599,7 +599,7 @@ public:
        const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
 // -------
 
-        std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->el, iel, iface);
+        std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->GetMeshElements(), iel, iface);
 
         const int  iface_is_a_boundary_control  = pair_control_iface.first;
 
@@ -961,7 +961,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
 
 
-       std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->el, iel, iface);
+       std::pair< int, unsigned int > pair_control_iface = femus::face_is_a_Gamma_control_face_of_some_index< femus::ctrl:: GAMMA_CONTROL_LIST_OF_FACES_WITH_EXTREMES >(msh->GetMeshElements(), iel, iface);
 
         const int  iface_is_a_boundary_control  = pair_control_iface.first;
 

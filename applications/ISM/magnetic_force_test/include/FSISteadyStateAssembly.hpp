@@ -21,7 +21,7 @@ namespace femus {
     Solution*	                mysolution      = ml_sol->GetSolutionLevel(level);
     LinearEquationSolver*       myLinEqSolver   = my_nnlin_impl_sys._LinSolver[level];
     Mesh*		        mymsh		= ml_prob._ml_msh->GetLevel(level);
-    elem*		        myel		= mymsh->el;
+    elem*		        myel		= mymsh->GetMeshElements();
     SparseMatrix*	        myKK		= myLinEqSolver->_KK;
     NumericVector*	        myRES		= myLinEqSolver->_RES;
 
@@ -263,7 +263,7 @@ namespace femus {
 
           // look for boundary faces
           if(myel->GetFaceElementIndex(iel, jface) < 0) {
-            unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
+            unsigned int face = -(mymsh->GetMeshElements()->GetFaceElementIndex(iel, jface) + 1);
 
             if( !ml_sol->GetBdcFunction()(xx, "V", tau, face, 0.) && tau != 0.) {
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
@@ -721,7 +721,7 @@ namespace femus {
     Solution*                   mysolution      = ml_sol->GetSolutionLevel(level);
     LinearEquationSolver*       myLinEqSolver   = my_nnlin_impl_sys._LinSolver[level];
     Mesh*                       mymsh           = ml_prob._ml_msh->GetLevel(level);
-    elem*                       myel            = mymsh->el;
+    elem*                       myel            = mymsh->GetMeshElements();
     SparseMatrix*               myKK            = myLinEqSolver->_KK;
     NumericVector*              myRES           = myLinEqSolver->_RES;
 
@@ -961,7 +961,7 @@ namespace femus {
 
           // look for boundary faces
           if(myel->GetFaceElementIndex(iel, jface) < 0) {
-            unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
+            unsigned int face = -(mymsh->GetMeshElements()->GetFaceElementIndex(iel, jface) + 1);
 
             if(!ml_sol->GetBdcFunction()(xx, "U", tau, face, 0.) && tau != 0.) {
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
