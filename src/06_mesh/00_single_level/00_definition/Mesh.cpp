@@ -261,11 +261,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
     BuildElementAndNodeStructures();
    
-//====  CharacteristicLength ======== 
-    ComputeCharacteristicLength();  //doesn't need dofmap
-
-//====  Print Info ======== 
-    PrintInfo();  //needs dofmap
     
     
   }
@@ -303,6 +298,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
 
     InitializeAndPossiblyFillAmrRestriction(false);       /** @todo is it really needed here? */
+
+
+//=========
+
+
+//====  CharacteristicLength ========
+    ComputeCharacteristicLength();  //doesn't need dofmap
+
+//====  Print Info ========
+    PrintInfo();  //needs dofmap
+
     
   }
 
@@ -389,7 +395,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
   
   void Mesh::ComputeCharacteristicLength() {
       
-    //compute max and min coords -----------
+    //compute max and min coords - BEGIN -----------
     std::vector < double > xMax(3, 0.);
     std::vector < double > xMin(3, 0.);
     for(unsigned i = 0; i < _coords[0].size(); i++) {
@@ -398,7 +404,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
       }
     }
-    //compute max and min coords - end -----------
+    //compute max and min coords - END -----------
     
     _cLength = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
     
@@ -446,12 +452,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     PartitionElements_and_FillDofMapAllFEFamilies();
 
     BuildElementAndNodeStructures();
-    
-//====  CharacteristicLength ======== 
-    ComputeCharacteristicLength();  //doesn't need dofmap
-
-//====  Print Info ======== 
-    PrintInfo();  //needs dofmap
     
   }
 
@@ -860,12 +860,6 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
        
            BuildElementAndNodeStructures();
 
-//====  CharacteristicLength ======== 
-           ComputeCharacteristicLength();  //doesn't need dofmap
-
-//====  Print Info ======== 
-           PrintInfo();  //needs dofmap
-    
   }
 
   

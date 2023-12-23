@@ -184,18 +184,15 @@ private:
 // === Mesh, BASIC, Dimension - END =================
 
 
-// === Mesh, BASIC, CharacteristicLength - BEGIN =================
+// === Mesh, BASIC, CharacteristicLength, uses _coords - BEGIN =================
 
-public:
-    
-    /// @todo This soon will be private
-    void ComputeCharacteristicLength();
-    
 private:
 
     double GetCharacteristicLength() const {
       return _cLength;
     };
+
+    void ComputeCharacteristicLength();
 
     void SetCharacteristicLength(const double & cLength){
       _cLength = cLength;
@@ -205,7 +202,7 @@ private:
     double _cLength;
 
     
-// === Mesh, BASIC, CharacteristicLength - END =================
+// === Mesh, BASIC, CharacteristicLength, uses _coords - END =================
 
 
 
