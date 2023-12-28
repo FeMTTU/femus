@@ -45,6 +45,7 @@ namespace femus {
   class elem {
 
 // === Friend functions and classes - BEGIN ===============
+
 friend class Mesh;
 
 // generation BEGIN

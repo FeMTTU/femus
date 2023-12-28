@@ -78,7 +78,6 @@ friend class MeshMetisPartitioning;
 friend class MeshRefinement;
 // refinement END
 
-friend class MultiLevelMesh;
 // === Friend functions and classes - END =================
 
 
@@ -307,12 +306,13 @@ private:
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file, with option to not read groups */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag, const bool read_groups, const bool read_boundary_groups);
 
+    void ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
+
 private:
   
     /** Only file reading */
     void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
 
-    void ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
 
 
@@ -376,16 +376,16 @@ public:
       return _level;
     }
 
-    
- private:
-    
-    void PrintInfoLevel() const;
-    
     /** MESH: Set the grid number */
     void SetLevel(const unsigned &i) {
         _level = i;
     };
 
+
+ private:
+    
+    void PrintInfoLevel() const;
+    
     /** MESH: level of mesh in the multi-level hierarchy */
     unsigned _level;
     
