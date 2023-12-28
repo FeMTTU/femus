@@ -119,38 +119,6 @@ public:
 // === Geometric Element, Single - END =================
 
     
-// === Geometric Element, Single, REFINEMENT - BEGIN =================
- public:
-    
-    /** It would private if we put Solution as another friend of Mesh, but maybe it is too much for now */
-    const unsigned GetRefIndex() const {
-      return _ref_index;
-    }
-
-    
- private:
-   
-    /** MESH */
-    const unsigned GetRefFaceIndex() const {
-      return _ref_face_index;
-    }
-    
-     void SetRefinementCellAndFaceIndices(const unsigned &dim) {
-      _ref_index  = pow(2, dim);     //8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
-      _ref_face_index = pow(2, dim -1u);
-    }
-
-    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE // 8*DIM[2]+4*DIM[1]+2*DIM[0]; */
-    unsigned _ref_index;
-    
-    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point // 4*DIM[2]+2*DIM[1]+1*DIM[0]; */
-    unsigned _ref_face_index;
-
-    
-// === Geometric Element, Single, REFINEMENT - END =================
-    
-
-
 // === Mesh, BASIC, Debug - BEGIN =================
 
 public:

@@ -236,11 +236,6 @@ namespace femus {
     // dimension - END ===============
 
     
-    // Refinement indices - BEGIN ===============
-    mesh.SetRefinementCellAndFaceIndices(mesh_dim); 
-    // Refinement indices - END ===============
-
-    
     // geom_el types - BEGIN ===============
     
        //  std::vector std::vector< GeomElemBase* > geom_elem_per_dimension_vec(mydim);

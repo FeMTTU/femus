@@ -1094,8 +1094,8 @@ _analytical_function.resize(new_size);
 
     AMR->_Sol[AMRIndex]->close();
 
-    double counter = AMR->_Sol[AMRIndex]->l1_norm();
-    bool test = (counter * _msh->GetRefIndex() <= _nprocs) ? 1 : 0;
+    const double counter = AMR->_Sol[AMRIndex]->l1_norm();
+    const bool test = (counter * _msh->GetMeshElements()->GetRefIndex( _msh->GetDimension() ) <= _nprocs) ? 1 : 0;
 
     return test;
   }

@@ -26,7 +26,7 @@
 
 #include <vector>
 #include <map>
-
+#include <cmath>
 
 namespace femus {
 
@@ -61,9 +61,7 @@ namespace femus {
   
       const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const   {    return ig[elementType][iface][jnode];  }
   
-      const unsigned GetNRE(const unsigned& elementType) const  { return NRE[elementType]; }
-      
-      const unsigned GetReferenceElementDirection(const unsigned& elementType, const unsigned dir, const unsigned node) const { 
+      const unsigned GetReferenceElementDirection(const unsigned& elementType, const unsigned dir, const unsigned node) const {
         return directions_of_reference_element[elementType][dir][node]; }
       
   private:
@@ -119,11 +117,6 @@ namespace femus {
     }
   };
   
-  /**
-   * Number of elements obtained with one refinement
-  **/
-  const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
-
   
   const unsigned directions_of_reference_element[N_GEOM_ELS][3][2] = { //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
   {
@@ -149,7 +142,34 @@ namespace femus {
 // const unsigned origin_of_reference_element[6]={26,0,12/*?*/,8,0,2};
 
 // === Geometric Element, Single - END =================
-    
+
+
+// === Geometric Element, Single, REFINEMENT - BEGIN =================
+  public:
+
+      const unsigned GetNRE(const unsigned& elementType) const  { return NRE[elementType]; }
+
+    /** It would private if we put Solution as another friend of Mesh, but maybe it is too much for now */
+    ///8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
+    /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE // 8*DIM[2]+4*DIM[1]+2*DIM[0]; */
+    const unsigned GetRefIndex(const unsigned dim) const {
+      return pow(2, dim);
+    }
+
+
+    /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point // 4*DIM[2]+2*DIM[1]+1*DIM[0]; */
+    const unsigned GetRefFaceIndex(const unsigned dim) const {
+      return pow(2, dim -1u);
+    }
+
+  private:
+
+  /**
+   * Number of elements obtained with one refinement
+  **/
+  const unsigned NRE[N_GEOM_ELS] = {8, 8, 8, 4, 4, 2};
+
+// === Geometric Element, Single, REFINEMENT - END =================
 
 
 // === Mesh, Basic, Dimension - BEGIN =================

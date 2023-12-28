@@ -136,10 +136,6 @@ namespace femus {
     mesh.SetDimension(dim);
     // Mesh, dimension - END ********************
     
-    // geom el, refinement - BEGIN ********************
-    mesh.SetRefinementCellAndFaceIndices(dim);
-    // geom el, refinement - END ******************** 
-    
     // Mesh, Elements - BEGIN ********************
     mesh.SetNumberOfElements(nel);
     // Mesh, Elements - END ********************

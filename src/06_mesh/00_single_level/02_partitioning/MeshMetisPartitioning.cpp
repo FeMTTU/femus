@@ -140,7 +140,7 @@ namespace femus {
   void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const Mesh& meshc) {
       
     partition.resize(_mesh.GetNumberOfElements());
-    unsigned refIndex = _mesh.GetRefIndex();
+    const unsigned refIndex = _mesh.GetMeshElements()->GetRefIndex( _mesh.GetDimension() );
     for(int isdom = 0; isdom < _nprocs; isdom++) {
       for(unsigned iel = meshc._elementOffset[isdom]; iel < meshc._elementOffset[isdom + 1]; iel++) {
         for(unsigned j = 0; j < refIndex; j++) {
