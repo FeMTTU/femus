@@ -522,7 +522,7 @@ public:
   
                     
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
 // -------
     geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -935,7 +935,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     
      //MU
 
-   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+   for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
        
 // -------
    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -1349,7 +1349,7 @@ public:
 
     
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
@@ -1821,7 +1821,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
 
 
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
 // -------
    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -2197,7 +2197,7 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
 
 
     // element loop: each process loops only on the elements that owns
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
@@ -2672,7 +2672,7 @@ static void assemble_elliptic_dirichlet_control(MultiLevelProblem& ml_prob) {
         
         
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
       
 

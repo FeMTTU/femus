@@ -28,6 +28,8 @@
 #include <map>
 #include <cmath>
 
+
+
 namespace femus {
 
   //Forward declarations  
@@ -36,8 +38,14 @@ namespace femus {
    * The elem class: it contains the list of all Mesh Geometric Elements, along with several Element-based and also Node-based properties
    * @todo I believe it would even be more linear if this class did not have any function at all involving the Mesh pointer, there are very few in any case
    * @todo Some GeomEl information has to be moved to the basic classes
+   * The idea is that the elem class does not modify the Mesh class, but only the other way around
   */
   class elem {
+
+// === Friend functions and classes - BEGIN ===============
+friend class Mesh;
+friend class MeshRefinement;
+// === Friend functions and classes - END =================
 
 
 // === Constructors / Destructor - BEGIN =================
@@ -62,7 +70,8 @@ namespace femus {
       const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const   {    return ig[elementType][iface][jnode];  }
   
       const unsigned GetReferenceElementDirection(const unsigned& elementType, const unsigned dir, const unsigned node) const {
-        return directions_of_reference_element[elementType][dir][node]; }
+        return directions_of_reference_element[elementType][dir][node];
+      }
       
   private:
 
@@ -187,9 +196,8 @@ namespace femus {
       
 
 // === Mesh, Elements - BEGIN ===========================================================
-    public:
+    private:
       
-      //Elem
       // reorder the element according to the new element mapping
       void ReorderMeshElement_Type_Level_Group_Material___NearFace_rows_ChildElem_columns(const std::vector < unsigned >& elementMapping);
 
@@ -197,9 +205,7 @@ namespace femus {
       
       void BuildElem_NearFace_NearElem_using_NearVertex();
       
-      
-  private:
-      
+
       void ResizeElement_Level_Type_Group_Material(const unsigned nel_in, const unsigned level_in) {
        _elementLevel.resize(nel_in, level_in);
        _elementType.resize(nel_in);
@@ -245,11 +251,6 @@ namespace femus {
       };
 
       /** To be Added */
-      void SetRefinedElementNumber(const unsigned& value) {
-        _nelr = value;
-      };
-
-      /** To be Added */
       void AddToElementNumber(const unsigned& value, const char name[]);
 
       /** To be Added */
@@ -259,6 +260,11 @@ namespace femus {
       
     private:
       
+      /** To be Added */
+      void SetRefinedElementNumber(const unsigned& value) {
+        _nelr = value;
+      };
+
       void InitializeNumberOfElementsPerGeomType() {
             for (unsigned g = 0; g < N_GEOM_ELS ; g++) { _nelt[g] = 0; }
       }
@@ -296,19 +302,6 @@ namespace femus {
 
 
 // === Elements, Subdomains - BEGIN =================
-  public:
-    
-      void SetElementOffsets(const std::vector < unsigned > & elementOffset, const unsigned &iproc, const unsigned &nprocs) {
-        
-        _elementOffset = elementOffset;
-        _elementOwned = elementOffset[iproc + 1] - elementOffset[iproc];
-
-        SetProcs(iproc, nprocs);
-        
-      }
-      
-     unsigned get_n_elements_owned() const { return _elementOwned; }
-     
     private:
 
       unsigned _iproc;
@@ -318,10 +311,21 @@ namespace femus {
       std::vector < unsigned > _elementOffset;
       unsigned _elementOwned;
       
+      void SetElementOffsets(const std::vector < unsigned > & elementOffset, const unsigned &iproc, const unsigned &nprocs) {
+
+        _elementOffset = elementOffset;
+        _elementOwned = elementOffset[iproc + 1] - elementOffset[iproc];
+
+        SetProcs(iproc, nprocs);
+
+      }
+
       void SetProcs(const unsigned &iproc, const unsigned &nprocs) {
         _iproc = iproc;
         _nprocs = nprocs;
       }
+
+     unsigned get_n_elements_owned() const { return _elementOwned; }
 
 // === Elements, Subdomains - END =================
 
@@ -332,10 +336,6 @@ namespace femus {
     
       const unsigned GetLevelOfRefinementForList() const {
         return _level;
-      }
-      
-      void SetElementLevel(const unsigned& iel, const short unsigned& level) {
-        _elementLevel[iel] = level;
       }
       
       const short unsigned GetElementLevel(const unsigned &jel) const {
@@ -362,6 +362,10 @@ namespace femus {
       /** level of refinement of this list of elements */
       unsigned _level;
       
+      void SetElementLevel(const unsigned& iel, const short unsigned& level) {
+        _elementLevel[iel] = level;
+      }
+
 // === Elements, Level - END =================
 
       
@@ -399,7 +403,7 @@ namespace femus {
       void SetElementMaterial(const unsigned& iel, const short unsigned& value);
 
       /** To be Added */
-      short unsigned GetElementMaterial(const unsigned& iel);
+      short unsigned GetElementMaterial(const unsigned& iel) const;
 
 
   private:

@@ -292,7 +292,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   RES->zero(); // Zero all the entries of the Global Residual
 
   // ELEMENT LOOP: each process loops only on the elements that it owns.
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     // Numer of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);
@@ -591,7 +591,7 @@ void UpdateMu (MultiLevelSolution& mlSol) {
   xT[1][6] = sqrt (3.) / 6.;
 
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
@@ -807,7 +807,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   RES->zero(); // Set to zero all the entries of the Global Residual
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
@@ -986,7 +986,7 @@ void UpdateMuOld (MultiLevelSolution& mlSol) {
   xT[1][6] = sqrt (3.) / 6.;
 
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
@@ -1116,7 +1116,7 @@ void UpdateMuOld (MultiLevelSolution& mlSol) {
   sol->_Sol[solsmu2N]->zero();
   sol->_Sol[solw2]->zero();
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
@@ -1185,7 +1185,7 @@ void UpdateMuOld (MultiLevelSolution& mlSol) {
   sol->_Sol[solsmu1N]->zero();
   sol->_Sol[solw1]->zero();
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);

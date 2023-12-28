@@ -409,7 +409,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
   //BEGIN element loop
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     //BEGIN local dof number extraction
     unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);  //temperature
@@ -670,7 +670,7 @@ double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, con
   MyVector <double> solTXi(1, 0.);
   solTXi.stack();
 
-  if(elem >= msh->_elementOffset[iproc] && elem  < msh->_elementOffset[iproc + 1]) {
+  if(elem >= msh->GetElementOffset(iproc) && elem  < msh->GetElementOffset(iproc + 1)) {
     //BEGIN local dof number extraction
     unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
     solT.resize(nDofsT);

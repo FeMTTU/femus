@@ -89,7 +89,7 @@ namespace femus {
     
     
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
-      for(unsigned iel = mesh_in._elementOffset[isdom]; iel < mesh_in._elementOffset[isdom + 1]; iel++) {
+      for(unsigned iel = mesh_in.GetElementOffset(isdom); iel < mesh_in.GetElementOffset(isdom + 1); iel++) {
         const short unsigned ielt = mesh_in.GetElementType(iel);
         const unsigned ndofs_itype_in = mesh_in.GetFiniteElement(ielt, itype)->GetBasis()->n_dofs();
             Get_QitoQjProjection_SparsityPatternSize_OneElement_OneFEFamily_Lagrange_Continuous(mesh_in, iel, NNZ_d, NNZ_o, itype, mesh_in.GetFiniteElement(ielt, jtype), ndofs_itype_in );
@@ -117,7 +117,7 @@ namespace femus {
     _ProjQitoQj[itype][jtype]->init(ni, nj, ni_loc, nj_loc, nnz_d, nnz_o);
 
     for(unsigned isdom = _iproc; isdom < _iproc + 1; isdom++) {
-      for(unsigned iel = mesh_in._elementOffset[isdom]; iel < mesh_in._elementOffset[isdom + 1]; iel++) {
+      for(unsigned iel = mesh_in.GetElementOffset(isdom); iel < mesh_in.GetElementOffset(isdom + 1); iel++) {
         const short unsigned ielt = mesh_in.GetElementType(iel);
         const unsigned ndofs_itype_in = mesh_in.GetFiniteElement(ielt, itype)->GetBasis()->n_dofs();
           Build_QitoQjProjection_OneElement_OneFEFamily_Lagrange_Continuous(mesh_in, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o, itype, mesh_in.GetFiniteElement(ielt, jtype), ndofs_itype_in );

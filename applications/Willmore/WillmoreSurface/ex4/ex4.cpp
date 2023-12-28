@@ -444,7 +444,7 @@ void AssembleBloodCell (MultiLevelProblem& ml_prob) {
     columns[1] = (volumeConstraint) ? lambda1PdeDof : lambda2PdeDof;
 
     // For equations other than Lagrange multiplier:
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
       if (iel > volumeConstraint * areaConstraint) {
         row[0] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, iel);
         columns[0] = row[0];
@@ -461,7 +461,7 @@ void AssembleBloodCell (MultiLevelProblem& ml_prob) {
 
 
   // ELEMENT LOOP: each process loops only on the elements that it owns.
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     // Number of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);

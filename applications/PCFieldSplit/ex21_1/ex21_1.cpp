@@ -445,7 +445,7 @@ void AssembleBoussinesqApproximation_AD(MultiLevelProblem& ml_prob) {
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     // element geometry type
     short unsigned ielGeom = msh->GetElementType(iel);
@@ -789,7 +789,7 @@ std::pair < std::vector <double>, std::vector <double> > GetVaribleValues(MultiL
   }
   */
   //BEGIN local dof number extraction
-  if(elem >= msh->_elementOffset[iproc] && elem  < msh->_elementOffset[iproc + 1]) {
+  if(elem >= msh->GetElementOffset(iproc) && elem  < msh->GetElementOffset(iproc + 1)) {
     unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
     solT.reserve(nDofsT);
   

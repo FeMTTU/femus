@@ -675,7 +675,7 @@ _analytical_function.resize(new_size);
       double solNorm2 = 0.;
       double volume = 0.;
 
-      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+      for(int iel = _msh->GetElementOffset(iproc); iel < _msh->GetElementOffset(iproc + 1); iel++) {
 
         short unsigned ielGeom = _msh->GetElementType(iel);
         unsigned solDofs  = _msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -745,7 +745,7 @@ _analytical_function.resize(new_size);
       parallelVec->close();
       volume = parallelVec->l1_norm();
 
-      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+      for(int iel = _msh->GetElementOffset(iproc); iel < _msh->GetElementOffset(iproc + 1); iel++) {
         if(_msh->GetMeshElements()->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
 
           double ielErrNorm2 = 0.;
@@ -815,7 +815,7 @@ _analytical_function.resize(new_size);
 // 	      unsigned nve = localElementNearVertexNumber.size();
 // 	      for(unsigned j = 0; j < nve; j++) {
 // 		unsigned jel = localElementNearVertexNumber[j];
-// 		if(jel >= _msh->_elementOffset[iproc] && jel < _msh->_elementOffset[iproc + 1]) {
+// 		if(jel >= _msh->GetElementOffset(iproc) && jel < _msh->GetElementOffset(iproc + 1)) {
 // 		  if(_msh->GetMeshElements()->GetIfElementCanBeRefined(jel) && (*AMR->_Sol[AMRIndex])(jel) == 0.) {
 // 		    AMR->_Sol[AMRIndex]->set(jel, 1.);
 // 		    counter_vec->add(_iproc, 1.);
@@ -889,7 +889,7 @@ _analytical_function.resize(new_size);
       double volumeRefined = 0.;
       double volume = 0.;
 
-      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+      for(int iel = _msh->GetElementOffset(iproc); iel < _msh->GetElementOffset(iproc + 1); iel++) {
 
         short unsigned ielGeom = _msh->GetElementType(iel);
         unsigned solDofs  = _msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -972,12 +972,12 @@ _analytical_function.resize(new_size);
 
       double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
 
-      unsigned offset = _msh->_elementOffset[iproc];
-      std::vector < double > ielVolume(_msh->_elementOffset[iproc + 1] - _msh->_elementOffset[iproc],0);
-      std::vector < double > ielErrNorm2(_msh->_elementOffset[iproc + 1] - _msh->_elementOffset[iproc],0);
+      unsigned offset = _msh->GetElementOffset(iproc);
+      std::vector < double > ielVolume(_msh->GetElementOffset(iproc + 1) - _msh->GetElementOffset(iproc),0);
+      std::vector < double > ielErrNorm2(_msh->GetElementOffset(iproc + 1) - _msh->GetElementOffset(iproc),0);
       
       
-      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+      for(int iel = _msh->GetElementOffset(iproc); iel < _msh->GetElementOffset(iproc + 1); iel++) {
         if(_msh->GetMeshElements()->GetIfElementCanBeRefined(iel)) {
 
 //           double ielErrNorm2 = 0.;
@@ -1045,7 +1045,7 @@ _analytical_function.resize(new_size);
             if( ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset] ) {
               for(unsigned j = 1; j < _msh->GetMeshElements()->GetElementNearElementSize(iel,1);j++){
 		unsigned jel = _msh->GetMeshElements()->GetElementNearElement(iel,j);
-		if(jel >= _msh->_elementOffset[iproc] && jel<_msh->_elementOffset[iproc + 1] ){
+		if(jel >= _msh->GetElementOffset(iproc) && jel<_msh->GetElementOffset(iproc + 1) ){
 		  if(_msh->GetMeshElements()->GetIfElementCanBeRefined(jel)){
 		    if(jel > iel) {
                       AMR->_Sol[AMRIndex]->set(jel, 2.);
@@ -1134,7 +1134,7 @@ _analytical_function.resize(new_size);
 //   }
 //   counter_vec->zero();
 //
-//   for (int kel = _msh->_elementOffset[_iproc]; kel < _msh->_elementOffset[_iproc+1]; kel++) {
+//   for (int kel = _msh->GetElementOffset(_iproc); kel < _msh->GetElementOffset(_iproc + 1); kel++) {
 //     short unsigned kelt=_msh->GetElementType(kel);
 //     for (unsigned k=0; k<SolIndex.size(); k++) {
 //       if(SolType[k] < NFE_FAMS_C_ZERO_LAGRANGE){
@@ -1226,7 +1226,7 @@ _analytical_function.resize(new_size);
 //
 //     counter_vec->zero();
 //
-//     for(int iel_metis = _msh->_elementOffset[_iproc]; iel_metis < _msh->_elementOffset[_iproc + 1]; iel_metis++) {
+//     for(int iel_metis = _msh->GetElementOffset(_iproc); iel_metis < _msh->GetElementOffset(_iproc + 1); iel_metis++) {
 //
 //       for(unsigned k = 0; k < SolIndex.size(); k++) {
 //
@@ -1308,7 +1308,7 @@ _analytical_function.resize(new_size);
 
       unsigned nel = _msh->GetNumberOfElements();
 
-      for(int iel = _msh->_elementOffset[_iproc]; iel < _msh->_elementOffset[_iproc + 1]; iel++) {
+      for(int iel = _msh->GetElementOffset(_iproc); iel < _msh->GetElementOffset(_iproc + 1); iel++) {
 
         row_dof.resize(1);
         row_dof[0] = iel;

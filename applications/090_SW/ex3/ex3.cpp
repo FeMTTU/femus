@@ -276,7 +276,7 @@ void ETD(MultiLevelProblem& ml_prob)
   
   double dx;
     
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofh  = msh->GetElementDofNumber(iel, solTypeh);    // number of solution element dofs

@@ -299,7 +299,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
   unsigned    iproc = msh->processor_id();
   unsigned    nprocs = msh->n_processors();
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
@@ -456,7 +456,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
   unsigned    iprocFine = mshFine->processor_id(); // get the process_id (for parallel computation)
 
-  for (int ielFine = solFine->GetMesh()->_elementOffset[iprocFine]; ielFine < solFine->GetMesh()->_elementOffset[iprocFine + 1]; ielFine ++) {
+  for (int ielFine = solFine->GetMesh()->GetElementOffset(iprocFine); ielFine < solFine->GetMesh()->GetElementOffset(iprocFine + 1); ielFine ++) {
 
     short unsigned ielFineGeom = mshFine->GetElementType (ielFine);
     unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);
@@ -505,7 +505,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
       //BEGIN computation of the coarse solution at the fine Gauss point
 
-      for (int ielCoarse = sol->GetMesh()->_elementOffset[iproc]; ielCoarse < sol->GetMesh()->_elementOffset[iproc + 1]; ielCoarse++) {
+      for (int ielCoarse = sol->GetMesh()->GetElementOffset(iproc); ielCoarse < sol->GetMesh()->GetElementOffset(iproc + 1); ielCoarse++) {
 
         short unsigned ielGeomCoarse = msh->GetElementType (ielCoarse);
         unsigned nDofCoarse  = msh->GetElementDofNumber (ielCoarse, soluType);

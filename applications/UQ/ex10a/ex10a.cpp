@@ -417,7 +417,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
   CC->zero();
 
   for (int kproc = 0; kproc < nprocs; kproc++) {
-    for (int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
+    for (int jel = msh->GetElementOffset(kproc); jel < msh->GetElementOffset(kproc + 1); jel++) {
 
       short unsigned ielGeom2;
       unsigned nDof2;
@@ -482,7 +482,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
       }
 
       // element loop: each process loops only on the elements that owns
-      for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+      for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
         short unsigned ielGeom1 = msh->GetElementType (iel);
         unsigned nDof1  = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
@@ -657,7 +657,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
 
         //BEGIN COMPUTE coeffsGS LOCAL
 
-        for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+        for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
           short unsigned ielGeom = msh->GetElementType (iel);
           unsigned nDofu  = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
@@ -728,7 +728,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
 
     double local_norm2 = 0.;
 
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
       short unsigned ielGeom = msh->GetElementType (iel);
       unsigned nDofu  = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
@@ -794,7 +794,7 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
 
       double integral = 0.;
 
-      for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+      for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
         short unsigned ielGeom = msh->GetElementType (iel);
         unsigned nDofu  = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
@@ -903,7 +903,7 @@ void GetCoefficientsForQuantityOfInterest (MultiLevelProblem& ml_prob, std::vect
 
   // element loop: each process loops only on the elements that owns
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);   // number of solution element dofs
@@ -1562,7 +1562,7 @@ void GetHistogramAndKDE (std::vector< std::vector <double > > & sgmQoIStandardiz
 
     if (dim == 1) {
 
-      for (int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
+      for (int iel = sol->GetMesh()->GetElementOffset(iproc); iel < sol->GetMesh()->GetElementOffset(iproc + 1); iel ++) {
 
         unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof (0, iel, 2);
         unsigned  xRightDof = sol->GetMesh()->GetSolutionDof (1, iel, 2);
@@ -1612,7 +1612,7 @@ void GetHistogramAndKDE (std::vector< std::vector <double > > & sgmQoIStandardiz
       std::vector<double> sampleLocal;
       marker.GetMarkerLocalCoordinates (sampleLocal);
 
-      if (iel >= sol->GetMesh()->_elementOffset[iproc]  &&  iel < sol->GetMesh()->_elementOffset[iproc + 1]) {
+      if (iel >= sol->GetMesh()->GetElementOffset(iproc)  &&  iel < sol->GetMesh()->GetElementOffset(iproc + 1)) {
 
         //BEGIN write HISTO solution
         double histoValue = 1. / measure;
@@ -1700,7 +1700,7 @@ void GetHistogramAndKDE (std::vector< std::vector <double > > & sgmQoIStandardiz
       if (dim == 1) {
 
         //BEGIN write finest histogram solution
-        for (int iel = solFinest->GetMesh()->_elementOffset[iprocFinest]; iel < solFinest->GetMesh()->_elementOffset[iprocFinest + 1]; iel ++) {
+        for (int iel = solFinest->GetMesh()->GetElementOffset(iprocFinest); iel < solFinest->GetMesh()->GetElementOffset(iprocFinest + 1); iel ++) {
 
           unsigned  xLeftDof = solFinest->GetMesh()->GetSolutionDof (0, iel, 2);
           unsigned  xRightDof = solFinest->GetMesh()->GetSolutionDof (1, iel, 2);
@@ -1725,7 +1725,7 @@ void GetHistogramAndKDE (std::vector< std::vector <double > > & sgmQoIStandardiz
         Marker marker2 (sgmQoIStandardizedFinest[m], 0., VOLUME, mlSolFinest->GetLevel (level), 2, true);
         unsigned iel2 = marker2.GetMarkerElement();
 
-        if (iel2 >= solFinest->GetMesh()->_elementOffset[iprocFinest]  &&  iel2 < solFinest->GetMesh()->_elementOffset[iprocFinest + 1]) {
+        if (iel2 >= solFinest->GetMesh()->GetElementOffset(iprocFinest)  &&  iel2 < solFinest->GetMesh()->GetElementOffset(iprocFinest + 1)) {
           double histoValue = 1. / measureFinest;
           solFinest->_Sol[solIndexHISTOF]->add (iel2, histoValue);
 
@@ -1770,7 +1770,7 @@ void GetKDEIntegral (MultiLevelProblem& ml_prob) {
 
   double local_integral = 0.;
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofu  = msh->GetElementDofNumber (iel, solTypeKDE);   // number of solution element dofs
@@ -1871,7 +1871,7 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
     double solHISTOFSample = 0.;
 
     if (dim == 1) {
-      for (int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
+      for (int iel = sol->GetMesh()->GetElementOffset(iproc); iel < sol->GetMesh()->GetElementOffset(iproc + 1); iel ++) {
 
         unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof (0, iel, 2);
         unsigned  xRightDof = sol->GetMesh()->GetSolutionDof (1, iel, 2);
@@ -1928,7 +1928,7 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
       if (histoFinest) {
 
         //BEGIN evaluate the finest histogram at the sample
-        for (int iel = solFinest->GetMesh()->_elementOffset[iprocFinest]; iel < solFinest->GetMesh()->_elementOffset[iprocFinest + 1]; iel ++) {
+        for (int iel = solFinest->GetMesh()->GetElementOffset(iprocFinest); iel < solFinest->GetMesh()->GetElementOffset(iprocFinest + 1); iel ++) {
           unsigned  xLeftDof = solFinest->GetMesh()->GetSolutionDof (0, iel, 2);
           unsigned  xRightDof = solFinest->GetMesh()->GetSolutionDof (1, iel, 2);
 
@@ -1956,7 +1956,7 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
       std::vector<double> sampleLocal;
       marker.GetMarkerLocalCoordinates (sampleLocal);
 
-      if (iel >= sol->GetMesh()->_elementOffset[iproc]  &&  iel < sol->GetMesh()->_elementOffset[iproc + 1]) {
+      if (iel >= sol->GetMesh()->GetElementOffset(iproc)  &&  iel < sol->GetMesh()->GetElementOffset(iproc + 1)) {
 
         if (histoErr) solHISTOSampleError = (*sol->_Sol[solIndexHISTOError]) (iel);
 
@@ -2036,7 +2036,7 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
         Marker marker2 (sgmQoIStandardized[m], 0., VOLUME, mlSolFinest->GetLevel (level), 2, true);
         unsigned iel2 = marker2.GetMarkerElement();
 
-        if (iel2 >= solFinest->GetMesh()->_elementOffset[iprocFinest]  &&  iel2 < solFinest->GetMesh()->_elementOffset[iprocFinest + 1]) {
+        if (iel2 >= solFinest->GetMesh()->GetElementOffset(iprocFinest)  &&  iel2 < solFinest->GetMesh()->GetElementOffset(iprocFinest + 1)) {
           solHISTOFSample = (*solFinest->_Sol[solIndexHISTO]) (iel2);
 
         }

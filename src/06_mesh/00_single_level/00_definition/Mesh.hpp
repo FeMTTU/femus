@@ -62,6 +62,8 @@ class Mesh : public ParallelObject {
 
 // === Friend functions and classes - BEGIN =================
 /// These classes can access stuff that otherwise is protected/private
+
+// generation BEGIN
 friend   void MeshTools::Generation::BuildBox ( Mesh& mesh,
 		      std::vector < std::vector < double> > &coords,
                       const unsigned int nx,
@@ -75,11 +77,16 @@ friend   void MeshTools::Generation::BuildBox ( Mesh& mesh,
 
 friend class MED_IO;
 friend class GambitIO;
+// generation END
 
+// partitioning BEGIN
 friend class MeshPartitioning;
 friend class MeshMetisPartitioning;
+// partitioning END
 
+// refinement BEGIN
 friend class MeshRefinement;
+// refinement END
 
 friend class MultiLevelMesh;
 // === Friend functions and classes - END =================
@@ -99,26 +106,7 @@ public:
     
 // === Constructors / Destructor - END =================
 
-    
 
-// === Geometric Element, Single - BEGIN =================
- public:
-   
-    /** */
-    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type = GeomElemBase::_index_for_all_faces) const;
-
-    unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = GeomElemBase::_index_for_all_faces) const;
-    
-    /**  */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
-
-    /**  */
-    unsigned GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const;
-    
-    
-// === Geometric Element, Single - END =================
-
-    
 // === Mesh, BASIC, Debug - BEGIN =================
 
 public:
@@ -196,15 +184,18 @@ private:
     
     /** Get element type*/
     short unsigned GetElementType(const unsigned &iel) const;
-    /**  */
-    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
     
 // === Elements, Type - END =================
+
 
 // === Elements, Subdomains - BEGIN =================
  public:
     
-    /** MESH: Number of elements per processor (incremental count)  @todo should be private */
+   unsigned GetElementOffset(const unsigned iproc_in) const { return  _elementOffset[iproc_in]; }
+
+ private:
+
+    /** MESH: Number of elements per processor (incremental count) */
     std::vector < unsigned > _elementOffset;
  
 // === Elements, Subdomains - END =================
@@ -227,6 +218,25 @@ private:
     
 // === Elements, Material - END =================
     
+// === Elements, Faces - BEGIN =================
+ public:
+
+    /** */
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type = GeomElemBase::_index_for_all_faces) const;
+
+    unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = GeomElemBase::_index_for_all_faces) const;
+
+    /**  */
+    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
+
+    /**  */
+    unsigned GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const;
+
+    /**  */
+    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
+
+// === Elements, Faces - END =================
+
 // === Mesh, Elements - END ====================================================
 
 

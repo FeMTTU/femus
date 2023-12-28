@@ -525,7 +525,7 @@ void AssembleMatrixResNS ( MultiLevelProblem &ml_prob ) {
   myKK->zero();
 
   // *** element loop ***
-  for ( int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++ ) {
+  for ( int iel = mymsh->GetElementOffset(iproc); iel < mymsh->GetElementOffset(iproc + 1); iel++ ) {
 
     unsigned kel        = iel;
     short unsigned kelt = mymsh->GetElementType ( kel );
@@ -1029,7 +1029,7 @@ void SetLambda ( MultiLevelSolution &mlSol, const unsigned &level, const  FEOrde
   unsigned iproc  = mymsh->processor_id();
 
   // *** element loop ***
-  for ( int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++ ) {
+  for ( int iel = mymsh->GetElementOffset(iproc); iel < mymsh->GetElementOffset(iproc + 1); iel++ ) {
 
     unsigned kel        = iel;
     short unsigned kelt = mymsh->GetElementType ( kel );
@@ -1337,7 +1337,7 @@ void AssembleMatrixResT ( MultiLevelProblem &ml_prob ) {
 
   // *** element loop ***
 
-  for ( int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++ ) {
+  for ( int iel = mymsh->GetElementOffset(iproc); iel < mymsh->GetElementOffset(iproc + 1); iel++ ) {
 
     unsigned kel = iel;
     short unsigned kelt = mymsh->GetElementType ( kel );

@@ -447,7 +447,7 @@ namespace femus {
     std::map < int, std::map <int, bool > > DnBlgToMe_o;     //don't belong to me 
     std::map < int, std::map <int, bool > > DnBlgToMe_d;     //don't belong to me
 
-    for(int kel = _msh->_elementOffset[this_proc]; kel < _msh->_elementOffset[this_proc + 1]; kel++) {
+    for(int kel = _msh->GetElementOffset( this_proc ); kel < _msh->GetElementOffset(this_proc + 1); kel++) {
 
       short int kelt = _msh->GetElementType(kel);
       std::vector < int > nve(_SolPdeIndex.size());

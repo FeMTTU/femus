@@ -636,8 +636,8 @@ namespace femus {
           if(sol_type < NFE_FAMS_C_ZERO_LAGRANGE) {
               abort();
 //             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-//               for(int iel = GetMLMesh()->GetLevel(ig)->_elementOffset[isdom];
-//                   iel < GetMLMesh()->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
+//               for(int iel = GetMLMesh()->GetLevel(ig)->GetElementOffset(isdom);
+//                   iel < GetMLMesh()->GetLevel(ig)->GetElementOffset(isdom + 1); iel++) {
 //                 unsigned nloc_dof = GetMLMesh()->GetLevel(ig)->GetElementDofNumber(iel, sol_type);
 // 
 //                 for(int j = 0; j < nloc_dof; j++) {
@@ -669,8 +669,8 @@ namespace femus {
               
   CurrentElem < double > geom_element_iel(dim, GetMLMesh()->GetLevel(ig) );
   
-              for(int iel = GetMLMesh()->GetLevel(ig)->_elementOffset[_iproc];
-                  iel < GetMLMesh()->GetLevel(ig)->_elementOffset[_iproc + 1]; iel++) {
+              for(int iel = GetMLMesh()->GetLevel(ig)->GetElementOffset(_iproc);
+                  iel < GetMLMesh()->GetLevel(ig)->GetElementOffset(_iproc + 1); iel++) {
                   value = 0.;
 
 // ------- - BEGIN

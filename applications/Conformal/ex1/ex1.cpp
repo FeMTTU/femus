@@ -282,7 +282,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   RES->zero(); // Zero all the entries of the Global Residual
 
   // ELEMENT LOOP: each process loops only on the elements that it owns.
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     double scaleValue = (*sol->_Sol[scaleIndex]) (iel);
     double energyValue = (*sol->_Sol[energyIndex]) (iel);
@@ -612,7 +612,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   RES->zero(); // Set to zero all the entries of the Global Residual
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     double scaleValue = (*sol->_Sol[solScaleIndex]) (iel);
 
@@ -801,7 +801,7 @@ void UpdateScale (MultiLevelProblem& ml_prob, const double &elScalingFactor) {
 
 
   // element loop: each process loops only on the elements that owns
-  for (unsigned iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (unsigned iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     double scaleValue = (*sol->_Sol[elScaleIndex]) (iel);
     double counter = (*sol->_Sol[counterIndex]) (iel);
@@ -853,7 +853,7 @@ void UpdateScale (MultiLevelProblem& ml_prob, const double &elScalingFactor) {
 //   }
 //   sol->_Sol[vtScaleIndex]->close();
 //
-//   for (unsigned iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//   for (unsigned iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 //      double value = .99 * (*sol->_Sol[elScaleIndex]) (iel);
 //      unsigned vtDofs  = msh->GetElementDofNumber (iel, vtScaleType);
 //      for (unsigned i = 0; i < vtDofs; i++) {

@@ -342,7 +342,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolGlobal) {
   unsigned    iproc = msh->processor_id();
   unsigned    nprocs = msh->n_processors();
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     short unsigned ielGroup = msh->GetElementGroup (iel);

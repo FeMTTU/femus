@@ -528,7 +528,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   myKK->zero();
 
   // *** element loop ***
-  for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = mymsh->GetElementOffset(iproc); iel < mymsh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielt = mymsh->GetElementType(iel);
     unsigned nve = mymsh->GetElementDofNumber(iel, order_ind);
@@ -769,7 +769,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
     unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
 
 
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
       short unsigned ielt = msh->GetElementType(iel);
       unsigned nve = msh->GetElementDofNumber(iel, SolOrder);

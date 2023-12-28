@@ -136,7 +136,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   //std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
-  for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = mymsh->GetElementOffset(iproc); iel < mymsh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielt = mymsh->GetElementType(iel);
 

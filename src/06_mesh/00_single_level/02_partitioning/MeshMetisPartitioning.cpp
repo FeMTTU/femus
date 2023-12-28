@@ -142,7 +142,7 @@ namespace femus {
     partition.resize(_mesh.GetNumberOfElements());
     const unsigned refIndex = _mesh.GetMeshElements()->GetRefIndex( _mesh.GetDimension() );
     for(int isdom = 0; isdom < _nprocs; isdom++) {
-      for(unsigned iel = meshc._elementOffset[isdom]; iel < meshc._elementOffset[isdom + 1]; iel++) {
+      for(unsigned iel = meshc.GetElementOffset(isdom); iel < meshc.GetElementOffset(isdom + 1); iel++) {
         for(unsigned j = 0; j < refIndex; j++) {
           partition[ iel * refIndex + j ] = isdom;
         }

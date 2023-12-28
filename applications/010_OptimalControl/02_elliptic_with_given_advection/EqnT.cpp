@@ -96,8 +96,6 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob){
    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
 
-//    const uint nel_beg = mymsh->_elementOffset[myproc];
-//    const uint nel_end = mymsh->_elementOffset[myproc+1];
    
   for (uint iel = 0; iel < (nel_e - nel_b); iel++) {
 

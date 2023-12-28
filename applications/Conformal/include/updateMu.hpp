@@ -68,7 +68,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
   std::vector< double > stdVectorPhi;
   std::vector< double > stdVectorPhi_uv;
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs1  = msh->GetElementDofNumber(iel, solType1);
@@ -327,7 +327,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     //std::vector < double > phi2_x; // local test function first order partial derivatives
     //double weight2; // gauss point weight
 
-    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
       short unsigned ielGeom = msh->GetElementType(iel);
       unsigned nDofs1  = msh->GetElementDofNumber(iel, solType1);
@@ -416,7 +416,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     std::vector< double > solTheta2;
     std::vector< double > solPhi2;
 
-    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
       short unsigned ielGeom = msh->GetElementType(iel);
       unsigned nDofs1  = msh->GetElementDofNumber(iel, solType1);

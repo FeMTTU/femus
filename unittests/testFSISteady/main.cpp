@@ -523,7 +523,7 @@ void AssembleMatrixResFSI(MultiLevelProblem& ml_prob) {
   myKK->zero();
 
   /// *** element loop ***
-  for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = mymsh->GetElementOffset(iproc); iel < mymsh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned kel        = iel;
     short unsigned kelt = mymsh->GetElementType(kel);

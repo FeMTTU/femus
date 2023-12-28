@@ -627,7 +627,7 @@ template < class real_num>
   
   
   
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
 //---------------- Geometry - BEGIN
       geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -1130,7 +1130,7 @@ void compute_L2_norm_of_errors_of_unknowns_with_analytical_sol(MultiLevelProblem
   
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
       
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
@@ -1333,7 +1333,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_with_analytical_sol(const MultiL
   double l2norm = 0.;
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     
     const short unsigned ielGeom = msh->GetElementType(iel);
@@ -1509,7 +1509,7 @@ std::pair < double, double > GetErrorNorm_L2_H1_multiple_methods(MultiLevelSolut
   double l2norm_inexact = 0.;
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     
     short unsigned ielGeom = msh->GetElementType(iel);

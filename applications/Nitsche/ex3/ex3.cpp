@@ -444,7 +444,7 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
   unsigned imarkerI = markerOffsetI[iproc];
 
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofD  = msh->GetElementDofNumber(iel, solDType);  // number of solution element dofs
@@ -833,7 +833,7 @@ void BuildFlag(MultiLevelSolution& mlSol) {
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   std::vector < std::vector<double> >  x(dim);
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, nflagType);  // number of solution element dofs
@@ -948,7 +948,7 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
   Vec v;
   EPS eps;
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned eFlag = static_cast <unsigned>(floor((*sol->_Sol[eflagIndex])(iel) + 0.5));
     if(eFlag == 1) {

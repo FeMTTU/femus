@@ -660,7 +660,7 @@ const int state_pos_begin   =  vector_offsets[pos_index_state];
  
  
  
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
   // geometry *****************************
       geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -1455,7 +1455,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
     
      //MU
 
-   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+   for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
        
 // -------
    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -1682,7 +1682,7 @@ static double*  GetErrorNorm(const MultiLevelProblem & ml_prob, MultiLevelSoluti
   std::vector < double > seminorm ( pure_boundary_norms::no_of_h1_norms ,0.);
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     
   // geometry *****************************
@@ -2225,7 +2225,7 @@ static void assemble_ns_dirichlet_control_lifting_internal_AD(MultiLevelProblem&
 //*************************************************** 
  
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
 
    // geometry *****************************
@@ -2909,7 +2909,7 @@ const int state_pos_begin   =  vector_offsets[navier_stokes::lifting_internal:: 
 
   
    
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
   // geometry *****************************
       geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -3773,7 +3773,7 @@ if (assembleMatrix) JAC->close();  /// This is needed for the parallel, when spl
   
 
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
 // -------
    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -3987,7 +3987,7 @@ static double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolutio
   std::vector < double > seminorm ( lifting_internal_norms::no_of_h1_norms ,0.);
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     
   // geometry *****************************

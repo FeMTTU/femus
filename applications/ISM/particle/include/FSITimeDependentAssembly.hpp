@@ -207,7 +207,7 @@ namespace femus
     myKK->zero();
 
     // *** element loop ***
-    for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+    for(int iel = mymsh->GetElementOffset(iproc); iel < mymsh->GetElementOffset(iproc + 1); iel++) {
 
       short unsigned ielt = mymsh->GetElementType(iel);
       unsigned nve        = mymsh->GetElementDofNumber(iel, SolType2);
@@ -372,12 +372,12 @@ namespace femus
         mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old);
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi(ig);
 
-        if(flag_mat == 2 || iel == mymsh->_elementOffset[iproc]) {
+        if(flag_mat == 2 || iel == mymsh->GetElementOffset(iproc)) {
           if(ig == 0) {
             double GaussWeight = mymsh->_finiteElement[ielt][SolType2]->GetGaussWeight(ig);
             area = Weight_hat / GaussWeight;
 
-            if(iel == mymsh->_elementOffset[iproc]) {
+            if(iel == mymsh->GetElementOffset(iproc)) {
               area_elem_first->add(mymsh->processor_id(), area);
               area_elem_first->close();
               rapresentative_area = area_elem_first->l1_norm() / nprocs;

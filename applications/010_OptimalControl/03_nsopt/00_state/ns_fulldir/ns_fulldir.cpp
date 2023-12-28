@@ -426,7 +426,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 // #endif  
   
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
 
@@ -807,7 +807,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   
     // ****************** element loop *******************
  
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
   // geometry *****************************
    short unsigned ielGeom = msh->GetElementType(iel);
@@ -1233,7 +1233,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
   std::vector < double > l2norm (ns_state_only::no_of_norms,0.);
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     
   // geometry *****************************

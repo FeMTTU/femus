@@ -140,7 +140,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   myRES->zero();
   
   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
     
     short unsigned ielt = msh->GetElementType (iel);
     
@@ -1568,7 +1568,7 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
   //END
   
   //   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
-  //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  //   for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
   //
   //     short unsigned ielt = msh->GetElementType (iel);
   //
@@ -1612,7 +1612,7 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
 //   unsigned    iproc = msh->processor_id();
 //
 //
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//   for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 //
 //     short unsigned ielt = msh->GetElementType (iel);
 //

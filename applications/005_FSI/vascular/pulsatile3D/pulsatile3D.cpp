@@ -1057,7 +1057,7 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
   solPIndex = mlSol.GetIndex ( "PS" );
   unsigned solPType = mlSol.GetSolutionType ( solPIndex );
 
-  for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+  for ( int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++ ) {
     if ( msh->GetElementGroup ( iel ) == group ) {
       short unsigned ielt = msh->GetElementType ( iel );
       unsigned ndofV = msh->GetElementDofNumber ( iel, solVType );

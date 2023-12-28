@@ -215,7 +215,7 @@ static void compute_cost_functional_regularization_bdry(const MultiLevelProblem 
   
   
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
@@ -545,7 +545,7 @@ double u_x_gss = 0.;
   
     
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
  
     geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
@@ -783,7 +783,7 @@ static void compute_cost_functional_regularization_lifting_external(const MultiL
 
 
     // element loop: each process loops only on the elements that owns
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
         int group_flag         = msh->GetElementGroup(iel);      // element group flag (Exterior = GROUP_EXTERNAL, Interior = GROUP_INTERNAL)
         short unsigned ielGeom = msh->GetElementType(iel);       // element geometry type
@@ -1099,7 +1099,7 @@ double integral_g_dot_n = 0.;
   
   
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
    // geometry *****************************
       geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -1449,7 +1449,7 @@ double  integral_div_ctrl = 0.;
 //*************************************************** 
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
    // geometry *****************************
       geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);

@@ -193,7 +193,7 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
 
   std::vector < std::vector < std::vector <double > > > aP (3);
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofu  = msh->GetElementDofNumber (iel, soluType); // number of solution element dofs
@@ -548,7 +548,7 @@ void BuildFlag (MultiLevelSolution& mlSol) {
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   std::vector < std::vector<double> >  x (dim);
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs  = msh->GetElementDofNumber (iel, nflagType); // number of solution element dofs

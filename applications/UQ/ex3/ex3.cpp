@@ -307,7 +307,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
     CC->zero();
 
     for ( int kproc = 0; kproc < nprocs; kproc++ ) {
-        for ( int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++ ) {
+        for ( int jel = msh->GetElementOffset(kproc); jel < msh->GetElementOffset(kproc + 1); jel++ ) {
 
             short unsigned ielGeom2;
             unsigned nDof2;
@@ -372,7 +372,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
             }
 
             // element loop: each process loops only on the elements that owns
-            for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+            for ( int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++ ) {
 
                 short unsigned ielGeom1 = msh->GetElementType ( iel );
                 unsigned nDof1  = msh->GetElementDofNumber ( iel, solType ); // number of solution element dofs
@@ -527,7 +527,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 //
 //   std::vector < std::vector < double > > eigenFunction(numberOfEigPairs); // local solution
 //
-//   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//   for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 //
 //     short unsigned ielGeom = msh->GetElementType(iel);
 //     unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -616,7 +616,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 
                 //BEGIN COMPUTE coeffsGS LOCAL
 
-                for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+                for ( int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++ ) {
 
                     short unsigned ielGeom = msh->GetElementType ( iel );
                     unsigned nDofu  = msh->GetElementDofNumber ( iel, solType ); // number of solution element dofs
@@ -687,7 +687,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 
         double local_norm2 = 0.;
 
-        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+        for ( int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++ ) {
 
             short unsigned ielGeom = msh->GetElementType ( iel );
             unsigned nDofu  = msh->GetElementDofNumber ( iel, solType ); // number of solution element dofs
@@ -753,7 +753,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 
             double integral = 0.;
 
-            for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+            for ( int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++ ) {
 
                 short unsigned ielGeom = msh->GetElementType ( iel );
                 unsigned nDofu  = msh->GetElementDofNumber ( iel, solType ); // number of solution element dofs
@@ -862,7 +862,7 @@ void GetCoefficientsForQuantityOfInterest ( MultiLevelProblem& ml_prob, std::vec
 
     // element loop: each process loops only on the elements that owns
 
-    for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+    for ( int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++ ) {
 
         short unsigned ielGeom = msh->GetElementType ( iel );
         unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs

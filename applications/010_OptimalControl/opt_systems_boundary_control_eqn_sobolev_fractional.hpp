@@ -690,7 +690,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
   const int proc_to_bcast_from = jproc;
   
 // --- jel opening - BEGIN
-    for(int jel = msh->_elementOffset[jproc]; jel < msh->_elementOffset[jproc + 1]; jel++) {
+    for(int jel = msh->GetElementOffset(jproc); jel < msh->GetElementOffset(jproc + 1); jel++) {
 
 
 // ------- Sol_n_el_dofs_Mat - BEGIN
@@ -1041,7 +1041,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
               
 // --- iel opening - BEGIN
        
-       for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1] ; iel++) {
+       for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1) ; iel++) {
            
            
 // --- geometry - BEGIN        

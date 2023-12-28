@@ -575,7 +575,7 @@ static void AssembleBilaplaceProblem_AD(MultiLevelProblem& ml_prob) {
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel); 
 // // //     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs

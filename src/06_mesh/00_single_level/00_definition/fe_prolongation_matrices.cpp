@@ -110,7 +110,7 @@ namespace femus {
       NNZ_o->zero();
 
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-        for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
+        for(int iel = _coarseMsh->GetElementOffset(isdom); iel < _coarseMsh->GetElementOffset(isdom + 1); iel++) {
           const short unsigned ielt = _coarseMsh->GetElementType(iel);
             Get_Prolongation_SparsityPatternSize_OneElement_OneFEFamily( mesh_in, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs, mesh_in.GetFiniteElement(ielt, solType) );
             ///@todo this GetFiniteElement should come from the Coarse one, it is more consistent, but it should be abstract so it should be the same, try to compare both
@@ -142,7 +142,7 @@ namespace femus {
 
       // loop on the coarse grid
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
-        for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
+        for(int iel = _coarseMsh->GetElementOffset(isdom); iel < _coarseMsh->GetElementOffset(isdom + 1); iel++) {
           const short unsigned ielt = _coarseMsh->GetElementType(iel);
             Build_Prolongation_OneElement_OneFEFamily(mesh_in, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs, mesh_in.GetFiniteElement(ielt, solType) );         }
       }

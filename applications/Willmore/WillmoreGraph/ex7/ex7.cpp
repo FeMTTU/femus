@@ -305,7 +305,7 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
   double HPintegralLocal = 0.;
   
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     // element geometry type
     short unsigned ielGeom = msh->GetElementType (iel);

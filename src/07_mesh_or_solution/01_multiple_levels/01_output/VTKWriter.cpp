@@ -103,10 +103,10 @@ namespace femus {
     
     std::map < unsigned, unsigned > VTKWriter::ghost_map_proc(const Mesh * mesh, const unsigned index) const {
 
-    unsigned elementOffset = mesh->_elementOffset[_writer_one_level.processor_id()];
-    unsigned elementOffsetp1 = mesh->_elementOffset[_writer_one_level.processor_id() + 1];
+    const unsigned elementOffset   = mesh->GetElementOffset( _writer_one_level.processor_id() );
+    const unsigned elementOffsetp1 = mesh->GetElementOffset( _writer_one_level.processor_id() + 1 );
     
-    unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _writer_one_level.processor_id());
+    const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _writer_one_level.processor_id());
     
     unsigned ghostMapCounter = 0;
      
@@ -133,8 +133,8 @@ namespace femus {
 
   void VTKWriter::fill_connectivity_proc(const Mesh * mesh, const unsigned index, const std::map<unsigned, unsigned>  &  ghostMap,  int * const var_conn) const {
        
-    const unsigned elementOffset = mesh->_elementOffset[_writer_one_level.processor_id()];
-    const unsigned elementOffsetp1 = mesh->_elementOffset[_writer_one_level.processor_id() + 1];
+    const unsigned elementOffset = mesh->GetElementOffset( _writer_one_level.processor_id() );
+    const unsigned elementOffsetp1 = mesh->GetElementOffset( _writer_one_level.processor_id() + 1 );
     
     const unsigned dofOffset = mesh->dofmap_get_dof_offset(index, _writer_one_level.processor_id());
     const unsigned nvtOwned = mesh->dofmap_get_own_size(index, _writer_one_level.processor_id());
@@ -184,7 +184,7 @@ namespace femus {
        
       unsigned counter = 0;
       
-      for(unsigned iel = mesh->_elementOffset[_writer_one_level.processor_id()]; iel < mesh->_elementOffset[_writer_one_level.processor_id() + 1]; iel++ ) {
+      for(unsigned iel = mesh->GetElementOffset(_writer_one_level.processor_id()); iel < mesh->GetElementOffset(_writer_one_level.processor_id() + 1); iel++ ) {
 
         for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
             counter++;
@@ -512,8 +512,8 @@ namespace femus {
 
     //------------- Mesh, NODE and ELEMENT INFO - BEGIN ----------------------------------------------------------------------------------
     // count the own element dofs on all levels -------------
-    const unsigned elemetOffset = mesh->_elementOffset[_writer_one_level.processor_id()];
-    const unsigned elemetOffsetp1 = mesh->_elementOffset[_writer_one_level.processor_id() + 1];
+    const unsigned elemetOffset = mesh->GetElementOffset(_writer_one_level.processor_id() );
+    const unsigned elemetOffsetp1 = mesh->GetElementOffset(_writer_one_level.processor_id() + 1 );
     const unsigned nel = elemetOffsetp1 - elemetOffset;
     
     //count the own node dofs on all levels -------------

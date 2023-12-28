@@ -108,7 +108,7 @@ void AssemblePoissonProblem_old_fe_quadrature_nonAD(MultiLevelProblem& ml_prob,
 
   
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
@@ -331,7 +331,7 @@ void AssemblePoissonProblem_old_fe_quadrature_AD(MultiLevelProblem& ml_prob,
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs

@@ -370,7 +370,7 @@ std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlS
   double l2norm = 0.;
 
 // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
 
     short unsigned ielGeom = msh->GetElementType (iel);
@@ -524,7 +524,7 @@ void BuidProjection (MultiLevelProblem& ml_prob, const unsigned &level) {
   unsigned solType = mlSol->GetSolutionType (solwIndex);
   sol->_Sol[solwIndex]->zero();
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
@@ -584,7 +584,7 @@ void BuidProjection (MultiLevelProblem& ml_prob, const unsigned &level) {
   std::vector < double > solw;
 
   //BEGIN element loop
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
@@ -762,7 +762,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
   std::vector< double > res (dim2 + dim + 1);
 
   //BEGIN element loop
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofsU  = msh->GetElementDofNumber (iel, solTypeU);
@@ -1118,7 +1118,7 @@ void Assemble (MultiLevelProblem& ml_prob) {
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
 

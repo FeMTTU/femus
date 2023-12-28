@@ -78,7 +78,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
   std::vector< double > stdVectorPhi;
   std::vector< double > stdVectorPhi_uv;
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs1  = msh->GetElementDofNumber(iel, solType1);
@@ -325,7 +325,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     }
     sol->_Sol[indexCntEdge]->zero();
 
-    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
       short unsigned ielGeom = msh->GetElementType(iel);
       unsigned idx = (ielGeom == QUAD) ? 0 : 1;
@@ -398,7 +398,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     }
     sol->_Sol[indexCntEdge]->close();
 
-    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
       short unsigned ielGeom = msh->GetElementType(iel);
       unsigned idx = (ielGeom == QUAD) ? 0 : 1;

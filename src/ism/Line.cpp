@@ -462,7 +462,7 @@ namespace femus {
       counter = 0;
       unsigned iprocParticles = _markerOffset[iproc + 1] - _markerOffset[iproc];
 
-      for (unsigned iel = _mesh->_elementOffset[iproc]; iel < _mesh->_elementOffset[iproc + 1]; iel++) {
+      for (unsigned iel = _mesh->GetElementOffset(iproc); iel < _mesh->GetElementOffset(iproc + 1); iel++) {
 
         for (unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
 
@@ -813,7 +813,7 @@ namespace femus {
       counter = 0;
       unsigned iprocParticles = _markerOffset[iproc + 1] - _markerOffset[iproc];
 
-      for (unsigned iel = _mesh->_elementOffset[iproc]; iel < _mesh->_elementOffset[iproc + 1]; iel++) {
+      for (unsigned iel = _mesh->GetElementOffset(iproc); iel < _mesh->GetElementOffset(iproc + 1); iel++) {
 
         for (unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
 
@@ -1337,7 +1337,7 @@ namespace femus {
       _sol->_Sol[solIndexMat]->close();
 
       //set all nodes M with element Mat = 0 to 0
-      for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+      for (int iel = _mesh->GetElementOffset(_iproc); iel < _mesh->GetElementOffset(_iproc + 1); iel++) {
 
         unsigned idofMat = _mesh->GetSolutionDof (0, iel, solTypeMat);
         unsigned  material = (*_sol->_Sol[solIndexMat]) (idofMat);
@@ -1352,7 +1352,7 @@ namespace femus {
       }
       _sol->_Sol[solIndexM]->close();
 
-      for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+      for (int iel = _mesh->GetElementOffset(_iproc); iel < _mesh->GetElementOffset(_iproc + 1); iel++) {
 
         unsigned idofMat = _mesh->GetSolutionDof (0, iel, solTypeMat);
         unsigned  material = (*_sol->_Sol[solIndexMat]) (idofMat);

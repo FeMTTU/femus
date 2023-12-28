@@ -414,7 +414,7 @@ namespace femus
   /**
    * Return element material
    **/
-  short unsigned elem::GetElementMaterial(const unsigned& iel)
+  short unsigned elem::GetElementMaterial(const unsigned& iel) const
   {
     return _elementMaterial[iel];
   }

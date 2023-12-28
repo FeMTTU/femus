@@ -69,7 +69,7 @@ namespace femus {
 
     //BEGIN flag element to be refined
     if(type == 0) {   // Flag all element
-      for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
+      for(int iel = _mesh.GetElementOffset(_iproc); iel < _mesh.GetElementOffset(_iproc + 1); iel++) {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
           _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
           numberOfRefinedElement->add(_iproc, 1.);
@@ -77,7 +77,7 @@ namespace femus {
       }
     }
     else if(type == 1) {   // Flag AMR elements
-      for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
+      for(int iel = _mesh.GetElementOffset(_iproc); iel < _mesh.GetElementOffset(_iproc + 1); iel++) {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
           if((*_mesh.GetTopology()->_Sol[ _mesh.GetAmrIndex() ])(iel) > 0.5) {
             numberOfRefinedElement->add(_iproc, 1.);
@@ -110,7 +110,7 @@ namespace femus {
       }
     }
     else if(type == 2) {   // Flag only even elements (for debugging purposes)
-      for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
+      for(int iel = _mesh.GetElementOffset(_iproc); iel < _mesh.GetElementOffset(_iproc + 1); iel++) {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
           if((*_mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && iel % 2 == 0) {
             _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
@@ -149,7 +149,7 @@ namespace femus {
 
 
     //BEGIN flag element to be refined
-    for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
+    for(int iel = _mesh.GetElementOffset(_iproc); iel < _mesh.GetElementOffset(_iproc + 1); iel++) {
       if(_mesh.el->GetIfElementCanBeRefined(iel)) {
         if((*_mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && error(iel) > treshold) {
           _mesh.GetTopology()->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
@@ -225,8 +225,8 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
 
     _mesh.SetNumberOfElements(nelem);
 
-    unsigned elementOffsetCoarse   = mshc->_elementOffset[_iproc];
-    unsigned elementOffsetCoarseP1 = mshc->_elementOffset[_iproc + 1];
+    unsigned elementOffsetCoarse   = mshc->GetElementOffset(_iproc);
+    unsigned elementOffsetCoarseP1 = mshc->GetElementOffset(_iproc + 1);
 
     std::vector < double > coarseLocalizedAmrVector;
     mshc->GetTopology()->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
@@ -252,7 +252,7 @@ void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, /*const*/ ele
       elc->LocalizeElementNearFace(isdom);
       elc->LocalizeElement_Level_Type_Group_Material(isdom);
       
-      for(unsigned iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
+      for(unsigned iel = mshc->GetElementOffset(isdom); iel < mshc->GetElementOffset(isdom + 1); iel++) {
           
         if(static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
             

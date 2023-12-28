@@ -318,7 +318,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
   //BEGIN element loop
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     //BEGIN local dof number extraction
     unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);  //velocity

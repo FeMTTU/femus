@@ -120,7 +120,7 @@ void System_assemble_flexible_Laplacian_With_Manufactured_Sol(
   
   
     // element loop: each process loops only on the elements that owns
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
 
     //=============== Geometry - BEGIN ========================================

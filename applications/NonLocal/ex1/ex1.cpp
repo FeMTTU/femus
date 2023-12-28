@@ -335,7 +335,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
   unsigned    iproc = msh->processor_id();
   unsigned    nprocs = msh->n_processors();
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     if (elementSkipFlags[iel] == 0) {
 
@@ -499,7 +499,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
   unsigned    iprocFine = mshFine->processor_id(); // get the process_id (for parallel computation)
 
-  for (int ielFine = solFine->GetMesh()->_elementOffset[iprocFine]; ielFine < solFine->GetMesh()->_elementOffset[iprocFine + 1]; ielFine ++) {
+  for (int ielFine = solFine->GetMesh()->GetElementOffset(iprocFine); ielFine < solFine->GetMesh()->GetElementOffset(iprocFine + 1); ielFine ++) {
 
     if (elementSkipFlagsFine[ielFine] == 0) {
 
@@ -553,7 +553,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
         //BEGIN computation of the coarse solution at the fine Gauss point
 
-        for (int ielCoarse = sol->GetMesh()->_elementOffset[iproc]; ielCoarse < sol->GetMesh()->_elementOffset[iproc + 1]; ielCoarse++) {
+        for (int ielCoarse = sol->GetMesh()->GetElementOffset(iproc); ielCoarse < sol->GetMesh()->GetElementOffset(iproc + 1); ielCoarse++) {
 
           if (elementSkipFlags[ielCoarse] == 0) {
 
@@ -634,7 +634,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
   //END
 
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//   for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 //
 //     unsigned xDof = msh->GetSolutionDof (0, iel, soluType);
 //
@@ -684,7 +684,7 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
   //BEGIN TO REMOVE
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -710,7 +710,7 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
 
   unsigned rightDofsIproc = msh->_dofOffset[xType][iproc + 1];
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -753,7 +753,7 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
 
   msh->GetTopology()->_Sol[0]->close();
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -773,7 +773,7 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSi
   rightBound -= 0.5 * meshSize;
 
 //         //BEGIN TO REMOVE
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -808,7 +808,7 @@ void ShiftTheExtrema (MultiLevelMesh & mlMsh, const double & meshSize, const dou
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
 //   //         //BEGIN TO REMOVE
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//   for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 //
 //     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
 //     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -829,7 +829,7 @@ void ShiftTheExtrema (MultiLevelMesh & mlMsh, const double & meshSize, const dou
     rightBound -= 0.5 * meshSize;
   }
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -853,7 +853,7 @@ void ShiftTheExtrema (MultiLevelMesh & mlMsh, const double & meshSize, const dou
   msh->GetTopology()->_Sol[0]->close();
 
 //   //         //BEGIN TO REMOVE
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//   for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 //
 //     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
 //     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -885,7 +885,7 @@ void BuildElementSkipFlags (MultiLevelMesh & mlMsh, std::vector<unsigned> &eleme
 
   elementSkipFlags.assign (numberOfElements, 0);
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
@@ -953,7 +953,7 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
   unsigned    iprocFine = mshFine->processor_id(); // get the process_id (for parallel computation)
 
   for (int kproc = 0; kproc < nprocs; kproc++) {
-    for (int ielLocal = sol->GetMesh()->_elementOffset[kproc]; ielLocal < sol->GetMesh()->_elementOffset[kproc + 1]; ielLocal++) {
+    for (int ielLocal = sol->GetMesh()->GetElementOffset(kproc); ielLocal < sol->GetMesh()->GetElementOffset(kproc + 1); ielLocal++) {
 
       short unsigned ielGeomLocal;
       unsigned nDofLocal;
@@ -1007,7 +1007,7 @@ void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevel
         if (xLocal[0][i] > xMinAndMax[1]) xMinAndMax[1] = xLocal[0][i];
       }
 
-      for (int ielFine = solFine->GetMesh()->_elementOffset[iprocFine]; ielFine < solFine->GetMesh()->_elementOffset[iprocFine + 1]; ielFine ++) {
+      for (int ielFine = solFine->GetMesh()->GetElementOffset(iprocFine); ielFine < solFine->GetMesh()->GetElementOffset(iprocFine + 1); ielFine ++) {
 
         short unsigned ielFineGeom = mshFine->GetElementType (ielFine);
         unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);

@@ -427,7 +427,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes)
    std::vector< double > xx(dim, 0.);
    double weight;
   
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
     std::vector < double> normal(dim, 0);
     
     // loop on faces

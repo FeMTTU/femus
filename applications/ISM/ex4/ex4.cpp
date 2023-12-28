@@ -408,7 +408,7 @@ void AssembleIncompressibleNavierStokes(MultiLevelProblem& mlProb)
   if (assembleMatrix) KK->zero();
 
   //BEGIN element loop for each process
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     short unsigned ielType = msh->GetElementType(iel);
 

@@ -619,7 +619,7 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
     //END terms for coefficient obtained projecting the KL (computation later)
 
     // element loop: each process loops only on the elements that owns
-    for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+    for ( int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++ ) {
 
         short unsigned ielGeom = msh->GetElementType ( iel );
         unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs

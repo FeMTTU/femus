@@ -232,7 +232,7 @@ void AssembleAllenCahnProblem_with_Crank_Nicholson_AD(MultiLevelProblem& ml_prob
   
   double dt = GetTimeStep(0.); 
   
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs

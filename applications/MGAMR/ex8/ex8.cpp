@@ -358,7 +358,7 @@ void AssemblePoisson(MultiLevelProblem& ml_prob) {
   
   
   //BEGIN element loop
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     //BEGIN local dof number extraction
     unsigned nDofsU = msh->GetElementDofNumber(iel, solUType);  //velocity

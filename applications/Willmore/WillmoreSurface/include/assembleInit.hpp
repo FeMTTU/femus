@@ -84,7 +84,7 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
   double energy = 0.;
 
   // ELEMENT LOOP: each process loops only on the elements that it owns.
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     // Number of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);
@@ -424,7 +424,7 @@ void AssembleSystemW (MultiLevelProblem& ml_prob) {
   RES->zero(); // Set to zero all the entries of the Global Residual
 
   // ELEMENT LOOP: each process loops only on the elements that it owns.
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->GetElementOffset(iproc); iel < msh->GetElementOffset(iproc + 1); iel++) {
 
     // Number of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);
