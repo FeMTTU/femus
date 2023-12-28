@@ -64,17 +64,7 @@ class Mesh : public ParallelObject {
 /// These classes can access stuff that otherwise is protected/private
 
 // generation BEGIN
-friend   void MeshTools::Generation::BuildBox ( Mesh& mesh,
-		      std::vector < std::vector < double> > &coords,
-                      const unsigned int nx,
-                      const unsigned int ny,
-                      const unsigned int nz,
-                      const double xmin, const double xmax,
-                      const double ymin, const double ymax,
-                      const double zmin, const double zmax,
-                      const ElemType type,
-                      std::vector<bool> &type_elem_flag );
-
+friend class MeshTools::Generation;
 friend class MED_IO;
 friend class GambitIO;
 // generation END

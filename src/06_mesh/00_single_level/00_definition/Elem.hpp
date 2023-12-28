@@ -166,12 +166,12 @@ friend class MeshRefinement;
     }
 
 
+  private:
+
     /** MESH, REF: 4 faces from refining 1 QUAD TRI; 2 faces from refining 1 LINE; 1 face from refining 1 point // 4*DIM[2]+2*DIM[1]+1*DIM[0]; */
     const unsigned GetRefFaceIndex(const unsigned dim) const {
       return pow(2, dim -1u);
     }
-
-  private:
 
   /**
    * Number of elements obtained with one refinement

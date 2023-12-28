@@ -17,18 +17,12 @@
 // includes :
 //----------------------------------------------------------------------------
 
-// #include <iostream>
-// #include <fstream>
-// #include <cstdlib>
-// #include <cmath>
-// #include <cstring>
-#include <cassert>
-#include "mpi.h"
-// #include <algorithm>
-#include "Mesh.hpp"
 #include "MeshGeneration.hpp"
 
+#include "Mesh.hpp"
 
+#include <cassert>
+#include "mpi.h"
 
 namespace femus
 {
@@ -36,93 +30,13 @@ namespace femus
 
   namespace MeshTools
   {
-    namespace Generation
-    {
-      namespace Private
-      {
 
-        /**
-         * A useful inline function which replaces the #defines
-         * used previously.  Not private since this is a namespace,
-         * but would be if this were a class.  The first one returns
-         * the proper node number for 2D elements while the second
-         * one returns the node number for 3D elements.
-         */
-        inline
-        unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j)
-        {
-
-          switch(type) {
-// 	  case INVALID_ELEM:
-// 	  case QUAD4:
-// 	  case TRI3:
-// 	    {
-// 	      return i + j*(nx+1);
-// 	      break;
-// 	    }
-//
-// 	  case QUAD8:
-            case QUAD9:
-            case TRI6: {
-                return i + j * (2 * nx + 1);
-                break;
-              }
-
-            default: {
-                std::cout << "ERROR: Unrecognized or Not Supported 2D element type." << std::endl;
-                exit(1);
-              }
-          }
-
-          return -1; // invalid_uint
-        }
-
-
-        // Same as the function above, but for 3D elements
-        inline
-        unsigned int idx(const ElemType type,
-                         const unsigned int nx,
-                         const unsigned int ny,
-                         const unsigned int i,
-                         const unsigned int j,
-                         const unsigned int k)
-        {
-          switch(type) {
-// 	  case INVALID_ELEM:
-// 	  case HEX8:
-// 	  case PRISM6:
-// 	    {
-// 	      return i + (nx+1)*(j + k*(ny+1));
-// 	      break;
-// 	    }
-
-// 	  case HEX20:
-            case HEX27:
-// 	  case TET4:  // TET4's are created from an initial HEX27 discretization
-// 	  case TET10: // TET10's are created from an initial HEX27 discretization
-// 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
-// 	  case PRISM15:
-// 	  case PRISM18:
-              {
-                return i + (2 * nx + 1) * (j + k * (2 * ny + 1));
-                break;
-              }
-
-            default: {
-                std::cout << "ERROR: Unrecognized element type." << std::endl;
-                exit(1);
-              }
-          }
-
-          return -1;
-        }
-      }
 
 // ------------------------------------------------------------
 /** MeshTools::Generation function for mesh generation
    //1: bottom  //2: right  //3: top  //4: left (in 2d)  
   */
-      void BuildBox(Mesh& mesh,
+      void Generation::BuildBox(Mesh& mesh,
                     std::vector < std::vector < double> >& vt,
                     const unsigned int nx,
                     const unsigned int ny,
@@ -134,7 +48,6 @@ namespace femus
                     std::vector<bool>& type_elem_flag)
       {
 
-        using namespace MeshTools::Generation::Private;
 
         // Clear the mesh and start from scratch
         //mesh.clear(); // to be added
@@ -1470,7 +1383,6 @@ namespace femus
       }
 
 
-    }
 
   }
 
