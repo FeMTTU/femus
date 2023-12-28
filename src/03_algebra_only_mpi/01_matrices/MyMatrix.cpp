@@ -252,11 +252,11 @@ namespace femus {
   }
 
   // ******************
-  template <class Type> unsigned MyMatrix<Type>::size() {
+  template <class Type> const unsigned MyMatrix<Type>::size() const {
     return _size;
   }
 
-  template <class Type> unsigned MyMatrix<Type>::size(const unsigned &i) {
+  template <class Type> const unsigned MyMatrix<Type>::size(const unsigned &i) const {
     return (_matIsAllocated) ? _rowSize[i] : 0;
   }
 

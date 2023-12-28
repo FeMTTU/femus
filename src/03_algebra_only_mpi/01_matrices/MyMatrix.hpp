@@ -69,9 +69,9 @@ namespace femus {
       void clear();
 
       // ******************
-      unsigned size();
+      const unsigned size() const;
       
-      unsigned size(const unsigned &i);
+      const unsigned size(const unsigned &i) const;
 
       // ******************
       const unsigned begin() const;

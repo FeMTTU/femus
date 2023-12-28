@@ -214,6 +214,25 @@ friend class MeshRefinement;
       
 
 // === Mesh, Elements - BEGIN ===========================================================
+  public:
+
+      /// @todo These are called by some Writers, but I don't want to make them friends here
+      void LocalizeElement_Level_Type_Group_Material(const unsigned &lproc) {
+        _elementLevel.broadcast(lproc);
+        _elementType.broadcast(lproc);
+        _elementGroup.broadcast(lproc);
+        _elementMaterial.broadcast(lproc);
+      }
+
+      /// @todo These are called by some Writers, but I don't want to make them friends here
+      void FreeLocalizedElement_Level_Type_Group_Material() {
+        _elementLevel.clearBroadcast();
+        _elementType.clearBroadcast();
+        _elementGroup.clearBroadcast();
+        _elementMaterial.clearBroadcast();
+      }
+
+
     private:
       
       // reorder the element according to the new element mapping
@@ -237,28 +256,8 @@ friend class MeshRefinement;
         _elementGroup.scatter(_elementOffset);
         _elementMaterial.scatter(_elementOffset);
       }
-      
-  public:
-
-      /// @todo These are called by some Writers, but I don't want to make them friends here
-      void LocalizeElement_Level_Type_Group_Material(const unsigned &lproc) {
-        _elementLevel.broadcast(lproc);
-        _elementType.broadcast(lproc);
-        _elementGroup.broadcast(lproc);
-        _elementMaterial.broadcast(lproc);
-      }
-      
-      /// @todo These are called by some Writers, but I don't want to make them friends here
-      void FreeLocalizedElement_Level_Type_Group_Material() {
-        _elementLevel.clearBroadcast();
-        _elementType.clearBroadcast();
-        _elementGroup.clearBroadcast();
-        _elementMaterial.clearBroadcast();
-      }
 
 
-      
-      
 // === Elements, Numbers - BEGIN =================
     private:
       
@@ -391,7 +390,7 @@ friend class MeshRefinement;
   public:
 
       /** To be Added */
-      short unsigned GetElementGroup(const unsigned& iel);
+      short unsigned GetElementGroup(const unsigned& iel) const;
 
       /** @todo If it wasn't for a nonlocal assembly, it would be private */
       void SetElementGroup(const unsigned& iel, const short unsigned& value);
@@ -435,9 +434,9 @@ friend class MeshRefinement;
    public:
  
       /** To be Added */
-      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
+      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface) const;
 
-      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface);
+      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface) const;
      
    private:
      
@@ -468,19 +467,19 @@ friend class MeshRefinement;
 // === Elements, for Each Element give all elements near the current element, including those with a common vertex - BEGIN =================
   public:
       
-      void BuildElementNearElement();
-
-      const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers)  {
+      const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers) const {
         return (layers == 0) ? 1 : _elementNearElement.end(iel);
       };
 
-      const unsigned GetElementNearElement(const unsigned& iel, const unsigned &j)  {
+      const unsigned GetElementNearElement(const unsigned& iel, const unsigned &j) const {
         return _elementNearElement[iel][j];
       };
 
       
    private:
      
+      void BuildElementNearElement();
+
       /** For each element, it gives the elements that are near the given element, including those that are only touching a common vertex
        * It is used for Domain Decomposition and for AMR
         @todo why is this not scattered??? */
@@ -489,22 +488,19 @@ friend class MeshRefinement;
 
 
 // === Elements, for Each Element gives the children elements - BEGIN =================
-  public:
-
-      //Elem
-      void ReorderChildElement_OnCoarseElem_columns(const std::vector < unsigned >& elementMapping);
+   private:
      
-      void AllocateChildrenElement(const unsigned int& refindex, const Mesh* msh);
+      /** To be Added */
+      unsigned GetChildElement(const unsigned& iel, const unsigned& json) const;
 
       /** To be Added */
       void SetChildElement(const unsigned& iel, const unsigned& json, const unsigned& value);
 
-      /** To be Added */
-      unsigned GetChildElement(const unsigned& iel, const unsigned& json);
-      
-   private:
-     
-      /** This is only going to all levels except the finest one  
+      void AllocateChildrenElement(const unsigned int& refindex, const Mesh* msh);
+
+      void ReorderChildElement_OnCoarseElem_columns(const std::vector < unsigned >& elementMapping);
+
+      /** This is only going to all levels except the finest one
        *  It contains for each element the list of its child elements */
       MyMatrix <unsigned> _childElem;
       
@@ -520,36 +516,31 @@ friend class MeshRefinement;
       
       
 // === Nodes, Number - BEGIN =================
-  public:
-
+  private:
+      
       /** To be Added */
-      unsigned GetNodeNumber()const;
+      unsigned GetNodeNumber() const;
 
       /** To be Added */
       void SetNodeNumber(const unsigned& value);
 
-  
-  private:
-      
       /** Number of nodes of the Mesh */
       unsigned _nvt;
 // === Nodes, Number - END =================
 
 
 // === Nodes, for Each Node give the Elements having that Node as a vertex (temporary then deleted) - BEGIN =================
-  public:
+   private:
       
+      /** To be Added */
+      unsigned GetElementNearVertexNumber(const unsigned& inode) const;
+
+      /** To be Added */
+      unsigned GetElementNearVertex(const unsigned& inode, const unsigned& jnode) const;
+
       /** To be Added */
       void BuildElementNearVertex();
 
-      /** To be Added */
-      unsigned GetElementNearVertexNumber(const unsigned& inode);
-
-      /** To be Added */
-      unsigned GetElementNearVertex(const unsigned& inode, const unsigned& jnode);
-
-   private:
-      
       void DeleteElementNearVertex();
 
       /** For each Node, it gives the list of elements having that Node as a vertex 
@@ -563,8 +554,7 @@ friend class MeshRefinement;
 
 
      
-// ========= Previously, it was all info of geometric elements. From now on, there is also FE information - BEGIN ==========      
-// =========      
+// ========= Previously, it was all info of geometric elements. From now on, there is also FE information - BEGIN ==========
 
 
 
@@ -636,54 +626,54 @@ friend class MeshRefinement;
 
 // === Mesh, DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - BEGIN =================
   public:
-      
-      /** To be Added */
-      unsigned GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode);
 
-      void ShrinkToFitElementDof();
+      /// @todo These are called by some Writers, but I don't want to make them friends here
       void LocalizeElementDof(const unsigned &jproc);
+
+      /// @todo These are called by some Writers, but I don't want to make them friends here
       void FreeLocalizedElementDof();
 
       /** Return the local->global node number */
-      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode);
+      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode) const;
 
-      /** To be Added */
-      void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
-      
-      void ScatterElementDof();
-      
+
+  private:
+    
       //Dof
       void ReorderMeshElement_Dof_stuff(const std::vector < unsigned >& elementMapping);
-      
+
       //Dof
       void ReorderElementDof_rows(const std::vector < unsigned >& elementMapping);
-      
+
       //Dof
       // reorder the nodes according to the new node mapping
       void ReorderElementDof_columns_Using_node_mapping(const std::vector < unsigned >& nodeMapping);
 
-      
+      void ScatterElementDof();
 
-     
-  private:
-    
+      void ShrinkToFitElementDof();
+
+      /** To be Added */
+      void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
+
+      /** To be Added */
+      unsigned GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode) const;
+
      /** For each element, gives the conversion from local node index to global node index */
       MyMatrix <unsigned> _elementDof;
 // === Mesh, DOF, for Each Element return the dof of 1 scalar variable  (Local->Global (element-based) Dofmap for 1 scalar variable) - END =================
 
       
 // === Mesh, DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - BEGIN =================
-  public:
+   private:
+     
+      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1) const;
 
       void AllocateChildrenElementDof(const unsigned int& refindex, const Mesh* msh);
-      
+
       /** To be Added */
       void SetChildElementDof(elem* elf);
 
-      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1);
-      
-   private:
-     
       /** This is only going to all levels except the finest one */
       MyMatrix <unsigned> _childElemDof;
 // === Mesh, DOF, for Each Element return the dofs of all its children (or only of itself if it is not a refined element), for 1 scalar variable - END =================

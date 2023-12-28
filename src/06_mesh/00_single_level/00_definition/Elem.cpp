@@ -299,7 +299,7 @@ namespace femus
   /**
    * Return the local->global face node index
    **/
-  unsigned elem::GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode)
+  unsigned elem::GetFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& inode) const
   {
     return _elementDof[iel][ig[_elementType[iel]][iface][inode]];
   }
@@ -353,12 +353,12 @@ namespace femus
   /**
    * Return the global adiacent-to-face element number
    **/
-  int elem::GetFaceElementIndex(const unsigned& iel, const unsigned& iface)
+  int elem::GetFaceElementIndex(const unsigned& iel, const unsigned& iface) const
   {
     return _elementNearFace[iel][iface];
   }
 
-  int elem::GetBoundaryIndex(const unsigned& iel, const unsigned& iface)
+  int elem::GetBoundaryIndex(const unsigned& iel, const unsigned& iface) const
   {
     return  -(GetFaceElementIndex(iel, iface) + 1);
   }
@@ -390,7 +390,7 @@ namespace femus
   /**
    * Return element group
    **/
-  short unsigned elem::GetElementGroup(const unsigned& iel)
+  short unsigned elem::GetElementGroup(const unsigned& iel) const
   {
     return _elementGroup[iel];
   }
@@ -578,7 +578,7 @@ namespace femus
   /**
    * Return the number of elements which have a given vertex
    **/
-  unsigned elem::GetElementNearVertexNumber(const unsigned& inode)
+  unsigned elem::GetElementNearVertexNumber(const unsigned& inode) const
   {
     return _elementNearVertex.size(inode);
   }
@@ -586,7 +586,7 @@ namespace femus
   /**
    * Return the element index for the given i-node in the j-position with 0<=j<nve(i)
    **/
-  unsigned elem::GetElementNearVertex(const unsigned& inode, const unsigned& j)
+  unsigned elem::GetElementNearVertex(const unsigned& inode, const unsigned& j) const
   {
     return _elementNearVertex[inode][j];
   }
@@ -660,7 +660,7 @@ namespace femus
     }
   }
 
-  unsigned elem::GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1)
+  unsigned elem::GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1) const
   {
     return _childElemDof[iel][i0 * GetElementDofNumber(iel, 2) + i1];
   }
@@ -670,7 +670,7 @@ namespace femus
     _childElem[iel][json] = value;
   }
 
-  unsigned elem::GetChildElement(const unsigned& iel, const unsigned& json)
+  unsigned elem::GetChildElement(const unsigned& iel, const unsigned& json) const
   {
     return _childElem[iel][json];
   }
@@ -691,7 +691,7 @@ namespace femus
     _elementDof.broadcast(jproc);
   }
 
-  unsigned elem::GetElementDofIndex(const unsigned& iel, const unsigned& inode)
+  unsigned elem::GetElementDofIndex(const unsigned& iel, const unsigned& inode) const
   {
     return _elementDof[iel][inode];
   };
