@@ -1374,12 +1374,14 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
       for (unsigned iel = ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().begin(); 
                     iel < ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().end(); iel++) {
           
-        const short unsigned elType = ml_msh.GetLevel(lev)->GetMeshElements()->GetElementType(iel);
+        const short unsigned elType = ml_msh.GetLevel(lev)->GetElementType(iel);
       
+        const unsigned dimension = ml_msh.GetLevel(0)->GetDimension();
+
         int increment = 1;
       
         if (static_cast < short unsigned >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
-          increment = ml_msh.GetLevel(0)->GetMeshElements()->GetNRE(elType);
+          increment = ml_msh.GetLevel(0)->GetMeshElements()->GetRefIndex(dimension);
         }
         
         for (unsigned j = 0; j < increment; j++) {

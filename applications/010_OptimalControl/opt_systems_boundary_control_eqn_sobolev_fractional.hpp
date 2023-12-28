@@ -719,7 +719,7 @@ const double C_ns =    compute_C_ns(dim_bdry, s_frac, use_Cns);
 // ---  - BEGIN
          unsigned short  jel_geommm;
       if (iproc == jproc) {
-       jel_geommm = msh->GetMeshElements()->GetElementType(jel);
+       jel_geommm = msh->GetElementType(jel);
 //         std::cout  << " current_proc " << iproc << " from external_proc " << jproc << " elem " << jel << " (before bcast) "  << jel_geommm << std::endl;
 //         geom_element_jel.set_geom_type(jel);
 //         jel_geom = geom_element_jel.geom_type();

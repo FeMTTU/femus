@@ -174,8 +174,6 @@ friend class MeshRefinement;
 // === Geometric Element, Single, REFINEMENT - BEGIN =================
   public:
 
-      const unsigned GetNRE(const unsigned& elementType) const  { return NRE[elementType]; }
-
     /** It would private if we put Solution as another friend of Mesh, but maybe it is too much for now */
     ///8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD, TRI; 2 elements from refining 1 LINE
     /** MESH, REF: 8 elements from refining 1 HEX, TET, WEDGE; 4 elements from refining 1 QUAD TRI; 2 elements from refining 1 LINE // 8*DIM[2]+4*DIM[1]+2*DIM[0]; */
@@ -190,6 +188,9 @@ friend class MeshRefinement;
     const unsigned GetRefFaceIndex(const unsigned dim) const {
       return pow(2, dim -1u);
     }
+
+  /** Unused now */
+  const unsigned GetNRE(const unsigned& elementType) const  { return NRE[elementType]; }
 
   /**
    * Number of elements obtained with one refinement
@@ -298,17 +299,17 @@ friend class MeshRefinement;
 // === Elements, Type - BEGIN =================
   public:
     
+      /** @todo this is not const because it does broadcast at one point */
+      MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
+      
+  private:
+    
       /** To be Added */
       unsigned GetIndex(const std::string name) const;
 
       /** To be Added */
       const short unsigned GetElementType(const unsigned& iel) const;
 
-      /** @todo this is not const because it does broadcast at one point */
-      MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
-      
-  private:
-    
       /** To be Added */
       void SetElementType(const unsigned& iel, const short unsigned& value);
 
@@ -350,10 +351,6 @@ friend class MeshRefinement;
 // === Elements, Level - BEGIN =================
   public:
     
-      const unsigned GetLevelOfRefinementForList() const {
-        return _level;
-      }
-      
       const short unsigned GetElementLevel(const unsigned &jel) const {
         return _elementLevel[jel];
       }
@@ -362,14 +359,18 @@ friend class MeshRefinement;
         return (_elementLevel[iel] == _level) ? true : false;
       }
       
+  private:
+    
+      const unsigned GetLevelOfRefinementForList() const {
+        return _level;
+      }
+
       const bool GetIfFatherHasBeenRefined(const unsigned& iel) const {
         return GetIfElementCanBeRefined(iel);
       }
-      
-      const MyVector<short unsigned> &  GetElementLevelArray() const { return _elementLevel; } 
-    
-  private:
-    
+
+      const MyVector<short unsigned> &  GetElementLevelArray() const { return _elementLevel; }
+
       MyVector<short unsigned> _elementLevel;
       
       /** Pointer to the list of coarser elements */
@@ -392,16 +393,16 @@ friend class MeshRefinement;
       /** To be Added */
       short unsigned GetElementGroup(const unsigned& iel);
 
-      /** To be Added */
+      /** @todo If it wasn't for a nonlocal assembly, it would be private */
       void SetElementGroup(const unsigned& iel, const short unsigned& value);
+
+  private:
 
       /** Number of groups  */
       unsigned GetElementGroupNumber() const;
 
       /** Number of groups  */
       void SetElementGroupNumber(const unsigned& value);
-      
-  private:
 
       /** @todo Number of groups of elements - in Gambit it is explicit at the top of the file */
       unsigned _ngroup;
@@ -416,14 +417,14 @@ friend class MeshRefinement;
   public:
       
       /** To be Added */
-      void SetElementMaterial(const unsigned& iel, const short unsigned& value);
-
-      /** To be Added */
       short unsigned GetElementMaterial(const unsigned& iel) const;
 
 
   private:
     
+      /** To be Added */
+      void SetElementMaterial(const unsigned& iel, const short unsigned& value);
+
       MyVector< short unsigned> _elementMaterial;
     
 // === Elements, Materials - END =================
@@ -432,30 +433,27 @@ friend class MeshRefinement;
 
 // === Elements, for Each Element give the Elements with a common Face to the current element - BEGIN =================
    public:
-     
-     //Elem
-      void ReorderElementNearFace_rows(const std::vector < unsigned >& elementMapping);
-      
  
-      /** To be Added */
-      void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
-
       /** To be Added */
       int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
 
       int GetBoundaryIndex(const unsigned& iel, const unsigned& iface);
      
+   private:
+     
       void ShrinkToFitElementNearFace();
       void LocalizeElementNearFace(const unsigned& jproc);
       void FreeLocalizedElementNearFace();
 
-      const MyMatrix <int> &  GetElementNearFaceArray() const { return _elementNearFace; } 
+      const MyMatrix <int> &  GetElementNearFaceArray() const { return _elementNearFace; }
 
-      MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; } 
+      MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; }
 
+      /** To be Added */
+      void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
 
-   private:
-     
+      void ReorderElementNearFace_rows(const std::vector < unsigned >& elementMapping);
+
       void ScatterElementNearFace();
       
       /** To be added */
