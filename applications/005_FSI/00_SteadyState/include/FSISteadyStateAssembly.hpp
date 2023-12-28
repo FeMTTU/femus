@@ -1374,7 +1374,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
       for (unsigned iel = ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().begin(); 
                     iel < ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray().end(); iel++) {
           
-        short unsigned elType = ml_msh.GetLevel(lev)->GetMeshElements()->GetElementTypeArray()[iel];
+        const short unsigned elType = ml_msh.GetLevel(lev)->GetMeshElements()->GetElementType(iel);
       
         int increment = 1;
       

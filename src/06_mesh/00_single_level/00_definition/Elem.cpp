@@ -323,9 +323,9 @@ namespace femus
   /**
    * Return the total number of elements, where the shape can be specified as an input string
    **/
-  unsigned elem::GetElementNumber(const char* name) const
+  unsigned elem::GetElementNumber(const std::string name) const
   {
-    if (!strcmp(name, "All")) {
+    if (!strcmp(name.c_str(), "All")) {
       return _nel;
     }
     unsigned i;
@@ -336,7 +336,7 @@ namespace femus
   /**
    * Add value to the total number of the element
    **/
-  void elem::AddToElementNumber(const unsigned& value, const char name[])
+  void elem::AddToElementNumber(const unsigned& value, const std::string name)
   {
     unsigned i;
     i = GetIndex(name);
@@ -594,26 +594,26 @@ namespace femus
   /**
    * return the index 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line
    **/
-  unsigned elem::GetIndex(const char name[]) const
+  unsigned elem::GetIndex(const std::string name) const
   {
     unsigned index = 0;
-    if (!strcmp(name, "Hex")) {
-      index = 0;
+    if (!strcmp(name.c_str(), geom_elems[HEX].c_str() )) {
+      index = HEX;
     }
-    else if (!strcmp(name, "Tet")) {
-      index = 1;
+    else if (!strcmp(name.c_str(), geom_elems[TET].c_str() )) {
+      index = TET;
     }
-    else if (!strcmp(name, "Wedge")) {
-      index = 2;
+    else if (!strcmp(name.c_str(), geom_elems[WEDGE].c_str() )) {
+      index = WEDGE;
     }
-    else if (!strcmp(name, "Quad")) {
-      index = 3;
+    else if (!strcmp(name.c_str(), geom_elems[QUAD].c_str() )) {
+      index = QUAD;
     }
-    else if (!strcmp(name, "Triangle")) {
-      index = 4;
+    else if (!strcmp(name.c_str(), geom_elems[TRI].c_str() )) {
+      index = TRI;
     }
-    else if (!strcmp(name, "Line")) {
-      index = 5;
+    else if (!strcmp(name.c_str(), geom_elems[LINE].c_str() ) ) {
+      index = LINE;
     }
     else {
       std::cout << "error! invalid Element Shape in elem::GetIndex(...)" << std::endl;

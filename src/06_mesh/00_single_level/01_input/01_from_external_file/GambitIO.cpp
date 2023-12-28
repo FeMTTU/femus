@@ -165,36 +165,36 @@ namespace femus {
       
       if(nve == 27) {
         type_elem_flag[0] = type_elem_flag[3] = true;
-        mesh.el->AddToElementNumber(1, "Hex");
+        mesh.el->AddToElementNumber(1, geom_elems[HEX]);
         mesh.el->SetElementType(iel, HEX);
       }
       
       else if(nve == 10) {
         type_elem_flag[1] = type_elem_flag[4] = true;
-        mesh.el->AddToElementNumber(1, "Tet");
+        mesh.el->AddToElementNumber(1, geom_elems[TET]);
         mesh.el->SetElementType(iel, TET);
       }
       
       else if(nve == 18) {
         type_elem_flag[2] = type_elem_flag[3] = type_elem_flag[4] = true;
-        mesh.el->AddToElementNumber(1, "Wedge");
+        mesh.el->AddToElementNumber(1, geom_elems[WEDGE]);
         mesh.el->SetElementType(iel, WEDGE);
       }
       
       else if(nve == 9) {
         type_elem_flag[3] = true;
-        mesh.el->AddToElementNumber(1, "Quad");
+        mesh.el->AddToElementNumber(1, geom_elems[QUAD]);
         mesh.el->SetElementType(iel, QUAD);
       }
       
       else if(mesh.GetDimension() == 2 && nve == 6) {
         type_elem_flag[4] = true;
-        mesh.el->AddToElementNumber(1, "Triangle");
+        mesh.el->AddToElementNumber(1, geom_elems[TRI] );
         mesh.el->SetElementType(iel, TRI);
       }
       
       else if(mesh.GetDimension() == 1 && nve == 3) {
-        mesh.el->AddToElementNumber(1, "Line");
+        mesh.el->AddToElementNumber(1, geom_elems[LINE]);
         mesh.el->SetElementType(iel, LINE);
       }
 

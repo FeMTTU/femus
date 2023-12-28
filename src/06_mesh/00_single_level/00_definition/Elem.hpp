@@ -23,6 +23,7 @@
 #include "MyVector.hpp"
 #include "MyMatrix.hpp"
 
+#include "MeshGeneration.hpp"
 
 #include <vector>
 #include <map>
@@ -34,6 +35,7 @@ namespace femus {
 
   //Forward declarations  
   class Mesh;
+
   /**
    * The elem class: it contains the list of all Mesh Geometric Elements, along with several Element-based and also Node-based properties
    * @todo I believe it would even be more linear if this class did not have any function at all involving the Mesh pointer, there are very few in any case
@@ -44,12 +46,28 @@ namespace femus {
 
 // === Friend functions and classes - BEGIN ===============
 friend class Mesh;
+
+// generation BEGIN
+friend class MeshTools::Generation;
+friend class MED_IO;
+friend class GambitIO;
+// generation END
+
+// partitioning BEGIN
+// friend class MeshPartitioning;
+friend class MeshMetisPartitioning;
+// partitioning END
+
+
+// refinement BEGIN
 friend class MeshRefinement;
+// refinement END
+
 // === Friend functions and classes - END =================
 
 
 // === Constructors / Destructor - BEGIN =================
-    public:
+    private:
 
       /** constructors */
       elem(const unsigned& other_nel, const unsigned dim_in);
@@ -182,11 +200,10 @@ friend class MeshRefinement;
 
 
 // === Mesh, Basic, Dimension - BEGIN =================
-  public:
+  private:
+
       /** To be Added */
       unsigned GetDimension() const { return _dim; }
-      
-  private:
 
       /** Dimension of the underlying Mesh */
       unsigned _dim;
@@ -221,7 +238,8 @@ friend class MeshRefinement;
       }
       
   public:
-      
+
+      /// @todo These are called by some Writers, but I don't want to make them friends here
       void LocalizeElement_Level_Type_Group_Material(const unsigned &lproc) {
         _elementLevel.broadcast(lproc);
         _elementType.broadcast(lproc);
@@ -229,6 +247,7 @@ friend class MeshRefinement;
         _elementMaterial.broadcast(lproc);
       }
       
+      /// @todo These are called by some Writers, but I don't want to make them friends here
       void FreeLocalizedElement_Level_Type_Group_Material() {
         _elementLevel.clearBroadcast();
         _elementType.clearBroadcast();
@@ -240,26 +259,24 @@ friend class MeshRefinement;
       
       
 // === Elements, Numbers - BEGIN =================
-    public:
-  
+    private:
+      
       /**    Return the number of elements of a certain shape, specified as an input string. Otherwise return the number of all elements */
-      unsigned GetElementNumber(const char* name = "All") const;
+      unsigned GetElementNumber(const std::string name = "All") const;
 
       /** To be Added */
       unsigned GetRefinedElementNumber() const {
         return _nelr;
       };
 
+      static  unsigned int  InitializeNumberOfElementsFromCoarseList(elem* elc, const unsigned refindex);
+
       /** To be Added */
-      void AddToElementNumber(const unsigned& value, const char name[]);
+      void AddToElementNumber(const unsigned& value, const std::string name);
 
       /** To be Added */
       void AddToElementNumber(const unsigned& value, short unsigned ielt);
 
-     static  unsigned int  InitializeNumberOfElementsFromCoarseList(elem* elc, const unsigned refindex);
-      
-    private:
-      
       /** To be Added */
       void SetRefinedElementNumber(const unsigned& value) {
         _nelr = value;
@@ -282,20 +299,19 @@ friend class MeshRefinement;
   public:
     
       /** To be Added */
-      unsigned GetIndex(const char name[]) const;
+      unsigned GetIndex(const std::string name) const;
 
       /** To be Added */
       const short unsigned GetElementType(const unsigned& iel) const;
 
-      /** To be Added */
+      /** @todo this is not const because it does broadcast at one point */
       MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
       
-      /** To be Added */
-      void SetElementType(const unsigned& iel, const short unsigned& value);
-      
-    
   private:
     
+      /** To be Added */
+      void SetElementType(const unsigned& iel, const short unsigned& value);
+
       MyVector< short unsigned> _elementType;
     
 // === Elements, Type - END =================

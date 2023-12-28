@@ -231,7 +231,7 @@ namespace femus
                       mesh.el->SetElementGroup(iel, 1);
                       mesh.el->SetElementMaterial(iel, 2);
                       type_elem_flag[5] = true;
-                      mesh.el->AddToElementNumber(1, "Line");
+                      mesh.el->AddToElementNumber(1, geom_elems[LINE]);
                       mesh.el->SetElementType(iel, 5);
 
                       LocalToGlobalNodePerElement[0] = 2 * i   + 1;
@@ -521,7 +521,7 @@ namespace femus
                         mesh.el->SetElementGroup(iel, 1);
                         mesh.el->SetElementMaterial(iel, 2);
                         type_elem_flag[3] = true;
-                        mesh.el->AddToElementNumber(1, "Quad");
+                        mesh.el->AddToElementNumber(1, geom_elems[QUAD]);
                         mesh.el->SetElementType(iel, 3);
 
                         LocalToGlobalNodePerElement[0] = idx(type, nx, i, j) + 1;
@@ -576,7 +576,7 @@ namespace femus
                         mesh.el->SetElementGroup(iel, 1);
                         mesh.el->SetElementMaterial(iel, 2); // 2 == fluid
                         type_elem_flag[4] = true;
-                        mesh.el->AddToElementNumber(1, "Triangle");
+                        mesh.el->AddToElementNumber(1, geom_elems[TRI]);
                         mesh.el->SetElementType(iel, 4);
 
 
@@ -609,7 +609,7 @@ namespace femus
                         mesh.el->SetElementGroup(iel, 1);
                         mesh.el->SetElementMaterial(iel, 2); // 2 == fluid
                         type_elem_flag[4] = true;
-                        mesh.el->AddToElementNumber(1, "Triangle");
+                        mesh.el->AddToElementNumber(1, geom_elems[TRI]);
                         mesh.el->SetElementType(iel, 4);
 
                         LocalToGlobalNodePerElement[0] = idx(type, nx, i, j) + 1;
@@ -987,7 +987,7 @@ namespace femus
                           mesh.el->SetElementMaterial(iel, 2);
                           type_elem_flag[0] = true; // hex
                           type_elem_flag[3] = true; // quad face
-                          mesh.el->AddToElementNumber(1, "Hex");
+                          mesh.el->AddToElementNumber(1, geom_elems[HEX]);
                           mesh.el->SetElementType(iel, 0);
 
                           LocalToGlobalNodePerElement[0] = idx(type, nx, ny, i,  j,  k) + 1;
