@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
 
   if (inputparser->isTrue("multilevel_mesh.first.type", "box")) {
     //Set Boundary (update Dirichlet(...) function)
-    ml_sol.InitializeBdc();
+    ml_sol.InitializeBdc_with_ParsedFunction();
 
     unsigned int bdcsize = inputparser->getSize("multilevel_solution.multilevel_mesh.first.variable.first.boundary_conditions");
 
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
     }
 
     for (int i = 0; i < bdcsize; ++i) {
-      ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
+      ml_sol.SetBoundaryCondition_with_ParsedFunction("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
     }
 
     ml_sol.GenerateBdc("All");
@@ -504,6 +504,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
           unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface);
 
           if (ml_sol->GetBoundaryCondition("Sol", faceIndex - 1u) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex - 1u)) {
+
             bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex - 1u));
             unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
             const unsigned felt = mymsh->GetElementFaceType(iel, jface);

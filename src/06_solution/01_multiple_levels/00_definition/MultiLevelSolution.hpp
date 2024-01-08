@@ -383,30 +383,12 @@ public:
     void UpdateBdc(const double time);
 
     /** To be Added */
-    void GenerateBdc( const unsigned int k, const unsigned grid0, const double time );
     void GenerateRKBdc(const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex, 
                        const unsigned int &grid0, const std::vector < double> & time,  const double &time0, 
                        const double &dt, const double* AI);
     
     /** for NONLOCAL problems, _Bdc must be 0 on all the volume constraint */
     void GenerateBdcOnVolumeConstraint(const std::vector<unsigned> &volumeConstraintFlags, const unsigned &solIndex, const unsigned &grid0);
-
-    /** To be Added */
-    BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;
-
-    /** To be Added */
-    bool Ishomogeneous(const std::string varname, const unsigned int facename) const;
-
-    /** @deprecated */
-    void InitializeBdc();
-    
-    /** @deprecated */
-    void SetBoundaryCondition_new(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET,
-                              const bool istimedependent = false, FunctionBase* func = NULL);
-
-    /** To be Added */
-    FunctionBase* GetBdcFunction(const std::string varname, const unsigned int facename) const;
-
 
     BoundaryFunc GetBdcFunction() const {
       return _SetBoundaryConditionFunction;
@@ -422,26 +404,34 @@ public:
         return _bdcType[i];
     };
 
+
+    /** @deprecated */
     bool GetUseParsedBCFunction() const {
       return _useParsedBCFunction;
     }
+
+    /** @deprecated */
+    BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;
+
+    /** @deprecated */
+    bool Ishomogeneous(const std::string varname, const unsigned int facename) const;
+
+    /** @deprecated */
+    void InitializeBdc_with_ParsedFunction();
     
-    
+    /** @deprecated */
+    void SetBoundaryCondition_with_ParsedFunction(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET,
+                              const bool istimedependent = false, FunctionBase* func = NULL);
+
+    /** @deprecated */
+    FunctionBase* GetBdcFunction(const std::string varname, const unsigned int facename) const;
+
+
 private:
-    
-    bool _useParsedBCFunction;
 
-    /** To be Added */
-    bool Ishomogeneous(const unsigned int var, const unsigned int facename) const;
+    void GenerateBdc( const unsigned int k, const unsigned grid0, const double time );
 
-    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
-    std::vector < std::vector <BDCType> >         _boundaryConditions;
-    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary. Says if the Boundary Condition is homogeneous */
-    std::vector < std::vector <bool> >            _isHomogeneous;
-    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
-    std::vector < std::vector <FunctionBase *> >  _nonHomogeneousBCFunction;
-    
-    /** Vector size: number of added solutions. */
+    /** Vector size: number of added solutions. Steady or Time-dependent, or undefined or Not-available ...*/
     std::vector < char* >                    _bdcType;
     
     /** boundary condition function pointer */
@@ -453,15 +443,34 @@ private:
     /** Flag to tell whether the BC function has been set */
     bool _bdcFuncSetMLProb;
 
-    /** To be Added */
-    BDCType GetBoundaryCondition(const unsigned int var, const unsigned int facename) const;
-
-    /** To be Added */
-    FunctionBase* GetBdcFunction(const unsigned int var, const unsigned int facename) const;
-
     /** Problem pointer for Boundary Conditions */
     const MultiLevelProblem* _mlBCProblem;
-    
+
+
+    /** @deprecated */
+    bool _useParsedBCFunction;
+
+    /** @deprecated */
+    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
+    std::vector < std::vector <BDCType> >         _boundaryConditions;
+
+    /** @deprecated */
+    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary. Says if the Boundary Condition is homogeneous */
+    std::vector < std::vector <bool> >            _isHomogeneous;
+
+    /** @deprecated */
+    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
+    std::vector < std::vector <FunctionBase *> >  _nonHomogeneousBCFunction;
+
+    /** @deprecated */
+    BDCType GetBoundaryCondition(const unsigned int var, const unsigned int facename) const;
+
+    /** @deprecated */
+    bool Ishomogeneous(const unsigned int var, const unsigned int facename) const;
+
+    /** @deprecated */
+    FunctionBase* GetBdcFunction(const unsigned int var, const unsigned int facename) const;
+
 // === Boundary Conditions - THERE IS TIME DEPENDENT STUFF HERE - END =================
 
 
@@ -569,20 +578,17 @@ BDCType MultiLevelSolution::GetBoundaryCondition(const unsigned int var, const u
     return _boundaryConditions[var][facename];
 }
 
-inline
-bool MultiLevelSolution::Ishomogeneous(const unsigned int var, const unsigned int facename) const {
-    return _isHomogeneous[var][facename];
-}
-
-inline
-FunctionBase* MultiLevelSolution::GetBdcFunction(const unsigned int var, const unsigned int facename) const {
-    return _nonHomogeneousBCFunction[var][facename];
-}
 
 inline
 BDCType MultiLevelSolution::GetBoundaryCondition(const std::string varname, const unsigned int facename) const {
     unsigned int var = GetIndex(varname.c_str());
     return _boundaryConditions[var][facename];
+}
+
+
+inline
+bool MultiLevelSolution::Ishomogeneous(const unsigned int var, const unsigned int facename) const {
+    return _isHomogeneous[var][facename];
 }
 
 inline
@@ -592,10 +598,17 @@ bool MultiLevelSolution::Ishomogeneous(const std::string varname, const unsigned
 }
 
 inline
+FunctionBase* MultiLevelSolution::GetBdcFunction(const unsigned int var, const unsigned int facename) const {
+    return _nonHomogeneousBCFunction[var][facename];
+}
+
+inline
 FunctionBase* MultiLevelSolution::GetBdcFunction(const std::string varname, const unsigned int facename) const {
     unsigned int var = GetIndex(varname.c_str());
     return _nonHomogeneousBCFunction[var][facename];
 }
+
+
 
 inline 
 void MultiLevelSolution::Set(const char * name, InitFuncMLProb funcMLProb, const MultiLevelProblem * ml_prob) {

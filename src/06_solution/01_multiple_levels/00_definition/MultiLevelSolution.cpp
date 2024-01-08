@@ -570,7 +570,7 @@ namespace femus {
   }
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::InitializeBdc() {
+  void MultiLevelSolution::InitializeBdc_with_ParsedFunction() {
     _useParsedBCFunction = true;
 
     int nvars = _solType.size();
@@ -595,7 +595,7 @@ namespace femus {
   }
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::SetBoundaryCondition_new(const std::string name, const std::string facename,
+  void MultiLevelSolution::SetBoundaryCondition_with_ParsedFunction(const std::string name, const std::string facename,
                                                     const BDCType bdctype, const bool istimedependent, FunctionBase* func) {
 
 
@@ -896,7 +896,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   
   
 
-  bool PRINT = false;
+  bool PRINT_RK = false;
   void MultiLevelSolution::GenerateRKBdc(
     const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex,
     const unsigned int &grid0, const std::vector < double> & itime, const double &time0, const double &dt, const double *AI) {
@@ -1005,7 +1005,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
                     if(test) {
 
-                      if(PRINT) std::cout << inode_coord_Metis << " " << value0 << "\n" ;
+                      if(PRINT_RK) std::cout << inode_coord_Metis << " " << value0 << "\n" ;
 
                       std::vector < double > ivalue(solKiIndex.size(), 0.);
                       for(unsigned k = 0; k < solKiIndex.size(); k++) {
@@ -1015,7 +1015,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
                         else {
                           _SetBoundaryConditionFunction(xx, _solName[solIndex], ivalue[k], msh->GetMeshElements()->GetBoundaryIndex(iel, jface), itime[k]);
                         }
-                        if(PRINT) std::cout << inode_coord_Metis << " " << ivalue[k] << std::endl;
+                        if(PRINT_RK) std::cout << inode_coord_Metis << " " << ivalue[k] << std::endl;
                         ivalue[k] -= value0;
                       }
 
@@ -1062,7 +1062,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
       }
     }
 
-    PRINT = false;
+    PRINT_RK = false;
   }
 
 

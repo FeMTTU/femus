@@ -223,7 +223,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
 //Ok now that the mesh file is there i want to COMPUTE the MG OPERATORS... but I want to compute them ONCE and FOR ALL,
 //not for every equation... but the functions belong to the single equation... I need to make them EXTERNAL
 // then I'll have A from the equation, PRL and REST from a MG object.
-//So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
+//So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and Print from HERE and not from the gencase
 
 
 //once you have the list of the equations, you loop over them to initialize everything

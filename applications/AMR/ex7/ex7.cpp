@@ -351,13 +351,13 @@ int main(int argc, char** argv) {
   ml_sol.Initialize("Sol");
 
   //Set Boundary (update Dirichlet(...) function)
-  ml_sol.InitializeBdc();
+  ml_sol.InitializeBdc_with_ParsedFunction();
 
 //     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
 
   for (int i = 0; i < boundary_conditions.size(); ++i) {
-    ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
+    ml_sol.SetBoundaryCondition_with_ParsedFunction("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
   }
 
   ml_sol.GenerateBdc("All");
