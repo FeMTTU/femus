@@ -352,18 +352,6 @@ int main(int argc, char** argv) {
   //Initialize (update Init(...) function)
   ml_sol.Initialize("Sol");
 
-  //Set Boundary (update Dirichlet(...) function)
- // ml_sol.InitializeBdc();
-
-//     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
-//     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
-
-//   for (int i = 0; i < boundary_conditions.size(); ++i) {
-//     ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
-//   }
-
-  //ml_sol.GenerateBdc("All");
-
 
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   ml_sol.GenerateBdc("Sol");

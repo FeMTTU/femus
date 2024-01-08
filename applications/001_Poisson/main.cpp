@@ -492,7 +492,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
       } // end phii loop
     } // end gauss point loop
 
-    if (ml_prob._ml_sol->_useParsedBCFunction) {
+    if (ml_prob._ml_sol->GetUseParsedBCFunction() ) {
 
       //number of faces for each type of element
       unsigned nfaces = mymsh->GetElementFaceNumber(iel);

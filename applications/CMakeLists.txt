@@ -12,8 +12,6 @@ OPTION(BUILD_TUTORIAL "Build the tutorial problems" ON)
 # --
 OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 
-# --
-OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
 
 # Ask the user which executable have to be built
 OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
@@ -96,10 +94,6 @@ ENDIF(BUILD_TUTORIAL)
 IF(BUILD_POISSON)
   ADD_SUBDIRECTORY(001_Poisson/)
 ENDIF(BUILD_POISSON)
-
-IF(BUILD_POISSON_AMR)
-  ADD_SUBDIRECTORY(001_Poisson_AMR/)
-ENDIF(BUILD_POISSON_AMR)
 
 
 IF(BUILD_NAVIERSTOKESAPPS)

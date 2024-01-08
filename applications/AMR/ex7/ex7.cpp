@@ -7,19 +7,21 @@
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemusInit.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
 
-#include "ParsedFunction.hpp"
 #include "Files.hpp"
+#include "ParsedFunction.hpp"
 
 #include <json/json.h>
 #include <json/value.h>
+
 #include <cstdlib>
 
 
@@ -163,7 +165,7 @@ int main(int argc, char** argv) {
     {
       elemtype = INVALID_ELEM;
     }
-    
+
   }
 
   std::string variableName = root["variable"].get("name", "Q").asString();
@@ -454,7 +456,6 @@ int main(int argc, char** argv) {
 
   if (iproc == 0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n", H1error);
 
-  ml_msh.PrintInfo();
 
   //Destroy all the new systems
   ml_prob.clear();

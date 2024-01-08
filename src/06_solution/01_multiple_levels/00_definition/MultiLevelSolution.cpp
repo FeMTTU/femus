@@ -574,10 +574,12 @@ namespace femus {
     _useParsedBCFunction = true;
 
     int nvars = _solType.size();
-    int nfaces = GetMLMesh()->GetLevel(0)->GetBoundaryInfo().size();
+
     _boundaryConditions.resize(nvars);
     _isHomogeneous.resize(nvars);
     _nonHomogeneousBCFunction.resize(nvars);
+
+    int nfaces = GetMLMesh()->GetLevel(0)->GetBoundaryInfo().size();
 
     for(int i = 0; i < nvars; i++) {
       _boundaryConditions[i].resize(nfaces);

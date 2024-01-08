@@ -407,33 +407,30 @@ public:
     /** To be Added */
     FunctionBase* GetBdcFunction(const std::string varname, const unsigned int facename) const;
 
-    BoundaryFunc GetBdcFunction() {
-      return _SetBoundaryConditionFunction;
-    }
 
     BoundaryFunc GetBdcFunction() const {
       return _SetBoundaryConditionFunction;
     }
 
-    BoundaryFuncMLProb GetBdcFunctionMLProb() {
-      return _SetBoundaryConditionFunctionMLProb;
-    }
 
     BoundaryFuncMLProb GetBdcFunctionMLProb() const {
       return _SetBoundaryConditionFunctionMLProb;
     }
 
     /** To be Added */
-    char* GetBdcType(unsigned i) {
+    char* GetBdcType(unsigned i) const {
         return _bdcType[i];
     };
 
-    bool _useParsedBCFunction;
-
+    bool GetUseParsedBCFunction() const {
+      return _useParsedBCFunction;
+    }
     
     
 private:
     
+    bool _useParsedBCFunction;
+
     /** To be Added */
     bool Ishomogeneous(const unsigned int var, const unsigned int facename) const;
 

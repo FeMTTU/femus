@@ -96,6 +96,34 @@ public:
 // === Constructors / Destructor - END =================
 
 
+
+// === Mesh, Level, Current (when the Mesh is part of a multilevel hierarchy) - BEGIN  =================
+
+public:
+
+    /** MESH: Get the grid number */
+    unsigned GetLevel() const {
+      return _level;
+    }
+
+    /** MESH: Set the grid number */
+    void SetLevel(const unsigned &i) {
+        _level = i;
+    };
+
+
+ private:
+
+    void PrintInfoLevel() const;
+
+    /** MESH: level of mesh in the multi-level hierarchy */
+    unsigned _level;
+
+// === Mesh, Level, Current (when the Mesh is part of a multilevel hierarchy) - END  =================
+
+
+
+
 // === Mesh, BASIC, Debug - BEGIN =================
 
 public:
@@ -292,7 +320,9 @@ private:
 // === Mesh, Nodes - END ====================================================
     
     
-    
+
+
+
     
 // === Mesh, COARSE GENERATION - BEGIN =================
     
@@ -319,7 +349,7 @@ private:
 // === COARSE MESH GENERATION, from FILEs - END =================
 
 
-// === COARSE MESH GENERATION, from function - BEGIN =================
+// === COARSE MESH GENERATION, from function, for a Box - BEGIN =================
  public:
    
     /** This function generates a coarse box mesh */
@@ -347,10 +377,10 @@ private:
     /** Boundary names for faces, this is only filled in the above function so far */
     std::map<unsigned int, std::string> _boundaryinfo;
     
-// === COARSE MESH GENERATION, from function - END =================
+// === COARSE MESH GENERATION, from function, for a Box - END =================
 
 
-// === COARSE MESH GENERATION, for all - BEGIN =================
+// === COARSE MESH GENERATION, from file or function: FE stuff (Nodes) - BEGIN =================
     
  private:
     
@@ -361,37 +391,13 @@ private:
     
     static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
     
-// === COARSE MESH GENERATION, for all - END =================
+// === COARSE MESH GENERATION, from file or function: FE stuff (Nodes) - END =================
+
 
 // === Mesh, COARSE GENERATION - END =================
 
     
 
-// === Mesh, Level, Current (when the Mesh is part of a multilevel hierarchy) - BEGIN  =================
-
-public:
-
-    /** MESH: Get the grid number */
-    unsigned GetLevel() const {
-      return _level;
-    }
-
-    /** MESH: Set the grid number */
-    void SetLevel(const unsigned &i) {
-        _level = i;
-    };
-
-
- private:
-    
-    void PrintInfoLevel() const;
-    
-    /** MESH: level of mesh in the multi-level hierarchy */
-    unsigned _level;
-    
-// === Mesh, Level, Current (when the Mesh is part of a multilevel hierarchy) - END  =================
-
-    
 
 // === FE stuff - BEGIN ====================================================
 

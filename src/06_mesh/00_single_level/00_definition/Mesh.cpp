@@ -1187,9 +1187,12 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   void Mesh::AddBiquadraticNodesNotInMeshFile() {
 
+    // Nodes, initialize - BEGIN
     unsigned int nnodes = GetNumberOfNodes();
+    // Nodes, initialize - END
 
-    //intialize to UINT_MAX
+
+    //intialize to UINT_MAX - BEGIN
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
       const unsigned elementType = el->GetElementType(iel);
 
@@ -1200,8 +1203,10 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         }
       }
     }
+    //intialize to UINT_MAX - END
 
-    // generate face dofs for tet and wedge elements
+
+    // generate face dofs for tet and wedge elements - BEGIN
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
       const unsigned elementType = el->GetElementType(iel);
 
@@ -1245,8 +1250,9 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         }
       }
     }
+    // generate face dofs for tet and wedge elements - END
 
-    // generates element dofs for tet, wedge and triangle elements
+    // generates element dofs for tet, wedge and triangle elements - BEGIN
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
       if(1 == el->GetElementType(iel)) {     //tet
         el->SetElementDofIndex(iel, 14, nnodes);
@@ -1261,14 +1267,17 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         ++nnodes;
       }
     }
+    // generates element dofs for tet, wedge and triangle elements - END
 
+
+    // Nodes - BEGIN
     el->SetNodeNumber(nnodes);
     SetNumberOfNodes(nnodes);
-//     std::cout <<"nnodes after="<< nnodes << std::endl;
-    
+    // Nodes - END
+
     
 
-    // add the coordinates of the biquadratic nodes not included in gambit
+    // add the coordinates of the biquadratic nodes not included in the mesh file - BEGIN
     _coords[0].resize(nnodes);
     _coords[1].resize(nnodes);
     _coords[2].resize(nnodes);
@@ -1296,7 +1305,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
         }
       }
     }
-    
+    // add the coordinates of the biquadratic nodes not included in the mesh file - END
+
     
   }
   
