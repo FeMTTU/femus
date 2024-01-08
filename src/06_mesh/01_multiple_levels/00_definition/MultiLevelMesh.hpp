@@ -84,20 +84,6 @@ public:
 //====================
 public:
 
-    /** Read the coarse-mesh from an input file (call the right reader from the extension) */
-    void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref);
-
-    /** Read the coarse-mesh from an input file (call the right reader from the extension) */
-    void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
-    
-    void ReadCoarseMesh(const std::string mesh_file);
-
-    void ReadCoarseMesh(const std::string mesh_file, const double Lref, const bool read_groups, const bool read_boundary_groups);
-
-    void ReadCoarseMeshFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
-
-    void ReadCoarseMeshOnlyFileReading(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
-    
     /** Built-in cube-structured mesh generator */
     void GenerateCoarseBoxMesh( const unsigned int nx,
                                const unsigned int ny,
@@ -108,8 +94,24 @@ public:
                                const ElemType type,
                                const char GaussOrder[]
                              );
+
+    /** Read the coarse-mesh from an input file (call the right reader from the extension) */
+    void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref);
+
+    /** Read the coarse-mesh from an input file (call the right reader from the extension) */
+    void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
     
-//==== Coarse level - END  ======== 
+    void ReadCoarseMesh(const std::string mesh_file);
+
+    void ReadCoarseMesh(const std::string mesh_file, const double Lref, const bool read_groups, const bool read_boundary_groups);
+
+    void ReadCoarseMeshFileReadingBeforePartitioning(const std::string mesh_file, const double Lref, const bool read_groups, const bool read_boundary_groups);
+
+private:
+
+    void ReadCoarseMeshOnlyFileReading(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
+
+//==== Coarse level - END  ========
    
 //====================
 //==== Coarse level, Geom Elem - BEGIN ======== 

@@ -458,14 +458,7 @@ int main(int argc, char** args) {
 
   const std::string mesh_file = my_specifics[app]._mesh_files_path_relative_to_executable[m] + my_specifics[app]._mesh_files[m];
 
-  ml_mesh.ReadCoarseMeshFileReadingBeforePartitioning(mesh_file.c_str(), Lref, read_groups, read_boundary_groups);
-
-  ml_mesh.GetLevelZero(0)->dofmap_build_all_fe_families_and_elem_and_node_structures();
-
-
-  ml_mesh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
-
-  ml_mesh.PrepareNewLevelsForRefinement();
+  ml_mesh.ReadCoarseMesh(mesh_file, Lref, read_groups, read_boundary_groups);
   // ======= Mesh, Coarse reading - END ==================
 
 

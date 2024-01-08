@@ -362,6 +362,16 @@ private:
                                const ElemType type, 
                                std::vector<bool> &type_elem_flag);
 
+ private:
+
+   void GenerateCoarseBoxMeshBeforePartitioning(
+    const unsigned int nx, const unsigned int ny, const unsigned int nz,
+    const double xmin, const double xmax,
+    const double ymin, const double ymax,
+    const double zmin, const double zmax,
+    const ElemType elemType, std::vector<bool>& type_elem_flag);
+
+
  public:
    
   std::map<unsigned int, std::string> GetBoundaryInfo() const {   
@@ -383,7 +393,11 @@ private:
 // === COARSE MESH GENERATION, from file or function: FE stuff (Nodes) - BEGIN =================
     
  private:
-    
+
+    void Initialize_Level_AMR_Coords();
+
+    void AddNodes_in_CoarseGen();
+
     void AddBiquadraticNodesNotInMeshFile();
     
     /** Weights used to build the baricentric coordinate to compute the missing biquadratic nodes **/

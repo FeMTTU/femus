@@ -214,11 +214,17 @@ namespace femus {
 
 
     Mesh& mesh = GetMesh();
+
+
+// === Level - BEGIN =================
     mesh.SetLevel(0);
+// === Level - END =================
 
     hid_t  file_id = open_mesh_file(name);
 
+    // meshes, read - BEGIN ========================
     const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
+    // meshes, read - END ========================
 
 
     // dimension - BEGIN ===============

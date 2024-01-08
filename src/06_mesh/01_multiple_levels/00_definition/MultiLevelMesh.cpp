@@ -148,7 +148,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
    
 }
 
-void MultiLevelMesh::ReadCoarseMeshFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
+void MultiLevelMesh::ReadCoarseMeshFileReadingBeforePartitioning(const std::string mesh_file, const double Lref, const bool read_groups, const bool read_boundary_groups)
 {
     
     _gridn0 = 1;
@@ -189,7 +189,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
 
 void MultiLevelMesh::ReadCoarseMesh(const std::string mesh_file, const double Lref, const bool read_groups, const bool read_boundary_groups) {
   
-  ReadCoarseMeshFileReadingBeforePartitioning(mesh_file.c_str(), Lref, read_groups, read_boundary_groups);
+  ReadCoarseMeshFileReadingBeforePartitioning(mesh_file, Lref, read_groups, read_boundary_groups);
     
   GetLevelZero(0)->dofmap_build_all_fe_families_and_elem_and_node_structures();
  

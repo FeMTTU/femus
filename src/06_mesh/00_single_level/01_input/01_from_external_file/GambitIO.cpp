@@ -94,20 +94,26 @@ namespace femus {
 
   void GambitIO::read(const std::string& name, std::vector < std::vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
+
     Mesh& mesh = GetMesh();
 
     std::ifstream inf;
     std::string str2;
+
     unsigned ngroup;
     unsigned nbcd;
+
     unsigned dim;       //dimension of the Geometric Elements
     unsigned dimNodes;  //number of coordinates provided: it could be different if you have say 2D elements in 3d
     double x, y, z;
-    
     unsigned nvt;
+
     unsigned nel;
 
+
+// === Level - BEGIN =================
     mesh.SetLevel(0);
+// === Level - END =================
 
     
     // read control data - BEGIN ******************** A

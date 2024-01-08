@@ -220,30 +220,14 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 
   void Mesh::ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool> & type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
-//==== Level - BEGIN ==============================
-    SetLevel(0);
-//==== Level - END ==============================
 
-//==== AMR - BEGIN ==============================
-    SetIfHomogeneous(true);
-//==== AMR - END ==============================
+    Initialize_Level_AMR_Coords();
 
-//==== Coords, coarse, then to topology - BEGIN ==============================
-    _coords.resize(3);
-//==== Coords, coarse, then to topology - END ==============================
-
-    
 
     ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
 
 
-
-//==== Only in Coarse generations - BEGIN ==============================
-    AddBiquadraticNodesNotInMeshFile();
-
-    el->ShrinkToFitElementDof();
-    el->ShrinkToFitElementNearFace();
-//==== Only in Coarse generations - END ==============================
+    AddNodes_in_CoarseGen();
 
 
   }  
@@ -421,7 +405,25 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     const double ymin, const double ymax,
     const double zmin, const double zmax,
     const ElemType elemType, std::vector<bool>& type_elem_flag) {
+
+
+    GenerateCoarseBoxMeshBeforePartitioning(nx, ny, nz,
+    xmin, xmax,
+    ymin, ymax,
+    zmin, zmax,
+    elemType, type_elem_flag);
+
+
+
+    PartitionElements_and_FillDofMapAllFEFamilies();
+
+    BuildElementAndNodeStructures();
     
+  }
+
+
+
+  void Mesh::Initialize_Level_AMR_Coords() {
 
 //==== Level - BEGIN ==============================
     SetLevel(0);
@@ -434,13 +436,34 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
 //==== Coords, coarse, then to topology - BEGIN ==============================
     _coords.resize(3);
 //==== Coords, coarse, then to topology - END ==============================
-    
 
-    
+  }
+
+
+
+  void Mesh::GenerateCoarseBoxMeshBeforePartitioning(
+    const unsigned int nx, const unsigned int ny, const unsigned int nz,
+    const double xmin, const double xmax,
+    const double ymin, const double ymax,
+    const double zmin, const double zmax,
+    const ElemType elemType, std::vector<bool>& type_elem_flag) {
+
+
+    Initialize_Level_AMR_Coords();
+
+
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
 
 
-    
+    AddNodes_in_CoarseGen();
+
+
+  }
+
+
+
+  void Mesh::AddNodes_in_CoarseGen() {
+
 //==== Only in Coarse generations - BEGIN ==============================
     AddBiquadraticNodesNotInMeshFile();
 
@@ -448,12 +471,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x, const int &El
     el->ShrinkToFitElementNearFace();
 //==== Only in Coarse generations - END ==============================
 
-
-    PartitionElements_and_FillDofMapAllFEFamilies();
-
-    BuildElementAndNodeStructures();
-    
   }
+
 
 
   void Mesh::Topology_FillSolidNodeFlag() {

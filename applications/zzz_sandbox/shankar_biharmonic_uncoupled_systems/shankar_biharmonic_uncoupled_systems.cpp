@@ -888,14 +888,7 @@ int main(int argc, char** args) {
 
             const std::string mesh_file = my_specifics[app]._mesh_files_path_relative_to_executable[m] + my_specifics[app]._mesh_files[m];
 
-            mlMsh.ReadCoarseMeshFileReadingBeforePartitioning(mesh_file.c_str(), Lref, read_groups, read_boundary_groups);
-
-            mlMsh.GetLevelZero(0)->dofmap_build_all_fe_families_and_elem_and_node_structures();
-
-
-            mlMsh.BuildFETypesBasedOnExistingCoarseMeshGeomElements();
-
-            mlMsh.PrepareNewLevelsForRefinement();
+            mlMsh.ReadCoarseMesh(mesh_file, Lref, read_groups, read_boundary_groups);
             // ======= Mesh, Coarse reading - END ==================
 
             // read coarse level mesh and generate finers level meshes
